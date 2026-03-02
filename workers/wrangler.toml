@@ -1,0 +1,28 @@
+name = "prime-self-api"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+
+# AI Gateway binding
+[ai]
+binding = "AI"
+
+# KV namespace for rate limiting + cache
+[[kv_namespaces]]
+binding = "CACHE"
+id = "TBD"
+
+# Cron Triggers — daily transit snapshot + digest at 6 AM UTC
+[triggers]
+crons = ["0 6 * * *"]
+
+# Secrets (set via wrangler secret put):
+# NEON_CONNECTION_STRING
+# ANTHROPIC_API_KEY
+# TELNYX_API_KEY
+# TELNYX_PHONE_NUMBER
+# JWT_SECRET
+# AI_GATEWAY_URL

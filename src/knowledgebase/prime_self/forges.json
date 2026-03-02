@@ -1,0 +1,66 @@
+{
+  "_meta": {
+    "description": "The Five Forges — Prime Self developmental arenas",
+    "note": "Each Forge maps to specific HD and astrological indicators"
+  },
+  "initiation": {
+    "forge": "Initiation",
+    "number": 1,
+    "essence": "The spark that starts. Beginning what has not existed before.",
+    "description": "The Forge of Initiation is the arena of first action — the capacity to bring something new into existence without precedent or guarantee. It is the courage to begin, to disrupt stagnant patterns, and to act before consensus forms. Initiation is not just starting things; it is the willingness to be the first domino, to absorb the initial resistance that meets every new creation.",
+    "hdTriggers": ["Manifestor type", "Motor-to-Throat connection", "Gate 51 (Shock)", "Gate 21 (Control)", "Gate 25 (Spirit of the Self)"],
+    "astroTriggers": ["Aries placements", "Mars aspects", "1st House emphasis", "Uranus transits"],
+    "practicalExpression": "Starting businesses, launching movements, breaking ground on creative projects, initiating difficult conversations, pioneering new methodologies",
+    "shadowForm": "Compulsive starting without finishing, aggression disguised as initiative, disrupting for the sake of disruption",
+    "masterForm": "Aligned initiation that serves a genuine need — informing before acting, timing the spark to ignite rather than scatter",
+    "primeQuestion": "What am I here to start that no one else will?"
+  },
+  "mastery": {
+    "forge": "Mastery",
+    "number": 2,
+    "essence": "The depth that transforms skill into art.",
+    "description": "The Forge of Mastery is the arena of sustained dedication — the 10,000 hours that transform raw talent into refined expertise. It is the Generator's natural domain: the satisfaction that comes from doing what you love until you are undeniably excellent at it. Mastery is not just competence; it is the point where practice becomes effortless expression, where the doer and the doing merge.",
+    "hdTriggers": ["Generator/MG type", "Defined Sacral", "Gate 14 (Power Skills)", "Gate 34 (Power)", "Gate 9 (Focus)", "Gate 5 (Waiting)"],
+    "astroTriggers": ["Taurus/Capricorn placements", "Saturn aspects", "6th House emphasis", "Saturn Return"],
+    "practicalExpression": "Deep skill development, patient practice, building expertise through sustained engagement, teaching others from mastered experience",
+    "shadowForm": "Perfectionism that prevents completion, obsession without joy, identifying so deeply with the craft that life outside it atrophies",
+    "masterForm": "Joyful mastery — skill so refined it appears effortless, the Sacral hum of doing exactly what you were built to do",
+    "primeQuestion": "What would I do for a lifetime even if no one paid me or praised me?"
+  },
+  "guidance": {
+    "forge": "Guidance",
+    "number": 3,
+    "essence": "The vision that sees potential in others.",
+    "description": "The Forge of Guidance is the arena of navigating others' energy — the capacity to see systems, people, and processes clearly enough to direct them toward greater efficiency and fulfillment. This is the Projector's natural domain: the penetrating awareness that recognizes what others cannot see about themselves. Guidance is not advice-giving; it is the deep recognition that allows another person to feel truly seen.",
+    "hdTriggers": ["Projector type", "Focused/absorbing aura", "Gate 7 (Role of the Self)", "Gate 31 (Leadership)", "Gate 8 (Contribution)", "Gate 1 (Self-Expression)"],
+    "astroTriggers": ["Libra/Aquarius placements", "Jupiter aspects", "10th House emphasis", "North Node direction"],
+    "practicalExpression": "Coaching, consulting, system optimization, strategic advising, mentoring, facilitating others' growth",
+    "shadowForm": "Unsolicited advice, bitterness from unrecognized wisdom, manipulating under the guise of helping",
+    "masterForm": "Invited guidance that transforms — the right insight delivered to the right person at the right time, producing recognition and success for both parties",
+    "primeQuestion": "Who am I here to guide, and how do I earn their invitation?"
+  },
+  "perception": {
+    "forge": "Perception",
+    "number": 4,
+    "essence": "The mirror that reveals collective truth.",
+    "description": "The Forge of Perception is the arena of deep seeing — the capacity to perceive the health, dynamics, and truth of environments and communities. This is the Reflector's natural domain: the completely open design that samples and amplifies everything, becoming an accurate mirror of collective reality. Perception is not passive observation; it is the active capacity to reflect back what a community needs to see about itself.",
+    "hdTriggers": ["Reflector type", "Completely open design", "Lunar cycle authority", "Gate 48 (Depth)", "Gate 57 (Intuitive Clarity)"],
+    "astroTriggers": ["Pisces/Cancer placements", "Neptune aspects", "12th House emphasis", "Moon cycles"],
+    "practicalExpression": "Community assessment, environmental sensitivity, cultural insight, organizational health diagnosis, serving as the canary in the coal mine",
+    "shadowForm": "Identifying with what is perceived, losing self in others' environments, disappointment when communities don't match potential",
+    "masterForm": "Clear, compassionate mirroring that helps communities self-correct — the wisdom to reflect truth without absorbing the toxicity",
+    "primeQuestion": "What is the truth of this environment, and how can I reflect it back constructively?"
+  },
+  "transformation": {
+    "forge": "Transformation",
+    "number": 5,
+    "essence": "The death that precedes rebirth.",
+    "description": "The Forge of Transformation is the arena of fundamental change — the willingness to let old identities, structures, and beliefs die so that something more authentic can emerge. This forge is not type-specific; it is the territory that every person must eventually enter. Transformation is not improvement; it is metamorphosis — the caterpillar does not become a better caterpillar, it becomes something entirely different.",
+    "hdTriggers": ["Any type in deconditioning", "Pluto gate activation", "Gate 28 (The Game Player)", "Gate 32 (Continuity)", "Gate 50 (Values)", "Saturn Return"],
+    "astroTriggers": ["Scorpio placements", "Pluto transits/aspects", "8th House emphasis", "Chiron Return"],
+    "practicalExpression": "Major life transitions, identity reconstruction, leaving what no longer serves, grief work, shadow integration, rebirth after crisis",
+    "shadowForm": "Compulsive destruction, destroying what is working to avoid the discomfort of stability, change addiction",
+    "masterForm": "Conscious metamorphosis — the graceful surrender of outdated forms combined with the courage to step into unknown territory. The phoenix principle in action.",
+    "primeQuestion": "What must I let die so that what I'm becoming can live?"
+  }
+}

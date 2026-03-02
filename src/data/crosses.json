@@ -1,0 +1,327 @@
+{
+  "_meta": {
+    "description": "192 Incarnation Crosses — keyed by Personality Sun gate number",
+    "structure": "Each gate has 3 cross variants: right (lines 1-2), juxtaposition (line 3), left (lines 4-5-6)",
+    "fields": "name = thematic name, gates = [pSun, pEarth, dSun, dEarth]"
+  },
+  "1": {
+    "right": { "name": "Right Angle Cross of the Sphinx", "gates": [1, 2, 7, 13] },
+    "juxta": { "name": "Juxtaposition Cross of Self-Expression", "gates": [1, 2, 7, 13] },
+    "left":  { "name": "Left Angle Cross of Defiance", "gates": [1, 2, 7, 13] }
+  },
+  "2": {
+    "right": { "name": "Right Angle Cross of the Sphinx", "gates": [2, 1, 13, 7] },
+    "juxta": { "name": "Juxtaposition Cross of the Driver", "gates": [2, 1, 13, 7] },
+    "left":  { "name": "Left Angle Cross of Defiance", "gates": [2, 1, 13, 7] }
+  },
+  "3": {
+    "right": { "name": "Right Angle Cross of Laws", "gates": [3, 50, 41, 31] },
+    "juxta": { "name": "Juxtaposition Cross of Mutation", "gates": [3, 50, 41, 31] },
+    "left":  { "name": "Left Angle Cross of Wishes", "gates": [3, 50, 41, 31] }
+  },
+  "4": {
+    "right": { "name": "Right Angle Cross of Explanation", "gates": [4, 49, 8, 14] },
+    "juxta": { "name": "Juxtaposition Cross of Formulization", "gates": [4, 49, 8, 14] },
+    "left":  { "name": "Left Angle Cross of Revolution", "gates": [4, 49, 8, 14] }
+  },
+  "5": {
+    "right": { "name": "Right Angle Cross of Consciousness", "gates": [5, 35, 63, 64] },
+    "juxta": { "name": "Juxtaposition Cross of Habits", "gates": [5, 35, 63, 64] },
+    "left":  { "name": "Left Angle Cross of Separation", "gates": [5, 35, 63, 64] }
+  },
+  "6": {
+    "right": { "name": "Right Angle Cross of Eden", "gates": [6, 36, 12, 11] },
+    "juxta": { "name": "Juxtaposition Cross of Conflict", "gates": [6, 36, 12, 11] },
+    "left":  { "name": "Left Angle Cross of the Plane", "gates": [6, 36, 12, 11] }
+  },
+  "7": {
+    "right": { "name": "Right Angle Cross of the Sphinx", "gates": [7, 13, 1, 2] },
+    "juxta": { "name": "Juxtaposition Cross of Interaction", "gates": [7, 13, 1, 2] },
+    "left":  { "name": "Left Angle Cross of Masks", "gates": [7, 13, 1, 2] }
+  },
+  "8": {
+    "right": { "name": "Right Angle Cross of Contagion", "gates": [8, 14, 55, 59] },
+    "juxta": { "name": "Juxtaposition Cross of Contribution", "gates": [8, 14, 55, 59] },
+    "left":  { "name": "Left Angle Cross of Uncertainty", "gates": [8, 14, 55, 59] }
+  },
+  "9": {
+    "right": { "name": "Right Angle Cross of Planning", "gates": [9, 16, 40, 37] },
+    "juxta": { "name": "Juxtaposition Cross of Focus", "gates": [9, 16, 40, 37] },
+    "left":  { "name": "Left Angle Cross of Dedication", "gates": [9, 16, 40, 37] }
+  },
+  "10": {
+    "right": { "name": "Right Angle Cross of the Vessel of Love", "gates": [10, 15, 46, 25] },
+    "juxta": { "name": "Juxtaposition Cross of Behavior", "gates": [10, 15, 46, 25] },
+    "left":  { "name": "Left Angle Cross of Prevention", "gates": [10, 15, 46, 25] }
+  },
+  "11": {
+    "right": { "name": "Right Angle Cross of Eden", "gates": [11, 12, 36, 6] },
+    "juxta": { "name": "Juxtaposition Cross of Ideas", "gates": [11, 12, 36, 6] },
+    "left":  { "name": "Left Angle Cross of Education", "gates": [11, 12, 36, 6] }
+  },
+  "12": {
+    "right": { "name": "Right Angle Cross of Eden", "gates": [12, 11, 6, 36] },
+    "juxta": { "name": "Juxtaposition Cross of Articulation", "gates": [12, 11, 6, 36] },
+    "left":  { "name": "Left Angle Cross of Education", "gates": [12, 11, 6, 36] }
+  },
+  "13": {
+    "right": { "name": "Right Angle Cross of the Sphinx", "gates": [13, 7, 2, 1] },
+    "juxta": { "name": "Juxtaposition Cross of Listening", "gates": [13, 7, 2, 1] },
+    "left":  { "name": "Left Angle Cross of Masks", "gates": [13, 7, 2, 1] }
+  },
+  "14": {
+    "right": { "name": "Right Angle Cross of Contagion", "gates": [14, 8, 59, 55] },
+    "juxta": { "name": "Juxtaposition Cross of Empowering", "gates": [14, 8, 59, 55] },
+    "left":  { "name": "Left Angle Cross of Uncertainty", "gates": [14, 8, 59, 55] }
+  },
+  "15": {
+    "right": { "name": "Right Angle Cross of the Vessel of Love", "gates": [15, 10, 25, 46] },
+    "juxta": { "name": "Juxtaposition Cross of Extremes", "gates": [15, 10, 25, 46] },
+    "left":  { "name": "Left Angle Cross of Prevention", "gates": [15, 10, 25, 46] }
+  },
+  "16": {
+    "right": { "name": "Right Angle Cross of Planning", "gates": [16, 9, 37, 40] },
+    "juxta": { "name": "Juxtaposition Cross of Experimentation", "gates": [16, 9, 37, 40] },
+    "left":  { "name": "Left Angle Cross of Dedication", "gates": [16, 9, 37, 40] }
+  },
+  "17": {
+    "right": { "name": "Right Angle Cross of Service", "gates": [17, 18, 58, 52] },
+    "juxta": { "name": "Juxtaposition Cross of Opinions", "gates": [17, 18, 58, 52] },
+    "left":  { "name": "Left Angle Cross of Upheaval", "gates": [17, 18, 58, 52] }
+  },
+  "18": {
+    "right": { "name": "Right Angle Cross of Service", "gates": [18, 17, 52, 58] },
+    "juxta": { "name": "Juxtaposition Cross of Correction", "gates": [18, 17, 52, 58] },
+    "left":  { "name": "Left Angle Cross of Upheaval", "gates": [18, 17, 52, 58] }
+  },
+  "19": {
+    "right": { "name": "Right Angle Cross of the Four Ways", "gates": [19, 33, 1, 2] },
+    "juxta": { "name": "Juxtaposition Cross of Need", "gates": [19, 33, 1, 2] },
+    "left":  { "name": "Left Angle Cross of Refinement", "gates": [19, 33, 1, 2] }
+  },
+  "20": {
+    "right": { "name": "Right Angle Cross of the Sleeping Phoenix", "gates": [20, 34, 55, 59] },
+    "juxta": { "name": "Juxtaposition Cross of the Now", "gates": [20, 34, 55, 59] },
+    "left":  { "name": "Left Angle Cross of Duality", "gates": [20, 34, 55, 59] }
+  },
+  "21": {
+    "right": { "name": "Right Angle Cross of Tension", "gates": [21, 48, 38, 39] },
+    "juxta": { "name": "Juxtaposition Cross of Control", "gates": [21, 48, 38, 39] },
+    "left":  { "name": "Left Angle Cross of Endeavor", "gates": [21, 48, 38, 39] }
+  },
+  "22": {
+    "right": { "name": "Right Angle Cross of Rulership", "gates": [22, 47, 26, 45] },
+    "juxta": { "name": "Juxtaposition Cross of Grace", "gates": [22, 47, 26, 45] },
+    "left":  { "name": "Left Angle Cross of Informing", "gates": [22, 47, 26, 45] }
+  },
+  "23": {
+    "right": { "name": "Right Angle Cross of Explanation", "gates": [23, 43, 49, 4] },
+    "juxta": { "name": "Juxtaposition Cross of Assimilation", "gates": [23, 43, 49, 4] },
+    "left":  { "name": "Left Angle Cross of Dedication", "gates": [23, 43, 49, 4] }
+  },
+  "24": {
+    "right": { "name": "Right Angle Cross of the Four Ways", "gates": [24, 44, 33, 19] },
+    "juxta": { "name": "Juxtaposition Cross of Rationalization", "gates": [24, 44, 33, 19] },
+    "left":  { "name": "Left Angle Cross of Incarnation", "gates": [24, 44, 33, 19] }
+  },
+  "25": {
+    "right": { "name": "Right Angle Cross of the Vessel of Love", "gates": [25, 46, 10, 15] },
+    "juxta": { "name": "Juxtaposition Cross of Innocence", "gates": [25, 46, 10, 15] },
+    "left":  { "name": "Left Angle Cross of the Healing", "gates": [25, 46, 10, 15] }
+  },
+  "26": {
+    "right": { "name": "Right Angle Cross of Rulership", "gates": [26, 45, 22, 47] },
+    "juxta": { "name": "Juxtaposition Cross of the Trickster", "gates": [26, 45, 22, 47] },
+    "left":  { "name": "Left Angle Cross of Confrontation", "gates": [26, 45, 22, 47] }
+  },
+  "27": {
+    "right": { "name": "Right Angle Cross of the Unexpected", "gates": [27, 28, 19, 33] },
+    "juxta": { "name": "Juxtaposition Cross of Caring", "gates": [27, 28, 19, 33] },
+    "left":  { "name": "Left Angle Cross of Alignment", "gates": [27, 28, 19, 33] }
+  },
+  "28": {
+    "right": { "name": "Right Angle Cross of the Unexpected", "gates": [28, 27, 33, 19] },
+    "juxta": { "name": "Juxtaposition Cross of Risks", "gates": [28, 27, 33, 19] },
+    "left":  { "name": "Left Angle Cross of Alignment", "gates": [28, 27, 33, 19] }
+  },
+  "29": {
+    "right": { "name": "Right Angle Cross of Contagion", "gates": [29, 30, 20, 34] },
+    "juxta": { "name": "Juxtaposition Cross of Commitment", "gates": [29, 30, 20, 34] },
+    "left":  { "name": "Left Angle Cross of Industry", "gates": [29, 30, 20, 34] }
+  },
+  "30": {
+    "right": { "name": "Right Angle Cross of Contagion", "gates": [30, 29, 34, 20] },
+    "juxta": { "name": "Juxtaposition Cross of Fates", "gates": [30, 29, 34, 20] },
+    "left":  { "name": "Left Angle Cross of Industry", "gates": [30, 29, 34, 20] }
+  },
+  "31": {
+    "right": { "name": "Right Angle Cross of the Unexpected", "gates": [31, 41, 27, 28] },
+    "juxta": { "name": "Juxtaposition Cross of Influence", "gates": [31, 41, 27, 28] },
+    "left":  { "name": "Left Angle Cross of the Alpha", "gates": [31, 41, 27, 28] }
+  },
+  "32": {
+    "right": { "name": "Right Angle Cross of Maya", "gates": [32, 42, 56, 60] },
+    "juxta": { "name": "Juxtaposition Cross of Conservation", "gates": [32, 42, 56, 60] },
+    "left":  { "name": "Left Angle Cross of Limitation", "gates": [32, 42, 56, 60] }
+  },
+  "33": {
+    "right": { "name": "Right Angle Cross of the Four Ways", "gates": [33, 19, 2, 1] },
+    "juxta": { "name": "Juxtaposition Cross of Retreat", "gates": [33, 19, 2, 1] },
+    "left":  { "name": "Left Angle Cross of Refinement", "gates": [33, 19, 2, 1] }
+  },
+  "34": {
+    "right": { "name": "Right Angle Cross of the Sleeping Phoenix", "gates": [34, 20, 59, 55] },
+    "juxta": { "name": "Juxtaposition Cross of Power", "gates": [34, 20, 59, 55] },
+    "left":  { "name": "Left Angle Cross of Duality", "gates": [34, 20, 59, 55] }
+  },
+  "35": {
+    "right": { "name": "Right Angle Cross of Consciousness", "gates": [35, 5, 64, 63] },
+    "juxta": { "name": "Juxtaposition Cross of Experience", "gates": [35, 5, 64, 63] },
+    "left":  { "name": "Left Angle Cross of Separation", "gates": [35, 5, 64, 63] }
+  },
+  "36": {
+    "right": { "name": "Right Angle Cross of Eden", "gates": [36, 6, 11, 12] },
+    "juxta": { "name": "Juxtaposition Cross of Crisis", "gates": [36, 6, 11, 12] },
+    "left":  { "name": "Left Angle Cross of the Plane", "gates": [36, 6, 11, 12] }
+  },
+  "37": {
+    "right": { "name": "Right Angle Cross of Planning", "gates": [37, 40, 9, 16] },
+    "juxta": { "name": "Juxtaposition Cross of Bargains", "gates": [37, 40, 9, 16] },
+    "left":  { "name": "Left Angle Cross of Migration", "gates": [37, 40, 9, 16] }
+  },
+  "38": {
+    "right": { "name": "Right Angle Cross of Tension", "gates": [38, 39, 48, 21] },
+    "juxta": { "name": "Juxtaposition Cross of Opposition", "gates": [38, 39, 48, 21] },
+    "left":  { "name": "Left Angle Cross of Individualism", "gates": [38, 39, 48, 21] }
+  },
+  "39": {
+    "right": { "name": "Right Angle Cross of Tension", "gates": [39, 38, 21, 48] },
+    "juxta": { "name": "Juxtaposition Cross of Provocation", "gates": [39, 38, 21, 48] },
+    "left":  { "name": "Left Angle Cross of Individualism", "gates": [39, 38, 21, 48] }
+  },
+  "40": {
+    "right": { "name": "Right Angle Cross of Planning", "gates": [40, 37, 16, 9] },
+    "juxta": { "name": "Juxtaposition Cross of Denial", "gates": [40, 37, 16, 9] },
+    "left":  { "name": "Left Angle Cross of Migration", "gates": [40, 37, 16, 9] }
+  },
+  "41": {
+    "right": { "name": "Right Angle Cross of the Unexpected", "gates": [41, 31, 28, 27] },
+    "juxta": { "name": "Juxtaposition Cross of Fantasy", "gates": [41, 31, 28, 27] },
+    "left":  { "name": "Left Angle Cross of the Alpha", "gates": [41, 31, 28, 27] }
+  },
+  "42": {
+    "right": { "name": "Right Angle Cross of Maya", "gates": [42, 32, 60, 56] },
+    "juxta": { "name": "Juxtaposition Cross of Completion", "gates": [42, 32, 60, 56] },
+    "left":  { "name": "Left Angle Cross of Limitation", "gates": [42, 32, 60, 56] }
+  },
+  "43": {
+    "right": { "name": "Right Angle Cross of Explanation", "gates": [43, 23, 4, 49] },
+    "juxta": { "name": "Juxtaposition Cross of Insight", "gates": [43, 23, 4, 49] },
+    "left":  { "name": "Left Angle Cross of Dedication", "gates": [43, 23, 4, 49] }
+  },
+  "44": {
+    "right": { "name": "Right Angle Cross of the Four Ways", "gates": [44, 24, 19, 33] },
+    "juxta": { "name": "Juxtaposition Cross of Alertness", "gates": [44, 24, 19, 33] },
+    "left":  { "name": "Left Angle Cross of Incarnation", "gates": [44, 24, 19, 33] }
+  },
+  "45": {
+    "right": { "name": "Right Angle Cross of Rulership", "gates": [45, 26, 47, 22] },
+    "juxta": { "name": "Juxtaposition Cross of Possession", "gates": [45, 26, 47, 22] },
+    "left":  { "name": "Left Angle Cross of Confrontation", "gates": [45, 26, 47, 22] }
+  },
+  "46": {
+    "right": { "name": "Right Angle Cross of the Vessel of Love", "gates": [46, 25, 15, 10] },
+    "juxta": { "name": "Juxtaposition Cross of Serendipity", "gates": [46, 25, 15, 10] },
+    "left":  { "name": "Left Angle Cross of the Healing", "gates": [46, 25, 15, 10] }
+  },
+  "47": {
+    "right": { "name": "Right Angle Cross of Rulership", "gates": [47, 22, 45, 26] },
+    "juxta": { "name": "Juxtaposition Cross of Oppression", "gates": [47, 22, 45, 26] },
+    "left":  { "name": "Left Angle Cross of Informing", "gates": [47, 22, 45, 26] }
+  },
+  "48": {
+    "right": { "name": "Right Angle Cross of Tension", "gates": [48, 21, 39, 38] },
+    "juxta": { "name": "Juxtaposition Cross of Depth", "gates": [48, 21, 39, 38] },
+    "left":  { "name": "Left Angle Cross of Endeavor", "gates": [48, 21, 39, 38] }
+  },
+  "49": {
+    "right": { "name": "Right Angle Cross of Explanation", "gates": [49, 4, 14, 8] },
+    "juxta": { "name": "Juxtaposition Cross of Principles", "gates": [49, 4, 14, 8] },
+    "left":  { "name": "Left Angle Cross of Revolution", "gates": [49, 4, 14, 8] }
+  },
+  "50": {
+    "right": { "name": "Right Angle Cross of Laws", "gates": [50, 3, 31, 41] },
+    "juxta": { "name": "Juxtaposition Cross of Values", "gates": [50, 3, 31, 41] },
+    "left":  { "name": "Left Angle Cross of Wishes", "gates": [50, 3, 31, 41] }
+  },
+  "51": {
+    "right": { "name": "Right Angle Cross of Penetration", "gates": [51, 57, 61, 62] },
+    "juxta": { "name": "Juxtaposition Cross of Shock", "gates": [51, 57, 61, 62] },
+    "left":  { "name": "Left Angle Cross of the Clarion", "gates": [51, 57, 61, 62] }
+  },
+  "52": {
+    "right": { "name": "Right Angle Cross of Service", "gates": [52, 58, 17, 18] },
+    "juxta": { "name": "Juxtaposition Cross of Stillness", "gates": [52, 58, 17, 18] },
+    "left":  { "name": "Left Angle Cross of Demands", "gates": [52, 58, 17, 18] }
+  },
+  "53": {
+    "right": { "name": "Right Angle Cross of Penetration", "gates": [53, 54, 57, 51] },
+    "juxta": { "name": "Juxtaposition Cross of Beginnings", "gates": [53, 54, 57, 51] },
+    "left":  { "name": "Left Angle Cross of Cycles", "gates": [53, 54, 57, 51] }
+  },
+  "54": {
+    "right": { "name": "Right Angle Cross of Penetration", "gates": [54, 53, 51, 57] },
+    "juxta": { "name": "Juxtaposition Cross of Ambition", "gates": [54, 53, 51, 57] },
+    "left":  { "name": "Left Angle Cross of Cycles", "gates": [54, 53, 51, 57] }
+  },
+  "55": {
+    "right": { "name": "Right Angle Cross of the Sleeping Phoenix", "gates": [55, 59, 34, 20] },
+    "juxta": { "name": "Juxtaposition Cross of Moods", "gates": [55, 59, 34, 20] },
+    "left":  { "name": "Left Angle Cross of Spirit", "gates": [55, 59, 34, 20] }
+  },
+  "56": {
+    "right": { "name": "Right Angle Cross of Laws", "gates": [56, 60, 3, 50] },
+    "juxta": { "name": "Juxtaposition Cross of Stimulation", "gates": [56, 60, 3, 50] },
+    "left":  { "name": "Left Angle Cross of Distraction", "gates": [56, 60, 3, 50] }
+  },
+  "57": {
+    "right": { "name": "Right Angle Cross of Penetration", "gates": [57, 51, 62, 61] },
+    "juxta": { "name": "Juxtaposition Cross of Intuition", "gates": [57, 51, 62, 61] },
+    "left":  { "name": "Left Angle Cross of the Clarion", "gates": [57, 51, 62, 61] }
+  },
+  "58": {
+    "right": { "name": "Right Angle Cross of Service", "gates": [58, 52, 18, 17] },
+    "juxta": { "name": "Juxtaposition Cross of Vitality", "gates": [58, 52, 18, 17] },
+    "left":  { "name": "Left Angle Cross of Demands", "gates": [58, 52, 18, 17] }
+  },
+  "59": {
+    "right": { "name": "Right Angle Cross of the Sleeping Phoenix", "gates": [59, 55, 20, 34] },
+    "juxta": { "name": "Juxtaposition Cross of Strategy", "gates": [59, 55, 20, 34] },
+    "left":  { "name": "Left Angle Cross of Spirit", "gates": [59, 55, 20, 34] }
+  },
+  "60": {
+    "right": { "name": "Right Angle Cross of Laws", "gates": [60, 56, 50, 3] },
+    "juxta": { "name": "Juxtaposition Cross of Limitation", "gates": [60, 56, 50, 3] },
+    "left":  { "name": "Left Angle Cross of Distraction", "gates": [60, 56, 50, 3] }
+  },
+  "61": {
+    "right": { "name": "Right Angle Cross of Maya", "gates": [61, 62, 32, 42] },
+    "juxta": { "name": "Juxtaposition Cross of Thinking", "gates": [61, 62, 32, 42] },
+    "left":  { "name": "Left Angle Cross of Obscuration", "gates": [61, 62, 32, 42] }
+  },
+  "62": {
+    "right": { "name": "Right Angle Cross of Maya", "gates": [62, 61, 42, 32] },
+    "juxta": { "name": "Juxtaposition Cross of Detail", "gates": [62, 61, 42, 32] },
+    "left":  { "name": "Left Angle Cross of Obscuration", "gates": [62, 61, 42, 32] }
+  },
+  "63": {
+    "right": { "name": "Right Angle Cross of Consciousness", "gates": [63, 64, 5, 35] },
+    "juxta": { "name": "Juxtaposition Cross of Doubts", "gates": [63, 64, 5, 35] },
+    "left":  { "name": "Left Angle Cross of Dominion", "gates": [63, 64, 5, 35] }
+  },
+  "64": {
+    "right": { "name": "Right Angle Cross of Consciousness", "gates": [64, 63, 35, 5] },
+    "juxta": { "name": "Juxtaposition Cross of Confusion", "gates": [64, 63, 35, 5] },
+    "left":  { "name": "Left Angle Cross of Dominion", "gates": [64, 63, 35, 5] }
+  }
+}

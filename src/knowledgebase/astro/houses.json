@@ -1,0 +1,98 @@
+{
+  "1": {
+    "house": 1,
+    "name": "House of Self",
+    "naturalSign": "Aries",
+    "angle": "Ascendant (ASC)",
+    "description": "The First House is the house of self-presentation — how you appear to others and how you instinctively approach new situations. The Ascendant (cusp of H1) is the mask you wear and the lens through which life is filtered. It is the body, physical vitality, and the first impression.",
+    "primeInsight": "In Prime Self, the First House describes how the individual's HD Type and astrological identity are initially perceived by others. The ASC sign colors the presentation of one's strategy."
+  },
+  "2": {
+    "house": 2,
+    "name": "House of Values",
+    "naturalSign": "Taurus",
+    "angle": null,
+    "description": "The Second House governs personal resources, values, self-worth, and material security. It describes what you value, how you earn, and your relationship with physical abundance. Planets here are deeply connected to the question: 'What do I consider worthy of my energy?'",
+    "primeInsight": "In Prime Self, the Second House maps to the values dimension of one's Forge assignment — what the person considers worth investing their life force into."
+  },
+  "3": {
+    "house": 3,
+    "name": "House of Communication",
+    "naturalSign": "Gemini",
+    "angle": null,
+    "description": "The Third House governs daily communication, siblings, immediate environment, short journeys, and the learning mind. It describes how you process and share information in everyday life — your mental habits and communication style.",
+    "primeInsight": "In Prime Self, the Third House correlates with the Throat center's expression style and the Knowledge dimension most accessible for daily learning."
+  },
+  "4": {
+    "house": 4,
+    "name": "House of Roots",
+    "naturalSign": "Cancer",
+    "angle": "Imum Coeli (IC)",
+    "description": "The Fourth House is the foundation — home, family, ancestry, emotional roots, and the inner private self. The IC (cusp of H4) represents the most hidden, intimate part of the psyche. This is where you come from and what you return to for safety.",
+    "primeInsight": "In Prime Self, the Fourth House holds the Design side's deep conditioning — the unconscious patterns inherited from family and ancestry that the bodygraph reveals."
+  },
+  "5": {
+    "house": 5,
+    "name": "House of Creation",
+    "naturalSign": "Leo",
+    "angle": null,
+    "description": "The Fifth House governs creative self-expression, children, romance, play, and the joy of living. It is where the individual's creative impulse becomes manifest — through art, love affairs, children, speculation, and anything that brings personal pleasure through creation.",
+    "primeInsight": "In Prime Self, the Fifth House maps to the Knowledge of Arts and the creative dimension of every Forge — the way the individual's authentic expression finds its most joyful outlet."
+  },
+  "6": {
+    "house": 6,
+    "name": "House of Service",
+    "naturalSign": "Virgo",
+    "angle": null,
+    "description": "The Sixth House governs daily routines, work, health, service, and self-improvement. It is the house of craftsmanship — the daily practices that refine capability and maintain physical wellbeing. It describes how you serve, what work rhythms sustain you, and your relationship with your body.",
+    "primeInsight": "In Prime Self, the Sixth House connects to the Forge of Mastery's daily practice dimension — how the individual refines their skills through consistent, unglamorous work."
+  },
+  "7": {
+    "house": 7,
+    "name": "House of Partnership",
+    "naturalSign": "Libra",
+    "angle": "Descendant (DSC)",
+    "description": "The Seventh House governs committed partnerships, marriage, open enemies, and one-on-one relationships. The Descendant (cusp of H7) describes the qualities you seek in others — often projected parts of yourself. This is the house of the mirror: what you encounter in partnership reflects what you need to integrate.",
+    "primeInsight": "In Prime Self, the Seventh House maps to composite chart dynamics — the energies that activate when the individual enters committed relationships. Electromagnetic connections in HD mirror the polarity of the ASC-DSC axis."
+  },
+  "8": {
+    "house": 8,
+    "name": "House of Transformation",
+    "naturalSign": "Scorpio",
+    "angle": null,
+    "description": "The Eighth House governs shared resources, deep intimacy, death/rebirth cycles, the occult, and other people's values. It is where personal boundaries dissolve and transformation occurs through merging with others or with deeper forces. The Eighth House demands surrender.",
+    "primeInsight": "In Prime Self, the Eighth House maps directly to the Forge of Transformation — the arena where ego structures must be surrendered so deeper identity can emerge."
+  },
+  "9": {
+    "house": 9,
+    "name": "House of Expansion",
+    "naturalSign": "Sagittarius",
+    "angle": null,
+    "description": "The Ninth House governs higher education, philosophy, long journeys, law, publishing, and the quest for meaning. It is where the mind expands beyond personal experience to seek universal truth. This is the house of the teacher, the traveler, and the philosophical seeker.",
+    "primeInsight": "In Prime Self, the Ninth House connects to the Knowledge of Heresies — the individual's drive to question established paradigms and seek their own truth through expanded experience."
+  },
+  "10": {
+    "house": 10,
+    "name": "House of Legacy",
+    "naturalSign": "Capricorn",
+    "angle": "Midheaven (MC)",
+    "description": "The Tenth House governs career, public reputation, authority, and legacy. The Midheaven (cusp of H10) represents the highest aspiration — the visible mark the individual makes on the world. It describes what you're known for, your relationship with authority, and the professional path.",
+    "primeInsight": "In Prime Self, the Tenth House and Midheaven describe the Incarnation Cross's most visible expression — how the life purpose becomes publicly manifest through career and reputation."
+  },
+  "11": {
+    "house": 11,
+    "name": "House of Community",
+    "naturalSign": "Aquarius",
+    "angle": null,
+    "description": "The Eleventh House governs groups, friendships, social ideals, collective vision, and humanitarian goals. It describes the communities you belong to, the causes you champion, and the collective future you're working toward.",
+    "primeInsight": "In Prime Self, the Eleventh House maps to the Cluster dimension — how the individual contributes to and benefits from group dynamics. The HD concept of circuit energy (Individual, Collective, Tribal) corresponds to Eleventh House themes."
+  },
+  "12": {
+    "house": 12,
+    "name": "House of the Unconscious",
+    "naturalSign": "Pisces",
+    "angle": null,
+    "description": "The Twelfth House governs the unconscious, hidden patterns, isolation, spirituality, self-undoing, and transcendence. It is the most mysterious house — holding everything that lies beneath conscious awareness. Planets here operate invisibly but powerfully, often expressing through dreams, intuition, or unconscious habits.",
+    "primeInsight": "In Prime Self, the Twelfth House connects to the Design side of the bodygraph — the unconscious body intelligence that operates below conscious awareness. Understanding Twelfth House placements helps decode the 'why' behind unconscious Design gate activations."
+  }
+}

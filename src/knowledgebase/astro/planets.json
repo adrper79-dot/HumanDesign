@@ -1,0 +1,134 @@
+{
+  "sun": {
+    "planet": "Sun",
+    "glyph": "☉",
+    "hdRole": "Most dominant gate activation — defines core conscious identity",
+    "astroRole": "Core identity, vitality, creative purpose, conscious ego",
+    "orbitalPeriod": "1 year (apparent)",
+    "transitSpeed": "~1° per day",
+    "hdStream": "Both Personality (birth) and Design (88° prior)",
+    "description": "The Sun is the primary identity marker in both systems. In HD, the Sun's gate activation on the Personality side is the most dominant theme — the quality the individual most consciously identifies with. The Design Sun (88° earlier) reveals the unconscious body intelligence. In astrology, the Sun represents the core creative identity and life force.",
+    "primeInsight": "The Personality Sun gate IS the person's most recognizable quality. In Prime Self, the synthesis of the Sun's sign (how), gate (what), and house (where) creates the central identity statement."
+  },
+  "moon": {
+    "planet": "Moon",
+    "glyph": "☽",
+    "hdRole": "Emotional driving force — what the person is driven to express",
+    "astroRole": "Emotional nature, instinctual responses, habits, the unconscious",
+    "orbitalPeriod": "27.3 days",
+    "transitSpeed": "~13° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "The Moon moves fastest and represents the shifting emotional landscape. In HD, the Moon's gate activation points to the emotional driving force — an almost compulsive quality the person needs to express. In astrology, the Moon is the instinctual emotional nature, shaped by early conditioning.",
+    "primeInsight": "The Moon's gate often reveals what the person feels they 'can't help but do.' In Prime Self, the Moon-Sun relationship (sign and gate) maps the conscious-unconscious emotional polarity."
+  },
+  "mercury": {
+    "planet": "Mercury",
+    "glyph": "☿",
+    "hdRole": "Communication style and mental process gate",
+    "astroRole": "Communication, intellect, learning style, perception",
+    "orbitalPeriod": "88 days",
+    "transitSpeed": "~1.5° per day (variable — retrograde periods)",
+    "hdStream": "Both Personality and Design",
+    "description": "Mercury colors how the person thinks and communicates. In HD, Mercury's gate activation indicates the signature communication frequency. In astrology, Mercury shapes the learning style, the way information is processed, and how ideas are exchanged. Mercury's retrograde periods are significant in both systems.",
+    "primeInsight": "Mercury's gate activations often reveal the person's most natural teaching and learning modality. In Prime Self, this maps directly to which of the Six Knowledges the person processes most fluently."
+  },
+  "venus": {
+    "planet": "Venus",
+    "glyph": "♀",
+    "hdRole": "Values and aesthetic gate — what the person finds beautiful or worthy",
+    "astroRole": "Love, beauty, values, relationships, pleasure, art",
+    "orbitalPeriod": "225 days",
+    "transitSpeed": "~1.2° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "Venus reveals what the person values and is attracted to. In HD, Venus's gate activation points to a core value — something the person considers inherently beautiful or worthy. In astrology, Venus governs love language, aesthetic preference, and relationship style.",
+    "primeInsight": "Venus's HD gate often describes what the person would do for free — the activity or quality they find intrinsically rewarding. In Prime Self, Venus maps to the Knowledge of Arts."
+  },
+  "mars": {
+    "planet": "Mars",
+    "glyph": "♂",
+    "hdRole": "Drive and immature energy — raw force seeking proper channel",
+    "astroRole": "Action, drive, aggression, desire, physical energy, courage",
+    "orbitalPeriod": "687 days",
+    "transitSpeed": "~0.5° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "Mars represents raw drive and assertion. In HD, Mars's gate activation points to an energy that can feel immature or aggressive until refined — a quality the person must learn to express constructively. In astrology, Mars governs how the person takes action, asserts will, and channels physical energy.",
+    "primeInsight": "Mars in Prime Self maps to the Forge of Initiation and the Knowledge of Defenses. Its gate reveals where the individual's competitive or combative energy needs conscious channeling."
+  },
+  "jupiter": {
+    "planet": "Jupiter",
+    "glyph": "♃",
+    "hdRole": "Expansion and blessing gate — natural abundance and protection",
+    "astroRole": "Growth, expansion, luck, philosophy, higher learning, abundance",
+    "orbitalPeriod": "11.86 years",
+    "transitSpeed": "~0.08° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "Jupiter expands whatever it touches. In HD, Jupiter's gate activation indicates an area of natural blessing and ease — a quality that flows abundantly. In astrology, Jupiter represents growth, optimism, and the quest for meaning. The Jupiter Return (~age 12, 24, 36, 48) marks significant expansion cycles.",
+    "primeInsight": "Jupiter's gate is often the person's 'secret superpower' — a quality so naturally abundant they may take it for granted. In Prime Self, Jupiter returns are key timing markers for growth phases."
+  },
+  "saturn": {
+    "planet": "Saturn",
+    "glyph": "♄",
+    "hdRole": "Discipline and maturation gate — what must be earned through effort",
+    "astroRole": "Structure, discipline, responsibility, limitation, mastery through time",
+    "orbitalPeriod": "29.46 years",
+    "transitSpeed": "~0.03° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "Saturn constrains and refines. In HD, Saturn's gate activation indicates a quality that requires discipline and repeated effort to master — it doesn't come easy, but the mastery is deep. In astrology, Saturn represents the great teacher whose lessons come through limitation and responsibility. The Saturn Return (~29.5) is the definitive maturation milestone.",
+    "primeInsight": "Saturn's gate is the gate of late mastery — what the person struggles with early but eventually commands. In Prime Self, the Saturn Return marks the transition from conditioned identity to authentic self-knowledge. It maps directly to the Forge of Mastery."
+  },
+  "uranus": {
+    "planet": "Uranus",
+    "glyph": "♅",
+    "hdRole": "Disruption and uniqueness gate — where the person breaks convention",
+    "astroRole": "Innovation, rebellion, awakening, sudden change, individual freedom",
+    "orbitalPeriod": "84 years",
+    "transitSpeed": "~0.01° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "Uranus disrupts established patterns. In HD, Uranus's gate activation points to where the person is inherently unconventional or revolutionary. In astrology, Uranus represents the awakener — liberating what has become too rigid. The Uranus opposition (~42) is the classic midlife awakening.",
+    "primeInsight": "Uranus's gate reveals the person's most authentic deviation from the norm. In Prime Self, Uranus transits are key triggers for the Forge of Initiation — sudden shifts that catalyze entirely new life directions. The Uranus opposition (~42) often coincides with the 6th line 'coming off the roof.'"
+  },
+  "neptune": {
+    "planet": "Neptune",
+    "glyph": "♆",
+    "hdRole": "Spiritual longing and illusion gate — where boundaries dissolve",
+    "astroRole": "Imagination, spirituality, transcendence, illusion, compassion, art",
+    "orbitalPeriod": "165 years",
+    "transitSpeed": "~0.006° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "Neptune dissolves boundaries. In HD, Neptune's gate activation indicates where the person experiences spiritual longing, artistic sensitivity, or confusion about reality. In astrology, Neptune represents the transcendent imagination — the capacity to sense what lies beyond material reality. Neptune square (~42) and opposition (~82) are spiritual milestones.",
+    "primeInsight": "Neptune's gate often reveals the person's primary spiritual or artistic sensitivity. In Prime Self, this maps to the contemplative dimension of the Knowledge of Arts and the mystical aspect of all Six Knowledges."
+  },
+  "pluto": {
+    "planet": "Pluto",
+    "glyph": "♇",
+    "hdRole": "Deep transformation gate — compulsive intensity requiring metamorphosis",
+    "astroRole": "Death/rebirth, power, transformation, the underworld, regeneration",
+    "orbitalPeriod": "248 years",
+    "transitSpeed": "~0.004° per day",
+    "hdStream": "Both Personality and Design",
+    "description": "Pluto represents evolutionary pressure at the deepest level. In HD, Pluto's gate activation indicates where the person experiences compulsive, transformative intensity — a quality that demands total metamorphosis over the lifetime. In astrology, Pluto governs power dynamics, death-rebirth cycles, and the shadow material that must be integrated.",
+    "primeInsight": "Pluto's gate often describes the person's deepest evolutionary assignment. In Prime Self, Pluto maps to the Forge of Transformation — the gate that reveals what must die so something more authentic can emerge."
+  },
+  "northNode": {
+    "planet": "North Node",
+    "glyph": "☊",
+    "hdRole": "Life direction gate — the evolutionary frontier",
+    "astroRole": "Soul purpose, evolutionary direction, growth edge, dharma",
+    "orbitalPeriod": "18.6 years (retrograde)",
+    "transitSpeed": "~0.05° per day (retrograde)",
+    "hdStream": "Both Personality and Design",
+    "description": "The North Node (Mean Node calculated in the engine) represents the evolutionary direction — what the person is growing toward. In HD, the North Node's gate activation indicates a quality the person is developing. In astrology, the North Node points to the soul's growth direction, often felt as uncomfortable but deeply purposeful.",
+    "primeInsight": "The North Node gate is the growth gate — it describes the quality the person is cultivating throughout their life. In Prime Self, the North Node-South Node axis maps to the tension between comfort zone (South) and evolutionary frontier (North), which directly informs the primary Forge assignment."
+  },
+  "southNode": {
+    "planet": "South Node",
+    "glyph": "☋",
+    "hdRole": "Familiar pattern gate — inherited talent and default mode",
+    "astroRole": "Past patterns, innate talents, comfort zone, karmic inheritance",
+    "orbitalPeriod": "18.6 years (retrograde)",
+    "transitSpeed": "~0.05° per day (retrograde)",
+    "hdStream": "Both Personality and Design",
+    "description": "The South Node (always opposite the North Node) represents inherited patterns and default tendencies. In HD, the South Node's gate activation indicates a quality the person has 'mastered' — something that comes easily but may be overrelied upon. In astrology, the South Node carries karmic familiarity.",
+    "primeInsight": "The South Node gate reveals the person's default expertise — the thing they can do in their sleep. In Prime Self, the challenge is not abandoning South Node gifts but expanding beyond them toward North Node growth."
+  }
+}

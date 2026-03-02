@@ -1,0 +1,9 @@
+Secrets.txt
+PLan-convo
+*.env
+.env.*
+node_modules/
+.wrangler/
+dist/
+.vitest/
+*.log

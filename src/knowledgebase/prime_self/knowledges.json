@@ -1,0 +1,66 @@
+{
+  "_meta": {
+    "description": "The Six Knowledges — Prime Self epistemological domains",
+    "note": "Each Knowledge maps to HD circuit/center themes"
+  },
+  "sciences": {
+    "knowledge": "Sciences",
+    "number": 1,
+    "essence": "Systematic understanding through observation, measurement, and logic.",
+    "description": "The Knowledge of Sciences encompasses the systematic study of observable reality — pattern recognition, data analysis, causal reasoning, and the methodical pursuit of verifiable truth. It is the domain of the logical mind applied to understanding how things work. In the Prime Self framework, Sciences is not limited to academic disciplines; it includes any rigorous, evidence-based approach to understanding systems.",
+    "hdMapping": "Logic circuit (Understanding), Ajna center patterns, Gate 63 (Doubt → After Completion), Gate 4 (Formulization), Gate 17 (Opinions → Following)",
+    "astroMapping": "Virgo/Aquarius emphasis, Mercury strength, 6th/11th House",
+    "practicalDomains": ["Data analysis", "Systems thinking", "Research methodology", "Diagnostic reasoning", "Pattern recognition", "Technology"],
+    "primeQuestion": "What can I prove, measure, or systematically verify about this?"
+  },
+  "arts": {
+    "knowledge": "Arts",
+    "number": 2,
+    "essence": "Creative expression that transmits what cannot be said directly.",
+    "description": "The Knowledge of Arts encompasses creative expression in all forms — visual, musical, literary, performative, and the art of living itself. Art is the domain where subjective truth is communicated through beauty, metaphor, and aesthetic experience. In Prime Self, Arts is the knowledge that recognizes: some truths can only be transmitted through creation, not explanation.",
+    "hdMapping": "Sensing circuit (Abstract/Experiential), Gate 1 (Self-Expression), Gate 8 (Contribution), Gate 56 (The Wanderer/Storytelling), Throat center expression gates",
+    "astroMapping": "Leo/Pisces emphasis, Venus/Neptune strength, 5th/12th House",
+    "practicalDomains": ["Visual arts", "Music", "Writing", "Performance", "Design", "Craft", "Culinary arts", "The art of conversation"],
+    "primeQuestion": "What truth can I express through creation that I cannot express through explanation?"
+  },
+  "defenses": {
+    "knowledge": "Defenses",
+    "number": 3,
+    "essence": "The intelligent protection of what is valuable.",
+    "description": "The Knowledge of Defenses encompasses the strategic and tactical awareness needed to protect oneself, one's community, and one's values. This is not aggression; it is the intelligent assessment of threat and the skillful deployment of boundaries and resources. In Prime Self, Defenses includes emotional boundaries, energetic hygiene, strategic thinking, and the discernment to know what deserves protection.",
+    "hdMapping": "Tribal circuit (Defense/Ego), Spleen center awareness, Gate 44 (Alertness), Gate 50 (Values/Guardian), Gate 32 (Continuity), Gate 28 (The Game Player)",
+    "astroMapping": "Aries/Scorpio emphasis, Mars/Pluto strength, 1st/8th House",
+    "practicalDomains": ["Boundary setting", "Strategic planning", "Risk assessment", "Energetic hygiene", "Negotiation", "Conflict resolution", "Resource protection"],
+    "primeQuestion": "What deserves my protection, and what is the most intelligent way to protect it?"
+  },
+  "heresies": {
+    "knowledge": "Heresies",
+    "number": 4,
+    "essence": "The necessary questioning of what everyone assumes is true.",
+    "description": "The Knowledge of Heresies encompasses the contrarian wisdom that questions established paradigms — not from rebellion alone, but from the recognition that collective truth often serves collective comfort rather than individual accuracy. Every genuine innovation began as heresy. In Prime Self, Heresies is the knowledge that asks: what if the established answer is wrong?",
+    "hdMapping": "Individual circuit (Knowing/Centering), Gate 43 (Breakthrough/Insight), Gate 23 (Assimilation/Splitting Apart), Gate 61 (Inner Truth/Mystery), Gate 24 (Rationalization/Return)",
+    "astroMapping": "Aquarius/Sagittarius emphasis, Uranus strength, 9th/11th House",
+    "practicalDomains": ["Paradigm questioning", "Independent thinking", "Innovation", "Philosophical inquiry", "Counter-narrative development", "Whistleblowing", "Intellectual courage"],
+    "primeQuestion": "What am I being told to believe that contradicts what I actually observe?"
+  },
+  "connections": {
+    "knowledge": "Connections",
+    "number": 5,
+    "essence": "The relational intelligence that builds trust and community.",
+    "description": "The Knowledge of Connections encompasses relational wisdom — the understanding of how bonds are formed, maintained, repaired, and sometimes dissolved. It includes emotional intelligence, social dynamics, tribal loyalty, and the chemistry of human interaction. In Prime Self, Connections is the knowledge that recognizes: no individual fulfills their design in isolation.",
+    "hdMapping": "Tribal circuit (Community), Solar Plexus emotional awareness, Gate 37 (Friendship), Gate 40 (Aloneness/Delivery), Gate 6 (Conflict/Friction → Intimacy), Gate 59 (Sexuality/Dispersing)",
+    "astroMapping": "Cancer/Libra emphasis, Moon/Venus strength, 4th/7th House",
+    "practicalDomains": ["Relationship building", "Emotional intelligence", "Community cultivation", "Bonding and trust", "Family dynamics", "Partnership", "Networking"],
+    "primeQuestion": "How do I build and sustain the connections my design requires?"
+  },
+  "mysteries": {
+    "knowledge": "Mysteries",
+    "number": 6,
+    "essence": "The territory beyond the known that can be sensed but not fully mapped.",
+    "description": "The Knowledge of Mysteries encompasses everything that lies at the edge of understanding — intuition, spiritual awareness, synchronicity, dreams, and the recognition that the most important dimensions of reality cannot be reduced to logic or measurement. In Prime Self, Mysteries is the knowledge that holds space for the unknown without collapsing it into premature certainty.",
+    "hdMapping": "Individual circuit (Knowing), Head center inspiration, Gate 61 (Inner Truth), Gate 64 (Before Completion), Gate 63 (After Completion), defined vs undefined centers as openness to mystery",
+    "astroMapping": "Pisces/Scorpio emphasis, Neptune/Pluto strength, 8th/12th House",
+    "practicalDomains": ["Intuitive development", "Contemplative practice", "Dream work", "Synchronicity awareness", "Spiritual inquiry", "Comfort with ambiguity", "Reverence for the unknown"],
+    "primeQuestion": "What is true that I cannot prove — yet know deeply?"
+  }
+}

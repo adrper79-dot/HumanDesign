@@ -1,0 +1,56 @@
+{
+  "conjunction": {
+    "aspect": "Conjunction",
+    "angle": 0,
+    "orb": 8,
+    "symbol": "☌",
+    "nature": "Fusion",
+    "description": "The conjunction merges two planetary energies into a single combined force. Neither planet operates independently — they are fused. This can be powerfully creative when harmonious planets meet, or intensely challenging when conflicting energies are forced together. The conjunction is the most potent aspect.",
+    "primeInsight": "Conjunctions in the natal chart represent fused qualities that the person cannot easily separate. In Prime Self synthesis, conjunctions indicate areas where two archetypal energies operate as one unit."
+  },
+  "opposition": {
+    "aspect": "Opposition",
+    "angle": 180,
+    "orb": 8,
+    "symbol": "☍",
+    "nature": "Polarity and awareness",
+    "description": "The opposition creates a tension between two signs on opposite sides of the zodiac. This polarity generates awareness — the person is pulled between two valid but seemingly contradictory needs. Integration of the opposition is the path: not choosing one side over the other, but finding a dynamic balance that honors both.",
+    "primeInsight": "Oppositions in Prime Self represent the core polarities the person is here to integrate. They often map to the tension between Personality and Design themes, especially when the opposition involves Sun-Earth."
+  },
+  "trine": {
+    "aspect": "Trine",
+    "angle": 120,
+    "orb": 8,
+    "symbol": "△",
+    "nature": "Harmony and flow",
+    "description": "The trine connects planets in signs of the same element, creating effortless flow between the energies. Trines represent natural talents and ease — areas where things come together without friction. The challenge is that ease can become complacency; trines work best when consciously activated.",
+    "primeInsight": "Trines indicate natural harmony between planetary themes. In Prime Self, they reveal where the person's gifts flow most effortlessly — and where the Forge of Mastery finds its easiest entry point."
+  },
+  "square": {
+    "aspect": "Square",
+    "angle": 90,
+    "orb": 8,
+    "symbol": "□",
+    "nature": "Tension and growth catalyst",
+    "description": "The square creates productive friction between planets in signs of the same modality but different elements. Squares are the engine of growth — they generate the tension that forces action, development, and mastery. Without squares, there is little motivation to evolve. They represent challenges that, when met, become the individual's greatest strengths.",
+    "primeInsight": "Squares are the growth catalysts in Prime Self. They map directly to the Forge of Transformation — the friction that demands evolution. A chart with many squares indicates a life of intense development potential."
+  },
+  "sextile": {
+    "aspect": "Sextile",
+    "angle": 60,
+    "orb": 6,
+    "symbol": "⚹",
+    "nature": "Opportunity and collaboration",
+    "description": "The sextile connects planets in compatible elements, creating opportunities for constructive collaboration between the energies. Unlike the trine (which flows automatically), the sextile requires conscious engagement — the opportunity is there, but must be actively used. Sextiles are the aspects of skill-building and creative potential.",
+    "primeInsight": "Sextiles in Prime Self represent available but not automatic synergies. They indicate potential collaborations between life themes that reward conscious effort."
+  },
+  "quincunx": {
+    "aspect": "Quincunx (Inconjunct)",
+    "angle": 150,
+    "orb": 3,
+    "symbol": "⚻",
+    "nature": "Adjustment and integration",
+    "description": "The quincunx connects signs that share neither element, modality, nor polarity — creating a fundamental mismatch that requires constant adjustment. There is no natural resolution; the person must develop a creative workaround to integrate these disparate energies. Quincunxes often produce distinctive originality precisely because the integration is unconventional.",
+    "primeInsight": "Quincunxes in Prime Self indicate where the person's most original contributions emerge from integrating things that don't naturally fit together. These aspects often produce the unique perspective that defines one's Prime Self."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "1/3": {
+    "profile": "1/3",
+    "name": "Investigator / Martyr",
+    "description": "The 1/3 profile combines a deep need for foundational security (Line 1) with a trial-and-error discovery process (Line 3). These individuals need to research and understand things thoroughly at the base level before they feel secure enough to engage with the world. Line 3 ensures that their learning comes through direct experience — bonds made and broken, experiments that succeed and fail. This is the profile of the resilient researcher who builds authority through lived experience, not theory alone.",
+    "conscious": { "line": 1, "theme": "Investigator — driven to establish a secure foundation through deep study and research" },
+    "unconscious": { "line": 3, "theme": "Martyr — learns through trial and error, discovering what works by engaging directly with life" },
+    "primeInsight": "The 1/3 builds unshakeable expertise through the combination of thorough investigation and fearless experimentation. Their authority comes from having both studied AND tested their knowledge in the real world."
+  },
+  "1/4": {
+    "profile": "1/4",
+    "name": "Investigator / Opportunist",
+    "description": "The 1/4 profile pairs deep investigation (Line 1) with a strong interpersonal network (Line 4). These individuals need a solid foundation of knowledge, which they then share through their personal connections. Line 4 operates through relationship — opportunities come through people they know, not through strangers. The 1/4 becomes a trusted authority within their network, sharing well-researched insights with those in their circle.",
+    "conscious": { "line": 1, "theme": "Investigator — needs thorough understanding before feeling secure" },
+    "unconscious": { "line": 4, "theme": "Opportunist — opportunities and influence flow through personal networks" },
+    "primeInsight": "The 1/4 is the network authority — the person everyone calls when they need reliable, well-researched information. Their influence spreads through genuine relationships, not broadcasting."
+  },
+  "2/4": {
+    "profile": "2/4",
+    "name": "Hermit / Opportunist",
+    "description": "The 2/4 profile combines natural talent that prefers solitude (Line 2) with a need for social connection and networking (Line 4). Line 2 carries an innate gift that others can see but the individual often cannot — the 'natural' who needs to be called out of their comfortable retreat. Line 4 ensures they have the relational bonds to be called upon. This creates a rhythm of withdrawal and engagement: retreating to recharge, then emerging when their network beckons.",
+    "conscious": { "line": 2, "theme": "Hermit — possesses natural gifts, needs alone time, must be called out" },
+    "unconscious": { "line": 4, "theme": "Opportunist — deeply relational, opportunities come through personal bonds" },
+    "primeInsight": "The 2/4 is the reluctant expert — their talent is visible to everyone except themselves. Their Prime Self path involves accepting that their gifts are real and allowing their trusted circle to call them into service."
+  },
+  "2/5": {
+    "profile": "2/5",
+    "name": "Hermit / Heretic",
+    "description": "The 2/5 combines natural, unconscious talent (Line 2) with a transpersonal field of projection (Line 5). Line 5 carries a universalizing quality — others project solutions onto the 2/5, expecting them to solve collective problems. When the 2/5 emerges from their hermit retreat, they can indeed deliver practical, universal solutions. But the projection field means they must be selective about which calls to answer, because failure to meet projected expectations leads to reputation damage.",
+    "conscious": { "line": 2, "theme": "Hermit — natural talent, needs solitude to recharge" },
+    "unconscious": { "line": 5, "theme": "Heretic — carries a projection field, expected to deliver universal solutions" },
+    "primeInsight": "The 2/5 is the called savior — emerging from solitude to deliver solutions that others have been projecting onto them. Their challenge is discernment: which calls genuinely match their natural gifts?"
+  },
+  "3/5": {
+    "profile": "3/5",
+    "name": "Martyr / Heretic",
+    "description": "The 3/5 is a deeply experiential profile that combines hands-on discovery (Line 3) with a universalizing projection field (Line 5). These individuals learn through trial and error, and then their discoveries become solutions for the collective. Line 3 breaks bonds and tests limits; Line 5 takes those hard-won lessons and makes them universally applicable. This is the profile of the practical revolutionary whose authority comes from having actually done the thing, not just theorized about it.",
+    "conscious": { "line": 3, "theme": "Martyr — discovers through direct experience, bonds made and broken" },
+    "unconscious": { "line": 5, "theme": "Heretic — translates personal experience into universal solutions" },
+    "primeInsight": "The 3/5 is the battle-tested innovator whose failures and experiments become the foundation for solutions others can use. Their resilience through trial and error builds unassailable practical authority."
+  },
+  "3/6": {
+    "profile": "3/6",
+    "name": "Martyr / Role Model",
+    "description": "The 3/6 profile has three distinct life phases. In the first ~30 years, they live fully in the Line 3 experiential process — making bonds, breaking them, discovering through chaos. Around age 30, the Line 6 'goes to the roof' and begins observing life from above, integrating all those early experiments into wisdom. After roughly age 50, they come off the roof as living examples of what they've learned — role models whose authority comes from having genuinely lived through it all.",
+    "conscious": { "line": 3, "theme": "Martyr — first 30 years of intense experimentation and discovery" },
+    "unconscious": { "line": 6, "theme": "Role Model — three-phase life: chaos → observation → embodied wisdom" },
+    "primeInsight": "The 3/6 is the late bloomer with the most authentic authority of all profiles. Their early chaos is not failure — it is the raw material that, when integrated during the roof phase, produces genuine wisdom that others can trust and follow."
+  },
+  "4/6": {
+    "profile": "4/6",
+    "name": "Opportunist / Role Model",
+    "description": "The 4/6 combines network-based influence (Line 4) with the three-phase role model journey (Line 6). Their opportunities and impact flow through personal relationships, and over the course of their life they evolve from participant to observer to living example. The Line 4 ensures they always have a relational foundation; the Line 6 adds the wisdom dimension that deepens with age.",
+    "conscious": { "line": 4, "theme": "Opportunist — influence and opportunities through close personal bonds" },
+    "unconscious": { "line": 6, "theme": "Role Model — three-phase evolution toward embodied wisdom" },
+    "primeInsight": "The 4/6 becomes the trusted wise elder within their network — someone whose advice carries weight because of both deep relationship and lived experience."
+  },
+  "4/1": {
+    "profile": "4/1",
+    "name": "Opportunist / Investigator",
+    "description": "The 4/1 is a fixed profile on the Left Angle — a transpersonal destiny path. Line 4 operates through network and influence, while Line 1 provides a deep, often unconscious foundation of knowledge. The 4/1 carries an unshakeable base that others sense and trust. Their influence spreads through relationships, anchored by expertise they may not even realize they possess.",
+    "conscious": { "line": 4, "theme": "Opportunist — life operates through personal network and influence" },
+    "unconscious": { "line": 1, "theme": "Investigator — deep, often unconscious foundational security" },
+    "primeInsight": "The 4/1's fixed foundation combined with relational influence makes them a pillar within their community — steady, reliable, and deeply knowledgeable in ways they often take for granted."
+  },
+  "5/1": {
+    "profile": "5/1",
+    "name": "Heretic / Investigator",
+    "description": "The 5/1 carries the strongest projection field in Human Design. Line 5 is universalizing — others look to the 5/1 to solve collective problems. Line 1 provides the deep investigative foundation that can actually back up those projections. When the 5/1 is well-prepared (Line 1 research), they can meet the transpersonal expectations placed on them (Line 5 delivery). Without that foundation, the projection field becomes a liability.",
+    "conscious": { "line": 5, "theme": "Heretic — strong projection field, expected to deliver universal solutions" },
+    "unconscious": { "line": 1, "theme": "Investigator — must have solid foundational knowledge to meet projections" },
+    "primeInsight": "The 5/1 is the practical universalist — capable of delivering solutions to collective problems, but only when they've done the deep homework that Line 1 demands. Preparation is their superpower."
+  },
+  "5/2": {
+    "profile": "5/2",
+    "name": "Heretic / Hermit",
+    "description": "The 5/2 pairs transpersonal projection (Line 5) with natural, unconscious talent that needs solitude (Line 2). Others project solutions onto the 5/2 and call them into action, but the 5/2 needs significant retreat time to recharge their natural gifts. This creates a rhythm: called out to deliver, then withdrawing to recover. The challenge is that the projection field never sleeps, even when the 5/2 needs to be alone.",
+    "conscious": { "line": 5, "theme": "Heretic — universal projection field, called to solve collective problems" },
+    "unconscious": { "line": 2, "theme": "Hermit — natural talent that needs solitude and retreat" },
+    "primeInsight": "The 5/2 must learn to protect their hermit need for solitude from the relentless projection field. When they balance retreat with selective engagement, their natural gifts deliver exactly what the collective needs."
+  },
+  "6/2": {
+    "profile": "6/2",
+    "name": "Role Model / Hermit",
+    "description": "The 6/2 combines the three-phase role model journey (Line 6) with natural, unconscious talent (Line 2). During the first 30 years, they're deeply engaged in trial and error. During the roof phase (30-50), they observe and integrate while their natural gifts operate quietly in the background. After 50, they come off the roof as natural authorities who embody their gifts without effort — role models who don't try to be role models.",
+    "conscious": { "line": 6, "theme": "Role Model — three-phase life journey toward embodied wisdom" },
+    "unconscious": { "line": 2, "theme": "Hermit — natural talent that operates best when not self-conscious" },
+    "primeInsight": "The 6/2's ultimate gift is effortless authority — when they come off the roof, they embody wisdom so naturally that others are drawn to follow without being told. Their best teaching is their way of being."
+  },
+  "6/3": {
+    "profile": "6/3",
+    "name": "Role Model / Martyr",
+    "description": "The 6/3 has arguably the most intense life journey of all profiles. Both lines carry experiential learning — Line 6 through the three-phase process and Line 3 through constant trial and error. The result is a life of deep, sometimes turbulent experience that, when integrated, produces a role model of extraordinary authenticity and resilience. The early years can feel chaotic, but every experiment contributes to the wisdom that emerges later.",
+    "conscious": { "line": 6, "theme": "Role Model — three phases of experiential evolution" },
+    "unconscious": { "line": 3, "theme": "Martyr — continuous experimentation and bond-breaking discovery" },
+    "primeInsight": "The 6/3 is the ultimate 'been there, done that' authority. Their combined experiential depth creates a wisdom that cannot be faked or studied — it can only be lived. They are the proof that the difficult path produces the deepest knowing."
+  }
+}

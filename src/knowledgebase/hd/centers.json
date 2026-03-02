@@ -1,0 +1,101 @@
+{
+  "head": {
+    "center": "Head",
+    "biologicalCorrelate": "Pineal gland",
+    "function": "Inspiration and mental pressure",
+    "type": "Pressure center",
+    "gates": [64, 61, 63],
+    "description": "The Head center is the source of inspiration — the pressure to think, to question, to wonder 'why?' It generates mental pressure that flows downward toward the Ajna for conceptualization. When defined, there is a consistent pressure to think about specific themes. When undefined, the mind is open to inspiration from everywhere but can become overwhelmed by questions that aren't its own to answer.",
+    "definedTheme": "Consistent mental inspiration and questioning along specific themes",
+    "undefinedTheme": "Open to diverse inspiration; challenge is discerning which questions are truly yours",
+    "primeInsight": "The Head center reminds us that not every question needs an answer. The pressure to think is inspirational fuel, not a demand for resolution. In Prime Self, the Head's openness becomes a gift of mental flexibility when not identified with."
+  },
+  "ajna": {
+    "center": "Ajna",
+    "biologicalCorrelate": "Anterior and posterior pituitary glands",
+    "function": "Conceptualization and mental processing",
+    "type": "Awareness center",
+    "gates": [47, 24, 4, 17, 43, 11],
+    "description": "The Ajna is where inspiration from the Head gets processed into concepts, opinions, and mental frameworks. It is the mind's processor — taking raw mental pressure and forming it into coherent thoughts. When defined, there is a fixed way of thinking and processing information. When undefined, there is the capacity to see multiple perspectives but also vulnerability to mental inconsistency.",
+    "definedTheme": "Consistent mental processing and conceptualization style",
+    "undefinedTheme": "Flexible thinking that can see all perspectives; watch for false certainty",
+    "primeInsight": "The Ajna's gift in Prime Self is understanding that the mind is a powerful tool for others but never a reliable authority for the self. Mental certainty ≠ correct decision-making."
+  },
+  "throat": {
+    "center": "Throat",
+    "biologicalCorrelate": "Thyroid and parathyroid glands",
+    "function": "Communication and manifestation",
+    "type": "Motor/manifestation center",
+    "gates": [62, 23, 56, 35, 12, 45, 33, 8, 31, 20, 16],
+    "description": "The Throat center is the hub of expression and action. It is where energy transforms into words and deeds — the center of manifestation. Every center in the bodygraph ultimately seeks connection to the Throat for expression. When defined, there is a consistent voice and manner of communication. The Throat is the most connected center in the chart, with 11 gates and connections to almost every other center.",
+    "definedTheme": "Consistent voice and manifestation capacity",
+    "undefinedTheme": "Flexible expression; challenge is not speaking to attract attention or prove worth",
+    "primeInsight": "The Throat reminds us that real manifestation follows correct timing. Speaking or acting from pressure rather than authority creates noise. In Prime Self, the Throat's power is channeled through strategy-aligned expression."
+  },
+  "g": {
+    "center": "G (Self/Identity)",
+    "biologicalCorrelate": "Liver and blood",
+    "function": "Identity, direction, and love",
+    "type": "Identity center",
+    "gates": [1, 13, 25, 46, 2, 15, 10, 7],
+    "description": "The G center is the seat of identity, direction, and love. It holds the Magnetic Monopole — the organizing principle that holds the illusion of separateness together and drives us in a specific direction through life. When defined, there is a fixed sense of self and direction. When undefined, identity and direction are fluid, deeply influenced by environment and companionship.",
+    "definedTheme": "Fixed sense of identity, direction, and capacity for love",
+    "undefinedTheme": "Fluid identity shaped by environment; the gift of adaptability in who you can be",
+    "primeInsight": "The G center is where the Incarnation Cross speaks loudest. In Prime Self, understanding your G center configuration reveals whether your life direction is self-determined (defined) or environment-dependent (undefined) — neither is better, but the navigation strategy differs completely."
+  },
+  "heart": {
+    "center": "Heart (Ego/Will)",
+    "biologicalCorrelate": "Heart, stomach, thymus, gallbladder",
+    "function": "Willpower, ego, and the material world",
+    "type": "Motor center",
+    "gates": [21, 51, 26, 40],
+    "description": "The Heart center generates willpower — the energy to make and keep promises, compete in the material world, and exercise ego-strength. It is a motor center with a work-rest cycle; willpower is not sustainable 24/7. When defined, there is consistent access to willpower and competitive drive. When undefined, willpower fluctuates and making promises can lead to burnout.",
+    "definedTheme": "Consistent willpower and competitive drive with a natural work-rest cycle",
+    "undefinedTheme": "Variable willpower; the wisdom to know what's truly worth proving",
+    "primeInsight": "The Heart center teaches that willpower is a resource, not an identity. In Prime Self, the undefined Heart's challenge of proving worth becomes its greatest wisdom once the person stops trying to will their way through life."
+  },
+  "sacral": {
+    "center": "Sacral",
+    "biologicalCorrelate": "Ovaries and testes",
+    "function": "Life force, fertility, work energy, and sexuality",
+    "type": "Motor center",
+    "gates": [5, 14, 29, 59, 9, 3, 42, 27, 34],
+    "description": "The Sacral center is the most powerful motor in the bodygraph — the source of life force, work energy, sexuality, and the power to persevere. It is the defining center for Generators and Manifesting Generators. When defined, there is sustainable energy that responds in the moment with gut-level sounds (uh-huh/un-un). When undefined, energy for work is inconsistent — borrowed and amplified from others rather than generated internally.",
+    "definedTheme": "Sustainable life force energy that responds in the moment",
+    "undefinedTheme": "Variable energy; the wisdom of knowing when enough is enough",
+    "primeInsight": "The Sacral is the engine of the Forge of Mastery. In Prime Self, Sacral response is the most reliable decision-making tool for Generators — it knows immediately what is correct to engage with. The key is trusting the gut over the mind."
+  },
+  "spleen": {
+    "center": "Spleen",
+    "biologicalCorrelate": "Spleen, lymphatic system, T-cells",
+    "function": "Survival instinct, intuition, time, health, and fear",
+    "type": "Awareness center",
+    "gates": [48, 57, 44, 50, 32, 28, 18],
+    "description": "The Spleen is the oldest awareness center — the body's immune and survival system operating entirely in the present moment. It communicates through spontaneous, quiet, one-time signals: intuitive hits that don't repeat. Each gate carries a specific fear that, when healthy, serves as a survival instinct. When defined, there is a consistent connection to instinctual awareness and well-being. When undefined, there is heightened sensitivity to health and survival themes.",
+    "definedTheme": "Consistent access to instinctual, in-the-moment awareness",
+    "undefinedTheme": "Amplified survival sensitivity; the gift of reading health and safety in any environment",
+    "primeInsight": "The Spleen speaks once and quietly. In Prime Self, learning to trust the Splenic signal — which may contradict the mind — is a core practice. The seven Splenic fears are not obstacles; they are precision instruments for navigating reality safely."
+  },
+  "solarplexus": {
+    "center": "Solar Plexus (Emotional)",
+    "biologicalCorrelate": "Lungs, kidneys, prostate, pancreas, nervous plexus",
+    "function": "Emotion, feeling, desire, and spirit awareness",
+    "type": "Motor center + Awareness center",
+    "gates": [6, 37, 22, 36, 30, 55, 49],
+    "description": "The Solar Plexus is both a motor and an awareness center — the seat of the emotional wave. It operates in a wave pattern: hope to pain, pleasure to anxiety, desire to disillusionment. There is no truth in the moment for the emotional system; clarity comes over time by riding the wave. When defined, there is a consistent emotional wave that colors all experience. When undefined, emotional openness amplifies others' feelings.",
+    "definedTheme": "Consistent emotional wave providing depth, passion, and spirit awareness",
+    "undefinedTheme": "Emotional empathy and amplification; the challenge is knowing whose feelings you're feeling",
+    "primeInsight": "The Solar Plexus is the most critical center to understand in Prime Self. If defined, it is ALWAYS the authority — no exception. Emotional clarity requires waiting through the wave. The phrase 'there is no truth in the now' is the fundamental operating principle. Patience with the emotional process transforms impulsive decisions into deeply aligned ones."
+  },
+  "root": {
+    "center": "Root",
+    "biologicalCorrelate": "Adrenal glands",
+    "function": "Adrenaline, stress, and drive",
+    "type": "Pressure center + Motor center",
+    "gates": [53, 60, 52, 19, 39, 41, 58, 38, 54],
+    "description": "The Root center is both a pressure center and a motor — the source of adrenalized drive and stress. It creates the pressure to evolve, to do, to start, to finish. When defined, there is a consistent relationship with pressure — it can be a reliable fuel source. When undefined, pressure is amplified and can create a frantic urgency to discharge stress that isn't theirs.",
+    "definedTheme": "Consistent relationship with pressure and adrenaline as fuel",
+    "undefinedTheme": "Amplified pressure sensitivity; the wisdom of knowing not all urgency is real",
+    "primeInsight": "The Root pressure is the engine of evolution. In Prime Self, learning to distinguish healthy drive from amplified urgency is essential. The undefined Root's greatest liberation comes from recognizing: 'This pressure to rush is not mine, and nothing will actually happen if I don't act on it right now.'"
+  }
+}

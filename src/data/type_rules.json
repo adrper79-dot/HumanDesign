@@ -1,0 +1,129 @@
+{
+  "description": "Type and Authority determination rules for Human Design chart calculation",
+
+  "typeRules": {
+    "description": "Applied in order. First match wins.",
+    "rules": [
+      {
+        "type": "Manifesting Generator",
+        "conditions": [
+          "Sacral center is defined",
+          "There exists a continuous channel path from any motor center to the Throat center"
+        ],
+        "strategy": "To Respond",
+        "notSelf": "Frustration",
+        "signature": "Satisfaction"
+      },
+      {
+        "type": "Generator",
+        "conditions": [
+          "Sacral center is defined",
+          "No continuous channel path from any motor center to the Throat center"
+        ],
+        "strategy": "To Respond",
+        "notSelf": "Frustration",
+        "signature": "Satisfaction"
+      },
+      {
+        "type": "Manifestor",
+        "conditions": [
+          "Sacral center is NOT defined",
+          "There exists a continuous channel path from any motor center to the Throat center"
+        ],
+        "strategy": "To Inform",
+        "notSelf": "Anger",
+        "signature": "Peace"
+      },
+      {
+        "type": "Projector",
+        "conditions": [
+          "Sacral center is NOT defined",
+          "No continuous channel path from any motor center to the Throat center",
+          "At least one center is defined"
+        ],
+        "strategy": "Wait for the Invitation",
+        "notSelf": "Bitterness",
+        "signature": "Success"
+      },
+      {
+        "type": "Reflector",
+        "conditions": [
+          "No centers are defined"
+        ],
+        "strategy": "Wait a Lunar Cycle",
+        "notSelf": "Disappointment",
+        "signature": "Surprise"
+      }
+    ]
+  },
+
+  "authorityRules": {
+    "description": "Applied in hierarchy order. First defined center match wins.",
+    "hierarchy": [
+      {
+        "authority": "Emotional - Solar Plexus",
+        "condition": "Solar Plexus center is defined",
+        "description": "Emotional wave must ride its full cycle before clarity. Never make decisions in the high or low of the wave."
+      },
+      {
+        "authority": "Sacral",
+        "condition": "Sacral center is defined AND Solar Plexus is NOT defined",
+        "description": "Gut response in the moment. The sacral responds with sounds and felt sense — yes or no."
+      },
+      {
+        "authority": "Splenic",
+        "condition": "Spleen center is defined AND Sacral and Solar Plexus are NOT defined",
+        "description": "Instantaneous knowing. The spleen speaks once, quietly, in the present moment. Trust the first hit."
+      },
+      {
+        "authority": "Ego / Heart",
+        "condition": "Heart center is defined AND Sacral, Solar Plexus, and Spleen are NOT defined",
+        "description": "Willpower and commitment. If the will is truly engaged — not forced — the direction is correct."
+      },
+      {
+        "authority": "Self-Projected",
+        "condition": "G Center is defined (connects to Throat) AND no lower authorities apply",
+        "description": "Identity speaks through the voice. Talk it through with trusted others and listen to what you say."
+      },
+      {
+        "authority": "Mental (None / Environment)",
+        "condition": "Only Head and/or Ajna are defined AND no lower authorities apply",
+        "description": "No inner authority. Decisions are best made by being in the right environment and bouncing ideas off others."
+      },
+      {
+        "authority": "Lunar",
+        "condition": "No centers are defined (Reflector type)",
+        "description": "Wait through a full lunar cycle (28.5 days) before major decisions. The Moon's transit through all 64 gates gives temporary definition to sample."
+      }
+    ]
+  },
+
+  "profileCombinations": {
+    "description": "Profile = Personality Sun Line / Design Sun Line. 12 possible combinations.",
+    "profiles": {
+      "1/3": { "name": "Investigator / Martyr", "theme": "Foundation through trial and error" },
+      "1/4": { "name": "Investigator / Opportunist", "theme": "Foundation through influence" },
+      "2/4": { "name": "Hermit / Opportunist", "theme": "Natural talent called out through relationships" },
+      "2/5": { "name": "Hermit / Heretic", "theme": "Natural talent projected upon and universalized" },
+      "3/5": { "name": "Martyr / Heretic", "theme": "Trial and error generating practical wisdom for others" },
+      "3/6": { "name": "Martyr / Role Model", "theme": "Discovery through experience becoming lived wisdom" },
+      "4/6": { "name": "Opportunist / Role Model", "theme": "Influence through network becoming living example" },
+      "4/1": { "name": "Opportunist / Investigator", "theme": "Fixed fate through relationships and deep study" },
+      "5/1": { "name": "Heretic / Investigator", "theme": "Practical solutions grounded in deep research" },
+      "5/2": { "name": "Heretic / Hermit", "theme": "Universalized solutions from natural genius" },
+      "6/2": { "name": "Role Model / Hermit", "theme": "Three-part life process — trial, retreat, embodiment" },
+      "6/3": { "name": "Role Model / Martyr", "theme": "Wisdom through lived experience across three life phases" }
+    }
+  },
+
+  "definitionTypes": {
+    "description": "How defined centers are connected to each other",
+    "types": {
+      "None": "No centers defined — Reflector",
+      "Single": "All defined centers connected through channels — one continuous group",
+      "Split": "Defined centers form exactly two separate groups",
+      "TripleSplit": "Defined centers form three separate groups",
+      "QuadrupleSplit": "Defined centers form four separate groups"
+    }
+  }
+}

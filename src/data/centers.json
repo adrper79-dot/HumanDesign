@@ -1,0 +1,60 @@
+{
+  "description": "Human Design 9 Centers with their associated gate numbers",
+  "centers": {
+    "Head": {
+      "gates": [61, 63, 64],
+      "biologicalCorrelate": "Pineal gland — mental pressure, inspiration",
+      "function": "Pressure to think, to be inspired, to answer questions",
+      "motor": false
+    },
+    "Ajna": {
+      "gates": [4, 11, 17, 24, 43, 47],
+      "biologicalCorrelate": "Anterior and posterior pituitary — conceptualization",
+      "function": "Processing, conceptualizing, forming opinions and theories",
+      "motor": false
+    },
+    "Throat": {
+      "gates": [8, 12, 16, 20, 23, 31, 33, 35, 45, 56, 62],
+      "biologicalCorrelate": "Thyroid and parathyroid — expression, manifestation",
+      "function": "Communication, expression, manifestation into form, action",
+      "motor": false
+    },
+    "G": {
+      "gates": [1, 2, 7, 10, 13, 15, 25, 46],
+      "biologicalCorrelate": "Liver, blood — identity, direction, love",
+      "function": "Identity, direction in life, love, self-expression",
+      "motor": false
+    },
+    "Heart": {
+      "gates": [21, 26, 40, 51],
+      "biologicalCorrelate": "Heart, gallbladder, stomach, thymus — willpower",
+      "function": "Willpower, ego, material world, self-worth, courage",
+      "motor": true
+    },
+    "SolarPlexus": {
+      "gates": [6, 22, 30, 36, 37, 49, 55],
+      "biologicalCorrelate": "Kidneys, prostate, pancreas, nervous system — emotions",
+      "function": "Emotions, feelings, desire, sensitivity, emotional wave",
+      "motor": true
+    },
+    "Sacral": {
+      "gates": [3, 5, 9, 14, 27, 29, 34, 42, 59],
+      "biologicalCorrelate": "Ovaries, testes — life force, fertility, sexuality",
+      "function": "Life force energy, work capacity, fertility, response, availability",
+      "motor": true
+    },
+    "Spleen": {
+      "gates": [18, 28, 32, 44, 48, 50, 57],
+      "biologicalCorrelate": "Lymphatic system, spleen, T-cells — immune system, intuition",
+      "function": "Survival, health, intuition, time, fear, instinct, taste and values",
+      "motor": false
+    },
+    "Root": {
+      "gates": [19, 38, 39, 41, 52, 53, 54, 58, 60],
+      "biologicalCorrelate": "Adrenal glands — stress, adrenaline, pressure",
+      "function": "Pressure to evolve, stress management, drive, fuel for ambition",
+      "motor": true
+    }
+  },
+  "motorCenters": ["Heart", "SolarPlexus", "Sacral", "Root"]
+}
