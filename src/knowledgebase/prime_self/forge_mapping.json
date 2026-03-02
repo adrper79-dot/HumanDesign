@@ -1,0 +1,111 @@
+{
+  "_meta": {
+    "description": "Forge Mapping — deterministic and weighted rules for identifying a person's primary and secondary Forge from HD and Astrology data",
+    "usage": "Used by synthesis.js and rag.js to ground Forge identification in specific chart signatures"
+  },
+  "primaryRules": {
+    "_note": "Primary Forge is determined first by HD Type, then refined by defined centers, active gates, and astrological emphasis. Weight values indicate relative importance (higher = stronger indicator).",
+    "byType": {
+      "Manifestor": {
+        "forge": "Initiation",
+        "confidence": "high",
+        "weight": 10,
+        "rationale": "Manifestors carry the initiating aura — closed and repelling — designed to act first and inform second. The Forge of Initiation is their natural arena."
+      },
+      "Generator": {
+        "forge": "Mastery",
+        "confidence": "high",
+        "weight": 10,
+        "rationale": "Generators have consistent Sacral energy for sustained work. The Forge of Mastery — deep, satisfying engagement — is their natural arena."
+      },
+      "Manifesting Generator": {
+        "forge": "Mastery",
+        "confidence": "high",
+        "weight": 10,
+        "rationale": "Manifesting Generators share the Sacral definition with Generators. Mastery is primary, though the motor-to-Throat connection adds Initiation as a strong secondary."
+      },
+      "Projector": {
+        "forge": "Guidance",
+        "confidence": "high",
+        "weight": 10,
+        "rationale": "Projectors carry the focused, absorbing aura designed to penetrate and see others. The Forge of Guidance — recognizing and directing others' energy — is their natural arena."
+      },
+      "Reflector": {
+        "forge": "Perception",
+        "confidence": "high",
+        "weight": 10,
+        "rationale": "Reflectors have a completely open design that samples the entire environment. The Forge of Perception — mirroring collective truth — is their natural arena."
+      }
+    }
+  },
+  "secondaryIndicators": {
+    "_note": "These indicators modify or add secondary Forge identification. Each returns a Forge name and a weight to be summed.",
+    "hdGateIndicators": [
+      { "gates": [51, 21, 25], "forge": "Initiation", "weight": 3, "label": "Initiating gates active" },
+      { "gates": [14, 34, 9, 5], "forge": "Mastery", "weight": 3, "label": "Mastery/Sacral gates active" },
+      { "gates": [7, 31, 8, 1], "forge": "Guidance", "weight": 3, "label": "Guidance/Leadership gates active" },
+      { "gates": [48, 57], "forge": "Perception", "weight": 3, "label": "Depth/Intuitive gates active" },
+      { "gates": [28, 32, 50], "forge": "Transformation", "weight": 3, "label": "Transformation/Values gates active" }
+    ],
+    "hdCenterIndicators": [
+      { "center": "Throat", "defined": true, "forge": "Initiation", "weight": 2, "label": "Defined Throat — manifestation capacity" },
+      { "center": "Sacral", "defined": true, "forge": "Mastery", "weight": 2, "label": "Defined Sacral — sustained life force" },
+      { "center": "G", "defined": true, "forge": "Guidance", "weight": 2, "label": "Defined G Center — identity/direction clarity" },
+      { "center": "Spleen", "defined": true, "forge": "Perception", "weight": 2, "label": "Defined Spleen — moment-to-moment awareness" },
+      { "center": "Solar Plexus", "defined": true, "forge": "Transformation", "weight": 2, "label": "Defined Solar Plexus — emotional wave and depth" }
+    ],
+    "hdMotorToThroat": {
+      "_note": "Motor-to-Throat connection is a strong Initiation indicator regardless of type",
+      "forge": "Initiation",
+      "weight": 4,
+      "label": "Motor center connected to Throat — manifestation channel"
+    },
+    "astroSignIndicators": [
+      { "signs": ["Aries"], "forge": "Initiation", "weight": 2, "planets": ["Sun", "Moon", "Mars", "Ascendant"] },
+      { "signs": ["Taurus", "Capricorn"], "forge": "Mastery", "weight": 2, "planets": ["Sun", "Moon", "Saturn"] },
+      { "signs": ["Libra", "Aquarius"], "forge": "Guidance", "weight": 2, "planets": ["Sun", "Moon", "Jupiter"] },
+      { "signs": ["Pisces", "Cancer"], "forge": "Perception", "weight": 2, "planets": ["Sun", "Moon", "Neptune"] },
+      { "signs": ["Scorpio"], "forge": "Transformation", "weight": 2, "planets": ["Sun", "Moon", "Pluto"] }
+    ],
+    "astroHouseIndicators": [
+      { "houses": [1], "forge": "Initiation", "weight": 1, "label": "1st House emphasis" },
+      { "houses": [6, 10], "forge": "Mastery", "weight": 1, "label": "6th/10th House emphasis" },
+      { "houses": [7, 11], "forge": "Guidance", "weight": 1, "label": "7th/11th House emphasis" },
+      { "houses": [4, 12], "forge": "Perception", "weight": 1, "label": "4th/12th House emphasis" },
+      { "houses": [8], "forge": "Transformation", "weight": 1, "label": "8th House emphasis" }
+    ]
+  },
+  "transformationOverride": {
+    "_note": "Transformation (Phoenix) is not type-specific. It activates when specific transit or natal conditions are present.",
+    "triggers": [
+      "Pluto gate activation in personality or design Sun/Earth",
+      "Active Saturn Return transit (within 2° orb)",
+      "Chiron Return transit (within 2° orb)",
+      "3+ Scorpio placements (Sun, Moon, or inner planets)",
+      "8th House stellium (3+ planets)",
+      "Gate 28-32-50 channel formation with transit activation"
+    ],
+    "behavior": "When transformation triggers are detected, add Transformation as a parallel Forge alongside the primary. It does not replace the primary Forge but indicates the person is in an active metamorphic period."
+  },
+  "scoringAlgorithm": {
+    "_note": "How to compute Forge scores from the indicators above",
+    "steps": [
+      "1. Start with byType mapping — this gives the primary Forge a base weight of 10",
+      "2. Sum hdGateIndicators: for each active gate, if it appears in an indicator set, add that weight to the corresponding Forge",
+      "3. Sum hdCenterIndicators: for each defined center, add the weight to the corresponding Forge",
+      "4. Check hdMotorToThroat: if any motor center connects to Throat, add weight to Initiation",
+      "5. Sum astroSignIndicators: for each qualifying planet in a qualifying sign, add the weight",
+      "6. Sum astroHouseIndicators: for each planet in a qualifying house, add the weight",
+      "7. The Forge with the highest total score is the Primary Forge",
+      "8. The Forge with the second-highest score is the Secondary Forge (if score > 5)",
+      "9. Check transformationOverride triggers — if any are active, add Transformation as a parallel Forge"
+    ]
+  },
+  "forgeArchetypes": {
+    "Initiation": { "archetype": "Chronos", "element": "Fire", "keyword": "Begin" },
+    "Mastery": { "archetype": "Eros", "element": "Earth", "keyword": "Build" },
+    "Guidance": { "archetype": "Aether", "element": "Air", "keyword": "Direct" },
+    "Perception": { "archetype": "Lux", "element": "Water", "keyword": "Mirror" },
+    "Transformation": { "archetype": "Phoenix", "element": "Void", "keyword": "Dissolve" }
+  }
+}

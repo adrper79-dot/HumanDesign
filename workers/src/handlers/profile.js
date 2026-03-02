@@ -17,11 +17,23 @@
  */
 
 import { calculateFullChart } from '../../../src/engine/index.js';
+import { getCurrentTransits } from '../../../src/engine/transits.js';
 import {
   buildSynthesisPrompt,
   validateSynthesisResponse,
   buildReprompt
 } from '../../../src/prompts/synthesis.js';
+
+/** 24-hour TTL for cached natal charts (seconds). */
+const CHART_CACHE_TTL = 86400;
+
+/**
+ * Build a deterministic cache key from birth parameters.
+ * Natal chart is fully deterministic for the same inputs.
+ */
+function chartCacheKey(birthDate, birthTime, lat, lng) {
+  return `chart:${birthDate}:${birthTime}:${lat}:${lng}`;
+}
 
 export async function handleProfile(request, env) {
   const body = await request.json();
@@ -45,12 +57,46 @@ export async function handleProfile(request, env) {
   // TODO: Proper timezone conversion (shared with calculate.js)
   const utc = { year, month, day, hour, minute, second: 0 };
 
-  // Run Layers 1-7
-  const chart = calculateFullChart({
-    ...utc,
-    lat: parseFloat(lat),
-    lng: parseFloat(lng)
-  });
+  // ── Chart Caching (Build Bible step 2) ──
+  const cacheKey = chartCacheKey(birthDate, birthTime, lat, lng);
+  let chart = null;
+  let cacheHit = false;
+
+  // Try KV cache for natal chart (Layers 1-6)
+  if (env.CACHE) {
+    try {
+      const cached = await env.CACHE.get(cacheKey, 'json');
+      if (cached) {
+        // Cache hit — recompute only transits (Layer 7)
+        chart = cached;
+        chart.transits = getCurrentTransits(chart.chart, chart.astrology);
+        cacheHit = true;
+      }
+    } catch {
+      // Cache read failed — fall through to fresh calculation
+    }
+  }
+
+  // Cache miss — run full Layers 1-6, then Layer 7
+  if (!chart) {
+    chart = calculateFullChart({
+      ...utc,
+      lat: parseFloat(lat),
+      lng: parseFloat(lng)
+    });
+
+    // Cache the natal portion (everything except transits) in KV
+    if (env.CACHE) {
+      try {
+        const natalOnly = { ...chart, transits: null };
+        await env.CACHE.put(cacheKey, JSON.stringify(natalOnly), {
+          expirationTtl: CHART_CACHE_TTL
+        });
+      } catch {
+        // Cache write failed — non-fatal
+      }
+    }
+  }
 
   // Build Layer 8 prompt
   const promptPayload = buildSynthesisPrompt({
@@ -115,6 +161,7 @@ export async function handleProfile(request, env) {
       partialGrounding: validation.partialGrounding || false,
       validationErrors: validation.errors,
       model: promptPayload.config.model,
+      chartCacheHit: cacheHit,
       calculatedAt: new Date().toISOString()
     }
   });

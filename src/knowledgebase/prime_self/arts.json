@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "knowledge": "Arts",
+    "number": 2,
+    "description": "Expanded reference for the Knowledge of Arts — creative expression that transmits what cannot be said directly"
+  },
+  "essence": "Creative expression that transmits what cannot be said directly.",
+  "hdMapping": {
+    "primaryCircuit": "Sensing (Abstract/Experiential)",
+    "primaryCenter": "Throat",
+    "coreGates": [1, 8, 56, 62, 33, 13],
+    "gateDescriptions": {
+      "1": "Self-Expression / The Creative — the pure drive to express individual identity through creative output",
+      "8": "Contribution / Holding Together — the desire to make a unique contribution that is recognized",
+      "56": "The Wanderer / Storytelling — transforming experience into narrative that stimulates others",
+      "62": "Detail / Preponderance of the Small — precision in naming and expressing subtle distinctions",
+      "33": "Privacy / Retreat — the withdrawal necessary for creative gestation and reflection",
+      "13": "The Listener / Fellowship — gathering stories and experiences as raw material for creative synthesis"
+    },
+    "supportingCenters": ["Throat", "G Center", "Solar Plexus"],
+    "circuitTheme": "The Abstract/Experiential circuit transforms lived experience into wisdom through reflection and expression. Arts is the knowledge domain that channels this transformation — turning raw feeling into communicable form."
+  },
+  "astroMapping": {
+    "primarySigns": ["Leo", "Pisces"],
+    "primaryPlanets": ["Venus", "Neptune"],
+    "houses": [5, 12],
+    "aspects": "Venus aspects govern aesthetic sense and creative pleasure. Neptune aspects add imagination and transcendent vision. Leo placements emphasize bold self-expression. Pisces placements bring emotional depth and boundary dissolution that feeds creative flow."
+  },
+  "practicalDomains": [
+    "Visual arts — painting, sculpture, photography, film",
+    "Music — composition, performance, production",
+    "Writing — poetry, fiction, essays, journalism",
+    "Performance — theater, dance, spoken word",
+    "Design — graphic, industrial, architectural, UX",
+    "Craft — woodwork, textiles, ceramics, culinary arts",
+    "The art of conversation — eloquence, wit, storytelling",
+    "Aesthetic curation — creating environments that evoke specific states"
+  ],
+  "developmentStages": {
+    "novice": "Overcoming the fear of judgment. Learning to create without editing simultaneously. Building a regular creative practice regardless of output quality.",
+    "practitioner": "Developing technical skill in chosen medium. Learning to channel emotional truth through form. Finding one's authentic creative voice distinct from influences.",
+    "master": "The merger of technical mastery with spontaneous expression. Creating work that communicates on subconscious levels. The ability to transmit states of being that words cannot capture."
+  },
+  "shadowExpressions": [
+    "Perfectionism that prevents creation from being shared",
+    "Creative narcissism — art as ego vehicle rather than truth transmission",
+    "Aesthetic escapism — retreating into beauty to avoid practical reality",
+    "Derivative creation — imitating rather than originating"
+  ],
+  "integrationPractices": [
+    "Maintain a daily creative practice — even 15 minutes counts",
+    "Consume diverse art forms outside your primary medium",
+    "Create for process, not product. Let some work be deliberately impermanent",
+    "Share work before it feels ready — creative courage builds through exposure"
+  ],
+  "primeQuestion": "What truth can I express through creation that I cannot express through explanation?"
+}

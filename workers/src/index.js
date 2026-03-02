@@ -17,6 +17,9 @@
  *   GET  /api/health                   – Health check
  */
 
+// Data injection for Workers runtime — MUST be first import
+import './engine-compat.js';
+
 import { handleCalculate } from './handlers/calculate.js';
 import { handleProfile } from './handlers/profile.js';
 import { handleTransits } from './handlers/transits.js';

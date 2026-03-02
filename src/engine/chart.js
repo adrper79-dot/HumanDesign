@@ -25,9 +25,15 @@ const __dirname = dirname(__filename);
 
 let crossesData = {};
 try {
-  crossesData = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'crosses.json'), 'utf8'));
+  if (globalThis.__PRIME_DATA?.crosses) {
+    // Workers runtime — data injected by engine-compat.js
+    crossesData = globalThis.__PRIME_DATA.crosses;
+  } else {
+    // Node.js runtime — read from filesystem
+    crossesData = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'crosses.json'), 'utf8'));
+  }
 } catch {
-  // Falls back gracefully if crosses.json is unavailable (e.g. Workers bundle)
+  // Falls back gracefully if crosses.json is unavailable
 }
 
 // ─── CHANNEL DEFINITIONS ────────────────────────────────────────

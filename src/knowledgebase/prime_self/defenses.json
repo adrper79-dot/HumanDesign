@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "knowledge": "Defenses",
+    "number": 3,
+    "description": "Expanded reference for the Knowledge of Defenses — the intelligent protection of what is valuable"
+  },
+  "essence": "The intelligent protection of what is valuable.",
+  "hdMapping": {
+    "primaryCircuit": "Tribal (Defense/Ego)",
+    "primaryCenter": "Spleen",
+    "coreGates": [44, 50, 32, 28, 18, 57],
+    "gateDescriptions": {
+      "44": "Alertness / Coming to Meet — pattern recognition that detects opportunity and threat before they arrive",
+      "50": "Values / The Cauldron — the guardian instinct that protects what the tribe considers sacred and necessary",
+      "32": "Continuity / Duration — the instinct for sustainability, ensuring what is built can endure",
+      "28": "The Game Player / Preponderance of the Great — the willingness to risk when the stakes are worth it",
+      "18": "Correction / Work on What Has Been Spoiled — the drive to identify and fix what is not working",
+      "57": "Intuitive Clarity / The Gentle — the Spleen's moment-to-moment survival awareness"
+    },
+    "supportingCenters": ["Spleen", "Heart/Ego", "Root"],
+    "circuitTheme": "The Tribal Defense circuit ensures survival and resource protection for the community. Defenses is the knowledge domain that operationalizes strategic awareness — knowing what to protect, when to hold firm, and when to yield."
+  },
+  "astroMapping": {
+    "primarySigns": ["Aries", "Scorpio"],
+    "primaryPlanets": ["Mars", "Pluto"],
+    "houses": [1, 8],
+    "aspects": "Mars aspects provide assertive energy for boundary enforcement. Pluto aspects add depth perception and the ability to detect hidden dynamics. Aries placements emphasize direct protective action. Scorpio placements add strategic depth and psychological awareness."
+  },
+  "practicalDomains": [
+    "Boundary setting — personal, professional, energetic",
+    "Strategic planning and risk assessment",
+    "Energetic hygiene — managing what you absorb from environments",
+    "Negotiation and conflict resolution",
+    "Resource protection and management",
+    "Security thinking — identifying vulnerabilities before they are exploited",
+    "Discernment — knowing who and what to trust",
+    "Protective leadership — standing between threats and those who depend on you"
+  ],
+  "developmentStages": {
+    "novice": "Learning to recognize that you have the right to boundaries. Overcoming people-pleasing patterns. Practicing simple 'no' statements.",
+    "practitioner": "Building nuanced boundary systems. Learning to defend without aggression. Developing strategic awareness — anticipating threats rather than only reacting.",
+    "master": "Effortless boundary maintenance that others respect without resentment. The ability to protect while remaining open. Strategic defense so well-designed that it rarely needs to be deployed."
+  },
+  "shadowExpressions": [
+    "Hypervigilance — seeing threats everywhere and living in perpetual defense mode",
+    "Walls instead of boundaries — shutting out nourishment along with threats",
+    "Aggression disguised as protection — offensive action labeled defensive",
+    "Control masquerading as care — restricting others under the guise of keeping them safe"
+  ],
+  "integrationPractices": [
+    "Audit your current boundaries: where are you over-defended? Under-defended?",
+    "Practice the Clean No — declining without justification, explanation, or apology",
+    "Identify your three most valuable resources (time, energy, attention) and build explicit protection around them",
+    "Study one defensive art — martial arts, negotiation, or strategic game theory — to embody protective intelligence"
+  ],
+  "primeQuestion": "What deserves my protection, and what is the most intelligent way to protect it?"
+}

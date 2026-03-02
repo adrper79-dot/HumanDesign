@@ -278,7 +278,13 @@ function loadKB(category, file) {
   const key = `${category}/${file}`;
   if (!_kbCache[key]) {
     try {
-      _kbCache[key] = JSON.parse(readFileSync(join(KB_ROOT, category, file), 'utf8'));
+      // Workers runtime — data injected by engine-compat.js
+      if (globalThis.__PRIME_DATA?.kb?.[key]) {
+        _kbCache[key] = globalThis.__PRIME_DATA.kb[key];
+      } else {
+        // Node.js runtime — read from filesystem
+        _kbCache[key] = JSON.parse(readFileSync(join(KB_ROOT, category, file), 'utf8'));
+      }
     } catch { _kbCache[key] = {}; }
   }
   return _kbCache[key];

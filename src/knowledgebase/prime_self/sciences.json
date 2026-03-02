@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "knowledge": "Sciences",
+    "number": 1,
+    "description": "Expanded reference for the Knowledge of Sciences — systematic understanding through observation, measurement, and logic"
+  },
+  "essence": "Systematic understanding through observation, measurement, and logic.",
+  "hdMapping": {
+    "primaryCircuit": "Logic (Understanding)",
+    "primaryCenter": "Ajna",
+    "coreGates": [63, 4, 17, 62, 16, 48],
+    "gateDescriptions": {
+      "63": "Doubt / After Completion — the pressure to verify, to test what has been accepted",
+      "4": "Formulization — the mental drive to find answers through logical structure",
+      "17": "Opinions / Following — the capacity to form and express logically defensible views",
+      "62": "Detail / Preponderance of the Small — precision in naming and categorizing",
+      "16": "Skills / Enthusiasm — the mastery of technique through practiced repetition",
+      "48": "Depth / The Well — the deep reservoir of accumulated understanding"
+    },
+    "supportingCenters": ["Ajna", "Head", "Throat"],
+    "circuitTheme": "The Logic circuit moves information from doubt to proof. Sciences is the knowledge domain that lives in this circuit — the discipline of testing, measuring, and building reliable models of reality."
+  },
+  "astroMapping": {
+    "primarySigns": ["Virgo", "Aquarius"],
+    "primaryPlanets": ["Mercury"],
+    "houses": [6, 11],
+    "aspects": "Strong Mercury aspects (especially trine/sextile to Saturn) support systematic thinking. Virgo placements emphasize analytical precision. Aquarius placements add systems-level pattern recognition."
+  },
+  "practicalDomains": [
+    "Data analysis and interpretation",
+    "Systems thinking and modeling",
+    "Research methodology and experimental design",
+    "Diagnostic reasoning and troubleshooting",
+    "Pattern recognition across datasets",
+    "Technology development and engineering",
+    "Statistical literacy",
+    "Scientific communication"
+  ],
+  "developmentStages": {
+    "novice": "Learning to observe without immediately interpreting. Building tolerance for uncertainty and incomplete data.",
+    "practitioner": "Applying systematic methods to real problems. Distinguishing correlation from causation. Building reliable measurement habits.",
+    "master": "Intuitive pattern recognition backed by rigorous verification. The ability to see the system behind the symptoms. Teaching others to think systematically."
+  },
+  "shadowExpressions": [
+    "Reductionism — reducing everything to data and losing the human dimension",
+    "Analysis paralysis — gathering information indefinitely to avoid acting",
+    "Intellectual arrogance — dismissing non-logical ways of knowing",
+    "Measurement fixation — measuring what is easy rather than what matters"
+  ],
+  "integrationPractices": [
+    "Maintain a systematic journal of observations and hypotheses",
+    "Practice the scientific method in daily decisions: observe, hypothesize, test, revise",
+    "Study one complex system deeply rather than many systems superficially",
+    "Balance analytical work with embodied practices to prevent over-mentalization"
+  ],
+  "primeQuestion": "What can I prove, measure, or systematically verify about this?"
+}
