@@ -13,6 +13,7 @@
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
+import { parseToUTC } from '../utils/parseToUTC.js';
 
 export async function handleTransits(request, env) {
   const url = new URL(request.url);
@@ -22,16 +23,16 @@ export async function handleTransits(request, env) {
   // Inline birth data for natal comparison
   const birthDate = url.searchParams.get('birthDate');
   const birthTime = url.searchParams.get('birthTime');
+  const birthTimezone = url.searchParams.get('birthTimezone');
 
   let natalChart = null;
   let natalAstro = null;
 
   if (birthDate && birthTime) {
-    const [year, month, day] = birthDate.split('-').map(Number);
-    const [hour, minute] = birthTime.split(':').map(Number);
+    const utc = parseToUTC(birthDate, birthTime, birthTimezone || undefined);
 
     const chart = calculateFullChart({
-      year, month, day, hour, minute, second: 0,
+      ...utc,
       lat, lng
     });
 

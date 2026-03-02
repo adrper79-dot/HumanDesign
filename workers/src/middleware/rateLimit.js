@@ -21,7 +21,7 @@ const RATE_LIMITS = {
  * @param {object} env — must have RATE_LIMIT_KV binding
  */
 export async function rateLimit(request, env) {
-  const kv = env.RATE_LIMIT_KV;
+  const kv = env.CACHE;
   if (!kv) return null; // KV not bound — skip rate limiting
 
   const url = new URL(request.url);

@@ -17,6 +17,7 @@
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 export async function handleCalculate(request, env) {
   const body = await request.json();
@@ -52,10 +53,27 @@ export async function handleCalculate(request, env) {
     lng: parseFloat(lng)
   });
 
+  // Non-blocking DB persistence — save chart if user is authenticated
+  let chartId = null;
+  const userId = request._user?.sub;
+  if (userId && env.NEON_CONNECTION_STRING) {
+    try {
+      const query = createQueryFn(env.NEON_CONNECTION_STRING);
+      const hdJson = JSON.stringify(result.chart || result);
+      const astroJson = JSON.stringify(result.westernAstrology || null);
+      const saved = await query(QUERIES.saveChart, [userId, hdJson, astroJson]);
+      chartId = saved?.rows?.[0]?.id || null;
+    } catch (e) {
+      // DB failure is non-fatal — chart still returned
+      console.error('Chart DB save failed:', e.message);
+    }
+  }
+
   return Response.json({
     success: true,
     data: result,
     meta: {
+      chartId,
       utcInput: utc,
       calculatedAt: new Date().toISOString()
     }

@@ -23,6 +23,8 @@ import {
   validateSynthesisResponse,
   buildReprompt
 } from '../../../src/prompts/synthesis.js';
+import { parseToUTC } from '../utils/parseToUTC.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 /** 24-hour TTL for cached natal charts (seconds). */
 const CHART_CACHE_TTL = 86400;
@@ -51,11 +53,8 @@ export async function handleProfile(request, env) {
 
   const { birthDate, birthTime, birthTimezone, lat, lng, question } = body;
 
-  // Convert to UTC (reuse logic from calculate handler)
-  const [year, month, day] = birthDate.split('-').map(Number);
-  const [hour, minute] = birthTime.split(':').map(Number);
-  // TODO: Proper timezone conversion (shared with calculate.js)
-  const utc = { year, month, day, hour, minute, second: 0 };
+  // Convert to UTC using shared utility
+  const utc = parseToUTC(birthDate, birthTime, birthTimezone);
 
   // ── Chart Caching (Build Bible step 2) ──
   const cacheKey = chartCacheKey(birthDate, birthTime, lat, lng);
@@ -146,6 +145,41 @@ export async function handleProfile(request, env) {
     }
   }
 
+  // ── DB Persistence (non-blocking) ──
+  // Save chart + profile to Neon for history & caching
+  let chartId = null;
+  let profileId = null;
+  const userId = request._user?.sub || null; // From JWT auth
+
+  if (env.NEON_CONNECTION_STRING && userId) {
+    try {
+      const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+      // Save chart
+      const chartResult = await query(QUERIES.saveChart, [
+        userId,
+        JSON.stringify(chart.chart),
+        JSON.stringify(chart.astrology)
+      ]);
+      chartId = chartResult.rows?.[0]?.id || null;
+
+      // Save profile
+      if (validation.parsed && chartId) {
+        const profileResult = await query(QUERIES.saveProfile, [
+          userId,
+          chartId,
+          JSON.stringify(validation.parsed.primeProfile || validation.parsed),
+          promptPayload.config.model,
+          JSON.stringify(validation.parsed.groundingAudit || {})
+        ]);
+        profileId = profileResult.rows?.[0]?.id || null;
+      }
+    } catch (err) {
+      // DB save failure is non-fatal — log and continue
+      console.error('DB save failed:', err.message);
+    }
+  }
+
   return Response.json({
     success: true,
     profile: validation.parsed?.primeProfile || null,
@@ -162,6 +196,8 @@ export async function handleProfile(request, env) {
       validationErrors: validation.errors,
       model: promptPayload.config.model,
       chartCacheHit: cacheHit,
+      chartId,
+      profileId,
       calculatedAt: new Date().toISOString()
     }
   });

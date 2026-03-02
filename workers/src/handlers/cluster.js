@@ -13,6 +13,7 @@
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { parseToUTC } from '../utils/parseToUTC.js';
 
 // ─── Forge Role Mapping ─────────────────────────────────────────
 const FORGE_ROLES = {
@@ -150,11 +151,10 @@ async function handleJoin(request, env, clusterId) {
   }
 
   // Calculate chart to determine Forge role
-  const [year, month, day] = birthDate.split('-').map(Number);
-  const [hour, minute] = birthTime.split(':').map(Number);
+  const utc = parseToUTC(birthDate, birthTime, birthTimezone || undefined);
 
   const chart = calculateFullChart({
-    year, month, day, hour, minute, second: 0,
+    ...utc,
     lat: parseFloat(lat), lng: parseFloat(lng),
     includeTransits: false
   });
@@ -225,10 +225,9 @@ async function handleSynthesize(request, env, clusterId) {
   if (body.members && Array.isArray(body.members)) {
     // Inline member data provided
     members = body.members.map(m => {
-      const [year, month, day] = m.birthDate.split('-').map(Number);
-      const [hour, minute] = m.birthTime.split(':').map(Number);
+      const utc = parseToUTC(m.birthDate, m.birthTime, m.birthTimezone || undefined);
       const chart = calculateFullChart({
-        year, month, day, hour, minute, second: 0,
+        ...utc,
         lat: parseFloat(m.lat), lng: parseFloat(m.lng),
         includeTransits: false
       });
