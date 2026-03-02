@@ -14,6 +14,9 @@
  *   POST /api/cluster/:id/synthesize   – Cluster intelligence synthesis
  *   POST /api/sms/webhook              – Telnyx inbound SMS webhook
  *   POST /api/sms/send-digest          – Trigger digest send
+ *   POST /api/auth/register            – Create account, get JWT
+ *   POST /api/auth/login               – Email-based login, get JWT
+ *   POST /api/auth/refresh             – Refresh access token
  *   GET  /api/health                   – Health check
  */
 
@@ -28,6 +31,8 @@ import { handleComposite } from './handlers/composite.js';
 import { handleRectify } from './handlers/rectify.js';
 import { handleCluster } from './handlers/cluster.js';
 import { handleSMS } from './handlers/sms.js';
+import { handleAuth } from './handlers/auth.js';
+import { handlePdfExport } from './handlers/pdf.js';
 import { corsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
@@ -40,8 +45,8 @@ const AUTH_ROUTES = new Set([
   '/api/sms/send-digest'
 ]);
 
-// Prefix-based auth routes (cluster endpoints, except webhook)
-const AUTH_PREFIXES = ['/api/cluster/'];
+// Prefix-based auth routes (cluster endpoints, profile export)
+const AUTH_PREFIXES = ['/api/cluster/', '/api/profile/'];
 
 // Public routes (no auth required)
 const PUBLIC_ROUTES = new Set([
@@ -50,6 +55,9 @@ const PUBLIC_ROUTES = new Set([
   '/api/transits/forecast',
   '/api/rectify',
   '/api/sms/webhook',
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/refresh',
   '/api/health'
 ]);
 
@@ -114,11 +122,18 @@ export default {
       } else if (path.startsWith('/api/sms/')) {
         response = await handleSMS(request, env, path);
 
+      } else if (path.startsWith('/api/auth/')) {
+        response = await handleAuth(request, env, path);
+
+      } else if (path.match(/^\/api\/profile\/[^/]+\/pdf$/)) {
+        const profileId = path.split('/')[3];
+        response = await handlePdfExport(request, env, profileId);
+
       } else if (path === '/api/health') {
         response = Response.json({
           status: 'ok',
-          version: '0.2.0',
-          endpoints: 13
+          version: '0.3.0',
+          endpoints: 17
         });
 
       } else {

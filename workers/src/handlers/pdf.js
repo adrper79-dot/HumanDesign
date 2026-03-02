@@ -1,0 +1,270 @@
+/**
+ * GET /api/profile/:id/pdf
+ *
+ * Generates a downloadable PDF of a Prime Self profile.
+ * Uses a minimal PDF builder (no external deps) — Workers-compatible.
+ *
+ * The PDF contains:
+ *   - Header with Prime Self branding
+ *   - Chart summary (Type, Authority, Profile, Cross, Definition)
+ *   - Forge assignment
+ *   - Full profile synthesis text
+ *   - Grounding audit summary
+ */
+
+import { createQueryFn, QUERIES } from '../db/queries.js';
+
+export async function handlePdfExport(request, env, profileId) {
+  if (!profileId) {
+    return Response.json({ error: 'Profile ID is required' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  // Fetch profile
+  const profileResult = await query(QUERIES.getProfileById, [profileId]);
+  const profile = profileResult.rows?.[0];
+
+  if (!profile) {
+    return Response.json({ error: 'Profile not found' }, { status: 404 });
+  }
+
+  // Verify ownership
+  const userId = request._user?.sub;
+  if (userId && profile.user_id !== userId) {
+    // Check if user is a practitioner with access to this client
+    const practCheck = await query(QUERIES.checkPractitionerAccess, [userId, profile.user_id]);
+    if (!practCheck.rows?.length) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
+  // Parse profile JSON
+  const profileData = typeof profile.profile_json === 'string'
+    ? JSON.parse(profile.profile_json)
+    : profile.profile_json;
+
+  // Fetch associated chart
+  let chartData = null;
+  if (profile.chart_id) {
+    const chartResult = await query(QUERIES.getChartById, [profile.chart_id]);
+    const chart = chartResult.rows?.[0];
+    if (chart) {
+      chartData = typeof chart.hd_json === 'string'
+        ? JSON.parse(chart.hd_json)
+        : chart.hd_json;
+    }
+  }
+
+  // Build PDF
+  const pdfBytes = generatePDF(profileData, chartData, profile.created_at);
+
+  return new Response(pdfBytes, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="prime-self-profile-${profileId.slice(0, 8)}.pdf"`,
+      'Content-Length': pdfBytes.byteLength.toString()
+    }
+  });
+}
+
+// ─── Minimal PDF Generator ───────────────────────────────────
+// Builds a valid PDF 1.4 document with text content.
+// No images or fancy layout — pure text with basic formatting.
+
+function generatePDF(profileData, chartData, createdAt) {
+  const lines = [];
+  const date = new Date(createdAt).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  // Title
+  lines.push({ text: 'PRIME SELF PROFILE', size: 24, bold: true, y: 750 });
+  lines.push({ text: `Generated: ${date}`, size: 10, y: 730 });
+  lines.push({ text: '─'.repeat(60), size: 10, y: 718 });
+
+  // Chart summary
+  let y = 695;
+  if (chartData) {
+    lines.push({ text: 'CHART SUMMARY', size: 14, bold: true, y });
+    y -= 20;
+
+    const fields = [
+      ['Type', chartData.type],
+      ['Authority', chartData.authority],
+      ['Profile', chartData.profile],
+      ['Definition', chartData.definition],
+      ['Cross', chartData.cross?.name || 'N/A']
+    ];
+
+    for (const [label, value] of fields) {
+      if (value) {
+        lines.push({ text: `${label}: ${value}`, size: 11, y });
+        y -= 16;
+      }
+    }
+    y -= 10;
+  }
+
+  // Forge assignment
+  if (profileData.forge || profileData.primaryForge) {
+    const forge = profileData.forge || profileData.primaryForge;
+    lines.push({ text: 'FORGE ASSIGNMENT', size: 14, bold: true, y });
+    y -= 20;
+    lines.push({ text: `Primary Forge: ${forge}`, size: 11, y });
+    y -= 16;
+    if (profileData.forgeDescription) {
+      const forgeLines = wrapText(profileData.forgeDescription, 80);
+      for (const line of forgeLines) {
+        if (y < 50) { y = 750; } // crude page break
+        lines.push({ text: line, size: 10, y });
+        y -= 14;
+      }
+    }
+    y -= 10;
+  }
+
+  // Profile synthesis
+  lines.push({ text: 'PROFILE SYNTHESIS', size: 14, bold: true, y });
+  y -= 20;
+
+  const synthesisText =
+    profileData.narrative ||
+    profileData.synthesis ||
+    profileData.description ||
+    JSON.stringify(profileData, null, 2);
+
+  const textLines = wrapText(synthesisText, 85);
+  for (const line of textLines) {
+    if (y < 50) { y = 750; } // crude page break
+    lines.push({ text: line, size: 10, y });
+    y -= 14;
+  }
+
+  // Grounding audit
+  if (profileData.groundingAudit) {
+    y -= 10;
+    lines.push({ text: 'GROUNDING AUDIT', size: 14, bold: true, y });
+    y -= 20;
+    const auditText = typeof profileData.groundingAudit === 'string'
+      ? profileData.groundingAudit
+      : JSON.stringify(profileData.groundingAudit, null, 2);
+    const auditLines = wrapText(auditText, 85);
+    for (const line of auditLines) {
+      if (y < 50) { y = 750; }
+      lines.push({ text: line, size: 9, y });
+      y -= 13;
+    }
+  }
+
+  // Footer
+  lines.push({ text: '─'.repeat(60), size: 10, y: 35 });
+  lines.push({ text: 'Prime Self \u2022 Movement-First Personal Development', size: 8, y: 22 });
+
+  return buildPDFBytes(lines);
+}
+
+function wrapText(text, maxChars) {
+  const result = [];
+  const paragraphs = text.split('\n');
+  for (const para of paragraphs) {
+    if (para.trim() === '') {
+      result.push('');
+      continue;
+    }
+    const words = para.split(/\s+/);
+    let line = '';
+    for (const word of words) {
+      if ((line + ' ' + word).trim().length > maxChars) {
+        result.push(line.trim());
+        line = word;
+      } else {
+        line = line ? line + ' ' + word : word;
+      }
+    }
+    if (line.trim()) result.push(line.trim());
+  }
+  return result;
+}
+
+/**
+ * Build raw PDF bytes from an array of text line objects.
+ * Minimal PDF 1.4 spec — single page, Helvetica font.
+ */
+function buildPDFBytes(lines) {
+  const objects = [];
+  let objectCount = 0;
+
+  function addObject(content) {
+    objectCount++;
+    const obj = { id: objectCount, content };
+    objects.push(obj);
+    return objectCount;
+  }
+
+  // Object 1: Catalog
+  addObject('<<\n/Type /Catalog\n/Pages 2 0 R\n>>');
+
+  // Object 2: Pages
+  addObject('<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>');
+
+  // Object 3: Page
+  addObject('<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 5 0 R\n/Resources <<\n  /Font <<\n    /F1 4 0 R\n    /F2 6 0 R\n  >>\n>>\n>>');
+
+  // Object 4: Font (Helvetica)
+  addObject('<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>');
+
+  // Build stream content
+  let stream = 'BT\n';
+  for (const line of lines) {
+    const font = line.bold ? '/F2' : '/F1';
+    const size = line.size || 10;
+    const escaped = escapePDF(line.text || '');
+    stream += `${font} ${size} Tf\n`;
+    stream += `50 ${line.y} Td\n`;
+    stream += `(${escaped}) Tj\n`;
+  }
+  stream += 'ET\n';
+
+  // Object 5: Page content stream
+  addObject(`<<\n/Length ${stream.length}\n>>\nstream\n${stream}endstream`);
+
+  // Object 6: Bold font (Helvetica-Bold)
+  addObject('<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica-Bold\n>>');
+
+  // Build PDF file
+  let pdf = '%PDF-1.4\n';
+  const offsets = [];
+
+  for (const obj of objects) {
+    offsets.push(pdf.length);
+    pdf += `${obj.id} 0 obj\n${obj.content}\nendobj\n`;
+  }
+
+  // Cross-reference table
+  const xrefOffset = pdf.length;
+  pdf += 'xref\n';
+  pdf += `0 ${objectCount + 1}\n`;
+  pdf += '0000000000 65535 f \n';
+  for (const offset of offsets) {
+    pdf += `${offset.toString().padStart(10, '0')} 00000 n \n`;
+  }
+
+  // Trailer
+  pdf += 'trailer\n';
+  pdf += `<<\n/Size ${objectCount + 1}\n/Root 1 0 R\n>>\n`;
+  pdf += `startxref\n${xrefOffset}\n%%EOF\n`;
+
+  // Convert to ArrayBuffer
+  const encoder = new TextEncoder();
+  return encoder.encode(pdf).buffer;
+}
+
+function escapePDF(str) {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    .replace(/[^\x20-\x7E]/g, '?'); // Replace non-ASCII with ?
+}

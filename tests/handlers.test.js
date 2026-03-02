@@ -411,3 +411,74 @@ describe('GET /api/transits/today', () => {
     expect(json.transits.gateActivations).toBeDefined();
   });
 });
+
+// ─── /api/auth/* ─────────────────────────────────────────────
+
+import { handleAuth } from '../workers/src/handlers/auth.js';
+
+describe('POST /api/auth/register', () => {
+  it('rejects missing email', async () => {
+    const req = makeRequest('POST', 'https://api.test/api/auth/register', { password: 'test1234' });
+    const res = await handleAuth(req, mockEnv, '/api/auth/register');
+    const json = await res.json();
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/[Ee]mail/);
+  });
+
+  it('rejects missing password', async () => {
+    const req = makeRequest('POST', 'https://api.test/api/auth/register', { email: 'test@test.com' });
+    const res = await handleAuth(req, mockEnv, '/api/auth/register');
+    const json = await res.json();
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/[Pp]assword/);
+  });
+
+  it('rejects short password', async () => {
+    const req = makeRequest('POST', 'https://api.test/api/auth/register', { email: 'test@test.com', password: '123' });
+    const res = await handleAuth(req, mockEnv, '/api/auth/register');
+    const json = await res.json();
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/8 characters/);
+  });
+
+  it('rejects non-POST methods', async () => {
+    const req = makeGetRequest('https://api.test/api/auth/register');
+    const res = await handleAuth(req, mockEnv, '/api/auth/register');
+    expect(res.status).toBe(405);
+  });
+});
+
+describe('POST /api/auth/login', () => {
+  it('rejects missing credentials', async () => {
+    const req = makeRequest('POST', 'https://api.test/api/auth/login', { email: 'test@test.com' });
+    const res = await handleAuth(req, mockEnv, '/api/auth/login');
+    const json = await res.json();
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/[Pp]assword/);
+  });
+});
+
+describe('POST /api/auth/refresh', () => {
+  it('rejects missing refresh token', async () => {
+    const req = makeRequest('POST', 'https://api.test/api/auth/refresh', {});
+    const res = await handleAuth(req, mockEnv, '/api/auth/refresh');
+    const json = await res.json();
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/[Rr]efresh/);
+  });
+
+  it('rejects invalid refresh token', async () => {
+    const req = makeRequest('POST', 'https://api.test/api/auth/refresh', { refreshToken: 'invalid.token.here' });
+    const res = await handleAuth(req, mockEnv, '/api/auth/refresh');
+    const json = await res.json();
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('POST /api/auth (unknown)', () => {
+  it('returns 404 for unknown auth path', async () => {
+    const req = makeRequest('POST', 'https://api.test/api/auth/unknown', {});
+    const res = await handleAuth(req, mockEnv, '/api/auth/unknown');
+    expect(res.status).toBe(404);
+  });
+});

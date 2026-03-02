@@ -70,6 +70,12 @@ export const QUERIES = {
     RETURNING id, created_at
   `,
 
+  createUserWithPassword: `
+    INSERT INTO users (email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING id, created_at
+  `,
+
   // Upsert user by ID — ensures foreign keys succeed even if user row is missing.
   // Caller passes: id, email, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng
   ensureUser: `
@@ -129,6 +135,17 @@ export const QUERIES = {
     WHERE user_id = $1
     ORDER BY created_at DESC
     LIMIT $2
+  `,
+
+  getProfileById: `
+    SELECT * FROM profiles WHERE id = $1
+  `,
+
+  checkPractitionerAccess: `
+    SELECT 1 FROM practitioner_clients pc
+    JOIN practitioners p ON p.id = pc.practitioner_id
+    WHERE p.user_id = $1 AND pc.client_user_id = $2
+    LIMIT 1
   `,
 
   // Transit Snapshots

@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email         TEXT UNIQUE,
   phone         TEXT UNIQUE,
+  password_hash TEXT,          -- PBKDF2-SHA256 hash (salt:hash base64)
   birth_date    DATE,
   birth_time    TIME,
   birth_tz      TEXT,          -- IANA timezone e.g. 'America/New_York'

@@ -12,7 +12,7 @@ ENVIRONMENT = "production"
 # Then paste the generated id below
 [[kv_namespaces]]
 binding = "CACHE"
-id = "TBD"
+id = "a4869245e0ac49c0af1d0c5a9d6266d2"
 
 # Cron Triggers — daily transit snapshot + digest at 6 AM UTC
 [triggers]
