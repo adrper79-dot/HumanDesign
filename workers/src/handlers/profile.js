@@ -155,6 +155,12 @@ export async function handleProfile(request, env) {
     try {
       const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
+      // Ensure user row exists (upsert by JWT sub)
+      await query(QUERIES.ensureUser, [
+        userId, null, null, birthDate, birthTime, birthTimezone || null,
+        parseFloat(lat), parseFloat(lng)
+      ]);
+
       // Save chart
       const chartResult = await query(QUERIES.saveChart, [
         userId,

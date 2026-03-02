@@ -70,6 +70,15 @@ export const QUERIES = {
     RETURNING id, created_at
   `,
 
+  // Upsert user by ID — ensures foreign keys succeed even if user row is missing.
+  // Caller passes: id, email, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng
+  ensureUser: `
+    INSERT INTO users (id, email, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ON CONFLICT (id) DO UPDATE SET updated_at = now()
+    RETURNING id
+  `,
+
   getUserById: `
     SELECT * FROM users WHERE id = $1
   `,

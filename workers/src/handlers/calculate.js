@@ -59,6 +59,13 @@ export async function handleCalculate(request, env) {
   if (userId && env.NEON_CONNECTION_STRING) {
     try {
       const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+      // Ensure user row exists (upsert by JWT sub)
+      await query(QUERIES.ensureUser, [
+        userId, null, null, birthDate, birthTime, birthTimezone || null,
+        parseFloat(lat), parseFloat(lng)
+      ]);
+
       const hdJson = JSON.stringify(result.chart || result);
       const astroJson = JSON.stringify(result.westernAstrology || null);
       const saved = await query(QUERIES.saveChart, [userId, hdJson, astroJson]);
