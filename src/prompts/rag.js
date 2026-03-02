@@ -9,8 +9,14 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const KB_ROOT = join(__dirname, '..', 'knowledgebase');
+// Workers runtime: import.meta.url may be undefined — guard fileURLToPath
+let __dirname_resolved = '';
+try {
+  if (import.meta.url) {
+    __dirname_resolved = dirname(fileURLToPath(import.meta.url));
+  }
+} catch { /* Workers runtime */ }
+const KB_ROOT = __dirname_resolved ? join(__dirname_resolved, '..', 'knowledgebase') : '';
 
 // ─── Lazy-loaded KB cache ────────────────────────────────────
 
@@ -20,8 +26,14 @@ function loadKB(category, file) {
   const key = `${category}/${file}`;
   if (!_cache[key]) {
     try {
-      const path = join(KB_ROOT, category, file);
-      _cache[key] = JSON.parse(readFileSync(path, 'utf8'));
+      if (globalThis.__PRIME_DATA?.kb?.[key]) {
+        _cache[key] = globalThis.__PRIME_DATA.kb[key];
+      } else if (KB_ROOT) {
+        const path = join(KB_ROOT, category, file);
+        _cache[key] = JSON.parse(readFileSync(path, 'utf8'));
+      } else {
+        _cache[key] = {};
+      }
     } catch {
       _cache[key] = {};
     }

@@ -10,10 +10,13 @@
 
 /**
  * Get a pg Client for migration scripts (Node.js only).
+ * NOT available in Workers runtime — use createQueryFn instead.
  */
-export function getClient(connectionString) {
-  // Dynamic import — only used in migration CLI
-  const { Client } = require('pg');
+export async function getClient(connectionString) {
+  // Use string concatenation to prevent esbuild from resolving at bundle time
+  const moduleName = 'p' + 'g';
+  const pg = await import(moduleName);
+  const Client = pg.default?.Client || pg.Client;
   return new Client({ connectionString, ssl: { rejectUnauthorized: false } });
 }
 

@@ -270,8 +270,14 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const __ragDir = dirname(fileURLToPath(import.meta.url));
-const KB_ROOT = join(__ragDir, '..', 'knowledgebase');
+// Workers runtime: import.meta.url may be undefined — guard fileURLToPath
+let __ragDir = '';
+try {
+  if (import.meta.url) {
+    __ragDir = dirname(fileURLToPath(import.meta.url));
+  }
+} catch { /* Workers runtime */ }
+const KB_ROOT = __ragDir ? join(__ragDir, '..', 'knowledgebase') : '';
 
 let _kbCache = {};
 function loadKB(category, file) {
@@ -281,9 +287,11 @@ function loadKB(category, file) {
       // Workers runtime — data injected by engine-compat.js
       if (globalThis.__PRIME_DATA?.kb?.[key]) {
         _kbCache[key] = globalThis.__PRIME_DATA.kb[key];
-      } else {
+      } else if (KB_ROOT) {
         // Node.js runtime — read from filesystem
         _kbCache[key] = JSON.parse(readFileSync(join(KB_ROOT, category, file), 'utf8'));
+      } else {
+        _kbCache[key] = {};
       }
     } catch { _kbCache[key] = {}; }
   }

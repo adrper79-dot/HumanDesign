@@ -20,17 +20,25 @@ import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Workers runtime: import.meta.url may be undefined — guard fileURLToPath
+let __dirname_resolved = '';
+try {
+  if (import.meta.url) {
+    const __filename = fileURLToPath(import.meta.url);
+    __dirname_resolved = dirname(__filename);
+  }
+} catch {
+  // Workers runtime — __dirname not needed when data is injected
+}
 
 let crossesData = {};
 try {
   if (globalThis.__PRIME_DATA?.crosses) {
     // Workers runtime — data injected by engine-compat.js
     crossesData = globalThis.__PRIME_DATA.crosses;
-  } else {
+  } else if (__dirname_resolved) {
     // Node.js runtime — read from filesystem
-    crossesData = JSON.parse(readFileSync(join(__dirname, '..', 'data', 'crosses.json'), 'utf8'));
+    crossesData = JSON.parse(readFileSync(join(__dirname_resolved, '..', 'data', 'crosses.json'), 'utf8'));
   }
 } catch {
   // Falls back gracefully if crosses.json is unavailable
