@@ -225,6 +225,48 @@ describe('Layer 5: Chart Determination', () => {
   });
 });
 
+// ─── Second Verification Anchor: 0921 ──────────────────────────
+// Added 2026-03-03 after false bug report incident.
+// Sep 21, 1983, 21:30 UTC, Naples FL → Profile 1/3, MG
+// Cross-validated against Jovian Archive reference chart.
+
+describe('Layer 5: Chart Determination (0921 Anchor)', () => {
+  const jdn0921 = toJulianDay(1983, 9, 21, 21, 30, 0);
+  const pos0921 = getAllPositions(jdn0921);
+  const pGates0921 = mapAllToGates(pos0921);
+  const design0921 = getDesignCalculation(jdn0921, pos0921);
+  const dGates0921 = mapAllToGates(design0921.designPositions);
+  const chart0921 = calculateChart(pGates0921, dGates0921);
+
+  it('type = Manifesting Generator', () => {
+    expect(chart0921.type).toBe('Manifesting Generator');
+  });
+
+  it('authority = Emotional - Solar Plexus', () => {
+    expect(chart0921.authority).toBe('Emotional - Solar Plexus');
+  });
+
+  it('profile = 1/3', () => {
+    expect(chart0921.profile).toBe('1/3');
+  });
+
+  it('P Sun = Gate 46 Line 1', () => {
+    expect(pGates0921.sun.gate).toBe(46);
+    expect(pGates0921.sun.line).toBe(1);
+  });
+
+  it('D Sun = Gate 15 Line 3', () => {
+    expect(dGates0921.sun.gate).toBe(15);
+    expect(dGates0921.sun.line).toBe(3);
+  });
+
+  it('cross = Right Angle Cross', () => {
+    expect(chart0921.cross.type).toBe('Right Angle Cross');
+    expect(chart0921.cross.gates[0]).toBe(46); // P Sun
+    expect(chart0921.cross.gates[2]).toBe(15); // D Sun
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════
 // LAYER 6: Western Astrology
 // ═══════════════════════════════════════════════════════════════

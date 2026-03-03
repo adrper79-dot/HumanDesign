@@ -157,11 +157,20 @@ HumanDesign/
 
 ---
 
-## Verification Anchor
+## Verification Anchors
 
-All chart calculations verified against **AP's natal chart** (Aug 5, 1979, 18:51 EST, Tampa FL):
+All chart calculations verified against two reference charts:
+
+**AP** (Aug 5, 1979, 18:51 EST, Tampa FL)
 - Type: **Projector** | Profile: **6/2** | Authority: **Emotional – Solar Plexus**
 - Cross: Left Angle Cross of Refinement (33/19 | 2/1)
+- P Sun: Gate 33 Line 6 (high-line boundary test)
+
+**0921** (Sep 21, 1983, 5:30 PM EDT, Naples FL)
+- Type: **Manifesting Generator** | Profile: **1/3** | Authority: **Emotional – Solar Plexus**
+- Cross: Right Angle Cross of the Vessel of Love (46/25 | 15/10)
+- P Sun: Gate 46 Line 1 (low-line boundary test)
+- Verified against Jovian Archive reference chart
 
 ---
 
@@ -187,6 +196,7 @@ All chart calculations verified against **AP's natal chart** (Aug 5, 1979, 18:51
 - [Architecture overview](docs/ARCHITECTURE.md) — system design and data flow
 - [API reference](docs/API_SPEC.md) — all 32 endpoints with examples
 - [Operations runbook](docs/OPERATION.md) — deployment, secrets, monitoring, rollback
+- [Lessons learned](docs/LESSONS_LEARNED.md) — debugging cases, common issues, preventive measures
 
 ```
 HumanDesign/
