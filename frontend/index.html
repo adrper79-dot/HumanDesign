@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime Self — Human Design & Astrology</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --border: #2a2a3a;
+    --gold: #c9a84c;
+    --gold-dim: #7a6030;
+    --text: #e8e6f0;
+    --text-dim: #8882a0;
+    --accent: #6a4fc8;
+    --accent2: #4fc8a0;
+    --red: #e05050;
+    --green: #50c878;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #0d0d1a 0%, #1a1230 100%);
+    border-bottom: 1px solid var(--gold-dim);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 1.3rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
+  .logo span { color: var(--text-dim); font-weight: 300; font-size: 0.85rem; margin-left: 8px; }
+  .auth-bar { display: flex; align-items: center; gap: 12px; }
+  .auth-status { font-size: 0.8rem; color: var(--text-dim); }
+  .auth-status.logged-in { color: var(--accent2); }
+
+  /* ── Buttons ── */
+  button, .btn {
+    cursor: pointer; border: none; border-radius: 6px; padding: 8px 16px;
+    font-size: 0.85rem; font-weight: 600; transition: all 0.15s; display: inline-flex;
+    align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--gold); color: #0a0a0f; }
+  .btn-primary:hover { background: #e0be6a; }
+  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
+  .btn-danger:hover { background: var(--red); color: white; }
+  .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Tabs ── */
+  .tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 4px; overflow-x: auto; }
+  .tab-btn {
+    background: none; border: none; color: var(--text-dim);
+    padding: 14px 18px; font-size: 0.88rem; font-weight: 500; cursor: pointer;
+    border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ── Layout ── */
+  .container { max-width: 1000px; margin: 0 auto; padding: 28px 24px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow);
+  }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* ── Forms ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media(max-width: 600px) { .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 0.78rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  input, select, textarea {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 9px 12px; font-size: 0.9rem; transition: border 0.15s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
+  select option { background: var(--bg3); }
+
+  /* ── Auth Modal ── */
+  .auth-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .auth-overlay.hidden { display: none; }
+  .auth-box {
+    background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 12px;
+    padding: 32px; width: 360px; max-width: 95vw; box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+  }
+  .auth-box h2 { color: var(--gold); margin-bottom: 6px; font-size: 1.3rem; }
+  .auth-box p { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 24px; }
+  .auth-toggle { text-align: center; margin-top: 16px; font-size: 0.82rem; color: var(--text-dim); }
+  .auth-toggle a { color: var(--gold); cursor: pointer; text-decoration: underline; }
+  .auth-error { color: var(--red); font-size: 0.82rem; margin-top: 8px; min-height: 18px; }
+
+  /* ── Status / Alerts ── */
+  .alert {
+    padding: 12px 16px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 16px;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .alert-info { background: rgba(106,79,200,0.15); border: 1px solid rgba(106,79,200,0.4); color: #b8a8f0; }
+  .alert-success { background: rgba(80,200,120,0.12); border: 1px solid rgba(80,200,120,0.3); color: var(--accent2); }
+  .alert-error { background: rgba(224,80,80,0.12); border: 1px solid rgba(224,80,80,0.3); color: var(--red); }
+  .alert-warn { background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); }
+
+  /* ── Loading spinner ── */
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(201,168,76,0.3); border-top-color: var(--gold);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-card {
+    text-align: center; padding: 40px; color: var(--text-dim);
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .loading-card .spinner { width: 32px; height: 32px; border-width: 3px; margin-bottom: 16px; }
+
+  /* ── Result displays ── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media(max-width:640px) { .chart-grid { grid-template-columns: 1fr; } }
+  .data-block { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .data-block h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 10px; }
+  .data-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .data-row:last-child { border-bottom: none; }
+  .data-label { font-size: 0.8rem; color: var(--text-dim); }
+  .data-value { font-size: 0.88rem; color: var(--text); font-weight: 500; text-align: right; max-width: 55%; }
+
+  /* ── Forge badge ── */
+  .forge-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(106,79,200,0.15));
+    border: 1px solid var(--gold-dim); border-radius: 100px;
+    padding: 8px 16px; font-size: 0.88rem; font-weight: 700; color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .confidence-pill {
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase; padding: 2px 8px;
+    border-radius: 100px; background: rgba(80,200,120,0.2); color: var(--accent2);
+  }
+  .confidence-pill.medium { background: rgba(201,168,76,0.2); color: var(--gold); }
+  .confidence-pill.low { background: rgba(224,80,80,0.2); color: var(--red); }
+
+  /* ── Section headers ── */
+  .section-header {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-dim); margin: 18px 0 8px; border-left: 2px solid var(--gold-dim);
+    padding-left: 8px;
+  }
+  .profile-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .profile-section h4 { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
+
+  /* ── Tags / Pills ── */
+  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .pill { background: rgba(106,79,200,0.2); border: 1px solid rgba(106,79,200,0.4); border-radius: 100px; padding: 3px 10px; font-size: 0.78rem; color: #c8b8f8; }
+  .pill.green { background: rgba(80,200,120,0.15); border-color: rgba(80,200,120,0.3); color: var(--accent2); }
+  .pill.gold { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.3); color: var(--gold); }
+
+  /* ── Grounding audit bar ── */
+  .audit-bar-wrap { background: var(--bg); height: 6px; border-radius: 3px; overflow: hidden; margin: 8px 0; }
+  .audit-bar { height: 100%; background: linear-gradient(90deg, var(--red), var(--gold), var(--green)); border-radius: 3px; transition: width 0.6s ease; }
+
+  /* ── Transit row ── */
+  .transit-row {
+    display: grid; grid-template-columns: 100px 1fr auto;
+    align-items: center; gap: 12px; padding: 10px 14px;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;
+  }
+  .planet-name { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
+  .planet-pos { font-size: 0.8rem; color: var(--text); }
+  .gate-badge {
+    background: rgba(106,79,200,0.25); border: 1px solid rgba(106,79,200,0.5);
+    color: #c8b8f8; border-radius: 5px; padding: 3px 8px; font-size: 0.78rem; font-weight: 700;
+  }
+
+  /* ── Profile history card ── */
+  .history-item {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 18px; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .history-item:hover { border-color: var(--gold-dim); }
+  .history-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 3px; }
+
+  /* ── Raw JSON toggler ── */
+  .raw-toggle { font-size: 0.75rem; color: var(--text-dim); cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
+  .raw-json { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.72rem; overflow-x: auto; margin-top: 8px; white-space: pre-wrap; color: #90c890; max-height: 400px; overflow-y: auto; }
+  .raw-json.open { display: block; }
+
+  /* ── Empty state ── */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-dim); }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 0.88rem; }
+
+  /* ── Indicator list ── */
+  .indicator-list { list-style: none; }
+  .indicator-list li {
+    padding: 7px 10px; border-left: 2px solid var(--accent); background: rgba(106,79,200,0.08);
+    margin-bottom: 5px; border-radius: 0 5px 5px 0; font-size: 0.82rem;
+  }
+  .indicator-list li .sys-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; background: rgba(106,79,200,0.3); border-radius: 3px; padding: 1px 5px; margin-right: 6px; color: #c8b8f8; }
+  .indicator-list li .sys-badge.astro { background: rgba(79,200,160,0.3); color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<!-- Auth Overlay -->
+<div class="auth-overlay hidden" id="authOverlay">
+  <div class="auth-box">
+    <h2 id="authTitle">Sign In</h2>
+    <p id="authSubtitle">Access your Prime Self profile and saved charts.</p>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••">
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <button class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:11px" onclick="submitAuth()">Sign In</button>
+    <div class="auth-toggle">
+      <span id="authToggleText">Don't have an account?</span>
+      <a onclick="toggleAuthMode()" id="authToggleLink">Create one</a>
+    </div>
+    <div style="text-align:center;margin-top:10px">
+      <a style="font-size:0.78rem;cursor:pointer;color:var(--text-dim)" onclick="closeAuthOverlay()">Continue without signing in</a>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">✦ Prime Self <span>Human Design + Astrology</span></div>
+  <div class="auth-bar">
+    <div class="auth-status" id="authStatusText">Not signed in</div>
+    <button class="btn-secondary btn-sm" id="authBtn" onclick="openAuthOverlay()">Sign In</button>
+    <button class="btn-danger btn-sm" id="logoutBtn" style="display:none" onclick="logout()">Sign Out</button>
+  </div>
+</header>
+
+<!-- Navigation Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('chart', this)">⊕ Chart Calculator</button>
+  <button class="tab-btn" onclick="switchTab('profile', this)">◈ Prime Self Profile</button>
+  <button class="tab-btn" onclick="switchTab('transits', this)">⊛ Transits</button>
+  <button class="tab-btn" onclick="switchTab('history', this)">◉ My Profiles</button>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+
+  <!-- ═══ CHART TAB ═══ -->
+  <div class="tab-content active" id="tab-chart">
+    <div class="card">
+      <div class="card-title">⊕ Birth Data</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Birth Date</label>
+          <input type="date" id="c-date" value="1990-06-15">
+        </div>
+        <div class="form-group">
+          <label>Birth Time</label>
+          <input type="time" id="c-time" value="14:30">
+        </div>
+        <div class="form-group">
+          <label>Latitude</label>
+          <input type="number" id="c-lat" step="0.0001" placeholder="40.7128" value="40.7128">
+        </div>
+        <div class="form-group">
+          <label>Longitude</label>
+          <input type="number" id="c-lng" step="0.0001" placeholder="-74.0060" value="-74.0060">
+        </div>
+        <div class="form-group full">
+          <label>Timezone</label>
+          <select id="c-tz">
+            <option value="America/New_York">America/New_York (EST/EDT)</option>
+            <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+            <option value="America/Denver">America/Denver (MST/MDT)</option>
+            <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+            <option value="America/Phoenix">America/Phoenix (MST no DST)</option>
+            <option value="America/Anchorage">America/Anchorage</option>
+            <option value="Pacific/Honolulu">Pacific/Honolulu</option>
+            <option value="Europe/London">Europe/London (GMT/BST)</option>
+            <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+            <option value="Europe/Berlin">Europe/Berlin</option>
+            <option value="Europe/Moscow">Europe/Moscow</option>
+            <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+            <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+            <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+            <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+            <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>City (optional — for display only)</label>
+          <input type="text" id="c-city" placeholder="e.g. New York, NY">
+        </div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="calculateChart()" id="calcBtn">
+          <span class="spinner" id="calcSpinner" style="display:none"></span>
+          Calculate Chart
+        </button>
+        <button class="btn-secondary" onclick="prefillExample()">Load Example</button>
+      </div>
+    </div>
+
+    <div id="chartResult"></div>
+  </div>
+
+  <!-- ═══ PROFILE TAB ═══ -->
+  <div class="tab-content" id="tab-profile">
+    <div class="alert alert-info">
+      ◈ The Prime Self Profile requires a full 8-layer synthesis via Claude AI. Generation takes 15–30 seconds. Authentication recommended to save your profile.
+    </div>
+    <div class="card">
+      <div class="card-title">◈ Generate Prime Self Profile</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Birth Date</label>
+          <input type="date" id="p-date" value="1990-06-15">
+        </div>
+        <div class="form-group">
+          <label>Birth Time</label>
+          <input type="time" id="p-time" value="14:30">
+        </div>
+        <div class="form-group">
+          <label>Latitude</label>
+          <input type="number" id="p-lat" step="0.0001" value="40.7128">
+        </div>
+        <div class="form-group">
+          <label>Longitude</label>
+          <input type="number" id="p-lng" step="0.0001" value="-74.0060">
+        </div>
+        <div class="form-group full">
+          <label>Timezone</label>
+          <select id="p-tz">
+            <option value="America/New_York">America/New_York</option>
+            <option value="America/Los_Angeles">America/Los_Angeles</option>
+            <option value="America/Chicago">America/Chicago</option>
+            <option value="Europe/London">Europe/London</option>
+            <option value="Europe/Paris">Europe/Paris</option>
+            <option value="Asia/Tokyo">Asia/Tokyo</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Specific Question (optional — leave blank for full profile)</label>
+          <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?">
+        </div>
+      </div>
+      <div style="margin-top:18px">
+        <button class="btn-primary" onclick="generateProfile()" id="profileBtn" style="padding:11px 24px">
+          <span class="spinner" id="profileSpinner" style="display:none"></span>
+          Generate Prime Self Profile
+        </button>
+      </div>
+    </div>
+    <div id="profileResult"></div>
+  </div>
+
+  <!-- ═══ TRANSITS TAB ═══ -->
+  <div class="tab-content" id="tab-transits">
+    <div class="card">
+      <div class="card-title">⊛ Current Transit Positions</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Live planetary positions — Human Design gate/line and Western Astrology sign/degree.</p>
+      <button class="btn-primary" onclick="loadTransits()" id="transitBtn">
+        <span class="spinner" id="transitSpinner" style="display:none"></span>
+        Load Today's Transits
+      </button>
+    </div>
+    <div id="transitResult"></div>
+  </div>
+
+  <!-- ═══ HISTORY TAB ═══ -->
+  <div class="tab-content" id="tab-history">
+    <div class="card">
+      <div class="card-title">◉ Saved Profiles</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Sign in to view your saved Prime Self Profiles.</p>
+      <button class="btn-primary" onclick="loadHistory()" id="historyBtn">
+        <span class="spinner" id="historySpinner" style="display:none"></span>
+        Load My Profiles
+      </button>
+    </div>
+    <div id="historyResult"></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const API = 'https://prime-self-api.adrper79.workers.dev';
+let token = localStorage.getItem('ps_token');
+let userEmail = localStorage.getItem('ps_email');
+let authMode = 'login'; // 'login' | 'register'
+
+// ── Auth Helpers ──────────────────────────────────────────────
+function updateAuthUI() {
+  const statusEl = document.getElementById('authStatusText');
+  const btnEl = document.getElementById('authBtn');
+  const logoutEl = document.getElementById('logoutBtn');
+  if (token && userEmail) {
+    statusEl.textContent = userEmail;
+    statusEl.className = 'auth-status logged-in';
+    btnEl.style.display = 'none';
+    logoutEl.style.display = '';
+  } else {
+    statusEl.textContent = 'Not signed in';
+    statusEl.className = 'auth-status';
+    btnEl.style.display = '';
+    logoutEl.style.display = 'none';
+  }
+}
+
+function openAuthOverlay() {
+  document.getElementById('authOverlay').classList.remove('hidden');
+  document.getElementById('authEmail').focus();
+}
+
+function closeAuthOverlay() {
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('authError').textContent = '';
+}
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  const isReg = authMode === 'register';
+  document.getElementById('authTitle').textContent = isReg ? 'Create Account' : 'Sign In';
+  document.getElementById('authSubtitle').textContent = isReg ? 'Start your Prime Self journey.' : 'Access your Prime Self profile and saved charts.';
+  document.getElementById('authSubmit').textContent = isReg ? 'Create Account' : 'Sign In';
+  document.getElementById('authToggleText').textContent = isReg ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('authToggleLink').textContent = isReg ? 'Sign in' : 'Create one';
+  document.getElementById('authError').textContent = '';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errorEl = document.getElementById('authError');
+  const btn = document.getElementById('authSubmit');
+
+  if (!email || !password) { errorEl.textContent = 'Email and password required.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Please wait…';
+  errorEl.textContent = '';
+
+  try {
+    const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+    const res = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify({ email, password }) });
+    if (res.error) { errorEl.textContent = res.error; return; }
+    token = res.accessToken || res.token;
+    userEmail = email;
+    localStorage.setItem('ps_token', token);
+    localStorage.setItem('ps_email', email);
+    updateAuthUI();
+    closeAuthOverlay();
+  } catch (e) {
+    errorEl.textContent = 'Connection error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'register' ? 'Create Account' : 'Sign In';
+  }
+}
+
+function logout() {
+  token = null; userEmail = null;
+  localStorage.removeItem('ps_token');
+  localStorage.removeItem('ps_email');
+  updateAuthUI();
+}
+
+// ── API Fetch ─────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, { ...options, headers });
+  return res.json();
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Chart Calculator ──────────────────────────────────────────
+function prefillExample() {
+  document.getElementById('c-date').value = '1979-08-05';
+  document.getElementById('c-time').value = '18:51';
+  document.getElementById('c-lat').value = '27.9506';
+  document.getElementById('c-lng').value = '-82.4572';
+  document.getElementById('c-city').value = 'Tampa, FL';
+}
+
+async function calculateChart() {
+  const btn = document.getElementById('calcBtn');
+  const spinner = document.getElementById('calcSpinner');
+  const resultEl = document.getElementById('chartResult');
+
+  btn.disabled = true;
+  spinner.style.display = '';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Calculating chart…</div></div>';
+
+  try {
+    const payload = {
+      birthDate: document.getElementById('c-date').value,
+      birthTime: document.getElementById('c-time').value,
+      birthTimezone: document.getElementById('c-tz').value,
+      lat: parseFloat(document.getElementById('c-lat').value),
+      lng: parseFloat(document.getElementById('c-lng').value),
+    };
+
+    const data = await apiFetch('/api/chart/calculate', { method: 'POST', body: JSON.stringify(payload) });
+    resultEl.innerHTML = renderChart(data);
+  } catch (e) {
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+function renderChart(data) {
+  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
+  const d = data.data || data;
+  const chart = d.chart || d;
+  const astro = d.westernAstrology || d.astrology || {};
+  const meta = data.meta || {};
+
+  let html = '';
+
+  // Human Design block
+  html += `<div class="card">
+    <div class="card-title">⊕ Human Design Chart</div>
+    <div class="chart-grid">
+      <div class="data-block">
+        <h4>Core Energy</h4>
+        ${row('Type', chart.type)}
+        ${row('Authority', chart.authority)}
+        ${row('Strategy', chart.strategy)}
+        ${row('Profile', chart.profile)}
+        ${row('Definition', chart.definition)}
+        ${row('Not-Self Theme', chart.notSelfTheme)}
+      </div>
+      <div class="data-block">
+        <h4>Incarnation Cross</h4>
+        ${row('Cross', chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null) || (chart.cross?.gates ? chart.cross.gates.join(', ') : '—'))}
+        ${row('Type', chart.cross?.type || chart.crossType || '—')}
+        ${row('Quarter', chart.cross?.quarter || '—')}
+      </div>
+    </div>`;
+
+  if (chart.definedCenters?.length) {
+    html += `<div class="section-header">Centers</div>
+    <div class="data-block" style="margin-top:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:16px">
+        <div>
+          <div class="data-label" style="margin-bottom:6px">Defined</div>
+          <div class="pill-list">${chart.definedCenters.map(c => `<span class="pill green">${c}</span>`).join('')}</div>
+        </div>
+        <div>
+          <div class="data-label" style="margin-bottom:6px">Open / Undefined</div>
+          <div class="pill-list">${(['Head','Ajna','Throat','G','Heart','SolarPlexus','Sacral','Spleen','Root'].filter(c => !chart.definedCenters.includes(c))).map(c => `<span class="pill">${c}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (chart.activeChannels?.length) {
+    html += `<div class="section-header">Active Channels</div>
+    <div class="pill-list" style="margin-top:8px">
+      ${chart.activeChannels.map(ch => `<span class="pill gold">${ch.channel || (ch.gates?.[0] + '-' + ch.gates?.[1])} ${ch.centers ? '('+ch.centers.join('↔')+')' : ''}</span>`).join('')}
+    </div>`;
+  }
+
+  html += `</div>`;
+
+  // Western Astrology block
+  if (astro && astro.placements) {
+    const planets = Object.entries(astro.placements).slice(0, 10);
+    html += `<div class="card">
+      <div class="card-title">♈ Western Astrology</div>
+      <div class="chart-grid">
+        <div class="data-block">
+          <h4>Key Placements</h4>
+          ${astro.ascendant ? row('Ascendant', astro.ascendant.sign + ' ' + (astro.ascendant.degrees?.toFixed(1)||'') + '°') : ''}
+          ${astro.midheaven ? row('Midheaven', astro.midheaven.sign + ' ' + (astro.midheaven.degrees?.toFixed(1)||'') + '°') : ''}
+          ${planets.slice(0,6).map(([p, v]) => row(p, v.sign + ' ' + (v.degrees?.toFixed(1)||'') + '° H'+v.house)).join('')}
+        </div>
+        <div class="data-block">
+          <h4>More Planets</h4>
+          ${planets.slice(6).map(([p, v]) => row(p, v.sign + ' ' + (v.degrees?.toFixed(1)||'') + '° H'+v.house)).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Meta
+  if (meta.chartId) {
+    html += `<div class="alert alert-success">✓ Chart saved (ID: ${meta.chartId})</div>`;
+  }
+
+  html += rawToggle(data);
+  return html;
+}
+
+// ── Profile Generator ─────────────────────────────────────────
+async function generateProfile() {
+  if (!token) {
+    const go = confirm('Sign in to save your profile. Generate without saving?');
+    if (!go) { openAuthOverlay(); return; }
+  }
+
+  const btn = document.getElementById('profileBtn');
+  const spinner = document.getElementById('profileSpinner');
+  const resultEl = document.getElementById('profileResult');
+
+  btn.disabled = true;
+  spinner.style.display = '';
+  resultEl.innerHTML = `<div class="loading-card">
+    <div class="spinner"></div>
+    <div style="margin-top:8px;font-size:0.95rem">Synthesizing your Prime Self Profile…</div>
+    <div style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)">Claude is analyzing your Human Design + Astrology data. This takes 15–30 seconds.</div>
+  </div>`;
+
+  try {
+    const payload = {
+      birthDate: document.getElementById('p-date').value,
+      birthTime: document.getElementById('p-time').value,
+      birthTimezone: document.getElementById('p-tz').value,
+      lat: parseFloat(document.getElementById('p-lat').value),
+      lng: parseFloat(document.getElementById('p-lng').value),
+    };
+    const q = document.getElementById('p-question').value.trim();
+    if (q) payload.question = q;
+
+    const data = await apiFetch('/api/profile/generate', { method: 'POST', body: JSON.stringify(payload) });
+    resultEl.innerHTML = renderProfile(data);
+  } catch (e) {
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+function renderProfile(data) {
+  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}<br><small>${data.message || ''}</small></div>`;
+
+  const pp = data.profile;
+  const chartSummary = data.chart || {};
+  const meta = data.meta || {};
+
+  if (!pp) {
+    return `<div class="alert alert-warn">Profile generation returned no data. Raw response below.</div>` + rawToggle(data);
+  }
+
+  let html = '';
+
+  // Chart summary banner
+  html += `<div class="card">
+    <div class="card-title">◈ Prime Self Profile</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">`;
+  if (chartSummary.type) html += `<span class="pill gold">${chartSummary.type}</span>`;
+  if (chartSummary.authority) html += `<span class="pill">${chartSummary.authority} Authority</span>`;
+  if (chartSummary.profile) html += `<span class="pill">${chartSummary.profile} Profile</span>`;
+  if (chartSummary.definition) html += `<span class="pill">${chartSummary.definition}</span>`;
+  html += `</div>`;
+
+  // Primary Forge
+  if (pp.primaryForge) {
+    const f = pp.primaryForge;
+    const confClass = f.confidence === 'high' ? '' : f.confidence === 'medium' ? 'medium' : 'low';
+    html += `<div class="forge-badge">
+        ✦ ${f.forge || '—'} Forge
+        <span class="confidence-pill ${confClass}">${f.confidence || ''}</span>
+      </div>`;
+    if (f.indicators?.length) {
+      html += `<ul class="indicator-list">`;
+      f.indicators.forEach(i => {
+        const sysClass = i.system === 'Astro' ? 'astro' : '';
+        html += `<li><span class="sys-badge ${sysClass}">${i.system}</span>${i.dataPoint}: <em style="color:var(--text-dim)">${i.correlation}</em></li>`;
+      });
+      html += `</ul>`;
+    }
+  }
+
+  html += `</div>`; // close card
+
+  // Knowledge Profile
+  if (pp.knowledgeProfile) {
+    const kp = pp.knowledgeProfile;
+    html += `<div class="card">
+      <div class="card-title">◇ Knowledge Profile</div>
+      <div class="chart-grid">
+        <div>
+          <div class="section-header">Natural Access</div>
+          <div class="pill-list">${(kp.natural||[]).map(k => `<span class="pill green">${k}</span>`).join('') || '<span style="color:var(--text-dim);font-size:0.82rem">None identified</span>'}</div>
+        </div>
+        <div>
+          <div class="section-header">Cultivate / Develop</div>
+          <div class="pill-list">${(kp.cultivate||[]).map(k => `<span class="pill">${k}</span>`).join('') || '<span style="color:var(--text-dim);font-size:0.82rem">None identified</span>'}</div>
+        </div>
+      </div>`;
+    if (kp.indicators?.length) {
+      html += `<div class="section-header" style="margin-top:14px">Indicators</div><ul class="indicator-list" style="margin-top:6px">`;
+      kp.indicators.forEach(i => { html += `<li>${i.knowledge}: <em style="color:var(--text-dim)">${i.source}</em></li>`; });
+      html += `</ul>`;
+    }
+    html += `</div>`;
+  }
+
+  // Decision Architecture
+  if (pp.decisionArchitecture) {
+    const da = pp.decisionArchitecture;
+    html += `<div class="card">
+      <div class="card-title">⊡ Decision Architecture</div>
+      <div class="profile-section">
+        <h4>HD Authority</h4>
+        <p style="font-size:0.88rem;line-height:1.6">${da.hdAuthority || '—'}</p>
+      </div>
+      <div class="profile-section">
+        <h4>Astrology Support</h4>
+        <p style="font-size:0.88rem;line-height:1.6">${da.astroSupport || '—'}</p>
+      </div>
+      <div class="profile-section">
+        <h4>Practical Guidance</h4>
+        <p style="font-size:0.88rem;line-height:1.6">${da.practicalGuidance || '—'}</p>
+      </div>
+    </div>`;
+  }
+
+  // Current Activation
+  if (pp.currentActivation) {
+    const ca = pp.currentActivation;
+    html += `<div class="card">
+      <div class="card-title">⊛ Current Activation</div>`;
+    if (ca.activeTransits?.length) {
+      ca.activeTransits.forEach(t => {
+        html += `<div class="transit-row">
+          <div class="planet-name">${t.planet}</div>
+          <div style="font-size:0.82rem;color:var(--text-dim)">${t.significance}</div>
+          <div class="gate-badge">Gate ${t.gate}</div>
+        </div>`;
+      });
+    }
+    if (ca.timingWindow) {
+      html += `<div class="section-header" style="margin-top:14px">Timing Window</div>
+        <p style="font-size:0.85rem;color:var(--text);margin-top:6px">${ca.timingWindow}</p>`;
+    }
+    if (ca.forgeRecommendation) {
+      html += `<div class="section-header">Forge Recommendation</div>
+        <p style="font-size:0.85rem;margin-top:6px;line-height:1.6">${ca.forgeRecommendation}</p>`;
+    }
+    html += `</div>`;
+  }
+
+  // Practice Recommendations
+  if (pp.practiceRecommendations?.length) {
+    html += `<div class="card">
+      <div class="card-title">◌ Practice Recommendations</div>`;
+    pp.practiceRecommendations.forEach(p => {
+      const catColor = p.category === 'Science' ? 'green' : p.category === 'Art' ? '' : 'gold';
+      html += `<div class="profile-section">
+        <h4>${p.practice} <span class="confidence-pill ${catColor}" style="margin-left:6px">${p.category}</span></h4>
+        <p style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">${p.rationale}</p>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Clustering Profile
+  if (pp.clusteringProfile) {
+    const cp = pp.clusteringProfile;
+    html += `<div class="card">
+      <div class="card-title">⬡ Clustering Profile</div>
+      <div class="chart-grid">
+        <div>
+          <div class="section-header">What You Bring</div>
+          <ul style="list-style:none;margin-top:8px">
+            ${(cp.brings||[]).map(b => `<li style="font-size:0.82rem;padding:5px 0;border-bottom:1px solid var(--border);color:var(--text)">${b}</li>`).join('')}
+          </ul>
+        </div>
+        <div>
+          <div class="section-header">Complementary Profiles</div>
+          <div class="pill-list" style="margin-top:8px">${(cp.complementaryProfiles||[]).map(p => `<span class="pill">${p}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Grounding Audit
+  if (meta.groundingAudit) {
+    const ga = meta.groundingAudit;
+    const pct = ga.claimsTotal ? Math.round((ga.claimsGrounded / ga.claimsTotal) * 100) : 0;
+    html += `<div class="card">
+      <div class="card-title">✓ Grounding Audit</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.88rem">${ga.claimsGrounded} / ${ga.claimsTotal} claims grounded</span>
+        <span class="confidence-pill ${pct>=90?'':'medium'}">${pct}%</span>
+      </div>
+      <div class="audit-bar-wrap" style="margin-top:10px"><div class="audit-bar" style="width:${pct}%"></div></div>
+      ${ga.ungroundedFields?.length ? `<div style="margin-top:8px;font-size:0.78rem;color:var(--text-dim)">Ungrounded: ${ga.ungroundedFields.join(', ')}</div>` : ''}
+      ${meta.partialGrounding ? `<div class="alert alert-warn" style="margin-top:10px">⚠ Partial grounding — some claims could not be fully grounded to reference data.</div>` : ''}
+    </div>`;
+  }
+
+  if (meta.profileId) html += `<div class="alert alert-success">✓ Profile saved (ID: ${meta.profileId})</div>`;
+
+  html += rawToggle(data);
+  return html;
+}
+
+// ── Transits ──────────────────────────────────────────────────
+async function loadTransits() {
+  const btn = document.getElementById('transitBtn');
+  const spinner = document.getElementById('transitSpinner');
+  const resultEl = document.getElementById('transitResult');
+
+  btn.disabled = true;
+  spinner.style.display = '';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Fetching transits…</div></div>';
+
+  try {
+    const data = await apiFetch('/api/transits/today');
+    resultEl.innerHTML = renderTransits(data);
+  } catch (e) {
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+function renderTransits(data) {
+  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
+
+  const t = data.data || data.transits || data;
+  const positions = t.transitPositions || t.positions || {};
+
+  if (!Object.keys(positions).length) {
+    return `<div class="alert alert-warn">No transit positions returned. Check API response.</div>` + rawToggle(data);
+  }
+
+  const PLANET_SYMBOLS = { Sun:'☉', Moon:'☽', Mercury:'☿', Venus:'♀', Mars:'♂', Jupiter:'♃', Saturn:'♄', Uranus:'♅', Neptune:'♆', Pluto:'♇', NorthNode:'☊', TrueNode:'☊', Chiron:'⚷' };
+
+  let html = `<div class="card">
+    <div class="card-title">⊛ Transit Positions — ${t.date || new Date().toLocaleDateString()}</div>`;
+
+  for (const [body, pos] of Object.entries(positions)) {
+    const sym = PLANET_SYMBOLS[body] || '';
+    html += `<div class="transit-row">
+      <div class="planet-name">${sym} ${body}</div>
+      <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
+      <div class="gate-badge">Gate ${pos.gate || '?'}.${pos.line || '?'}</div>
+    </div>`;
+  }
+
+  if (t.gateActivations?.length) {
+    const natalHits = t.gateActivations.filter(a => a.natalGatePresent);
+    if (natalHits.length) {
+      html += `<div class="section-header" style="margin-top:16px">Natal Gate Activations</div>`;
+      natalHits.forEach(a => {
+        html += `<div style="font-size:0.82rem;padding:7px 10px;background:rgba(201,168,76,0.08);border-left:2px solid var(--gold-dim);margin-bottom:4px">
+          ✦ Gate ${a.gate} activated by transit ${a.transitPlanet} (${a.speed || ''})
+        </div>`;
+      });
+    }
+  }
+
+  html += `</div>` + rawToggle(data);
+  return html;
+}
+
+// ── Profile History ───────────────────────────────────────────
+async function loadHistory() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const btn = document.getElementById('historyBtn');
+  const spinner = document.getElementById('historySpinner');
+  const resultEl = document.getElementById('historyResult');
+
+  btn.disabled = true;
+  spinner.style.display = '';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading profiles…</div></div>';
+
+  try {
+    const data = await apiFetch('/api/profile/list');
+    resultEl.innerHTML = renderHistory(data);
+  } catch (e) {
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+function renderHistory(data) {
+  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
+
+  const profiles = data.data || [];
+
+  if (!profiles.length) {
+    return `<div class="empty-state">
+      <div class="icon">◈</div>
+      <p>No saved profiles yet.<br>Generate a Prime Self Profile to get started.</p>
+    </div>`;
+  }
+
+  let html = `<div class="card">
+    <div class="card-title">◉ ${profiles.length} Saved Profile${profiles.length > 1 ? 's' : ''}</div>`;
+
+  profiles.forEach(p => {
+    const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Unknown date';
+    html += `<div class="history-item" onclick="loadSingleProfile('${p.id}')">
+      <div>
+        <div style="font-size:0.9rem;font-weight:600">Profile ${p.id?.slice(0,8) || '—'}</div>
+        <div class="history-meta">Created ${date} · Chart ${p.chartId?.slice(0,8) || 'N/A'} · ${p.modelUsed || ''}</div>
+      </div>
+      <button class="btn-secondary btn-sm">View →</button>
+    </div>`;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+async function loadSingleProfile(id) {
+  const resultEl = document.getElementById('historyResult');
+  resultEl.innerHTML += `<div class="loading-card"><div class="spinner"></div><div>Loading profile ${id.slice(0,8)}…</div></div>`;
+
+  try {
+    const data = await apiFetch('/api/profile/' + id);
+    if (data.error) { resultEl.innerHTML += `<div class="alert alert-error">${data.error}</div>`; return; }
+
+    const profileData = data.data?.profile || {};
+    const rendered = renderProfile({ profile: profileData, meta: { groundingAudit: data.data?.groundingAudit }, chart: {} });
+    resultEl.innerHTML = rendered;
+  } catch (e) {
+    resultEl.innerHTML += `<div class="alert alert-error">Error: ${e.message}</div>`;
+  }
+}
+
+// ── Utilities ─────────────────────────────────────────────────
+function row(label, value) {
+  if (!value && value !== 0) return '';
+  return `<div class="data-row"><span class="data-label">${label}</span><span class="data-value">${value}</span></div>`;
+}
+
+let _rawCount = 0;
+function rawToggle(data) {
+  const id = 'raw-' + (++_rawCount);
+  return `<span class="raw-toggle" onclick="toggleRaw('${id}')">Show raw JSON ▾</span>
+    <pre class="raw-json" id="${id}">${JSON.stringify(data, null, 2)}</pre>`;
+}
+
+function toggleRaw(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+// ── Init ──────────────────────────────────────────────────────
+updateAuthUI();
+</script>
+</body>
+</html>
