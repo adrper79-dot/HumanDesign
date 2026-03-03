@@ -14,6 +14,7 @@
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
+import { callLLM } from '../lib/llm.js';
 
 // ─── Forge Role Mapping ─────────────────────────────────────────
 const FORGE_ROLES = {
@@ -352,33 +353,7 @@ Respond as JSON:
  * Call LLM for cluster synthesis via AI Gateway.
  */
 async function callClusterLLM(promptPayload, env) {
-  const gatewayUrl = env.AI_GATEWAY_URL || 'https://gateway.ai.cloudflare.com/v1';
-  const apiKey = env.ANTHROPIC_API_KEY;
-
-  const response = await fetch(`${gatewayUrl}/anthropic/v1/messages`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: promptPayload.config.model,
-      max_tokens: promptPayload.config.max_tokens,
-      temperature: promptPayload.config.temperature,
-      system: promptPayload.system,
-      messages: promptPayload.messages
-    })
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`LLM API error ${response.status}: ${err}`);
-  }
-
-  const data = await response.json();
-  const text = data.content?.[0]?.text || '';
-
+  const text = await callLLM(promptPayload, env);
   try {
     return JSON.parse(text);
   } catch {

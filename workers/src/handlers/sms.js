@@ -12,6 +12,7 @@ import { buildDigestPrompt } from '../../../src/prompts/digest.js';
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { callLLM } from '../lib/llm.js';
 
 // ─── Telnyx API ──────────────────────────────────────────────
 
@@ -56,41 +57,10 @@ async function sendSMS(to, body, env) {
 }
 
 /**
- * Call Haiku for SMS digest generation.
+ * Call LLM for SMS digest generation — with Anthropic → Grok → Groq failover.
  */
 async function callDigestLLM(prompt, env) {
-  const gatewayUrl = env.AI_GATEWAY_URL || '';
-  const apiKey = env.ANTHROPIC_API_KEY;
-
-  // Use CF AI Gateway only if it's the real gateway URL; otherwise direct Anthropic
-  const isRealGateway = gatewayUrl.startsWith('https://gateway.ai.cloudflare.com/');
-  const endpoint = isRealGateway
-    ? `${gatewayUrl}/anthropic/v1/messages`
-    : 'https://api.anthropic.com/v1/messages';
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: prompt.config.model,
-      max_tokens: prompt.config.max_tokens,
-      temperature: prompt.config.temperature,
-      system: prompt.system,
-      messages: prompt.messages
-    })
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`LLM API error ${response.status}: ${err}`);
-  }
-
-  const data = await response.json();
-  return data.content?.[0]?.text || '';
+  return callLLM(prompt, env);
 }
 
 // ─── Route Handler ───────────────────────────────────────────

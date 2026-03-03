@@ -25,6 +25,7 @@ import {
 } from '../../../src/prompts/synthesis.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { callLLM } from '../lib/llm.js';
 
 /** 24-hour TTL for cached natal charts (seconds). */
 const CHART_CACHE_TTL = 86400;
@@ -209,59 +210,7 @@ export async function handleProfile(request, env) {
   });
 }
 
-/**
- * Call Claude via Cloudflare AI Gateway or directly via Anthropic API.
- *
- * AI_GATEWAY_URL can be:
- *   - A Cloudflare AI Gateway URL: https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}
- *     → We append /anthropic/v1/messages
- *   - The string "direct" or absent/invalid
- *     → We call Anthropic directly at https://api.anthropic.com/v1/messages
- */
-async function callLLM(promptPayload, env) {
-  const apiKey = env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
-
-  // Determine endpoint URL
-  const gatewayUrl = env.AI_GATEWAY_URL || '';
-  let endpoint;
-  if (
-    gatewayUrl &&
-    gatewayUrl !== 'direct' &&
-    gatewayUrl.startsWith('https://gateway.ai.cloudflare.com/')
-  ) {
-    // Cloudflare AI Gateway format
-    endpoint = `${gatewayUrl.replace(/\/$/, '')}/anthropic/v1/messages`;
-  } else {
-    // Direct Anthropic API
-    endpoint = 'https://api.anthropic.com/v1/messages';
-  }
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: promptPayload.config.model,
-      max_tokens: promptPayload.config.max_tokens,
-      temperature: promptPayload.config.temperature,
-      system: promptPayload.system,
-      messages: promptPayload.messages
-    })
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`LLM API error ${response.status}: ${err}`);
-  }
-
-  const data = await response.json();
-  const text = data.content?.[0]?.text || '';
-  return text;
-}
+// callLLM is imported from ../lib/llm.js — Anthropic → Grok → Groq failover
 
 /**
  * GET /api/profile/:id
