@@ -133,11 +133,11 @@ export const QUERIES = {
   `,
 
   getProfilesByUser: `
-    SELECT id, model_used, created_at
+    SELECT id, chart_id, model_used, created_at
     FROM profiles
     WHERE user_id = $1
     ORDER BY created_at DESC
-    LIMIT $2
+    LIMIT 50
   `,
 
   getProfileById: `
