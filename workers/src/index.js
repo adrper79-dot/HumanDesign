@@ -24,6 +24,11 @@
  *   POST /api/practitioner/clients/add    – Add client by email
  *   GET  /api/practitioner/clients/:id    – Client detail (chart + profile)
  *   DELETE /api/practitioner/clients/:id – Remove client
+ *   GET  /api/onboarding/intro            – Savannah story intro (public)
+ *   GET  /api/onboarding/forge            – Personalized Savannah arc
+ *   GET  /api/onboarding/forge/:key       – Specific forge arc
+ *   GET  /api/onboarding/progress         – User chapter progress
+ *   POST /api/onboarding/advance          – Mark chapter as read
  */
 
 // Data injection for Workers runtime — MUST be first import
@@ -40,6 +45,7 @@ import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
 import { handlePdfExport } from './handlers/pdf.js';
 import { handlePractitioner } from './handlers/practitioner.js';
+import { handleOnboarding } from './handlers/onboarding.js';
 import { corsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
@@ -52,8 +58,11 @@ const AUTH_ROUTES = new Set([
   '/api/sms/send-digest'
 ]);
 
-// Prefix-based auth routes (cluster endpoints, profile export, practitioner)
-const AUTH_PREFIXES = ['/api/cluster/', '/api/profile/', '/api/practitioner/'];
+// Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding)
+const AUTH_PREFIXES = ['/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/'];
+
+// Onboarding intro is public — exempted after prefix check
+const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
 
 // Public routes (no auth required)
 const PUBLIC_ROUTES = new Set([
@@ -70,6 +79,7 @@ const PUBLIC_ROUTES = new Set([
 
 function requiresAuth(path) {
   if (AUTH_ROUTES.has(path)) return true;
+  if (PUBLIC_ONBOARDING.has(path)) return false; // onboarding intro is public
   for (const prefix of AUTH_PREFIXES) {
     if (path.startsWith(prefix)) return true;
   }
@@ -132,6 +142,10 @@ export default {
       } else if (path.startsWith('/api/auth/')) {
         response = await handleAuth(request, env, path);
 
+      } else if (path.startsWith('/api/onboarding/')) {
+        const subpath = path.replace('/api/onboarding', '') || '/';
+        response = await handleOnboarding(request, env, subpath);
+
       } else if (path.startsWith('/api/practitioner/')) {
         const subpath = path.replace('/api/practitioner', '') || '/';
         response = await handlePractitioner(request, env, subpath);
@@ -144,7 +158,7 @@ export default {
         response = Response.json({
           status: 'ok',
           version: '0.3.0',
-          endpoints: 23
+          endpoints: 28
         });
 
       } else {

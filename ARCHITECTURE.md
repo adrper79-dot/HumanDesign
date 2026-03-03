@@ -351,46 +351,62 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 
 ## 8. Build Sequence
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation (Complete ✅)
 - [x] Prime Self Manifesto
 - [x] Canonical Framework
 - [x] HD/Astro Integration Layer
-- [ ] Architecture Plan (this document)
-- [ ] Build Bible / Prompting Documentation
-- [ ] Gate Wheel Lookup Table (`src/data/gate_wheel.json`)
-- [ ] Supporting data files (centers, channels, type rules)
+- [x] Architecture Plan (this document)
+- [x] Build Bible / Prompting Documentation
+- [x] Gate Wheel Lookup Table (`src/data/gate_wheel.json`)
+- [x] Supporting data files (centers, channels, type rules, crosses)
 
-### Phase 2: Calculation Engine (Layers 1–7)
-- [ ] Layer 1: Julian Day Number + Sun longitude
-- [ ] Layer 2: All planets + nodes
-- [ ] Layer 3: Design side (-88 days)
-- [ ] Layer 4: Gate/line lookup from longitude
-- [ ] Layer 5: Centers, channels, type, authority, profile, cross
-- [ ] Layer 6: Astrology (signs, houses, aspects)
-- [ ] Layer 7: Transit engine
+### Phase 2: Calculation Engine (Complete ✅)
+- [x] Layer 1: Julian Day Number + Sun longitude
+- [x] Layer 2: All planets + nodes
+- [x] Layer 3: Design side (-88 days)
+- [x] Layer 4: Gate/line lookup from longitude
+- [x] Layer 5: Centers, channels, type, authority, profile, cross
+- [x] Layer 6: Astrology (signs, houses, aspects)
+- [x] Layer 7: Transit engine
+- [x] 117/117 tests passing (vitest)
 
-### Phase 3: Data Layer
-- [ ] Neon schema migration
-- [ ] Knowledgebase generation pipeline (Opus 4.6)
-- [ ] Quality audit pass on generated content
-- [ ] R2 bucket setup for corpus storage
+### Phase 3: Data Layer (In Progress 🔄)
+- [x] Neon schema migration (9 tables live + indexes)
+- [x] Knowledgebase authored: types, profiles, centers, forges, knowledges,
+      sciences, arts, defenses, heresies, forge_mapping, signs, planets, aspects, houses
+- [x] R2 bucket provisioned (prime-self-exports, binding: R2)
+- [ ] gates.json — in progress via generate.js --gates (~64 Claude calls)
+- [ ] channels.json — pending (after gates complete)
+- [ ] crosses.json — pending (after gates complete)
+- [ ] Quality audit pass on generated gate/channel/cross KB
+- [ ] combined/ directory (add only VERIFIED cross-system entries)
 
-### Phase 4: Synthesis Layer (Layer 8)
-- [ ] System prompt engineering for Prime Self profile synthesis
-- [ ] Grounding audit validation logic
-- [ ] Dual-pass re-prompt for low-confidence outputs
-- [ ] API endpoint wiring
+### Phase 4: Synthesis Layer (Complete ✅)
+- [x] System prompt engineering (synthesis.js — SYSTEM_PROMPT, FORGE_MAPPING)
+- [x] Reference facts builder (buildReferenceFacts)
+- [x] RAG injection (getRAGContext — reads gates, channels, types, forges)
+- [x] Grounding audit validation logic (validateSynthesisResponse)
+- [x] Dual-pass re-prompt logic (buildReprompt, second LLM call in profile.js)
+- [x] API endpoint wired (/api/profile/generate)
+- [x] Direct Anthropic API fallback (callLLM in profile.js)
 
-### Phase 5: Distribution
-- [ ] Telnyx SMS integration for daily transit digests
-- [ ] Practitioner dashboard
-- [ ] Composite/relationship charts
-- [ ] Clustering feature
-- [ ] PDF export
+### Phase 5: Distribution (Complete ✅)
+- [x] Telnyx SMS handler (sms.js — webhook + send-digest)
+- [x] Composite/relationship chart endpoint (/api/composite)
+- [x] Clustering feature (/api/cluster/*)
+- [x] PDF export with R2 caching (/api/profile/:id/pdf)
+- [x] Auth endpoints (register/login/refresh with PBKDF2 + JWT)
+- [x] Practitioner dashboard (6 endpoints — register/profile/clients CRUD)
+- [x] TELNYX_PHONE_NUMBER + TELNYX_CONNECTION_ID wired to SMS outbound
+- [x] Telnyx connection ID set as Worker secret (2887319279378629637)
 
-### Phase 6: Narrative Integration
-- [ ] Savannah onboarding narrative mapped to Forge journey
-- [ ] In-app story progression tied to user's Prime Self development
+### Phase 6: Narrative Integration (Complete ✅)
+- [x] Savannah onboarding narrative mapped to all 5 Forges (Chronos/Eros/Aether/Lux/Phoenix)
+- [x] savannah_narrative.json — 22-chapter story with per-Forge arcs, teachings, and user messages
+- [x] Onboarding handler — 5 routes: intro (public), forge, forge/:key, progress (KV), advance
+- [x] Progress tracking via KV namespace (no schema migration required)
+- [x] In-app story progression tied to user's primary Forge (from generated profile)
+- [x] Deployed live — `GET /api/onboarding/intro` returns 5-Forge structure ✅
 
 ---
 

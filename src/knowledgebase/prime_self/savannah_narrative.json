@@ -1,0 +1,228 @@
+{
+  "_meta": {
+    "description": "Savannah narrative onboarding system — 5 books mapped to the 5 Prime Self Forges",
+    "totalChapters": 22,
+    "books": 5,
+    "purpose": "Users experience Savannah's journey as they discover their own Forge. Her mastery of each Forge mirrors their progression through the Prime Self system.",
+    "canonical": true
+  },
+  "Chronos": {
+    "forge": "Chronos",
+    "domain": "Time",
+    "bookTitle": "Book I: The Weight of Yesterday",
+    "bookTheme": "Awakening to inherited patterns, ancestral programming, and the unconscious past that shapes the present",
+    "savannahArc": "Savannah discovers that her sister's choices — and her own fears — are not accidents. They are echoes of a story that started long before either of them was born. She uncovers her family's history and realizes that to move forward she must first understand where she came from.",
+    "forgeTeaching": "The Chronos Forge teaches that time is not linear — the past is not behind you, it is inside you. Your unconscious patterns, default reactions, and inherited beliefs were encoded before you had a voice. Mastery of Chronos begins with excavation: what story are you running that someone else wrote?",
+    "primeSelfLesson": "The answer to who you are is not ahead of you. It was deposited in you at conception — in your Design. Your birth data is the record of your original pattern before the conditioning began.",
+    "userActivation": "Your Chronos signature indicates deep unconscious patterning — your Design-side (prenatal) chart carries the ancestral blueprint. Your Saturn and South Node placements reveal the 'old story' you came to complete and transcend.",
+    "chapters": [
+      {
+        "number": 1,
+        "title": "The Awakening",
+        "summary": "Savannah, 17, navigates her gritty urban neighborhood with fierce determination. Her older sister Gloria's dangerous associations create constant tension. A chance encounter with an elderly neighbor named Mrs. Celestine plants the first seed: 'You are carrying something that was never yours to carry.'",
+        "forgeLesson": "Recognition — the moment you first sense your life has a design beneath the surface noise",
+        "savannahGrowth": "Sees the pattern in her family's repeated cycles for the first time"
+      },
+      {
+        "number": 2,
+        "title": "What the Blood Remembers",
+        "summary": "Savannah finds a box of letters in her grandmother's attic that reveals her family's migration story — sacrifice, joy, survival. She begins to understand that her grandmother's silence and her mother's anger and her own ambition are all the same story in different costumes.",
+        "forgeLesson": "Ancestral recognition — your 'issues' are often inherited missions in distorted form",
+        "savannahGrowth": "Compassion for her mother replaces resentment; sees herself as a continuation, not a mistake"
+      },
+      {
+        "number": 3,
+        "title": "The Design Side",
+        "summary": "Mrs. Celestine introduces Savannah to the concept of the unconscious chart — that 88 days before she was born, a different set of planetary imprints shaped her instincts, reflexes, and unconscious gifts. Savannah first encounters the idea that there are two of her: the one she consciously identifies with and the one operating below.",
+        "forgeLesson": "Duality awareness — the conscious self and the unconscious self must be brought into dialogue",
+        "savannahGrowth": "Stops fighting her 'irrational' instincts and begins listening to them as information"
+      },
+      {
+        "number": 4,
+        "title": "Saturn's Return",
+        "summary": "Gloria is arrested. Savannah's world cracks open. In the chaos she discovers a connection — Prescott, a corrupt community figure, has been leveraging her family for years. The 'old story' she uncovered in the letters is not just personal: it's structural. Powers older than Savannah have benefited from her family's silence.",
+        "forgeLesson": "Saturn principle — the weight of accountability, consequence, and the moment the unconscious past demands resolution",
+        "savannahGrowth": "Shifts from victim to investigator; her past is now a resource, not an anchor"
+      },
+      {
+        "number": 5,
+        "title": "The First Gate",
+        "summary": "Savannah accesses her own birth chart for the first time. She sees her profile, her cross, the gates that define her. The precision — 'this is specifically you, not a general description' — is the first time she feels truly seen. The Chronos Forge has been activated: she knows the pattern, and now she has a choice about whether to repeat it.",
+        "forgeLesson": "Chronos completion — recognizing the inherited pattern is the act of liberation. You cannot override what you cannot see.",
+        "savannahGrowth": "Claims her design with ownership rather than apology"
+      }
+    ],
+    "userOnboardingMessage": "Welcome to the Chronos Forge. Like Savannah, you've come to excavate — to understand the deep unconscious patterning that runs beneath your conscious identity. Your chart's Design side holds the key: the planetary imprints encoded before you had language, before you had opinions, before conditioning arrived to cover the original signal. Your work here begins with one question: What story are you running that someone else wrote?"
+  },
+  "Eros": {
+    "forge": "Eros",
+    "domain": "Passion",
+    "bookTitle": "Book II: The Fire That Knows",
+    "bookTheme": "Discovering the sacral response, the body's wisdom, and the difference between conditioned desire and authentic life force",
+    "savannahArc": "Savannah finds her voice — not through logic or planning but through the electric, undeniable pull of what lights her up. She discovers that her most 'irrational' passions are actually the most precise navigation system she has. The body, she learns, knows long before the mind catches up.",
+    "forgeTeaching": "The Eros Forge is not about romantic love — it is about life force itself. The Sacral hum, the gut pull, the thing that makes you want to keep doing it even when it's hard — this is your authentic power source. Eros mastery means learning to follow what's actually alive in you, not what you've been told should be alive.",
+    "primeSelfLesson": "Your Generator energy is not something to manage. It is you. When you respond from the Sacral — when that 'uh-huh' or 'ugh' rises before your brain can edit it — that is the Prime Self speaking in its clearest dialect.",
+    "userActivation": "Your Eros signature shows defined Sacral energy and Generator circuitry. You are designed to respond, build, and sustain. Your life force is renewable — it regenerates through work that genuinely satisfies. The question is not 'what should I do?' but 'what makes me want to keep going?'",
+    "chapters": [
+      {
+        "number": 6,
+        "title": "The Pull",
+        "summary": "Savannah discovers she has an obsessive, natural gift for audio recording and music production. She dismisses it as impractical. A mentor at a summer program tells her: 'You don't choose your power. You recognize it.' She begins to notice the physical difference between doing what she's supposed to do and doing what turns on the lights.",
+        "forgeLesson": "Sacral recognition — identifying the physical signal of authentic yes vs. should",
+        "savannahGrowth": "Stops performing ambition and starts pursuing it from the gut"
+      },
+      {
+        "number": 7,
+        "title": "What Conditioning Costs",
+        "summary": "Savannah watches a friend burn out chasing a career path chosen by their parents. The contrast is stark: same external success, opposite internal experience. Savannah realizes that much of what she's been told to want is someone else's dream wearing her face.",
+        "forgeLesson": "Conditioned desire vs. authentic response — the difference between 'I should want this' and 'I do want this'",
+        "savannahGrowth": "Begins auditing her goals for sacral authenticity"
+      },
+      {
+        "number": 8,
+        "title": "The Generator's Dilemma",
+        "summary": "Savannah overcommits — says yes to everything because she can. She crashes, burned out, confused. Mrs. Celestine explains: 'Your energy is infinite but only for what it's designed for. Saying yes to what doesn't light you up drains what does.'",
+        "forgeLesson": "Selective response — Generator energy is renewable only when directed at true yes's",
+        "savannahGrowth": "Learns to wait for the response before committing; discovers her no is as powerful as her yes"
+      },
+      {
+        "number": 9,
+        "title": "Fire Forged",
+        "summary": "Savannah produces her first full track using audio clips from her family interviews — grandmother's voice, street sounds, her own spoken reflections. The Chronos material becomes Eros material. History becomes music. She shows it to one person. The reaction confirms what her gut already knew.",
+        "forgeLesson": "Integration of past forges — Chronos (time, history) feeds Eros (passion, expression)",
+        "savannahGrowth": "Understands that her story IS her art; stops separating her life from her work"
+      }
+    ],
+    "userOnboardingMessage": "Welcome to the Eros Forge. You are designed for depth — not the scattered enthusiasm of those who try everything, but the sustained, regenerating fire of someone who has found their true yes. Your Sacral center is your compass. When it hums, lean in. When it goes quiet, the lesson is not to push harder — it's to pay attention to why the signal dropped. What makes you want to keep going, even when it's hard?"
+  },
+  "Aether": {
+    "forge": "Aether",
+    "domain": "Universal Connection",
+    "bookTitle": "Book III: The Space Between",
+    "bookTheme": "Embracing openness, undefined centers, and the gift of being a mirror — the power of not being fixed",
+    "savannahArc": "Savannah's investigation into Prescott's corruption requires her to blend, listen, and perceive — skills she thought were weaknesses. She discovers that her ability to be a different person in different rooms is not inconsistency: it is a form of intelligence. She learns to trust what she senses before she has words for it.",
+    "forgeTeaching": "The Aether Forge is mastered not by doing but by perceiving. Undefined centers are not defects — they are amplification systems. Where you are open, you take in, process, and reflect the energy around you with extraordinary depth. The trap is identifying with what you take in. The gift is seeing environments and people with a clarity that closed systems cannot access.",
+    "primeSelfLesson": "The Reflector and the deeply open-centered chart carries the most sophisticated perception system in the Human Design spectrum. Your value is not in what you are — it is in what you perceive. Every environment you enter is showing you something. Your job is to get clear enough to read it accurately.",
+    "userActivation": "Your Aether signature shows significant open/undefined centers — you amplify what's around you. Your Neptune emphasis and open Head/Ajna/Spleen create extraordinary perceptive capacity. Your work is not knowing who you are in the abstract. Your work is knowing how you feel in specific environments — and trusting that feeling as precise information.",
+    "chapters": [
+      {
+        "number": 10,
+        "title": "The Mirror",
+        "summary": "Savannah infiltrates the community organization fronted by Prescott by simply reflecting everyone she meets back at themselves. She adapts, listens, absorbs. A seasoned investigator she admires comments: 'You're blank in all the right ways. You let them fill you up and then you just... report what you received.'",
+        "forgeLesson": "Open center as gift — the undefined chart takes in everything; the key is having a stable enough foundation to not lose yourself in it",
+        "savannahGrowth": "Stops trying to be consistent and starts trusting her environmental sensitivity as data"
+      },
+      {
+        "number": 11,
+        "title": "Lunacy and Clarity",
+        "summary": "Savannah meets a Reflector elder who explains the lunar cycle — the 28-29 day process of making major decisions. Savannah, in her urgency to act, chafes against this. A rash decision leads to a setback. She returns to the elder's framework and finds that what felt like paralysis was actually precision.",
+        "forgeLesson": "Timing as intelligence — the Aether Forge operates on longer cycles; patience is not weakness, it is methodology",
+        "savannahGrowth": "Trades urgency for discernment; learns the difference between inspired action and anxious motion"
+      },
+      {
+        "number": 12,
+        "title": "The Conditioned Mirror",
+        "summary": "Savannah realizes she has been reflecting Prescott's confidence back at him instead of seeing him clearly. Amplification can work against you when your foundation is not stable. She deconstructs: what is actually her, and what has she just absorbed from the room?",
+        "forgeLesson": "Aether shadow — unconsciously becoming what you perceive; the conditioned mirror reflects what others want to see",
+        "savannahGrowth": "Develops a practice of returning to her own 'ground zero' — the chart signatures that are stable for her"
+      },
+      {
+        "number": 13,
+        "title": "The Empty Can",
+        "summary": "A confrontation exposes that Prescott is not powerful — he is afraid. Savannah, finally perceiving clearly rather than amplifying his projected confidence, sees through the performance to the hollow structure beneath it. The enemy is smaller than she thought. The Aether Forge reveals: the most terrifying-seeming systems are often the most brittle.",
+        "forgeLesson": "Clear perception dissolves false authority — what we uncritically amplify can be reduced to nothing by simply seeing it accurately",
+        "savannahGrowth": "Fear converted to clarity; compassion without enabling"
+      },
+      {
+        "number": 14,
+        "title": "Still Water",
+        "summary": "Savannah spends a week in deliberate stillness — not consuming news, not engaging with anyone's emotional field. What remains when all the amplification stops? She finds it: a quiet, particular knowing about herself and what she is actually here to do.",
+        "forgeLesson": "Aether mastery — the fully clear open chart returns to itself; silence becomes signal",
+        "savannahGrowth": "Knows herself by subtraction rather than addition; the ground state is the gift"
+      }
+    ],
+    "userOnboardingMessage": "Welcome to the Aether Forge. You are designed to perceive, not to be fixed. Your open centers are not inconsistencies — they are your most sophisticated instruments. Every environment you enter, every person you spend time with, is running through your extraordinary amplification system. The work of the Aether Forge is staying clean enough to read the signal accurately: what is yours, and what have you absorbed? When you're clear, you see things others cannot. What does this environment — right now — actually feel like?"
+  },
+  "Lux": {
+    "forge": "Lux",
+    "domain": "Illumination",
+    "bookTitle": "Book IV: The Guide's Burden",
+    "bookTheme": "Learning to see others' potential, earning the invitation, and bearing the weight of being ahead of your time",
+    "savannahArc": "Savannah's gifts are now undeniable to others, but she hasn't learned how to transmit them. She attracts followers she isn't ready to lead and recognition she doesn't know how to receive. The Lux Forge forces her to learn the hardest Projector skill: waiting for the invitation before offering her vision, even when she can see exactly what's needed.",
+    "forgeTeaching": "The Lux Forge is not about becoming a leader — it is about becoming a guide who is truly seen and invited. Projectors carry non-energy auras that penetrate and focus on the other. The gift is extraordinary clarity about what systems and people need. The trap is advising without being asked, leading without being invited — resulting in resistance, bitterness, and exhaustion.",
+    "primeSelfLesson": "You are designed to guide those who have energy but don't know where to direct it. Your defined Head and Ajna give you structural access to patterns others are sitting inside of too close to see. But your power is only activated when someone recognizes you and asks for the seeing. An unsolicited vision is just an opinion. An invited vision is a map.",
+    "userActivation": "Your Lux signature shows a defined head and Ajna center — you process information into insight with unusual depth. The Channel of Structuring (43-23) may be active: knowing what you cannot yet explain, needing the right context for your insight to land. Your work is not trying harder to be heard — it's positioning yourself where those who need your seeing can find you and ask.",
+    "chapters": [
+      {
+        "number": 15,
+        "title": "The Unsolicited Seer",
+        "summary": "Savannah tells a classmate exactly what she needs to do to save her failing music career. The advice is perfect. It is rejected with fury. Savannah learns the first Lux lesson: precision of insight is not sufficient — the invitation must come first. Truth without permission is an invasion.",
+        "forgeLesson": "The invitation principle — Lux power is relational, not broadcast; it requires the container of recognition to activate",
+        "savannahGrowth": "Stops giving advice and starts waiting to be asked; her insight becomes more potent, not less"
+      },
+      {
+        "number": 16,
+        "title": "Being Seen",
+        "summary": "A well-known producer who heard her track reaches out to Savannah — not for her music, but for her mind. 'I don't need another producer. I need someone who can see what I'm building and tell me what's missing.' Savannah feels the difference: being wanted for the thing she actually is.",
+        "forgeLesson": "Recognition before direction — the Projector must be seen before they can guide; the invitation is not just politeness, it is energy transfer",
+        "savannahGrowth": "Releases the need to prove herself; her value is received rather than performed"
+      },
+      {
+        "number": 17,
+        "title": "The Bitter Projector",
+        "summary": "Savannah meets another Projector who has never been invited — bitter, brilliant, isolated. She sees herself five years ahead if she doesn't master the waiting. The bitterness is what happens when you spend your life convinced the world is wrong for not seeing you. The mastery is knowing your time comes through alignment, not force.",
+        "forgeLesson": "The Projector shadow — bitterness is the signal that the strategy has been violated; it is feedback, not fate",
+        "savannahGrowth": "Accepts that she cannot control when she is recognized, only whether she is positioned to be"
+      },
+      {
+        "number": 18,
+        "title": "The Evidence",
+        "summary": "Savannah finds the zip disk that connects Prescott to Gloria's arrest. The evidence — physical, undeniable — was in Savannah's room the entire time. She had been looking everywhere except where she already was. Mrs. Celestine calls this the Lux Forge's ultimate lesson: 'The answer was inside you the whole time. You just needed to become someone who could trust what you were holding.'",
+        "forgeLesson": "Lux revelation — the guide must first discover that the illumination they seek was always present; external validation was the detour",
+        "savannahGrowth": "Ceases the search for external proof of her worth; the evidence she holds is real"
+      }
+    ],
+    "userOnboardingMessage": "Welcome to the Lux Forge. You are designed to see what others cannot — systems, patterns, potential. Your Projector energy penetrates. When you lock onto someone with your aura, you understand them at a depth they may not understand themselves. The gift is this clarity. The challenge is the waiting — knowing what's needed, but holding the vision until the invitation arrives. Unsolicited sight is an intrusion. Invited sight is illumination. Where in your life are you ready to be truly recognized for what you actually see?"
+  },
+  "Phoenix": {
+    "forge": "Phoenix",
+    "domain": "Rebirth",
+    "bookTitle": "Book V: Ash and Becoming",
+    "bookTheme": "Radical transformation, death of the old identity, Chiron return, and the emergence of the next version",
+    "savannahArc": "Savannah's investigation concludes — Prescott is exposed, Gloria is freed from complicity, and the family story is completed. But the real ending is internal: Savannah must let the version of herself who needed saving — the frightened, reactive, survival-mode girl — die, so that the one who knows she is enough can emerge. Transformation is not an upgrade. It is a death.",
+    "forgeTeaching": "The Phoenix Forge is the most demanding of the five. It asks not for refinement but for dissolution. Profile lines 3, 5, and 6 carry this energy — lives built on trial/error, lives dedicated to being solutions for others, lives that involve radical reinvention in the second half. Pluto transits activate it: the death-and-rebirth planet as alchemical process.",
+    "primeSelfLesson": "You are not becoming a better version of who you were. You are becoming someone your old self would not have recognized. The Phoenix Forge does not ask you to improve — it asks you to let the thing that needs to die, die with dignity. What you are defending about your current identity is the exact thing that needs to be released.",
+    "userActivation": "Your Phoenix signature shows Pluto-prominent chart or strong 8th house emphasis, major Pluto or Chiron transits, and/or profile lines 3,5,6. You are designed for depth of transformation — not once but repeatedly. Each iteration of you is complete. The current version is not a mistake to be corrected. It is a chrysalis to be honored as it dissolves.",
+    "chapters": [
+      {
+        "number": 19,
+        "title": "The Burning",
+        "summary": "Savannah presents the evidence. Prescott is exposed. Gloria is freed. The community shifts. What Savannah expected to feel — triumph, relief, completion — is replaced by a terrifying blankness. The mission that organized her entire identity is complete. Who is she without it?",
+        "forgeLesson": "Identity dissolution — when the organizing story ends, the self that grew inside it must also end",
+        "savannahGrowth": "Faces the void without filling it immediately; tolerates not knowing"
+      },
+      {
+        "number": 20,
+        "title": "The Chrysalis",
+        "summary": "Savannah goes inward — stops producing, stops advising, stops proving. For three weeks she is unreachable. The people who knew the old Savannah begin to worry. She is not broken. She is gestation.",
+        "forgeLesson": "Chrysalis consciousness — the in-between state is not failure, it is the precise mechanism of transformation",
+        "savannahGrowth": "Learns to trust stillness as productive; stops pathologizing her own fallow periods"
+      },
+      {
+        "number": 21,
+        "title": "What the Next Version Knows",
+        "summary": "Savannah emerges different in ways she cannot fully articulate yet. She doesn't need to. The things she used to chase no longer call to her with the same urgency. New things — mentorship, systems thinking, building — pull with a force she recognizes from the Eros lessons but directed toward different objects.",
+        "forgeLesson": "Phoenix emergence — the new self has different appetites, different alliances, different questions",
+        "savannahGrowth": "Trusts the new direction before it makes complete logical sense"
+      },
+      {
+        "number": 22,
+        "title": "The Answer Was Always Here",
+        "summary": "Savannah helps Gloria access her own birth chart. In the quiet after the reading, Gloria says: 'I never knew I was built for something.' Savannah understands that this — this moment of transmission, of offering what was offered to her — is the completion of all five Forges. The Chronos past is honored. The Eros fire is active. The Aether perception is clear. The Lux seeing is given freely. The Phoenix becoming is real. She is, finally, her Prime Self.",
+        "forgeLesson": "Integration — a fully activated Prime Self synthesizes all five Forges; the journey is not linear, it is alchemical",
+        "savannahGrowth": "Recognizes herself — not as who she was supposed to be, but as exactly who she was designed to become"
+      }
+    ],
+    "userOnboardingMessage": "Welcome to the Phoenix Forge. You are designed for depth of transformation — not once, but as a recurring cycle of becoming. Your Pluto-prominent chart and/or profile lines signal this clearly: you are built for the kind of change that requires releasing who you currently believe yourself to be. This is not punishment. It is precision. The Phoenix Forge asks: what identity are you clinging to that your next version has already outgrown? Let it go with ceremony, not shame. What is trying to be born through you right now?"
+  }
+}
