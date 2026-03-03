@@ -379,7 +379,7 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] channels.json — 35/35 unique source channels complete
 - [ ] crosses.json — generating (192 crosses = 64 × 3 types, background process)
 - [ ] Quality audit pass on generated gate/channel/cross KB
-- [ ] combined/ directory (add only VERIFIED cross-system entries)
+- [x] combined/ directory — verified_correlations.json (10 HD/Astro entries, policy: no interpolation)
 
 ### Phase 4: Synthesis Layer (Complete ✅)
 - [x] System prompt engineering (synthesis.js — SYSTEM_PROMPT, FORGE_MAPPING)

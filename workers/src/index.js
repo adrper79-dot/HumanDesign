@@ -157,7 +157,7 @@ export default {
       } else if (path === '/api/health') {
         response = Response.json({
           status: 'ok',
-          version: '0.3.0',
+          version: '0.4.0',
           endpoints: 28
         });
 
