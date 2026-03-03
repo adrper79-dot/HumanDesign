@@ -104,7 +104,7 @@ export async function handleGetChart(request, env, chartId) {
   }
 
   try {
-    const query = createQueryFn(env);
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const result = await query(QUERIES.getChartById, [chartId]);
     const chart = result?.rows?.[0];
 

@@ -278,7 +278,7 @@ export async function handleGetProfile(request, env, profileId) {
     return Response.json({ error: 'Database unavailable' }, { status: 503 });
   }
   try {
-    const query = createQueryFn(env);
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const result = await query(QUERIES.getProfileById, [profileId]);
     const profile = result?.rows?.[0];
     if (!profile) {
@@ -321,7 +321,7 @@ export async function handleListProfiles(request, env) {
     return Response.json({ error: 'Database unavailable' }, { status: 503 });
   }
   try {
-    const query = createQueryFn(env);
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const result = await query(QUERIES.getProfilesByUser, [userId]);
     const profiles = (result?.rows || []).map(p => ({
       id: p.id,
