@@ -169,7 +169,16 @@ export const QUERIES = {
   createPractitioner: `
     INSERT INTO practitioners (user_id, certified, tier)
     VALUES ($1, $2, $3)
-    RETURNING id
+    RETURNING id, user_id, certified, tier, created_at
+  `,
+
+  getPractitionerByUserId: `
+    SELECT * FROM practitioners WHERE user_id = $1
+  `,
+
+  countPractitionerClients: `
+    SELECT COUNT(*) AS count FROM practitioner_clients
+    WHERE practitioner_id = $1
   `,
 
   addClient: `
@@ -178,10 +187,31 @@ export const QUERIES = {
     ON CONFLICT DO NOTHING
   `,
 
+  removeClient: `
+    DELETE FROM practitioner_clients
+    WHERE practitioner_id = $1 AND client_user_id = $2
+  `,
+
   getPractitionerClients: `
     SELECT u.* FROM users u
     JOIN practitioner_clients pc ON pc.client_user_id = u.id
     WHERE pc.practitioner_id = $1
+  `,
+
+  getPractitionerClientsWithCharts: `
+    SELECT
+      u.id, u.email, u.phone, u.birth_date, u.created_at AS joined_at,
+      pc.created_at AS added_at,
+      c.id AS chart_id, c.calculated_at AS chart_date
+    FROM users u
+    JOIN practitioner_clients pc ON pc.client_user_id = u.id
+    LEFT JOIN LATERAL (
+      SELECT id, calculated_at FROM charts
+      WHERE user_id = u.id
+      ORDER BY calculated_at DESC LIMIT 1
+    ) c ON true
+    WHERE pc.practitioner_id = $1
+    ORDER BY pc.created_at DESC
   `,
 
   // Clusters

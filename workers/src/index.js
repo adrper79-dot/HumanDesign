@@ -18,6 +18,12 @@
  *   POST /api/auth/login               – Email-based login, get JWT
  *   POST /api/auth/refresh             – Refresh access token
  *   GET  /api/health                   – Health check
+ *   POST /api/practitioner/register       – Register as practitioner
+ *   GET  /api/practitioner/profile        – Get practitioner profile
+ *   GET  /api/practitioner/clients        – List clients
+ *   POST /api/practitioner/clients/add    – Add client by email
+ *   GET  /api/practitioner/clients/:id    – Client detail (chart + profile)
+ *   DELETE /api/practitioner/clients/:id – Remove client
  */
 
 // Data injection for Workers runtime — MUST be first import
@@ -33,6 +39,7 @@ import { handleCluster } from './handlers/cluster.js';
 import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
 import { handlePdfExport } from './handlers/pdf.js';
+import { handlePractitioner } from './handlers/practitioner.js';
 import { corsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
@@ -45,8 +52,8 @@ const AUTH_ROUTES = new Set([
   '/api/sms/send-digest'
 ]);
 
-// Prefix-based auth routes (cluster endpoints, profile export)
-const AUTH_PREFIXES = ['/api/cluster/', '/api/profile/'];
+// Prefix-based auth routes (cluster endpoints, profile export, practitioner)
+const AUTH_PREFIXES = ['/api/cluster/', '/api/profile/', '/api/practitioner/'];
 
 // Public routes (no auth required)
 const PUBLIC_ROUTES = new Set([
@@ -125,6 +132,10 @@ export default {
       } else if (path.startsWith('/api/auth/')) {
         response = await handleAuth(request, env, path);
 
+      } else if (path.startsWith('/api/practitioner/')) {
+        const subpath = path.replace('/api/practitioner', '') || '/';
+        response = await handlePractitioner(request, env, subpath);
+
       } else if (path.match(/^\/api\/profile\/[^/]+\/pdf$/)) {
         const profileId = path.split('/')[3];
         response = await handlePdfExport(request, env, profileId);
@@ -133,7 +144,7 @@ export default {
         response = Response.json({
           status: 'ok',
           version: '0.3.0',
-          endpoints: 17
+          endpoints: 23
         });
 
       } else {
