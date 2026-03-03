@@ -262,3 +262,75 @@ async function callLLM(promptPayload, env) {
   const text = data.content?.[0]?.text || '';
   return text;
 }
+
+/**
+ * GET /api/profile/:id
+ *
+ * Retrieve a Prime Self Profile by ID.
+ * Auth required — only the profile owner can access it.
+ */
+export async function handleGetProfile(request, env, profileId) {
+  const userId = request._user?.sub || null;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  if (!env.NEON_CONNECTION_STRING) {
+    return Response.json({ error: 'Database unavailable' }, { status: 503 });
+  }
+  try {
+    const query = createQueryFn(env);
+    const result = await query(QUERIES.getProfileById, [profileId]);
+    const profile = result?.rows?.[0];
+    if (!profile) {
+      return Response.json({ error: 'Profile not found' }, { status: 404 });
+    }
+    if (profile.user_id !== userId) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    return Response.json({
+      ok: true,
+      data: {
+        id: profile.id,
+        chartId: profile.chart_id,
+        profile: typeof profile.profile_json === 'string'
+          ? JSON.parse(profile.profile_json)
+          : profile.profile_json,
+        modelUsed: profile.model_used,
+        groundingAudit: typeof profile.grounding_audit === 'string'
+          ? JSON.parse(profile.grounding_audit)
+          : profile.grounding_audit,
+        createdAt: profile.created_at
+      }
+    });
+  } catch (err) {
+    return Response.json({ error: 'Database error', detail: err.message }, { status: 500 });
+  }
+}
+
+/**
+ * GET /api/profile/list
+ *
+ * List all Prime Self Profiles for the authenticated user.
+ */
+export async function handleListProfiles(request, env) {
+  const userId = request._user?.sub || null;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  if (!env.NEON_CONNECTION_STRING) {
+    return Response.json({ error: 'Database unavailable' }, { status: 503 });
+  }
+  try {
+    const query = createQueryFn(env);
+    const result = await query(QUERIES.getProfilesByUser, [userId]);
+    const profiles = (result?.rows || []).map(p => ({
+      id: p.id,
+      chartId: p.chart_id,
+      modelUsed: p.model_used,
+      createdAt: p.created_at
+    }));
+    return Response.json({ ok: true, data: profiles });
+  } catch (err) {
+    return Response.json({ error: 'Database error', detail: err.message }, { status: 500 });
+  }
+}

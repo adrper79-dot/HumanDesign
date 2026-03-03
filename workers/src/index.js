@@ -35,7 +35,7 @@
 import './engine-compat.js';
 
 import { handleCalculate, handleGetChart } from './handlers/calculate.js';
-import { handleProfile } from './handlers/profile.js';
+import { handleProfile, handleGetProfile, handleListProfiles } from './handlers/profile.js';
 import { handleTransits } from './handlers/transits.js';
 import { handleForecast } from './handlers/forecast.js';
 import { handleComposite } from './handlers/composite.js';
@@ -152,6 +152,13 @@ export default {
         const subpath = path.replace('/api/practitioner', '') || '/';
         response = await handlePractitioner(request, env, subpath);
 
+      } else if (path === '/api/profile/list' && request.method === 'GET') {
+        response = await handleListProfiles(request, env);
+
+      } else if (path.match(/^\/api\/profile\/[^/]+$/) && request.method === 'GET') {
+        const profileId = path.split('/')[3];
+        response = await handleGetProfile(request, env, profileId);
+
       } else if (path.match(/^\/api\/profile\/[^/]+\/pdf$/)) {
         const profileId = path.split('/')[3];
         response = await handlePdfExport(request, env, profileId);
@@ -164,7 +171,7 @@ export default {
         response = Response.json({
           status: 'ok',
           version: '0.4.0',
-          endpoints: 29
+          endpoints: 31
         });
 
       } else {
