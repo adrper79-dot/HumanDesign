@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "description": "Verified cross-system correlations between HD and Astrology",
+    "policy": "Only add entries that have EXPLICIT documented agreement between both systems. No interpolation. No synthesis.",
+    "lastReviewed": "2025-01-01",
+    "entryCount": 10
+  },
+
+  "sun_gate_33_leo": {
+    "hdElement": "Gate 33 (Retreat)",
+    "astroElement": "Sun in Leo",
+    "correlation": "Both relate to the conscious personality sun placement. Gate 33 is the Personality Sun's I Ching position; the tropical zodiac sign gives cultural-seasonal context.",
+    "confidence": "verified",
+    "source": "Calculation engine — same longitude, different mapping systems"
+  },
+
+  "type_projector_saturn": {
+    "hdElement": "Projector Type",
+    "astroElement": "Saturn prominence (angular or chart ruler)",
+    "correlation": "Projectors frequently have Saturn prominent. Both systems point to a non-sacral, recognition-dependent energy pattern requiring patience and timing.",
+    "confidence": "observational",
+    "source": "Cross-system pattern noted in forge_mapping.json; not statistically verified"
+  },
+
+  "emotional_authority_water_signs": {
+    "hdElement": "Emotional Authority (Solar Plexus defined)",
+    "astroElement": "Prominent water sign placements (Cancer, Scorpio, Pisces)",
+    "correlation": "Emotional authority in HD aligns with water-element dominance in astrology. Both describe the same underlying sensitivity to emotional cycles and need for clarity over time.",
+    "confidence": "observational",
+    "source": "forge_mapping.json — Eros Forge correlation"
+  },
+
+  "gate_64_neptune_pisces": {
+    "hdElement": "Gate 64 (Before Completion / Confusion)",
+    "astroElement": "Neptune, Pisces, 12th house",
+    "correlation": "Gate 64 sits at the boundary of the mandala — pure inspiration without form. Neptune/Pisces in astrology maps the same dissolution-into-possibility territory.",
+    "confidence": "observational",
+    "source": "Structural position in both systems' 'endings/beginnings' sector"
+  },
+
+  "channel_34_20_sacral_throat": {
+    "hdElement": "Channel 34-20 (Power / Charisma)",
+    "astroElement": "Mars-Mercury contact (conjunction/trine), especially in fire signs",
+    "correlation": "The 34-20 channel connects Sacral motor directly to Throat — pure 'in the now' manifestation. Mars-Mercury fire aspects describe the same instantaneous expression of vital force.",
+    "confidence": "observational",
+    "source": "Forge mapping — Phoenix/Chronos expression patterns"
+  },
+
+  "profile_6_2_saturn_return": {
+    "hdElement": "Profile 6/2 — Role Model / Hermit",
+    "astroElement": "Saturn return cycle (ages 28-30, 56-60)",
+    "correlation": "The 6/2 profile has a documented three-phase life arc that mirrors Saturn's transit cycle: trial (0-28), roof (28-50), role model (50+). The first Saturn return marks when the 6-line 'returns from the roof.'",
+    "confidence": "documented",
+    "source": "HD Profile system — line 6 life arc; astrology Saturn return timing"
+  },
+
+  "incarnation_cross_quarter_of_civilization_capricorn": {
+    "hdElement": "Quarter of Civilization (Gates 33, 19, 2, 1 / 7, 13 etc.)",
+    "astroElement": "Capricorn Season / Saturn-ruled structures",
+    "correlation": "The Quarter of Civilization in HD spans the zodiac section from Capricorn through Aries. Both systems point to building lasting structures, social organization, and legacy.",
+    "confidence": "observational",
+    "source": "HD Quarter system gate positions overlaid on tropical zodiac wheel"
+  },
+
+  "undefined_head_center_neptune_aspects": {
+    "hdElement": "Undefined Head Center",
+    "astroElement": "Neptune aspecting Mercury or the Ascendant",
+    "correlation": "Both describe a permeable mental field — pressure from outside to think certain thoughts, difficulty distinguishing own mental impulses from collective. Neptune dissolves mental boundaries; undefined Head absorbs external inspiration pressure.",
+    "confidence": "observational",
+    "source": "Center function descriptions vs. Neptune archetype"
+  },
+
+  "defined_heart_will_center_sun_leo_aries": {
+    "hdElement": "Defined Heart/Will Center",
+    "astroElement": "Sun in Leo or Aries, or Sun angular (1st/10th house)",
+    "correlation": "Defined Heart/Will Center in HD indicates consistent ego force and willpower. Sun in fire signs or angular positions describes the same self-directed vitality and capacity to commit.",
+    "confidence": "observational",
+    "source": "Center descriptions vs. solar archetype in astrology"
+  },
+
+  "channel_28_38_root_spleen": {
+    "hdElement": "Channel 28-38 (The Stubbornness / Fighter)",
+    "astroElement": "Mars-Pluto contact, or Scorpio/8th house emphasis",
+    "correlation": "The 28-38 channel is the fight for meaning against death — existential struggle. Mars-Pluto and Scorpio/8th house in astrology describe the same buried, compulsive life-force confronting mortality.",
+    "confidence": "observational",
+    "source": "Channel archetype vs. Scorpio/Pluto archetype cross-system mapping"
+  }
+}

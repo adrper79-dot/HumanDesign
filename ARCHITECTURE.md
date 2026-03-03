@@ -375,9 +375,9 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] Knowledgebase authored: types, profiles, centers, forges, knowledges,
       sciences, arts, defenses, heresies, forge_mapping, signs, planets, aspects, houses
 - [x] R2 bucket provisioned (prime-self-exports, binding: R2)
-- [ ] gates.json — in progress via generate.js --gates (~64 Claude calls)
-- [ ] channels.json — pending (after gates complete)
-- [ ] crosses.json — pending (after gates complete)
+- [x] gates.json — 64/64 complete via generate.js --gates (Claude Sonnet)
+- [x] channels.json — 35/35 unique source channels complete
+- [ ] crosses.json — generating (192 crosses = 64 × 3 types, background process)
 - [ ] Quality audit pass on generated gate/channel/cross KB
 - [ ] combined/ directory (add only VERIFIED cross-system entries)
 

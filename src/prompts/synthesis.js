@@ -353,6 +353,14 @@ function getRAGContext(chartData) {
       }
     }
 
+    // Incarnation Cross
+    const crossesKB = loadKB('hd', 'crosses.json');
+    const crossName = chartData.hdChart?.cross?.name || chartData.hdChart?.cross;
+    if (crossName && typeof crossName === 'string' && crossesKB[crossName]) {
+      const c = crossesKB[crossName];
+      sections.push(`### INCARNATION CROSS: ${crossName}\n${c.description?.slice(0, 300) || ''}\n${c.lifeTheme ? `Life Theme: ${c.lifeTheme}` : ''}`);
+    }
+
     return sections.length ? `## KNOWLEDGEBASE CONTEXT (RAG)\n\n${sections.join('\n\n---\n\n')}` : '';
   } catch {
     return '';

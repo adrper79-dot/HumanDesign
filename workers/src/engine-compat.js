@@ -17,6 +17,7 @@ import typesData from '../../src/knowledgebase/hd/types.json';
 import profilesData from '../../src/knowledgebase/hd/profiles.json';
 import gatesData from '../../src/knowledgebase/hd/gates.json';
 import channelsData from '../../src/knowledgebase/hd/channels.json';
+import crossesKBData from '../../src/knowledgebase/hd/crosses.json';
 import forgesData from '../../src/knowledgebase/prime_self/forges.json';
 import knowledgesData from '../../src/knowledgebase/prime_self/knowledges.json';
 import forgeMappingData from '../../src/knowledgebase/prime_self/forge_mapping.json';
@@ -28,6 +29,7 @@ globalThis.__PRIME_DATA = {
     'hd/profiles.json': profilesData,
     'hd/gates.json': gatesData,
     'hd/channels.json': channelsData,
+    'hd/crosses.json': crossesKBData,
     'prime_self/forges.json': forgesData,
     'prime_self/knowledges.json': knowledgesData,
     'prime_self/forge_mapping.json': forgeMappingData
