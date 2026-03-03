@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prime Self — Human Design & Astrology</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
 <style>
   :root {
     --bg: #0a0a0f;
@@ -226,16 +227,18 @@
   <div class="auth-box">
     <h2 id="authTitle">Sign In</h2>
     <p id="authSubtitle">Access your Prime Self profile and saved charts.</p>
+    <form onsubmit="submitAuth(); return false;">
     <div class="form-group" style="margin-bottom:12px">
       <label>Email</label>
-      <input type="email" id="authEmail" placeholder="you@example.com">
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
     </div>
     <div class="form-group" style="margin-bottom:16px">
       <label>Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••">
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
     </div>
     <div class="auth-error" id="authError"></div>
-    <button class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:11px" onclick="submitAuth()">Sign In</button>
+    <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:11px">Sign In</button>
+    </form>
     <div class="auth-toggle">
       <span id="authToggleText">Don't have an account?</span>
       <a onclick="toggleAuthMode()" id="authToggleLink">Create one</a>
@@ -330,7 +333,7 @@
   <!-- ═══ PROFILE TAB ═══ -->
   <div class="tab-content" id="tab-profile">
     <div class="alert alert-info">
-      ◈ The Prime Self Profile requires a full 8-layer synthesis via Claude AI. Generation takes 15–30 seconds. Authentication recommended to save your profile.
+      ◈ The Prime Self Profile requires sign-in and a full 8-layer synthesis via Claude AI. Generation takes 15–30 seconds.
     </div>
     <div class="card">
       <div class="card-title">◈ Generate Prime Self Profile</div>
@@ -465,9 +468,15 @@ async function submitAuth() {
 
   try {
     const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
-    const res = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify({ email, password }) });
-    if (res.error) { errorEl.textContent = res.error; return; }
-    token = res.accessToken || res.token;
+    // Use raw fetch here — not apiFetch — so a 401 doesn't trigger the auto-logout loop
+    const rawRes = await fetch(API + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const res = await rawRes.json();
+    if (!rawRes.ok || res.error) { errorEl.textContent = res.error || 'Login failed'; return; }
+    token = res.accessToken;
     userEmail = email;
     localStorage.setItem('ps_token', token);
     localStorage.setItem('ps_email', email);
@@ -493,6 +502,15 @@ async function apiFetch(path, options = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(API + path, { ...options, headers });
+  // Auto-handle expired / missing token
+  if (res.status === 401) {
+    token = null;
+    localStorage.removeItem('ps_token');
+    updateAuthUI();
+    openAuthOverlay();
+    document.getElementById('authError').textContent = 'Session expired — please sign in again.';
+    return { error: 'Session expired. Please sign in.' };
+  }
   return res.json();
 }
 
@@ -628,8 +646,9 @@ function renderChart(data) {
 // ── Profile Generator ─────────────────────────────────────────
 async function generateProfile() {
   if (!token) {
-    const go = confirm('Sign in to save your profile. Generate without saving?');
-    if (!go) { openAuthOverlay(); return; }
+    openAuthOverlay();
+    document.getElementById('authError').textContent = 'Sign in required to generate a profile.';
+    return;
   }
 
   const btn = document.getElementById('profileBtn');
