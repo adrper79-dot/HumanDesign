@@ -26,18 +26,25 @@ async function sendSMS(to, body, env) {
     throw new Error('Telnyx credentials not configured');
   }
 
+  const payload = {
+    from,
+    to,
+    text: body,
+    type: 'SMS'
+  };
+
+  // Include messaging_profile_id if set (routes via Telnyx connection)
+  if (env.TELNYX_CONNECTION_ID) {
+    payload.messaging_profile_id = env.TELNYX_CONNECTION_ID;
+  }
+
   const response = await fetch('https://api.telnyx.com/v2/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify({
-      from,
-      to,
-      text: body,
-      type: 'SMS'
-    })
+    body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
@@ -52,10 +59,16 @@ async function sendSMS(to, body, env) {
  * Call Haiku for SMS digest generation.
  */
 async function callDigestLLM(prompt, env) {
-  const gatewayUrl = env.AI_GATEWAY_URL || 'https://gateway.ai.cloudflare.com/v1';
+  const gatewayUrl = env.AI_GATEWAY_URL || '';
   const apiKey = env.ANTHROPIC_API_KEY;
 
-  const response = await fetch(`${gatewayUrl}/anthropic/v1/messages`, {
+  // Use CF AI Gateway only if it's the real gateway URL; otherwise direct Anthropic
+  const isRealGateway = gatewayUrl.startsWith('https://gateway.ai.cloudflare.com/');
+  const endpoint = isRealGateway
+    ? `${gatewayUrl}/anthropic/v1/messages`
+    : 'https://api.anthropic.com/v1/messages';
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
