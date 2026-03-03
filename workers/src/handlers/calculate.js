@@ -86,3 +86,47 @@ export async function handleCalculate(request, env) {
     }
   });
 }
+
+/**
+ * GET /api/chart/:id
+ *
+ * Retrieve a previously calculated chart by ID.
+ * Requires authentication — only the chart owner can retrieve their chart.
+ */
+export async function handleGetChart(request, env, chartId) {
+  const userId = request._user?.sub || null;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  if (!env.NEON_CONNECTION_STRING) {
+    return Response.json({ error: 'Database unavailable' }, { status: 503 });
+  }
+
+  try {
+    const query = createQueryFn(env);
+    const result = await query(QUERIES.getChartById, [chartId]);
+    const chart = result?.rows?.[0];
+
+    if (!chart) {
+      return Response.json({ error: 'Chart not found' }, { status: 404 });
+    }
+
+    // Verify ownership
+    if (chart.user_id !== userId) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    return Response.json({
+      ok: true,
+      data: {
+        id: chart.id,
+        hdChart: typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json,
+        astroChart: typeof chart.astro_json === 'string' ? JSON.parse(chart.astro_json) : chart.astro_json,
+        calculatedAt: chart.calculated_at
+      }
+    });
+  } catch (err) {
+    return Response.json({ error: 'Database error', detail: err.message }, { status: 500 });
+  }
+}

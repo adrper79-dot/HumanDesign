@@ -34,7 +34,7 @@
 // Data injection for Workers runtime — MUST be first import
 import './engine-compat.js';
 
-import { handleCalculate } from './handlers/calculate.js';
+import { handleCalculate, handleGetChart } from './handlers/calculate.js';
 import { handleProfile } from './handlers/profile.js';
 import { handleTransits } from './handlers/transits.js';
 import { handleForecast } from './handlers/forecast.js';
@@ -59,7 +59,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding)
-const AUTH_PREFIXES = ['/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -79,7 +79,9 @@ const PUBLIC_ROUTES = new Set([
 
 function requiresAuth(path) {
   if (AUTH_ROUTES.has(path)) return true;
-  if (PUBLIC_ONBOARDING.has(path)) return false; // onboarding intro is public
+  // Explicit public exemptions take priority over prefix auth
+  if (PUBLIC_ROUTES.has(path)) return false;
+  if (PUBLIC_ONBOARDING.has(path)) return false;
   for (const prefix of AUTH_PREFIXES) {
     if (path.startsWith(prefix)) return true;
   }
@@ -154,11 +156,15 @@ export default {
         const profileId = path.split('/')[3];
         response = await handlePdfExport(request, env, profileId);
 
+      } else if (path.match(/^\/api\/chart\/[^/]+$/) && request.method === 'GET') {
+        const chartId = path.split('/')[3];
+        response = await handleGetChart(request, env, chartId);
+
       } else if (path === '/api/health') {
         response = Response.json({
           status: 'ok',
           version: '0.4.0',
-          endpoints: 28
+          endpoints: 29
         });
 
       } else {
