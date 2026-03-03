@@ -283,16 +283,20 @@
           <label>Birth Time</label>
           <input type="time" id="c-time" value="14:30">
         </div>
-        <div class="form-group">
-          <label>Latitude</label>
-          <input type="number" id="c-lat" step="0.0001" placeholder="40.7128" value="40.7128">
-        </div>
-        <div class="form-group">
-          <label>Longitude</label>
-          <input type="number" id="c-lng" step="0.0001" placeholder="-74.0060" value="-74.0060">
+        <div class="form-group full">
+          <label>Birth Location</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" style="flex:1"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
+            <button type="button" class="btn-secondary" onclick="geocodeLocation('c')" id="c-geoBtn"
+              style="white-space:nowrap;padding:0 16px;font-size:0.85rem">Look Up</button>
+          </div>
+          <div id="c-geo-status" style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)"></div>
+          <input type="hidden" id="c-lat">
+          <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
-          <label>Timezone</label>
+          <label>Timezone <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
           <select id="c-tz">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -312,10 +316,6 @@
             <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
             <option value="UTC">UTC</option>
           </select>
-        </div>
-        <div class="form-group full">
-          <label>City (optional — for display only)</label>
-          <input type="text" id="c-city" placeholder="e.g. New York, NY">
         </div>
       </div>
       <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
@@ -346,16 +346,20 @@
           <label>Birth Time</label>
           <input type="time" id="p-time" value="14:30">
         </div>
-        <div class="form-group">
-          <label>Latitude</label>
-          <input type="number" id="p-lat" step="0.0001" value="40.7128">
-        </div>
-        <div class="form-group">
-          <label>Longitude</label>
-          <input type="number" id="p-lng" step="0.0001" value="-74.0060">
+        <div class="form-group full">
+          <label>Birth Location</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" style="flex:1"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('p')}">
+            <button type="button" class="btn-secondary" onclick="geocodeLocation('p')" id="p-geoBtn"
+              style="white-space:nowrap;padding:0 16px;font-size:0.85rem">Look Up</button>
+          </div>
+          <div id="p-geo-status" style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)"></div>
+          <input type="hidden" id="p-lat">
+          <input type="hidden" id="p-lng">
         </div>
         <div class="form-group full">
-          <label>Timezone</label>
+          <label>Timezone <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
           <select id="p-tz">
             <option value="America/New_York">America/New_York</option>
             <option value="America/Los_Angeles">America/Los_Angeles</option>
@@ -526,15 +530,80 @@ function switchTab(id, btn) {
 function prefillExample() {
   document.getElementById('c-date').value = '1979-08-05';
   document.getElementById('c-time').value = '18:51';
+  document.getElementById('c-location').value = 'Tampa, FL, USA';
   document.getElementById('c-lat').value = '27.9506';
   document.getElementById('c-lng').value = '-82.4572';
-  document.getElementById('c-city').value = 'Tampa, FL';
+  setTimezone('c-tz', 'America/New_York');
+  const s = document.getElementById('c-geo-status');
+  s.textContent = '✓ Tampa, Florida, United States · 27.9506°N, 82.4572°W · America/New_York';
+  s.style.color = '#48c774';
+}
+
+// ── Geocode helpers ────────────────────────────────────────────
+async function geocodeLocation(prefix) {
+  const locationEl = document.getElementById(prefix + '-location');
+  const statusEl   = document.getElementById(prefix + '-geo-status');
+  const geoBtn     = document.getElementById(prefix + '-geoBtn');
+  const q = locationEl.value.trim();
+  if (!q) { statusEl.style.color = '#f56565'; statusEl.textContent = 'Enter a city first.'; return; }
+
+  geoBtn.disabled = true;
+  geoBtn.textContent = '…';
+  statusEl.style.color = 'var(--text-dim)';
+  statusEl.textContent = 'Looking up…';
+
+  try {
+    const data = await apiFetch('/api/geocode?q=' + encodeURIComponent(q));
+    if (data.error) {
+      statusEl.style.color = '#f56565';
+      statusEl.textContent = '✗ ' + data.error;
+      return;
+    }
+    document.getElementById(prefix + '-lat').value = data.lat;
+    document.getElementById(prefix + '-lng').value = data.lng;
+    setTimezone(prefix + '-tz', data.timezone);
+    const latDir = data.lat >= 0 ? 'N' : 'S';
+    const lngDir = data.lng >= 0 ? 'E' : 'W';
+    statusEl.style.color = '#48c774';
+    statusEl.textContent = `✓ ${data.displayName} · ${Math.abs(data.lat).toFixed(4)}°${latDir}, ${Math.abs(data.lng).toFixed(4)}°${lngDir} · ${data.timezone}`;
+  } catch (e) {
+    statusEl.style.color = '#f56565';
+    statusEl.textContent = '✗ Error: ' + e.message;
+  } finally {
+    geoBtn.disabled = false;
+    geoBtn.textContent = 'Look Up';
+  }
+}
+
+function setTimezone(selectId, tz) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  // Try exact match first
+  for (const opt of sel.options) {
+    if (opt.value === tz) { sel.value = tz; return; }
+  }
+  // Timezone not in existing list — add it at the top
+  const opt = document.createElement('option');
+  opt.value = tz; opt.textContent = tz;
+  sel.insertBefore(opt, sel.firstChild);
+  sel.value = tz;
 }
 
 async function calculateChart() {
   const btn = document.getElementById('calcBtn');
   const spinner = document.getElementById('calcSpinner');
   const resultEl = document.getElementById('chartResult');
+
+  // Auto-geocode if location text is present but coordinates not yet resolved
+  if (isNaN(parseFloat(document.getElementById('c-lat').value))) {
+    if (document.getElementById('c-location').value.trim()) {
+      await geocodeLocation('c');
+    }
+    if (isNaN(parseFloat(document.getElementById('c-lat').value))) {
+      resultEl.innerHTML = '<div class="alert alert-error">⚠ Please enter a birth location and click “Look Up” first.</div>';
+      return;
+    }
+  }
 
   btn.disabled = true;
   spinner.style.display = '';
@@ -662,6 +731,20 @@ async function generateProfile() {
     <div style="margin-top:8px;font-size:0.95rem">Synthesizing your Prime Self Profile…</div>
     <div style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)">Claude is analyzing your Human Design + Astrology data. This takes 15–30 seconds.</div>
   </div>`;
+
+  // Auto-geocode if location text is present but coordinates not yet resolved
+  if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
+    if (document.getElementById('p-location').value.trim()) {
+      await geocodeLocation('p');
+    }
+    if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
+      document.getElementById('profileResult').innerHTML =
+        '<div class="alert alert-error">⚠ Please enter a birth location and click “Look Up” first.</div>';
+      document.getElementById('profileBtn').disabled = false;
+      document.getElementById('profileSpinner').style.display = 'none';
+      return;
+    }
+  }
 
   try {
     const payload = {

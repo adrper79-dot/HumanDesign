@@ -17,6 +17,7 @@
  *   POST /api/auth/register            – Create account, get JWT
  *   POST /api/auth/login               – Email-based login, get JWT
  *   POST /api/auth/refresh             – Refresh access token
+ *   GET  /api/geocode                  – City → lat/lng + timezone
  *   GET  /api/health                   – Health check
  *   POST /api/practitioner/register       – Register as practitioner
  *   GET  /api/practitioner/profile        – Get practitioner profile
@@ -35,6 +36,7 @@
 import './engine-compat.js';
 
 import { handleCalculate, handleGetChart } from './handlers/calculate.js';
+import { handleGeocode } from './handlers/geocode.js';
 import { handleProfile, handleGetProfile, handleListProfiles } from './handlers/profile.js';
 import { handleTransits } from './handlers/transits.js';
 import { handleForecast } from './handlers/forecast.js';
@@ -67,6 +69,7 @@ const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
 // Public routes (no auth required)
 const PUBLIC_ROUTES = new Set([
   '/api/chart/calculate',
+  '/api/geocode',
   '/api/transits/today',
   '/api/transits/forecast',
   '/api/rectify',
@@ -167,11 +170,14 @@ export default {
         const chartId = path.split('/')[3];
         response = await handleGetChart(request, env, chartId);
 
+      } else if (path === '/api/geocode' && request.method === 'GET') {
+        response = await handleGeocode(request, env);
+
       } else if (path === '/api/health') {
         response = Response.json({
           status: 'ok',
           version: '0.5.0',
-          endpoints: 31
+          endpoints: 32
         });
 
       } else {

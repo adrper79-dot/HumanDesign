@@ -482,3 +482,61 @@ describe('POST /api/auth (unknown)', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// ─── /api/geocode ─────────────────────────────────────────────
+
+import { handleGeocode } from '../workers/src/handlers/geocode.js';
+
+describe('GET /api/geocode', () => {
+  it('rejects missing q param', async () => {
+    const req = makeGetRequest('https://api.test/api/geocode');
+    const res = await handleGeocode(req, mockEnv);
+    const json = await res.json();
+    expect(res.status).toBe(400);
+    expect(json.error).toBeDefined();
+  });
+
+  it('rejects single-character query', async () => {
+    const req = makeGetRequest('https://api.test/api/geocode?q=X');
+    const res = await handleGeocode(req, mockEnv);
+    const json = await res.json();
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 404 when Nominatim finds nothing', async () => {
+    const orig = global.fetch;
+    global.fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => [] });
+    const req = makeGetRequest('https://api.test/api/geocode?q=ZZZNoSuchPlace9999');
+    const res = await handleGeocode(req, mockEnv);
+    const json = await res.json();
+    expect(res.status).toBe(404);
+    expect(json.error).toMatch(/not found/i);
+    global.fetch = orig;
+  });
+
+  it('returns lat/lng/timezone for a valid city', async () => {
+    const orig = global.fetch;
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{
+          lat: '27.9506',
+          lon: '-82.4572',
+          display_name: 'Tampa, Hillsborough County, Florida, United States'
+        }]
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ianaTimeId: 'America/New_York' })
+      });
+    const req = makeGetRequest('https://api.test/api/geocode?q=Tampa+FL+USA');
+    const res = await handleGeocode(req, mockEnv);
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.lat).toBeCloseTo(27.9506, 3);
+    expect(json.lng).toBeCloseTo(-82.4572, 3);
+    expect(json.timezone).toBe('America/New_York');
+    expect(json.displayName).toContain('Tampa');
+    global.fetch = orig;
+  });
+});
