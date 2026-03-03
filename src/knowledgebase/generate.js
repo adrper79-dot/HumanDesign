@@ -84,11 +84,11 @@ primary sources. You never use Ra Uru Hu's specific phrases or proprietary
 terminology beyond standard HD structural terms.`;
 
 async function generateGate(gateNum, wheelData, centersData, channelsData) {
-  // Find gate info
-  const gateEntry = wheelData.gates.find(g => g.gate === gateNum);
+  // Find gate info — wheelData is the .wheel array of {gate, startDeg, hexName}
+  const gateEntry = wheelData.find(g => g.gate === gateNum);
   if (!gateEntry) throw new Error(`Gate ${gateNum} not found in wheel data`);
 
-  // Find center
+  // Find center — centersData is an object keyed by center name, each with .gates array
   let center = 'Unknown';
   for (const [name, info] of Object.entries(centersData)) {
     if (info.gates && info.gates.includes(gateNum)) {
@@ -115,7 +115,7 @@ HD structural facts (observable, not interpreted):
 - Center: ${center}
 - Circuit: ${circuit}
 - Channel partner: Gate ${partner || 'unknown'}
-- Wheel position: starts at ${gateEntry.startDegree}° ecliptic
+- Wheel position: starts at ${gateEntry.startDeg}° ecliptic
 
 Write an original interpretation that:
 1. Is grounded in the hexagram's actual meaning
@@ -148,12 +148,18 @@ Output as JSON:
 }
 
 async function generateAllGates() {
-  const wheelData = loadJSON('data/gate_wheel.json');
-  const centersData = loadJSON('data/centers.json');
-  const channelsData = loadJSON('data/channels.json');
+  const rawWheel = loadJSON('data/gate_wheel.json');
+  const rawCenters = loadJSON('data/centers.json');
+  const rawChannels = loadJSON('data/channels.json');
+
+  // Extract sub-structures
+  const wheelData = rawWheel.wheel;       // array of {gate, startDeg, hexName, ...}
+  const centersData = rawCenters.centers; // object keyed by center name
+  const channelsData = rawChannels.channels; // array of {channel, gates, centers, circuit, name}
 
   const existing = loadExisting('hd/gates.json');
-  const gates = { ...existing };
+  // Remove _meta stub so we don't skip generation thinking it's done
+  const gates = Object.fromEntries(Object.entries(existing).filter(([k]) => k !== '_meta'));
 
   for (let i = 1; i <= 64; i++) {
     if (gates[i]) {
@@ -212,15 +218,17 @@ Output as JSON:
 }
 
 async function generateAllChannels() {
-  const channelsData = loadJSON('data/channels.json');
+  const rawChannels = loadJSON('data/channels.json');
+  const channelsData = rawChannels.channels; // array of {channel, gates, centers, circuit, name}
   const gateDescriptions = loadExisting('hd/gates.json');
 
-  if (Object.keys(gateDescriptions).length < 64) {
+  const gateCount = Object.keys(gateDescriptions).filter(k => k !== '_meta').length;
+  if (gateCount < 64) {
     console.warn('  ⚠ Not all gates generated yet. Run --gates first.');
   }
 
-  const existing = loadExisting('hd/channels.json');
-  const channels = { ...existing };
+  const existingRaw = loadExisting('hd/channels.json');
+  const channels = Object.fromEntries(Object.entries(existingRaw).filter(([k]) => k !== '_meta'));
 
   // Deduplicate channels (handle 23-43 / 43-23 duplicates)
   const seen = new Set();
@@ -290,15 +298,15 @@ Output as JSON:
 async function generateAllCrosses() {
   const gateDescriptions = loadExisting('hd/gates.json');
 
-  if (Object.keys(gateDescriptions).length < 64) {
+  const gateCount = Object.keys(gateDescriptions).filter(k => k !== '_meta').length;
+  if (gateCount < 64) {
     console.warn('  ⚠ Not all gates generated yet. Run --gates first for best results.');
   }
 
   // Load crosses data reference
   const crossesRef = loadJSON('data/crosses.json');
-  const existing = loadExisting('hd/crosses.json');
-  const crosses = { ...existing };
-
+  const existingRaw = loadExisting('hd/crosses.json');
+  const crosses = Object.fromEntries(Object.entries(existingRaw).filter(([k]) => k !== '_meta'));
   // Quarter assignments based on gate number ranges in the mandala
   const QUARTER_MAP = {
     'Initiation': [13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3, 27, 24],
@@ -333,17 +341,17 @@ async function generateAllCrosses() {
       const key = `${gateStr}_${variant}`;
 
       if (crosses[key]) {
-        console.log(\`  ✓ Cross \${name} already exists, skipping\`);
+        console.log(`  ✓ Cross ${name} already exists, skipping`);
         continue;
       }
 
-      console.log(\`  → Generating Cross: \${name}...\`);
+      console.log(`  → Generating Cross: ${name}...`);
       try {
         crosses[key] = await generateCross(name, variantTypes[variant], gates, quarter, gateDescriptions);
         saveJSON('hd/crosses.json', crosses);
         await new Promise(r => setTimeout(r, 300));
       } catch (err) {
-        console.error(\`  ✗ Cross \${name} failed: \${err.message}\`);
+        console.error(`  ✗ Cross ${name} failed: ${err.message}`);
       }
     }
   }

@@ -14,6 +14,11 @@ ENVIRONMENT = "production"
 binding = "CACHE"
 id = "a4869245e0ac49c0af1d0c5a9d6266d2"
 
+# R2 bucket for PDF exports and knowledgebase corpus
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "prime-self-exports"
+
 # Cron Triggers — daily transit snapshot + digest at 6 AM UTC
 [triggers]
 crons = ["0 6 * * *"]

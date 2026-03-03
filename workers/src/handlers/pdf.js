@@ -59,6 +59,35 @@ export async function handlePdfExport(request, env, profileId) {
   // Build PDF
   const pdfBytes = generatePDF(profileData, chartData, profile.created_at);
 
+  // Store in R2 for caching (non-blocking)
+  const r2Key = `pdfs/${profileId}.pdf`;
+  if (env.R2) {
+    // Check if already in R2 first
+    try {
+      const existing = await env.R2.head(r2Key);
+      if (existing) {
+        // Serve from R2 cache
+        const obj = await env.R2.get(r2Key);
+        if (obj) {
+          return new Response(obj.body, {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/pdf',
+              'Content-Disposition': `attachment; filename="prime-self-profile-${profileId.slice(0, 8)}.pdf"`,
+              'X-Cache': 'HIT'
+            }
+          });
+        }
+      }
+    } catch { /* not in cache */ }
+
+    // Write to R2 cache (don't await)
+    env.R2.put(r2Key, pdfBytes, {
+      httpMetadata: { contentType: 'application/pdf' },
+      customMetadata: { profileId, userId: profile.user_id, createdAt: profile.created_at }
+    }).catch(() => { /* non-fatal */ });
+  }
+
   return new Response(pdfBytes, {
     status: 200,
     headers: {
