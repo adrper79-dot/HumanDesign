@@ -353,12 +353,15 @@ function getRAGContext(chartData) {
       }
     }
 
-    // Incarnation Cross
+    // Incarnation Cross — keys are "{gate}_{variant}" e.g. "1_right"
     const crossesKB = loadKB('hd', 'crosses.json');
-    const crossName = chartData.hdChart?.cross?.name || chartData.hdChart?.cross;
-    if (crossName && typeof crossName === 'string' && crossesKB[crossName]) {
-      const c = crossesKB[crossName];
-      sections.push(`### INCARNATION CROSS: ${crossName}\n${c.description?.slice(0, 300) || ''}\n${c.lifeTheme ? `Life Theme: ${c.lifeTheme}` : ''}`);
+    const crossName = chartData.hdChart?.cross?.name || (typeof chartData.hdChart?.cross === 'string' ? chartData.hdChart.cross : null);
+    if (crossName) {
+      // Scan for matching entry by cross name
+      const crossEntry = Object.values(crossesKB).find(v => v && v.cross === crossName);
+      if (crossEntry) {
+        sections.push(`### INCARNATION CROSS: ${crossName}\n${crossEntry.description?.slice(0, 300) || ''}\n${crossEntry.lifeTheme ? `Life Theme: ${crossEntry.lifeTheme}` : ''}`);
+      }
     }
 
     return sections.length ? `## KNOWLEDGEBASE CONTEXT (RAG)\n\n${sections.join('\n\n---\n\n')}` : '';
