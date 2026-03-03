@@ -45,12 +45,12 @@ export async function handleTransits(request, env) {
 
   return Response.json({
     success: true,
-    date: new Date().toISOString().slice(0, 10),
+    date: transits.date || new Date().toISOString().slice(0, 10),
     transits: {
-      positions: transits.positions,
-      gateActivations: transits.gateActivations,
-      aspects: transits.transitAspects || [],
-      natalMatches: transits.natalMatches || []
+      transitPositions: transits.transitPositions || {},
+      gateActivations: transits.gateActivations || [],
+      aspects: transits.transitToNatalAspects || [],
+      natalMatches: []
     }
   });
 }
