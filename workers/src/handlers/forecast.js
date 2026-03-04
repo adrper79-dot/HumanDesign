@@ -56,7 +56,7 @@ export async function handleForecast(request, env) {
   );
 
   return Response.json({
-    success: true,
+    ok: true,
     range: {
       start: startDate.toISOString().slice(0, 10),
       end: endDate.toISOString().slice(0, 10),

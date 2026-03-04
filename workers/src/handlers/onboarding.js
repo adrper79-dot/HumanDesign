@@ -115,7 +115,7 @@ export async function handleOnboarding(request, env, subpath) {
 
 function handleIntro() {
   return Response.json({
-    success: true,
+    ok: true,
     title: 'The Prime Self Journey',
     protagonist: {
       name: 'Savannah',
@@ -193,7 +193,7 @@ async function handleChapter(forgeKey, chapterIndex, userId, query) {
   }
 
   return Response.json({
-    success: true,
+    ok: true,
     forge: normalizedKey,
     bookTitle: summary.bookTitle,
     chapterIndexInForge: chapterIndex,
@@ -227,7 +227,7 @@ async function handleProgress(userId, kv) {
   }));
 
   return Response.json({
-    success: true,
+    ok: true,
     totalChapters: 22,
     totalRead,
     percentComplete: Math.round((totalRead / 22) * 100),
@@ -260,7 +260,7 @@ async function handleAdvance(request, userId, kv) {
   await kv.put(`onboarding:${userId}:${normalizedForge}:${idx}`, '1', { expirationTtl: 365 * 24 * 3600 });
 
   return Response.json({
-    success: true,
+    ok: true,
     message: `Marked ${normalizedForge} chapter ${idx} as read`,
     nextChapter: idx < summary.chapterCount ? idx + 1 : null,
     forgeComplete: idx >= summary.chapterCount
@@ -272,7 +272,7 @@ async function handleAdvance(request, userId, kv) {
 function buildForgeResponse(forgeName, forgeData) {
   const summary = FORGE_SUMMARIES[forgeName];
   return Response.json({
-    success: true,
+    ok: true,
     forge: forgeName,
     ...summary,
     userForgeContext: forgeData ? {

@@ -375,7 +375,7 @@ export async function handleComposite(request, env) {
   const composite = analyzeComposite(chartA, chartB);
 
   return Response.json({
-    success: true,
+    ok: true,
     composite,
     meta: {
       calculatedAt: new Date().toISOString()

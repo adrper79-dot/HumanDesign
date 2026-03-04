@@ -142,7 +142,7 @@ async function handleCreate(request, env) {
   const result = await query(QUERIES.createCluster, [name, createdBy || null, challenge]);
 
   return Response.json({
-    success: true,
+    ok: true,
     cluster: {
       id: result.rows?.[0]?.id,
       name,
@@ -190,7 +190,7 @@ async function handleList(request, env) {
     })) || [];
 
     return Response.json({
-      success: true,
+      ok: true,
       clusters
     });
   } catch (err) {
@@ -237,7 +237,7 @@ async function handleLeave(request, env, clusterId) {
     }
 
     return Response.json({
-      success: true,
+      ok: true,
       message: 'Successfully left cluster'
     });
   } catch (err) {
@@ -293,7 +293,7 @@ async function handleJoin(request, env, clusterId) {
   await query(QUERIES.addClusterMember, [clusterId, userId, forgeRole.role]);
 
   return Response.json({
-    success: true,
+    ok: true,
     member: {
       userId,
       type: chart.chart.type,
@@ -325,7 +325,7 @@ async function handleGet(request, env, clusterId) {
   const composition = analyzeClusterComposition(members);
 
   return Response.json({
-    success: true,
+    ok: true,
     clusterId,
     members,
     composition,
@@ -411,7 +411,7 @@ async function handleSynthesize(request, env, clusterId) {
   }
 
   return Response.json({
-    success: true,
+    ok: true,
     clusterId,
     synthesis,
     composition,

@@ -179,7 +179,7 @@ export async function handleRectify(request, env) {
   const stableRange = findStableRange(snapshots);
 
   return Response.json({
-    success: true,
+    ok: true,
     baseChart: {
       type: baseFP.type,
       authority: baseFP.authority,

@@ -172,7 +172,7 @@ async function handleRegister(request, env) {
   );
 
   return Response.json({
-    success: true,
+    ok: true,
     user: { id: userId, email: email.toLowerCase() },
     accessToken,
     refreshToken,
@@ -237,7 +237,7 @@ async function handleLogin(request, env) {
   );
 
   return Response.json({
-    success: true,
+    ok: true,
     user: { id: user.id, email: user.email },
     accessToken,
     refreshToken,
@@ -304,7 +304,7 @@ async function handleRefresh(request, env) {
   );
 
   return Response.json({
-    success: true,
+    ok: true,
     accessToken,
     expiresIn: ACCESS_TOKEN_TTL
   });

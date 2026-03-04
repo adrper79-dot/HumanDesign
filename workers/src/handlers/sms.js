@@ -220,7 +220,7 @@ async function handleSendDigest(request, env) {
     }
 
     return Response.json({
-      success: true,
+      ok: true,
       sent,
       failed,
       total: users.length
@@ -246,7 +246,7 @@ async function handleSendDigest(request, env) {
     await sendSMS(user.phone, digest, env);
 
     return Response.json({
-      success: true,
+      ok: true,
       phone: user.phone,
       digest
     });
@@ -359,7 +359,7 @@ async function handleSubscribe(request, env) {
     }
 
     return Response.json({
-      success: true,
+      ok: true,
       message: 'Successfully subscribed to SMS digests',
       phone
     });
@@ -422,7 +422,7 @@ async function handleUnsubscribe(request, env) {
     }
 
     return Response.json({
-      success: true,
+      ok: true,
       message: 'Successfully unsubscribed from SMS digests'
     });
   } catch (err) {

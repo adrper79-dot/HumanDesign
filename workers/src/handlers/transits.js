@@ -44,7 +44,7 @@ export async function handleTransits(request, env) {
   const transits = getCurrentTransits(natalChart, natalAstro);
 
   return Response.json({
-    success: true,
+    ok: true,
     date: transits.date || new Date().toISOString().slice(0, 10),
     transits: {
       transitPositions: transits.transitPositions || {},

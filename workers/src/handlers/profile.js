@@ -199,7 +199,7 @@ export async function handleProfile(request, env) {
   }
 
   return Response.json({
-    success: true,
+    ok: true,
     quickStartGuide: validation.parsed?.quickStartGuide || null,
     technicalInsights: validation.parsed?.technicalInsights || null,
     chart: {

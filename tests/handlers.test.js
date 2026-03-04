@@ -54,7 +54,7 @@ describe('POST /api/chart/calculate', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.success).toBe(true);
+    expect(json.ok).toBe(true);
     expect(json.data).toBeDefined();
 
     // Verify HD chart
@@ -146,7 +146,7 @@ describe('POST /api/composite', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.success).toBe(true);
+    expect(json.ok).toBe(true);
     expect(json.composite).toBeDefined();
     expect(json.composite.personA).toBeDefined();
     expect(json.composite.personB).toBeDefined();
@@ -214,7 +214,7 @@ describe('POST /api/rectify', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.success).toBe(true);
+    expect(json.ok).toBe(true);
     expect(json.baseChart).toBeDefined();
     expect(json.sensitivity).toBeDefined();
     expect(json.snapshots).toBeDefined();
@@ -344,7 +344,7 @@ describe('GET /api/transits/forecast', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.success).toBe(true);
+    expect(json.ok).toBe(true);
     expect(json.range).toBeDefined();
     expect(json.range.days).toBe(7);
     expect(json.events).toBeDefined();
@@ -384,7 +384,7 @@ describe('GET /api/transits/today', () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.success).toBe(true);
+    expect(json.ok).toBe(true);
     expect(json.date).toBeDefined();
     expect(json.transits).toBeDefined();
     expect(json.transits.gateActivations).toBeDefined();

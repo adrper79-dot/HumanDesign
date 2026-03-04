@@ -92,7 +92,7 @@ export async function handleCalculate(request, env) {
   }
 
   return Response.json({
-    success: true,
+    ok: true,
     data: result,
     meta: {
       chartId,

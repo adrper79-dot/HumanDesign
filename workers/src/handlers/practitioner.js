@@ -74,7 +74,7 @@ async function handleRegister(request, env, userId, query) {
   const existing = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (existing.rows?.length) {
     return Response.json({
-      success: true,
+      ok: true,
       practitioner: existing.rows[0],
       message: 'Already registered as practitioner'
     });
@@ -85,7 +85,7 @@ async function handleRegister(request, env, userId, query) {
   const practitioner = result.rows?.[0];
 
   return Response.json({
-    success: true,
+    ok: true,
     practitioner,
     message: 'Registered as practitioner. Upgrade tier to manage clients.'
   }, { status: 201 });
@@ -105,7 +105,7 @@ async function handleGetProfile(userId, query) {
   const limit = TIER_LIMITS[p.tier] || 0;
 
   return Response.json({
-    success: true,
+    ok: true,
     practitioner: {
       ...p,
       clientCount: count,
@@ -126,7 +126,7 @@ async function handleListClients(userId, query) {
   const clients = await query(QUERIES.getPractitionerClientsWithCharts, [practitionerId]);
 
   return Response.json({
-    success: true,
+    ok: true,
     clients: clients.rows || [],
     count: clients.rows?.length || 0
   });
@@ -198,7 +198,7 @@ async function handleAddClient(request, env, userId, query) {
   await query(QUERIES.addClient, [pract.id, client.id]);
 
   return Response.json({
-    success: true,
+    ok: true,
     message: `${clientEmail} added to your roster`,
     client: { id: client.id, email: client.email }
   }, { status: 201 });
@@ -231,7 +231,7 @@ async function handleGetClientDetail(userId, clientId, query) {
   const profile = profileResult.rows?.[0] || null;
 
   return Response.json({
-    success: true,
+    ok: true,
     client: clientResult.rows[0],
     chart: chart ? {
       id: chart.id,
@@ -254,5 +254,5 @@ async function handleRemoveClient(userId, clientId, query) {
   }
 
   await query(QUERIES.removeClient, [practResult.rows[0].id, clientId]);
-  return Response.json({ success: true, message: 'Client removed from roster' });
+  return Response.json({ ok: true, message: 'Client removed from roster' });
 }
