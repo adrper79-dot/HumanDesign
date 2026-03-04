@@ -8,6 +8,8 @@
  * In Node context (migration), use Client from pg.
  */
 
+import { neon } from '@neondatabase/serverless';
+
 /**
  * Get a pg Client for migration scripts (Node.js only).
  * NOT available in Workers runtime — use createQueryFn instead.
@@ -27,40 +29,19 @@ export async function getClient(connectionString) {
  * @param {string} connectionString — Neon pooled connection string
  */
 export function createQueryFn(connectionString) {
-  // @neondatabase/serverless must be bundled or imported
-  // For now, use fetch-based driver
-  return async function query(sql, params = []) {
-    const response = await neonQuery(connectionString, sql, params);
-    return response;
+  // Use official Neon serverless driver
+  const sql = neon(connectionString);
+  
+  return async function query(sqlText, params = []) {
+    try {
+      const rows = await sql(sqlText, params);
+      // Neon returns array of rows directly, wrap to match pg interface
+      return { rows };
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw error;
+    }
   };
-}
-
-/**
- * HTTP-based Neon query (no WebSocket needed).
- * Uses the Neon serverless HTTP API.
- */
-async function neonQuery(connectionString, sql, params) {
-  const url = new URL(connectionString);
-  const httpUrl = `https://${url.hostname}/sql`;
-
-  const response = await fetch(httpUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Neon-Connection-String': connectionString
-    },
-    body: JSON.stringify({
-      query: sql,
-      params: params
-    })
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Neon query failed: ${response.status} ${text}`);
-  }
-
-  return response.json();
 }
 
 // ─── User Queries ────────────────────────────────────────────
