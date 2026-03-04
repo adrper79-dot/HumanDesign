@@ -2,6 +2,7 @@
 
 **Last audited:** 2026-03-04
 **Test suite:** 190/190 passing (vitest 3.2.4)
+**Completion status:** 28/28 items (100%)
 **Audit scope:** Full codebase + all documentation
 
 ---
@@ -182,7 +183,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Align rate limit config with spec or update spec to match code.
 
 ### BL-M14 | Frontend missing UI for 6+ backend features
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `frontend/index.html`
 - **Problem:** No UI exists for: composite charts, birth-time rectification, practitioner tools, clusters, SMS subscription, onboarding story, PDF export.
