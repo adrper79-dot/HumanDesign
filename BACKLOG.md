@@ -119,9 +119,9 @@ These items cause outright failures in deployed environments.
 - **Fix:** Set origin to the production frontend domain (`https://prime-self-ui.pages.dev`) or make it configurable via environment variable. Allow `*` only in development.
 
 ### BL-M5 | Gene Keys knowledgebase only 59% complete
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
-- **Files:** `src/knowledgebase/genekeys/keys.json`
+- **Files:** `src/knowledgebase/genekeys/keys.json`, `src/knowledgebase/genekeys/generate-missing.js`
 - **Problem:** 38 of 64 Gene Keys are populated. The RAG context for 26 keys is empty, forcing the LLM to either hallucinate or skip the Gene Keys section entirely.
 - **Fix:** Generate the remaining 26 Gene Key entries using the `generate.js` script or Opus-driven batch generation.
 
