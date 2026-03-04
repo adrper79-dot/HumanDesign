@@ -123,9 +123,7 @@ export function buildRAGContext(chartData) {
     const signLines = [];
     const keyPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'];
     for (const p of keyPlanets) {
-      const placement = chartData.astrology.placements.find(
-        pl => pl.planet === p || pl.body === p
-      );
+      const placement = chartData.astrology.placements[p];
       if (placement) {
         const signKey = placement.sign?.toLowerCase();
         if (signs[signKey]) {
@@ -144,9 +142,7 @@ export function buildRAGContext(chartData) {
     const planetLines = [];
     const outerPlanets = ['Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
     for (const p of outerPlanets) {
-      const placement = chartData.astrology.placements.find(
-        pl => pl.planet === p || pl.body === p
-      );
+      const placement = chartData.astrology.placements[p];
       if (placement && planets[p.toLowerCase()]) {
         planetLines.push(`${p} (${placement.sign} ${placement.degrees?.toFixed(1)}°): ${planets[p.toLowerCase()].hdRole}`);
       }

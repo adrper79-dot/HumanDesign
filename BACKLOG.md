@@ -84,13 +84,13 @@ These items cause outright failures in deployed environments.
 ## Moderate (14) — Functional gaps, security, data completeness
 
 ### BL-M1 | 7 documented API endpoints not implemented
-- [ ] **Status:** Open
+- [~] **Status:** Partial (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/index.js`, `docs/API_SPEC.md`
 - **Problem:** These endpoints are in API_SPEC.md but have no route handler:
-  - `GET /api/auth/me`
-  - `POST /api/chart/save`
-  - `GET /api/chart/history`
+  - `GET /api/auth/me` ✓ DONE
+  - `POST /api/chart/save` ✓ DONE
+  - `GET /api/chart/history` ✓ DONE
   - `GET /api/cluster/list`
   - `POST /api/cluster/leave`
   - `POST /api/sms/subscribe`
@@ -126,14 +126,14 @@ These items cause outright failures in deployed environments.
 - **Fix:** Generate the remaining 26 Gene Key entries using the `generate.js` script or Opus-driven batch generation.
 
 ### BL-M6 | `digest.js` property name mismatches
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `src/prompts/digest.js`
 - **Problem:** References `transitData.positions` and `transitData.natalMatches`, but the transit engine returns `transitPositions` and `gateActivations`. SMS digests silently produce empty content.
 - **Fix:** Align property names with the actual transit engine output.
 
 ### BL-M7 | `rag.js` treats astrology placements as array
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `src/prompts/rag.js`
 - **Problem:** Calls `.find()` on `chartData.astrology?.placements`, which is an object keyed by planet name in the engine output. `.find()` on an object returns `undefined` silently.
@@ -175,7 +175,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Add injection for all knowledgebase files used by `synthesis.js` and `rag.js`.
 
 ### BL-M13 | Rate limits don't match API spec
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/middleware/rateLimit.js`, `docs/API_SPEC.md`
 - **Problem:** Code: `calculate=60/min, profile=10/min, transits=120/min`. Spec: `auth=10/min, profile=5/min, geocode=30/min`. Auth and geocode have no dedicated rate limits in code.

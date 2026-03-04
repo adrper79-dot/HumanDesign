@@ -119,23 +119,23 @@ Write the weekly digest:`;
 function extractNotableTransits(transitData, chartData) {
   const notes = [];
 
-  if (transitData?.positions) {
+  if (transitData?.transitPositions) {
     // Sun transit is always notable
-    const sun = transitData.positions.Sun || transitData.positions.sun;
+    const sun = transitData.transitPositions.Sun || transitData.transitPositions.sun;
     if (sun) {
       notes.push(`Transit Sun at ${sun.sign || ''} ${(sun.degrees || sun.longitude || 0).toFixed(1)}°`);
     }
 
     // Moon for emotional tone
-    const moon = transitData.positions.Moon || transitData.positions.moon;
+    const moon = transitData.transitPositions.Moon || transitData.transitPositions.moon;
     if (moon) {
       notes.push(`Transit Moon at ${moon.sign || ''} ${(moon.degrees || moon.longitude || 0).toFixed(1)}°`);
     }
   }
 
   // Gate activations matching natal
-  if (transitData?.natalMatches?.length) {
-    for (const match of transitData.natalMatches.slice(0, 3)) {
+  if (transitData?.gateActivations?.length) {
+    for (const match of transitData.gateActivations.slice(0, 3)) {
       notes.push(`Transit ${match.planet || match.body} activates your natal Gate ${match.gate}`);
     }
   }
@@ -144,18 +144,18 @@ function extractNotableTransits(transitData, chartData) {
 }
 
 function formatTransitAspects(transitData) {
-  if (!transitData?.transitAspects?.length) return '(none today)';
+  if (!transitData?.aspects?.length) return '(none today)';
 
-  return transitData.transitAspects
+  return transitData.aspects
     .slice(0, 5)
     .map(a => `${a.planet1 || a.transitPlanet} ${a.type} ${a.planet2 || a.natalPlanet} (orb ${a.orb?.toFixed(1)}°)`)
     .join('\n');
 }
 
 function formatNatalMatches(transitData) {
-  if (!transitData?.natalMatches?.length) return '(none today)';
+  if (!transitData?.gateActivations?.length) return '(none today)';
 
-  return transitData.natalMatches
+  return transitData.gateActivations
     .slice(0, 5)
     .map(m => `Gate ${m.gate} (${m.planet || m.body})`)
     .join(', ');

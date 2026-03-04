@@ -4,6 +4,7 @@
  *   POST /api/auth/register   – Create account, get JWT
  *   POST /api/auth/login      – Email-based login, get JWT
  *   POST /api/auth/refresh    – Refresh token
+ *   GET  /api/auth/me         – Get current user info
  *
  * Uses HS256 JWTs (matches auth.js middleware).
  * Passwords are hashed with PBKDF2 via Web Crypto API.
@@ -21,15 +22,68 @@ const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30; // 30 days
 // ─── Route Dispatcher ────────────────────────────────────────
 
 export async function handleAuth(request, env, path) {
-  if (request.method !== 'POST') {
-    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  // Known auth paths
+  const knownPaths = ['/api/auth/register', '/api/auth/login', '/api/auth/refresh', '/api/auth/me'];
+  
+  // GET requests
+  if (request.method === 'GET') {
+    if (path === '/api/auth/me') return handleGetMe(request, env);
+    // Known path but wrong method
+    if (knownPaths.includes(path)) {
+      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+    return Response.json({ error: 'Not found' }, { status: 404 });
   }
 
-  if (path === '/api/auth/register') return handleRegister(request, env);
-  if (path === '/api/auth/login') return handleLogin(request, env);
-  if (path === '/api/auth/refresh') return handleRefresh(request, env);
+  // POST requests
+  if (request.method === 'POST') {
+    if (path === '/api/auth/register') return handleRegister(request, env);
+    if (path === '/api/auth/login') return handleLogin(request, env);
+    if (path === '/api/auth/refresh') return handleRefresh(request, env);
+    return Response.json({ error: 'Not found' }, { status: 404 });
+  }
 
-  return Response.json({ error: 'Not found' }, { status: 404 });
+  // Other methods
+  return Response.json({ error: 'Method not allowed' }, { status: 405 });
+}
+
+// ─── Get Current User ────────────────────────────────────────
+
+/**
+ * GET /api/auth/me
+ * Returns the current authenticated user's information.
+ * Requires authentication (middleware sets request._user).
+ */
+async function handleGetMe(request, env) {
+  const userId = request._user?.sub;
+  
+  if (!userId) {
+    return Response.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const result = await query(QUERIES.getUserById, [userId]);
+
+  if (!result.rows || result.rows.length === 0) {
+    return Response.json(
+      { error: 'User not found' },
+      { status: 404 }
+    );
+  }
+
+  const user = result.rows[0];
+
+  // Remove sensitive fields
+  delete user.password_hash;
+  delete user.refresh_token;
+
+  return Response.json({
+    ok: true,
+    user
+  });
 }
 
 // ─── Register ────────────────────────────────────────────────

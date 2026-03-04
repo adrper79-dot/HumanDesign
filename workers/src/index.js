@@ -17,6 +17,7 @@
  *   POST /api/auth/register            – Create account, get JWT
  *   POST /api/auth/login               – Email-based login, get JWT
  *   POST /api/auth/refresh             – Refresh access token
+ *   GET  /api/auth/me                  – Get current user info
  *   GET  /api/geocode                  – City → lat/lng + timezone
  *   GET  /api/health                   – Health check
  *   POST /api/practitioner/register       – Register as practitioner
@@ -56,6 +57,7 @@ import { runDailyTransitCron } from './cron.js';
 
 // Routes that require authentication
 const AUTH_ROUTES = new Set([
+  '/api/auth/me',
   '/api/profile/generate',
   '/api/composite',
   '/api/sms/send-digest'

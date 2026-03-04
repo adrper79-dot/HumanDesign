@@ -6,10 +6,15 @@
  */
 
 const RATE_LIMITS = {
+  '/api/auth/register':     { max: 10,  windowSec: 60  },  // 10/min (spec: auth endpoints)
+  '/api/auth/login':        { max: 10,  windowSec: 60  },  // 10/min
+  '/api/auth/refresh':      { max: 10,  windowSec: 60  },  // 10/min
+  '/api/auth/me':           { max: 10,  windowSec: 60  },  // 10/min
   '/api/chart/calculate':   { max: 60,  windowSec: 60  },  // 60/min
-  '/api/profile/generate':  { max: 10,  windowSec: 60  },  // 10/min (LLM calls)
-  '/api/transits/today':    { max: 120, windowSec: 60  },  // 120/min
-  '/api/transits/forecast': { max: 30,  windowSec: 60  },  // 30/min
+  '/api/profile/generate':  { max: 5,   windowSec: 60  },  // 5/min (LLM calls)
+  '/api/geocode':           { max: 30,  windowSec: 60  },  // 30/min
+  '/api/transits/today':    { max: 60,  windowSec: 60  },  // 60/min
+  '/api/transits/forecast': { max: 60,  windowSec: 60  },  // 60/min
   default:                  { max: 60,  windowSec: 60  }
 };
 
