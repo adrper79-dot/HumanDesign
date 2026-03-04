@@ -140,11 +140,11 @@ These items cause outright failures in deployed environments.
 - **Fix:** Use `Object.values()` or direct key access instead of `.find()`.
 
 ### BL-M8 | Duplicate RAG logic between synthesis.js and rag.js
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `src/prompts/synthesis.js`, `src/prompts/rag.js`
-- **Problem:** Both files contain overlapping RAG context builders. `synthesis.js` uses its own `getRAGContext`; `rag.js` exports `buildRAGContext`. Maintaining two versions risks divergence.
-- **Fix:** Consolidate into `rag.js` as the single RAG module. Have `synthesis.js` import from it.
+- **Problem:** Both files contained overlapping RAG context builders. `synthesis.js` used its own `getRAGContext`; `rag.js` exported `buildRAGContext`. Maintaining two versions risked divergence.
+- **Fix:** Consolidated into `rag.js` as the single RAG module. `synthesis.js` now imports `buildRAGContext()`. Removed 266 lines of duplicate code.
 
 ### BL-M9 | Duplicate JWT implementation
 - [x] **Status:** Done (2026-03-04)
