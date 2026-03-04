@@ -175,7 +175,10 @@ export async function handleProfile(request, env) {
         const profileResult = await query(QUERIES.saveProfile, [
           userId,
           chartId,
-          JSON.stringify(validation.parsed.primeProfile || validation.parsed),
+          JSON.stringify({
+            quickStartGuide: validation.parsed.quickStartGuide,
+            technicalInsights: validation.parsed.technicalInsights
+          }),
           promptPayload.config.model,
           JSON.stringify(validation.parsed.groundingAudit || {})
         ]);
@@ -189,13 +192,15 @@ export async function handleProfile(request, env) {
 
   return Response.json({
     success: true,
-    profile: validation.parsed?.primeProfile || null,
+    quickStartGuide: validation.parsed?.quickStartGuide || null,
+    technicalInsights: validation.parsed?.technicalInsights || null,
     chart: {
       type: chart.chart.type,
       authority: chart.chart.authority,
       profile: chart.chart.profile,
       definition: chart.chart.definition,
-      cross: chart.chart.cross
+      cross: chart.chart.cross,
+      numerology: chart.numerology || null
     },
     meta: {
       groundingAudit: validation.parsed?.groundingAudit || null,

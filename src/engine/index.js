@@ -14,6 +14,7 @@ import { mapAllToGates } from './gates.js';
 import { calculateChart } from './chart.js';
 import { calculateAstrology } from './astro.js';
 import { getCurrentTransits } from './transits.js';
+import { calculateNumerologyFromBirthData } from './numerology.js';
 
 /**
  * Calculate the full Prime Self chart for a given birth.
@@ -65,6 +66,9 @@ export function calculateFullChart(params) {
     transits = getCurrentTransits(chart, astrology);
   }
 
+  // Layer 8: Numerology (Life Path, Personal Year, Tarot)
+  const numerology = calculateNumerologyFromBirthData(year, month, day);
+
   return {
     birth: { year, month, day, hour, minute, second, lat, lng, jdn },
     design: {
@@ -75,6 +79,7 @@ export function calculateFullChart(params) {
     designGates,
     chart,
     astrology,
-    transits
+    transits,
+    numerology
   };
 }

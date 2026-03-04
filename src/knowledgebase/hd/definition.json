@@ -1,0 +1,88 @@
+{
+  "single": {
+    "name": "Single Definition",
+    "description": "All defined centers are connected in one continuous circuit. Energy flows in a unified, consistent way without internal breaks. Single Definition people have a reliable, self-contained energy signature and can process experiences independently without needing others to complete their circuit. They are naturally self-reliant in their decision-making process and can trust their own inner authority without external input.",
+    "theme": "Self-contained, unified energy",
+    "strengths": [
+      "Consistent, reliable energy flow",
+      "Independent decision-making capacity",
+      "Clear sense of self",
+      "Can function well alone"
+    ],
+    "challenges": [
+      "May be rigid or inflexible",
+      "Can struggle with perspectives outside their own circuitry",
+      "Might not naturally seek collaborative input"
+    ],
+    "primeInsight": "Single Definition creates a fortress of self-reliance. In Prime Self, this is neither superiority nor limitation — it's simply a different operating system. These individuals complete their own circuit and can make decisions without needing another person to 'bridge' their energy. The gift is consistency; the challenge is remaining open to influence from sources outside their unified field."
+  },
+  "split": {
+    "name": "Split Definition",
+    "description": "Defined centers form two separate circuits with a gap (or 'split') between them. The person needs to bridge this split — either through specific transits, through another person's energy, or through conscious integration work. Split Definition creates a natural openness to others and often results in attraction to people who 'complete' the circuit. This isn't weakness; it's a heightened capacity for collaboration and synergy.",
+    "theme": "Bridging required for wholeness",
+    "strengths": [
+      "Natural collaborator — seeks connection",
+      "Can see multiple perspectives",
+      "Adaptable energy based on who they're with",
+      "Excels in partnerships and teams"
+    ],
+    "challenges": [
+      "Can feel incomplete when alone",
+      "May make decisions prematurely when bridged by others' energy",
+      "Vulnerable to 'needing' specific people to feel whole"
+    ],
+    "primeInsight": "Split Definition is the human design for collaboration. The gap between circuits is not a flaw — it's an invitation to partnership. In Prime Self, understanding your split means recognizing WHICH channels bridge your circuits and being conscious of how certain people or transits activate your wholeness. The key is making major decisions when your split is bridged AND you've honored your authority, not just one or the other."
+  },
+  "triple_split": {
+    "name": "Triple Split",
+    "description": "Defined centers form three separate circuits with two gaps. Triple Split people require multiple bridges to experience full integration of their energy. This creates an even more complex relationship with others — they may need two or more specific people, or very particular transits, to fully activate their complete design. Triple Split individuals often have diverse interests and can compartmentalize different aspects of their lives with remarkable ease.",
+    "theme": "Multiple bridging points create versatility",
+    "strengths": [
+      "Exceptional ability to work with diverse groups",
+      "Can compartmentalize and focus on different areas independently",
+      "Adaptable to complex team dynamics",
+      "Brings together disparate perspectives"
+    ],
+    "challenges": [
+      "Can feel fragmented or pulled in multiple directions",
+      "May struggle with decision-making without the right constellation of people",
+      "Risk of compartmentalized life creating disconnection"
+    ],
+    "primeInsight": "Triple Split is the design of the complex integrator. In Prime Self, these individuals excel in environments requiring synthesis of multiple viewpoints or systems. Their gift is holding multiple truths simultaneously; their challenge is honoring their authority when their circuits are bridged by the right combination of energies. They are natural systems thinkers precisely because their own system requires conscious integration."
+  },
+  "quadruple_split": {
+    "name": "Quadruple Split",
+    "description": "Defined centers form four separate circuits with three gaps — the maximum complexity in Human Design. Quadruple Split is extremely rare and creates individuals who require very specific combinations of people or transits to experience full energetic integration. These people often have extraordinarily diverse lives, interests, and social circles. They can function in each circuit independently but truly thrive when all circuits are bridged simultaneously.",
+    "theme": "Maximum complexity, maximum versatility",
+    "strengths": [
+      "Unparalleled ability to navigate complex social architectures",
+      "Can engage with radically different groups and contexts",
+      "Exceptional at synthesizing diverse systems of thought",
+      "Natural mediator between disparate factions or perspectives"
+    ],
+    "challenges": [
+      "Can feel deeply fragmented without the right community",
+      "Difficult to find the specific constellation of people who bridge all gaps",
+      "May struggle with a sense of not belonging anywhere fully"
+    ],
+    "primeInsight": "Quadruple Split is the rarest and most complex definition — the master integrator design. In Prime Self, these individuals are here to demonstrate how seemingly incompatible systems can coexist and collaborate. Their life path often involves building communities, teams, or networks that bring together radically different elements. The key is understanding that fragmentation is not failure — it's preparation for integration at a scale most people cannot comprehend."
+  },
+  "none": {
+    "name": "No Definition (Reflector)",
+    "description": "All nine centers are undefined — the Reflector design. With no definition at all, Reflectors are pure mirrors, sampling and amplifying the energy of their environment. They have no fixed way of being; instead, they reflect and magnify whatever (and whoever) surrounds them. This makes them the ultimate barometers of collective health and community vitality. Their correct environment is everything; in the wrong place, they absorb dysfunction; in the right place, they become radiant reflections of collective wellness.",
+    "theme": "Complete openness, complete reflection",
+    "strengths": [
+      "Extraordinary sensitivity to environmental health",
+      "Can see the community/group with total objectivity",
+      "Natural wisdom keepers and seers",
+      "Capacity to evaluate spaces, people, systems without bias"
+    ],
+    "challenges": [
+      "Vulnerable to absorbing others' energy patterns",
+      "Difficult to distinguish 'self' from environment",
+      "Require lunar cycle to make major decisions (28 days)",
+      "Can feel 'invisible' or undefined in unhealthy environments"
+    ],
+    "primeInsight": "Reflectors with no definition are the seismographs of the collective. In Prime Self, their wisdom comes from radical environment dependency: they BECOME the space they're in. This is why their first priority is always finding the right place, the right community, the right people. A Reflector in the wrong environment reflects dysfunction; a Reflector in a healthy environment becomes a beacon of collective wisdom. Their lunar cycle waiting period is not delay — it's the time required for the Moon to transit all 64 gates and give them the complete picture."
+  }
+}

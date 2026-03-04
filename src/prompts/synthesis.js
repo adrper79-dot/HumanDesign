@@ -13,56 +13,141 @@
 
 // ─── SYSTEM PROMPT (STATIC) ────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are the Prime Self Oracle — an advanced synthesis engine that reasons across Human Design, Western Astrology, and the Prime Self philosophical framework to deliver personalized, grounded guidance.
+const SYSTEM_PROMPT = `You are the Prime Self Oracle — an advanced synthesis engine that delivers personalized, grounded guidance through layered interpretation.
 
-RULES (non-negotiable):
-1. Every claim you make must be grounded to a specific data point in the Reference Facts provided. If you cannot cite the specific gate, planet, aspect, or Forge indicator, do not make the claim.
-2. If a gate, channel, or placement is NOT in the Reference Facts block, output: {"field": null, "skipped_reason": "no_reference_data"}
-3. Do not interpolate or synthesize missing data. Absence of connection is valid and useful information — say so explicitly.
-4. When correlating across HD and Astrology, state the correlation as observation, not as established fact. Use language like "this suggests" or "this pattern indicates" rather than "this means."
-5. The Prime Self Forge identification must be grounded in specific HD and Astro signatures as defined in the Forge Mapping reference.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT STRUCTURE (REQUIRED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-OUTPUT SCHEMA (strict JSON, additionalProperties: false at ALL levels):
+Your response must include TWO layers:
+
+LAYER 1: QUICK START GUIDE (user-facing default)
+• 400-600 words total
+• ZERO jargon unless immediately explained
+• Conversational tone (like explaining to a friend)
+• Specific actionable guidance, not abstract concepts
+• Sections: Who You Are | How You Make Best Decisions | Your Life Strategy | This Month | Working With Others
+
+LAYER 2: TECHNICAL INSIGHTS (opt-in, collapsible)
+• Gene Keys terminology (NOT Human Design IP terms)
+• Astrological signatures with interpretations
+• Numerology insights (Life Path, Personal Year)
+• I Ching hexagram wisdom
+• Can include technical correlations but explain them
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LANGUAGE RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FORBIDDEN TERMS (Human Design IP risk - DO NOT USE):
+  ✗ "Human Design", "BodyGraph", "Rave Mandala", "Rave", "Ra Uru Hu"
+  ✗ "Projector", "Generator", "Manifestor", "Manifesting Generator", "Reflector"
+  ✗ "Incarnation Cross", "Variable", "PHS", "Environment"
+  ✗ "Emotional Solar Plexus Authority", "Sacral Authority" (as proper nouns)
+
+APPROVED ALTERNATIVES (Gene Keys / Prime Self language):
+  ✓ Types → Patterns/Archetypes
+    - Projector → "Guide Pattern" or "Oracle Pattern"
+    - Generator → "Builder Pattern" or "Life Force Pattern"  
+    - Manifesting Generator → "Builder-Initiator Pattern"
+    - Manifestor → "Catalyst Pattern" or "Initiator Pattern"
+    - Reflector → "Mirror Pattern" or "Lunar Pattern"
+  
+  ✓ Authority → Decision Navigation / Inner Guidance
+    - Emotional Authority → "Emotional Wave Navigation"
+    - Sacral Authority → "Life Force Response" or "Gut Response"
+    - Splenic Authority → "Intuitive Knowing"
+    - Ego Authority → "Willpower Alignment"
+    - Self-Projected → "Voiced Truth"
+    - Mental/Environmental → "Collaborative Clarity"
+    - Lunar → "Moon Cycle Wisdom"
+  
+  ✓ Gates → Gene Keys
+    - "Gate 37" → "Gene Key 37"
+    - "Gate 37.4" → "Gene Key 37, Line 4" or "GK37.4"
+  
+  ✓ Other Terms
+    - Incarnation Cross → "Life Purpose Vector" or "Dharma Path"
+    - Profile → "Archetype Code" or "Life Role"
+    - Definition → "Energy Blueprint" or "Connection Pattern"
+    - Split Definition → "Bridging Pattern"
+    - Channels → "Energy Pathways" or "Connections"
+    - Centers → "Energy Centers" (OK to keep)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TONE GUIDELINES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Write like you're explaining to a curious friend over coffee, not lecturing a student.
+
+BAD (too technical):
+"Your undefined Sacral center means you lack consistent access to generative life force energy."
+
+GOOD (conversational):
+"You're not designed for 9-to-5 grind-it-out work. Your energy comes in waves based on who you're around and what excites you in the moment."
+
+BAD (too abstract):
+"Gate 37.4 in your Design Sun indicates unconscious capacity for transpersonal bargaining."
+
+GOOD (practical):
+"You naturally know how to negotiate in family situations, even though you may not realize you're doing it. Trust your gut feelings about family commitments."
+
+BAD (no actionable guidance):
+"You have emotional authority which requires riding the wave."
+
+GOOD (specific steps):
+"For big decisions, wait 2-3 days. Day 1 you might feel excited. Day 2 doubt. Day 3 notice what remains TRUE across both - that's your answer."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GROUNDING RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Every claim must be grounded to a specific data point in the Reference Facts.
+2. If a gate, channel, or placement is NOT in Reference Facts, do not make claims about it.
+3. Do not interpolate or synthesize missing data.
+4. When correlating across systems, state as observation: "this suggests" not "this means."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT SCHEMA (strict JSON)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 {
-  "primeProfile": {
-    "primaryForge": {
-      "forge": "Chronos|Eros|Aether|Lux|Phoenix",
+  "quickStartGuide": {
+    "whoYouAre": "string (80-120 words)",
+    "decisionStyle": "string (120-150 words)",
+    "lifeStrategy": "string (100-140 words)",
+    "thisMonth": "string (80-120 words)",
+    "workingWithOthers": "string (80-120 words)"
+  },
+  "technicalInsights": {
+    "geneKeysProfile": {
+      "lifesWork": { "key": "number", "shadow": "string", "gift": "string", "siddhi": "string", "contemplation": "string" },
+      "otherActiveKeys": [{ "key": "number", "position": "string", "shadow": "string", "gift": "string", "message": "string" }]
+    },
+    "numerologyInsights": {
+      "lifePath": { "number": "number", "name": "string", "essence": "string", "currentGuidance": "string" },
+      "personalYear": { "number": "number", "theme": "string", "guidance": "string" },
+      "tarotCard": { "card": "string", "message": "string" }
+    },
+    "astrologicalSignatures": [
+      { "placement": "string", "interpretation": "string", "practicalImplication": "string" }
+    ],
+    "energyBlueprint": {
+      "pattern": "string",
+      "definedCenters": ["string"],
+      "openCenters": ["string"],
+      "connectionPattern": "string"
+    },
+    "forgeIdentification": {
+      "primaryForge": "string",
       "confidence": "high|medium|low",
-      "indicators": [
-        { "system": "HD|Astro", "dataPoint": "string", "correlation": "string" }
-      ]
-    },
-    "knowledgeProfile": {
-      "natural": ["string — which of 6 Knowledges are natal-supported"],
-      "cultivate": ["string — which require deliberate development"],
-      "indicators": [{ "knowledge": "string", "source": "string" }]
-    },
-    "decisionArchitecture": {
-      "hdAuthority": "string",
-      "astroSupport": "string — how astro placements support or complicate",
-      "practicalGuidance": "string"
-    },
-    "currentActivation": {
-      "activeTransits": [{ "planet": "string", "gate": "number", "significance": "string" }],
-      "timingWindow": "string",
-      "forgeRecommendation": "string"
-    },
-    "clusteringProfile": {
-      "brings": ["string — what this person contributes to a Cluster"],
-      "complementaryProfiles": ["string — what types would amplify them"]
-    },
-    "practiceRecommendations": [
-      {
-        "practice": "string",
-        "category": "Science|Art|Defense",
-        "rationale": "string — grounded in specific chart data"
-      }
-    ]
+      "indicators": [{ "system": "string", "dataPoint": "string" }]
+    }
   },
   "groundingAudit": {
     "claimsTotal": "number",
     "claimsGrounded": "number",
-    "ungroundedFields": ["string — field paths that couldn't be grounded"]
+    "ungroundedFields": ["string"]
   }
 }
 
@@ -246,6 +331,28 @@ function buildReferenceFacts(data) {
     }
   }
 
+  // ── Numerology Reference Facts ──
+  if (data.numerology) {
+    const n = data.numerology;
+    sections.push('\n=== NUMEROLOGY REFERENCE FACTS ===');
+    
+    if (n.lifePath) {
+      sections.push(`Life Path Number: ${n.lifePath.number} - ${n.lifePath.name || ''}`);
+    }
+    if (n.birthday) {
+      sections.push(`Birthday Number: ${n.birthday.number}`);
+    }
+    if (n.personalYear) {
+      sections.push(`Personal Year ${n.personalYear.year}: ${n.personalYear.number} - ${n.personalYear.theme || ''}`);
+    }
+    if (n.personalMonth) {
+      sections.push(`Personal Month (${n.personalMonth.month}/${n.personalMonth.year}): ${n.personalMonth.number}`);
+    }
+    if (n.tarotCard) {
+      sections.push(`Tarot Birth Card: ${n.tarotCard.card} (${n.tarotCard.archetype || ''})`);
+    }
+  }
+
   // ── Forge Mapping Reference ──
   sections.push('\n=== FORGE MAPPING REFERENCE ===');
   for (const f of FORGE_MAPPING) {
@@ -323,6 +430,78 @@ function getRAGContext(chartData) {
       sections.push(`### PROFILE: ${profileKey}\n${profiles[profileKey].description}`);
     }
 
+    // Authority (how to make decisions)
+    const authority = loadKB('hd', 'authority.json');
+    const authRaw = chartData.hdChart?.authority || '';
+    // Map authority names to KB keys
+    const authMap = {
+      'Emotional': 'emotional',
+      'Solar Plexus': 'emotional',
+      'Emotional Solar Plexus': 'emotional',
+      'Sacral': 'sacral',
+      'Splenic': 'splenic',
+      'Ego Manifested': 'ego_manifested',
+      'Ego Projected': 'ego_projected',
+      'Self Projected': 'self_projected',
+      'Mental Projector': 'mental_projector',
+      'Lunar': 'lunar_cycle',
+      'Lunar Cycle': 'lunar_cycle'
+    };
+    const authKey = authMap[authRaw] || authRaw.toLowerCase().replace(/\s+/g, '_');
+    if (authority[authKey]) {
+      const auth = authority[authKey];
+      sections.push(`### AUTHORITY: ${auth.authority}\n${auth.description}\n\n**How It Works:** ${auth.howItWorks}\n\n**Strategy:** ${auth.strategy}\n\n**Prime Insight:** ${auth.primeInsight}`);
+    }
+
+    // Definition (energy flow pattern)
+    const definition = loadKB('hd', 'definition.json');
+    const defRaw = chartData.hdChart?.definition || '';
+    // Map definition names to KB keys
+    const defMap = {
+      'Single Definition': 'single',
+      'Split Definition': 'split',
+      'Triple Split Definition': 'triple_split',
+      'Quadruple Split Definition': 'quadruple_split',
+      'No Definition': 'none',
+      'None': 'none'
+    };
+    const defKey = defMap[defRaw] || defRaw.toLowerCase().replace(/\s+definition/i, '').replace(/\s+/g, '_');
+    if (definition[defKey]) {
+      const def = definition[defKey];
+      sections.push(`### DEFINITION: ${def.name}\n${def.description}\n\n**Theme:** ${def.theme}\n\n**Prime Insight:** ${def.primeInsight}`);
+    }
+
+    // Centers (defined and undefined energy mechanics)
+    const centers = loadKB('hd', 'centers.json');
+    const centerLines = [];
+    
+    // Defined centers
+    if (chartData.hdChart?.definedCenters && Array.isArray(chartData.hdChart.definedCenters)) {
+      chartData.hdChart.definedCenters.forEach(centerName => {
+        const centerKey = centerName.toLowerCase().replace(/\s+/g, '_');
+        const center = centers[centerKey];
+        if (center) {
+          centerLines.push(`**${centerName} (Defined):** ${center.definedTheme}`);
+        }
+      });
+    }
+    
+    // Undefined centers
+    if (chartData.hdChart?.undefinedCenters && Array.isArray(chartData.hdChart.undefinedCenters)) {
+      chartData.hdChart.undefinedCenters.forEach(centerName => {
+        const centerKey = centerName.toLowerCase().replace(/\s+/g, '_');
+        const center = centers[centerKey];
+        if (center) {
+          centerLines.push(`**${centerName} (Undefined):** ${center.undefinedTheme}`);
+        }
+      });
+    }
+    
+    if (centerLines.length) {
+      const definedCount = chartData.hdChart?.definedCenters?.length || 0;
+      sections.push(`### CENTERS (${definedCount} defined, ${9 - definedCount} undefined)\n${centerLines.join('\n')}`);
+    }
+
     // Active gates (cap at 10)
     const gates = loadKB('hd', 'gates.json');
     if (!gates._meta) {
@@ -361,6 +540,172 @@ function getRAGContext(chartData) {
       const crossEntry = Object.values(crossesKB).find(v => v && v.cross === crossName);
       if (crossEntry) {
         sections.push(`### INCARNATION CROSS: ${crossName}\n${crossEntry.description?.slice(0, 300) || ''}\n${crossEntry.lifeTheme ? `Life Theme: ${crossEntry.lifeTheme}` : ''}`);
+      }
+    }
+
+    // Gene Keys for active gates
+    const geneKeys = loadKB('genekeys', 'keys.json');
+    const activeGates = collectActiveGatesForRAG(chartData);
+    if (activeGates.length > 0 && Object.keys(geneKeys).length > 0) {
+      const keyLines = activeGates.slice(0, 8).map(g => {
+        const key = geneKeys[g];
+        if (!key) return '';
+        return `Gene Key ${g} - ${key.name}\n  Shadow: ${key.shadow} - ${key.shadowDescription?.slice(0, 150) || ''}\n  Gift: ${key.gift} - ${key.giftDescription?.slice(0, 150) || ''}\n  Siddhi: ${key.siddhi}\n  Contemplation: ${key.contemplation || ''}`;
+      }).filter(Boolean);
+      if (keyLines.length) sections.push(`### GENE KEYS WISDOM\n${keyLines.join('\n\n')}`);
+    }
+
+    // Astrology: Major Planets in Signs (Phase 2 Enhancement)
+    const planets = loadKB('astro', 'planets.json');
+    const signs = loadKB('astro', 'signs.json');
+    const houses = loadKB('astro', 'houses.json');
+    if (chartData.astrology?.placements) {
+      const planetLines = [];
+      const majorPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'];
+      
+      for (const planetName of majorPlanets) {
+        const placement = chartData.astrology.placements.find(
+          pl => pl.planet === planetName || pl.body === planetName
+        );
+        if (placement) {
+          const planetKey = planetName.toLowerCase();
+          const signKey = placement.sign?.toLowerCase();
+          const planetInfo = planets[planetKey];
+          const signInfo = signs[signKey];
+          
+          if (planetInfo && signInfo) {
+            // Combine planet archetype + sign expression + house (if available)
+            const planetDesc = planetInfo.description?.slice(0, 180) || planetInfo.astroRole;
+            const signDesc = signInfo.primeExpression || signInfo.description?.slice(0, 120);
+            let houseSuffix = '';
+            
+            // Add house context if available
+            if (placement.house && houses[placement.house]) {
+              const houseInfo = houses[placement.house];
+              houseSuffix = `\n  House ${placement.house} (${houseInfo.name}): ${houseInfo.primeInsight}`;
+            }
+            
+            planetLines.push(`**${planetName} in ${placement.sign}** (${placement.degrees?.toFixed(1)}°)${placement.house ? ` — House ${placement.house}` : ''}\n  Planet: ${planetDesc}\n  Sign: ${signDesc}${houseSuffix}\n  **Prime Insight:** ${planetInfo.primeInsight}`);
+          }
+        }
+      }
+      
+      if (planetLines.length) {
+        sections.push(`### PLANETARY ARCHETYPES\n${planetLines.join('\n\n')}`);
+      }
+    }
+
+    // Astrology: Major Aspects (Phase 2 Enhancement)
+    const aspectsKB = loadKB('astro', 'aspects.json');
+    if (chartData.astrology?.aspects && Array.isArray(chartData.astrology.aspects)) {
+      // Sort by orb tightness and take top 6
+      const topAspects = chartData.astrology.aspects
+        .filter(a => a.aspect && a.planet1 && a.planet2)
+        .sort((a, b) => (Math.abs(a.orb || 10) - Math.abs(b.orb || 10)))
+        .slice(0, 6);
+      
+      const aspectLines = topAspects.map(a => {
+        const aspectKey = a.aspect?.toLowerCase();
+        const aspectInfo = aspectsKB[aspectKey];
+        if (aspectInfo) {
+          return `**${a.planet1} ${a.aspect} ${a.planet2}** (orb ${Math.abs(a.orb || 0).toFixed(1)}°)\n  ${aspectInfo.description?.slice(0, 180)}\n  **Prime Insight:** ${aspectInfo.primeInsight}`;
+        }
+        return '';
+      }).filter(Boolean);
+      
+      if (aspectLines.length) {
+        sections.push(`### MAJOR ASPECTS\n${aspectLines.join('\n\n')}`);
+      }
+    }
+
+    // Numerology insights
+    if (chartData.numerology) {
+      const n = chartData.numerology;
+      const lifePaths = loadKB('numerology', 'lifePaths.json');
+      const personalYears = loadKB('numerology', 'personalYears.json');
+      const tarotCards = loadKB('numerology', 'tarotCards.json');
+
+      const numSections = [];
+      
+      if (n.lifePath && lifePaths[n.lifePath.number]) {
+        const lp = lifePaths[n.lifePath.number];
+        numSections.push(`Life Path ${n.lifePath.number}: ${lp.name}\n  ${lp.description?.slice(0, 200) || lp.essence || ''}`);
+      }
+
+      if (n.personalYear && personalYears[n.personalYear.number]) {
+        const py = personalYears[n.personalYear.number];
+        numSections.push(`Personal Year ${n.personalYear.number}: ${py.theme}\n  ${py.guidance?.slice(0, 200) || py.description?.slice(0, 200) || ''}`);
+      }
+
+      if (n.tarotCard && tarotCards[n.lifePath?.number]) {
+        const tc = tarotCards[n.lifePath.number];
+        numSections.push(`Tarot Birth Card: ${tc.card}\n  ${tc.description?.slice(0, 150) || ''}`);
+      }
+
+      if (numSections.length) sections.push(`### NUMEROLOGY INSIGHTS\n${numSections.join('\n\n')}`);
+    }
+
+    // Prime Self: Six Knowledges (Phase 3 Enhancement)
+    const knowledges = loadKB('prime_self', 'knowledges.json');
+    if (Object.keys(knowledges).length > 1) { // Check it's loaded (has more than _meta)
+      const knowledgeLines = [];
+      
+      // Determine relevant Knowledges based on chart configuration
+      // Logic: Check which centers/gates suggest affinity with each Knowledge domain
+      const relevantKnowledges = [];
+      
+      // Sciences: Ajna defined, Logic circuit active
+      if (chartData.hdChart?.definedCenters?.some(c => c === 'Ajna' || c.includes('Ajna'))) {
+        relevantKnowledges.push('sciences');
+      }
+      
+      // Arts: Throat defined, creative expression gates (1, 8, 56, 62)
+      const activeGates = collectActiveGatesForRAG(chartData);
+      if (chartData.hdChart?.definedCenters?.some(c => c === 'Throat' || c.includes('Throat')) || 
+          activeGates.some(g => [1, 8, 56, 62].includes(g))) {
+        relevantKnowledges.push('arts');
+      }
+      
+      // Defenses: Spleen defined, Tribal circuit, Ego defined
+      if (chartData.hdChart?.definedCenters?.some(c => c === 'Spleen' || c === 'Heart' || c === 'Ego' || 
+          c.includes('Spleen') || c.includes('Heart') || c.includes('Ego'))) {
+        relevantKnowledges.push('defenses');
+      }
+      
+      // Heresies: Individual circuit gates (43, 23, 61, 24), Aquarius/Uranus emphasis
+      if (activeGates.some(g => [43, 23, 61, 24].includes(g))) {
+        relevantKnowledges.push('heresies');
+      }
+      
+      // Connections: Solar Plexus defined, Tribal gates (37, 40, 6, 59)
+      if (chartData.hdChart?.definedCenters?.some(c => c === 'Solar Plexus' || c.includes('Solar Plexus')) ||
+          activeGates.some(g => [37, 40, 6, 59].includes(g))) {
+        relevantKnowledges.push('connections');
+      }
+      
+      // Mysteries: Head defined, undefined centers (openness), gates 61, 64, 63
+      if (chartData.hdChart?.definedCenters?.some(c => c === 'Head' || c.includes('Head')) ||
+          activeGates.some(g => [61, 64, 63].includes(g))) {
+        relevantKnowledges.push('mysteries');
+      }
+      
+      // If no matches, add all Knowledges (fallback)
+      if (relevantKnowledges.length === 0) {
+        relevantKnowledges.push('sciences', 'arts', 'connections');
+      }
+      
+      // Take top 3 most relevant Knowledges
+      const topKnowledges = relevantKnowledges.slice(0, 3);
+      
+      for (const kKey of topKnowledges) {
+        const k = knowledges[kKey];
+        if (k && k.knowledge) {
+          knowledgeLines.push(`**${k.knowledge}** — ${k.essence}\n  ${k.description?.slice(0, 200) || ''}\n  **Prime Question:** ${k.primeQuestion}`);
+        }
+      }
+      
+      if (knowledgeLines.length) {
+        sections.push(`### PRIME SELF: SIX KNOWLEDGES\n${knowledgeLines.join('\n\n')}`);
       }
     }
 
@@ -454,9 +799,12 @@ export function validateSynthesisResponse(response) {
     parsed = response;
   }
 
-  // Check top-level structure
-  if (!parsed.primeProfile) {
-    errors.push('Missing primeProfile');
+  // Check top-level structure (NEW SCHEMA)
+  if (!parsed.quickStartGuide) {
+    errors.push('Missing quickStartGuide');
+  }
+  if (!parsed.technicalInsights) {
+    errors.push('Missing technicalInsights');
   }
   if (!parsed.groundingAudit) {
     errors.push('Missing groundingAudit');
@@ -466,29 +814,37 @@ export function validateSynthesisResponse(response) {
     return { valid: false, parsed, errors };
   }
 
-  const pp = parsed.primeProfile;
+  const qsg = parsed.quickStartGuide;
+  const ti = parsed.technicalInsights;
   const ga = parsed.groundingAudit;
 
-  // Validate required sections
-  const requiredSections = [
-    'primaryForge', 'knowledgeProfile', 'decisionArchitecture',
-    'currentActivation', 'clusteringProfile', 'practiceRecommendations'
+  // Validate Quick Start Guide sections
+  const requiredQSGSections = [
+    'whoYouAre', 'decisionStyle', 'lifeStrategy', 'thisMonth', 'workingWithOthers'
   ];
-  for (const section of requiredSections) {
-    if (!pp[section]) {
-      errors.push(`Missing primeProfile.${section}`);
+  for (const section of requiredQSGSections) {
+    if (!qsg[section]) {
+      errors.push(`Missing quickStartGuide.${section}`);
     }
+  }
+
+  // Validate Technical Insights sections
+  if (!ti.geneKeysProfile) {
+    errors.push('Missing technicalInsights.geneKeysProfile');
+  }
+  if (!ti.forgeIdentification) {
+    errors.push('Missing technicalInsights.forgeIdentification');
   }
 
   // Validate Forge enum
-  if (pp.primaryForge && pp.primaryForge.forge) {
+  if (ti.forgeIdentification && ti.forgeIdentification.forge) {
     const validForges = ['Chronos', 'Eros', 'Aether', 'Lux', 'Phoenix'];
-    if (!validForges.includes(pp.primaryForge.forge)) {
-      errors.push(`Invalid forge: ${pp.primaryForge.forge}`);
+    if (!validForges.includes(ti.forgeIdentification.forge)) {
+      errors.push(`Invalid forge: ${ti.forgeIdentification.forge}`);
     }
   }
 
-  // Validate grounding audit integrity
+  // Validate grounding audit integritiy
   if (ga) {
     if (typeof ga.claimsTotal !== 'number' || typeof ga.claimsGrounded !== 'number') {
       errors.push('groundingAudit claims must be numbers');
@@ -518,7 +874,7 @@ export function validateSynthesisResponse(response) {
 export function buildReprompt(previousOutput) {
   return {
     role: 'user',
-    content: `Review your previous output. For each claim in the primeProfile, cite the exact Reference Fact it derives from. Remove any claim you cannot directly cite. Return the same schema with corrected values and an updated groundingAudit.\n\nYour previous output:\n${JSON.stringify(previousOutput, null, 2)}`
+    content: `Review your previous output. For each claim in the quickStartGuide and technicalInsights, cite the exact Reference Fact it derives from. Remove any claim you cannot directly cite. Return the same schema with corrected values and an updated groundingAudit.\n\nYour previous output:\n${JSON.stringify(previousOutput, null, 2)}`
   };
 }
 

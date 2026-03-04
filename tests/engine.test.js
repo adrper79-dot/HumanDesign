@@ -460,13 +460,16 @@ describe('Layer 8: Synthesis', () => {
   describe('validateSynthesisResponse', () => {
     it('accepts valid response', () => {
       const valid = {
-        primeProfile: {
-          primaryForge: { forge: 'Aether', confidence: 'medium', indicators: [] },
-          knowledgeProfile: { natural: [], cultivate: [], indicators: [] },
-          decisionArchitecture: { hdAuthority: 'E', astroSupport: '', practicalGuidance: '' },
-          currentActivation: { activeTransits: [], timingWindow: '', forgeRecommendation: '' },
-          clusteringProfile: { brings: [], complementaryProfiles: [] },
-          practiceRecommendations: []
+        quickStartGuide: {
+          whoYouAre: 'Test',
+          decisionStyle: 'Test',
+          lifeStrategy: 'Test',
+          thisMonth: 'Test',
+          workingWithOthers: 'Test'
+        },
+        technicalInsights: {
+          geneKeysProfile: { shadowPatterns: [], giftOpportunities: [], siddhiPotential: [] },
+          forgeIdentification: { forge: 'Aether', confidence: 'medium', indicators: [] }
         },
         groundingAudit: { claimsTotal: 3, claimsGrounded: 3, ungroundedFields: [] }
       };
@@ -475,19 +478,24 @@ describe('Layer 8: Synthesis', () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it('rejects missing primeProfile', () => {
+    it('rejects missing quickStartGuide', () => {
       const result = validateSynthesisResponse({ groundingAudit: {} });
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Missing primeProfile');
+      expect(result.errors).toContain('Missing quickStartGuide');
     });
 
     it('rejects invalid forge', () => {
       const bad = {
-        primeProfile: {
-          primaryForge: { forge: 'INVALID' },
-          knowledgeProfile: {}, decisionArchitecture: {},
-          currentActivation: {}, clusteringProfile: {},
-          practiceRecommendations: []
+        quickStartGuide: {
+          whoYouAre: 'Test',
+          decisionStyle: 'Test',
+          lifeStrategy: 'Test',
+          thisMonth: 'Test',
+          workingWithOthers: 'Test'
+        },
+        technicalInsights: {
+          geneKeysProfile: {},
+          forgeIdentification: { forge: 'INVALID' }
         },
         groundingAudit: { claimsTotal: 0, claimsGrounded: 0, ungroundedFields: [] }
       };
@@ -497,11 +505,16 @@ describe('Layer 8: Synthesis', () => {
 
     it('rejects incomplete grounding', () => {
       const bad = {
-        primeProfile: {
-          primaryForge: { forge: 'Lux' },
-          knowledgeProfile: {}, decisionArchitecture: {},
-          currentActivation: {}, clusteringProfile: {},
-          practiceRecommendations: []
+        quickStartGuide: {
+          whoYouAre: 'Test',
+          decisionStyle: 'Test',
+          lifeStrategy: 'Test',
+          thisMonth: 'Test',
+          workingWithOthers: 'Test'
+        },
+        technicalInsights: {
+          geneKeysProfile: {},
+          forgeIdentification: { forge: 'Lux' }
         },
         groundingAudit: { claimsTotal: 5, claimsGrounded: 3, ungroundedFields: ['x', 'y'] }
       };
@@ -510,10 +523,10 @@ describe('Layer 8: Synthesis', () => {
     });
 
     it('parses JSON string input', () => {
-      const json = '{"primeProfile":{"primaryForge":{"forge":"Eros"},"knowledgeProfile":{},"decisionArchitecture":{},"currentActivation":{},"clusteringProfile":{},"practiceRecommendations":[]},"groundingAudit":{"claimsTotal":0,"claimsGrounded":0,"ungroundedFields":[]}}';
+      const json = '{"quickStartGuide":{"whoYouAre":"Test","decisionStyle":"Test","lifeStrategy":"Test","thisMonth":"Test","workingWithOthers":"Test"},"technicalInsights":{"geneKeysProfile":{},"forgeIdentification":{"forge":"Eros"}},"groundingAudit":{"claimsTotal":0,"claimsGrounded":0,"ungroundedFields":[]}}';
       const result = validateSynthesisResponse(json);
       expect(result.parsed).toBeDefined();
-      expect(result.parsed.primeProfile.primaryForge.forge).toBe('Eros');
+      expect(result.parsed.technicalInsights.forgeIdentification.forge).toBe('Eros');
     });
   });
 });
