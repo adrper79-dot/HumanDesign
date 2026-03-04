@@ -1,6 +1,6 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-03
+**Last audited:** 2026-03-04
 **Test suite:** 190/190 passing (vitest 3.2.4)
 **Audit scope:** Full codebase + all documentation
 
@@ -30,7 +30,7 @@ These items cause outright failures in deployed environments.
 - **Verify:** Deploy to staging → `POST /api/auth/register` succeeds → user row appears in Neon console.
 
 ### BL-C2 | `migrate.js` doesn't await `getClient()`
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical
 - **Files:** `workers/src/db/migrate.js`
 - **Problem:** `getClient()` is an `async` function but is called without `await`. The returned Promise is assigned to `client`, and `client.connect()` is called on a Promise object — throws `TypeError`.
@@ -50,7 +50,7 @@ These items cause outright failures in deployed environments.
 - **Verify:** Fresh deploy → both migration paths produce identical schema → `\d users` in Neon matches expected columns.
 
 ### BL-C4 | CORS blocks DELETE (and PUT/PATCH)
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical
 - **Files:** `workers/src/middleware/cors.js` (line 6)
 - **Problem:** `Access-Control-Allow-Methods` is `'GET, POST, OPTIONS'`. The `DELETE /api/practitioner/clients/:id` endpoint fails CORS preflight in all browsers.
@@ -71,7 +71,7 @@ These items cause outright failures in deployed environments.
 - **Verify:** Calculate a chart while logged in → `charts` table has a new row.
 
 ### BL-C6 | `parseToUTC` negative-minute bug
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical
 - **Files:** `workers/src/utils/parseToUTC.js` (lines 52–53)
 - **Problem:** When `utcTotalMinutes` is negative (e.g., -30), JavaScript's `%` operator preserves sign: `-30 % 60 = -30`. The code corrects negative *hours* but not negative *minutes*. Result: `{ hour: 23, minute: -30 }`.
@@ -105,7 +105,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Use constant-time comparison: compare byte-by-byte with XOR accumulator, or use `crypto.subtle.timingSafeEqual` if available in Workers runtime.
 
 ### BL-M3 | No JSON parse error handling in handlers
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/calculate.js`, `profile.js`, `auth.js`, `composite.js`, `cluster.js`
 - **Problem:** `request.json()` is called without try/catch. Malformed request bodies (non-JSON, empty, `text/plain`) throw unhandled exceptions → generic 500 instead of descriptive 400.
@@ -228,7 +228,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Implement each or decide they're not needed and document why.
 
 ### BL-m7 | No `birthTimezone` validation
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Files:** `workers/src/utils/parseToUTC.js`, `workers/src/handlers/calculate.js`
 - **Problem:** An invalid IANA timezone string causes `Intl.DateTimeFormat` to throw `RangeError`, surfacing as a 500 instead of 400.
 - **Fix:** Wrap timezone usage in try/catch and return `{ error: 'Invalid timezone' }` with 400.
@@ -246,7 +246,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Coerce to string first: `String(user.birth_date).split('-')`.
 
 ### BL-m10 | No email format validation in auth
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Files:** `workers/src/handlers/auth.js`
 - **Problem:** Registration only checks `!email || !password`. Users can register with invalid email strings.
 - **Fix:** Add basic regex validation: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`.
