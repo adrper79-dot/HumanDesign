@@ -193,8 +193,8 @@ These items cause outright failures in deployed environments.
 ## Minor (10) — Polish, consistency, housekeeping
 
 ### BL-m1 | Response envelope inconsistency
-- [ ] **Status:** Open
-- **Files:** `workers/src/handlers/*.js`
+- [x] **Status:** Done (2026-03-04)
+- **Files:** `workers/src/handlers/*.js`, `tests/handlers.test.js`
 - **Problem:** Some handlers return `{ success: true }`, others `{ ok: true }`. API spec documents no consistent envelope.
 - **Fix:** Standardize on one shape (suggest `{ ok: true, data: {...} }` per ARCHITECTURE.md).
 
