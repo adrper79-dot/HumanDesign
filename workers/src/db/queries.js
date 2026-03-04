@@ -2,11 +2,13 @@
  * Database Queries — Neon PostgreSQL
  *
  * Prepared queries for all core operations.
- * Uses fetch-based HTTP API for Workers compatibility.
+ * Uses @neondatabase/serverless for Workers compatibility.
  *
- * In Workers context, use createQueryFn() which uses HTTP.
+ * In Workers context, use createQueryFn() which uses Neon serverless driver.
  * In Node context (migration), use getClient() which uses pg.
  */
+
+import { neonConfig, Pool } from '@neondatabase/serverless';
 
 /**
  * Get a pg Client for migration scripts (Node.js only).
@@ -22,44 +24,20 @@ export async function getClient(connectionString) {
 
 /**
  * Create a serverless query function for Workers runtime.
- * Uses Neon's HTTP SQL API via fetch.
+ * Uses Neon's serverless driver optimized for edge compute.
  *
  * @param {string} connectionString — Neon connection string
  * @returns {Function} query function (sql, params) => Promise<{rows}>
  */
 export function createQueryFn(connectionString) {
+  // Configure Neon for Cloudflare Workers (uses fetch instead of Node http)
+  neonConfig.fetchFunction = fetch;
+  
+  const pool = new Pool({ connectionString });
+  
   return async function query(sqlText, params = []) {
     try {
-      // Parse connection string to extract auth and endpoint info
-      const url = new URL(connectionString);
-      const password = url.password;
-      const host = url.hostname;
-      const database = url.pathname.slice(1); // remove leading /
-      const username = url.username;
-      
-      // Neon HTTP API endpoint
-      const endpoint = `https://${host}/sql`;
-      
-      // Make HTTP request to Neon's SQL-over-HTTP API
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${password}` // Neon uses password as API key
-        },
-        body: JSON.stringify({
-          query: sqlText,
-          params: params || []
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Database query failed (${response.status}): ${errorText}`);
-      }
-
-      const result = await response.json();
-      // Neon returns {rows: [...], fields: [...], rowCount: ...}
+      const result = await pool.query(sqlText, params);
       return result;
     } catch (error) {
       console.error('Database query error:', error);
