@@ -168,11 +168,11 @@ These items cause outright failures in deployed environments.
 - **Fix:** Add `[42, 53, 'Sacral', 'Root']` to the CHANNELS array.
 
 ### BL-M12 | `engine-compat.js` incomplete data injection
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/engine-compat.js`
 - **Problem:** Injects 9 JSON files into `globalThis.__PRIME_DATA` but the knowledgebase has 20+ files. Any engine/prompt code referencing missing files will fail at runtime in the Workers environment.
-- **Fix:** Add injection for all knowledgebase files used by `synthesis.js` and `rag.js`.
+- **Fix:** Added 11 missing data files: hd/centers.json, hd/authority.json, hd/definition.json, genekeys/keys.json, astro/planets.json, astro/signs.json, astro/houses.json, astro/aspects.json, numerology/lifePaths.json, numerology/personalYears.json, numerology/tarotCards.json. Total now 20 files injected.
 
 ### BL-M13 | Rate limits don't match API spec
 - [x] **Status:** Done (2026-03-04)
@@ -205,15 +205,16 @@ These items cause outright failures in deployed environments.
 - **Fix:** Updated version to '0.2.0', removed stale endpoint count, added timestamp for better health check utility.
 
 ### BL-m3 | `wrangler.toml` exposes `account_id`
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Files:** `workers/wrangler.toml`
 - **Problem:** Not a secret, but best practice is to omit from version control. Use `CLOUDFLARE_ACCOUNT_ID` env var instead.
+- **Fix:** Removed account_id from wrangler.toml. Added comment noting it should be set via CLOUDFLARE_ACCOUNT_ID environment variable.
 
 ### BL-m4 | `Secrets.txt` in workspace root
-- [ ] **Status:** Open
-- **Files:** `Secrets.txt`
+- [x] **Status:** Verified (2026-03-04)
+- **Files:** `Secrets.txt`, `.gitignore`
 - **Problem:** Even if gitignored, having a plaintext secrets file in the workspace is a risk vector.
-- **Fix:** Verify `.gitignore` coverage. Consider removing in favor of a password manager or `wrangler secret` exclusively.
+- **Fix:** Verified that Secrets.txt is properly gitignored (line 1 of .gitignore). File is safe for local development reference. Production secrets managed via `wrangler secret` command.
 
 ### BL-m5 | Documentation test count stale
 - [x] **Status:** Done (Previously completed)

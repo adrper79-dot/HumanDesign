@@ -2,7 +2,7 @@ name = "prime-self-api"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
-account_id = "a1c8a33cbe8a3c9e260480433a0dbb06"
+# account_id moved to CLOUDFLARE_ACCOUNT_ID environment variable
 
 [vars]
 ENVIRONMENT = "production"
