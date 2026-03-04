@@ -20,7 +20,15 @@ import { parseToUTC } from '../utils/parseToUTC.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 
 export async function handleCalculate(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
 
   // Validate required fields
   const required = ['birthDate', 'birthTime', 'lat', 'lng'];
@@ -38,7 +46,14 @@ export async function handleCalculate(request, env) {
   // Convert to UTC
   let utc;
   if (birthTimezone) {
-    utc = parseToUTC(birthDate, birthTime, birthTimezone);
+    try {
+      utc = parseToUTC(birthDate, birthTime, birthTimezone);
+    } catch (error) {
+      return Response.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
   } else {
     // Assume UTC if no timezone provided
     const [year, month, day] = birthDate.split('-').map(Number);

@@ -368,7 +368,8 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] Layer 5: Centers, channels, type, authority, profile, cross
 - [x] Layer 6: Astrology (signs, houses, aspects)
 - [x] Layer 7: Transit engine
-- [x] 117/117 tests passing (vitest)
+- [x] Numerology engine (Life Path, Personal Year, Tarot Birth Card)
+- [x] 190/190 tests passing (vitest) — 86 engine + 41 handler + 63 numerology
 
 ### Phase 3: Data Layer (Complete ✅)
 - [x] Neon schema migration (9 tables live + indexes)
@@ -407,7 +408,26 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] Progress tracking via KV namespace (no schema migration required)
 - [x] In-app story progression tied to user's primary Forge (from generated profile)
 - [x] Deployed live — `GET /api/onboarding/intro` returns 5-Forge structure ✅
+### Phase 7: Hardening & Production Readiness (In Progress)
+*Full backlog: [BACKLOG.md](BACKLOG.md) — 26 issues across 3 severity tiers.*
 
+- [ ] Fix Neon DB driver to use official API (BL-C1) — **all DB features broken**
+- [ ] Fix `migrate.js` await + reconcile schema drift (BL-C2, BL-C3)
+- [ ] Fix CORS to allow DELETE/PUT/PATCH methods (BL-C4)
+- [ ] Fix chart auto-save dead code (BL-C5)
+- [ ] Fix `parseToUTC` negative-minute bug (BL-C6)
+- [ ] Implement 7 missing documented endpoints or update spec (BL-M1)
+- [ ] Constant-time password comparison (BL-M2)
+- [ ] JSON parse error handling in all handlers (BL-M3)
+- [ ] Restrict CORS origin to production domain (BL-M4)
+- [ ] Complete Gene Keys knowledgebase (38/64 → 64/64) (BL-M5)
+- [ ] Fix `digest.js` property name mismatches (BL-M6)
+- [ ] Fix `rag.js` array/object mismatch (BL-M7)
+- [ ] Consolidate duplicate RAG and JWT code (BL-M8, BL-M9)
+- [ ] Add missing channel 42-53 in composite.js (BL-M11)
+- [ ] Complete `engine-compat.js` data injection (BL-M12)
+- [ ] Frontend for composite, practitioner, onboarding, PDF features (BL-M14)
+- [ ] Add integration tests for middleware, DB, LLM failover
 ---
 
 ## 9. Security Notes
@@ -417,6 +437,13 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - Birth data is PII — encrypt at rest, minimize retention
 - Practitioner access to client charts requires explicit consent records
 - Rate limiting via Cloudflare AI Gateway for LLM endpoints
+
+**Audit findings (2026-03-03):**
+- ⚠️ CORS origin is wildcard `*` — should be restricted to production domain (BL-M4)
+- ⚠️ Password comparison uses `===` instead of constant-time compare (BL-M2)
+- ⚠️ `Secrets.txt` exists in workspace root — verify `.gitignore` coverage (BL-m4)
+- ⚠️ No email format validation on registration (BL-m10)
+- ⚠️ Token stored in `localStorage` in frontend — XSS-vulnerable
 
 ---
 

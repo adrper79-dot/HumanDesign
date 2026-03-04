@@ -333,7 +333,15 @@ function typeInteraction(typeA, typeB) {
 }
 
 export async function handleComposite(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
 
   if (!body.personA || !body.personB) {
     return Response.json(

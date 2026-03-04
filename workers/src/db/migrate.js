@@ -123,7 +123,7 @@ const MIGRATIONS = [
  * Run all pending migrations.
  */
 export async function migrate(connectionString) {
-  const client = getClient(connectionString);
+  const client = await getClient(connectionString);
 
   try {
     await client.connect();

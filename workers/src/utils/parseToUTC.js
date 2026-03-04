@@ -21,14 +21,16 @@ export function parseToUTC(birthDate, birthTime, timezone) {
     return { year, month, day, hour, minute, second: 0 };
   }
 
-  // Use Intl to determine the UTC offset for this timezone at this date
-  const testDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric', month: 'numeric', day: 'numeric',
-    hour: 'numeric', minute: 'numeric', second: 'numeric',
-    hour12: false
-  });
+  // Validate timezone by attempting to use it with Intl
+  try {
+    // Use Intl to determine the UTC offset for this timezone at this date
+    const testDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+      hour12: false
+    });
   const parts = formatter.formatToParts(testDate);
   const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0');
 
@@ -50,7 +52,7 @@ export function parseToUTC(birthDate, birthTime, timezone) {
   const utcTotalMinutes = localTotalMinutes - offsetMinutes;
 
   let utcHour = Math.floor(utcTotalMinutes / 60);
-  let utcMinuteVal = utcTotalMinutes % 60;
+  let utcMinuteVal = ((utcTotalMinutes % 60) + 60) % 60;
   let utcDay = day, utcMonth = month, utcYear = year;
 
   if (utcHour >= 24) { utcHour -= 24; utcDay++; }
@@ -66,4 +68,8 @@ export function parseToUTC(birthDate, birthTime, timezone) {
     year: utcYear, month: utcMonth, day: utcDay,
     hour: utcHour, minute: utcMinuteVal, second: 0
   };
+  } catch (error) {
+    // Invalid timezone string causes Intl.DateTimeFormat to throw RangeError
+    throw new Error(`Invalid timezone: ${timezone}`);
+  }
 }

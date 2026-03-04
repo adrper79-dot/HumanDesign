@@ -39,7 +39,15 @@ function chartCacheKey(birthDate, birthTime, lat, lng) {
 }
 
 export async function handleProfile(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
 
   // Validate
   const required = ['birthDate', 'birthTime', 'lat', 'lng'];

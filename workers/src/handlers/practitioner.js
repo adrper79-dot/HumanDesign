@@ -133,7 +133,16 @@ async function handleListClients(userId, query) {
 }
 
 async function handleAddClient(request, env, userId, query) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const { clientEmail } = body;
 
   if (!clientEmail) {

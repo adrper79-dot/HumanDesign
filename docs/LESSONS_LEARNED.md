@@ -45,10 +45,42 @@ The calculation engine was **100% accurate** when given correct input data.
 5. **Near-boundary cases can be misleading** — The P Sun was at 148.2512°, just 0.0012° past the Gate 29 Line 4/5 boundary (148.25°). This made it _appear_ like a rounding error when it was actually a completely different date.
 
 **Preventive Measures**
-- [ ] Add input validation warnings for ambiguous dates (e.g., if day ≤ 12, ask user to confirm MM/DD format)
-- [ ] Display calculated birth data summary before final chart generation: "Confirm: Born on **[Day of Week], [Month Name] [Day], [Year]** at [time]?"
-- [ ] Add "Compare with Jovian Archive" feature: allow users to upload a reference PDF and auto-extract the birth data for comparison
-- [ ] Show P/D Sun positions in degrees alongside gate/line for power users (helps spot gross errors)
+- [ ] Add input validation warnings for ambiguous dates (e.g., if day ≤ 12, ask user to confirm MM/DD format) — *tracked in backlog as future UX improvement*
+- [ ] Display calculated birth data summary before final chart generation: "Confirm: Born on **[Day of Week], [Month Name] [Day], [Year]** at [time]?" — *tracked in backlog as future UX improvement*
+- [ ] Add "Compare with Jovian Archive" feature: allow users to upload a reference PDF and auto-extract the birth data for comparison — *deferred: requires PDF parsing library*
+- [ ] Show P/D Sun positions in degrees alongside gate/line for power users (helps spot gross errors) — *low effort, can add to chart response*
+
+---
+
+### 2026-03-03 | Full Codebase Audit — 26 Issues Found
+
+**Trigger**
+Full review of entire codebase, all documentation, tests, and data files prior to production readiness assessment.
+
+**Findings Summary**
+
+| Severity | Count | Key Theme |
+|---|---|---|
+| Critical | 6 | Broken DB driver, dead code, CORS blocks, schema drift, math bugs |
+| Moderate | 14 | Missing endpoints, security gaps, data completeness, code duplication |
+| Minor | 10 | Inconsistencies, hardcoded values, polish |
+
+**Top 3 Systemic Issues Discovered**
+
+1. **The Neon DB driver doesn't use the real Neon HTTP API** (BL-C1). `neonQuery()` in `queries.js` sends requests to an endpoint pattern that doesn't exist. Every database-dependent feature — auth, chart saving, profiles, practitioners, clusters, SMS — silently fails. This was never caught because handler tests mock the DB layer and engine tests don't touch the DB at all.
+
+2. **Infrastructure wrappers have bugs the engine tests can't reach.** The calculation engine (Layers 1–7) is excellently tested — 190 tests, two verification anchors, boundary coverage. But the code that _wraps_ the engine (CORS, timezone parsing, data injection, chart persistence) has zero test coverage and contains real bugs: `parseToUTC` produces negative minutes (BL-C6), CORS blocks DELETE methods (BL-C4), `engine-compat.js` only injects 9 of 20+ data files (BL-M12).
+
+3. **Spec/implementation drift.** 7 endpoints documented in API_SPEC.md don't exist in the router. 10+ endpoints in the router aren't in the spec. Rate limit values in the code don't match the spec. The health endpoint hardcodes a wrong version number. This drift happened because the spec was written up-front and not kept updated as implementation evolved.
+
+**Key Learnings**
+
+1. **Test the seams, not just the core** — Engine math tests are thorough, but integration seams (DB queries, timezone conversion, CORS, data injection) are where production failures actually happen. Prioritize adding integration tests for the middleware and DB layers.
+2. **Spec-first only works with spec-maintenance** — API_SPEC.md drifted significantly from the actual router. Either generate the spec from the code (e.g., OpenAPI from route definitions) or add a CI check that verifies spec/route alignment.
+3. **One migration source of truth** — Having both `migrate.js` and `migrate.sql` with different schemas is a time bomb. Pick one path. Ideally `migrate.sql` is the DDL source and `migrate.js` just executes it.
+4. **Audit data injection for serverless** — When code runs in both Node.js (tests) and Workers (production), every data file used at runtime must be explicitly injected via `engine-compat.js`. Add a startup check that validates all expected keys exist in `globalThis.__PRIME_DATA`.
+
+**Backlog Reference**: Full details in [BACKLOG.md](../BACKLOG.md) — items BL-C1 through BL-m10.
 
 ---
 
@@ -183,6 +215,8 @@ npx wrangler kv key delete "geo:city name" --namespace-id <id>
 - [ ] Add "reverse geocode" — after user enters lat/lng, show the city name to confirm
 - [ ] Show day-of-week for birth date (helps catch month errors: "You were born on a Wednesday" → user can verify)
 - [ ] Timezone suggestion based on geocode result
+- [ ] Validate IANA timezone strings before passing to `Intl.DateTimeFormat` — return 400 on invalid (BL-m7)
+- [ ] Basic email format validation on registration (BL-m10)
 
 ### Chart Comparison Tool
 - [ ] Allow users to upload a Jovian/MyBodyGraph PDF
@@ -195,6 +229,14 @@ npx wrangler kv key delete "geo:city name" --namespace-id <id>
   - Gate index, line offset, color, tone, base for P/D Sun
   - Full channel activation logic trace
 - [ ] Log every chart calculation to DB with input hash (detect repeated errors)
+
+### Infrastructure Hardening (from 2026-03-03 audit)
+- [ ] Fix Neon DB driver to use official `@neondatabase/serverless` package (BL-C1)
+- [ ] Add integration tests for middleware (CORS, rate limiting, auth) (backlog: test gaps)
+- [ ] Add integration tests for DB query layer (backlog: test gaps)
+- [ ] Consolidate migration path to single source of truth (BL-C3)
+- [ ] Add startup validation for `globalThis.__PRIME_DATA` in Workers (BL-M12)
+- [ ] Generate API spec from route definitions or add CI check for drift (BL-M1)
 
 ---
 
@@ -218,3 +260,4 @@ Both cases are committed to the repository as PDFs in the project root:
 | Date | Author | Change |
 |---|---|---|
 | 2026-03-03 | System | Initial creation post-incident: false bug report due to date entry error |
+| 2026-03-03 | Audit  | Added full codebase audit findings (26 issues); linked to BACKLOG.md; updated preventive measures with tracking notes; added infrastructure hardening section to Future Improvements |

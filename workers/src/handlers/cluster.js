@@ -107,7 +107,16 @@ export async function handleCluster(request, env, path) {
  * Body: { name, challenge, createdBy }
  */
 async function handleCreate(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const { name, challenge, createdBy } = body;
 
   if (!name || !challenge) {
@@ -141,7 +150,16 @@ async function handleCreate(request, env) {
  * and adds them to the cluster.
  */
 async function handleJoin(request, env, clusterId) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const { userId, birthDate, birthTime, birthTimezone, lat, lng } = body;
 
   if (!userId || !birthDate || !birthTime || lat === undefined || lng === undefined) {
@@ -218,7 +236,16 @@ async function handleGet(request, env, clusterId) {
  * (or uses stored member data from DB)
  */
 async function handleSynthesize(request, env, clusterId) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Get cluster info

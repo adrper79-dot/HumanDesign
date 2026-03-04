@@ -4,6 +4,31 @@
 
 All responses are `application/json`. Protected endpoints require `Authorization: Bearer <accessToken>`.
 
+> **Spec Accuracy Notice (2026-03-03 audit):**
+> This spec has drifted from the actual implementation. The following endpoints are **documented below but NOT yet implemented** in the router:
+> - `GET /api/auth/me` — not implemented
+> - `POST /api/chart/save` — not implemented (auto-save in calculate is dead code per BL-C5)
+> - `GET /api/chart/history` — not implemented
+> - `GET /api/cluster/list` — not implemented
+> - `POST /api/cluster/leave` — not implemented
+> - `POST /api/sms/subscribe` — not implemented (opt-in only via inbound "START" SMS)
+> - `POST /api/sms/unsubscribe` — not implemented (opt-out only via inbound "STOP" SMS)
+>
+> The following endpoints **exist in the router but are NOT documented below**:
+> - `GET /api/profile/:id/pdf` — PDF export with R2 caching
+> - `POST /api/cluster/create` — create a cluster
+> - `POST /api/cluster/:id/synthesize` — cluster LLM synthesis
+> - `GET /api/onboarding/intro` — public intro to 5 Forges
+> - `GET /api/onboarding/forge` — personalized forge arc
+> - `GET /api/onboarding/forge/:key` — specific forge arc
+> - `GET /api/onboarding/chapter/:key/:n` — chapter content
+> - `GET /api/onboarding/progress` — user chapter progress
+> - `POST /api/onboarding/advance` — mark chapter read
+> - `GET /api/practitioner/profile` — get practitioner profile
+> - `DELETE /api/practitioner/clients/:id` — remove client (CORS-blocked per BL-C4)
+>
+> See [BACKLOG.md](../BACKLOG.md) items BL-M1 for details.
+
 ---
 
 ## Authentication
@@ -57,8 +82,8 @@ Issue a new access token.
 
 ---
 
-### `GET /api/auth/me` 🔒
-Return the authenticated user's profile.
+### `GET /api/auth/me` 🔒 — ⚠️ NOT IMPLEMENTED
+Return the authenticated user's profile. *(Planned but no route handler exists.)*
 
 **Response 200**
 ```json
@@ -124,8 +149,8 @@ Calculate a complete Human Design + Astrology chart. Does not require authentica
 
 ---
 
-### `POST /api/chart/save` 🔒
-Save a calculated chart to the authenticated user's history.
+### `POST /api/chart/save` 🔒 — ⚠️ NOT IMPLEMENTED
+Save a calculated chart to the authenticated user's history. *(Auto-save in `/api/chart/calculate` exists but is dead code — see BL-C5.)*
 
 **Request:** same body as `/api/chart/calculate` plus the calculated `chartData`.
 ```json
@@ -146,8 +171,8 @@ Save a calculated chart to the authenticated user's history.
 
 ---
 
-### `GET /api/chart/history` 🔒
-List the authenticated user's saved charts (newest first).
+### `GET /api/chart/history` 🔒 — ⚠️ NOT IMPLEMENTED
+List the authenticated user's saved charts (newest first). *(No route handler exists.)*
 
 **Response 200**
 ```json
@@ -292,8 +317,8 @@ Retrieve a client's charts. Practitioner must have the client in their roster.
 
 ## Clusters
 
-### `GET /api/cluster/list` 🔒
-List all clusters.
+### `GET /api/cluster/list` 🔒 — ⚠️ NOT IMPLEMENTED
+List all clusters. *(No route handler exists.)*
 
 ### `GET /api/cluster/:id` 🔒
 Get cluster details and member list.
@@ -304,8 +329,8 @@ Join a cluster.
 { "clusterId": 2 }
 ```
 
-### `POST /api/cluster/leave` 🔒
-Leave a cluster.
+### `POST /api/cluster/leave` 🔒 — ⚠️ NOT IMPLEMENTED
+Leave a cluster. *(No route handler exists.)*
 ```json
 { "clusterId": 2 }
 ```
@@ -321,14 +346,14 @@ Return the personalised Savannah story arc for the authenticated user's Forge ar
 
 ## SMS
 
-### `POST /api/sms/subscribe` 🔒
-Subscribe the authenticated user to daily transit SMS digests.
+### `POST /api/sms/subscribe` 🔒 — ⚠️ NOT IMPLEMENTED
+Subscribe the authenticated user to daily transit SMS digests. *(SMS opt-in currently only works via inbound "START" text.)*
 ```json
 { "phoneNumber": "+18005551234" }
 ```
 
-### `POST /api/sms/unsubscribe` 🔒
-Unsubscribe from SMS digests.
+### `POST /api/sms/unsubscribe` 🔒 — ⚠️ NOT IMPLEMENTED
+Unsubscribe from SMS digests. *(SMS opt-out currently only works via inbound "STOP" text.)*
 
 ### `POST /api/sms/send-digest` (internal / cron)
 Triggered by the daily cron to send SMS digests.
@@ -343,6 +368,8 @@ Liveness check. Always returns 200.
 ```json
 { "status": "ok", "endpoints": 32, "version": "0.5.0" }
 ```
+
+> **Note (BL-m2):** The `version` and `endpoints` values are hardcoded and stale. Actual package version is `0.2.0` and actual route count is 33.
 
 ---
 
@@ -371,9 +398,13 @@ Common HTTP status codes:
 
 ## Rate Limits
 
-| Endpoint group | Limit |
-|---|---|
-| `/api/auth/*` | 10 req / minute per IP |
-| `/api/profile/generate` | 5 req / minute per user |
-| `/api/geocode` | 30 req / minute per IP |
-| All other endpoints | 60 req / minute per IP |
+> **⚠️ Spec/implementation mismatch (BL-M13):** The values below are the *intended* limits. The actual code in `rateLimit.js` uses different values: `calculate=60/min, profile=10/min, transits=120/min`. Auth and geocode have no dedicated rate limits in code (fall through to default 60/min).
+
+| Endpoint group | Limit (spec) | Limit (actual code) |
+|---|---|---|
+| `/api/auth/*` | 10 req / minute per IP | 60 (default) |
+| `/api/profile/generate` | 5 req / minute per user | 10 / minute |
+| `/api/geocode` | 30 req / minute per IP | 60 (default) |
+| `/api/chart/calculate` | 60 req / minute per IP | 60 / minute |
+| `/api/transits/*` | 60 req / minute per IP | 120 / minute |
+| All other endpoints | 60 req / minute per IP | 60 (default) |

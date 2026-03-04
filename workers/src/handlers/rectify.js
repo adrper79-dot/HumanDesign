@@ -90,7 +90,15 @@ function diffFingerprints(base, test, offsetLabel) {
 }
 
 export async function handleRectify(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
 
   // Validate
   for (const field of ['birthDate', 'birthTime', 'lat', 'lng']) {

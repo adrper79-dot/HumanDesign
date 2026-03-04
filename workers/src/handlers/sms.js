@@ -179,7 +179,16 @@ async function handleWebhook(request, env) {
  * Body: { userId?: string, phone?: string, all?: boolean }
  */
 async function handleSendDigest(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   if (body.all) {

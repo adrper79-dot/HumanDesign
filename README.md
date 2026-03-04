@@ -39,7 +39,7 @@ npm install
 
 ```bash
 npx vitest run
-# Expected: 121 tests passing
+# Expected: 190 tests passing (as of 2026-03-03)
 ```
 
 ### Serve the Frontend Locally
@@ -148,8 +148,9 @@ HumanDesign/
 │   └── index.html       # Single-file SPA (Chart, Profile, Transits, History tabs)
 │
 ├── tests/
-│   ├── engine.test.js   # Engine unit tests
-│   └── handlers.test.js # Handler integration tests
+│   ├── engine.test.js   # Engine unit tests (86 tests)
+│   ├── handlers.test.js # Handler integration tests (41 tests)
+│   └── numerology.test.js # Numerology tests (63 tests)
 │
 ├── docs/                # Extended documentation
 └── wrangler.toml        # Cloudflare Worker config (KV, R2, cron)
@@ -185,7 +186,7 @@ All chart calculations verified against two reference charts:
 | LLM | Anthropic Claude → xAI Grok → Groq (automatic failover) |
 | Auth | PBKDF2-SHA256 passwords, HS256 JWT |
 | SMS | Telnyx |
-| Tests | Vitest (121 tests) |
+| Tests | Vitest (190 tests across 3 test files) |
 | Frontend | Vanilla HTML/CSS/JS (no build step) |
 | Geocoding | OpenStreetMap Nominatim + BigDataCloud (free, no API keys) |
 
@@ -194,9 +195,10 @@ All chart calculations verified against two reference charts:
 ## Documentation
 
 - [Architecture overview](docs/ARCHITECTURE.md) — system design and data flow
-- [API reference](docs/API_SPEC.md) — all 32 endpoints with examples
+- [API reference](docs/API_SPEC.md) — endpoint documentation (see spec accuracy notice at top)
 - [Operations runbook](docs/OPERATION.md) — deployment, secrets, monitoring, rollback
-- [Lessons learned](docs/LESSONS_LEARNED.md) — debugging cases, common issues, preventive measures
+- [Lessons learned](docs/LESSONS_LEARNED.md) — debugging cases, audit findings, preventive measures
+- [Backlog](BACKLOG.md) — all known issues by severity, sprint plan
 
 ```
 HumanDesign/

@@ -51,42 +51,45 @@ All deterministic astronomical and HD calculations live in `src/engine/`. Layer 
 
 | Layer | Module | What it computes |
 |---|---|---|
-| 1 | `jde.js` | Julian Day Number + ΔT correction |
-| 2 | `solar.js` | Sun/Earth orbital mechanics (longitude, latitude, distance) |
-| 3 | `planets.js` | All 9 HD bodies via VSOP87 truncated series |
-| 4 | `hd_gates.js` | Zodiac degree → HD gate + line (64-gate wheel) |
-| 5 | `hd_centers.js` | Gate activations → defined/undefined centers |
-| 6 | `hd_channels.js` | Paired gates → channels → type/authority derivation |
-| 7 | `aspects.js` | Western astrology aspects (conjunction through quincunx) |
-| 8 | `synthesis.js` (LLM) | Natural-language profile from structured chart data |
+| 1 | `julian.js` | Julian Day Number + Sun longitude (Meeus Ch. 7, 25) |
+| 2 | `planets.js` | All planetary longitudes + nodes (JPL Keplerian + Meeus lunar) |
+| 3 | `design.js` | Design-side JDN (−88° solar arc) + design planetary positions |
+| 4 | `gates.js` | Ecliptic longitude → HD gate/line/color/tone/base (64-gate wheel) |
+| 5 | `chart.js` | Centers, channels, type, authority, profile, definition, cross |
+| 6 | `astro.js` | Western astrology — signs, Placidus houses, aspects, ASC/MC |
+| 7 | `transits.js` | Current transit positions, gate activations, transit-to-natal aspects |
+| 8 | `synthesis.js` (LLM) | Natural-language Prime Self profile from structured chart data |
+| — | `numerology.js` | Life Path, Personal Year/Month/Day, Tarot Birth Card |
 
-Entry point: `src/engine/index.js` — exports `calculateFullChart(dateUtc, lat, lng)` and returns the full structured payload consumed by handlers.
+Entry point: `src/engine/index.js` — exports `calculateFullChart({ year, month, day, hour, minute, second, lat, lng })` (all times UTC) and returns the full structured payload consumed by handlers.
 
 ### Transit calculation
 
 `src/engine/transits.js` exports:
-- `getCurrentTransits(lat, lng)` — current planetary positions + gate activations + aspects to natal (when natal provided)
-- `forecastTransits(startDate, days, natal)` — daily gate ingresses + key aspects over a range
+- `getCurrentTransits(natalChart, natalAstro, nowJDN?)` — current planetary positions + gate activations + transit-to-natal aspects
+- `getTransitForecast(natalChart, natalAstro, startDate, endDate, options?)` — daily gate ingresses + key aspects over a date range (max 366 days)
 
 ---
 
 ## Database Schema
 
-Managed via `workers/src/db/migrate.js`. All timestamps are UTC.
+Managed via `workers/src/db/migrate.sql` (canonical DDL) and `workers/src/db/migrate.js` (runner). All timestamps are UTC.
 
 ```sql
-users                   -- email, hashed_password, name, practitioner_flag
-charts                  -- user_id, birth_date, lat, lng, city_name, raw_json
-profiles                -- chart_id, user_id, archetype, raw_json, pdf_r2_key
-practitioners           -- user_id (FK), bio, specialties, public_flag
+users                   -- email, password_hash, phone, birth_date, birth_time, birth_tz, lat, lng
+charts                  -- user_id, hd_json (JSONB), astro_json (JSONB), numerology_json (JSONB)
+profiles                -- user_id, chart_id, profile_json (JSONB), model_used, grounding_audit (JSONB)
+practitioners           -- user_id (FK), certified, tier
 practitioner_clients    -- practitioner_id, client_user_id
-clusters                -- name, archetype, description
-cluster_members         -- cluster_id, user_id
-transit_snapshots       -- snapshot_date, raw_json (written by cron)
-_migrations             -- migration_id, applied_at
+clusters                -- name, created_by, challenge
+cluster_members         -- cluster_id, user_id, forge_role
+transit_snapshots       -- snapshot_date (UNIQUE), positions_json (JSONB)
+sms_messages            -- user_id, phone, message_type, status, telnyx_message_id
 ```
 
-Foreign keys with `ON DELETE CASCADE` on user-owned rows. `charts.raw_json` and `profiles.raw_json` are `JSONB`.
+Foreign keys with `ON DELETE CASCADE` on user-owned rows. Chart and profile data stored as `JSONB`.
+
+> **Known issue (BL-C3):** `migrate.js` and `migrate.sql` have drifted — see [BACKLOG.md](../BACKLOG.md#bl-c3--schema-drift-between-migratejs-and-migratesql).
 
 ---
 
@@ -118,7 +121,7 @@ Middleware (workers/src/middleware/auth.js)
 ```javascript
 // workers/src/lib/llm.js
 providers = [
-  { name: 'anthropic', key: env.ANTHROPIC_API_KEY, model: 'claude-3-5-sonnet-20241022' },
+  { name: 'anthropic', key: env.ANTHROPIC_API_KEY, models: { opus: 'claude-opus-4-20250514', sonnet: 'claude-sonnet-4-20250514', haiku: 'claude-3-5-haiku-20241022' } },
   { name: 'grok',      key: env.GROK_API_KEY,      model: 'grok-beta'                  },
   { name: 'groq',      key: env.GROQ_API_KEY,      model: 'llama-3.3-70b-versatile'    },
 ]
@@ -127,6 +130,31 @@ providers = [
 ```
 
 Optionally routes through a Cloudflare AI Gateway URL for caching + observability.
+
+---
+
+## Known Issues & Technical Debt
+
+For the full itemized backlog, see [BACKLOG.md](../BACKLOG.md).
+
+**Critical (blocking production):**
+- Neon HTTP query driver uses an incorrect API pattern — all DB operations fail (BL-C1)
+- `migrate.js` doesn't `await` its async `getClient()` call (BL-C2)
+- Schema drift between `migrate.js` and `migrate.sql` (BL-C3)
+- CORS `Access-Control-Allow-Methods` missing `DELETE` (BL-C4)
+- Chart auto-save is dead code — route is public so `request._user` is always undefined (BL-C5)
+- `parseToUTC` produces negative minutes for some timezone offsets (BL-C6)
+
+**Architectural debt:**
+- Duplicate JWT implementation in `handlers/auth.js` and `middleware/auth.js` (BL-M9)
+- Duplicate RAG logic in `synthesis.js` and `rag.js` (BL-M8)
+- `engine-compat.js` only injects 9 of 20+ data files into Workers runtime (BL-M12)
+- 7 documented API endpoints not implemented; 10+ implemented endpoints not documented (BL-M1)
+- Gene Keys knowledgebase 59% complete (38/64) (BL-M5)
+
+**Test coverage gaps:**
+- 190 tests pass for engine + handler validation
+- Zero coverage for: middleware, DB layer, LLM failover, cron, SMS, practitioner, cluster, onboarding, PDF handlers
 
 ---
 

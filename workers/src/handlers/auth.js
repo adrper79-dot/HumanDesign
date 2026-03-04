@@ -32,12 +32,30 @@ export async function handleAuth(request, env, path) {
 // ─── Register ────────────────────────────────────────────────
 
 async function handleRegister(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const { email, password, phone, birthDate, birthTime, birthTimezone, lat, lng } = body;
 
   if (!email || !password) {
     return Response.json(
       { error: 'Email and password are required' },
+      { status: 400 }
+    );
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return Response.json(
+      { error: 'Invalid email format' },
       { status: 400 }
     );
   }
@@ -108,7 +126,16 @@ async function handleRegister(request, env) {
 // ─── Login ───────────────────────────────────────────────────
 
 async function handleLogin(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const { email, password } = body;
 
   if (!email || !password) {
@@ -164,7 +191,16 @@ async function handleLogin(request, env) {
 // ─── Refresh Token ───────────────────────────────────────────
 
 async function handleRefresh(request, env) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+  
   const { refreshToken } = body;
 
   if (!refreshToken) {

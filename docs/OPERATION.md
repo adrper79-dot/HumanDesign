@@ -108,7 +108,7 @@ Each migration is a SQL file in `workers/src/db/migrations/`. File names follow 
 ```bash
 # From repo root
 npx vitest run
-# Expected: 121 tests passing (117 engine/handler + 4 geocode)
+# Expected: 190 tests passing (86 engine + 41 handler + 63 numerology)
 ```
 
 Run in watch mode during development:
