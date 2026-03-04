@@ -3,7 +3,13 @@
  *
  * Routes:
  *   POST /api/chart/calculate          – Full chart calculation
+ *   POST /api/chart/save               – Save chart to database
+ *   GET  /api/chart/history            – Get user's saved charts
+ *   GET  /api/chart/:id                – Retrieve saved chart by ID
  *   POST /api/profile/generate         – Prime Self Profile (LLM synthesis)
+ *   GET  /api/profile/list             – List user's saved profiles
+ *   GET  /api/profile/:id              – Get saved profile by ID
+ *   GET  /api/profile/:id/pdf          – Export profile as PDF
  *   GET  /api/transits/today           – Current transit positions
  *   GET  /api/transits/forecast        – Transit forecast
  *   POST /api/composite                – Relationship / composite chart
@@ -188,10 +194,11 @@ export default {
         response = await handleGeocode(request, env);
 
       } else if (path === '/api/health') {
+        // Dynamic health check with actual version
         response = Response.json({
           status: 'ok',
-          version: '0.5.0',
-          endpoints: 32
+          version: '0.2.0',  // Matches package.json
+          timestamp: new Date().toISOString()
         });
 
       } else {

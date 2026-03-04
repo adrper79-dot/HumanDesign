@@ -255,8 +255,8 @@ async function handleSendDigest(request, env) {
  */
 async function generateDigestForUser(user, env) {
   // Parse user birth data
-  const [year, month, day] = user.birth_date.split('-').map(Number);
-  const [hour, minute] = (user.birth_time || '12:00').split(':').map(Number);
+  const [year, month, day] = String(user.birth_date).split('-').map(Number);
+  const [hour, minute] = String(user.birth_time || '12:00').split(':').map(Number);
   const lat = parseFloat(user.birth_lat);
   const lng = parseFloat(user.birth_lng);
 

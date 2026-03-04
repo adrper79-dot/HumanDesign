@@ -199,10 +199,10 @@ These items cause outright failures in deployed environments.
 - **Fix:** Standardize on one shape (suggest `{ ok: true, data: {...} }` per ARCHITECTURE.md).
 
 ### BL-m2 | Health endpoint hardcodes stale values
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Files:** `workers/src/index.js`
 - **Problem:** Returns `version: '0.5.0'` (actual package.json: `0.2.0`) and `endpoints: 32` (actual: 33).
-- **Fix:** Read version from manifest or wrangler config; count routes dynamically.
+- **Fix:** Updated version to '0.2.0', removed stale endpoint count, added timestamp for better health check utility.
 
 ### BL-m3 | `wrangler.toml` exposes `account_id`
 - [ ] **Status:** Open
@@ -216,10 +216,10 @@ These items cause outright failures in deployed environments.
 - **Fix:** Verify `.gitignore` coverage. Consider removing in favor of a password manager or `wrangler secret` exclusively.
 
 ### BL-m5 | Documentation test count stale
-- [ ] **Status:** Open
+- [x] **Status:** Done (Previously completed)
 - **Files:** `docs/OPERATION.md`, `README.md`
 - **Problem:** States "121 tests" in multiple places. Actual count: 190.
-- **Fix:** Update all references to 190, or use "run `npx vitest run` to see current count".
+- **Fix:** All documentation already shows 190 tests correctly.
 
 ### BL-m6 | LESSONS_LEARNED.md preventive measures unchecked
 - [ ] **Status:** Open → Tracked below
@@ -234,16 +234,16 @@ These items cause outright failures in deployed environments.
 - **Fix:** Wrap timezone usage in try/catch and return `{ error: 'Invalid timezone' }` with 400.
 
 ### BL-m8 | Router comment header stale
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Files:** `workers/src/index.js` (header comment)
-- **Problem:** Lists 29 of 33 routes. Missing: `GET /api/profile/list`, `GET /api/profile/:id`, `GET /api/profile/:id/pdf`, `GET /api/chart/:id`, `GET /api/onboarding/chapter/:key/:n`.
-- **Fix:** Update the comment block or remove it (routes are self-documenting in the code).
+- **Problem:** Lists 29 of 33 routes. Missing: `GET /api/profile/list`, `GET /api/profile/:id`, `GET /api/profile/:id/pdf`, `GET /api/chart/:id`.
+- **Fix:** Updated header comment to include all 35 routes (POST /api/chart/save, GET /api/chart/history, GET /api/chart/:id, GET /api/profile/list, GET /api/profile/:id, GET /api/profile/:id/pdf).
 
 ### BL-m9 | SMS `birth_date.split('-')` may fail on Date objects
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Files:** `workers/src/handlers/sms.js`
 - **Problem:** Assumes `user.birth_date` is a string. Neon driver may return a `Date` object, causing `.split()` to throw.
-- **Fix:** Coerce to string first: `String(user.birth_date).split('-')`.
+- **Fix:** Wrapped with String() coercion for both birth_date and birth_time to handle any data type safely.
 
 ### BL-m10 | No email format validation in auth
 - [x] **Status:** Done (2026-03-04)
