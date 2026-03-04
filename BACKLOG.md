@@ -223,10 +223,10 @@ These items cause outright failures in deployed environments.
 - **Fix:** All documentation already shows 190 tests correctly.
 
 ### BL-m6 | LESSONS_LEARNED.md preventive measures unchecked
-- [ ] **Status:** Open → Tracked below
+- [x] **Status:** Done (2026-03-04)
 - **Files:** `docs/LESSONS_LEARNED.md`
-- **Problem:** All 4 preventive measures from the 2026-03-03 incident are `[ ]` unchecked.
-- **Fix:** Implement each or decide they're not needed and document why.
+- **Problem:** All 4 preventive measures from the 2026-03-03 incident were `[ ]` unchecked.
+- **Fix:** Reviewed all preventive measures. Marked completed items (BL-m7, BL-m10, BL-C1, BL-C3, BL-M12). Remaining items are tracked in backlog or deferred as future UX improvements.
 
 ### BL-m7 | No `birthTimezone` validation
 - [x] **Status:** Done (2026-03-04)

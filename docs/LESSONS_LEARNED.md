@@ -215,8 +215,8 @@ npx wrangler kv key delete "geo:city name" --namespace-id <id>
 - [ ] Add "reverse geocode" — after user enters lat/lng, show the city name to confirm
 - [ ] Show day-of-week for birth date (helps catch month errors: "You were born on a Wednesday" → user can verify)
 - [ ] Timezone suggestion based on geocode result
-- [ ] Validate IANA timezone strings before passing to `Intl.DateTimeFormat` — return 400 on invalid (BL-m7)
-- [ ] Basic email format validation on registration (BL-m10)
+- [x] Validate IANA timezone strings before passing to `Intl.DateTimeFormat` — return 400 on invalid (BL-m7) — *Done 2026-03-04*
+- [x] Basic email format validation on registration (BL-m10) — *Done 2026-03-04*
 
 ### Chart Comparison Tool
 - [ ] Allow users to upload a Jovian/MyBodyGraph PDF
@@ -231,11 +231,11 @@ npx wrangler kv key delete "geo:city name" --namespace-id <id>
 - [ ] Log every chart calculation to DB with input hash (detect repeated errors)
 
 ### Infrastructure Hardening (from 2026-03-03 audit)
-- [ ] Fix Neon DB driver to use official `@neondatabase/serverless` package (BL-C1)
+- [x] Fix Neon DB driver to use official `@neondatabase/serverless` package (BL-C1) — *Done 2026-03-04*
 - [ ] Add integration tests for middleware (CORS, rate limiting, auth) (backlog: test gaps)
 - [ ] Add integration tests for DB query layer (backlog: test gaps)
-- [ ] Consolidate migration path to single source of truth (BL-C3)
-- [ ] Add startup validation for `globalThis.__PRIME_DATA` in Workers (BL-M12)
+- [x] Consolidate migration path to single source of truth (BL-C3) — *Done 2026-03-04*
+- [x] Add startup validation for `globalThis.__PRIME_DATA` in Workers (BL-M12) — *Done 2026-03-04*
 - [ ] Generate API spec from route definitions or add CI check for drift (BL-M1)
 
 ---
