@@ -36,6 +36,7 @@
 import './engine-compat.js';
 
 import { handleCalculate, handleGetChart } from './handlers/calculate.js';
+import { handleSaveChart, handleChartHistory } from './handlers/chart-save.js';
 import { handleGeocode } from './handlers/geocode.js';
 import { handleProfile, handleGetProfile, handleListProfiles } from './handlers/profile.js';
 import { handleTransits } from './handlers/transits.js';
@@ -48,7 +49,7 @@ import { handleAuth } from './handlers/auth.js';
 import { handlePdfExport } from './handlers/pdf.js';
 import { handlePractitioner } from './handlers/practitioner.js';
 import { handleOnboarding } from './handlers/onboarding.js';
-import { corsHeaders, handleOptions } from './middleware/cors.js';
+import { corsHeaders, getCorsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
 import { runDailyTransitCron } from './cron.js';
@@ -108,13 +109,13 @@ export default {
       // Authentication check (protected routes)
       if (requiresAuth(path)) {
         const authResult = await authenticate(request, env);
-        if (authResult) return addCorsHeaders(authResult);
+        if (authResult) return addCorsHeaders(authResult, request);
       }
 
       // Rate limiting (all API routes)
       if (path.startsWith('/api/')) {
         const rlResult = await rateLimit(request, env);
-        if (rlResult) return addCorsHeaders(rlResult);
+        if (rlResult) return addCorsHeaders(rlResult, request);
       }
 
       let response;
@@ -122,6 +123,17 @@ export default {
       // ─── Route matching ────────────────────────────────
       if (path === '/api/chart/calculate' && request.method === 'POST') {
         response = await handleCalculate(request, env);
+
+      } else if (path === '/api/chart/save' && request.method === 'POST') {
+        response = await handleSaveChart(request, env);
+
+      } else if (path === '/api/chart/history' && request.method === 'GET') {
+        response = await handleChartHistory(request, env);
+
+      } else if (path.startsWith('/api/chart/') && request.method === 'GET') {
+        // GET /api/chart/:id
+        const chartId = path.split('/')[3];
+        response = await handleGetChart(request, env, chartId);
 
       } else if (path === '/api/profile/generate' && request.method === 'POST') {
         response = await handleProfile(request, env);
@@ -189,7 +201,7 @@ export default {
 
       // Add rate limit + CORS headers
       response = addRateLimitHeaders(response, request);
-      return addCorsHeaders(response);
+      return addCorsHeaders(response, request);
 
     } catch (err) {
       console.error('Worker error:', err);
@@ -208,9 +220,10 @@ export default {
   }
 };
 
-function addCorsHeaders(response) {
+function addCorsHeaders(response, request) {
   const headers = new Headers(response.headers);
-  for (const [key, value] of Object.entries(corsHeaders)) {
+  const dynamicCorsHeaders = getCorsHeaders(request);
+  for (const [key, value] of Object.entries(dynamicCorsHeaders)) {
     headers.set(key, value);
   }
   return new Response(response.body, {

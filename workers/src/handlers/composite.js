@@ -56,6 +56,7 @@ const CHANNELS = [
   [35, 36, 'Throat',      'SolarPlexus'],
   [37, 40, 'SolarPlexus', 'Heart'],
   [39, 55, 'Root',        'SolarPlexus'],
+  [42, 53, 'Sacral',      'Root'],
   [47, 64, 'Ajna',        'Head'],
 ];
 

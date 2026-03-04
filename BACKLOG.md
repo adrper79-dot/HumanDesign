@@ -59,7 +59,7 @@ These items cause outright failures in deployed environments.
 - **Verify:** Browser DevTools → Network → `DELETE` preflight returns 204 with correct `Allow-Methods` header.
 
 ### BL-C5 | Chart auto-save is dead code
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical
 - **Files:** `workers/src/handlers/calculate.js` (lines 55–73), `workers/src/index.js` (route config)
 - **Problem:** `/api/chart/calculate` is listed in `PUBLIC_ROUTES`, so `authenticate()` is never called and `request._user` is always `undefined`. The DB persistence block (`if (userId && env.NEON_CONNECTION_STRING)`) never executes.
@@ -98,7 +98,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Either implement the missing endpoints or remove them from the API spec. Prioritize `/api/auth/me`, `/api/chart/save`, and `/api/chart/history` as they affect core user flows.
 
 ### BL-M2 | Password comparison is timing-attack vulnerable
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/auth.js`
 - **Problem:** Password hash verification uses `===` string comparison, which short-circuits on first mismatch. This leaks timing information about the hash.
@@ -112,7 +112,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Wrap in try/catch with `return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 })`.
 
 ### BL-M4 | Wildcard CORS origin with auth
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/middleware/cors.js`
 - **Problem:** `Access-Control-Allow-Origin: '*'` allows any website to make authenticated requests using stolen tokens.
@@ -147,7 +147,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Consolidate into `rag.js` as the single RAG module. Have `synthesis.js` import from it.
 
 ### BL-M9 | Duplicate JWT implementation
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/auth.js`, `workers/src/middleware/auth.js`
 - **Problem:** Both files independently implement `verifyHS256`, `base64UrlEncode`, and `base64UrlDecode`. Bug fixes must be replicated in both.
@@ -161,7 +161,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Implement page-break logic: detect overflow → finalize current page → insert new page → continue rendering.
 
 ### BL-M11 | `composite.js` missing channel 42-53
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/composite.js`
 - **Problem:** Has 35 channels in its CHANNELS array. Missing channel **42-53** (Channel of Maturation, Sacral → Root). Any composite analysis involving gates 42 or 53 misses this connection.
