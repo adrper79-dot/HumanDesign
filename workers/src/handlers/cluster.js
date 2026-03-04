@@ -75,6 +75,11 @@ function analyzeClusterComposition(members) {
 export async function handleCluster(request, env, path) {
   const url = new URL(request.url);
 
+  // GET /api/cluster/list
+  if (path === '/api/cluster/list' && request.method === 'GET') {
+    return handleList(request, env);
+  }
+
   // POST /api/cluster/create
   if (path === '/api/cluster/create' && request.method === 'POST') {
     return handleCreate(request, env);
@@ -84,6 +89,12 @@ export async function handleCluster(request, env, path) {
   const joinMatch = path.match(/^\/api\/cluster\/([^/]+)\/join$/);
   if (joinMatch && request.method === 'POST') {
     return handleJoin(request, env, joinMatch[1]);
+  }
+
+  // POST /api/cluster/:id/leave
+  const leaveMatch = path.match(/^\/api\/cluster\/([^/]+)\/leave$/);
+  if (leaveMatch && request.method === 'POST') {
+    return handleLeave(request, env, leaveMatch[1]);
   }
 
   // GET /api/cluster/:id
@@ -139,6 +150,103 @@ async function handleCreate(request, env) {
       createdAt: result.rows?.[0]?.created_at
     }
   }, { status: 201 });
+}
+
+/**
+ * GET /api/cluster/list
+ *
+ * Returns all clusters the authenticated user is a member of.
+ * Requires authentication.
+ */
+async function handleList(request, env) {
+  const userId = request._user?.userId;
+  
+  if (!userId) {
+    return Response.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    
+    // Get all cluster memberships for this user
+    const memberships = await query(
+      `SELECT c.id, c.name, c.challenge, c.created_at, cm.joined_at
+       FROM cluster_members cm
+       JOIN clusters c ON c.id = cm.cluster_id
+       WHERE cm.user_id = $1
+       ORDER BY cm.joined_at DESC`,
+      [userId]
+    );
+
+    const clusters = memberships.rows?.map(row => ({
+      id: row.id,
+      name: row.name,
+      challenge: row.challenge,
+      createdAt: row.created_at,
+      joinedAt: row.joined_at
+    })) || [];
+
+    return Response.json({
+      success: true,
+      clusters
+    });
+  } catch (err) {
+    console.error('Cluster list error:', err);
+    return Response.json(
+      { error: 'Failed to fetch cluster list' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/cluster/:id/leave
+ *
+ * Remove the authenticated user from a cluster.
+ * Requires authentication.
+ */
+async function handleLeave(request, env, clusterId) {
+  const userId = request._user?.userId;
+  
+  if (!userId) {
+    return Response.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    
+    // Remove the user from the cluster
+    const result = await query(
+      `DELETE FROM cluster_members 
+       WHERE cluster_id = $1 AND user_id = $2
+       RETURNING cluster_id`,
+      [clusterId, userId]
+    );
+
+    if (!result.rows || result.rows.length === 0) {
+      return Response.json(
+        { error: 'Not a member of this cluster' },
+        { status: 404 }
+      );
+    }
+
+    return Response.json({
+      success: true,
+      message: 'Successfully left cluster'
+    });
+  } catch (err) {
+    console.error('Cluster leave error:', err);
+    return Response.json(
+      { error: 'Failed to leave cluster' },
+      { status: 500 }
+    );
+  }
 }
 
 /**

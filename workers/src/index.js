@@ -14,12 +14,16 @@
  *   GET  /api/transits/forecast        – Transit forecast
  *   POST /api/composite                – Relationship / composite chart
  *   POST /api/rectify                  – Birth-time sensitivity analysis
+ *   GET  /api/cluster/list             – List user's clusters
  *   POST /api/cluster/create           – Create a cluster
  *   POST /api/cluster/:id/join         – Add member to cluster
+ *   POST /api/cluster/:id/leave        – Leave a cluster
  *   GET  /api/cluster/:id              – Get cluster details
  *   POST /api/cluster/:id/synthesize   – Cluster intelligence synthesis
  *   POST /api/sms/webhook              – Telnyx inbound SMS webhook
  *   POST /api/sms/send-digest          – Trigger digest send
+ *   POST /api/sms/subscribe            – Subscribe to SMS digests
+ *   POST /api/sms/unsubscribe          – Unsubscribe from SMS digests
  *   POST /api/auth/register            – Create account, get JWT
  *   POST /api/auth/login               – Email-based login, get JWT
  *   POST /api/auth/refresh             – Refresh access token

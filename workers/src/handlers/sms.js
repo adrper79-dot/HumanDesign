@@ -74,6 +74,14 @@ export async function handleSMS(request, env, path) {
     return handleSendDigest(request, env);
   }
 
+  if (path === '/api/sms/subscribe' && request.method === 'POST') {
+    return handleSubscribe(request, env);
+  }
+
+  if (path === '/api/sms/unsubscribe' && request.method === 'POST') {
+    return handleUnsubscribe(request, env);
+  }
+
   return Response.json({ error: 'SMS route not found' }, { status: 404 });
 }
 
@@ -279,6 +287,151 @@ async function generateDigestForUser(user, env) {
   }
 
   return digestText;
+}
+
+/**
+ * POST /api/sms/subscribe
+ *
+ * Subscribe to SMS digests via HTTP API (web/app-based).
+ * Body: { phone } - E.164 format (e.g., +14155551234)
+ * Requires authentication.
+ */
+async function handleSubscribe(request, env) {
+  const userId = request._user?.userId;
+  
+  if (!userId) {
+    return Response.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  const { phone } = body;
+
+  if (!phone) {
+    return Response.json(
+      { error: 'Missing required field: phone' },
+      { status: 400 }
+    );
+  }
+
+  // Validate E.164 format
+  if (!/^\+[1-9]\d{1,14}$/.test(phone)) {
+    return Response.json(
+      { error: 'Invalid phone format. Use E.164 format (e.g., +14155551234)' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    
+    // Update user's phone and SMS opt-in status
+    await query(
+      `UPDATE users 
+       SET phone = $1, sms_opt_in = true 
+       WHERE id = $2`,
+      [phone, userId]
+    );
+
+    // Send confirmation SMS
+    if (env.TELNYX_API_KEY) {
+      try {
+        await sendSMS(
+          phone,
+          'You\'re now subscribed to Prime Self daily transit digests! Text STOP anytime to unsubscribe.',
+          env
+        );
+      } catch (smsErr) {
+        // Log but don't fail the subscription if SMS fails
+        console.error('Confirmation SMS failed:', smsErr);
+      }
+    }
+
+    return Response.json({
+      success: true,
+      message: 'Successfully subscribed to SMS digests',
+      phone
+    });
+  } catch (err) {
+    console.error('SMS subscribe error:', err);
+    return Response.json(
+      { error: 'Failed to subscribe' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/sms/unsubscribe
+ *
+ * Unsubscribe from SMS digests via HTTP API.
+ * Requires authentication.
+ */
+async function handleUnsubscribe(request, env) {
+  const userId = request._user?.userId;
+  
+  if (!userId) {
+    return Response.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    
+    // Get user's phone for confirmation SMS
+    const userResult = await query(
+      `SELECT phone FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    const phone = userResult.rows?.[0]?.phone;
+
+    // Update SMS opt-in status
+    await query(
+      `UPDATE users 
+       SET sms_opt_in = false 
+       WHERE id = $1`,
+      [userId]
+    );
+
+    // Send confirmation SMS if phone exists
+    if (phone && env.TELNYX_API_KEY) {
+      try {
+        await sendSMS(
+          phone,
+          'You\'ve been unsubscribed from Prime Self transit digests. Text START anytime to re-subscribe.',
+          env
+        );
+      } catch (smsErr) {
+        // Log but don't fail the unsubscribe if SMS fails
+        console.error('Confirmation SMS failed:', smsErr);
+      }
+    }
+
+    return Response.json({
+      success: true,
+      message: 'Successfully unsubscribed from SMS digests'
+    });
+  } catch (err) {
+    console.error('SMS unsubscribe error:', err);
+    return Response.json(
+      { error: 'Failed to unsubscribe' },
+      { status: 500 }
+    );
+  }
 }
 
 // Export for cron usage

@@ -84,18 +84,18 @@ These items cause outright failures in deployed environments.
 ## Moderate (14) — Functional gaps, security, data completeness
 
 ### BL-M1 | 7 documented API endpoints not implemented
-- [~] **Status:** Partial (2026-03-04)
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
-- **Files:** `workers/src/index.js`, `docs/API_SPEC.md`
-- **Problem:** These endpoints are in API_SPEC.md but have no route handler:
+- **Files:** `workers/src/index.js`, `workers/src/handlers/cluster.js`, `workers/src/handlers/sms.js`
+- **Problem:** These endpoints were in API_SPEC.md but had no route handler:
   - `GET /api/auth/me` ✓ DONE
   - `POST /api/chart/save` ✓ DONE
   - `GET /api/chart/history` ✓ DONE
-  - `GET /api/cluster/list`
-  - `POST /api/cluster/leave`
-  - `POST /api/sms/subscribe`
-  - `POST /api/sms/unsubscribe`
-- **Fix:** Either implement the missing endpoints or remove them from the API spec. Prioritize `/api/auth/me`, `/api/chart/save`, and `/api/chart/history` as they affect core user flows.
+  - `GET /api/cluster/list` ✓ DONE
+  - `POST /api/cluster/leave` ✓ DONE
+  - `POST /api/sms/subscribe` ✓ DONE
+  - `POST /api/sms/unsubscribe` ✓ DONE
+- **Fix:** Implemented all 7 missing endpoints. Added proper authentication, input validation, error handling, and JSDoc documentation following best practices.
 
 ### BL-M2 | Password comparison is timing-attack vulnerable
 - [x] **Status:** Done (2026-03-04)
