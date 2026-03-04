@@ -146,7 +146,7 @@ function generatePDF(profileData, chartData, createdAt) {
     if (profileData.forgeDescription) {
       const forgeLines = wrapText(profileData.forgeDescription, 80);
       for (const line of forgeLines) {
-        if (y < 50) { y = 750; } // crude page break
+        if (y < 50) y = 750; // page break
         lines.push({ text: line, size: 10, y });
         y -= 14;
       }
@@ -166,7 +166,7 @@ function generatePDF(profileData, chartData, createdAt) {
 
   const textLines = wrapText(synthesisText, 85);
   for (const line of textLines) {
-    if (y < 50) { y = 750; } // crude page break
+    if (y < 50) y = 750; // page break
     lines.push({ text: line, size: 10, y });
     y -= 14;
   }
@@ -181,7 +181,7 @@ function generatePDF(profileData, chartData, createdAt) {
       : JSON.stringify(profileData.groundingAudit, null, 2);
     const auditLines = wrapText(auditText, 85);
     for (const line of auditLines) {
-      if (y < 50) { y = 750; }
+      if (y < 50) y = 750; // page break
       lines.push({ text: line, size: 9, y });
       y -= 13;
     }
@@ -219,9 +219,25 @@ function wrapText(text, maxChars) {
 
 /**
  * Build raw PDF bytes from an array of text line objects.
- * Minimal PDF 1.4 spec — single page, Helvetica font.
+ * Support for multiple pages — splits lines when Y coordinate resets (page break).
+ * Minimal PDF 1.4 spec, Helvetica font.
  */
 function buildPDFBytes(lines) {
+  // Split lines into pages when Y coordinate jumps from low to high (page break)
+  const pages = [[]];
+  let pageIndex = 0;
+  let prevY = 750;
+
+  for (const line of lines) {
+    // Detect page break: Y jumps from low (<100) back to high (>700)
+    if (prevY < 100 && line.y > 700) {
+      pageIndex++;
+      pages[pageIndex] = [];
+    }
+    pages[pageIndex].push(line);
+    prevY = line.y;
+  }
+
   const objects = [];
   let objectCount = 0;
 
@@ -235,32 +251,48 @@ function buildPDFBytes(lines) {
   // Object 1: Catalog
   addObject('<<\n/Type /Catalog\n/Pages 2 0 R\n>>');
 
-  // Object 2: Pages
-  addObject('<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>');
+  // Reserve ID 2 for Pages object (will add after knowing page count)
+  const pagesObjId = 2;
+  objectCount = 2;
 
-  // Object 3: Page
-  addObject('<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 5 0 R\n/Resources <<\n  /Font <<\n    /F1 4 0 R\n    /F2 6 0 R\n  >>\n>>\n>>');
-
-  // Object 4: Font (Helvetica)
+  // Object 3, 4: Fonts
   addObject('<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>');
-
-  // Build stream content
-  let stream = 'BT\n';
-  for (const line of lines) {
-    const font = line.bold ? '/F2' : '/F1';
-    const size = line.size || 10;
-    const escaped = escapePDF(line.text || '');
-    stream += `${font} ${size} Tf\n`;
-    stream += `50 ${line.y} Td\n`;
-    stream += `(${escaped}) Tj\n`;
-  }
-  stream += 'ET\n';
-
-  // Object 5: Page content stream
-  addObject(`<<\n/Length ${stream.length}\n>>\nstream\n${stream}endstream`);
-
-  // Object 6: Bold font (Helvetica-Bold)
   addObject('<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica-Bold\n>>');
+
+  // Create page objects and content streams
+  const pageObjIds = [];
+  for (let i = 0; i < pages.length; i++) {
+    const pageLines = pages[i];
+
+    // Build stream content for this page
+    let stream = 'BT\n';
+    for (const line of pageLines) {
+      const font = line.bold ? '/F2' : '/F1';
+      const size = line.size || 10;
+      const escaped = escapePDF(line.text || '');
+      stream += `${font} ${size} Tf\n`;
+      stream += `50 ${line.y} Td\n`;
+      stream += `(${escaped}) Tj\n`;
+    }
+    stream += 'ET\n';
+
+    // Add content stream object
+    const streamObjId = addObject(`<<\n/Length ${stream.length}\n>>\nstream\n${stream}endstream`);
+
+    // Add page object (fonts now at objects 3 and 4)
+    const pageObjId = addObject(`<<\n/Type /Page\n/Parent ${pagesObjId} 0 R\n/MediaBox [0 0 612 792]\n/Contents ${streamObjId} 0 R\n/Resources <<\n  /Font <<\n    /F1 3 0 R\n    /F2 4 0 R\n  >>\n>>\n>>`);
+    
+    pageObjIds.push(pageObjId);
+  }
+
+  // Build Kids array for Pages object
+  const kidsArray = pageObjIds.map(id => `${id} 0 R`).join(' ');
+
+  // Insert Object 2: Pages (at position 1 in objects array, after Catalog)
+  objects.splice(1, 0, {
+    id: pagesObjId,
+    content: `<<\n/Type /Pages\n/Kids [${kidsArray}]\n/Count ${pages.length}\n>>`
+  });
 
   // Build PDF file
   let pdf = '%PDF-1.4\n';

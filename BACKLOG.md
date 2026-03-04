@@ -154,7 +154,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Extract shared JWT utilities into `workers/src/lib/jwt.js` and import from both.
 
 ### BL-M10 | PDF handler can't do multi-page
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/pdf.js`
 - **Problem:** Only creates a single PDF page object. When content overflows (Y < 50), it resets Y but doesn't add a new page. Long profiles get visually corrupted.
