@@ -239,6 +239,43 @@
   }
   .indicator-list li .sys-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; background: rgba(106,79,200,0.3); border-radius: 3px; padding: 1px 5px; margin-right: 6px; color: #c8b8f8; }
   .indicator-list li .sys-badge.astro { background: rgba(79,200,160,0.3); color: var(--accent2); }
+
+  /* ── Cluster Cards ── */
+  .cluster-card {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .cluster-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+  .cluster-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .cluster-card-title { font-size: 1rem; font-weight: 700; color: var(--gold); }
+  .cluster-card-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
+  .cluster-card-challenge { font-size: 0.85rem; color: var(--text); margin-top: 8px; font-style: italic; }
+  .cluster-member-count { background: rgba(79,200,160,0.2); color: var(--accent2); padding: 3px 10px; border-radius: 100px; font-size: 0.78rem; font-weight: 600; }
+
+  /* ── Forge Role Badges ── */
+  .forge-role-badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+    border-radius: 100px; font-size: 0.78rem; font-weight: 600;
+    background: rgba(201,168,76,0.15); border: 1px solid var(--gold-dim); color: var(--gold);
+  }
+  .forge-role-badge.power { background: rgba(224,80,80,0.15); border-color: rgba(224,80,80,0.4); color: #f08080; }
+  .forge-role-badge.craft { background: rgba(80,200,120,0.15); border-color: rgba(80,200,120,0.4); color: #80e0a0; }
+  .forge-role-badge.vision { background: rgba(106,79,200,0.15); border-color: rgba(106,79,200,0.4); color: #b8a8f0; }
+  .forge-role-badge.mirrors { background: rgba(79,200,200,0.15); border-color: rgba(79,200,200,0.4); color: #80e0e0; }
+
+  /* ── Composition Bar Chart ── */
+  .composition-bar { background: var(--bg); height: 32px; border-radius: 6px; overflow: hidden; display: flex; margin: 12px 0; }
+  .composition-segment { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: white; transition: all 0.3s; }
+  .composition-segment:hover { filter: brightness(1.2); }
+  .composition-segment.manifestor { background: #e05050; }
+  .composition-segment.generator { background: #50c878; }
+  .composition-segment.mg { background: #60d888; }
+  .composition-segment.projector { background: #6a4fc8; }
+  .composition-segment.reflector { background: #4fc8c8; }
+
+  /* ── Action Grid ── */
+  .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 16px; }
+  .action-grid button { justify-content: center; }
 </style>
 </head>
 <body>
@@ -568,26 +605,45 @@
   <!-- ═══ CLUSTERS TAB ═══ -->
   <div class="tab-content" id="tab-clusters">
     <div class="card">
-      <div class="card-title">◉ Group Dynamics</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Create and analyze group/cluster dynamics for teams, families, or communities.</p>
+      <div class="card-title">◉ Group Dynamics <span class="help-icon" title="Analyze team, family, or community energy patterns using Human Design and Prime Self Forge philosophy">ⓘ</span></div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:20px">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
       
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px">Create Cluster</h4>
-      <div class="form-grid">
-        <div class="form-group"><label>Cluster Name</label><input type="text" id="cluster-name" placeholder="Team Alpha"></div>
-        <div class="form-group"><label>Description</label><input type="text" id="cluster-desc" placeholder="Optional"></div>
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <button class="btn-primary" onclick="showCreateClusterForm()" id="showCreateBtn">+ New Cluster</button>
+        <button class="btn-secondary" onclick="loadClusters()" id="clusterListRefreshBtn">
+          <span class="spinner" id="clusterListSpinner" style="display:none"></span>
+          ↻ Refresh List
+        </button>
       </div>
-      <button class="btn-primary" onclick="createCluster()" id="clusterCreateBtn" style="margin-top:8px">
-        <span class="spinner" id="clusterCreateSpinner" style="display:none"></span>
-        Create Cluster
-      </button>
 
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:24px 0 8px">My Clusters</h4>
-      <button class="btn-secondary" onclick="loadClusters()" id="clusterLoadBtn">
-        <span class="spinner" id="clusterLoadSpinner" style="display:none"></span>
-        View My Teams
-      </button>
+      <!-- Create Cluster Form (initially hidden) -->
+      <div id="createClusterForm" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px">
+        <h4 style="color:var(--gold);font-size:0.95rem;margin-bottom:14px">Create New Cluster</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Cluster Name<span class="help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'">ⓘ</span></label>
+            <input type="text" id="cluster-name" placeholder="e.g., Product Team Alpha">
+          </div>
+          <div class="form-group full">
+            <label>Shared Challenge<span class="help-icon" title="What is this group working on together? This helps the AI generate relevant insights">ⓘ</span></label>
+            <textarea id="cluster-challenge" placeholder="e.g., Launching our new product by Q2" rows="2"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn-primary" onclick="createCluster()" id="clusterCreateBtn">
+            <span class="spinner" id="clusterCreateSpinner" style="display:none"></span>
+            Create Cluster
+          </button>
+          <button class="btn-secondary" onclick="hideCreateClusterForm()">Cancel</button>
+        </div>
+      </div>
     </div>
-    <div id="clusterResult"></div>
+
+    <!-- Cluster List -->
+    <div id="clusterListContainer"></div>
+
+    <!-- Cluster Detail View -->
+    <div id="clusterDetailContainer" style="display:none"></div>
   </div>
 
   <!-- ═══ SMS TAB ═══ -->
@@ -753,6 +809,11 @@ function switchTab(id, btn) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
   btn.classList.add('active');
+  
+  // Auto-load clusters when tab is activated
+  if (id === 'clusters' && token && !document.getElementById('clusterListContainer').innerHTML) {
+    loadClusters();
+  }
 }
 
 // ── Astrological Chart Wheel ─────────────────────────────────
@@ -1670,13 +1731,37 @@ function renderRoster(data) {
 }
 
 // ── Clusters ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CLUSTERS — Group Dynamics Analysis
+// ══════════════════════════════════════════════════════════════
+
+let currentCluster = null;
+
+function showCreateClusterForm() {
+  document.getElementById('createClusterForm').style.display = 'block';
+  document.getElementById('cluster-name').focus();
+}
+
+function hideCreateClusterForm() {
+  document.getElementById('createClusterForm').style.display = 'none';
+  document.getElementById('cluster-name').value = '';
+  document.getElementById('cluster-challenge').value = '';
+}
+
 async function createCluster() {
   if (!token) { openAuthOverlay(); return; }
 
   const name = document.getElementById('cluster-name').value.trim();
-  const description = document.getElementById('cluster-desc').value.trim() || undefined;
+  const challenge = document.getElementById('cluster-challenge').value.trim();
 
-  if (!name) { alert('Cluster name required'); return; }
+  if (!name) { 
+    showAlert('clusterListContainer', 'Please enter a cluster name', 'error');
+    return; 
+  }
+  if (!challenge) {
+    showAlert('clusterListContainer', 'Please describe your shared challenge', 'error');
+    return;
+  }
 
   const btn = document.getElementById('clusterCreateBtn');
   const spinner = document.getElementById('clusterCreateSpinner');
@@ -1685,12 +1770,12 @@ async function createCluster() {
   spinner.style.display = '';
 
   try {
-    const data = await apiFetch('/api/cluster', 'POST', { name, description });
-    alert('Cluster created: ' + (data.clusterId || 'success'));
-    document.getElementById('cluster-name').value = '';
-    document.getElementById('cluster-desc').value = '';
+    const data = await apiFetch('/api/cluster/create', 'POST', { name, challenge, createdBy: null });
+    showAlert('clusterListContainer', `Cluster "${name}" created successfully!`, 'success');
+    hideCreateClusterForm();
+    loadClusters();
   } catch (e) {
-    alert('Error: ' + e.message);
+    showAlert('clusterListContainer', 'Error creating cluster: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1700,43 +1785,271 @@ async function createCluster() {
 async function loadClusters() {
   if (!token) { openAuthOverlay(); return; }
 
-  const btn = document.getElementById('clusterLoadBtn');
-  const spinner = document.getElementById('clusterLoadSpinner');
-  const resultEl = document.getElementById('clusterResult');
+  const spinner = document.getElementById('clusterListSpinner');
+  const container = document.getElementById('clusterListContainer');
 
-  btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading clusters…</div></div>';
+  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your clusters…</div></div>';
 
   try {
     const data = await apiFetch('/api/cluster/list');
-    resultEl.innerHTML = renderClusters(data);
+    container.innerHTML = renderClusterList(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-error">⚠ Error loading clusters: ${e.message}</div>`;
+  } finally {
+    spinner.style.display = 'none';
+  }
+}
+
+function renderClusterList(data) {
+  if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
+  const clusters = data.clusters || [];
+
+  if (!clusters.length) {
+    return `<div class="empty-state">
+      <div class="icon">◉</div>
+      <p>No clusters yet. Create your first team, family, or community group above.</p>
+    </div>`;
+  }
+
+  let html = `<div class="card"><div class="card-title">Your Clusters (${clusters.length})</div>`;
+  clusters.forEach(c => {
+    html += `<div class="cluster-card" onclick="viewClusterDetail('${c.id}')">`;
+    html += `  <div class="cluster-card-header">`;
+    html += `    <div><div class="cluster-card-title">${escapeHtml(c.name)}</div>`;
+    html += `    <div class="cluster-card-meta">Created ${formatDate(c.createdAt)}</div></div>`;
+    html += `    <span class="cluster-member-count">◉ ${c.memberCount || 0} members</span>`;
+    html += `  </div>`;
+    if (c.challenge) {
+      html += `  <div class="cluster-card-challenge">"${escapeHtml(c.challenge)}"</div>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+async function viewClusterDetail(clusterId) {
+  const container = document.getElementById('clusterDetailContainer');
+  const listContainer = document.getElementById('clusterListContainer');
+  
+  listContainer.style.display = 'none';
+  container.style.display = 'block';
+  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading cluster details…</div></div>';
+
+  try {
+    const data = await apiFetch(`/api/cluster/${clusterId}`);
+    currentCluster = { id: clusterId, ...data };
+    container.innerHTML = renderClusterDetail(data, clusterId);
+  } catch (e) {
+    container.innerHTML = `<div class="alert alert-error">⚠ Error: ${e.message}</div>`;
+  }
+}
+
+function renderClusterDetail(data, clusterId) {
+  const members = data.members || [];
+  const comp = data.composition || {};
+  
+  let html = `<div class="card">`;
+  html += `  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">`;
+  html += `    <div class="card-title">◉ Cluster Details</div>`;
+  html += `    <button class="btn-secondary btn-sm" onclick="backToClusterList()">← Back to List</button>`;
+  html += `  </div>`;
+
+  // Members Section
+  html += `  <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 10px">Members (${members.length})</h4>`;
+  
+  if (members.length === 0) {
+    html += `  <div class="alert alert-info">No members yet. Add members below to analyze group dynamics.</div>`;
+  } else {
+    // Type breakdown bar
+    const typeCounts = {};
+    members.forEach(m => {
+      const type = m.forgeRole?.role || 'Unknown';
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
+
+    html += `  <div class="composition-bar">`;
+    Object.keys(typeCounts).forEach(type => {
+      const count = typeCounts[type];
+      const pct = (count / members.length * 100).toFixed(1);
+      const className = type.toLowerCase().replace(/[^a-z]/g, '');
+      html += `    <div class="composition-segment ${className}" style="width:${pct}%" title="${count} ${type}">`;
+      if (pct > 10) html += `${count}`;
+      html += `    </div>`;
+    });
+    html += `  </div>`;
+
+    // Member cards
+    members.forEach(m => {
+      const forgeClass = (m.forgeRole?.forge || '').toLowerCase().includes('power') ? 'power' :
+                        (m.forgeRole?.forge || '').toLowerCase().includes('craft') ? 'craft' :
+                        (m.forgeRole?.forge || '').toLowerCase().includes('vision') ? 'vision' :
+                        (m.forgeRole?.forge || '').toLowerCase().includes('mirror') ? 'mirrors' : '';
+      
+      html += `  <div class="data-block" style="margin-bottom:8px">`;
+      html += `    <div style="display:flex;justify-content:space-between;align-items:center">`;
+      html += `      <strong>${escapeHtml(m.email || 'Member')}</strong>`;
+      html += `      <span class="forge-role-badge ${forgeClass}">${m.forgeRole?.role || 'Participant'}</span>`;
+      html += `    </div>`;
+      if (m.forgeRole?.forge) {
+        html += `    <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">${m.forgeRole.forge}</div>`;
+      }
+      html += `  </div>`;
+    });
+  }
+
+  // Composition Insights
+  if (comp.insights && comp.insights.length > 0) {
+    html += `  <h4 style="color:var(--gold);font-size:0.9rem;margin:20px 0 10px">Composition Insights</h4>`;
+    html += `  <ul class="indicator-list">`;
+    comp.insights.forEach(insight => {
+      html += `    <li>${insight}</li>`;
+    });
+    html += `  </ul>`;
+  }
+
+  // Actions
+  html += `  <div class="action-grid">`;
+  html += `    <button class="btn-secondary" onclick="showAddMemberForm()">+ Add Member</button>`;
+  if (members.length >= 2) {
+    html += `    <button class="btn-primary" onclick="synthesizeCluster('${clusterId}')">⚡ Generate Synthesis</button>`;
+  }
+  html += `    <button class="btn-danger" onclick="leaveCluster('${clusterId}')">Leave Cluster</button>`;
+  html += `  </div>`;
+
+  html += `</div>`;
+
+  // Add Member Form (hidden)
+  html += `<div id="addMemberFormCard" style="display:none"></div>`;
+  
+  // Synthesis Result
+  html += `<div id="synthesisResult"></div>`;
+
+  return html;
+}
+
+function backToClusterList() {
+  document.getElementById('clusterDetailContainer').style.display = 'none';
+  document.getElementById('clusterListContainer').style.display = 'block';
+  currentCluster = null;
+}
+
+function showAddMemberForm() {
+  const container = document.getElementById('addMemberFormCard');
+  container.style.display = 'block';
+  container.innerHTML = `
+    <div class="card">
+      <div class="card-title">Add Member</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Enter member birth data to calculate their chart and add them to the cluster.</p>
+      
+      <div class="form-grid">
+        <div class="form-group"><label>User ID or Email</label><input type="text" id="member-userId" placeholder="user@example.com"></div>
+        <div class="form-group"><label>Birth Date</label><input type="date" id="member-date"></div>
+        <div class="form-group"><label>Birth Time</label><input type="time" id="member-time"></div>
+        <div class="form-group"><label>Latitude</label><input type="number" step="0.0001" id="member-lat" placeholder="e.g., 27.9506"></div>
+        <div class="form-group"><label>Longitude</label><input type="number" step="0.0001" id="member-lng" placeholder="e.g., -82.4572"></div>
+        <div class="form-group"><label>Timezone</label><select id="member-tz">
+          <option value="America/New_York">America/New_York</option>
+          <option value="America/Chicago">America/Chicago</option>
+          <option value="America/Los_Angeles">America/Los_Angeles</option>
+          <option value="UTC">UTC</option>
+        </select></div>
+      </div>
+      
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn-primary" onclick="addMemberToCluster()" id="addMemberBtn">
+          <span class="spinner" id="addMemberSpinner" style="display:none"></span>
+          Add Member
+        </button>
+        <button class="btn-secondary" onclick="document.getElementById('addMemberFormCard').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+async function addMemberToCluster() {
+  if (!currentCluster) return;
+
+  const userId = document.getElementById('member-userId').value.trim();
+  const birthDate = document.getElementById('member-date').value;
+  const birthTime = document.getElementById('member-time').value;
+  const lat = parseFloat(document.getElementById('member-lat').value);
+  const lng = parseFloat(document.getElementById('member-lng').value);
+  const birthTimezone = document.getElementById('member-tz').value;
+
+  if (!userId || !birthDate || !birthTime || isNaN(lat) || isNaN(lng)) {
+    showAlert('addMemberFormCard', 'All fields required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('addMemberBtn');
+  const spinner = document.getElementById('addMemberSpinner');
+  btn.disabled = true;
+  spinner.style.display = '';
+
+  try {
+    await apiFetch(`/api/cluster/${currentCluster.id}/join`, 'POST', {
+      userId, birthDate, birthTime, birthTimezone, lat, lng
+    });
+    showAlert('synthesisResult', 'Member added successfully!', 'success');
+    document.getElementById('addMemberFormCard').style.display = 'none';
+    viewClusterDetail(currentCluster.id); // Refresh
+  } catch (e) {
+    showAlert('addMemberFormCard', 'Error: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
   }
 }
 
-function renderClusters(data) {
-  if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
-  const clusters = data.clusters || [];
+async function synthesizeCluster(clusterId) {
+  const container = document.getElementById('synthesisResult');
+  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Generating AI synthesis… This may take 10-20 seconds.</div></div>';
 
-  if (!clusters.length) {
-    return `<div class="empty-state"><div class="icon">◉</div><p>No clusters yet.</p></div>`;
+  try {
+    // Note: The API expects members array with birth data. For now, show a placeholder.
+    // In production, you'd fetch member birth data from backend.
+    showAlert('synthesisResult', 'Synthesis feature requires member birth data storage in database. Coming soon!', 'info');
+  } catch (e) {
+    container.innerHTML = `<div class="alert alert-error">⚠ Synthesis error: ${e.message}</div>`;
   }
+}
 
-  let html = `<div class="card"><div class="card-title">◉ ${clusters.length} Cluster${clusters.length > 1 ? 's' : ''}</div>`;
-  clusters.forEach(c => {
-    html += `<div style="padding:10px;background:var(--bg3);border-radius:6px;margin:8px 0">`;
-    html += `<strong>${c.name}</strong>`;
-    if (c.description) html += `<div style="color:var(--text-dim);font-size:0.85rem;margin-top:4px">${c.description}</div>`;
-    html += `<div style="color:var(--accent2);font-size:0.8rem;margin-top:4px">${c.memberCount || 0} members</div>`;
-    html += `</div>`;
-  });
-  html += `</div>`;
-  return html;
+async function leaveCluster(clusterId) {
+  if (!confirm('Are you sure you want to leave this cluster?')) return;
+
+  try {
+    await apiFetch(`/api/cluster/${clusterId}/leave`, 'POST');
+    showAlert('clusterListContainer', 'You have left the cluster', 'success');
+    backToClusterList();
+    loadClusters();
+  } catch (e) {
+    showAlert('synthesisResult', 'Error leaving cluster: ' + e.message, 'error');
+  }
+}
+
+function showAlert(containerId, message, type = 'info') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const alertHtml = `<div class="alert alert-${type}" style="margin-top:12px">${message}</div>`;
+  container.insertAdjacentHTML('afterbegin', alertHtml);
+  setTimeout(() => {
+    const alert = container.querySelector('.alert');
+    if (alert) alert.remove();
+  }, 5000);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatDate(isoString) {
+  if (!isoString) return 'Unknown';
+  const date = new Date(isoString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 // ── SMS Subscription ───────────────────────────────────────────
