@@ -1,23 +1,86 @@
 # Prime Self
 
-**Human Design + Astrology synthesis platform** — deterministic chart calculations, AI-powered personality profiling, transit tracking, and practitioner tools, all running as a Cloudflare Worker API with a lightweight SPA frontend.
+> **Discover your unique energy blueprint.**  
+> Combine ancient wisdom (Energy Blueprint + Astrology + Numerology) with modern AI to reveal your decision-making style, life purpose, and optimal strategies for success.
+
+**What is Prime Self?** A personal insight platform that analyzes your exact birth time and location to create a detailed map of your energy patterns. Get clear, actionable guidance about how you're designed to make decisions, interact with others, and fulfill your purpose—all in plain language, powered by AI.
 
 ---
 
-## What It Does
+## ✨ Try It Now
 
-| Feature | Description |
+**Live Demo:** [https://prime-self-ui.pages.dev](https://prime-self-ui.pages.dev)  
+*(Generate your chart instantly—no sign-up required for basic features)*
+
+---
+
+## What You Get
+
+### 🎯 Personal Energy Blueprint
+Discover your **Pattern** (how you operate), **Decision Style** (how to make aligned choices), **Life Role** (your personality archetype), and **Purpose Vector** (your unique life theme). Understand why certain strategies work for you and others don't.
+
+### 🌟 AI-Powered Full Profile
+Get a comprehensive 8-layer synthesis combining:
+- Energy Blueprint core design
+- Western Astrology placements
+- Gene Keys wisdom
+- Numerology life path
+- Your Forge archetype (Artisan, Scientist, Councilor, or Oracle)
+- Current planetary activations
+- Personalized practice recommendations
+- Relatable narrative context
+
+### 🌙 Daily Transit Insights
+See how today's planetary positions interact with your birth chart. Know when to initiate, when to wait, and when key opportunities or challenges are emerging.
+
+### 💑 Relationship Compatibility
+Generate composite charts to understand the energy dynamics between you and anyone else. See where you complement each other and where challenges might arise.
+
+### 📱 SMS Daily Digest
+Subscribe to receive your daily transit brief via text message. Stay aligned with the cosmic weather without checking apps.
+
+### 👥 Professional Tools
+For practitioners: manage client rosters, run batch calculations, generate detailed synthesis reports, and export professional-quality PDFs.
+
+---
+
+## Key Concepts
+
+New to Energy Blueprints? Here are the core terms explained simply:
+
+| Term | Meaning |
 |---|---|
-| **Chart calculation** | Full Human Design chart (type, authority, profile, centers, channels, cross) + Western Astrology placements from birth data |
-| **Prime Self Profile** | LLM-synthesised 8-layer profile: Forge archetype, Knowledge Profile, Decision Architecture, Current Activation, Practice Recommendations |
-| **Transits** | Live planetary positions mapped to HD gates/lines; transit-to-natal aspects |
-| **Transit forecast** | Day-by-day gate ingresses and key aspect windows over a date range |
-| **Geocoding** | City/location → lat/lng + IANA timezone (free, no API key) |
-| **Auth** | Email + password registration; 24-hour JWT access + 30-day refresh |
-| **History** | Saved charts and profiles per user, retrievable by ID |
-| **Practitioner tools** | Register as practitioner, manage clients, access client charts |
-| **Onboarding** | Savannah story arc personalised per Forge archetype |
-| **SMS digest** | Daily transit brief delivered via Telnyx SMS |
+| **Energy Blueprint** | Your personal energy map based on exact birth time/place. Shows how you're designed to operate in the world. |
+| **Pattern** | Your energy type: **Builder** (sustainable energy), **Guide** (recognition-based), **Initiator** (self-starting), **Builder-Initiator** (multi-passionate hybrid), or **Reflector** (lunar mirror). |
+| **Decision Style** | How you make aligned decisions: **Emotional Wave** (wait through emotional clarity), **Sacral Response** (gut yes/no), **Splenic Instinct** (in-the-moment knowing), **Heart Will** (self-direction), etc. |
+| **Life Role** | Your personality archetype as two numbers (e.g., 6/2, 1/3). First = how others see you, second = how you see yourself. |
+| **Gene Keys** | The 64 energy points in your chart (numbered 1-64). Each represents a life theme and skill. |
+| **Centers** | Nine bio-energy hubs. **Defined** (colored) = consistent energy. **Open** (white) = flexible, amplifies others. |
+| **Purpose Vector** | Your life's thematic purpose (e.g., "Cross of Refinement"). Formed by your four main gene key activations. |
+| **Transits** | Current planetary positions and how they activate your chart today. Your "cosmic weather forecast." |
+| **Forge** | Your Prime Self archetype: **Artisan** (hands-on creator), **Scientist** (systematic researcher), **Councilor** (community weaver), or **Oracle** (pattern seer). |
+
+📖 **See full glossary:** [docs/GLOSSARY.md](docs/GLOSSARY.md)
+
+---
+
+## How It Works
+
+1. **Enter Your Birth Data** — Date, time (as exact as possible), and location
+2. **Instant Chart Calculation** — Planetary positions computed using astronomical algorithms
+3. **AI Synthesis** — Claude AI weaves your energy blueprint, astrology, and numerology into a readable profile
+4. **Actionable Insights** — Get specific strategies for decision-making, relationships, career, and personal growth
+5. **Track Transits** — See daily updates on how current planetary positions affect your unique design
+
+All calculations are deterministic (same input = same output) and verified against professional reference charts.
+
+---
+
+---
+
+## 🔧 For Developers
+
+Everything below this line is for developers who want to run, modify, or deploy Prime Self.
 
 ---
 
@@ -163,15 +226,15 @@ HumanDesign/
 All chart calculations verified against two reference charts:
 
 **AP** (Aug 5, 1979, 18:51 EST, Tampa FL)
-- Type: **Projector** | Profile: **6/2** | Authority: **Emotional – Solar Plexus**
-- Cross: Left Angle Cross of Refinement (33/19 | 2/1)
-- P Sun: Gate 33 Line 6 (high-line boundary test)
+- Pattern: **Guide** (Oracle Pattern) | Life Role: **6/2** (Role Model / Hermit) | Decision Style: **Emotional Wave Navigation**
+- Purpose Vector: Left Angle Cross of Refinement (33/19 | 2/1)
+- P Sun: Gene Key 33 Line 6 (high-line boundary test)
 
 **0921** (Sep 21, 1983, 5:30 PM EDT, Naples FL)
-- Type: **Manifesting Generator** | Profile: **1/3** | Authority: **Emotional – Solar Plexus**
-- Cross: Right Angle Cross of the Vessel of Love (46/25 | 15/10)
-- P Sun: Gate 46 Line 1 (low-line boundary test)
-- Verified against Jovian Archive reference chart
+- Pattern: **Builder-Initiator** | Life Role: **1/3** (Investigator / Experimenter) | Decision Style: **Emotional Wave Navigation**
+- Purpose Vector: Right Angle Cross of the Vessel of Love (46/25 | 15/10)
+- P Sun: Gene Key 46 Line 1 (low-line boundary test)
+- Verified against professional reference chart
 
 ---
 
@@ -242,8 +305,8 @@ HumanDesign/
 ## Verification Anchor
 
 All calculations verified against **AP's natal chart** (Aug 5, 1979, 22:51 UTC, Tampa FL):
-- Type: Projector | Profile: 6/2 | Authority: Emotional – Solar Plexus
-- Cross: Left Angle Cross of Refinement (33/19 | 2/1)
+- Pattern: Guide (Oracle) | Life Role: 6/2 | Decision Style: Emotional Wave Navigation
+- Purpose Vector: Left Angle Cross of Refinement (33/19 | 2/1)
 
 ## Tech Stack
 

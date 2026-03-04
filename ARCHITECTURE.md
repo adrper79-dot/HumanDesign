@@ -2,7 +2,7 @@
 
 ## 1. Vision
 
-**Prime Self** is a movement-first platform that delivers a proprietary personal-development philosophy—grounded in Human Design (HD), Western Astrology (Astro), and the Prime Self Forge framework—through a serverless, API-first technology stack.
+**Prime Self** is a movement-first platform that delivers a proprietary personal-development philosophy—grounded in Energy Blueprint patterns, Western Astrology (Astro), and the Prime Self Forge framework—through a serverless, API-first technology stack.
 
 The technology exists to serve the philosophy. Every architectural decision flows from one constraint: *the calculation must be verifiably accurate, the interpretation must be honestly grounded, and the philosophy must be faithfully delivered.*
 
@@ -90,13 +90,13 @@ Location:   Tampa, Florida, USA
 Lat/Lng:    27.9506° N, 82.4572° W
 
 Known Outputs:
-  Type:           Projector
-  Profile:        6/2
-  Definition:     Split Definition
-  Authority:      Emotional – Solar Plexus
-  Strategy:       Wait for the Invitation
+  Pattern:        Guide (Oracle Pattern)
+  Life Role:      6/2 (Role Model / Hermit)
+  Connection:     Split (Bridging Pattern)
+  Decision Style: Emotional Wave Navigation
+  Strategy:       Wait for Recognition
   Not-Self:       Bitterness
-  Cross:          Left Angle Cross of Refinement (33/19 | 2/1)
+  Purpose Vector: Left Angle Cross of Refinement (33/19 | 2/1)
 
   Personality Sun:  Gate 33, Line 6
   Design Sun:       Gate 2, Line 2
@@ -123,16 +123,16 @@ Known Outputs:
 
 ```json
 {
-  "hd": {
-    "type": "Projector",
-    "strategy": "Wait for the Invitation",
-    "authority": "Emotional - Solar Plexus",
-    "profile": "6/2",
-    "definition": "Split",
+  "energyBlueprint": {
+    "pattern": "Guide",
+    "strategy": "Wait for Recognition",
+    "decisionStyle": "Emotional Wave Navigation",
+    "lifeRole": "6/2",
+    "connectionPattern": "Split (Bridging)",
     "notSelf": "Bitterness",
     "definedCenters": ["Throat", "G", "SolarPlexus", "Root"],
     "undefinedCenters": ["Head", "Ajna", "Sacral", "Spleen", "Heart"],
-    "gates": {
+    "geneKeys": {
       "conscious": { "sun": {"gate":33,"line":6}, "earth": {"gate":19,"line":6}, "...": "..." },
       "unconscious": { "sun": {"gate":2,"line":2}, "earth": {"gate":1,"line":2}, "...": "..." }
     },
@@ -167,7 +167,7 @@ src/knowledgebase/
     gates.json          64 gates — original content derived from I Ching (Legge)
     channels.json       36 channels — synthesized from gate pair descriptions
     centers.json        9 centers — biological/energetic function
-    crosses.json        192 incarnation crosses — synthesized from component gates
+    crosses.json        192 purpose vectors — synthesized from component gene keys
     types.json          5 types — structural descriptions
     profiles.json       12 profiles — line combination descriptions
   astro/
@@ -308,7 +308,7 @@ CREATE TABLE cluster_members (
 | Agent Role | Model | When Used |
 |------------|-------|-----------|
 | **Calculation Verifier** | Sonnet 4.6 | Post-build — validates each layer against test vectors |
-| **Knowledgebase Generator** | Opus 4.6 | One-time — generates 64 gates, 36 channels, 192 crosses from I Ching source |
+| **Knowledgebase Generator** | Opus 4.6 | One-time — generates 64 gene keys, 36 channels, 192 purpose vectors from I Ching source |
 | **Profile Synthesizer** | Opus 4.6 | Per-request — reasons across HD + Astro + Transits + Prime Self |
 | **Transit Digest Writer** | Haiku 4.5 | Daily cron — short, structured SMS/push messages |
 | **Quality Auditor** | Sonnet 4.6 | Post-generation — checks for ungrounded claims, IP derivation |

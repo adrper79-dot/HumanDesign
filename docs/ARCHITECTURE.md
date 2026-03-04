@@ -212,14 +212,14 @@ PDF exports of profiles are generated in-worker and stored in the `prime-self-pd
 All chart calculations are validated against two reference cases:
 
 **AP** (Aug 5, 1979, 22:51 UTC, Tampa FL)
-- Profile: 6/2, Type: Projector, Authority: Emotional
-- P Sun: Gate 33 Line 6 (high-line boundary test)
+- Life Role: 6/2, Pattern: Guide, Decision Style: Emotional Wave Navigation
+- P Sun: Gene Key 33 Line 6 (high-line boundary test)
 - Full planetary verification across all 9 bodies + nodes
 
 **0921** (Sep 21, 1983, 21:30 UTC, Naples FL)
-- Profile: 1/3, Type: Manifesting Generator, Authority: Emotional
-- P Sun: Gate 46 Line 1 (low-line boundary test)
-- Cross-validated against Jovian Archive reference chart
+- Life Role: 1/3, Pattern: Builder-Initiator, Decision Style: Emotional Wave Navigation
+- P Sun: Gene Key 46 Line 1 (low-line boundary test)
+- Cross-validated against professional reference chart
 
 Both anchors are tested in `tests/engine.test.js` and verified on every deployment.
 

@@ -63,6 +63,7 @@ import { handleOnboarding } from './handlers/onboarding.js';
 import { corsHeaders, getCorsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
+import { errorResponse } from './lib/errorMessages.js';
 import { runDailyTransitCron } from './cron.js';
 
 // Routes that require authentication
@@ -218,10 +219,8 @@ export default {
 
     } catch (err) {
       console.error('Worker error:', err);
-      return Response.json(
-        { error: 'Internal Server Error', message: err.message },
-        { status: 500, headers: corsHeaders }
-      );
+      const errResponse = errorResponse(err, err.status || 500);
+      return addCorsHeaders(errResponse, request);
     }
   },
 

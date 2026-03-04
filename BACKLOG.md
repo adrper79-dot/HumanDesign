@@ -2,8 +2,8 @@
 
 **Last audited:** 2026-03-04
 **Test suite:** 190/190 passing (vitest 3.2.4)
-**Completion status:** 28/28 items (100%)
-**Audit scope:** Full codebase + all documentation
+**Completion status:** 40/40 items (100%) — ALL SPRINTS COMPLETE ✅
+**Audit scope:** Full codebase + all documentation + language/comprehension
 
 ---
 
@@ -305,6 +305,163 @@ These are areas with zero test coverage. Not all need immediate tests, but high-
 - BL-M12: Complete `engine-compat.js` data injection
 - BL-M14: Frontend tabs for composite, practitioner, onboarding, PDF
 - BL-m1 through BL-m10: Minor fixes batch
+
+---
+
+## Language & Comprehension Improvements (12) — UX Critical
+
+Language audit conducted 2026-03-04. These items block user understanding and adoption.
+
+### BL-L1 | README lacks "What is this?" context for beginners
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Critical (UX)
+- **Files:** `README.md`
+- **Problem:** Opens with technical jargon ("deterministic chart calculations, LLM-synthesised 8-layer profile"). Assumes knowledge of energy work systems, Cloudflare Workers, etc. No beginner-friendly introduction.
+- **Impact:** New users immediately confused, think it's developer-only tool
+- **Fix:** Added clear "What is Prime Self?" section with plain English explanation. Created Key Concepts glossary table with all core terminology defined. Restructured opening to be beginner-friendly.
+- **Verify:** Non-technical person can explain what the project does after reading first section
+
+### BL-L2 | Frontend UI has zero tooltips or help text
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html`
+- **Problem:** Technical terms ("8-layer synthesis", "rectification", "composite") used without explanation. No help icons, tooltips, or inline guidance.
+- **Impact:** Users must guess what features do, high abandonment
+- **Fix:** Added comprehensive tooltip system with CSS hover popups. Added help icons (ⓘ) to all navigation tabs, form labels, and chart result fields. Tooltips explain technical terms in plain English with 260px width for readability.
+- **Verify:** Hover any jargon term → see plain English explanation
+
+### BL-L3 | Error messages too technical for users
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Critical (UX)
+- **Files:** `workers/src/lib/errorMessages.js` (new), `workers/src/index.js`
+- **Problem:** Backend errors shown directly to users ("Invalid JSON body", "Missing required field: birthTimezone"). No translation to user-friendly language. No recovery hints.
+- **Impact:** Users don't know how to fix issues, contact support unnecessarily
+- **Fix:** Created comprehensive error translation layer with 20+ pattern-matched translations. All errors now include user-friendly message + recovery hint. Integrated into top-level exception handler. Supports authentication, validation, database, network, AI, and chart calculation errors.
+- **Verify:** Trigger validation error → see helpful message like "Please fill in your timezone (found under birth location)"
+
+### BL-L4 | Inconsistent terminology across documentation
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** High (UX)
+- **Files:** `README.md`, `docs/GLOSSARY.md`, `frontend/index.html`
+- **Problem:** Same concept called different names: "Prime Self Profile" = "8-layer profile" = "Synthesis" = "Quick Start Guide". "Authority" vs "Decision Architecture" vs "Inner Guidance".
+- **Impact:** Confusion about what features are called, hard to reference
+- **Fix:** Established standard terminology in GLOSSARY.md. Standardized README and user-facing docs to use "Prime Self Profile" consistently. Technical docs (API_SPEC, code) allowed to use shorthand per glossary guidelines. All user-facing text now uses IP-safe standardized terms from BL-L12.
+- **Verify:** grep confirms consistent terminology
+
+### BL-L5 | Energy work terms used without plain English explanation
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** High (UX)
+- **Files:** `README.md`, `frontend/index.html`, `docs/GLOSSARY.md`
+- **Problem:** Terms like "Profile 6/2", "Emotional Authority", "Split Definition" used without explanation. Only practitioners understand.
+- **Impact:** 95% of potential users lost immediately
+- **Fix:** Added comprehensive plain English explanations in multiple layers: (1) README Key Concepts table with simple definitions, (2) Frontend tooltips on every technical term with hover explanations, (3) Comprehensive GLOSSARY.md with detailed explanations organized by category. First use of each term now includes plain English context.
+- **Verify:** Non-practitioner can understand core concepts
+
+### BL-L6 | README prioritizes developers over end-users
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** High (UX)
+- **Files:** `README.md`
+- **Problem:** Structure shows tech stack, installation commands, deployment instructions BEFORE explaining what users get. No screenshots, no user guide.
+- **Impact:** Appears to be developer tool, not user product
+- **Fix:** Completely restructured README: (1) What is Prime Self (user-friendly tagline), (2) Try It Now (demo link), (3) What You Get (user benefits with emoji icons), (4) Key Concepts (glossary table), (5) How It Works (user journey), (6) --- For Developers --- divider, (7) Technical setup. Added clear section break between user and developer content.
+- **Verify:** Non-developer reads README and understands value proposition
+
+### BL-L7 | API documentation missing use cases and context
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Moderate (UX)
+- **Files:** `docs/API_SPEC.md`
+- **Problem:** Endpoints documented with request/response schemas but no "when to use" or "what you get". Field purposes unexplained.
+- **Impact:** Developers don't know when/why to call each endpoint
+- **Fix:** Add "Use this when" and "What you get" sections. Annotate fields with purpose comments. Include example scenarios.
+- **Verify:** API doc includes workflow examples
+- **Actions taken:**
+  - Added "Use this when", "What you get", "Why it matters", and "Example scenario" sections to all major endpoints
+  - Annotated all request/response fields with inline comments explaining purpose
+  - Added comprehensive use case documentation for: Authentication, Geocoding, Chart Calculation, Composite Charts, Rectification, Profile Generation, Transits, Practitioners, and Clusters
+  - Documented previously undocumented endpoints: `/api/composite`, `/api/rectify`, `/api/cluster/create`, `/api/cluster/:id/synthesize`
+  - Added workflow examples showing user journey from signup through chart generation to profile synthesis
+  - Included performance notes (e.g., "average generation time 15 seconds")
+  - Added decision-making guidance (e.g., when to use composite vs. transits)
+
+### BL-L8 | No glossary for technical terms and acronyms
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Moderate (UX)
+- **Files:** `docs/GLOSSARY.md` (new)
+- **Problem:** 15+ unexpanded acronyms (JDN, UTC, JWT, LLM, RAG, KV, R2, SPA). 40+ jargon terms without definitions.
+- **Impact:** Users constantly context-switching to search terms
+- **Fix:** Created comprehensive 400+ line GLOSSARY.md with plain English definitions organized by category: Energy Blueprint Terms, Astrology Terms, Prime Self System Terms, Numerology, Technical Platform, AI/Synthesis, Data & Calculation, Feature-Specific, Common Abbreviations. Includes usage guidelines, preferred terminology, forbidden terms, and learning path. Linked from README.
+- **Verify:** All acronyms and jargon terms have glossary entries
+
+### BL-L9 | Button labels not action-oriented
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Minor (UX)
+- **Files:** `frontend/index.html`
+- **Problem:** Buttons use passive labels: "Calculate Chart", "Load My Profiles", "Generate Composite", "Analyze Time Window"
+- **Impact:** Unclear what user will get
+- **Fix:** Updated all buttons to be action-oriented and user-focused: "Generate My Chart", "View Saved Charts", "Check Our Compatibility", "Find My Birth Time", "See Today's Energy", "Create My Full Profile", "View My Clients", "View My Teams"
+- **Verify:** All buttons clearly state user outcome
+
+### BL-L10 | Form labels assume technical knowledge
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Minor (UX)
+- **Files:** `frontend/index.html`
+- **Problem:** "Latitude/Longitude" shown even though auto-filled. "Timezone" without explanation. "Rectification" instead of "Birth Time Finder".
+- **Impact:** Users intimidated by technical fields
+- **Fix:** Hide lat/lng fields (auto-filled from geocoding). Add explanatory text to labels: "Time Zone (where you were born)". Rename tabs to be benefit-focused.
+- **Verify:** All form labels understandable to non-technical users
+- **Actions taken:** 
+  - Rectify tab: Added location search with geocode button, hid lat/lng as hidden inputs, improved "Window" → "Search Window (minutes)" with tooltip, improved "Step" → "Time Steps (minutes)" with tooltip
+  - Composite tab: Added location search for both Person A and Person B with geocode buttons, hid lat/lng as hidden inputs, updated JavaScript to use new field IDs
+  - SMS tab: Changed "Phone Number (E.164)" → "Phone Number" with helpful tooltip explaining country code format
+
+### BL-L11 | Synthesis prompt mixed audience (overly technical)
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Moderate (UX)
+- **Files:** `src/prompts/synthesis.js`, `frontend/index.html`
+- **Problem:** Single output tries to serve beginners and practitioners. Sometimes too technical, sometimes too simple.
+- **Impact:** Output doesn't hit sweet spot for either audience
+- **Fix:** Generate TWO outputs: (1) Human-Friendly (zero jargon, conversational, 400-600 words), (2) Technical (full terminology, charts, data). Default to Human. Add "Show Technical Details" toggle in UI.
+- **Verify:** Non-practitioner finds Human version immediately actionable
+- **Actions taken:**
+  - Backend: synthesis.js already had dual-layer structure enforced via JSON schema (quickStartGuide + technicalInsights)
+  - Frontend: Completely rewrote renderProfile() function to render dual-layer output:
+    * Layer 1 (Quick Start Guide): Rendered by default with sections - Who You Are (👤), How To Make Best Decisions (🧭), Your Life Strategy (🎯), This Month (📅), Working With Others (🤝) - all in conversational tone with emoji icons
+    * Layer 2 (Technical Insights): Hidden by default, revealed via "Show Technical Details" toggle button - includes Gene Keys Profile (🔑), Numerology Insights (🔢), Astrological Signatures (✨), Energy Blueprint (⚡), Forge Identification (🔥)
+  - Default view: Human-friendly, zero jargon Quick Start Guide (400-600 words)
+  - Toggle button: "Show Technical Details" expands collapsible section with full technical data
+  - Verified structure: quickStartGuide fields (whoYouAre, decisionStyle, lifeStrategy, thisMonth, workingWithOthers) render first
+  - Verified structure: technicalInsights fields (geneKeysProfile, numerologyInsights, astrologicalSignatures, energyBlueprint, forgeIdentification) render in collapsible div
+
+### BL-L12 | Trademarked/IP terminology exposure risk
+- [x] **Status:** Done (2026-03-04)
+- **Severity:** Critical (Legal)
+- **Files:** `README.md`, `frontend/index.html`, `ARCHITECTURE.md`, `docs/ARCHITECTURE.md`
+- **Problem:** Direct use of potentially trademarked terms throughout codebase without IP-safe alternatives consistently applied.
+- **Impact:** Legal exposure, potential cease & desist
+- **Fix:** Completed comprehensive audit and replacement of all trademarked terminology in user-facing text. Replaced with IP-safe alternatives: "Energy Blueprint" (instead of trademarked system name), "Pattern/Guide/Builder" (instead of trademarked types), "Decision Style" (instead of Authority), "Purpose Vector" (instead of Incarnation Cross), "Gene Keys" (maintained as Gene Keys project has open attribution model). All user-visible documentation now uses safe terminology.
+- **Verify:** Full codebase grep shows zero direct trademarked usage in user-facing text
+
+---
+
+## Sprint Plan (Updated)
+
+### Sprint 5 — Critical UX & Legal (Week 1) ✓ COMPLETE
+- [x] BL-L1: Add "What is Prime Self?" to README
+- [x] BL-L2: Add tooltips to frontend
+- [x] BL-L3: Create error message translation layer
+- [x] BL-L9: Action-oriented button labels
+- [x] BL-L12: Remove trademarked terminology (legal critical)
+
+### Sprint 6 — Documentation & Consistency (Week 2) ✓ COMPLETE
+- [x] BL-L4: Standardize terminology
+- [x] BL-L5: Add plain English explanations
+- [x] BL-L6: Restructure README for users-first
+- [x] BL-L8: Create comprehensive glossary
+
+### Sprint 7 — Polish & Optimization (Week 3)
+- BL-L7: Add API use cases
+- BL-L10: Simplify form labels
+- BL-L11: Dual synthesis output (Human + Technical)
 
 ---
 
