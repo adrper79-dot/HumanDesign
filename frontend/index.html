@@ -490,7 +490,7 @@
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
           <div style="display:flex;gap:8px;align-items:flex-start">
-            <input type="text" id="comp-locationA" placeholder="New York, NY"
+            <input type="text" id="comp-A-location" placeholder="New York, NY"
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-A')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-A')" id="comp-A-geoBtn"
@@ -511,7 +511,7 @@
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
           <div style="display:flex;gap:8px;align-items:flex-start">
-            <input type="text" id="comp-locationB" placeholder="Los Angeles, CA"
+            <input type="text" id="comp-B-location" placeholder="Los Angeles, CA"
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-B')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-B')" id="comp-B-geoBtn"
@@ -818,7 +818,11 @@ function switchTab(id, btn) {
 
 // ── Astrological Chart Wheel ─────────────────────────────────
 function renderAstroChart(astro) {
-  if (!astro || !astro.placements) return '';
+  console.log('🎨 renderAstroChart called', astro);
+  if (!astro || !astro.placements) {
+    console.warn('⚠️ No astrology data or placements:', { astro, hasPlacements: astro?.placements });
+    return '';
+  }
   
   const zodiacSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
   const planetSymbols = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇' };
@@ -1019,10 +1023,12 @@ async function calculateChart() {
 }
 
 function renderChart(data) {
+  console.log('📊 renderChart called with data:', data);
   if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
   const d = data.data || data;
   const chart = d.chart || d;
   const astro = d.westernAstrology || d.astrology || {};
+  console.log('📊 Extracted astro:', astro);
   const meta = data.meta || {};
 
   let html = '';
@@ -1464,14 +1470,31 @@ function renderTransits(data) {
   }
 
   const PLANET_SYMBOLS = { Sun:'☉', Moon:'☽', Mercury:'☿', Venus:'♀', Mars:'♂', Jupiter:'♃', Saturn:'♄', Uranus:'♅', Neptune:'♆', Pluto:'♇', NorthNode:'☊', TrueNode:'☊', Chiron:'⚷' };
+  const PLANET_MEANINGS = {
+    Sun: 'Core identity and life force',
+    Moon: 'Emotional nature and instincts',
+    Mercury: 'Communication and thinking style',
+    Venus: 'Values, love, and beauty',
+    Mars: 'Drive, passion, and action',
+    Jupiter: 'Expansion, wisdom, and luck',
+    Saturn: 'Structure, discipline, and lessons',
+    Uranus: 'Innovation and breakthrough',
+    Neptune: 'Dreams, intuition, and spirituality',
+    Pluto: 'Transformation and power',
+    NorthNode: 'Life direction and soul purpose',
+    TrueNode: 'Life direction and soul purpose',
+    Chiron: 'The wounded healer, where we heal others through our own wounds'
+  };
 
   let html = `<div class="card">
-    <div class="card-title">⊛ Transit Positions — ${t.date || new Date().toLocaleDateString()}</div>`;
+    <div class="card-title">⊛ Transit Positions — ${t.date || new Date().toLocaleDateString()}</div>
+    <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">Current planetary positions affecting the collective energy. Hover over planet names for their meanings.</p>`;
 
   for (const [body, pos] of Object.entries(positions)) {
     const sym = PLANET_SYMBOLS[body] || '';
+    const meaning = PLANET_MEANINGS[body] || 'Planetary influence';
     html += `<div class="transit-row">
-      <div class="planet-name">${sym} ${body}</div>
+      <div class="planet-name">${sym} ${body} <span class="help-icon" title="${meaning}" style="font-size:0.65rem;margin-left:2px">ⓘ</span></div>
       <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
       <div class="gate-badge">Gate ${pos.gate || '?'}.${pos.line || '?'}</div>
     </div>`;
