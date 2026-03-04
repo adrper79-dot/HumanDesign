@@ -309,7 +309,7 @@
 
 <!-- Header -->
 <header>
-  <div class="logo">✦ Prime Self <span>Energy Blueprint + Astrology</span></div>
+  <div class="logo">✦ Prime Self <span>Energy Blueprint + Astrology</span><span style="font-size:0.65rem;margin-left:8px;color:var(--text-dim)">v2.1</span></div>
   <div class="auth-bar">
     <div class="auth-status" id="authStatusText">Not signed in</div>
     <button class="btn-secondary btn-sm" id="authBtn" onclick="openAuthOverlay()">Sign In</button>
@@ -1187,6 +1187,9 @@ async function generateProfile() {
 }
 
 function renderProfile(data) {
+  console.log('🔍 renderProfile called - Version 2.1');
+  console.log('Raw data:', data);
+  
   if (data.error) return `<div class="alert alert-error">API Error: ${data.error}<br><small>${data.message || ''}</small></div>`;
 
   // Ensure we're working with the data payload (handle potential wrappers)
@@ -1197,12 +1200,15 @@ function renderProfile(data) {
   const meta = payload.meta || {};
 
   // Debug logging
-  console.log('Profile data:', { hasQSG: !!qsg, hasTI: !!ti, payload });
+  console.log('Profile data:', { hasQSG: !!qsg, hasTI: !!ti, qsg, ti, payload });
 
   // Check if data exists (null/undefined, not just empty objects)
   if ((qsg === null || qsg === undefined) && (ti === null || ti === undefined)) {
+    console.warn('⚠️ No profile data found - showing raw response');
     return `<div class="alert alert-warn">Profile generation returned no data. Raw response below.</div>` + rawToggle(data);
   }
+  
+  console.log('✅ Profile data valid - rendering...');
 
   let html = '';
 
