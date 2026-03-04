@@ -21,7 +21,7 @@ Items are organized by severity and grouped by system. Each item has:
 These items cause outright failures in deployed environments.
 
 ### BL-C1 | Neon DB driver uses non-existent API pattern
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical
 - **Files:** `workers/src/db/queries.js` (lines 38–57)
 - **Problem:** `neonQuery()` POSTs to `https://{hostname}/sql` with a `Neon-Connection-String` header. This is not how Neon's serverless HTTP API works. The correct approach is to use the `@neondatabase/serverless` npm package or the documented Neon HTTP endpoint (`https://{project-id}.neon.tech/sql` with `Authorization: Bearer` header).
@@ -39,7 +39,7 @@ These items cause outright failures in deployed environments.
 - **Verify:** `npm run migrate` completes without errors.
 
 ### BL-C3 | Schema drift between `migrate.js` and `migrate.sql`
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical
 - **Files:** `workers/src/db/migrate.js`, `workers/src/db/migrate.sql`
 - **Problem:** The two migration sources produce incompatible schemas:

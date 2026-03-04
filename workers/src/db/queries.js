@@ -2,13 +2,11 @@
  * Database Queries — Neon PostgreSQL
  *
  * Prepared queries for all core operations.
- * Uses the @neondatabase/serverless driver for Workers compatibility.
+ * Uses fetch-based HTTP API for Workers compatibility.
  *
- * In Workers context, use neon() HTTP driver.
- * In Node context (migration), use Client from pg.
+ * In Workers context, use createQueryFn() which uses HTTP.
+ * In Node context (migration), use getClient() which uses pg.
  */
-
-import { neon } from '@neondatabase/serverless';
 
 /**
  * Get a pg Client for migration scripts (Node.js only).
@@ -24,19 +22,45 @@ export async function getClient(connectionString) {
 
 /**
  * Create a serverless query function for Workers runtime.
- * Uses @neondatabase/serverless neon() driver over HTTP.
+ * Uses Neon's HTTP SQL API via fetch.
  *
- * @param {string} connectionString — Neon pooled connection string
+ * @param {string} connectionString — Neon connection string
+ * @returns {Function} query function (sql, params) => Promise<{rows}>
  */
 export function createQueryFn(connectionString) {
-  // Use official Neon serverless driver
-  const sql = neon(connectionString);
-  
   return async function query(sqlText, params = []) {
     try {
-      const rows = await sql(sqlText, params);
-      // Neon returns array of rows directly, wrap to match pg interface
-      return { rows };
+      // Parse connection string to extract auth and endpoint info
+      const url = new URL(connectionString);
+      const password = url.password;
+      const host = url.hostname;
+      const database = url.pathname.slice(1); // remove leading /
+      const username = url.username;
+      
+      // Neon HTTP API endpoint
+      const endpoint = `https://${host}/sql`;
+      
+      // Make HTTP request to Neon's SQL-over-HTTP API
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${password}` // Neon uses password as API key
+        },
+        body: JSON.stringify({
+          query: sqlText,
+          params: params || []
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Database query failed (${response.status}): ${errorText}`);
+      }
+
+      const result = await response.json();
+      // Neon returns {rows: [...], fields: [...], rowCount: ...}
+      return result;
     } catch (error) {
       console.error('Database query error:', error);
       throw error;
