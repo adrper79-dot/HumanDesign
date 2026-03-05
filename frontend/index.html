@@ -1713,7 +1713,7 @@ async function runRectification() {
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Analyzing time window…</div></div>';
 
   try {
-    const data = await apiFetch('/api/rectify', 'POST', body);
+    const data = await apiFetch('/api/rectify', { method: 'POST', body: JSON.stringify(body) });
     resultEl.innerHTML = renderRectification(data);
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
@@ -1764,7 +1764,7 @@ async function addClient() {
   spinner.style.display = '';
 
   try {
-    const data = await apiFetch('/api/practitioner/roster/add', 'POST', { clientName: name, profileId });
+    const data = await apiFetch('/api/practitioner/roster/add', { method: 'POST', body: JSON.stringify({ clientName: name, profileId }) });
     alert(data.message || 'Client added');
     document.getElementById('prac-name').value = '';
     document.getElementById('prac-profileId').value = '';
@@ -1857,7 +1857,7 @@ async function createCluster() {
   spinner.style.display = '';
 
   try {
-    const data = await apiFetch('/api/cluster/create', 'POST', { name, challenge, createdBy: null });
+    const data = await apiFetch('/api/cluster/create', { method: 'POST', body: JSON.stringify({ name, challenge, createdBy: null }) });
     showAlert('clusterListContainer', `Cluster "${name}" created successfully!`, 'success');
     hideCreateClusterForm();
     loadClusters();
@@ -2076,9 +2076,9 @@ async function addMemberToCluster() {
   spinner.style.display = '';
 
   try {
-    await apiFetch(`/api/cluster/${currentCluster.id}/join`, 'POST', {
+    await apiFetch(`/api/cluster/${currentCluster.id}/join`, { method: 'POST', body: JSON.stringify({
       userId, birthDate, birthTime, birthTimezone, lat, lng
-    });
+    }) });
     showAlert('synthesisResult', 'Member added successfully!', 'success');
     document.getElementById('addMemberFormCard').style.display = 'none';
     viewClusterDetail(currentCluster.id); // Refresh
@@ -2107,7 +2107,7 @@ async function leaveCluster(clusterId) {
   if (!confirm('Are you sure you want to leave this cluster?')) return;
 
   try {
-    await apiFetch(`/api/cluster/${clusterId}/leave`, 'POST');
+    await apiFetch(`/api/cluster/${clusterId}/leave`, { method: 'POST' });
     showAlert('clusterListContainer', 'You have left the cluster', 'success');
     backToClusterList();
     loadClusters();
@@ -2154,7 +2154,7 @@ async function subscribeSMS() {
   spinner.style.display = '';
 
   try {
-    const data = await apiFetch('/api/sms/subscribe', 'POST', { phoneNumber: phone });
+    const data = await apiFetch('/api/sms/subscribe', { method: 'POST', body: JSON.stringify({ phoneNumber: phone }) });
     resultEl.innerHTML = `<div class="alert alert-success">✓ ${data.message || 'Subscribed successfully'}</div>`;
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
@@ -2178,7 +2178,7 @@ async function unsubscribeSMS() {
   spinner.style.display = '';
 
   try {
-    const data = await apiFetch('/api/sms/unsubscribe', 'POST', { phoneNumber: phone });
+    const data = await apiFetch('/api/sms/unsubscribe', { method: 'POST', body: JSON.stringify({ phoneNumber: phone }) });
     resultEl.innerHTML = `<div class="alert alert-success">✓ ${data.message || 'Unsubscribed'}</div>`;
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
@@ -2202,7 +2202,7 @@ async function startOnboarding() {
   progressEl.style.display = 'block';
 
   try {
-    const data = await apiFetch('/api/onboarding/start', 'POST', {});
+    const data = await apiFetch('/api/onboarding/start', { method: 'POST', body: JSON.stringify({}) });
     const sessionId = data.sessionId;
     
     // Simulate multi-step onboarding
@@ -2210,7 +2210,7 @@ async function startOnboarding() {
       await new Promise(r => setTimeout(r, 800));
       document.getElementById('onboardBar').style.width = `${step * 20}%`;
       
-      const stepData = await apiFetch(`/api/onboarding/session/${sessionId}/next`, 'POST', {});
+      const stepData = await apiFetch(`/api/onboarding/session/${sessionId}/next`, { method: 'POST', body: JSON.stringify({}) });
       contentEl.innerHTML = renderOnboardingStep(stepData, step);
     }
 
