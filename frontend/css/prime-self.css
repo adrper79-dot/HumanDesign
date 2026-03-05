@@ -1,0 +1,321 @@
+/**
+ * Prime Self - Main Stylesheet
+ * 
+ * Import this single file to load the entire design system.
+ * Alternatively, import individual files for better performance
+ * (only load components you use).
+ * 
+ * Usage:
+ * <link rel="stylesheet" href="css/prime-self.css">
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   FOUNDATION
+   Load tokens and base styles first
+   ══════════════════════════════════════════════════════════ */
+
+@import url('design-tokens.css');
+@import url('base.css');
+
+
+/* ═══════════════════════════════════════════════════════════
+   COMPONENTS
+   Load in any order
+   ══════════════════════════════════════════════════════════ */
+
+@import url('components/layout.css');
+@import url('components/buttons.css');
+@import url('components/cards.css');
+@import url('components/forms.css');
+@import url('components/tabs.css');
+@import url('components/modals.css');
+@import url('components/alerts.css');
+
+
+/* ═══════════════════════════════════════════════════════════
+   APPLICATION-SPECIFIC STYLES
+   Add custom styles below, using design tokens
+   ══════════════════════════════════════════════════════════ */
+
+/* Prime Self specific components */
+
+.forge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: linear-gradient(135deg, 
+    rgba(201, 168, 76, 0.15), 
+    rgba(106, 79, 200, 0.15)
+  );
+  border: var(--border-width-thin) solid var(--border-emphasis);
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--interactive-primary);
+  margin-bottom: var(--space-3);
+}
+
+.confidence-pill {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  background: rgba(80, 200, 120, 0.2);
+  color: var(--status-info);
+}
+
+.confidence-pill.medium {
+  background: rgba(201, 168, 76, 0.2);
+  color: var(--interactive-primary);
+}
+
+.confidence-pill.low {
+  background: rgba(224, 80, 80, 0.2);
+  color: var(--status-error);
+}
+
+
+/* Transit visualization */
+
+.transit-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-tertiary);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+  transition: var(--transition-all);
+}
+
+.transit-row:hover {
+  border-color: var(--border-emphasis);
+  background: var(--bg-secondary);
+}
+
+.planet-name {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--interactive-primary);
+}
+
+.planet-pos {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.gate-badge {
+  background: rgba(106, 79, 200, 0.25);
+  border: var(--border-width-thin) solid rgba(106, 79, 200, 0.5);
+  color: var(--color-purple-300);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+}
+
+
+/* Cluster cards */
+
+.cluster-card {
+  background: var(--bg-tertiary);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.cluster-card:hover {
+  border-color: var(--border-emphasis);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.cluster-card-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--interactive-primary);
+  margin-bottom: var(--space-2);
+}
+
+.cluster-card-meta {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.cluster-member-count {
+  background: rgba(79, 200, 160, 0.2);
+  color: var(--status-info);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+
+/* Forge role badges */
+
+.forge-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  background: rgba(201, 168, 76, 0.15);
+  border: var(--border-width-thin) solid var(--border-emphasis);
+  color: var(--interactive-primary);
+}
+
+.forge-role-badge.power {
+  background: rgba(224, 80, 80, 0.15);
+  border-color: rgba(224, 80, 80, 0.4);
+  color: #f08080;
+}
+
+.forge-role-badge.craft {
+  background: rgba(80, 200, 120, 0.15);
+  border-color: rgba(80, 200, 120, 0.4);
+  color: #80e0a0;
+}
+
+.forge-role-badge.vision {
+  background: rgba(106, 79, 200, 0.15);
+  border-color: rgba(106, 79, 200, 0.4);
+  color: var(--color-purple-300);
+}
+
+
+/* Chart composition bar */
+
+.composition-bar {
+  background: var(--bg-primary);
+  height: 2rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  margin: var(--space-3) 0;
+}
+
+.composition-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: white;
+  transition: var(--transition-transform);
+  cursor: pointer;
+}
+
+.composition-segment:hover {
+  filter: brightness(1.2);
+  transform: scaleY(1.1);
+}
+
+.composition-segment.manifestor {
+  background: var(--status-error);
+}
+
+.composition-segment.generator {
+  background: var(--status-success);
+}
+
+.composition-segment.projector {
+  background: var(--color-purple-500);
+}
+
+.composition-segment.reflector {
+  background: var(--status-info);
+}
+
+
+/* Profile sections */
+
+.profile-section {
+  background: var(--bg-tertiary);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.profile-section h4 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--interactive-primary);
+  margin-bottom: var(--space-3);
+}
+
+
+/* History item cards */
+
+.history-item {
+  background: var(--bg-tertiary);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.history-item:hover {
+  border-color: var(--border-emphasis);
+  transform: translateX(4px);
+}
+
+.history-meta {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+
+/* Raw JSON display */
+
+.raw-toggle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: var(--space-3);
+  display: inline-block;
+  transition: var(--transition-colors);
+}
+
+.raw-toggle:hover {
+  color: var(--text-primary);
+}
+
+.raw-json {
+  display: none;
+  background: var(--bg-primary);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-x: auto;
+  margin-top: var(--space-2);
+  white-space: pre-wrap;
+  color: #90c890;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.raw-json.open {
+  display: block;
+}

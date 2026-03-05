@@ -1,0 +1,218 @@
+/**
+ * Tab Component Styles
+ * Accessible tab navigation with ARIA support
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   TAB CONTAINER
+   ══════════════════════════════════════════════════════════ */
+
+.tabs {
+  background: var(--bg-secondary);
+  border-bottom: var(--border-width-thin) solid var(--border-subtle);
+  position: sticky;
+  top: var(--header-height);
+  z-index: var(--z-sticky);
+}
+
+.tab-list {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-6);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+}
+
+/* Hide scrollbar but keep functionality */
+.tab-list::-webkit-scrollbar {
+  height: 3px;
+}
+
+.tab-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tab-list::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+}
+
+.tab-list::-webkit-scrollbar-thumb:hover {
+  background: var(--border-default);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   TAB BUTTONS
+   ══════════════════════════════════════════════════════════ */
+
+.tab-btn {
+  /* Reset */
+  background: none;
+  border: none;
+  cursor: pointer;
+  
+  /* Layout */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  
+  /* Spacing */
+  padding: var(--space-3) var(--space-4);
+  min-height: var(--touch-target-min);
+  
+  /* Typography */
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  white-space: nowrap;
+  
+  /* Visual */
+  border-bottom: 2px solid transparent;
+  transition: var(--transition-colors);
+  
+  /* Accessibility */
+  position: relative;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+/* Active tab */
+.tab-btn[aria-selected="true"],
+.tab-btn.active {
+  color: var(--interactive-primary);
+  border-bottom-color: var(--interactive-primary);
+}
+
+/* Disabled tab */
+.tab-btn:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Tab icon */
+.tab-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+/* Tab badge (notification count) */
+.tab-badge {
+  background: var(--status-error);
+  color: white;
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--radius-full);
+  min-width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   TAB PANELS
+   ══════════════════════════════════════════════════════════ */
+
+.tab-panel {
+  display: none;
+  animation: fade-in var(--duration-normal) var(--ease-out);
+}
+
+.tab-panel[aria-hidden="false"],
+.tab-panel.active {
+  display: block;
+}
+
+/* Panel content wrapper */
+.tab-content {
+  /* Inherits from .container in base.css */
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   VERTICAL TABS (Optional variant)
+   ══════════════════════════════════════════════════════════ */
+
+.tabs-vertical {
+  display: flex;
+  gap: var(--space-6);
+  border-bottom: none;
+  position: static;
+}
+
+.tabs-vertical .tab-list {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: var(--border-width-thin) solid var(--border-subtle);
+  padding: 0;
+  min-width: 200px;
+}
+
+.tabs-vertical .tab-btn {
+  border-bottom: none;
+  border-right: 2px solid transparent;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.tabs-vertical .tab-btn[aria-selected="true"],
+.tabs-vertical .tab-btn.active {
+  border-right-color: var(--interactive-primary);
+}
+
+.tabs-vertical .tab-panels {
+  flex: 1;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .tab-list {
+    padding: 0 var(--space-4);
+  }
+  
+  .tab-btn {
+    padding: var(--space-3);
+    font-size: var(--text-sm);
+  }
+  
+  /* Stack vertical tabs on mobile */
+  .tabs-vertical {
+    flex-direction: column;
+  }
+  
+  .tabs-vertical .tab-list {
+    border-right: none;
+    border-bottom: var(--border-width-thin) solid var(--border-subtle);
+    min-width: auto;
+  }
+  
+  .tabs-vertical .tab-btn {
+    border-right: none;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .tabs-vertical .tab-btn[aria-selected="true"],
+  .tabs-vertical .tab-btn.active {
+    border-right-color: transparent;
+    border-bottom-color: var(--interactive-primary);
+  }
+}

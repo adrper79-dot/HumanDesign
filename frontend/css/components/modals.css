@@ -1,0 +1,222 @@
+/**
+ * Modal Component Styles
+ * Accessible modal dialogs with focus trap
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL OVERLAY
+   ══════════════════════════════════════════════════════════ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(var(--blur-sm));
+  z-index: var(--z-modal-backdrop);
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  
+  animation: fade-in var(--duration-normal) var(--ease-out);
+}
+
+.modal-overlay[aria-hidden="true"],
+.modal-overlay.hidden {
+  display: none;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL DIALOG
+   ══════════════════════════════════════════════════════════ */
+
+.modal {
+  background: var(--bg-secondary);
+  border: var(--border-width-thin) solid var(--border-emphasis);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - var(--space-8));
+  overflow-y: auto;
+  
+  position: relative;
+  z-index: var(--z-modal);
+  
+  animation: scale-in var(--duration-normal) var(--ease-out);
+}
+
+/* Modal sizes */
+.modal-sm {
+  max-width: 360px;
+}
+
+.modal-md {
+  max-width: 540px;
+}
+
+.modal-lg {
+  max-width: 720px;
+}
+
+.modal-xl {
+  max-width: 960px;
+}
+
+.modal-full {
+  max-width: calc(100vw - var(--space-8));
+  max-height: calc(100vh - var(--space-8));
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL SECTIONS
+   ══════════════════════════════════════════════════════════ */
+
+.modal-header {
+  padding: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width-thin) solid var(--border-subtle);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.modal-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--interactive-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.modal-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-colors);
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-close:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.modal-close:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.modal-body {
+  padding: var(--space-6);
+}
+
+.modal-footer {
+  padding: var(--space-4) var(--space-6) var(--space-6);
+  border-top: var(--border-width-thin) solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL VARIANTS
+   ══════════════════════════════════════════════════════════ */
+
+/* Confirmation modal */
+.modal-confirm .modal-header {
+  border-bottom-color: var(--status-warning);
+}
+
+.modal-confirm .modal-title {
+  color: var(--status-warning);
+}
+
+/* Error modal */
+.modal-error .modal-header {
+  border-bottom-color: var(--status-error);
+}
+
+.modal-error .modal-title {
+  color: var(--status-error);
+}
+
+/* Success modal */
+.modal-success .modal-header {
+  border-bottom-color: var(--status-success);
+}
+
+.modal-success .modal-title {
+  color: var(--status-success);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .modal {
+    max-width: 100%;
+    border-radius: var(--radius-lg);
+  }
+  
+  .modal-overlay {
+    padding: var(--space-2);
+  }
+  
+  .modal-header,
+  .modal-body {
+    padding: var(--space-4);
+  }
+  
+  .modal-footer {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  
+  /* Stack footer buttons on mobile */
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ACCESSIBILITY - Focus Trap
+   ══════════════════════════════════════════════════════════ */
+
+.modal-overlay:not([aria-hidden="true"]) {
+  /* Prevent background scrolling when modal is open */
+  overflow: hidden;
+}
+
+/* Body scroll lock when modal is active */
+body:has(.modal-overlay:not([aria-hidden="true"])) {
+  overflow: hidden;
+}

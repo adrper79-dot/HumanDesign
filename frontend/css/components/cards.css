@@ -1,0 +1,218 @@
+/**
+ * Card Component Styles
+ * Consistent container patterns
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   BASE CARD
+   ══════════════════════════════════════════════════════════ */
+
+.card {
+  background: var(--bg-secondary);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition-all);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CARD SECTIONS
+   ══════════════════════════════════════════════════════════ */
+
+.card-header {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width-thin) solid var(--border-subtle);
+}
+
+.card-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--interactive-primary);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+.card-body {
+  /* Default card content area */
+}
+
+.card-footer {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: var(--border-width-thin) solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CARD VARIANTS
+   ══════════════════════════════════════════════════════════ */
+
+/* Elevated card */
+.card-elevated {
+  box-shadow: var(--shadow-xl);
+  border-color: var(--border-emphasis);
+}
+
+/* Interactive card (clickable) */
+.card-interactive {
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.card-interactive:hover {
+  border-color: var(--border-emphasis);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2xl);
+}
+
+.card-interactive:active {
+  transform: translateY(0);
+}
+
+/* Flat card (no shadow) */
+.card-flat {
+  box-shadow: none;
+}
+
+/* Bordered card (emphasized border) */
+.card-bordered {
+  border-width: var(--border-width-medium);
+  border-color: var(--border-emphasis);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   LOADING CARD
+   ══════════════════════════════════════════════════════════ */
+
+.card-loading {
+  text-align: center;
+  padding: var(--space-10);
+  color: var(--text-secondary);
+}
+
+.card-loading .spinner {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+  margin: 0 auto var(--space-4);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   EMPTY STATE CARD
+   ══════════════════════════════════════════════════════════ */
+
+.card-empty {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  color: var(--text-secondary);
+}
+
+.card-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-3);
+  opacity: 0.4;
+  display: block;
+}
+
+.card-empty-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.card-empty-text {
+  font-size: var(--text-base);
+  margin-bottom: 0;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   DATA DISPLAY CARDS
+   ══════════════════════════════════════════════════════════ */
+
+.data-block {
+  background: var(--bg-tertiary);
+  border: var(--border-width-thin) solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.data-block-title {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+  font-weight: var(--font-semibold);
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-1) 0;
+  border-bottom: var(--border-width-thin) solid rgba(255, 255, 255, 0.04);
+}
+
+.data-row:last-child {
+  border-bottom: none;
+}
+
+.data-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.data-value {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+  text-align: right;
+  max-width: 60%;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE CARD GRID
+   ══════════════════════════════════════════════════════════ */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: var(--space-4);
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}

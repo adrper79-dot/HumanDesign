@@ -1,0 +1,257 @@
+/**
+ * Alert Component Styles
+ * Status messages and notifications
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   BASE ALERT
+   ══════════════════════════════════════════════════════════ */
+
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  border: var(--border-width-thin) solid transparent;
+  animation: slide-up var(--duration-normal) var(--ease-out);
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  font-size: 1.25em;
+  line-height: 1;
+  margin-top: 0.125rem;
+}
+
+.alert-content {
+  flex: 1;
+  line-height: var(--leading-relaxed);
+}
+
+.alert-title {
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-1);
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  opacity: 0.7;
+  transition: opacity var(--duration-fast);
+  flex-shrink: 0;
+  font-size: 1.25em;
+  line-height: 1;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.alert-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ALERT VARIANTS
+   ══════════════════════════════════════════════════════════ */
+
+/* Info */
+.alert-info {
+  background: rgba(106, 79, 200, 0.15);
+  border-color: rgba(106, 79, 200, 0.4);
+  color: var(--color-purple-300);
+}
+
+.alert-info .alert-icon::before {
+  content: "ⓘ";
+}
+
+/* Success */
+.alert-success {
+  background: rgba(80, 200, 120, 0.12);
+  border-color: rgba(80, 200, 120, 0.3);
+  color: var(--status-info);
+}
+
+.alert-success .alert-icon::before {
+  content: "✓";
+}
+
+/* Warning */
+.alert-warning {
+  background: rgba(201, 168, 76, 0.12);
+  border-color: rgba(201, 168, 76, 0.3);
+  color: var(--interactive-primary);
+}
+
+.alert-warning .alert-icon::before {
+  content: "⚠";
+}
+
+/* Error */
+.alert-error {
+  background: rgba(224, 80, 80, 0.12);
+  border-color: rgba(224, 80, 80, 0.3);
+  color: var(--status-error);
+}
+
+.alert-error .alert-icon::before {
+  content: "✕";
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   ALERT SIZES
+   ══════════════════════════════════════════════════════════ */
+
+.alert-sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.alert-lg {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-lg);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   LOADING/PROGRESS
+   ══════════════════════════════════════════════════════════ */
+
+.alert-loading {
+  background: rgba(106, 79, 200, 0.1);
+  border-color: rgba(106, 79, 200, 0.3);
+  color: var(--color-purple-300);
+}
+
+.alert-loading .alert-icon {
+  animation: spin var(--duration-slow) linear infinite;
+}
+
+.alert-loading .alert-icon::before {
+  content: "⟳";
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS (Floating)
+   ══════════════════════════════════════════════════════════ */
+
+.toast-container {
+  position: fixed;
+  top: var(--space-6);
+  right: var(--space-6);
+  z-index: calc(var(--z-modal) + 10);
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  box-shadow: var(--shadow-xl);
+  animation: slide-in-right var(--duration-normal) var(--ease-out);
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(calc(100% + var(--space-6)));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .toast-container {
+    top: var(--space-4);
+    right: var(--space-4);
+    left: var(--space-4);
+    max-width: none;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   PROGRESS BAR
+   ══════════════════════════════════════════════════════════ */
+
+.progress-container {
+  background: var(--bg-primary);
+  height: 6px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin: var(--space-2) 0;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, 
+    var(--status-error), 
+    var(--interactive-primary), 
+    var(--status-success)
+  );
+  border-radius: var(--radius-sm);
+  transition: width var(--duration-slower) var(--ease-out);
+  min-width: 2%;
+}
+
+.progress-bar-indeterminate {
+  width: 30%;
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(400%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   LOADING SPINNER
+   ══════════════════════════════════════════════════════════ */
+
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(201, 168, 76, 0.3);
+  border-top-color: var(--interactive-primary);
+  border-radius: var(--radius-full);
+  animation: spin var(--duration-slow) linear infinite;
+}
+
+.spinner-lg {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+}
+
+.spinner-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-width: 1.5px;
+}
