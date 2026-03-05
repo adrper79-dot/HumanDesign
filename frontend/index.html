@@ -1743,8 +1743,8 @@ async function runRectification() {
 function renderRectification(data) {
   if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
   
-  const sensitivity = data.sensitivity || [];
-  const guidance = data.guidance || [];
+  const sensitivity = Array.isArray(data.sensitivity) ? data.sensitivity : [];
+  const guidance = Array.isArray(data.guidance) ? data.guidance : [];
 
   let html = `<div class="card"><div class="card-title"><span class="icon-time"></span> Rectification Analysis</div>`;
   html += `<div class="section-title">Time Window Variations</div>`;
