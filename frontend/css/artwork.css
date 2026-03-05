@@ -1,0 +1,433 @@
+/**
+ * Artwork & Visual Elements
+ * Premium illustrations and decorative elements
+ * Inspired by Porsche and Apple aesthetics
+ */
+
+/* ─── Hero Artwork ─────────────── */
+
+.hero-artwork {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  background: linear-gradient(135deg, 
+    var(--color-near-black) 0%,
+    var(--color-charcoal) 50%,
+    var(--color-graphite) 100%
+  );
+}
+
+.hero-artwork::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: var(--gradient-mesh);
+  opacity: 0.6;
+  animation: rotate-slow 60s linear infinite;
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Geometric Patterns ─────────────── */
+
+.geometric-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.03;
+  background-image: 
+    linear-gradient(30deg, transparent 49%, rgba(255,255,255,0.08) 49%, rgba(255,255,255,0.08) 51%, transparent 51%),
+    linear-gradient(-30deg, transparent 49%, rgba(255,255,255,0.08) 49%, rgba(255,255,255,0.08) 51%, transparent 51%);
+  background-size: 60px 60px;
+}
+
+/* Radial gradient accent */
+.radial-accent {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 600px;
+  background: radial-gradient(ellipse at top,
+    rgba(213, 0, 28, 0.12) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.radial-accent-gold {
+  background: radial-gradient(ellipse at top,
+    rgba(212, 175, 55, 0.08) 0%,
+    transparent 60%
+  );
+}
+
+/* ─── Card Artwork ─────────────── */
+
+.card-with-art {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-with-art::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle,
+    rgba(213, 0, 28, 0.08) 0%,
+    transparent 70%
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ─── Abstract Shapes ─────────────── */
+
+.abstract-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.abstract-circle-1 {
+  width: 400px;
+  height: 400px;
+  top: -200px;
+  right: -100px;
+  opacity: 0.6;
+}
+
+.abstract-circle-2 {
+  width: 600px;
+  height: 600px;
+  bottom: -300px;
+  left: -150px;
+  opacity: 0.3;
+}
+
+/* Orbital rings */
+.orbital-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+}
+
+.orbital-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+}
+
+.orbital-ring:nth-child(1) {
+  width: 100%;
+  height: 100%;
+  animation: orbit-1 20s linear infinite;
+}
+
+.orbital-ring:nth-child(2) {
+  width: 70%;
+  height: 70%;
+  animation: orbit-2 15s linear infinite reverse;
+}
+
+.orbital-ring:nth-child(3) {
+  width: 40%;
+  height: 40%;
+  animation: orbit-3 10s linear infinite;
+}
+
+@keyframes orbit-1 {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes orbit-2 {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes orbit-3 {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ─── Chart Visualization Background ─────────────── */
+
+.chart-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.06;
+}
+
+.chart-bg svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Human Design Body Graph silhouette */
+.bodygraph-silhouette {
+  position: absolute;
+  right: -50px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 250px;
+  height: 400px;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200'%3E%3C!-- Head --%3E%3Ccircle cx='50' cy='20' r='15' fill='none' stroke='white' stroke-width='0.5'/%3E%3C!-- Throat --%3E%3Crect x='40' y='40' width='20' height='15' fill='none' stroke='white' stroke-width='0.5'/%3E%3C!-- G Center --%3E%3Ccircle cx='50' cy='80' r='12' fill='none' stroke='white' stroke-width='0.5'/%3E%3C!-- Sacral --%3E%3Crect x='42' y='95' width='16' height='20' fill='none' stroke='white' stroke-width='0.5'/%3E%3C!-- Root --%3E%3Crect x='40' y='120' width='20' height='15' fill='none' stroke='white' stroke-width='0.5'/%3E%3C!-- Connecting channels --%3E%3Cline x1='50' y1='35' x2='50' y2='40' stroke='white' stroke-width='0.3'/%3E%3Cline x1='50' y1='55' x2='50' y2='68' stroke='white' stroke-width='0.3'/%3E%3Cline x1='50' y1='92' x2='50' y2='95' stroke='white' stroke-width='0.3'/%3E%3Cline x1='50' y1='115' x2='50' y2='120' stroke='white' stroke-width='0.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* ─── Astrological Wheel Background ─────────────── */
+
+.zodiac-wheel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  opacity: 0.05;
+  animation: rotate-slow 120s linear infinite;
+}
+
+.zodiac-wheel svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Premium Dividers ─────────────── */
+
+.divider-premium {
+  position: relative;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0.15) 80%,
+    transparent 100%
+  );
+  margin: var(--space-8) 0;
+}
+
+.divider-premium::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: var(--color-porsche-red);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(213, 0, 28, 0.4);
+}
+
+.divider-gold::before {
+  background: var(--color-gold);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+/* ─── Section Headers with Artwork ─────────────── */
+
+.section-header-premium {
+  position: relative;
+  padding: var(--space-12) 0 var(--space-6);
+  text-align: center;
+}
+
+.section-header-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 100px;
+  background: radial-gradient(ellipse,
+    rgba(213, 0, 28, 0.1) 0%,
+    transparent 70%
+  );
+  z-index: -1;
+}
+
+.section-title-premium {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  margin-bottom: var(--space-2);
+}
+
+.section-subtitle-premium {
+  font-size: var(--text-md);
+  color: var(--text-tertiary);
+  font-weight: var(--weight-regular);
+}
+
+/* ─── Glow Effects ─────────────── */
+
+.glow-red {
+  box-shadow: var(--glow-red);
+}
+
+.glow-gold {
+  box-shadow: var(--glow-gold);
+}
+
+.glow-text-red {
+  text-shadow: 0 0 20px rgba(213, 0, 28, 0.5);
+}
+
+.glow-text-gold {
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* ─── Logo Lockup ─────────────── */
+
+.logo-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.logo-lockup-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, 
+    var(--color-porsche-red) 0%, 
+    var(--color-porsche-red-dark) 100%
+  );
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: var(--text-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.logo-lockup-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo-lockup-primary {
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.logo-lockup-secondary {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* ─── Feature Cards with Artwork ─────────────── */
+
+.feature-card-art {
+  position: relative;
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.feature-card-art::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle,
+    var(--interactive-primary) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.feature-card-art:hover::before {
+  opacity: 0.08;
+}
+
+.feature-card-art:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Spotlight Effect ─────────────── */
+
+.spotlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.spotlight::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 50%
+  );
+  animation: spotlight-move 10s ease-in-out infinite;
+}
+
+@keyframes spotlight-move {
+  0%, 100% {
+    transform: translate(0%, 0%);
+  }
+  25% {
+    transform: translate(25%, 10%);
+  }
+  50% {
+    transform: translate(-10%, 25%);
+  }
+  75% {
+    transform: translate(10%, -15%);
+  }
+}

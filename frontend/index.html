@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prime Self — Energy Blueprint & Astrology</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><circle cx='16' cy='16' r='14' stroke='%23d5001c' stroke-width='2'/><circle cx='16' cy='16' r='6' fill='%23d5001c'/><line x1='16' y1='2' x2='16' y2='30' stroke='%23d5001c' stroke-width='1'/><line x1='2' y1='16' x2='30' y2='16' stroke='%23d5001c' stroke-width='1'/></svg>">
+<!-- Premium Design System -->
+<link rel="stylesheet" href="css/prime-self-premium.css">
 <style>
   :root {
     --bg: #0a0a0f;
@@ -309,7 +311,22 @@
 
 <!-- Header -->
 <header>
-  <div class="logo">✦ Prime Self <span>Energy Blueprint + Astrology</span><span style="font-size:0.65rem;margin-left:8px;color:var(--text-dim)">v2.1</span></div>
+  <!-- Premium background gradient -->
+  <div class="geometric-bg"></div>
+  <div class="logo-lockup">
+    <div class="logo-lockup-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="4" fill="currentColor"/>
+        <line x1="12" y1="2" x2="12" y2="22" stroke-width="1"/>
+        <line x1="2" y1="12" x2="22" y2="12" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="logo-lockup-text">
+      <div class="logo-lockup-primary">Prime Self</div>
+      <div class="logo-lockup-secondary">Energy Blueprint + Astrology · v2.1</div>
+    </div>
+  </div>
   <div class="auth-bar">
     <div class="auth-status" id="authStatusText">Not signed in</div>
     <button class="btn-secondary btn-sm" id="authBtn" onclick="openAuthOverlay()">Sign In</button>
@@ -319,16 +336,16 @@
 
 <!-- Navigation Tabs -->
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('chart', this)">⊕ Chart Calculator<span class="help-icon" title="Generate your personal Energy Blueprint based on your exact birth date, time, and location">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('profile', this)">◈ Prime Self Profile<span class="help-icon" title="View your integrated synthesis report combining Gene Keys, astrology, and life path numerology">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('transits', this)">⊛ Transits<span class="help-icon" title="See how today's planetary positions interact with your birth chart energy">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('composite', this)">⧈ Composite<span class="help-icon" title="Explore the combined energy blueprint for two people in a relationship or partnership">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('rectify', this)">◴ Rectify<span class="help-icon" title="Find your accurate birth time by analyzing life events when exact time is unknown">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('practitioner', this)">⚕ Practitioner<span class="help-icon" title="Professional tools for readings: batch calculations, client management, and detailed synthesis">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('clusters', this)">◉ Clusters<span class="help-icon" title="Find shared patterns in a group of people like teams, families, or organizations">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('sms', this)">📱 SMS<span class="help-icon" title="Send automated text reports with astrological insights and transit updates">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('onboarding', this)">⚛ Onboarding<span class="help-icon" title="Initial intake questionnaire for personalized reading preparation">ⓘ</span></button>
-  <button class="tab-btn" onclick="switchTab('history', this)">◎ My Profiles<span class="help-icon" title="Access all your saved birth charts and synthesis reports">ⓘ</span></button>
+  <button class="tab-btn active" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart<span class="icon-info help-icon" title="Generate your personal Energy Blueprint based on your exact birth date, time, and location"></span></button>
+  <button class="tab-btn" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile<span class="icon-info help-icon" title="View your integrated synthesis report combining Gene Keys, astrology, and life path numerology"></span></button>
+  <button class="tab-btn" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits<span class="icon-info help-icon" title="See how today's planetary positions interact with your birth chart energy"></span></button>
+  <button class="tab-btn" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Composite<span class="icon-info help-icon" title="Explore the combined energy blueprint for two people in a relationship or partnership"></span></button>
+  <button class="tab-btn" onclick="switchTab('rectify', this)"><span class="icon-time"></span> Rectify<span class="icon-info help-icon" title="Find your accurate birth time by analyzing life events when exact time is unknown"></span></button>
+  <button class="tab-btn" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> Practitioner<span class="icon-info help-icon" title="Professional tools for readings: batch calculations, client management, and detailed synthesis"></span></button>
+  <button class="tab-btn" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> Clusters<span class="icon-info help-icon" title="Find shared patterns in a group of people like teams, families, or organizations"></span></button>
+  <button class="tab-btn" onclick="switchTab('sms', this)"><span class="icon-sms"></span> SMS<span class="icon-info help-icon" title="Send automated text reports with astrological insights and transit updates"></span></button>
+  <button class="tab-btn" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> Onboarding<span class="icon-info help-icon" title="Initial intake questionnaire for personalized reading preparation"></span></button>
+  <button class="tab-btn" onclick="switchTab('history', this)"><span class="icon-archive"></span> Saved<span class="icon-info help-icon" title="Access all your saved birth charts and synthesis reports"></span></button>
 </div>
 
 <!-- Main Content -->
@@ -337,18 +354,18 @@
   <!-- ═══ CHART TAB ═══ -->
   <div class="tab-content active" id="tab-chart">
     <div class="card">
-      <div class="card-title">⊕ Birth Data</div>
+      <div class="card-title"><span class="icon-chart"></span> Birth Data</div>
       <div class="form-grid">
         <div class="form-group">
           <label>Birth Date</label>
           <input type="date" id="c-date" value="1990-06-15">
         </div>
         <div class="form-group">
-          <label>Birth Time<span class="help-icon" title="Enter your exact birth time. Your Energy Blueprint shifts every ~2 hours as the Earth rotates">ⓘ</span></label>
+          <label>Birth Time<span class="icon-info help-icon" title="Enter your exact birth time. Your Energy Blueprint shifts every ~2 hours as the Earth rotates"></span></label>
           <input type="time" id="c-time" value="14:30">
         </div>
         <div class="form-group full">
-          <label>Birth Location<span class="help-icon" title="Enter city and country to get latitude, longitude, and timezone. Accuracy within 50 miles is sufficient">ⓘ</span></label>
+          <label>Birth Location<span class="icon-info help-icon" title="Enter city and country to get latitude, longitude, and timezone. Accuracy within 50 miles is sufficient"></span></label>
           <div style="display:flex;gap:8px">
             <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
@@ -360,7 +377,7 @@
           <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
-          <label>Timezone<span class="help-icon" title="The timezone determines how to convert your birth time to UTC for planetary calculations">ⓘ</span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
+          <label>Timezone<span class="icon-info help-icon" title="The timezone determines how to convert your birth time to UTC for planetary calculations"></span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
           <select id="c-tz">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -397,10 +414,10 @@
   <!-- ═══ PROFILE TAB ═══ -->
   <div class="tab-content" id="tab-profile">
     <div class="alert alert-info">
-      ◈ The Prime Self Profile requires sign-in and a full 8-layer synthesis via Claude AI. Generation takes 15–30 seconds.
+      The Prime Self Profile requires sign-in and a full 8-layer synthesis via Claude AI. Generation takes 15–30 seconds.
     </div>
     <div class="card">
-      <div class="card-title">◈ Generate Prime Self Profile</div>
+      <div class="card-title"><span class="icon-profile"></span> Generate Prime Self Profile</div>
       <div class="form-grid">
         <div class="form-group">
           <label>Birth Date</label>
@@ -452,7 +469,7 @@
   <!-- ═══ TRANSITS TAB ═══ -->
   <div class="tab-content" id="tab-transits">
     <div class="card">
-      <div class="card-title">⊛ Current Transit Positions</div>
+      <div class="card-title"><span class="icon-transit"></span> Current Transit Positions</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Live planetary positions — Gene Key/line activations and Western Astrology sign/degree.</p>
       <button class="btn-primary" onclick="loadTransits()" id="transitBtn">
         <span class="spinner" id="transitSpinner" style="display:none"></span>
@@ -465,7 +482,7 @@
   <!-- ═══ HISTORY TAB ═══ -->
   <div class="tab-content" id="tab-history">
     <div class="card">
-      <div class="card-title">◉ Saved Profiles</div>
+      <div class="card-title"><span class="icon-archive"></span> Saved Profiles</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Sign in to view your saved Prime Self Profiles.</p>
       <button class="btn-primary" onclick="loadHistory()" id="historyBtn">
         <span class="spinner" id="historySpinner" style="display:none"></span>
@@ -478,7 +495,7 @@
   <!-- ═══ COMPOSITE TAB ═══ -->
   <div class="tab-content" id="tab-composite">
     <div class="card">
-      <div class="card-title">⧈ Composite Chart</div>
+      <div class="card-title"><span class="icon-partnership"></span> Composite Chart</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze relationship dynamics between two people.</p>
       
       <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px">Person A</h4>
@@ -534,7 +551,7 @@
   <!-- ═══ RECTIFY TAB ═══ -->
   <div class="tab-content" id="tab-rectify">
     <div class="card">
-      <div class="card-title">◴ Birth Time Rectification</div>
+      <div class="card-title"><span class="icon-time"></span> Birth Time Rectification</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze how chart changes within a time window to find the most accurate birth time.</p>
       
       <div class="form-grid">
@@ -580,7 +597,7 @@
   <!-- ═══ PRACTITIONER TAB ═══ -->
   <div class="tab-content" id="tab-practitioner">
     <div class="card">
-      <div class="card-title">⚕ Practitioner Portal</div>
+      <div class="card-title"><span class="icon-star"></span> Practitioner Portal</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Manage client roster and session notes (requires practitioner account).</p>
       
       <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px">Add Client</h4>
@@ -605,7 +622,7 @@
   <!-- ═══ CLUSTERS TAB ═══ -->
   <div class="tab-content" id="tab-clusters">
     <div class="card">
-      <div class="card-title">◉ Group Dynamics <span class="help-icon" title="Analyze team, family, or community energy patterns using Human Design and Prime Self Forge philosophy">ⓘ</span></div>
+      <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Human Design and Prime Self Forge philosophy"></span></div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:20px">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
       
       <div style="display:flex;gap:10px;margin-bottom:20px">
@@ -621,11 +638,11 @@
         <h4 style="color:var(--gold);font-size:0.95rem;margin-bottom:14px">Create New Cluster</h4>
         <div class="form-grid">
           <div class="form-group">
-            <label>Cluster Name<span class="help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'">ⓘ</span></label>
+            <label>Cluster Name<span class="icon-info help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'"></span></label>
             <input type="text" id="cluster-name" placeholder="e.g., Product Team Alpha">
           </div>
           <div class="form-group full">
-            <label>Shared Challenge<span class="help-icon" title="What is this group working on together? This helps the AI generate relevant insights">ⓘ</span></label>
+            <label>Shared Challenge<span class="icon-info help-icon" title="What is this group working on together? This helps the AI generate relevant insights"></span></label>
             <textarea id="cluster-challenge" placeholder="e.g., Launching our new product by Q2" rows="2"></textarea>
           </div>
         </div>
@@ -649,7 +666,7 @@
   <!-- ═══ SMS TAB ═══ -->
   <div class="tab-content" id="tab-sms">
     <div class="card">
-      <div class="card-title">📱 SMS Digest</div>
+      <div class="card-title"><span class="icon-sms"></span> SMS Digest</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Subscribe to receive daily transit digests via SMS.</p>
       
       <div class="form-grid">
@@ -679,7 +696,7 @@
   <!-- ═══ ONBOARDING TAB ═══ -->
   <div class="tab-content" id="tab-onboarding">
     <div class="card">
-      <div class="card-title">⚛ Onboarding Story</div>
+      <div class="card-title"><span class="icon-compass"></span> Onboarding Story</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Interactive guided journey through your Prime Self profile discovery.</p>
       
       <button class="btn-primary" onclick="startOnboarding()" id="onboardBtn">
@@ -818,9 +835,9 @@ function switchTab(id, btn) {
 
 // ── Astrological Chart Wheel ─────────────────────────────────
 function renderAstroChart(astro) {
-  console.log('🎨 renderAstroChart called', astro);
+  console.log('[Chart] renderAstroChart called', astro);
   if (!astro || !astro.placements) {
-    console.warn('⚠️ No astrology data or placements:', { astro, hasPlacements: astro?.placements });
+    console.warn('[Chart] No astrology data or placements:', { astro, hasPlacements: astro?.placements });
     return '';
   }
   
@@ -929,7 +946,7 @@ function prefillExample() {
   document.getElementById('c-lng').value = '-82.4572';
   setTimezone('c-tz', 'America/New_York');
   const s = document.getElementById('c-geo-status');
-  s.textContent = '✓ Tampa, Florida, United States · 27.9506°N, 82.4572°W · America/New_York';
+  s.textContent = '<span class="icon-check"></span> Tampa, Florida, United States · 27.9506°N, 82.4572°W · America/New_York';
   s.style.color = '#48c774';
 }
 
@@ -959,7 +976,7 @@ async function geocodeLocation(prefix) {
     const latDir = data.lat >= 0 ? 'N' : 'S';
     const lngDir = data.lng >= 0 ? 'E' : 'W';
     statusEl.style.color = '#48c774';
-    statusEl.textContent = `✓ ${data.displayName} · ${Math.abs(data.lat).toFixed(4)}°${latDir}, ${Math.abs(data.lng).toFixed(4)}°${lngDir} · ${data.timezone}`;
+    statusEl.textContent = `<span class="icon-check"></span> ${data.displayName} · ${Math.abs(data.lat).toFixed(4)}°${latDir}, ${Math.abs(data.lng).toFixed(4)}°${lngDir} · ${data.timezone}`;
   } catch (e) {
     statusEl.style.color = '#f56565';
     statusEl.textContent = '✗ Error: ' + e.message;
@@ -994,7 +1011,7 @@ async function calculateChart() {
       await geocodeLocation('c');
     }
     if (isNaN(parseFloat(document.getElementById('c-lat').value))) {
-      resultEl.innerHTML = '<div class="alert alert-error">⚠ Please enter a birth location and click “Look Up” first.</div>';
+      resultEl.innerHTML = '<div class="alert alert-error"><span class="icon-info"></span> Please enter a birth location and click “Look Up” first.</div>';
       return;
     }
   }
@@ -1023,31 +1040,31 @@ async function calculateChart() {
 }
 
 function renderChart(data) {
-  console.log('📊 renderChart called with data:', data);
+  console.log('[Chart] renderChart called with data:', data);
   if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
   const d = data.data || data;
   const chart = d.chart || d;
   const astro = d.westernAstrology || d.astrology || {};
-  console.log('📊 Extracted astro:', astro);
+  console.log('[Chart] Extracted astro:', astro);
   const meta = data.meta || {};
 
   let html = '';
 
   // Energy Blueprint block
   html += `<div class="card">
-    <div class="card-title">⊕ Energy Blueprint Chart</div>
+    <div class="card-title"><span class="icon-chart"></span> Energy Blueprint Chart</div>
     <div class="chart-grid">
       <div class="data-block">
         <h4>Core Energy</h4>
-        ${row('Pattern <span class="help-icon" title="Your energy type: Builder (consistent energy), Guide (recognition-based), Initiator (spontaneous), Builder-Initiator (hybrid), or Reflector (lunar mirror)">ⓘ</span>', chart.type)}
-        ${row('Decision Style <span class="help-icon" title="How you make aligned decisions: Emotional Wave, Sacral Response, Splenic Instinct, Heart Will, etc.">ⓘ</span>', chart.authority)}
-        ${row('Strategy <span class="help-icon" title="Your interaction approach: To Respond, Wait for Invitation, Inform Before Acting, or Wait a Lunar Cycle">ⓘ</span>', chart.strategy)}
-        ${row('Life Role <span class="help-icon" title="Your personality archetype (e.g., 1/3 Investigator-Martyr, 6/2 Role Model-Hermit). First number is conscious, second is unconscious">ⓘ</span>', chart.profile)}
-        ${row('Circuit Type <span class="help-icon" title="How your energy centers connect: Single, Split, Triple Split, or Quad Split. Affects how you process and share energy">ⓘ</span>', chart.definition)}
-        ${row('Not-Self Theme <span class="help-icon" title="The emotional signal that you are out of alignment with your pattern and strategy">ⓘ</span>', chart.notSelfTheme)}
+        ${row('Pattern <span class="icon-info help-icon" title="Your energy type: Builder (consistent energy), Guide (recognition-based), Initiator (spontaneous), Builder-Initiator (hybrid), or Reflector (lunar mirror)"></span>', chart.type)}
+        ${row('Decision Style <span class="icon-info help-icon" title="How you make aligned decisions: Emotional Wave, Sacral Response, Splenic Instinct, Heart Will, etc."></span>', chart.authority)}
+        ${row('Strategy <span class="icon-info help-icon" title="Your interaction approach: To Respond, Wait for Invitation, Inform Before Acting, or Wait a Lunar Cycle"></span>', chart.strategy)}
+        ${row('Life Role <span class="icon-info help-icon" title="Your personality archetype (e.g., 1/3 Investigator-Martyr, 6/2 Role Model-Hermit). First number is conscious, second is unconscious"></span>', chart.profile)}
+        ${row('Circuit Type <span class="icon-info help-icon" title="How your energy centers connect: Single, Split, Triple Split, or Quad Split. Affects how you process and share energy"></span>', chart.definition)}
+        ${row('Not-Self Theme <span class="icon-info help-icon" title="The emotional signal that you are out of alignment with your pattern and strategy"></span>', chart.notSelfTheme)}
       </div>
       <div class="data-block">
-        <h4>Purpose Vector <span class="help-icon" title="Your life purpose formed by the 4 main gene key activations: conscious Sun/Earth and unconscious Sun/Earth">ⓘ</span></h4>
+        <h4>Purpose Vector <span class="icon-info help-icon" title="Your life purpose formed by the 4 main gene key activations: conscious Sun/Earth and unconscious Sun/Earth"></span></h4>
         ${row('Cross', chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null) || (chart.cross?.gates ? chart.cross.gates.join(', ') : '—'))}
         ${row('Type', chart.cross?.type || chart.crossType || '—')}
         ${row('Quarter', chart.cross?.quarter || '—')}
@@ -1055,7 +1072,7 @@ function renderChart(data) {
     </div>`;
 
   if (chart.definedCenters?.length) {
-    html += `<div class="section-header">Energy Centers <span class="help-icon" title="The 9 bio-energy hubs in your chart. Defined (colored) centers are consistent; Open (white) centers amplify and sample others' energy">ⓘ</span></div>
+    html += `<div class="section-header">Energy Centers <span class="icon-info help-icon" title="The 9 bio-energy hubs in your chart. Defined (colored) centers are consistent; Open (white) centers amplify and sample others' energy"></span></div>
     <div class="data-block" style="margin-top:8px">
       <div style="display:flex;flex-wrap:wrap;gap:16px">
         <div>
@@ -1071,7 +1088,7 @@ function renderChart(data) {
   }
 
   if (chart.activeChannels?.length) {
-    html += `<div class="section-header">Active Channels <span class="help-icon" title="Energy pathways connecting two defined centers. These are consistent talents and themes in your life">ⓘ</span></div>
+    html += `<div class="section-header">Active Channels <span class="icon-info help-icon" title="Energy pathways connecting two defined centers. These are consistent talents and themes in your life"></span></div>
     <div class="pill-list" style="margin-top:8px">
       ${chart.activeChannels.map(ch => `<span class="pill gold">${ch.channel || (ch.gates?.[0] + '-' + ch.gates?.[1])} ${ch.centers ? '('+ch.centers.join('↔')+')' : ''}</span>`).join('')}
     </div>`;
@@ -1100,13 +1117,13 @@ function renderChart(data) {
       <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">Your planetary placements show how different life energies express through you. Hover over each planet's info icon for its meaning.</p>
       <div class="chart-grid">
         <div class="data-block">
-          <h4>Key Placements <span class="help-icon" title="Your planets' zodiac signs, degrees, and houses. These show life themes and energy expressions">ⓘ</span></h4>
-          ${astro.ascendant ? row('Ascendant <span class="help-icon" title="Your rising sign: how you appear to others and approach new situations. This is your social mask and first impression">ⓘ</span>', astro.ascendant.sign + ' ' + (astro.ascendant.degrees?.toFixed(1)||'') + '°') : ''}
-          ${astro.midheaven ? row('Midheaven <span class="help-icon" title="Your public image, career path, and legacy. This is what you are known for in the world">ⓘ</span>', astro.midheaven.sign + ' ' + (astro.midheaven.degrees?.toFixed(1)||'') + '°') : ''}
+          <h4>Key Placements <span class="icon-info help-icon" title="Your planets' zodiac signs, degrees, and houses. These show life themes and energy expressions"></span></h4>
+          ${astro.ascendant ? row('Ascendant <span class="icon-info help-icon" title="Your rising sign: how you appear to others and approach new situations. This is your social mask and first impression"></span>', astro.ascendant.sign + ' ' + (astro.ascendant.degrees?.toFixed(1)||'') + '°') : ''}
+          ${astro.midheaven ? row('Midheaven <span class="icon-info help-icon" title="Your public image, career path, and legacy. This is what you are known for in the world"></span>', astro.midheaven.sign + ' ' + (astro.midheaven.degrees?.toFixed(1)||'') + '°') : ''}
           ${planets.slice(0,6).map(([p, v]) => {
             const meaning = planetMeanings[p] || '';
             return row(
-              `${p} <span class="help-icon" title="${meaning}. This planet is in ${v.sign} (how it expresses) and House ${v.house} (where it operates)">ⓘ</span>`,
+              `${p} <span class="icon-info help-icon" title="${meaning}. This planet is in ${v.sign} (how it expresses) and House ${v.house} (where it operates)"></span>`,
               v.sign + ' ' + (v.degrees?.toFixed(1)||'') + '° H'+v.house
             );
           }).join('')}
@@ -1116,7 +1133,7 @@ function renderChart(data) {
           ${planets.slice(6).map(([p, v]) => {
             const meaning = planetMeanings[p] || '';
             return row(
-              `${p} <span class="help-icon" title="${meaning}. This planet is in ${v.sign} (how it expresses) and House ${v.house} (where it operates)">ⓘ</span>`,
+              `${p} <span class="icon-info help-icon" title="${meaning}. This planet is in ${v.sign} (how it expresses) and House ${v.house} (where it operates)"></span>`,
               v.sign + ' ' + (v.degrees?.toFixed(1)||'') + '° H'+v.house
             );
           }).join('')}
@@ -1130,7 +1147,7 @@ function renderChart(data) {
 
   // Meta
   if (meta.chartId) {
-    html += `<div class="alert alert-success">✓ Chart saved (ID: ${meta.chartId})</div>`;
+    html += `<div class="alert alert-success"><span class="icon-check"></span> Chart saved (ID: ${meta.chartId})</div>`;
   }
 
   html += rawToggle(data);
@@ -1164,7 +1181,7 @@ async function generateProfile() {
     }
     if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
       document.getElementById('profileResult').innerHTML =
-        '<div class="alert alert-error">⚠ Please enter a birth location and click “Look Up” first.</div>';
+        '<div class="alert alert-error"><span class="icon-info"></span> Please enter a birth location and click “Look Up” first.</div>';
       document.getElementById('profileBtn').disabled = false;
       document.getElementById('profileSpinner').style.display = 'none';
       return;
@@ -1193,7 +1210,7 @@ async function generateProfile() {
 }
 
 function renderProfile(data) {
-  console.log('🔍 renderProfile called - Version 2.1');
+  console.log('[Profile] renderProfile called - Version 2.1');
   console.log('Raw data:', data);
   
   if (data.error) return `<div class="alert alert-error">API Error: ${data.error}<br><small>${data.message || ''}</small></div>`;
@@ -1210,7 +1227,7 @@ function renderProfile(data) {
 
   // Check if data exists (null/undefined, not just empty objects)
   if ((qsg === null || qsg === undefined) && (ti === null || ti === undefined)) {
-    console.warn('⚠️ No profile data found - showing raw response');
+    console.warn('[Profile] No profile data found - showing raw response');
     return `<div class="alert alert-warn">Profile generation returned no data. Raw response below.</div>` + rawToggle(data);
   }
   
@@ -1220,7 +1237,7 @@ function renderProfile(data) {
 
   // Chart summary banner
   html += `<div class="card">
-    <div class="card-title">◈ Prime Self Profile</div>
+    <div class="card-title"><span class="icon-profile"></span> Prime Self Profile</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">`;
   if (chartSummary.type) html += `<span class="pill gold">${chartSummary.type}</span>`;
   if (chartSummary.authority) html += `<span class="pill">${chartSummary.authority}</span>`;
@@ -1233,40 +1250,40 @@ function renderProfile(data) {
   // ═══ QUICK START GUIDE (Layer 1 - Human-Friendly) ═══
   if (qsg) {
     html += `<div class="card">
-      <div class="card-title">🌟 Your Quick Start Guide</div>
+      <div class="card-title"><span class="icon-star"></span> Your Quick Start Guide</div>
       <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:18px">Beginner-friendly overview — no jargon, just practical insights.</p>`;
     
     if (qsg.whoYouAre) {
       html += `<div class="profile-section">
-        <h4>👤 Who You Are</h4>
+        <h4><span class="icon-profile"></span> Who You Are</h4>
         <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.whoYouAre}</p>
       </div>`;
     }
     
     if (qsg.decisionStyle) {
       html += `<div class="profile-section">
-        <h4>🧭 How To Make Best Decisions</h4>
+        <h4><span class="icon-compass"></span> How To Make Best Decisions</h4>
         <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.decisionStyle}</p>
       </div>`;
     }
     
     if (qsg.lifeStrategy) {
       html += `<div class="profile-section">
-        <h4>🎯 Your Life Strategy</h4>
+        <h4><span class="icon-target"></span> Your Life Strategy</h4>
         <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.lifeStrategy}</p>
       </div>`;
     }
     
     if (qsg.thisMonth) {
       html += `<div class="profile-section">
-        <h4>📅 This Month</h4>
+        <h4><span class="icon-calendar"></span> This Month</h4>
         <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.thisMonth}</p>
       </div>`;
     }
     
     if (qsg.workingWithOthers) {
       html += `<div class="profile-section">
-        <h4>🤝 Working With Others</h4>
+        <h4><span class="icon-partnership"></span> Working With Others</h4>
         <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.workingWithOthers}</p>
       </div>`;
     }
@@ -1291,7 +1308,7 @@ function renderProfile(data) {
     if (ti.geneKeysProfile) {
       const gk = ti.geneKeysProfile;
       html += `<div class="card">
-        <div class="card-title">🔑 Gene Keys Profile</div>`;
+        <div class="card-title"><span class="icon-key"></span> Gene Keys Profile</div>`;
       
       if (gk.lifesWork) {
         const lw = gk.lifesWork;
@@ -1324,7 +1341,7 @@ function renderProfile(data) {
     if (ti.numerologyInsights) {
       const num = ti.numerologyInsights;
       html += `<div class="card">
-        <div class="card-title">🔢 Numerology Insights</div>`;
+        <div class="card-title"><span class="icon-numbers"></span> Numerology Insights</div>`;
       
       if (num.lifePath) {
         const lp = num.lifePath;
@@ -1357,7 +1374,7 @@ function renderProfile(data) {
     // Astrological Signatures
     if (ti.astrologicalSignatures?.length) {
       html += `<div class="card">
-        <div class="card-title">✨ Astrological Signatures</div>`;
+        <div class="card-title"><span class="icon-sparkle"></span> Astrological Signatures</div>`;
       ti.astrologicalSignatures.forEach(sig => {
         html += `<div class="profile-section">
           <h4>${sig.placement || ''}</h4>
@@ -1378,7 +1395,7 @@ function renderProfile(data) {
     if (ti.energyBlueprint) {
       const eb = ti.energyBlueprint;
       html += `<div class="card">
-        <div class="card-title">⚡ Energy Blueprint</div>
+        <div class="card-title"><span class="icon-energy"></span> Energy Blueprint</div>
         ${eb.pattern ? `<div class="profile-section"><h4>Pattern</h4><p>${eb.pattern}</p></div>` : ''}
         <div class="chart-grid">
           <div>
@@ -1398,7 +1415,7 @@ function renderProfile(data) {
     if (ti.forgeIdentification) {
       const forge = ti.forgeIdentification;
       html += `<div class="card">
-        <div class="card-title">🔥 Forge Identification</div>
+        <div class="card-title"><span class="icon-fire"></span> Forge Identification</div>
         <div class="forge-badge">
           ✦ ${forge.primaryForge || '—'} Forge
           <span class="confidence-pill ${forge.confidence==='high'?'':'medium'}">${forge.confidence || ''}</span>
@@ -1421,18 +1438,18 @@ function renderProfile(data) {
     const ga = meta.groundingAudit;
     const pct = ga.claimsTotal ? Math.round((ga.claimsGrounded / ga.claimsTotal) * 100) : 0;
     html += `<div class="card">
-      <div class="card-title">✓ Grounding Audit</div>
+      <div class="card-title"><span class="icon-check"></span> Grounding Audit</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:0.88rem">${ga.claimsGrounded} / ${ga.claimsTotal} claims grounded</span>
         <span class="confidence-pill ${pct>=90?'':'medium'}">${pct}%</span>
       </div>
       <div class="audit-bar-wrap" style="margin-top:10px"><div class="audit-bar" style="width:${pct}%"></div></div>
       ${ga.ungroundedFields?.length ? `<div style="margin-top:8px;font-size:0.78rem;color:var(--text-dim)">Ungrounded: ${ga.ungroundedFields.join(', ')}</div>` : ''}
-      ${meta.partialGrounding ? `<div class="alert alert-warn" style="margin-top:10px">⚠ Partial grounding — some claims could not be fully grounded to reference data.</div>` : ''}
+      ${meta.partialGrounding ? `<div class="alert alert-warn" style="margin-top:10px"><span class="icon-info"></span> Partial grounding — some claims could not be fully grounded to reference data.</div>` : ''}
     </div>`;
   }
 
-  if (meta.profileId) html += `<div class="alert alert-success">✓ Profile saved (ID: ${meta.profileId}) <button class="btn-secondary btn-sm" onclick="exportPDF('${meta.profileId}')" style="margin-left:12px">Download PDF</button></div>`;
+  if (meta.profileId) html += `<div class="alert alert-success"><span class="icon-check"></span> Profile saved (ID: ${meta.profileId}) <button class="btn-secondary btn-sm" onclick="exportPDF('${meta.profileId}')" style="margin-left:12px">Download PDF</button></div>`;
 
   html += rawToggle(data);
   return html;
@@ -1487,14 +1504,14 @@ function renderTransits(data) {
   };
 
   let html = `<div class="card">
-    <div class="card-title">⊛ Transit Positions — ${t.date || new Date().toLocaleDateString()}</div>
+    <div class="card-title"><span class="icon-transit"></span> Transit Positions — ${t.date || new Date().toLocaleDateString()}</div>
     <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">Current planetary positions affecting the collective energy. Hover over planet names for their meanings.</p>`;
 
   for (const [body, pos] of Object.entries(positions)) {
     const sym = PLANET_SYMBOLS[body] || '';
     const meaning = PLANET_MEANINGS[body] || 'Planetary influence';
     html += `<div class="transit-row">
-      <div class="planet-name">${sym} ${body} <span class="help-icon" title="${meaning}" style="font-size:0.65rem;margin-left:2px">ⓘ</span></div>
+      <div class="planet-name">${sym} ${body} <span class="icon-info help-icon" title="${meaning}" style="font-size:0.65rem;margin-left:2px"></span></div>
       <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
       <div class="gate-badge">Gate ${pos.gate || '?'}.${pos.line || '?'}</div>
     </div>`;
@@ -1546,13 +1563,13 @@ function renderHistory(data) {
 
   if (!profiles.length) {
     return `<div class="empty-state">
-      <div class="icon">◈</div>
+      <span class="icon-profile icon-xl"></span>
       <p>No saved profiles yet.<br>Generate a Prime Self Profile to get started.</p>
     </div>`;
   }
 
   let html = `<div class="card">
-    <div class="card-title">◉ ${profiles.length} Saved Profile${profiles.length > 1 ? 's' : ''}</div>`;
+    <div class="card-title"><span class="icon-cluster"></span> ${profiles.length} Saved Profile${profiles.length > 1 ? 's' : ''}</div>`;
 
   profiles.forEach(p => {
     const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Unknown date';
@@ -1628,7 +1645,7 @@ function renderComposite(data) {
   const c = data.composite || {};
   
   let html = `<div class="card">
-    <div class="card-title">⧈ Relationship Dynamics</div>
+    <div class="card-title"><span class="icon-partnership"></span> Relationship Dynamics</div>
     <div class="chart-grid" style="grid-template-columns: 1fr 1fr">
       <div class="data-block">
         <h4>Person A</h4>
@@ -1651,7 +1668,7 @@ function renderComposite(data) {
   // Electromagnetic connections (chemistry!)
   if (c.electromagnetic?.length) {
     html += `<div class="card">
-      <div class="card-title">⚡ Electromagnetic Connections (${c.electromagnetic.length})</div>
+      <div class="card-title"><span class="icon-energy"></span> Electromagnetic Connections (${c.electromagnetic.length})</div>
       <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
         Channels where each person provides one gate - creates magnetic attraction and chemistry.
       </p>
@@ -1665,7 +1682,7 @@ function renderComposite(data) {
   // Companionship channels
   if (c.companionship?.length) {
     html += `<div class="card">
-      <div class="card-title">🤝 Companionship Channels (${c.companionship.length})</div>
+      <div class="card-title"><span class="icon-partnership"></span> Companionship Channels (${c.companionship.length})</div>
       <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
         Both people have these channels defined individually - shared strengths.
       </p>
@@ -1679,7 +1696,7 @@ function renderComposite(data) {
   // Relationship dynamics
   if (c.dynamics?.length) {
     html += `<div class="card">
-      <div class="card-title">💡 Relationship Insights</div>`;
+      <div class="card-title"><span class="icon-lightbulb"></span> Relationship Insights</div>`;
     c.dynamics.forEach(d => {
       html += `<div style="padding:10px;margin:8px 0;background:var(--bg2);border-left:3px solid var(--gold);border-radius:4px">
         <div style="font-weight:600;color:var(--gold);font-size:0.8rem;text-transform:uppercase;margin-bottom:4px">${d.area}</div>
@@ -1729,7 +1746,7 @@ function renderRectification(data) {
   const sensitivity = data.sensitivity || [];
   const guidance = data.guidance || [];
 
-  let html = `<div class="card"><div class="card-title">◴ Rectification Analysis</div>`;
+  let html = `<div class="card"><div class="card-title"><span class="icon-time"></span> Rectification Analysis</div>`;
   html += `<div class="section-title">Time Window Variations</div>`;
   html += `<div style="font-size:0.85rem;color:var(--text-dim);margin:8px 0">Analyzed ${sensitivity.length} time points</div>`;
   
@@ -1803,10 +1820,10 @@ function renderRoster(data) {
   const clients = data.roster || [];
 
   if (!clients.length) {
-    return `<div class="empty-state"><div class="icon">⚕</div><p>No clients yet.</p></div>`;
+    return `<div class="empty-state"><span class="icon-star icon-xl"></span><p>No clients yet.</p></div>`;
   }
 
-  let html = `<div class="card"><div class="card-title">⚕ ${clients.length} Client${clients.length > 1 ? 's' : ''}</div>`;
+  let html = `<div class="card"><div class="card-title"><span class="icon-star"></span> ${clients.length} Client${clients.length > 1 ? 's' : ''}</div>`;
   clients.forEach(c => {
     html += `<div style="padding:10px;background:var(--bg3);border-radius:6px;margin:8px 0">`;
     html += `<strong>${c.clientName}</strong>`;
@@ -1882,7 +1899,7 @@ async function loadClusters() {
     const data = await apiFetch('/api/cluster/list');
     container.innerHTML = renderClusterList(data);
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error">⚠ Error loading clusters: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error loading clusters: ${e.message}</div>`;
   } finally {
     spinner.style.display = 'none';
   }
@@ -1894,7 +1911,7 @@ function renderClusterList(data) {
 
   if (!clusters.length) {
     return `<div class="empty-state">
-      <div class="icon">◉</div>
+      <span class="icon-cluster icon-xl"></span>
       <p>No clusters yet. Create your first team, family, or community group above.</p>
     </div>`;
   }
@@ -1905,7 +1922,7 @@ function renderClusterList(data) {
     html += `  <div class="cluster-card-header">`;
     html += `    <div><div class="cluster-card-title">${escapeHtml(c.name)}</div>`;
     html += `    <div class="cluster-card-meta">Created ${formatDate(c.createdAt)}</div></div>`;
-    html += `    <span class="cluster-member-count">◉ ${c.memberCount || 0} members</span>`;
+    html += `    <span class="cluster-member-count"><span class="icon-cluster"></span> ${c.memberCount || 0} members</span>`;
     html += `  </div>`;
     if (c.challenge) {
       html += `  <div class="cluster-card-challenge">"${escapeHtml(c.challenge)}"</div>`;
@@ -1929,7 +1946,7 @@ async function viewClusterDetail(clusterId) {
     currentCluster = { id: clusterId, ...data };
     container.innerHTML = renderClusterDetail(data, clusterId);
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error">⚠ Error: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error: ${e.message}</div>`;
   }
 }
 
@@ -1939,7 +1956,7 @@ function renderClusterDetail(data, clusterId) {
   
   let html = `<div class="card">`;
   html += `  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">`;
-  html += `    <div class="card-title">◉ Cluster Details</div>`;
+  html += `    <div class="card-title"><span class="icon-cluster"></span> Cluster Details</div>`;
   html += `    <button class="btn-secondary btn-sm" onclick="backToClusterList()">← Back to List</button>`;
   html += `  </div>`;
 
@@ -2000,7 +2017,7 @@ function renderClusterDetail(data, clusterId) {
   html += `  <div class="action-grid">`;
   html += `    <button class="btn-secondary" onclick="showAddMemberForm()">+ Add Member</button>`;
   if (members.length >= 2) {
-    html += `    <button class="btn-primary" onclick="synthesizeCluster('${clusterId}')">⚡ Generate Synthesis</button>`;
+    html += `    <button class="btn-primary" onclick="synthesizeCluster('${clusterId}')"><span class="icon-energy"></span> Generate Synthesis</button>`;
   }
   html += `    <button class="btn-danger" onclick="leaveCluster('${clusterId}')">Leave Cluster</button>`;
   html += `  </div>`;
@@ -2099,7 +2116,7 @@ async function synthesizeCluster(clusterId) {
     // In production, you'd fetch member birth data from backend.
     showAlert('synthesisResult', 'Synthesis feature requires member birth data storage in database. Coming soon!', 'info');
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error">⚠ Synthesis error: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Synthesis error: ${e.message}</div>`;
   }
 }
 
@@ -2155,7 +2172,7 @@ async function subscribeSMS() {
 
   try {
     const data = await apiFetch('/api/sms/subscribe', { method: 'POST', body: JSON.stringify({ phoneNumber: phone }) });
-    resultEl.innerHTML = `<div class="alert alert-success">✓ ${data.message || 'Subscribed successfully'}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-success"><span class="icon-check"></span> ${data.message || 'Subscribed successfully'}</div>`;
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
   } finally {
@@ -2179,7 +2196,7 @@ async function unsubscribeSMS() {
 
   try {
     const data = await apiFetch('/api/sms/unsubscribe', { method: 'POST', body: JSON.stringify({ phoneNumber: phone }) });
-    resultEl.innerHTML = `<div class="alert alert-success">✓ ${data.message || 'Unsubscribed'}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-success"><span class="icon-check"></span> ${data.message || 'Unsubscribed'}</div>`;
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
   } finally {
@@ -2214,7 +2231,7 @@ async function startOnboarding() {
       contentEl.innerHTML = renderOnboardingStep(stepData, step);
     }
 
-    contentEl.innerHTML += `<div class="alert alert-success" style="margin-top:16px">✓ Onboarding complete!</div>`;
+    contentEl.innerHTML += `<div class="alert alert-success" style="margin-top:16px"><span class="icon-check"></span> Onboarding complete!</div>`;
   } catch (e) {
     contentEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
   } finally {

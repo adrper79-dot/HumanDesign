@@ -1,0 +1,266 @@
+/**
+ * Premium Design Tokens
+ * Inspired by Porsche and Apple design principles
+ * - Precision and clarity
+ * - Minimalist elegance
+ * - High contrast
+ * - Timeless sophistication
+ */
+
+:root {
+  /* ─── Color System: Porsche/Apple Premium ─────────────── */
+  
+  /* Neutrals: High contrast, pure blacks and whites */
+  --color-black: #000000;
+  --color-near-black: #0a0a0a;
+  --color-charcoal: #1c1c1e;        /* Apple dark mode bg */
+  --color-graphite: #2c2c2e;
+  --color-silver: #8e8e93;          /* Apple gray */
+  --color-aluminum: #c7c7cc;
+  --color-snow: #f2f2f7;            /* Apple light mode bg */
+  --color-white: #ffffff;
+  
+  /* Porsche Signature Red */
+  --color-porsche-red: #d5001c;
+  --color-porsche-red-dark: #a30015;
+  --color-porsche-red-light: #ff1744;
+  
+  /* Premium Gold Accent */
+  --color-gold: #d4af37;
+  --color-gold-dark: #b8920d;
+  --color-gold-light: #ffd700;
+  
+  /* Depth & Dimension */
+  --color-midnight: #001219;
+  --color-deep-space: #0d1b2a;
+  --color-slate: #1b263b;
+  --color-steel: #415a77;
+  --color-frost: #778da9;
+  
+  /* Status Colors: Refined */
+  --color-success: #30d158;         /* Apple green */
+  --color-warning: #ff9f0a;         /* Apple orange */
+  --color-error: #ff453a;           /* Apple red */
+  --color-info: #0a84ff;            /* Apple blue */
+  
+  /* ─── Semantic Tokens: Dark Mode (Premium) ─────────────── */
+  
+  /* Backgrounds */
+  --bg-primary: var(--color-near-black);
+  --bg-secondary: var(--color-charcoal);
+  --bg-tertiary: var(--color-graphite);
+  --bg-elevated: rgba(44, 44, 46, 0.95);
+  --bg-glass: rgba(28, 28, 30, 0.72);
+  
+  /* Text */
+  --text-primary: var(--color-white);
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --text-tertiary: rgba(255, 255, 255, 0.55);
+  --text-quaternary: rgba(255, 255, 255, 0.35);
+  
+  /* Interactive */
+  --interactive-primary: var(--color-porsche-red);
+  --interactive-primary-hover: var(--color-porsche-red-light);
+  --interactive-primary-active: var(--color-porsche-red-dark);
+  --interactive-secondary: var(--color-gold);
+  --interactive-accent: var(--color-info);
+  
+  /* Borders */
+  --border-primary: rgba(255, 255, 255, 0.15);
+  --border-secondary: rgba(255, 255, 255, 0.08);
+  --border-focus: var(--color-porsche-red);
+  --border-accent: var(--color-gold);
+  
+  /* Overlays */
+  --overlay-backdrop: rgba(0, 0, 0, 0.75);
+  --overlay-dim: rgba(0, 0, 0, 0.4);
+  
+  /* ─── Typography: Apple-inspired ─────────────── */
+  
+  /* Font Families */
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 
+                  'Segoe UI', system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+               'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+  --font-numbers: 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+  
+  /* Font Sizes: Precise scale */
+  --text-xs: 0.688rem;      /* 11px */
+  --text-sm: 0.813rem;      /* 13px */
+  --text-base: 1rem;        /* 16px */
+  --text-md: 1.063rem;      /* 17px - Apple body */
+  --text-lg: 1.25rem;       /* 20px */
+  --text-xl: 1.5rem;        /* 24px */
+  --text-2xl: 2rem;         /* 32px */
+  --text-3xl: 2.5rem;       /* 40px */
+  --text-4xl: 3rem;         /* 48px */
+  
+  /* Font Weights: Apple system */
+  --weight-thin: 100;
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-heavy: 800;
+  
+  /* Line Heights: Generous */
+  --leading-tight: 1.2;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 1.75;
+  
+  /* Letter Spacing: Precision */
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.015em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.015em;
+  --tracking-wider: 0.05em;
+  
+  /* ─── Spacing: 4px base with Apple's generosity ─────────────── */
+  
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;    /* 2px */
+  --space-1: 0.25rem;       /* 4px */
+  --space-2: 0.5rem;        /* 8px */
+  --space-3: 0.75rem;       /* 12px */
+  --space-4: 1rem;          /* 16px */
+  --space-5: 1.25rem;       /* 20px */
+  --space-6: 1.5rem;        /* 24px */
+  --space-8: 2rem;          /* 32px */
+  --space-10: 2.5rem;       /* 40px */
+  --space-12: 3rem;         /* 48px */
+  --space-16: 4rem;         /* 64px */
+  --space-20: 5rem;         /* 80px */
+  --space-24: 6rem;         /* 96px */
+  
+  /* ─── Layout ─────────────── */
+  
+  /* Container Widths */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  
+  /* Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  
+  /* Z-index */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  
+  /* ─── Borders & Radius ─────────────── */
+  
+  /* Border Widths */
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  
+  /* Border Radius: Porsche precision */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+  
+  /* ─── Shadows: Depth & Elevation ─────────────── */
+  
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2),
+               0 1px 2px 0 rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25),
+               0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+               0 4px 6px -2px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35),
+               0 10px 10px -5px rgba(0, 0, 0, 0.15);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+  
+  /* Glow Effects */
+  --glow-red: 0 0 20px rgba(213, 0, 28, 0.4);
+  --glow-gold: 0 0 20px rgba(212, 175, 55, 0.3);
+  --glow-white: 0 0 20px rgba(255, 255, 255, 0.2);
+  
+  /* ─── Effects ─────────────── */
+  
+  /* Blur */
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 16px;
+  --blur-xl: 24px;
+  
+  /* Backdrop Filters: Glass morphism */
+  --backdrop-blur-sm: blur(4px) saturate(180%);
+  --backdrop-blur-md: blur(12px) saturate(180%);
+  --backdrop-blur-lg: blur(24px) saturate(180%);
+  
+  /* ─── Transitions: Smooth & Precise ─────────────── */
+  
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);    /* Apple spring */
+  --ease-sharp: cubic-bezier(0.4, 0, 0.6, 1);          /* Material sharp */
+  
+  /* ─── Gradients: Premium Depth ─────────────── */
+  
+  --gradient-radial-red: radial-gradient(circle at 50% 0%,
+    rgba(213, 0, 28, 0.15) 0%,
+    rgba(213, 0, 28, 0) 70%
+  );
+  
+  --gradient-radial-gold: radial-gradient(circle at 50% 0%,
+    rgba(212, 175, 55, 0.1) 0%,
+    rgba(212, 175, 55, 0) 70%
+  );
+  
+  --gradient-mesh: 
+    radial-gradient(at 0% 0%, rgba(213, 0, 28, 0.1) 0%, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(10, 132, 255, 0.06) 0%, transparent 50%);
+  
+  --gradient-steel: linear-gradient(135deg,
+    var(--color-graphite) 0%,
+    var(--color-charcoal) 100%
+  );
+}
+
+/* ─── Light Mode Override (Optional) ─────────────── */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: var(--color-white);
+    --bg-secondary: var(--color-snow);
+    --bg-tertiary: var(--color-aluminum);
+    --bg-elevated: rgba(255, 255, 255, 0.95);
+    --bg-glass: rgba(255, 255, 255, 0.72);
+    
+    --text-primary: var(--color-black);
+    --text-secondary: rgba(0, 0, 0, 0.85);
+    --text-tertiary: rgba(0, 0, 0, 0.55);
+    --text-quaternary: rgba(0, 0, 0, 0.35);
+    
+    --border-primary: rgba(0, 0, 0, 0.12);
+    --border-secondary: rgba(0, 0, 0, 0.06);
+    
+    --overlay-backdrop: rgba(0, 0, 0, 0.5);
+    --overlay-dim: rgba(0, 0, 0, 0.2);
+  }
+}
