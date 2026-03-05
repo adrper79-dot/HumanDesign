@@ -282,6 +282,37 @@
 </head>
 <body>
 
+<!-- Lava Lamp Background -->
+<div class="lava-lamp-bg">
+  <div class="lava-blob lava-blob-1"></div>
+  <div class="lava-blob lava-blob-2"></div>
+  <div class="lava-blob lava-blob-3"></div>
+  <div class="lava-blob lava-blob-4"></div>
+</div>
+
+<!-- Crescent Moon -->
+<div class="crescent-moon">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 50 10 
+             A 35 35 0 1 1 50 90
+             A 30 30 0 1 0 50 10 Z" 
+          fill="currentColor"/>
+  </svg>
+</div>
+
+<!-- Stars -->
+<div class="stars" id="starsContainer"></div>
+
+<!-- Floating Orbs -->
+<div class="floating-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- Ambient Particles -->
+<div class="ambient-particles" id="particlesContainer"></div>
+
 <!-- Auth Overlay -->
 <div class="auth-overlay hidden" id="authOverlay">
   <div class="auth-box">
@@ -2279,6 +2310,41 @@ function toggleRaw(id) {
   const el = document.getElementById(id);
   el.classList.toggle('open');
 }
+
+// ── Ambient Art Initialization ────────────────────────────────────
+function initStars() {
+  const container = document.getElementById('starsContainer');
+  if (!container) return;
+  
+  const starCount = 80;
+  for (let i = 0; i < starCount; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    container.appendChild(star);
+  }
+}
+
+function initParticles() {
+  const container = document.getElementById('particlesContainer');
+  if (!container) return;
+  
+  const particleCount = 30;
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.animationDelay = Math.random() * 10 + 's';
+    particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+    container.appendChild(particle);
+  }
+}
+
+// Initialize ambient art on page load
+initStars();
+initParticles();
 
 // ── Init ──────────────────────────────────────────────────────
 updateAuthUI();
