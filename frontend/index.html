@@ -825,8 +825,8 @@ function renderAstroChart(astro) {
   }
   
   const zodiacSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-  const planetSymbols = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇' };
-  const planetColors = { Sun: '#FFD700', Moon: '#C0C0C0', Mercury: '#FFA500', Venus: '#FF69B4', Mars: '#FF4500', Jupiter: '#9370DB', Saturn: '#4169E1', Uranus: '#00CED1', Neptune: '#1E90FF', Pluto: '#8B4513' };
+  const planetSymbols = { sun: '☉', moon: '☽', mercury: '☿', venus: '♀', mars: '♂', jupiter: '♃', saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇' };
+  const planetColors = { sun: '#FFD700', moon: '#C0C0C0', mercury: '#FFA500', venus: '#FF69B4', mars: '#FF4500', jupiter: '#9370DB', saturn: '#4169E1', uranus: '#00CED1', neptune: '#1E90FF', pluto: '#8B4513' };
   
   // Get planet positions (convert to 0-360 degrees)
   const planets = Object.entries(astro.placements || {}).filter(([name]) => planetSymbols[name]);
