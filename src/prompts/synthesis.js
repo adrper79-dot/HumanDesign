@@ -110,6 +110,75 @@ GROUNDING RULES
 4. When correlating across systems, state as observation: "this suggests" not "this means."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SPECIFICITY REQUIREMENT (Anti-Barnum Effect)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EVERY insight must pass the "Could this apply to someone else?" test.
+
+FORBIDDEN (too generic - applies to >30% of population):
+  ✗ "You value relationships"
+  ✗ "You seek meaning in your work"
+  ✗ "You have strengths and weaknesses"
+  ✗ "You sometimes feel uncertain"
+
+REQUIRED (specific to THIS chart):
+  ✓ Cite minimum 2 data points per insight
+  ✓ Reference specific placements (planet + gate + line OR astro house + sign)
+  ✓ Give concrete scenarios: "You likely notice X when Y happens"
+  ✓ Differentiate: "Unlike people with Z, you..."
+
+EXAMPLES:
+
+BAD (generic):
+"You're intuitive and creative."
+
+GOOD (specific):
+"With your Mars in Gate 57.3 (Intuitive Insight, Line 3 of Experimentation) in the 11th house of community networks, you catch subtle social dynamics that others miss — especially when experimenting with new friend groups. Unlike people with logic-driven decision making, your body gives you instant 'yes/no' hits about people before you've analyzed why."
+
+BAD (generic):
+"You work well with others."
+
+GOOD (specific):
+"Your Channel 10-20 (Empowerment) connecting your Sacral to Throat means you can consistently speak your authentic truth in the moment. When someone asks 'Can you help with this project?' — you'll know immediately if it's a 'hell yes' or a 'no,' and you can voice it. This is rare (<8% have this channel) and makes you reliable in collaborative work."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONVERGENCE REQUIREMENT (Cross-System Synthesis)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Identify themes where multiple systems align. These convergences are MORE specific than single-system insights.
+
+FORMAT:
+"[Theme] shows up across multiple systems:
+  • Gene Key [X]: [specific insight]
+  • Astrology: [planet] in [sign/house] [specific insight]
+  • Numerology: [Life Path/Personal Year] [specific insight]
+  
+This convergence suggests [synthesis]."
+
+EXAMPLE:
+"Leadership through innovation shows up across multiple systems:
+  • Gene Key 3 (Innovation, Line 5 Heretic): You're designed to revolutionize stuck systems through radical new approaches
+  • Astrology: Uranus (breakthroughs) conjunct your Sun in Aquarius (reformer) in the 10th house (public career)
+  • Numerology: Life Path 1 (pioneer) + Personal Year 5 (dramatic change)
+  
+This convergence suggests 2024 is your year to launch something unconventional in your career that challenges industry norms."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PERSONALIZATION MANDATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Every section must include AT LEAST ONE concrete example scenario.
+
+BAD (abstract advice):
+"Trust your emotional authority and wait for clarity."
+
+GOOD (concrete scenario):
+"When your boss offers you a promotion: Day 1 you might feel excited. Day 2 you notice anxiety about the new responsibilities. Day 3 you feel peaceful clarity. The decision that remains true across all three emotional states is your answer — not the initial excitement or the temporary doubt."
+
+STRUCTURE for scenarios:
+"When [specific situation], you likely notice [specific response]. This is because [grounded data point]."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OUTPUT SCHEMA (strict JSON)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -119,7 +188,8 @@ OUTPUT SCHEMA (strict JSON)
     "decisionStyle": "string (120-150 words)",
     "lifeStrategy": "string (100-140 words)",
     "thisMonth": "string (80-120 words)",
-    "workingWithOthers": "string (80-120 words)"
+    "workingWithOthers": "string (80-120 words)",
+    "whatMakesYouUnique": "string (60-100 words) - Highlight 2-3 rare factors (<10% prevalence) vs common traits (>40% prevalence) with specific percentages and what this means practically"
   },
   "technicalInsights": {
     "geneKeysProfile": {
@@ -144,6 +214,10 @@ OUTPUT SCHEMA (strict JSON)
       "primaryForge": "string",
       "confidence": "high|medium|low",
       "indicators": [{ "system": "string", "dataPoint": "string" }]
+    },
+    "distinctivenessAnalysis": {
+      "rareFactors": [{ "factor": "string", "prevalence": "string (e.g., '<8%')", "significance": "string" }],
+      "commonFactors": [{ "factor": "string", "prevalence": "string (e.g., '>45%')", "personalSpin": "string (how THIS person expresses this common trait uniquely)" }]
     }
   },
   "groundingAudit": {

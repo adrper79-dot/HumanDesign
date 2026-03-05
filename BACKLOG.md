@@ -443,6 +443,115 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 
 ---
 
+## Profile Specificity Enhancement (8) — Combat Generic Outputs
+
+**Context:** User feedback indicates Prime Self Profile outputs feel too general and could apply to anyone (Barnum/Forer Effect). Need to add specificity, cross-system synthesis, and contextual interpretation.
+
+### BL-PS1 | Anti-Barnum specificity enforcement in system prompt
+- [ ] **Status:** In Progress
+- **Severity:** Critical (Product Quality)
+- **Files:** `src/prompts/synthesis.js` (SYSTEM_PROMPT)
+- **Problem:** System prompt doesn't explicitly forbid generic statements like "You value authenticity" or "Sometimes you doubt yourself". No examples of specific vs generic insights.
+- **Impact:** LLM returns horoscope-style outputs that could apply to 50%+ of population
+- **Fix:** Add SPECIFICITY REQUIREMENT section with:
+  - "Could this apply to someone else?" test
+  - Examples of BAD (generic) vs GOOD (specific) insights
+  - Requirement: minimum 2 data points per insight, explain HOW they interact
+  - Forbidden generic statements list
+  - Grounding rule: no statements that >30% of population could claim
+- **Verify:** Generate 5 profiles, ask external reviewers if insights feel personalized
+
+### BL-PS2 | Contextual gate interpretation (planet + line + conscious/unconscious)
+- [ ] **Status:** In Progress
+- **Severity:** High (Data Richness)
+- **Files:** `src/prompts/rag.js` (buildRAGContext function)
+- **Problem:** Gate descriptions are pulled identically for everyone. No differentiation between: Sun in Gate 37 (identity-level) vs Neptune in Gate 37 (generational), Conscious (aware) vs Unconscious (blind spot), Line 1 (investigator) vs Line 6 (role model), Channel-completing vs hanging gate
+- **Impact:** Every person with Gate 37 gets same description regardless of context
+- **Fix:** Create `getContextualGateInsight()` function that enriches gate KB entries with:
+  - Planet context (Sun=identity, Moon=emotional, Mercury=mental, Neptune/Pluto=generational)
+  - Conscious/Unconscious modifier (aware vs blind spot)
+  - Line theme (6 different approaches to same gate)
+  - Channel completion status (consistent vs waiting for activation)
+- **Verify:** Same gate in different contexts produces meaningfully different insights
+
+### BL-PS3 | Cross-system convergence requirement
+- [ ] **Status:** In Progress
+- **Severity:** High (Synthesis Quality)
+- **Files:** `src/prompts/synthesis.js` (SYSTEM_PROMPT)
+- **Problem:** Prompt doesn't require finding themes where MULTIPLE systems point to same pattern (HD + Astro + Numerology convergence)
+- **Impact:** Insights treat each system independently instead of showing reinforcing patterns
+- **Fix:** Add CONVERGENCE REQUIREMENT to system prompt:
+  - Identify top 3-5 themes where multiple systems align
+  - Example provided in prompt showing HD Split Definition + Mercury conjunct North Node in Gemini + Life Path 5 = bridge-builder/translator theme
+  - Required format showing which systems converge on each major theme
+- **Verify:** Outputs include "convergence" insights showing multi-system alignment
+
+### BL-PS4 | Distinctiveness analysis (rare vs common factors)
+- [ ] **Status:** In Progress
+- **Severity:** Moderate (Personalization)
+- **Files:** `src/prompts/synthesis.js` (OUTPUT_SCHEMA)
+- **Problem:** No analysis of which chart factors are RARE vs COMMON (e.g., Emotional Manifestor with Quad Split = 2% of population, vs undefined Head = 60%)
+- **Impact:** Outputs give equal weight to common and rare factors
+- **Fix:** Add `distinctiveness` section to output schema:
+  - rareFactors: combinations appearing in <10% of population
+  - commonFactors: traits appearing in >40% of population with "personal spin" explaining how they combine UNIQUELY in this chart
+  - prevalence percentages for context
+- **Verify:** Outputs highlight what makes THIS chart distinctive
+
+### BL-PS5 | Astrological house integration in gate interpretations
+- [ ] **Status:** In Progress  
+- **Severity:** Moderate (Astro Integration)
+- **Files:** `src/prompts/rag.js` (buildRAGContext function)
+- **Problem:** Gate activations don't reference astrological house placement for life area context
+- **Impact:** Missing layer: Mars in 10th house activating Gate 21 = career/leadership manifestation, same gate in 7th house = partnership dynamics
+- **Fix:** When building gate insights, cross-reference planet's house placement:
+  - Find which planet activates the gate
+  - Look up that planet's house in astrology data
+  - Add house theme to gate interpretation (1st=self, 7th=partnerships, 10th=career, 12th=spirituality, etc.)
+- **Verify:** Same gate activated by different house placements produces different life-area contexts
+
+### BL-PS6 | Line-specific wisdom integration
+- [ ] **Status:** In Progress
+- **Severity:** Moderate (Gene Keys Depth)
+- **Files:** `src/knowledgebase/genekeys/keys.json`, `src/prompts/rag.js`
+- **Problem:** Gate descriptions don't differentiate by line. Gate 37.1 (investigator of family dynamics) vs 37.6 (role model for family) are VERY different but get same description
+- **Impact:** Missing 80% of Gene Keys specificity (lines are where the real individuation happens)
+- **Fix:** Add line-specific insights to Gene Keys knowledge base:
+  - Line 1: Investigation/foundation
+  - Line 2: Natural talent/hermit
+  - Line 3: Trial & error/experimentation  
+  - Line 4: Networking/friendship
+  - Line 5: Projection/universalization
+  - Line 6: Role model/transition
+  - Pull line-specific wisdom when building RAG context
+- **Verify:** Same gate with different lines produces 6 distinct interpretations
+
+### BL-PS7 | Hanging gate vs complete channel differentiation
+- [ ] **Status:** In Progress
+- **Severity:** Moderate (Pattern Recognition)
+- **Files:** `src/prompts/rag.js` (channel context in gate insights)
+- **Problem:** No distinction between gates that complete channels (consistent) vs hanging gates (waiting for others to activate)
+- **Impact:** Missing key relationship dynamic: "You DO this consistently" vs "You SEEK this from others"
+- **Fix:** For each active gate, determine:
+  - Is the opposite gate also active? → Channel complete = consistent energy
+  - Is opposite gate undefined? → Hanging gate = seeks completion from environment/others
+  - Add "channel status" modifier to gate insights
+- **Verify:** Gate 12 (with Gate 22) says "You consistently express emotions through your throat" vs Gate 12 (alone) says "You seek emotional clarity from others to voice"
+
+### BL-PS8 | Personalization examples in every section
+- [ ] **Status:** In Progress
+- **Severity:** High (User Experience)
+- **Files:** `src/prompts/synthesis.js` (TONE GUIDELINES section)
+- **Problem:** Tone guidelines show bad vs good examples, but don't require CONCRETE examples in every insight
+- **Impact:** Abstract advice like "trust your authority" instead of "when your boss asks for a decision, say 'let me sleep on it' - by morning you'll know"
+- **Fix:** Add requirement to system prompt:
+  - Every insight must include at least one CONCRETE example or scenario
+  - Not "you might feel X" but "you likely notice X when Y happens"  
+  - Required format: "This means in practice: [specific scenario]"
+- **Verify:** Outputs include concrete examples like "At work meetings, you might notice..." or "When dating, pay attention to..."
+
+---
+
 ## Sprint Plan (Updated)
 
 ### Sprint 5 — Critical UX & Legal (Week 1) ✓ COMPLETE

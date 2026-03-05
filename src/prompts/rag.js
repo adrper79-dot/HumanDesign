@@ -44,6 +44,107 @@ function loadKB(category, file) {
   return _cache[key];
 }
 
+// ─── CONTEXTUAL INTERPRETATION HELPERS (BL-PS2, BL-PS5, BL-PS6, BL-PS7) ─────
+
+/**
+ * Planet context for gate interpretation - what role does this placement play?
+ */
+const PLANET_CONTEXTS = {
+  sun: { role: 'Core Identity', theme: 'who you are at your essence', prevalence: 'unique to birth time' },
+  earth: { role: 'Grounding Force', theme: 'how you ground your purpose', prevalence: 'unique to birth time' },
+  moon: { role: 'Emotional Driver', theme: 'what motivates you emotionally', prevalence: 'changes monthly' },
+  mercury: { role: 'Communication Style', theme: 'how you think and communicate', prevalence: 'unique to birth period' },
+  venus: { role: 'Values & Relationships', theme: 'what you value and how you relate', prevalence: 'unique to birth period' },
+  mars: { role: 'Action & Energy', theme: 'how you take action and assert yourself', prevalence: 'unique to birth period' },
+  jupiter: { role: 'Growth & Expansion', theme: 'where you grow and find opportunity', prevalence: 'generational (12-year cycle)' },
+  saturn: { role: 'Structure & Discipline', theme: 'where you build mastery through discipline', prevalence: 'generational (29-year cycle)' },
+  uranus: { role: 'Innovation & Rebellion', theme: 'where you break patterns and innovate', prevalence: 'generational (84-year cycle)' },
+  neptune: { role: 'Dreams & Spirituality', theme: 'where you dissolve boundaries and dream', prevalence: 'generational (165-year cycle)' },
+  pluto: { role: 'Transformation & Power', theme: 'where you transform and claim power', prevalence: 'generational (248-year cycle)' },
+  northnode: { role: 'Life Direction', theme: 'where you\'re growing toward', prevalence: 'unique (18.6-year cycle)' },
+  southnode: { role: 'Past Patterns', theme: 'what you\'re releasing', prevalence: 'unique (18.6-year cycle)' },
+  chiron: { role: 'Wounded Healer', theme: 'where your wounds become wisdom', prevalence: 'unique (50-year cycle)' }
+};
+
+/**
+ * Line themes (I Ching hexagram line meanings)
+ */
+const LINE_THEMES = {
+  1: { name: 'Investigator/Foundation', theme: 'researching, building foundation, introspection', gift: 'deep knowledge through investigation', challenge: 'insecurity without thorough research' },
+  2: { name: 'Hermit/Natural', theme: 'innate talent, waiting to be called', gift: 'natural genius when called forth', challenge: 'shyness, hiding talents' },
+  3: { name: 'Martyr/Experimenter', theme: 'learning through trial and error', gift: 'resilience, practical wisdom from experience', challenge: 'repeated mistakes, chaos' },
+  4: { name: 'Opportunist/Networker', theme: 'building networks, opportunity through connection', gift: 'bridging people and resources', challenge: 'exhausting friendships, superficiality' },
+  5: { name: 'Heretic/Universalizer', theme: 'practical solutions, projection from others', gift: 'solving problems at scale', challenge: 'seduction/betrayal dynamic, unrealistic expectations' },
+  6: { name: 'Role Model/Objectivity', theme: 'wisdom from experience, teaching by example', gift: 'embodied wisdom, objectivity', challenge: 'pessimism, detachment' }
+};
+
+/**
+ * House themes - which life area is this gate/planet expressed in?
+ */
+const HOUSE_THEMES = {
+  1: 'self-identity and appearance',
+  2: 'money and values',
+  3: 'communication and siblings',
+  4: 'home and family',
+  5: 'creativity and romance',
+  6: 'health and daily work',
+  7: 'relationships and partnerships',
+  8: 'transformation and shared resources',
+  9: 'higher learning and travel',
+  10: 'career and public life',
+  11: 'community and friendships',
+  12: 'spirituality and hidden matters'
+};
+
+/**
+ * Get contextual interpretation for a specific gate activation.
+ * Enriches generic gate description with planet context, line specificity, house placement, and channel status.
+ * 
+ * @param {number} gateNumber - Gate number (1-64)
+ * @param {string} planet - Planet name (sun, moon, mercury, etc.)
+ * @param {number} line - Line number (1-6)
+ * @param {boolean} isDesignSide - True if from designGates (unconscious), false if from personalityGates (conscious)
+ * @param {number} house - Astrological house (1-12) - optional
+ * @param {boolean} isChannelComplete - True if this gate completes a channel (not hanging)
+ * @param {string} baseDescription - Base gate description from KB
+ * @returns {string} Enriched contextual interpretation
+ */
+function getContextualGateInterpretation(gateNumber, planet, line, isDesignSide, house, isChannelComplete, baseDescription) {
+  const parts = [];
+  
+  // Base description
+  parts.push(baseDescription);
+  
+  // Planet context
+  const planetContext = PLANET_CONTEXTS[planet.toLowerCase()];
+  if (planetContext) {
+    const consciousnessNote = isDesignSide ? 'unconscious design' : 'conscious personality';
+    parts.push(`\n**Planet Context (${planet.toUpperCase()}):** ${planetContext.role} — ${planetContext.theme}. This is your ${consciousnessNote} placement (${isDesignSide ? 'what you don\'t see in yourself but others do' : 'what you\'re aware of'}). Prevalence: ${planetContext.prevalence}.`);
+  }
+  
+  // Line specificity
+  const lineTheme = LINE_THEMES[line];
+  if (lineTheme) {
+    parts.push(`\n**Line ${line} (${lineTheme.name}):** ${lineTheme.theme}. ${lineTheme.gift} | Challenge: ${lineTheme.challenge}.`);
+  }
+  
+  // House placement (life area)
+  if (house && HOUSE_THEMES[house]) {
+    parts.push(`\n**House ${house}:** This energy expresses in the realm of ${HOUSE_THEMES[house]}. Unlike same gate in different houses, yours plays out specifically here.`);
+  }
+  
+  // Channel completion status
+  if (isChannelComplete !== undefined) {
+    if (isChannelComplete) {
+      parts.push(`\n**Channel Status:** COMPLETE — This gate connects to form a full channel. You have CONSISTENT, RELIABLE access to this energy. This is rarer than hanging gates (~8-15% of people have each specific channel).`);
+    } else {
+      parts.push(`\n**Channel Status:** HANGING — This gate is active but doesn't complete a channel. You SEEK this energy from others or experience it inconsistently. This is actually more common than complete channels.`);
+    }
+  }
+  
+  return parts.join('');
+}
+
 /**
  * Build RAG context for a specific chart.
  * 
@@ -151,14 +252,88 @@ export function buildRAGContext(chartData) {
       sections.push(`### CENTERS (${definedCount} defined, ${9 - definedCount} undefined)\n${centerLines.join('\n')}`);
     }
 
-    // Active gates (cap at 10)
+    // Active gates WITH CONTEXTUAL INTERPRETATION (BL-PS2, BL-PS5, BL-PS6, BL-PS7)
     const gates = loadKB('hd', 'gates.json');
     if (!gates._meta) {
-      const active = collectActiveGates(chartData);
-      const gateLines = active.slice(0, 10).map(g =>
-        gates[g] ? `Gate ${g}: ${gates[g].description?.slice(0, 200) || gates[g].theme || ''}` : ''
-      ).filter(Boolean);
-      if (gateLines.length) sections.push(`### ACTIVE GATES\n${gateLines.join('\n\n')}`);
+      const gateLines = [];
+      const activeChannelGates = new Set();
+      
+      // Build set of gates that complete channels
+      if (chartData.hdChart?.activeChannels && Array.isArray(chartData.hdChart.activeChannels)) {
+        chartData.hdChart.activeChannels.forEach(ch => {
+          if (ch.gates && Array.isArray(ch.gates)) {
+            ch.gates.forEach(g => activeChannelGates.add(g));
+          }
+        });
+      }
+      
+      // Helper to find house for a planet
+      const getHouseForPlanet = (planetName) => {
+        if (!chartData.astrology?.placements) return null;
+        const placement = chartData.astrology.placements.find(
+          p => (p.planet === planetName || p.body === planetName) || 
+               (p.planet?.toLowerCase() === planetName.toLowerCase() || p.body?.toLowerCase() === planetName.toLowerCase())
+        );
+        return placement?.house || null;
+      };
+      
+      // Process personality gates (conscious)
+      if (chartData.personalityGates) {
+        for (const [planet, gateData] of Object.entries(chartData.personalityGates)) {
+          if (!gateData?.gate || !gates[gateData.gate]) continue;
+          
+          const baseDesc = gates[gateData.gate].description?.slice(0, 150) || gates[gateData.gate].theme || '';
+          const house = getHouseForPlanet(planet);
+          const isComplete = activeChannelGates.has(gateData.gate);
+          
+          const enriched = getContextualGateInterpretation(
+            gateData.gate,
+            planet,
+            gateData.line || 1,
+            false, // personality = conscious
+            house,
+            isComplete,
+            `**Gate ${gateData.gate} (${gates[gateData.gate].name || ''})** — ${baseDesc}`
+          );
+          
+          gateLines.push(`**PERSONALITY ${planet.toUpperCase()} — Gate ${gateData.gate}.${gateData.line || 1}**\n${enriched}`);
+        }
+      }
+      
+      // Process design gates (unconscious)
+      if (chartData.designGates) {
+        for (const [planet, gateData] of Object.entries(chartData.designGates)) {
+          if (!gateData?.gate || !gates[gateData.gate]) continue;
+          
+          const baseDesc = gates[gateData.gate].description?.slice(0, 150) || gates[gateData.gate].theme || '';
+          const house = getHouseForPlanet(planet);
+          const isComplete = activeChannelGates.has(gateData.gate);
+          
+          const enriched = getContextualGateInterpretation(
+            gateData.gate,
+            planet,
+            gateData.line || 1,
+            true, // design = unconscious
+            house,
+            isComplete,
+            `**Gate ${gateData.gate} (${gates[gateData.gate].name || ''})** — ${baseDesc}`
+          );
+          
+          gateLines.push(`**DESIGN ${planet.toUpperCase()} — Gate ${gateData.gate}.${gateData.line || 1}**\n${enriched}`);
+        }
+      }
+      
+      // Limit to top 12 most significant (prioritize Sun, Moon, Mercury, Venus, Mars > others)
+      const priorityOrder = ['sun', 'moon', 'mercury', 'venus', 'mars', 'earth', 'jupiter', 'saturn', 'northnode', 'southnode', 'uranus', 'neptune', 'pluto'];
+      gateLines.sort((a, b) => {
+        const planetA = a.match(/(?:PERSONALITY|DESIGN)\s+(\w+)/)?.[1]?.toLowerCase() || '';
+        const planetB = b.match(/(?:PERSONALITY|DESIGN)\s+(\w+)/)?.[1]?.toLowerCase() || '';
+        const idxA = priorityOrder.indexOf(planetA);
+        const idxB = priorityOrder.indexOf(planetB);
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+      });
+      
+      if (gateLines.length) sections.push(`### ACTIVE GATES (Contextual Interpretations)\n\n${gateLines.slice(0, 12).join('\n\n---\n\n')}`);
     }
 
     // Channels (cap at 6)
@@ -191,16 +366,67 @@ export function buildRAGContext(chartData) {
       }
     }
 
-    // Gene Keys for active gates
+    // Gene Keys for active gates WITH LINE-SPECIFIC WISDOM (BL-PS6)
     const geneKeys = loadKB('genekeys', 'keys.json');
-    const activeGates = collectActiveGates(chartData);
-    if (activeGates.length > 0 && Object.keys(geneKeys).length > 0) {
-      const keyLines = activeGates.slice(0, 8).map(g => {
-        const key = geneKeys[g];
-        if (!key) return '';
-        return `Gene Key ${g} - ${key.name}\n  Shadow: ${key.shadow} - ${key.shadowDescription?.slice(0, 150) || ''}\n  Gift: ${key.gift} - ${key.giftDescription?.slice(0, 150) || ''}\n  Siddhi: ${key.siddhi}\n  Contemplation: ${key.contemplation || ''}`;
-      }).filter(Boolean);
-      if (keyLines.length) sections.push(`### GENE KEYS WISDOM\n${keyLines.join('\n\n')}`);
+    if (Object.keys(geneKeys).length > 0) {
+      const keyLines = [];
+      
+      // Collect gates with their line info from personality and design
+      const gatesWithLines = [];
+      
+      if (chartData.personalityGates) {
+        for (const [planet, gateData] of Object.entries(chartData.personalityGates)) {
+          if (gateData?.gate && geneKeys[gateData.gate]) {
+            gatesWithLines.push({ gate: gateData.gate, line: gateData.line || 1, planet, isDesign: false });
+          }
+        }
+      }
+      
+      if (chartData.designGates) {
+        for (const [planet, gateData] of Object.entries(chartData.designGates)) {
+          if (gateData?.gate && geneKeys[gateData.gate]) {
+            // Avoid duplicates if same gate in personality and design
+            const alreadyAdded = gatesWithLines.some(g => g.gate === gateData.gate && g.line === (gateData.line || 1));
+            if (!alreadyAdded) {
+              gatesWithLines.push({ gate: gateData.gate, line: gateData.line || 1, planet, isDesign: true });
+            }
+          }
+        }
+      }
+      
+      // Sort by planet priority and limit to 8
+      const priorityOrder = ['sun', 'moon', 'mercury', 'venus', 'mars', 'earth', 'jupiter', 'saturn'];
+      gatesWithLines.sort((a, b) => {
+        const idxA = priorityOrder.indexOf(a.planet.toLowerCase());
+        const idxB = priorityOrder.indexOf(b.planet.toLowerCase());
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+      });
+      
+      // Generate Gene Key entries with line themes
+      for (const { gate, line, planet, isDesign } of gatesWithLines.slice(0, 8)) {
+        const key = geneKeys[gate];
+        if (!key) continue;
+        
+        const lineTheme = LINE_THEMES[line];
+        const sideLabel = isDesign ? 'Design (unconscious)' : 'Personality (conscious)';
+        
+        let entry = `**Gene Key ${gate}.${line} — ${key.name}** (${planet.toUpperCase()} ${sideLabel})\n`;
+        entry += `  **Shadow:** ${key.shadow} — ${key.shadowDescription?.slice(0, 120) || ''}\n`;
+        entry += `  **Gift:** ${key.gift} — ${key.giftDescription?.slice(0, 120) || ''}\n`;
+        entry += `  **Siddhi:** ${key.siddhi}\n`;
+        
+        if (lineTheme) {
+          entry += `  **Line ${line} Theme (${lineTheme.name}):** ${lineTheme.theme}. Your ${lineTheme.gift.toLowerCase()}.`;
+        }
+        
+        if (key.contemplation) {
+          entry += `\n  **Contemplation:** ${key.contemplation}`;
+        }
+        
+        keyLines.push(entry);
+      }
+      
+      if (keyLines.length) sections.push(`### GENE KEYS WISDOM (with Line Themes)\n\n${keyLines.join('\n\n')}`);
     }
 
     // Astrology: Major Planets in Signs
