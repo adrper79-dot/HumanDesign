@@ -1627,14 +1627,69 @@ function renderComposite(data) {
   if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
   const c = data.composite || {};
   
-  let html = `<div class="card"><div class="card-title">⧈ Composite Analysis</div>`;
-  html += row('Type Interaction', c.typeInteraction);
-  html += row('Authority Dynamic', c.authorityDynamic);
-  html += row('Gate Activations', c.sharedGates?.length || 0);
-  html += row('Channel Connections', c.channelConnections?.length || 0);
-  html += `<div class="section-title">Analysis</div>`;
-  html += `<div style="color:var(--text);font-size:0.9rem;line-height:1.7;margin-top:12px">${c.analysis || 'No analysis available.'}</div>`;
-  html += `</div>`;
+  let html = `<div class="card">
+    <div class="card-title">⧈ Relationship Dynamics</div>
+    <div class="chart-grid" style="grid-template-columns: 1fr 1fr">
+      <div class="data-block">
+        <h4>Person A</h4>
+        ${row('Pattern', c.personA?.type || '—')}
+        ${row('Authority', c.personA?.authority || '—')}
+        ${row('Profile', c.personA?.profile || '—')}
+        ${row('Forge', c.personA?.forge || '—')}
+      </div>
+      <div class="data-block">
+        <h4>Person B</h4>
+        ${row('Pattern', c.personB?.type || '—')}
+        ${row('Authority', c.personB?.authority || '—')}
+        ${row('Profile', c.personB?.profile || '—')}
+        ${row('Forge', c.personB?.forge || '—')}
+      </div>
+    </div>
+    ${row('Combined Definition', c.combinedDefinition || '—')}
+  </div>`;
+  
+  // Electromagnetic connections (chemistry!)
+  if (c.electromagnetic?.length) {
+    html += `<div class="card">
+      <div class="card-title">⚡ Electromagnetic Connections (${c.electromagnetic.length})</div>
+      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
+        Channels where each person provides one gate - creates magnetic attraction and chemistry.
+      </p>
+      <div class="pill-list">`;
+    c.electromagnetic.forEach(em => {
+      html += `<span class="pill gold">${em.channel} (${em.centers.join(' ↔ ')})</span>`;
+    });
+    html += `</div></div>`;
+  }
+  
+  // Companionship channels
+  if (c.companionship?.length) {
+    html += `<div class="card">
+      <div class="card-title">🤝 Companionship Channels (${c.companionship.length})</div>
+      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
+        Both people have these channels defined individually - shared strengths.
+      </p>
+      <div class="pill-list">`;
+    c.companionship.forEach(ch => {
+      html += `<span class="pill green">${ch.channel} (${ch.centers.join(' ↔ ')})</span>`;
+    });
+    html += `</div></div>`;
+  }
+  
+  // Relationship dynamics
+  if (c.dynamics?.length) {
+    html += `<div class="card">
+      <div class="card-title">💡 Relationship Insights</div>`;
+    c.dynamics.forEach(d => {
+      html += `<div style="padding:10px;margin:8px 0;background:var(--bg2);border-left:3px solid var(--gold);border-radius:4px">
+        <div style="font-weight:600;color:var(--gold);font-size:0.8rem;text-transform:uppercase;margin-bottom:4px">${d.area}</div>
+        <div style="color:var(--text);font-size:0.88rem;line-height:1.6">${d.note}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  
+  html += rawToggle(data);
   return html;
 }
 

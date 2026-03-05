@@ -70,7 +70,6 @@ import { runDailyTransitCron } from './cron.js';
 const AUTH_ROUTES = new Set([
   '/api/auth/me',
   '/api/profile/generate',
-  '/api/composite',
   '/api/sms/send-digest'
 ]);
 
