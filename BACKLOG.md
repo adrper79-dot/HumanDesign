@@ -448,7 +448,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 **Context:** User feedback indicates Prime Self Profile outputs feel too general and could apply to anyone (Barnum/Forer Effect). Need to add specificity, cross-system synthesis, and contextual interpretation.
 
 ### BL-PS1 | Anti-Barnum specificity enforcement in system prompt
-- [ ] **Status:** In Progress
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical (Product Quality)
 - **Files:** `src/prompts/synthesis.js` (SYSTEM_PROMPT)
 - **Problem:** System prompt doesn't explicitly forbid generic statements like "You value authenticity" or "Sometimes you doubt yourself". No examples of specific vs generic insights.
@@ -462,7 +462,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Generate 5 profiles, ask external reviewers if insights feel personalized
 
 ### BL-PS2 | Contextual gate interpretation (planet + line + conscious/unconscious)
-- [ ] **Status:** In Progress
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** High (Data Richness)
 - **Files:** `src/prompts/rag.js` (buildRAGContext function)
 - **Problem:** Gate descriptions are pulled identically for everyone. No differentiation between: Sun in Gate 37 (identity-level) vs Neptune in Gate 37 (generational), Conscious (aware) vs Unconscious (blind spot), Line 1 (investigator) vs Line 6 (role model), Channel-completing vs hanging gate
@@ -475,7 +475,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Same gate in different contexts produces meaningfully different insights
 
 ### BL-PS3 | Cross-system convergence requirement
-- [ ] **Status:** In Progress
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** High (Synthesis Quality)
 - **Files:** `src/prompts/synthesis.js` (SYSTEM_PROMPT)
 - **Problem:** Prompt doesn't require finding themes where MULTIPLE systems point to same pattern (HD + Astro + Numerology convergence)
@@ -487,7 +487,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Outputs include "convergence" insights showing multi-system alignment
 
 ### BL-PS4 | Distinctiveness analysis (rare vs common factors)
-- [ ] **Status:** In Progress
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate (Personalization)
 - **Files:** `src/prompts/synthesis.js` (OUTPUT_SCHEMA)
 - **Problem:** No analysis of which chart factors are RARE vs COMMON (e.g., Emotional Manifestor with Quad Split = 2% of population, vs undefined Head = 60%)
@@ -499,7 +499,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Outputs highlight what makes THIS chart distinctive
 
 ### BL-PS5 | Astrological house integration in gate interpretations
-- [ ] **Status:** In Progress  
+- [x] **Status:** Done (2026-03-04)  
 - **Severity:** Moderate (Astro Integration)
 - **Files:** `src/prompts/rag.js` (buildRAGContext function)
 - **Problem:** Gate activations don't reference astrological house placement for life area context
@@ -511,7 +511,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Same gate activated by different house placements produces different life-area contexts
 
 ### BL-PS6 | Line-specific wisdom integration
-- [ ] **Status:** In Progress
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate (Gene Keys Depth)
 - **Files:** `src/knowledgebase/genekeys/keys.json`, `src/prompts/rag.js`
 - **Problem:** Gate descriptions don't differentiate by line. Gate 37.1 (investigator of family dynamics) vs 37.6 (role model for family) are VERY different but get same description
@@ -527,7 +527,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Same gate with different lines produces 6 distinct interpretations
 
 ### BL-PS7 | Hanging gate vs complete channel differentiation
-- [ ] **Status:** In Progress
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** Moderate (Pattern Recognition)
 - **Files:** `src/prompts/rag.js` (channel context in gate insights)
 - **Problem:** No distinction between gates that complete channels (consistent) vs hanging gates (waiting for others to activate)
@@ -539,7 +539,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Gate 12 (with Gate 22) says "You consistently express emotions through your throat" vs Gate 12 (alone) says "You seek emotional clarity from others to voice"
 
 ### BL-PS8 | Personalization examples in every section
-- [ ] **Status:** In Progress
+- [x] **Status:** Done (2026-03-04)
 - **Severity:** High (User Experience)
 - **Files:** `src/prompts/synthesis.js` (TONE GUIDELINES section)
 - **Problem:** Tone guidelines show bad vs good examples, but don't require CONCRETE examples in every insight
