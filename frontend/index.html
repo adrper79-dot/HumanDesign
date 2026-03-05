@@ -1610,7 +1610,10 @@ async function generateComposite() {
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Generating composite…</div></div>';
 
   try {
-    const data = await apiFetch('/api/composite', 'POST', { personA, personB });
+    const data = await apiFetch('/api/composite', { 
+      method: 'POST', 
+      body: JSON.stringify({ personA, personB }) 
+    });
     resultEl.innerHTML = renderComposite(data);
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
