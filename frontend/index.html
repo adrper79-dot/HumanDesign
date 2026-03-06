@@ -135,12 +135,12 @@
     transform: translateX(-50%); background: var(--bg2); color: var(--text);
     padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
     font-size: 0.8rem; font-weight: 400; white-space: normal; width: 260px;
-    box-shadow: var(--shadow); z-index: 1000; pointer-events: none; line-height: 1.4;
+    box-shadow: var(--shadow); z-index: 10000; pointer-events: none; line-height: 1.4;
   }
   .help-icon[title]:hover::before {
     content: ''; position: absolute; left: 50%; bottom: calc(100% + 2px);
     transform: translateX(-50%); border: 6px solid transparent;
-    border-top-color: var(--border); z-index: 1001;
+    border-top-color: var(--border); z-index: 10001;
   }
 
   /* ── Loading spinner ── */
@@ -367,16 +367,16 @@
 
 <!-- Navigation Tabs -->
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart<span class="icon-info help-icon" title="Generate your personal Energy Blueprint based on your exact birth date, time, and location"></span></button>
-  <button class="tab-btn" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile<span class="icon-info help-icon" title="View your integrated synthesis report combining Gene Keys, astrology, and life path numerology"></span></button>
-  <button class="tab-btn" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits<span class="icon-info help-icon" title="See how today's planetary positions interact with your birth chart energy"></span></button>
-  <button class="tab-btn" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Composite<span class="icon-info help-icon" title="Explore the combined energy blueprint for two people in a relationship or partnership"></span></button>
-  <button class="tab-btn" onclick="switchTab('rectify', this)"><span class="icon-time"></span> Rectify<span class="icon-info help-icon" title="Find your accurate birth time by analyzing life events when exact time is unknown"></span></button>
-  <button class="tab-btn" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> Practitioner<span class="icon-info help-icon" title="Professional tools for readings: batch calculations, client management, and detailed synthesis"></span></button>
-  <button class="tab-btn" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> Clusters<span class="icon-info help-icon" title="Find shared patterns in a group of people like teams, families, or organizations"></span></button>
-  <button class="tab-btn" onclick="switchTab('sms', this)"><span class="icon-sms"></span> SMS<span class="icon-info help-icon" title="Send automated text reports with astrological insights and transit updates"></span></button>
-  <button class="tab-btn" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> Onboarding<span class="icon-info help-icon" title="Initial intake questionnaire for personalized reading preparation"></span></button>
-  <button class="tab-btn" onclick="switchTab('history', this)"><span class="icon-archive"></span> Saved<span class="icon-info help-icon" title="Access all your saved birth charts and synthesis reports"></span></button>
+  <button class="tab-btn active" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart<span class="icon-info help-icon" title="Calculate your exact gate activations using birth coordinates and time. Your chart shifts every 2 hours as Earth rotates through different gate positions. We calculate both your conscious (personality) and unconscious (design) activations 88 days before birth."></span></button>
+  <button class="tab-btn" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile<span class="icon-info help-icon" title="Get an AI synthesis combining your 64 gates, Gene Keys shadows/gifts/siddhis, astrological aspects, and life path numbers. This creates specific guidance based on YOUR exact activation patterns - not generic descriptions."></span></button>
+  <button class="tab-btn" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits<span class="icon-info help-icon" title="See which gates are activated RIGHT NOW by current planetary positions and how they interact with YOUR gates. Fast-moving planets (Moon, Sun, Mercury) change daily. Slow planets (Saturn, Neptune, Pluto) create year-long themes."></span></button>
+  <button class="tab-btn" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Composite<span class="icon-info help-icon" title="Calculate the electromagnetic field created when two charts overlap. Shows new channels activated together, definition changes, and specific interaction dynamics. Essential for business partnerships and relationships."></span></button>
+  <button class="tab-btn" onclick="switchTab('rectify', this)"><span class="icon-time"></span> Rectify<span class="icon-info help-icon" title="Find your accurate birth time by back-calculating from life events. Major life shifts often correlate with gate changes. Test different times in your uncertainty window to find which gates align with your actual experiences."></span></button>
+  <button class="tab-btn" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> Practitioner<span class="icon-info help-icon" title="Batch process multiple charts for client readings. Save client profiles with notes, track reading history, and access all charts quickly. For professional readers who need organized client management."></span></button>
+  <button class="tab-btn" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> Clusters<span class="icon-info help-icon" title="Analyze group dynamics by overlaying multiple charts. See which gates/channels dominate in teams, identify missing energies, and understand collective patterns. Use for families, work teams, or organizations."></span></button>
+  <button class="tab-btn" onclick="switchTab('sms', this)"><span class="icon-sms"></span> SMS<span class="icon-info help-icon" title="Automate personalized text messages with transit updates. Uses YOUR gate activations to identify significant transits (returning planets, important aspects). Subscribers receive alerts when their specific gates are activated."></span></button>
+  <button class="tab-btn" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> Onboarding<span class="icon-info help-icon" title="Guided intake questionnaire that collects life event dates, themes, and challenges. This data trains the AI to provide readings aligned with YOUR actual lived experience, not generic interpretations."></span></button>
+  <button class="tab-btn" onclick="switchTab('history', this)"><span class="icon-archive"></span> Saved<span class="icon-info help-icon" title="Access all your previously generated charts and synthesis reports. Each profile includes the exact birth coordinates and timestamp used for calculations. Compare how readings evolve as you refine your birth time."></span></button>
 </div>
 
 <!-- Main Content -->
@@ -384,6 +384,10 @@
 
   <!-- ═══ CHART TAB ═══ -->
   <div class="tab-content active" id="tab-chart">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
+      <strong style="color:var(--gold)">Welcome to Prime Self</strong><br>
+      Enter your exact birth date, time, and location below. We'll calculate your personalized Energy Blueprint by mapping 64 gate activations, planetary positions, and numerological patterns. Your chart reveals which energies are consistently available to you (defined centers) vs. which you experience through others (open centers). This precision calculation forms the foundation for AI-powered synthesis.
+    </div>
     <div class="card">
       <div class="card-title"><span class="icon-chart"></span> Birth Data</div>
       <div class="form-grid">
@@ -392,11 +396,11 @@
           <input type="date" id="c-date" value="1990-06-15">
         </div>
         <div class="form-group">
-          <label>Birth Time<span class="icon-info help-icon" title="Enter your exact birth time. Your Energy Blueprint shifts every ~2 hours as the Earth rotates"></span></label>
+          <label>Birth Time<span class="icon-info help-icon" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE bodygraph shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
           <input type="time" id="c-time" value="14:30">
         </div>
         <div class="form-group full">
-          <label>Birth Location<span class="icon-info help-icon" title="Enter city and country to get latitude, longitude, and timezone. Accuracy within 50 miles is sufficient"></span></label>
+          <label>Birth Location<span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
           <div style="display:flex;gap:8px">
             <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
@@ -408,7 +412,7 @@
           <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
-          <label>Timezone<span class="icon-info help-icon" title="The timezone determines how to convert your birth time to UTC for planetary calculations"></span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
+          <label>Timezone<span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
           <select id="c-tz">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -444,8 +448,9 @@
 
   <!-- ═══ PROFILE TAB ═══ -->
   <div class="tab-content" id="tab-profile">
-    <div class="alert alert-info">
-      The Prime Self Profile requires sign-in and a full 8-layer synthesis via Claude AI. Generation takes 15–30 seconds.
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--gold)">
+      <strong style="color:var(--gold)">AI-Powered Multi-System Synthesis</strong><br>
+      This isn't a generic report. We calculate YOUR exact 64 gate activations (both conscious + unconscious), overlay Gene Keys shadows/gifts/siddhis, map astrological aspects with orbs, and integrate numerology — then Claude AI synthesizes convergences across ALL systems. You get specific scenarios ("When X happens, you notice Y because [datapoint]") instead of vague statements. <strong>Takes 15-30 seconds to generate.</strong> Requires sign-in to save your profile.
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-profile"></span> Generate Prime Self Profile</div>
@@ -501,7 +506,8 @@
   <div class="tab-content" id="tab-transits">
     <div class="card">
       <div class="card-title"><span class="icon-transit"></span> Current Transit Positions</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Live planetary positions — Gene Key/line activations and Western Astrology sign/degree.</p>
+      <p style="font-size:0.88rem;color:var(--text);margin-bottom:12px;line-height:1.6">See which gates are activated RIGHT NOW by current planetary positions. Fast-moving planets (Moon, Sun, Mercury) change daily and create short-term themes. Slow planets (Saturn, Neptune, Pluto) activate gates for months/years and mark major life chapters. When transiting planets activate YOUR natal gates, you experience amplified energy in those themes.</p>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Displays: Gene Key/line activations + Western Astrology signs/degrees/houses</p>
       <button class="btn-primary" onclick="loadTransits()" id="transitBtn">
         <span class="spinner" id="transitSpinner" style="display:none"></span>
         See Today's Energy
@@ -525,6 +531,10 @@
 
   <!-- ═══ COMPOSITE TAB ═══ -->
   <div class="tab-content" id="tab-composite">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(106,79,200,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--info)">
+      <strong style="color:var(--info)">Relationship Electromagnetic Field Analysis</strong><br>
+      Calculate the combined energy blueprint when two charts overlap. This shows: <strong>(1)</strong> New channels activated when you're together (electromagnetic bridges), <strong>(2)</strong> Definition changes (e.g., individual becomes emotional authority), <strong>(3)</strong> Dominant gates/themes in the relationship field, <strong>(4)</strong> Potential blind spots (missing energies). Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.
+    </div>
     <div class="card">
       <div class="card-title"><span class="icon-partnership"></span> Composite Chart</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze relationship dynamics between two people.</p>
@@ -836,18 +846,32 @@ function logout() {
 
 // ── API Fetch ─────────────────────────────────────────────────
 async function apiFetch(path, options = {}) {
+  // Always check for token in localStorage (in case of page refresh/navigation)
+  if (!token) {
+    token = localStorage.getItem('ps_token');
+    userEmail = localStorage.getItem('ps_email');
+  }
+  
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
+  
   const res = await fetch(API + path, { ...options, headers });
+  
   // Auto-handle expired / missing token
   if (res.status === 401) {
-    token = null;
-    localStorage.removeItem('ps_token');
-    updateAuthUI();
-    openAuthOverlay();
-    document.getElementById('authError').textContent = 'Session expired — please sign in again.';
-    return { error: 'Session expired. Please sign in.' };
+    // Only clear auth if we actually had a token (real expiration)
+    if (token) {
+      token = null;
+      userEmail = null;
+      localStorage.removeItem('ps_token');
+      localStorage.removeItem('ps_email');
+      updateAuthUI();
+      openAuthOverlay();
+      document.getElementById('authError').textContent = 'Session expired — please sign in again.';
+    }
+    return { error: 'Authentication required. Please sign in.' };
   }
+  
   return res.json();
 }
 
@@ -1595,7 +1619,11 @@ function renderHistory(data) {
   if (!profiles.length) {
     return `<div class="empty-state">
       <span class="icon-profile icon-xl"></span>
-      <p>No saved profiles yet.<br>Generate a Prime Self Profile to get started.</p>
+      <h3 style="margin:16px 0 8px;font-size:1.1rem;color:var(--text)">No Saved Profiles Yet</h3>
+      <p style="max-width:500px;margin:0 auto 24px">Generate yourfirst Prime Self Profile to unlock AI-powered synthesis combining your gates, Gene Keys, astrology, and numerology into personalized lifecycle guidance.</p>
+      <button class="btn-primary" onclick="switchTab('profile', document.querySelectorAll('.tab-btn')[1])" style="margin:0 auto;display:inline-block">
+        <span class="icon-sparkle"></span> Generate Your Profile
+      </button>
     </div>`;
   }
 
@@ -1851,7 +1879,10 @@ function renderRoster(data) {
   const clients = data.roster || [];
 
   if (!clients.length) {
-    return `<div class="empty-state"><span class="icon-star icon-xl"></span><p>No clients yet.</p></div>`;
+    return `<div class="empty-state"><span class="icon-star icon-xl"></span>
+      <h3 style="margin:16px 0 8px;font-size:1.1rem;color:var(--text)">Practitioner Roster Empty</h3>
+      <p style="max-width:500px;margin:0 auto 16px">Add clients to your professional roster for organized reading management. Each client entry stores their profile ID and notes for quick access during sessions.</p>
+    </div>`;
   }
 
   let html = `<div class="card"><div class="card-title"><span class="icon-star"></span> ${clients.length} Client${clients.length > 1 ? 's' : ''}</div>`;
@@ -1943,7 +1974,9 @@ function renderClusterList(data) {
   if (!clusters.length) {
     return `<div class="empty-state">
       <span class="icon-cluster icon-xl"></span>
-      <p>No clusters yet. Create your first team, family, or community group above.</p>
+      <h3 style="margin:16px 0 8px;font-size:1.1rem;color:var(--text)">No Clusters Yet</h3>
+      <p style="max-width:500px;margin:0 auto 16px">Create a cluster to analyze group dynamics. Overlay multiple birth charts to see which gates dominate your team, which energies are missing, and how members electromagnetically activate each other. Perfect for work teams, families, or partnerships.</p>
+      <p style="color:var(--text-dim);font-size:0.85rem">Enter a name and purpose above, then click Create Cluster.</p>
     </div>`;
   }
 
