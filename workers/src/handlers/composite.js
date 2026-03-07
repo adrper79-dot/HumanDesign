@@ -19,6 +19,8 @@
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
+import { trackEvent } from './achievements.js';
+import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 
 // ─── Channel definitions: [gateA, gateB, centerA, centerB] ──────
 const CHANNELS = [
@@ -364,15 +366,30 @@ export async function handleComposite(request, env) {
     }
   }
 
-  // Calculate both charts
+  // Calculate both charts (cached by birth params)
   const utcA = parsePerson(body.personA);
   const utcB = parsePerson(body.personB);
 
-  const chartA = calculateFullChart({ ...utcA, includeTransits: false });
-  const chartB = calculateFullChart({ ...utcB, includeTransits: false });
+  const { data: chartA } = await kvCache.getOrSet(
+    env,
+    keys.chart(body.personA.birthDate, body.personA.birthTime, body.personA.lat, body.personA.lng),
+    TTL.CHART,
+    () => calculateFullChart({ ...utcA, includeTransits: false })
+  );
+  const { data: chartB } = await kvCache.getOrSet(
+    env,
+    keys.chart(body.personB.birthDate, body.personB.birthTime, body.personB.lat, body.personB.lng),
+    TTL.CHART,
+    () => calculateFullChart({ ...utcB, includeTransits: false })
+  );
 
   // Analyze composite
   const composite = analyzeComposite(chartA, chartB);
+
+  // Track achievement event (only if authenticated)
+  if (request._user) {
+    await trackEvent(env, request._user.sub, 'composite_created', null, request._tier || 'free');
+  }
 
   return Response.json({
     ok: true,

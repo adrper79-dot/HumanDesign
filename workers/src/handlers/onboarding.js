@@ -209,13 +209,30 @@ async function handleProgress(userId, kv) {
   const progress = {};
   let totalRead = 0;
 
-  await Promise.all(VALID_FORGES.map(async (forge) => {
+  // Collect all KV keys up front for a single parallel batch
+  const kvRequests = [];
+  for (const forge of VALID_FORGES) {
     const total = FORGE_SUMMARIES[forge].chapterCount;
-    let chaptersRead = 0;
     for (let i = 1; i <= total; i++) {
-      const val = await kv.get(`onboarding:${userId}:${forge}:${i}`);
-      if (val === '1') chaptersRead++;
+      kvRequests.push({ forge, index: i, key: `onboarding:${userId}:${forge}:${i}` });
     }
+  }
+
+  // Fetch all chapter-read flags in parallel (was N+1 sequential reads)
+  const values = await Promise.all(kvRequests.map(r => kv.get(r.key)));
+
+  // Tally results per forge
+  const forgeCounts = {};
+  for (const forge of VALID_FORGES) {
+    forgeCounts[forge] = 0;
+  }
+  kvRequests.forEach((r, idx) => {
+    if (values[idx] === '1') forgeCounts[r.forge]++;
+  });
+
+  for (const forge of VALID_FORGES) {
+    const total = FORGE_SUMMARIES[forge].chapterCount;
+    const chaptersRead = forgeCounts[forge];
     totalRead += chaptersRead;
     progress[forge] = {
       chaptersRead,
@@ -224,7 +241,7 @@ async function handleProgress(userId, kv) {
       started: chaptersRead > 0,
       complete: chaptersRead >= total
     };
-  }));
+  }
 
   return Response.json({
     ok: true,

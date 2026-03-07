@@ -283,6 +283,14 @@ describe('POST /api/rectify', () => {
 
 // ─── /api/profile/generate (validation only, LLM mocked) ────
 
+// Mock tier enforcement so profile tests can reach validation logic
+vi.mock('../workers/src/middleware/tierEnforcement.js', () => ({
+  enforceUsageQuota: vi.fn().mockResolvedValue(null),
+  recordUsage: vi.fn().mockResolvedValue(undefined),
+  getTier: vi.fn().mockReturnValue({ name: 'free', features: {} }),
+  isQuotaExceeded: vi.fn().mockReturnValue(false),
+}));
+
 import { handleProfile } from '../workers/src/handlers/profile.js';
 
 describe('POST /api/profile/generate', () => {

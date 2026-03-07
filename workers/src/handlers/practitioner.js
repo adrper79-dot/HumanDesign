@@ -17,6 +17,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 
 const TIER_LIMITS = {
   free: 0,
@@ -29,6 +30,12 @@ export async function handlePractitioner(request, env, subpath) {
   const userId = request._user?.sub;
   if (!userId) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  // Enforce practitioner tools feature access (except for /register endpoint)
+  if (subpath !== '/register') {
+    const featureCheck = await enforceFeatureAccess(request, env, 'practitionerTools');
+    if (featureCheck) return featureCheck;
   }
 
   const method = request.method;

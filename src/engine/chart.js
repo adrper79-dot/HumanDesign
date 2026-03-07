@@ -16,28 +16,21 @@
  * Verification anchor: AP = Projector, 6/2, Split, Emotional, LAX Refinement
  */
 
-import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
-
-// Workers runtime: import.meta.url may be undefined — guard fileURLToPath
-let __dirname_resolved = '';
-try {
-  if (import.meta.url) {
-    const __filename = fileURLToPath(import.meta.url);
-    __dirname_resolved = dirname(__filename);
-  }
-} catch {
-  // Workers runtime — __dirname not needed when data is injected
-}
+// Node.js fs/path/url loaded dynamically to avoid breaking Cloudflare Workers
+// (static `import 'fs'` fails at import time in Workers — no Node.js compat)
 
 let crossesData = {};
 try {
   if (globalThis.__PRIME_DATA?.crosses) {
     // Workers runtime — data injected by engine-compat.js
     crossesData = globalThis.__PRIME_DATA.crosses;
-  } else if (__dirname_resolved) {
-    // Node.js runtime — read from filesystem
+  } else if (typeof import.meta.url === 'string') {
+    // Node.js runtime — dynamic import avoids Workers breakage
+    const { readFileSync } = await import('fs');
+    const { dirname, join } = await import('path');
+    const { fileURLToPath } = await import('url');
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname_resolved = dirname(__filename);
     crossesData = JSON.parse(readFileSync(join(__dirname_resolved, '..', 'data', 'crosses.json'), 'utf8'));
   }
 } catch {
@@ -81,6 +74,7 @@ const CHANNELS = [
   [35, 36, 'Throat',      'SolarPlexus'],
   [37, 40, 'SolarPlexus', 'Heart'],
   [39, 55, 'Root',        'SolarPlexus'],
+  [42, 53, 'Sacral',      'Root'],        // BL-R-H10: was missing
   [47, 64, 'Ajna',        'Head'],
 ];
 
@@ -104,9 +98,19 @@ const AUTHORITY_ORDER = [
   ['SolarPlexus', 'Emotional - Solar Plexus'],
   ['Sacral',      'Sacral'],
   ['Spleen',      'Splenic'],
-  ['Heart',       'Ego / Heart Projected'],
+  ['Heart',       'Ego'],  // BL-R-M4: split resolved in determineAuthority()
   ['G',           'Self-Projected'],
 ];
+
+/**
+ * Check if Heart center is connected to Throat through channels.
+ * @param {Map} graph – Center adjacency map
+ * @returns {boolean}
+ */
+function isHeartConnectedToThroat(graph) {
+  if (!graph || !graph.has('Heart')) return false;
+  return graph.get('Heart')?.has('Throat') || false;
+}
 
 // ─── CROSS TYPE PREFIXES ────────────────────────────────────────
 const CROSS_PREFIX = {
@@ -265,13 +269,20 @@ function determineType(definedCenters, graph) {
  *
  * @param {Set<string>} definedCenters
  * @param {string} type
+ * @param {Map} graph – Center adjacency map (for Heart→Throat check)
  * @returns {string}
  */
-function determineAuthority(definedCenters, type) {
+function determineAuthority(definedCenters, type, graph) {
   if (type === 'Reflector') return 'Lunar';
 
   for (const [center, authority] of AUTHORITY_ORDER) {
-    if (definedCenters.has(center)) return authority;
+    if (definedCenters.has(center)) {
+      // BL-R-M4: Distinguish Ego Manifested vs Ego Projected
+      if (center === 'Heart') {
+        return isHeartConnectedToThroat(graph) ? 'Ego Manifested' : 'Ego Projected';
+      }
+      return authority;
+    }
   }
 
   // If only Head and/or Ajna are defined (Mental Projector)
@@ -413,7 +424,7 @@ export function calculateChart(personalityGates, designGates) {
 
   // Determine chart properties
   const type = determineType(definedCenters, graph);
-  const authority = determineAuthority(definedCenters, type);
+  const authority = determineAuthority(definedCenters, type, graph);
   const strategy = determineStrategy(type);
   const notSelfTheme = determineNotSelfTheme(type);
   const definition = determineDefinition(components);

@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "locale": "de",
+    "name": "Deutsch",
+    "direction": "ltr"
+  },
+  "nav": {
+    "chart": "Karte",
+    "keys": "Schlüssel",
+    "astro": "Astro",
+    "transits": "Transite",
+    "profile": "Profil",
+    "enhance": "Verbessern",
+    "diary": "Tagebuch"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "createAccount": "Konto erstellen",
+    "signOut": "Abmelden",
+    "notSignedIn": "Nicht angemeldet",
+    "emailRequired": "E-Mail und Passwort erforderlich.",
+    "sessionExpired": "Sitzung abgelaufen — bitte erneut anmelden.",
+    "connectionError": "Verbindungsfehler: {{message}}",
+    "pleaseWait": "Bitte warten…",
+    "startJourney": "Beginne deine Prime Self Reise.",
+    "accessProfile": "Greife auf dein Prime Self Profil und gespeicherte Karten zu.",
+    "alreadyAccount": "Bereits ein Konto?",
+    "noAccount": "Noch kein Konto?",
+    "createOne": "Eines erstellen",
+    "signInLink": "Anmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "signInUpgrade": "Bitte melde dich an, um dein Konto zu aktualisieren."
+  },
+  "chart": {
+    "title": "Human Design Karte",
+    "calculate": "Karte berechnen",
+    "calculating": "Berechne…",
+    "birthDate": "Geburtsdatum",
+    "birthTime": "Geburtszeit",
+    "birthLocation": "Geburtsort",
+    "lookupLocation": "Nachschlagen",
+    "tryExample": "Beispiel testen",
+    "type": "Typ",
+    "authority": "Autorität",
+    "profile": "Profil",
+    "definition": "Definition",
+    "strategy": "Strategie",
+    "notSelf": "Nicht-Selbst Thema",
+    "incarnationCross": "Inkarnationskreuz",
+    "definedCenters": "Definierte Zentren",
+    "openCenters": "Offene Zentren",
+    "activeChannels": "Aktive Kanäle",
+    "gates": "Tore",
+    "saveChart": "Karte speichern",
+    "viewRaw": "Rohdaten anzeigen",
+    "hideRaw": "Rohdaten ausblenden"
+  },
+  "profile": {
+    "title": "Prime Self Profil",
+    "generate": "Profil generieren",
+    "generating": "Generiere dein Prime Self Profil…",
+    "listProfiles": "Gespeicherte Profile anzeigen",
+    "exportPdf": "PDF exportieren",
+    "shareProfile": "Teilen",
+    "question": "Optionale Fokusfrage",
+    "questionPlaceholder": "z.B. Was ist meine primäre Schmiede?",
+    "noProfiles": "Noch keine gespeicherten Profile."
+  },
+  "transits": {
+    "title": "Aktuelle Transite",
+    "loading": "Lade Transitdaten…",
+    "today": "Heutige Transite",
+    "forecast": "Vorhersage",
+    "gateActivations": "Tor-Aktivierungen",
+    "aspects": "Transit-Aspekte",
+    "noData": "Keine Transitdaten verfügbar."
+  },
+  "composite": {
+    "title": "Kompositkarte",
+    "personA": "Person A",
+    "personB": "Person B",
+    "generate": "Komposit generieren",
+    "electromagnetic": "Elektromagnetische Verbindungen",
+    "dominance": "Dominanzkanäle",
+    "companionship": "Kameradschaft",
+    "compromise": "Kompromiss",
+    "dynamics": "Beziehungsdynamik"
+  },
+  "practitioner": {
+    "title": "Praktiker-Dashboard",
+    "clients": "Klienten",
+    "addClient": "Klient hinzufügen",
+    "clientEmail": "E-Mail des Klienten",
+    "roster": "Klientenliste",
+    "noClients": "Noch keine Klienten."
+  },
+  "clusters": {
+    "title": "Gruppenintelligenz",
+    "create": "Gruppe erstellen",
+    "name": "Gruppenname",
+    "description": "Beschreibung",
+    "members": "Mitglieder",
+    "addMember": "Mitglied hinzufügen",
+    "synthesize": "Gruppe synthetisieren",
+    "noClusters": "Noch keine Gruppen."
+  },
+  "diary": {
+    "title": "Lebensereignis-Tagebuch",
+    "newEntry": "Neuer Eintrag",
+    "save": "Eintrag speichern",
+    "date": "Datum",
+    "mood": "Stimmung",
+    "energy": "Energielevel",
+    "notes": "Notizen",
+    "noEntries": "Noch keine Tagebucheinträge."
+  },
+  "enhance": {
+    "title": "Profil verbessern",
+    "behavioral": "Verhaltensvalidierung",
+    "bigFive": "Big Five Persönlichkeit",
+    "via": "VIA Charakterstärken",
+    "save": "Bewertung speichern"
+  },
+  "onboarding": {
+    "title": "Der Savannen-Bogen",
+    "start": "Reise beginnen",
+    "next": "Nächstes Kapitel",
+    "previous": "Zurück",
+    "complete": "Kapitel abgeschlossen"
+  },
+  "sms": {
+    "subscribe": "Tägliche Zusammenfassungen abonnieren",
+    "unsubscribe": "Abbestellen",
+    "phone": "Telefonnummer",
+    "subscribed": "SMS-Zusammenfassungen abonniert",
+    "unsubscribed": "SMS-Zusammenfassungen abbestellt"
+  },
+  "pricing": {
+    "title": "Wähle deinen Weg",
+    "seeker": "Suchender",
+    "guide": "Wegweiser",
+    "practitioner": "Praktiker",
+    "perMonth": "/Monat",
+    "currentPlan": "Aktueller Plan",
+    "upgrade": "Upgrade",
+    "billingPortal": "Abrechnung verwalten"
+  },
+  "share": {
+    "title": "Teilen",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert!",
+    "twitter": "Auf X teilen",
+    "facebook": "Auf Facebook teilen",
+    "downloadImage": "Bild herunterladen"
+  },
+  "common": {
+    "loading": "Laden…",
+    "error": "Etwas ist schiefgelaufen.",
+    "retry": "Erneut versuchen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "confirm": "Bestätigen",
+    "search": "Suchen",
+    "noResults": "Keine Ergebnisse gefunden.",
+    "success": "Erfolg!",
+    "features": "Funktionen",
+    "learnMore": "Mehr erfahren"
+  },
+  "errors": {
+    "networkError": "Netzwerkfehler. Bitte Verbindung prüfen.",
+    "serverError": "Serverfehler. Bitte später erneut versuchen.",
+    "notFound": "Nicht gefunden.",
+    "unauthorized": "Bitte anmelden um fortzufahren.",
+    "forbidden": "Kein Zugriff auf diese Funktion.",
+    "quotaExceeded": "Nutzungslimit erreicht. Upgrade für mehr.",
+    "invalidInput": "Bitte Eingabe überprüfen und erneut versuchen.",
+    "missingField": "Pflichtfeld fehlt: {{field}}"
+  }
+}

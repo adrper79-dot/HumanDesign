@@ -166,6 +166,136 @@ npx wrangler tail
 
 `console.neon.tech` — query statistics, connection counts, branch management.
 
+### Stripe Integration Monitoring
+
+**Dashboard:** `dashboard.stripe.com`
+
+#### Daily Health Checks
+
+1. **Webhooks → Endpoints**  
+   - Check delivery success rate (should be >95%)
+   - Failed events show error details (500, timeout, etc.)
+   - Click "Resend" to retry failed webhooks
+
+2. **Home → Analytics**  
+   - Monitor Monthly Recurring Revenue (MRR) trends
+   - Check subscriber growth rate
+   - Review churn rate (cancellations)
+
+3. **Payments → Disputed payments**  
+   - Handle chargebacks within 7 days
+   - Respond with evidence (invoice, subscription terms)
+
+4. **Customers → Subscriptions**  
+   - Review recent cancellations
+   - Check cancellation reasons (Stripe collects feedback)
+   - Identify patterns (e.g., "too expensive" spike)
+
+#### Webhook Health Queries
+
+Check webhook processing in worker logs:
+
+```bash
+cd workers
+npx wrangler tail --format pretty | grep "Webhook"
+```
+
+Expected output:
+```
+Webhook verified: checkout.session.completed
+Subscription created for user: 123e4567-e89b-12d3-a456-426614174000
+```
+
+Check database consistency:
+
+```sql
+-- Count subscriptions by status
+SELECT status, COUNT(*) 
+FROM subscriptions 
+GROUP BY status;
+
+-- Expected: mostly 'active', some 'cancelled'
+
+-- Recently failed payments
+SELECT u.email, pe.event_type, pe.failure_reason, pe.created_at
+FROM payment_events pe
+JOIN subscriptions s ON pe.subscription_id = s.id
+JOIN users u ON s.user_id = u.id
+WHERE pe.status = 'failed'
+ORDER BY pe.created_at DESC
+LIMIT 10;
+
+-- Users in grace period (past_due but still have access)
+SELECT u.email, s.tier, s.status, s.current_period_end
+FROM subscriptions s
+JOIN users u ON s.user_id = u.id
+WHERE s.status = 'past_due';
+```
+
+#### Alert Thresholds
+
+Set up alerts for:
+
+- **Webhook failure rate > 5%** (investigate handler errors)
+- **Payment failure rate > 10%** (card declines spiking)
+- **Monthly churn > 5%** (investigate product issues)
+- **Checkout abandonment > 40%** (checkout friction)
+
+#### Common Stripe Incidents
+
+**Incident: User reports upgrade didn't work**
+
+1. Get user email
+2. Query database:
+   ```sql
+   SELECT u.email, s.tier, s.status, s.stripe_subscription_id
+   FROM users u
+   LEFT JOIN subscriptions s ON u.id = s.user_id
+   WHERE u.email = 'user@example.com';
+   ```
+3. Check Stripe Dashboard → Customers → Search by email
+4. Verify subscription status in Stripe
+5. If mismatch between Stripe and database:
+   - Option A: Manually trigger webhook (Stripe → Events → Find event → Resend)
+   - Option B: Update database manually (emergency only)
+6. Instruct user to log out and log back in (refreshes tier in UI)
+
+**Incident: Webhook signature verification failing**
+
+Symptom: All webhooks showing 400 errors
+
+1. Check worker logs: `npx wrangler tail | grep "signature"`
+2. Verify `STRIPE_WEBHOOK_SECRET` matches Stripe Dashboard → Webhooks → Endpoint signing secret
+3. Update secret if needed:
+   ```bash
+   cd workers
+   npx wrangler secret put STRIPE_WEBHOOK_SECRET
+   # Paste secret from Stripe Dashboard
+   ```
+4. Resend failed webhooks from Stripe Dashboard
+
+**Incident: Refund request from user**
+
+1. Go to Stripe Dashboard → Payments → Search by user email
+2. Click payment → "Refund"
+3. Select full or partial refund
+4. Stripe sends `charge.refunded` webhook (auto-downgrades tier if full refund)
+5. Verify tier updated in database:
+   ```sql
+   SELECT tier, status FROM subscriptions 
+   WHERE user_id = (SELECT id FROM users WHERE email = 'user@example.com');
+   ```
+6. Email user confirmation
+
+**Incident: High failed payment rate**
+
+Cause: Usually expired cards at month-end
+
+1. Stripe automatically emails users to update payment method
+2. Check Stripe → More → Email history
+3. If user doesn't update card within 7 days, subscription auto-cancels
+4. User can resubscribe anytime (no data loss)
+
 ---
 
 ## Rollback

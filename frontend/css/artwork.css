@@ -746,3 +746,16 @@
     opacity: 0;
   }
 }
+
+/* BL-R-L9: Respect prefers-reduced-motion for all artwork animations */
+@media (prefers-reduced-motion: reduce) {
+  .hero-artwork *,
+  .bodygraph-visual *,
+  .lava-lamp-bg *,
+  .lava-blob,
+  .orbit-ring,
+  .spotlight {
+    animation: none !important;
+    transition: none !important;
+  }
+}

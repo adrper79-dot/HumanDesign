@@ -35,7 +35,7 @@
     { "channel": "35-36", "gates": [35, 36], "centers": ["Throat", "SolarPlexus"], "circuit": "Collective (Abstract)", "name": "Transitoriness" },
     { "channel": "37-40", "gates": [37, 40], "centers": ["SolarPlexus", "Heart"], "circuit": "Tribal (Ego)", "name": "Community" },
     { "channel": "39-55", "gates": [39, 55], "centers": ["Root", "SolarPlexus"], "circuit": "Individual", "name": "Emoting" },
-    { "channel": "43-23", "gates": [43, 23], "centers": ["Ajna", "Throat"],     "circuit": "Individual", "name": "Structuring" },
+    { "channel": "42-53", "gates": [42, 53], "centers": ["Sacral", "Root"],     "circuit": "Collective (Abstract)", "name": "Maturation" },
     { "channel": "47-64", "gates": [47, 64], "centers": ["Ajna", "Head"],       "circuit": "Collective (Abstract)", "name": "Abstraction" }
   ]
 }

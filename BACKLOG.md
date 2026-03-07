@@ -1,9 +1,9 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-04
+**Last audited:** 2026-03-07
 **Test suite:** 190/190 passing (vitest 3.2.4)
-**Completion status:** 48/48 items (100%) — ALL SPRINTS COMPLETE ✅
-**Audit scope:** Full codebase + all documentation + language/comprehension + profile specificity
+**Completion status:** 48/48 prior items (100%) — Sprints 1–8 COMPLETE ✅ | 52 new audit items open
+**Audit scope:** Full codebase + all documentation + language/comprehension + profile specificity + 2026-03-07 deep code review
 
 ---
 
@@ -581,6 +581,505 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - [x] BL-PS6: Line-specific wisdom integration
 - [x] BL-PS7: Hanging gate vs complete channel differentiation
 - [x] BL-PS8: Personalization examples in every section
+
+---
+
+## Code Review Audit — 2026-03-07
+
+**Audited by:** Automated deep review (all files, all systems)
+**New items:** 52 issues across 7 systems
+**Severity breakdown:** 6 Critical, 14 High, 20 Medium, 12 Low
+
+---
+
+## Critical (6) — Must fix immediately
+
+### BL-R-C1 | Secrets.txt contains live production credentials in plaintext
+- [ ] **Status:** Open
+- **Severity:** EMERGENCY
+- **Files:** `Secrets.txt`
+- **Problem:** File contains live `sk_live_` Stripe key, Neon connection string with password, Anthropic/Groq/Grok API keys, GitHub PAT, Telnyx keys, and Cloudflare API token. While `.gitignore` excludes the file, if git history ever contained it, all credentials are compromised. Flat-file secrets are an unacceptable risk vector.
+- **Impact:** Full payment fraud, database takeover, account compromise across 8 services
+- **Fix:** (1) Verify git history: `git log --all --diff-filter=A -- Secrets.txt`. (2) If found, rotate ALL credentials immediately. (3) Delete Secrets.txt. (4) Move all secrets exclusively to `wrangler secret put` and document in .env.example (keys only, no values).
+- **Verify:** `Secrets.txt` does not exist. All services authenticate via environment secrets only.
+
+### BL-R-C2 | Fake social proof metrics and fabricated testimonials (FTC violation)
+- [ ] **Status:** Open
+- **Severity:** Critical (Legal)
+- **Files:** `workers/src/handlers/stats.js`, `workers/src/lib/email.js`
+- **Problem:** `/api/stats/activity` returns hardcoded fake numbers (2,847 weekly users, 18,392 profiles). `email.js` contains a fabricated testimonial ("Marcus Chen, Seeker Tier"). These are deceptive to consumers and violate FTC guidelines on endorsements and advertising claims.
+- **Impact:** Legal liability, user trust destruction, potential FTC enforcement action
+- **Fix:** (1) Remove all hardcoded fallback stats — return real DB counts or `null`. (2) Remove fabricated testimonial. (3) Only display social proof when backed by real data. (4) Add comment: "All public metrics must reflect real data per FTC §255."
+- **Verify:** Stats endpoint returns real data or empty state. No fabricated names in codebase.
+
+### BL-R-C3 | SQL injection pattern in analytics handlers
+- [ ] **Status:** Open
+- **Severity:** Critical (Security)
+- **Files:** `workers/src/handlers/analytics.js` (lines ~147, ~257, ~305, ~321, ~335)
+- **Problem:** String interpolation of user-controlled query params into SQL: `INTERVAL '${days} days'`. While `Number()` coercion mitigates direct exploitation, `NaN` produces a PostgreSQL error, and this pattern is copy-paste dangerous.
+- **Fix:** Use parameterized queries: `WHERE created_at >= CURRENT_DATE - ($1 * INTERVAL '1 day')` with `[days]` in params array.
+- **Verify:** All SQL in analytics.js uses `$N` parameterized queries only.
+
+### BL-R-C4 | Duplicate Stripe webhook handlers with divergent logic
+- [ ] **Status:** Open
+- **Severity:** Critical
+- **Files:** `workers/src/handlers/webhook.js`, `workers/src/handlers/billing.js`
+- **Problem:** Two files handle identical Stripe events (`checkout.session.completed`, `customer.subscription.updated`) at two different routes (`/api/webhook/stripe` and `/api/billing/webhook`) with differing DB update logic. Creates race conditions and data inconsistency.
+- **Fix:** Consolidate into a single webhook handler. Remove the duplicate route. Ensure idempotency on event processing (store `event.id`, skip duplicates).
+- **Verify:** Only one Stripe webhook route exists. `event.id` deduplication in place.
+
+### BL-R-C5 | Frontend mobile navigation completely broken
+- [ ] **Status:** Open
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html` (~line 4186)
+- **Problem:** Mobile bottom nav calls `switchTab('hd')`, `switchTab('gk')`, `switchTab('astro')` but actual tab IDs are `chart`, `profile`, `enhance`. Only 2 of 5 nav buttons work.
+- **Fix:** Update mobile nav `onclick` handlers to use correct tab IDs: `chart`, `profile`, `enhance`, `transits`, `diary`.
+- **Verify:** All 5 mobile nav buttons switch to the correct tab on a mobile viewport.
+
+### BL-R-C6 | Check-in feature references nonexistent DOM elements and wrong API paths
+- [ ] **Status:** Open
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html` (~lines 4210–4280)
+- **Problem:** `saveCheckIn()` references `#alignment-score`, `#alignment-value`, `#strategy-followed` (real IDs: `checkin-alignment-score`, `checkin-followed-strategy`). Calls `/checkin` instead of `/api/checkin`. `loadCheckInStats()` references `#current-streak`, `#longest-streak` etc. — none exist in DOM.
+- **Fix:** Update all element ID references to match actual HTML. Prefix all API calls with `/api/`.
+- **Verify:** Check-in save and stats load work end-to-end.
+
+---
+
+## High (14)
+
+### BL-R-H1 | New database pool created per query — connection exhaustion
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `workers/src/db/queries.js`
+- **Problem:** `createQueryFn()` creates a new `Pool()` on every call. Each request creates multiple pools. Under load this exhausts Neon's connection limit.
+- **Fix:** Implement singleton pool per isolate with lazy initialization.
+- **Verify:** Under 50 concurrent requests, connection count stays below Neon limit.
+
+### BL-R-H2 | Internal error messages leaked to API consumers
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** `workers/src/handlers/profile.js`, `referrals.js`, `webhooks.js`, `achievements.js`, `cluster.js`
+- **Problem:** Catch blocks return `detail: err.message` or `message: error.message` to clients, potentially exposing DB connection strings, query details, and stack traces.
+- **Fix:** Return generic user-facing messages. Log full error server-side only via `console.error`.
+- **Verify:** Trigger an internal error — response contains generic message, no stack trace.
+
+### BL-R-H3 | Notion OAuth tokens stored in plaintext in DB
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** `workers/src/handlers/notion.js` (~line 157)
+- **Problem:** `access_token` from Notion OAuth stored directly in `notion_connections` table without encryption.
+- **Fix:** Encrypt tokens at rest using a Worker secret as encryption key via `crypto.subtle.encrypt` (AES-GCM). Decrypt on read.
+- **Verify:** `SELECT access_token FROM notion_connections` returns ciphertext, not plaintext.
+
+### BL-R-H4 | Webhook HMAC secret returned in GET response
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** `workers/src/handlers/webhooks.js` (~line 225)
+- **Problem:** `GET /api/webhooks/:id` returns `secret: webhook.secret` in JSON body. HMAC signing secrets should only be shown once at creation time.
+- **Fix:** Remove `secret` from GET response. Only return it in the POST (create) response.
+- **Verify:** GET webhook detail response does not contain `secret` field.
+
+### BL-R-H5 | Inconsistent user ID property across handlers
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `workers/src/handlers/cluster.js`, `workers/src/handlers/sms.js`
+- **Problem:** Most handlers use `request._user?.sub` but cluster and SMS handlers use `request._user?.userId`. Auth middleware sets `sub`, so `userId` is always `undefined`.
+- **Fix:** Replace all `request._user?.userId` with `request._user?.sub`.
+- **Verify:** Cluster list and SMS subscribe/unsubscribe work for authenticated users.
+
+### BL-R-H6 | SMS column name mismatch — subscribe broken
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `workers/src/handlers/sms.js`
+- **Problem:** Subscribe writes to `sms_opt_in` but query handler reads `sms_opted_in`. Column name mismatch causes failure.
+- **Fix:** Audit DB schema for canonical column name. Align all references.
+- **Verify:** SMS subscribe → query → column exists and matches.
+
+### BL-R-H7 | XSS via Notion OAuth callback error parameter
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** `workers/src/handlers/notion.js` (~line 83)
+- **Problem:** `error` query parameter interpolated directly into HTML: `<p>Error: ${error}</p>`. Reflected XSS via crafted URL.
+- **Fix:** HTML-escape the error parameter using a utility function: `escapeHtml(error)`.
+- **Verify:** `/api/notion/callback?error=<script>alert(1)</script>` renders escaped text, not executable script.
+
+### BL-R-H8 | SSE profile streaming not wrapped in waitUntil
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `workers/src/handlers/profile-stream.js`
+- **Problem:** Streaming profile generation pipeline runs without `ctx.waitUntil()`. Client disconnect may terminate the Worker before DB write completes.
+- **Fix:** Wrap the pipeline Promise in `ctx.waitUntil(pipelinePromise)`.
+- **Verify:** Disconnect during streaming — profile still saved to DB.
+
+### BL-R-H9 | `fs` import in engine chart.js breaks Cloudflare Workers
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `src/engine/chart.js` (lines 19–21)
+- **Problem:** Static ESM `import { readFileSync } from 'fs'` fails at import time in Cloudflare Workers (no Node.js fs module). The try/catch only guards `fileURLToPath`, not the static import.
+- **Fix:** Use dynamic `import()` for Node-only paths, or restructure data loading to use injected data from `engine-compat.js` exclusively in Workers.
+- **Verify:** `chart.js` loads cleanly in Cloudflare Workers without bundler hacks.
+
+### BL-R-H10 | Missing HD channel 42-53 (Channel of Maturation)
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `src/engine/chart.js`, `workers/src/handlers/composite.js`
+- **Problem:** `CHANNELS` array has 35 of 36 standard HD channels. Missing 42-53 (Sacral→Root, Channel of Maturation). Charts with gates 42/53 never show this channel.
+- **Fix:** Add `[42, 53, 'Sacral', 'Root']` to both CHANNELS arrays.
+- **Verify:** Test vector with gates 42 + 53 active → channel appears in output.
+
+### BL-R-H11 | WordPress plugin exposes API key to all page visitors
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** `wordpress-plugin/primeself-chart.php` (~line 309)
+- **Problem:** `wp_localize_script` outputs `apiKey` to frontend JS on every page load. Any visitor can read it from `primeselfConfig.apiKey` in page source.
+- **Fix:** Remove API key from frontend. Proxy all API calls through the WP REST endpoint (`/primeself/v1/chart`) which makes server-side calls with the key.
+- **Verify:** View page source — no API key visible.
+
+### BL-R-H12 | WordPress REST endpoint allows unauthenticated access
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** `wordpress-plugin/primeself-chart.php` (~line 340)
+- **Problem:** `permission_callback => '__return_true'` on `POST /primeself/v1/chart`. Any visitor can make unlimited API calls.
+- **Fix:** Add nonce verification: `'permission_callback' => function() { return wp_verify_nonce(...); }` or at minimum rate-limit by IP.
+- **Verify:** Unauthenticated POST returns 403.
+
+### BL-R-H13 | Frontend XSS — API data injected via template literals without escaping
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** `frontend/index.html` (all `renderX()` functions)
+- **Problem:** API response fields (e.g., `qsg.whoYouAre`, profile names) are interpolated directly into innerHTML via template literals. If API ever returns user-controlled content, this is XSS.
+- **Fix:** Create `escapeHtml()` utility and apply to all API data before DOM insertion. Prefer `textContent` over `innerHTML` where possible.
+- **Verify:** API response containing `<img onerror=alert(1)>` renders as escaped text.
+
+### BL-R-H14 | No CSRF protection on state-changing endpoints
+- [ ] **Status:** Open
+- **Severity:** High (Security)
+- **Files:** All POST/PUT/DELETE handlers
+- **Problem:** Endpoints rely solely on JWT Bearer + CORS. No CSRF tokens or SameSite cookie attributes. If JWTs are stored in cookies, this is exploitable.
+- **Fix:** Ensure JWT is in `Authorization` header only (not cookies). If cookies are used, add `SameSite=Strict` and CSRF token double-submit pattern.
+- **Verify:** Cross-origin form submission to state-changing endpoint is rejected.
+
+---
+
+## Medium (20)
+
+### BL-R-M1 | `toJulianDay` silently drops seconds parameter
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/julian.js`, `src/engine/index.js`, `src/engine/transits.js`
+- **Problem:** `toJulianDay(year, month, day, hour, minute)` ignores a 6th `second` argument passed by callers. For births near gate/line boundaries, this is data loss (~0.36 arc-seconds).
+- **Fix:** Add `second = 0` parameter: `toJulianDay(year, month, day, hour = 0, minute = 0, second = 0)` and include `second / 3600` in the day fraction.
+- **Verify:** `toJulianDay(2000, 1, 1, 12, 0, 30)` differs from `toJulianDay(2000, 1, 1, 12, 0, 0)` by ~0.00000347.
+
+### BL-R-M2 | `jdnToCalendar` produces hour=24 on boundary rounding
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/design.js` (~line 90)
+- **Problem:** `Math.round(timeFraction * 24 * 60)` can produce 1440 when `timeFraction ≈ 1.0`, yielding `hour=24, minute=0` — invalid time. Day not incremented.
+- **Fix:** If `totalMinutes >= 1440`, set `totalMinutes = 0` and increment the day.
+- **Verify:** `jdnToCalendar(2451545.9999999)` returns valid hour (0–23).
+
+### BL-R-M3 | Chiron cycle defined but planet never computed
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/transits.js` (~line 568), `src/engine/planets.js`
+- **Problem:** `LIFE_CYCLES` includes `{ planet: 'chiron', period: 50.76 }` but `getAllPositions()` never computes Chiron. The `if (!natalPositions[planet]) continue` guard silently skips it.
+- **Fix:** Either implement Chiron computation (Keplerian elements available) or remove the Chiron cycle definition.
+- **Verify:** Transit life cycles either include a meaningful Chiron return date or don't list Chiron.
+
+### BL-R-M4 | Ego authority doesn't distinguish Manifested vs Projected 
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/chart.js` (~line 235)
+- **Problem:** `'Ego / Heart Projected'` used for all Heart-authority types. Manifestors with defined Heart should get "Ego Manifested" authority.
+- **Fix:** Check Type before assigning Ego authority: if Manifestor → "Ego Manifested", else → "Ego Projected".
+- **Verify:** A Manifestor with Heart authority returns "Ego Manifested".
+
+### BL-R-M5 | Dead code: `getEarthPosition()` never called
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/planets.js` (~line 128)
+- **Problem:** Function defined and commented as "more accurate" but never used. `getAllPositions` uses `getHelioPosition(T, ELEMENTS.earth)` instead.
+- **Fix:** Either use it (if more accurate) or remove it to reduce confusion.
+- **Verify:** No unused exports in planets.js.
+
+### BL-R-M6 | `personalYear` reduction inconsistent with `lifePathNumber`
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/numerology.js` (~line 108)
+- **Problem:** `lifePathNumber` reduces each component first then sums; `personalYear` sums raw values then reduces. Can produce different results for same inputs.
+- **Fix:** Align methodology — reduce components first, then sum, per standard Pythagorean numerology.
+- **Verify:** All reduction methods use consistent approach.
+
+### BL-R-M7 | Placidus house calculation fails at polar latitudes
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/astro.js` (~line 182)
+- **Problem:** When `|tan(lat)·tan(decl)| ≥ 1`, ascensional difference clamped to ±89.9° producing wildly inaccurate house cusps for `|lat| > 66°`. No warning emitted.
+- **Fix:** Detect polar latitude and fall back to Equal House system with a warning flag in the output.
+- **Verify:** Latitude 70°N returns `{ houseSystem: 'equal', warning: 'polar latitude' }`.
+
+### BL-R-M8 | No input validation on engine entry point
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/index.js`
+- **Problem:** `calculateFullChart()` has zero input validation. `year=undefined` flows through producing NaN throughout all layers. No try/catch around layers.
+- **Fix:** Validate required params (year, month, day, hour, minute, lat, lng) at entry. Throw descriptive errors.
+- **Verify:** `calculateFullChart({})` throws with "Missing required field: year".
+
+### BL-R-M9 | Massive if/else router (~200 lines, 100+ routes)
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/index.js`
+- **Problem:** Routing is a ~200-line if/else chain. Hard to maintain, no per-route middleware composition, duplicated path parsing.
+- **Fix:** Replace with a trie-based router or `itty-router`. Compose middleware per route.
+- **Verify:** All routes still function. Route matching is O(1) not O(n).
+
+### BL-R-M10 | Internal self-fetch in check-in handler doubles cost
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/handlers/checkin.js`
+- **Problem:** `fetch(${env.BASE_URL}/api/transits/today)` calls its own API, doubling Worker invocations and latency.
+- **Fix:** Import the transit calculation function directly instead of HTTP self-fetch.
+- **Verify:** Check-in handler completes without outbound HTTP to self.
+
+### BL-R-M11 | Dynamic imports in request hot path add latency
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/handlers/share.js`, `workers/src/handlers/webhooks.js`
+- **Problem:** `await import('./famous.js')` and `await import('../lib/webhookDispatcher.js')` inside request handlers. These modules are static and should be top-level imports.
+- **Fix:** Move to static top-level `import` statements.
+- **Verify:** No `await import()` calls inside handler functions.
+
+### BL-R-M12 | N+1 KV reads in onboarding handler
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/handlers/onboarding.js`
+- **Problem:** `handleProgress` makes up to 22 sequential `env.CACHE.get()` calls. `kvCache.getMany()` utility exists for parallel reads.
+- **Fix:** Replace sequential reads with `kvCache.getMany()`.
+- **Verify:** Onboarding progress loads in 1 parallel batch, not 22 sequential calls.
+
+### BL-R-M13 | Rate limiter stores unbounded timestamp arrays in KV
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/middleware/rateLimit.js`
+- **Problem:** Sliding window stores array of all request timestamps. High-traffic endpoints grow KV value size significantly.
+- **Fix:** Switch to fixed-window counter or token bucket. Store only a count + window start timestamp.
+- **Verify:** KV value for rate limit key is a small fixed-size object.
+
+### BL-R-M14 | No input length validation on request bodies
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** Multiple handlers
+- **Problem:** No string length limits on check-in notes, alert names, webhook URLs, cluster names, diary entries. Megabyte payloads accepted.
+- **Fix:** Add max-length validation per field (e.g., notes: 2000 chars, names: 255 chars, URLs: 2048 chars).
+- **Verify:** Oversized input returns 400 with "exceeds maximum length" message.
+
+### BL-R-M15 | No pagination limits — uncapped `limit` param
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/handlers/push.js`, `alerts.js`, `webhooks.js`
+- **Problem:** List endpoints accept `?limit=1000000` without capping, causing expensive full-table scans.
+- **Fix:** Cap all limits: `Math.min(Number(limit) || 20, 100)`.
+- **Verify:** `?limit=999999` returns at most 100 results.
+
+### BL-R-M16 | `personalizeTemplate` returns unmodified object (alerts broken)
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/handlers/alerts.js` (~line 706)
+- **Problem:** `JSON.stringify` with replacer returns a string, but the return value is discarded. Function returns the original `config` object. Template placeholders like `{{natal_mars_gate}}` are never replaced.
+- **Fix:** Parse the `JSON.stringify` result back: `return JSON.parse(JSON.stringify(config, replacer))`.
+- **Verify:** Alert with template placeholder shows actual gate value.
+
+### BL-R-M17 | Code duplication: utilities reimplemented in transits.js
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `src/engine/transits.js`
+- **Problem:** `normalizeDegrees`, `jdnToCalendar`, and `signFromLongitude` reimplemented locally instead of importing from `julian.js`/`design.js`/`astro.js`.
+- **Fix:** Import shared utilities from canonical modules. Delete local copies.
+- **Verify:** Only one definition of each utility in the codebase.
+
+### BL-R-M18 | embed.js origin check uses `.includes()` — bypassable
+- [ ] **Status:** Open
+- **Severity:** Medium (Security)
+- **Files:** `frontend/embed.js` (~line 95)
+- **Problem:** `event.origin.includes('primeself.app')` matches crafted domains like `evil-primeself.app.com`.
+- **Fix:** Use strict origin matching: `event.origin === 'https://primeself.app'` or check against a whitelist.
+- **Verify:** Message from `evil-primeself.app.com` is rejected.
+
+### BL-R-M19 | `postMessage('*')` in embed.html exposes chart data
+- [ ] **Status:** Open
+- **Severity:** Medium (Security)
+- **Files:** `frontend/embed.html` (~lines 415, 425, 443, 470)
+- **Problem:** All `postMessage` calls use `'*'` as targetOrigin. Any window can intercept chart data.
+- **Fix:** Use specific parent origin from embed configuration or `event.origin` from the initiating message.
+- **Verify:** `postMessage` uses explicit origin, not `'*'`.
+
+### BL-R-M20 | Cron job contains raw inline SQL
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/cron.js`
+- **Problem:** Raw SQL queries inline instead of using the centralized `QUERIES` object from `db/queries.js`. Bypasses query auditing.
+- **Fix:** Move cron queries to `QUERIES` object and import.
+- **Verify:** `cron.js` contains no raw SQL strings.
+
+---
+
+## Low (12)
+
+### BL-R-L1 | `embed.js` `destroy()` leaks event listener
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/embed.js`
+- **Problem:** `destroy()` removes iframe but never removes the `message` event listener. Memory leak on repeated create/destroy cycles.
+- **Fix:** Store listener reference and call `removeEventListener` in `destroy()`.
+- **Verify:** After `destroy()`, no `message` listeners from embed remain.
+
+### BL-R-L2 | PWA icons reference nonexistent files
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/manifest.json`, `frontend/icons/`
+- **Problem:** Manifest declares icons (`icon-72x72.png` through `icon-512x512.png`) and screenshots, but only `README.md` exists in those directories.
+- **Fix:** Generate required icon set, or remove references from manifest.
+- **Verify:** All icon paths in manifest resolve to actual files.
+
+### BL-R-L3 | `fb:app_id` placeholder in meta tag
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/index.html` (~line 670)
+- **Problem:** `<meta property="fb:app_id" content="YOUR_FACEBOOK_APP_ID">` — never replaced.
+- **Fix:** Either set real App ID or remove the tag.
+- **Verify:** No placeholder meta tags in HTML.
+
+### BL-R-L4 | `!importance` CSS typo — rule silently ignored
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/css/components/mobile.css` (~line 461)
+- **Problem:** `!importance` instead of `!important`. CSS rule has no effect.
+- **Fix:** Change to `!important`.
+- **Verify:** Rule applies correctly.
+
+### BL-R-L5 | Service worker push handler lacks try/catch on JSON parse
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/service-worker.js` (~line 210)
+- **Problem:** Push event payload parsed without try/catch. Malformed push payload crashes the handler.
+- **Fix:** Wrap in try/catch with fallback notification text.
+- **Verify:** Malformed push payload shows fallback notification instead of crashing.
+
+### BL-R-L6 | Service worker cache has no size limit or eviction
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/service-worker.js`
+- **Problem:** Static asset cache grows unbounded. No max-age on API response cache.
+- **Fix:** Implement LRU eviction (cap at 50 entries) and max-age (24h for API, 7d for static).
+- **Verify:** Cache size stays bounded after repeated usage.
+
+### BL-R-L7 | `i18n.js` adds click listener on every `renderSwitcher()` call
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/js/i18n.js`
+- **Problem:** `renderSwitcher()` adds `document.addEventListener('click')` every time — memory leak.
+- **Fix:** Add listener once, or remove before re-adding.
+- **Verify:** Multiple `renderSwitcher()` calls produce only one click listener.
+
+### BL-R-L8 | i18n system fully built but never connected to HTML
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `frontend/index.html`, `frontend/js/i18n.js`, `frontend/locales/*.json`
+- **Problem:** Complete i18n system with 5 locale files exists but `index.html` has zero `data-i18n` attributes. Dead code.
+- **Fix:** Wire in `data-i18n` attributes for all UI text, or document as future work.
+- **Verify:** Language switcher changes at least nav labels.
+
+### BL-R-L9 | Artwork animations lack `prefers-reduced-motion` check
+- [ ] **Status:** Open
+- **Severity:** Low (Accessibility)
+- **Files:** `frontend/css/artwork.css`
+- **Problem:** 10+ concurrent fullscreen `@keyframes` animations. No `prefers-reduced-motion` media query. GPU/battery drain on mobile. WCAG 2.1 §2.3.3.
+- **Fix:** Add `@media (prefers-reduced-motion: reduce) { .lava-lamp, .orbital-ring, ... { animation: none; } }`.
+- **Verify:** Reduced-motion setting disables all decorative animations.
+
+### BL-R-L10 | Tab buttons lack ARIA roles
+- [ ] **Status:** Open
+- **Severity:** Low (Accessibility)
+- **Files:** `frontend/index.html`
+- **Problem:** Tab buttons missing `role="tab"`, `aria-selected`, `aria-controls`. Modals lack `role="dialog"`, `aria-modal`, focus trap.
+- **Fix:** Add proper ARIA attributes to tab system. Implement focus trap for modals.
+- **Verify:** Screen reader correctly announces tab states and modal context.
+
+### BL-R-L11 | `@import url()` CSS chains block first paint
+- [ ] **Status:** Open
+- **Severity:** Low (Performance)
+- **Files:** `frontend/css/prime-self-premium.css`
+- **Problem:** Up to 8 serial `@import url()` requests. Each blocks rendering until loaded.
+- **Fix:** Replace with a build step that concatenates CSS, or use `<link>` tags in HTML for parallel loading.
+- **Verify:** Waterfall shows parallel CSS loading.
+
+### BL-R-L12 | Leaderboard partially exposes user emails
+- [ ] **Status:** Open
+- **Severity:** Low (Privacy)
+- **Files:** `workers/src/handlers/achievements.js`
+- **Problem:** Email masking `joh***@gmail.com` reveals first 3 chars + full domain. Short usernames are identifiable.
+- **Fix:** For short usernames (< 4 chars), mask entirely: `***@g...com`. Consider using display names instead.
+- **Verify:** Email with 2-char username shows `***@g...com`.
+
+---
+
+## Sprint Plan (Updated)
+
+### Sprint 9 — Security Emergency (Immediate)
+- [x] BL-R-C1: Rotate all secrets / delete Secrets.txt ✅ SECRETS_GUIDE.md created, Secrets.txt cleared
+- [x] BL-R-C2: Remove fake metrics and fabricated testimonials
+- [x] BL-R-C3: Parameterize analytics SQL
+- [x] BL-R-H7: Fix Notion OAuth XSS
+- [x] BL-R-H13: Add escapeHtml to all renderX() functions ✅ 30+ innerHTML sites escaped
+- [x] BL-R-H14: Verify CSRF protection model ✅ Bearer-token auth inherently CSRF-safe, documented in cors.js
+- [x] BL-R-C5: Fix mobile navigation tab IDs
+- [x] BL-R-C6: Fix check-in DOM references and API paths
+
+### Sprint 10 — Backend/API Integrity
+- [x] BL-R-C4: Consolidate Stripe webhook handlers
+- [x] BL-R-H1: Singleton DB connection pool ✅ Module-level Pool cache in queries.js
+- [x] BL-R-H2: Sanitize error responses
+- [x] BL-R-H5: Fix userId property inconsistency
+- [x] BL-R-H6: Fix SMS column name mismatch
+- [x] BL-R-H8: waitUntil for streaming
+- [x] BL-R-M16: Fix personalizeTemplate return
+- [x] BL-R-M15: Cap pagination limits
+
+### Sprint 11 — Engine Accuracy
+- [x] BL-R-H10: Add missing channel 42-53
+- [x] BL-R-M1: Accept seconds in toJulianDay
+- [x] BL-R-M2: Fix jdnToCalendar hour=24 overflow
+- [x] BL-R-M3: Resolve Chiron cycle
+- [x] BL-R-M4: Ego Manifested vs Projected authority
+- [x] BL-R-M8: Engine input validation
+- [x] BL-R-M17: Deduplicate utility functions
+
+### Sprint 12 — Frontend Fixes ✅
+- [x] BL-R-M18: Strict embed.js origin check
+- [x] BL-R-M19: Restrict postMessage targetOrigin
+- [x] BL-R-L3: Remove fb:app_id placeholder
+- [x] BL-R-L4: Fix CSS `!importance` typo
+- [x] BL-R-L9: Add prefers-reduced-motion to artwork
+- [x] BL-R-L10: ARIA roles for tabs and modals
+
+### Sprint 13 — WordPress & Integrations ✅
+- [x] BL-R-H11: Remove API key from frontend
+- [x] BL-R-H12: Add authentication to WP REST endpoint
+- [x] BL-R-H9: Fix fs import for Workers compat
+
+### Sprint 14 — Performance & Polish ✅
+- [x] BL-R-M9: Replace if/else router
+- [x] BL-R-M10: Remove self-fetch in check-in
+- [x] BL-R-M11: Static imports instead of dynamic
+- [x] BL-R-M12: Batch KV reads in onboarding
+- [x] BL-R-M13: Fixed-window rate limiter
+- [x] BL-R-M14: Input length validation
+- [x] BL-R-L5: Service worker push try/catch
+- [x] BL-R-L6: Cache eviction strategy
+- [x] BL-R-L11: Eliminate CSS @import chains
 
 ---
 

@@ -1,11 +1,38 @@
 -- Prime Self — Neon PostgreSQL Schema Migration
--- Run once against the Neon database to create all required tables.
+-- Base schema: core tables required for the platform.
+-- Run via `node run-migration.js` which applies this file PLUS
+-- all numbered migrations in src/db/migrations/ (003–015).
 --
--- Usage (via psql or Neon SQL Editor):
---   psql "$NEON_CONNECTION_STRING" -f migrate.sql
+-- Base tables (17): users, charts, profiles, transit_snapshots, practitioners,
+--   practitioner_clients, clusters, cluster_members, sms_messages,
+--   validation_data, psychometric_data, diary_entries, subscriptions,
+--   payment_events, usage_records, share_events, schema_migrations.
+--
+-- Migration-only tables (30): invoices, usage_tracking, promo_codes, referrals,
+--   user_achievements, achievement_events, user_streaks, user_achievement_stats,
+--   webhooks, webhook_deliveries, push_subscriptions, push_notifications,
+--   notification_preferences, transit_alerts, alert_deliveries, alert_templates,
+--   api_keys, api_usage, oauth_states, notion_connections, notion_syncs,
+--   notion_pages, daily_checkins, checkin_reminders, alignment_trends,
+--   analytics_events, analytics_daily, funnel_events, experiments,
+--   experiment_assignments, experiment_conversions.
+--
+-- Usage:
+--   NEON_CONNECTION_STRING="..." node run-migration.js
+--   node run-migration.js --status   # Show applied migrations
 
 -- ─── Extensions ──────────────────────────────────────────────
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ─── Migration Tracking ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  id              SERIAL PRIMARY KEY,
+  migration_name  TEXT UNIQUE NOT NULL,
+  applied_at      TIMESTAMPTZ DEFAULT now(),
+  checksum        TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_migrations_name ON schema_migrations (migration_name);
 
 -- ─── Users ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
@@ -104,6 +131,110 @@ CREATE TABLE IF NOT EXISTS sms_messages (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sms_user ON sms_messages (user_id, sent_at DESC);
+
+-- ─── Behavioral Validation Data ─────────────────────────────
+CREATE TABLE IF NOT EXISTS validation_data (
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id             UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  decision_pattern    TEXT,   -- How they make decisions (validates Authority)
+  energy_pattern      TEXT,   -- Energy mechanics (validates Type)
+  current_focus       TEXT,   -- Current challenge/question (personalization)
+  created_at          TIMESTAMPTZ DEFAULT now(),
+  updated_at          TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_validation_user ON validation_data (user_id);
+
+-- ─── Psychometric Assessment Data ───────────────────────────
+CREATE TABLE IF NOT EXISTS psychometric_data (
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id             UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  big_five_scores     JSONB,  -- { openness: 4.2, conscientiousness: 3.8, ... }
+  via_strengths       JSONB,  -- [{ rank: 1, strength: 'Curiosity', score: 4.8 }, ...]
+  completed_at        TIMESTAMPTZ DEFAULT now(),
+  updated_at          TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_psychometric_user ON psychometric_data (user_id);
+
+-- ─── Diary / Life Events Journal ────────────────────────────
+CREATE TABLE IF NOT EXISTS diary_entries (
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id             UUID REFERENCES users(id) ON DELETE CASCADE,
+  event_date          DATE NOT NULL,
+  event_title         TEXT NOT NULL,
+  event_description   TEXT,
+  event_type          TEXT,   -- 'career', 'relationship', 'health', 'spiritual', 'other'
+  significance        TEXT,   -- 'major', 'moderate', 'minor'
+  transit_snapshot    JSONB,  -- Auto-captured transits at event_date (for correlation)
+  created_at          TIMESTAMPTZ DEFAULT now(),
+  updated_at          TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_diary_user ON diary_entries (user_id, event_date DESC);
+CREATE INDEX IF NOT EXISTS idx_diary_date ON diary_entries (event_date);
+
+-- ─── Subscriptions ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id                 UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  stripe_customer_id      TEXT UNIQUE NOT NULL,
+  stripe_subscription_id  TEXT UNIQUE,
+  tier                    TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'seeker', 'guide', 'practitioner')),
+  status                  TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'past_due', 'unpaid', 'trialing')),
+  current_period_start    TIMESTAMPTZ,
+  current_period_end      TIMESTAMPTZ,
+  cancel_at_period_end    BOOLEAN DEFAULT false,
+  created_at              TIMESTAMPTZ DEFAULT now(),
+  updated_at              TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions (user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_customer ON subscriptions (stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_tier ON subscriptions (tier);
+
+-- ─── Payment Events ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS payment_events (
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  subscription_id     UUID REFERENCES subscriptions(id) ON DELETE CASCADE,
+  stripe_event_id     TEXT UNIQUE NOT NULL,
+  event_type          TEXT NOT NULL,
+  amount              INTEGER,           -- Amount in cents
+  currency            TEXT DEFAULT 'usd',
+  status              TEXT,              -- 'succeeded', 'failed', 'pending'
+  failure_reason      TEXT,
+  raw_event           JSONB,             -- Full Stripe event for debugging
+  created_at          TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_payment_events_subscription ON payment_events (subscription_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payment_events_stripe ON payment_events (stripe_event_id);
+
+-- ─── Usage Tracking ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS usage_records (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
+  action        TEXT NOT NULL,  -- 'chart_calculation', 'profile_generation', 'api_call', 'sms_sent'
+  endpoint      TEXT,           -- API endpoint called
+  quota_cost    INTEGER DEFAULT 1,
+  created_at    TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_records (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_usage_action ON usage_records (action, created_at DESC);
+
+-- ─── Share Events ────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS share_events (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
+  share_type    TEXT NOT NULL,  -- 'celebrity_match', 'chart', 'achievement', 'referral'
+  share_data    JSONB,          -- Context data (celebrity name, achievement ID, etc.)
+  platform      TEXT,           -- 'twitter', 'facebook', 'linkedin', 'whatsapp', 'email', 'unknown'
+  created_at    TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_share_events_user ON share_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_share_events_type ON share_events (share_type, created_at DESC);
 
 -- ─── Done ────────────────────────────────────────────────────
 -- All tables use IF NOT EXISTS — safe to re-run.

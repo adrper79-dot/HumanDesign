@@ -1,0 +1,26 @@
+{
+  "name": "primeself-zapier",
+  "version": "1.0.0",
+  "description": "Prime Self integration for Zapier - chart calculations, transit alerts, and client management",
+  "main": "index.js",
+  "scripts": {
+    "test": "zapier test",
+    "validate": "zapier validate",
+    "push": "zapier push"
+  },
+  "dependencies": {
+    "zapier-platform-core": "^15.0.0"
+  },
+  "devDependencies": {
+    "zapier-platform-cli": "^15.0.0"
+  },
+  "keywords": [
+    "primeself",
+    "human design",
+    "astrology",
+    "chart",
+    "transit"
+  ],
+  "author": "Prime Self",
+  "license": "MIT"
+}

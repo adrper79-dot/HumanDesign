@@ -9,20 +9,8 @@
  * - Functional beauty
  */
 
-/* ─── Foundation ─────────────── */
-@import url('./design-tokens-premium.css');
-@import url('./icons.css');
-@import url('./artwork.css');
-
-/* ─── Component Library ─────────────── */
-@import url('./base.css');
-@import url('./components/buttons.css');
-@import url('./components/cards.css');
-@import url('./components/forms.css');
-@import url('./components/tabs.css');
-@import url('./components/modals.css');
-@import url('./components/alerts.css');
-@import url('./components/layout.css');
+/* ─── Foundation & Components ─────────────── */
+/* @import chains eliminated — all CSS loaded via parallel <link> tags in index.html */
 
 /* ─── Premium Overrides ─────────────── */
 

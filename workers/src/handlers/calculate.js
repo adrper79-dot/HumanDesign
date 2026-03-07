@@ -18,8 +18,17 @@
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { enforceUsageQuota, recordUsage } from '../middleware/tierEnforcement.js';
+import { trackEvent } from './achievements.js';
+import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 
 export async function handleCalculate(request, env) {
+  // Enforce usage quota for chart calculation (only if authenticated)
+  if (request._user) {
+    const quotaCheck = await enforceUsageQuota(request, env, 'chart_calculation', 'chartCalculations');
+    if (quotaCheck) return quotaCheck;
+  }
+
   let body;
   try {
     body = await request.json();
@@ -50,7 +59,7 @@ export async function handleCalculate(request, env) {
       utc = parseToUTC(birthDate, birthTime, birthTimezone);
     } catch (error) {
       return Response.json(
-        { error: error.message },
+        { error: 'Invalid birth data format' }, // BL-R-H2
         { status: 400 }
       );
     }
@@ -61,12 +70,15 @@ export async function handleCalculate(request, env) {
     utc = { year, month, day, hour, minute, second: 0 };
   }
 
-  // Run full chart calculation
-  const result = calculateFullChart({
-    ...utc,
-    lat: parseFloat(lat),
-    lng: parseFloat(lng)
-  });
+  // Run full chart calculation (cached by birth params)
+  const cacheKey = keys.chart(birthDate, birthTime, lat, lng);
+
+  const { data: result, cached: cacheHit } = await kvCache.getOrSet(
+    env, cacheKey, TTL.CHART,
+    () => calculateFullChart({ ...utc, lat: parseFloat(lat), lng: parseFloat(lng) })
+  );
+
+  recordCacheAccess(cacheHit);
 
   // Non-blocking DB persistence — save chart if user is authenticated
   let chartId = null;
@@ -91,9 +103,22 @@ export async function handleCalculate(request, env) {
     }
   }
 
+  // Record usage after successful chart calculation (only if authenticated)
+  if (userId) {
+    await recordUsage(env, userId, 'chart_calculation', '/api/chart/calculate');
+    
+    // Track achievement event
+    await trackEvent(env, userId, 'chart_calculated', { chartId }, request._tier || 'free');
+  }
+
   return Response.json({
     ok: true,
     data: result,
+    tier: request._tier,
+    usage: request._user ? {
+      current: request._usage || 0,
+      action: 'chart_calculation'
+    } : null,
     meta: {
       chartId,
       utcInput: utc,
@@ -142,6 +167,6 @@ export async function handleGetChart(request, env, chartId) {
       }
     });
   } catch (err) {
-    return Response.json({ error: 'Database error', detail: err.message }, { status: 500 });
+    return Response.json({ error: 'Database error' }, { status: 500 });
   }
 }

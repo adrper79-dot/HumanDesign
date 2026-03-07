@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "locale": "es",
+    "name": "Español",
+    "direction": "ltr"
+  },
+  "nav": {
+    "chart": "Carta",
+    "keys": "Claves",
+    "astro": "Astro",
+    "transits": "Tránsitos",
+    "profile": "Perfil",
+    "enhance": "Mejorar",
+    "diary": "Diario"
+  },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "createAccount": "Crear Cuenta",
+    "signOut": "Cerrar Sesión",
+    "notSignedIn": "No has iniciado sesión",
+    "emailRequired": "Correo y contraseña requeridos.",
+    "sessionExpired": "Sesión expirada — inicia sesión de nuevo.",
+    "connectionError": "Error de conexión: {{message}}",
+    "pleaseWait": "Por favor espera…",
+    "startJourney": "Comienza tu viaje Prime Self.",
+    "accessProfile": "Accede a tu perfil Prime Self y cartas guardadas.",
+    "alreadyAccount": "¿Ya tienes una cuenta?",
+    "noAccount": "¿No tienes una cuenta?",
+    "createOne": "Crear una",
+    "signInLink": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "signInUpgrade": "Inicia sesión para mejorar tu cuenta."
+  },
+  "chart": {
+    "title": "Carta de Diseño Humano",
+    "calculate": "Calcular Carta",
+    "calculating": "Calculando…",
+    "birthDate": "Fecha de Nacimiento",
+    "birthTime": "Hora de Nacimiento",
+    "birthLocation": "Lugar de Nacimiento",
+    "lookupLocation": "Buscar",
+    "tryExample": "Probar Ejemplo",
+    "type": "Tipo",
+    "authority": "Autoridad",
+    "profile": "Perfil",
+    "definition": "Definición",
+    "strategy": "Estrategia",
+    "notSelf": "Tema del No-Ser",
+    "incarnationCross": "Cruz de Encarnación",
+    "definedCenters": "Centros Definidos",
+    "openCenters": "Centros Abiertos",
+    "activeChannels": "Canales Activos",
+    "gates": "Puertas",
+    "saveChart": "Guardar Carta",
+    "viewRaw": "Ver Datos Crudos",
+    "hideRaw": "Ocultar Datos Crudos"
+  },
+  "profile": {
+    "title": "Perfil Prime Self",
+    "generate": "Generar Perfil",
+    "generating": "Generando tu Perfil Prime Self…",
+    "listProfiles": "Ver Perfiles Guardados",
+    "exportPdf": "Exportar PDF",
+    "shareProfile": "Compartir",
+    "question": "Pregunta de enfoque opcional",
+    "questionPlaceholder": "ej. ¿Cuál es mi Forja primaria?",
+    "noProfiles": "No tienes perfiles guardados."
+  },
+  "transits": {
+    "title": "Tránsitos Actuales",
+    "loading": "Cargando datos de tránsito…",
+    "today": "Tránsitos de Hoy",
+    "forecast": "Pronóstico",
+    "gateActivations": "Activaciones de Puertas",
+    "aspects": "Aspectos de Tránsito",
+    "noData": "No hay datos de tránsito disponibles."
+  },
+  "composite": {
+    "title": "Carta Compuesta",
+    "personA": "Persona A",
+    "personB": "Persona B",
+    "generate": "Generar Compuesta",
+    "electromagnetic": "Conexiones Electromagnéticas",
+    "dominance": "Canales Dominantes",
+    "companionship": "Compañerismo",
+    "compromise": "Compromiso",
+    "dynamics": "Dinámicas de Relación"
+  },
+  "practitioner": {
+    "title": "Panel del Practicante",
+    "clients": "Clientes",
+    "addClient": "Agregar Cliente",
+    "clientEmail": "Correo del cliente",
+    "roster": "Lista de Clientes",
+    "noClients": "No tienes clientes aún."
+  },
+  "clusters": {
+    "title": "Inteligencia Grupal",
+    "create": "Crear Grupo",
+    "name": "Nombre del Grupo",
+    "description": "Descripción",
+    "members": "Miembros",
+    "addMember": "Agregar Miembro",
+    "synthesize": "Sintetizar Grupo",
+    "noClusters": "No tienes grupos aún."
+  },
+  "diary": {
+    "title": "Diario de Eventos",
+    "newEntry": "Nueva Entrada",
+    "save": "Guardar Entrada",
+    "date": "Fecha",
+    "mood": "Ánimo",
+    "energy": "Nivel de Energía",
+    "notes": "Notas",
+    "noEntries": "No hay entradas en tu diario."
+  },
+  "enhance": {
+    "title": "Mejora tu Perfil",
+    "behavioral": "Validación Conductual",
+    "bigFive": "Cinco Grandes Rasgos",
+    "via": "Fortalezas de Carácter VIA",
+    "save": "Guardar Evaluación"
+  },
+  "onboarding": {
+    "title": "El Arco de la Sabana",
+    "start": "Comenzar Viaje",
+    "next": "Siguiente Capítulo",
+    "previous": "Anterior",
+    "complete": "Capítulo Completo"
+  },
+  "sms": {
+    "subscribe": "Suscribirse a Resúmenes Diarios",
+    "unsubscribe": "Desuscribirse",
+    "phone": "Número de Teléfono",
+    "subscribed": "Suscrito a resúmenes por SMS",
+    "unsubscribed": "Desuscrito de resúmenes por SMS"
+  },
+  "pricing": {
+    "title": "Elige tu Camino",
+    "seeker": "Buscador",
+    "guide": "Guía",
+    "practitioner": "Practicante",
+    "perMonth": "/mes",
+    "currentPlan": "Plan Actual",
+    "upgrade": "Mejorar Plan",
+    "billingPortal": "Gestionar Facturación"
+  },
+  "share": {
+    "title": "Compartir",
+    "copyLink": "Copiar Enlace",
+    "copied": "¡Copiado!",
+    "twitter": "Compartir en X",
+    "facebook": "Compartir en Facebook",
+    "downloadImage": "Descargar Imagen"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "error": "Algo salió mal.",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados.",
+    "success": "¡Éxito!",
+    "features": "Características",
+    "learnMore": "Más Información"
+  },
+  "errors": {
+    "networkError": "Error de red. Verifica tu conexión.",
+    "serverError": "Error del servidor. Intenta de nuevo más tarde.",
+    "notFound": "No encontrado.",
+    "unauthorized": "Inicia sesión para continuar.",
+    "forbidden": "No tienes acceso a esta función.",
+    "quotaExceeded": "Límite de uso alcanzado. Mejora tu plan.",
+    "invalidInput": "Verifica tu entrada e intenta de nuevo.",
+    "missingField": "Campo requerido: {{field}}"
+  }
+}

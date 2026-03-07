@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "locale": "fr",
+    "name": "Français",
+    "direction": "ltr"
+  },
+  "nav": {
+    "chart": "Carte",
+    "keys": "Clés",
+    "astro": "Astro",
+    "transits": "Transits",
+    "profile": "Profil",
+    "enhance": "Améliorer",
+    "diary": "Journal"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "signOut": "Se déconnecter",
+    "notSignedIn": "Non connecté",
+    "emailRequired": "E-mail et mot de passe requis.",
+    "sessionExpired": "Session expirée — veuillez vous reconnecter.",
+    "connectionError": "Erreur de connexion : {{message}}",
+    "pleaseWait": "Veuillez patienter…",
+    "startJourney": "Commencez votre voyage Prime Self.",
+    "accessProfile": "Accédez à votre profil Prime Self et vos cartes enregistrées.",
+    "alreadyAccount": "Vous avez déjà un compte ?",
+    "noAccount": "Pas encore de compte ?",
+    "createOne": "En créer un",
+    "signInLink": "Se connecter",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "signInUpgrade": "Connectez-vous pour mettre à niveau votre compte."
+  },
+  "chart": {
+    "title": "Carte de Design Humain",
+    "calculate": "Calculer la Carte",
+    "calculating": "Calcul en cours…",
+    "birthDate": "Date de naissance",
+    "birthTime": "Heure de naissance",
+    "birthLocation": "Lieu de naissance",
+    "lookupLocation": "Rechercher",
+    "tryExample": "Essayer un exemple",
+    "type": "Type",
+    "authority": "Autorité",
+    "profile": "Profil",
+    "definition": "Définition",
+    "strategy": "Stratégie",
+    "notSelf": "Thème du Non-Soi",
+    "incarnationCross": "Croix d'Incarnation",
+    "definedCenters": "Centres Définis",
+    "openCenters": "Centres Ouverts",
+    "activeChannels": "Canaux Actifs",
+    "gates": "Portes",
+    "saveChart": "Enregistrer la Carte",
+    "viewRaw": "Voir les données brutes",
+    "hideRaw": "Masquer les données brutes"
+  },
+  "profile": {
+    "title": "Profil Prime Self",
+    "generate": "Générer le Profil",
+    "generating": "Génération de votre Profil Prime Self…",
+    "listProfiles": "Voir les Profils Enregistrés",
+    "exportPdf": "Exporter en PDF",
+    "shareProfile": "Partager",
+    "question": "Question de focus optionnelle",
+    "questionPlaceholder": "ex. Quelle est ma Forge principale ?",
+    "noProfiles": "Aucun profil enregistré."
+  },
+  "transits": {
+    "title": "Transits Actuels",
+    "loading": "Chargement des données de transit…",
+    "today": "Transits d'Aujourd'hui",
+    "forecast": "Prévisions",
+    "gateActivations": "Activations de Portes",
+    "aspects": "Aspects de Transit",
+    "noData": "Aucune donnée de transit disponible."
+  },
+  "composite": {
+    "title": "Carte Composite",
+    "personA": "Personne A",
+    "personB": "Personne B",
+    "generate": "Générer la Composite",
+    "electromagnetic": "Connexions Électromagnétiques",
+    "dominance": "Canaux de Dominance",
+    "companionship": "Compagnonnage",
+    "compromise": "Compromis",
+    "dynamics": "Dynamiques Relationnelles"
+  },
+  "practitioner": {
+    "title": "Tableau de Bord Praticien",
+    "clients": "Clients",
+    "addClient": "Ajouter un Client",
+    "clientEmail": "E-mail du client",
+    "roster": "Liste des Clients",
+    "noClients": "Aucun client pour le moment."
+  },
+  "clusters": {
+    "title": "Intelligence de Groupe",
+    "create": "Créer un Groupe",
+    "name": "Nom du Groupe",
+    "description": "Description",
+    "members": "Membres",
+    "addMember": "Ajouter un Membre",
+    "synthesize": "Synthétiser le Groupe",
+    "noClusters": "Aucun groupe pour le moment."
+  },
+  "diary": {
+    "title": "Journal des Événements",
+    "newEntry": "Nouvelle Entrée",
+    "save": "Enregistrer l'Entrée",
+    "date": "Date",
+    "mood": "Humeur",
+    "energy": "Niveau d'Énergie",
+    "notes": "Notes",
+    "noEntries": "Aucune entrée dans le journal."
+  },
+  "enhance": {
+    "title": "Améliorez votre Profil",
+    "behavioral": "Validation Comportementale",
+    "bigFive": "Big Five Personnalité",
+    "via": "Forces de Caractère VIA",
+    "save": "Enregistrer l'Évaluation"
+  },
+  "onboarding": {
+    "title": "L'Arc de la Savane",
+    "start": "Commencer le Voyage",
+    "next": "Chapitre Suivant",
+    "previous": "Précédent",
+    "complete": "Chapitre Terminé"
+  },
+  "sms": {
+    "subscribe": "S'abonner aux Résumés Quotidiens",
+    "unsubscribe": "Se désabonner",
+    "phone": "Numéro de téléphone",
+    "subscribed": "Abonné aux résumés SMS",
+    "unsubscribed": "Désabonné des résumés SMS"
+  },
+  "pricing": {
+    "title": "Choisissez votre Voie",
+    "seeker": "Chercheur",
+    "guide": "Guide",
+    "practitioner": "Praticien",
+    "perMonth": "/mois",
+    "currentPlan": "Plan Actuel",
+    "upgrade": "Mettre à niveau",
+    "billingPortal": "Gérer la Facturation"
+  },
+  "share": {
+    "title": "Partager",
+    "copyLink": "Copier le Lien",
+    "copied": "Copié !",
+    "twitter": "Partager sur X",
+    "facebook": "Partager sur Facebook",
+    "downloadImage": "Télécharger l'Image"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue.",
+    "retry": "Réessayer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "noResults": "Aucun résultat trouvé.",
+    "success": "Succès !",
+    "features": "Fonctionnalités",
+    "learnMore": "En savoir plus"
+  },
+  "errors": {
+    "networkError": "Erreur réseau. Vérifiez votre connexion.",
+    "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
+    "notFound": "Non trouvé.",
+    "unauthorized": "Veuillez vous connecter pour continuer.",
+    "forbidden": "Vous n'avez pas accès à cette fonctionnalité.",
+    "quotaExceeded": "Limite d'utilisation atteinte. Passez à un plan supérieur.",
+    "invalidInput": "Veuillez vérifier votre saisie et réessayer.",
+    "missingField": "Champ requis : {{field}}"
+  }
+}

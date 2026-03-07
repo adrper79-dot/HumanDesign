@@ -95,7 +95,8 @@ function jdnToCalendar(jdn) {
 
   // Extract time from fractional day
   const timeFraction = dayDecimal - day;
-  const totalMinutes = Math.round(timeFraction * 24 * 60);
+  let totalMinutes = Math.round(timeFraction * 24 * 60);
+  if (totalMinutes >= 1440) totalMinutes -= 1440;  // BL-R-M2: clamp midnight overflow
   const hour = Math.floor(totalMinutes / 60);
   const minute = totalMinutes % 60;
 

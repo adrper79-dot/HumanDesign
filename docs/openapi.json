@@ -1,0 +1,1155 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Prime Self API",
+    "version": "1.0.0",
+    "description": "Programmatic access to Human Design chart calculations, profile generation, transit forecasts, and astrological insights. Perfect for developers, researchers, and businesses building HD-powered applications.",
+    "contact": {
+      "name": "Prime Self API Support",
+      "email": "api@primeself.app",
+      "url": "https://primeself.app"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://primeself.app/terms"
+    },
+    "termsOfService": "https://primeself.app/terms"
+  },
+  "servers": [
+    {
+      "url": "https://api.primeself.app",
+      "description": "Production server"
+    },
+    {
+      "url": "https://primeself-human-design.p.rapidapi.com",
+      "description": "RapidAPI proxy"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Chart",
+      "description": "Calculate and retrieve Human Design charts"
+    },
+    {
+      "name": "Profile",
+      "description": "Generate AI-powered profile narratives"
+    },
+    {
+      "name": "Transits",
+      "description": "Current and upcoming planetary transits"
+    },
+    {
+      "name": "Gates",
+      "description": "Information about HD gates and channels"
+    },
+    {
+      "name": "Cycles",
+      "description": "Life cycles (Saturn Return, etc.)"
+    }
+  ],
+  "paths": {
+    "/api/chart/calculate": {
+      "post": {
+        "tags": ["Chart"],
+        "summary": "Calculate Human Design chart",
+        "description": "Generate a complete Human Design chart from birth data, including type, profile, authority, centers, gates, channels, astrology, and numerology.",
+        "operationId": "calculateChart",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChartCalculationRequest"
+              },
+              "examples": {
+                "basic": {
+                  "summary": "Basic chart calculation",
+                  "value": {
+                    "birthDate": "1990-01-15",
+                    "birthTime": "14:30",
+                    "birthLocation": {
+                      "city": "Los Angeles",
+                      "country": "USA",
+                      "latitude": 34.0522,
+                      "longitude": -118.2437,
+                      "timezone": "America/Los_Angeles"
+                    }
+                  }
+                },
+                "withName": {
+                  "summary": "With name",
+                  "value": {
+                    "name": "John Doe",
+                    "birthDate": "1990-01-15",
+                    "birthTime": "14:30",
+                    "birthLocation": {
+                      "city": "Los Angeles",
+                      "country": "USA",
+                      "latitude": 34.0522,
+                      "longitude": -118.2437,
+                      "timezone": "America/Los_Angeles"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chart calculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChartResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    },
+    "/api/profile/generate": {
+      "post": {
+        "tags": ["Profile"],
+        "summary": "Generate profile narrative",
+        "description": "Create an AI-powered profile narrative from a Human Design chart. Customizable by section, audience, and length.",
+        "operationId": "generateProfile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileGenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    },
+    "/api/transits/forecast": {
+      "post": {
+        "tags": ["Transits"],
+        "summary": "Get transit forecast",
+        "description": "Retrieve current and upcoming planetary transits affecting a chart. Includes gate activations, channel formations, and astrological aspects.",
+        "operationId": "getTransitForecast",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitForecastRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Forecast generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransitForecastResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    },
+    "/api/gates/{gateNumber}": {
+      "get": {
+        "tags": ["Gates"],
+        "summary": "Get gate information",
+        "description": "Retrieve detailed information about a specific Human Design gate, including name, center, circuit, lines, and Gene Key.",
+        "operationId": "getGate",
+        "parameters": [
+          {
+            "name": "gateNumber",
+            "in": "path",
+            "required": true,
+            "description": "Gate number (1-64)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gate information retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    },
+    "/api/cycles/{chartId}": {
+      "get": {
+        "tags": ["Cycles"],
+        "summary": "Get life cycles",
+        "description": "Calculate major astrological life cycles for a chart (Saturn Return, Chiron Return, Uranus Opposition, etc.)",
+        "operationId": "getLifeCycles",
+        "parameters": [
+          {
+            "name": "chartId",
+            "in": "path",
+            "required": true,
+            "description": "Chart ID from /api/chart/calculate",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Filter cycles by type",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "saturn_return", "chiron_return", "uranus_opposition", "nodal_return"],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cycles calculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CyclesResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key from primeself.app Settings > API Keys"
+      }
+    },
+    "schemas": {
+      "ChartCalculationRequest": {
+        "type": "object",
+        "required": ["birthDate", "birthTime", "birthLocation"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Person's name (optional)",
+            "example": "John Doe"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Birth date in YYYY-MM-DD format",
+            "example": "1990-01-15"
+          },
+          "birthTime": {
+            "type": "string",
+            "pattern": "^([0-1][0-9]|2[0-3]):[0-5][0-9]$",
+            "description": "Birth time in HH:MM format (24-hour)",
+            "example": "14:30"
+          },
+          "birthLocation": {
+            "$ref": "#/components/schemas/BirthLocation"
+          }
+        }
+      },
+      "BirthLocation": {
+        "type": "object",
+        "required": ["latitude", "longitude", "timezone"],
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "Birth city (optional)",
+            "example": "Los Angeles"
+          },
+          "country": {
+            "type": "string",
+            "description": "Birth country (optional)",
+            "example": "USA"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "minimum": -90,
+            "maximum": 90,
+            "description": "Latitude in decimal degrees",
+            "example": 34.0522
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "minimum": -180,
+            "maximum": 180,
+            "description": "Longitude in decimal degrees",
+            "example": -118.2437
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA timezone identifier",
+            "example": "America/Los_Angeles"
+          }
+        }
+      },
+      "ChartResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "chart": {
+            "$ref": "#/components/schemas/Chart"
+          }
+        }
+      },
+      "Chart": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique chart identifier",
+            "example": "chart_abc123"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "birthData": {
+            "$ref": "#/components/schemas/BirthData"
+          },
+          "design": {
+            "$ref": "#/components/schemas/HumanDesign"
+          },
+          "astrology": {
+            "$ref": "#/components/schemas/Astrology"
+          },
+          "numerology": {
+            "$ref": "#/components/schemas/Numerology"
+          },
+          "geneKeys": {
+            "$ref": "#/components/schemas/GeneKeys"
+          }
+        }
+      },
+      "BirthData": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "time": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/BirthLocation"
+          },
+          "julianDay": {
+            "type": "number",
+            "description": "Julian Day Number for personality calculation"
+          },
+          "designDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Design calculation date (88° before birth)"
+          }
+        }
+      },
+      "HumanDesign": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Manifestor", "Generator", "Manifesting Generator", "Projector", "Reflector"],
+            "description": "Human Design energy type"
+          },
+          "profile": {
+            "type": "string",
+            "pattern": "^[1-6]/[1-6]$",
+            "description": "Profile line combination",
+            "example": "3/5"
+          },
+          "authority": {
+            "type": "string",
+            "enum": ["Emotional", "Sacral", "Splenic", "Ego", "Self-Projected", "Environmental", "Lunar"],
+            "description": "Decision-making authority"
+          },
+          "strategy": {
+            "type": "string",
+            "description": "Type-specific strategy"
+          },
+          "definition": {
+            "type": "string",
+            "enum": ["None", "Single", "Split", "Triple Split", "Quadruple Split"],
+            "description": "Center connection pattern"
+          },
+          "centers": {
+            "$ref": "#/components/schemas/Centers"
+          },
+          "gates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Gate"
+            }
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Channel"
+            }
+          }
+        }
+      },
+      "Centers": {
+        "type": "object",
+        "properties": {
+          "head": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "ajna": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "throat": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "g": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "ego": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "sacral": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "emotionalSolar": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "spleen": {
+            "$ref": "#/components/schemas/Center"
+          },
+          "root": {
+            "$ref": "#/components/schemas/Center"
+          }
+        }
+      },
+      "Center": {
+        "type": "object",
+        "properties": {
+          "defined": {
+            "type": "boolean",
+            "description": "Whether center has consistent energy"
+          },
+          "gates": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Activated gate numbers in this center"
+          }
+        }
+      },
+      "Gate": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "planet": {
+            "type": "string",
+            "example": "Sun"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["personality", "design"],
+            "description": "Conscious (personality) or unconscious (design)"
+          }
+        }
+      },
+      "Channel": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string",
+            "description": "Channel number (gate-gate format)",
+            "example": "64-47"
+          },
+          "name": {
+            "type": "string",
+            "example": "Abstraction"
+          },
+          "design": {
+            "type": "string",
+            "description": "Circuit type",
+            "example": "individual knowing"
+          }
+        }
+      },
+      "Astrology": {
+        "type": "object",
+        "properties": {
+          "sun": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "moon": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "mercury": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "venus": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "mars": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "jupiter": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "saturn": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "uranus": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "neptune": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "pluto": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "ascendant": {
+            "$ref": "#/components/schemas/SignDegree"
+          },
+          "aspects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Aspect"
+            }
+          }
+        }
+      },
+      "Planet": {
+        "type": "object",
+        "properties": {
+          "sign": {
+            "type": "string",
+            "example": "Capricorn"
+          },
+          "degree": {
+            "type": "number",
+            "format": "double",
+            "example": 24.5
+          },
+          "house": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          }
+        }
+      },
+      "SignDegree": {
+        "type": "object",
+        "properties": {
+          "sign": {
+            "type": "string"
+          },
+          "degree": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "Aspect": {
+        "type": "object",
+        "properties": {
+          "planet1": {
+            "type": "string"
+          },
+          "planet2": {
+            "type": "string"
+          },
+          "aspect": {
+            "type": "string",
+            "enum": ["conjunction", "opposition", "trine", "square", "sextile"]
+          },
+          "orb": {
+            "type": "number",
+            "format": "double",
+            "description": "Orb in degrees"
+          }
+        }
+      },
+      "Numerology": {
+        "type": "object",
+        "properties": {
+          "lifePath": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 11
+          },
+          "expression": {
+            "type": "integer"
+          },
+          "soulUrge": {
+            "type": "integer"
+          },
+          "personality": {
+            "type": "integer"
+          },
+          "birthday": {
+            "type": "integer"
+          }
+        }
+      },
+      "GeneKeys": {
+        "type": "object",
+        "properties": {
+          "lifeWork": {
+            "$ref": "#/components/schemas/GeneKey"
+          },
+          "evolution": {
+            "$ref": "#/components/schemas/GeneKey"
+          },
+          "radiance": {
+            "$ref": "#/components/schemas/GeneKey"
+          },
+          "purpose": {
+            "$ref": "#/components/schemas/GeneKey"
+          }
+        }
+      },
+      "GeneKey": {
+        "type": "object",
+        "properties": {
+          "gate": {
+            "type": "integer"
+          },
+          "geneKey": {
+            "type": "integer"
+          },
+          "shadow": {
+            "type": "string"
+          },
+          "gift": {
+            "type": "string"
+          },
+          "siddhi": {
+            "type": "string"
+          }
+        }
+      },
+      "ProfileGenerationRequest": {
+        "type": "object",
+        "required": ["chartId"],
+        "properties": {
+          "chartId": {
+            "type": "string",
+            "description": "Chart ID from /api/chart/calculate"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["overview", "type", "authority", "profile", "gates", "channels", "centers"]
+            },
+            "description": "Specific sections to include (default: all)"
+          },
+          "audience": {
+            "type": "string",
+            "enum": ["self", "practitioner", "simple"],
+            "default": "self",
+            "description": "Target audience for language complexity"
+          },
+          "length": {
+            "type": "string",
+            "enum": ["brief", "medium", "comprehensive"],
+            "default": "medium",
+            "description": "Profile narrative length"
+          }
+        }
+      },
+      "ProfileResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "profile": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "chartId": {
+                "type": "string"
+              },
+              "narrative": {
+                "type": "string",
+                "description": "Full combined narrative"
+              },
+              "sections": {
+                "type": "object",
+                "description": "Individual section narratives"
+              },
+              "wordCount": {
+                "type": "integer"
+              },
+              "generatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "TransitForecastRequest": {
+        "type": "object",
+        "required": ["chartId"],
+        "properties": {
+          "chartId": {
+            "type": "string"
+          },
+          "forecastDays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30,
+            "default": 7,
+            "description": "Number of days to forecast"
+          },
+          "includeAspects": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include transit-to-natal aspects"
+          }
+        }
+      },
+      "TransitForecastResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "forecast": {
+            "type": "object",
+            "properties": {
+              "chartId": {
+                "type": "string"
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "currentTransits": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Transit"
+                }
+              },
+              "upcomingTransits": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Transit"
+                }
+              },
+              "aspects": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TransitAspect"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Transit": {
+        "type": "object",
+        "properties": {
+          "planet": {
+            "type": "string"
+          },
+          "gate": {
+            "type": "integer"
+          },
+          "line": {
+            "type": "integer"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "impact": {
+            "type": "string",
+            "description": "Description of transit's impact"
+          },
+          "channelFormed": {
+            "type": "string",
+            "nullable": true,
+            "description": "Channel number if transit forms channel"
+          }
+        }
+      },
+      "TransitAspect": {
+        "type": "object",
+        "properties": {
+          "transit": {
+            "type": "string",
+            "description": "Transiting planet"
+          },
+          "natal": {
+            "type": "string",
+            "description": "Natal planet"
+          },
+          "aspect": {
+            "type": "string",
+            "enum": ["conjunction", "opposition", "trine", "square", "sextile"]
+          },
+          "orb": {
+            "type": "number",
+            "format": "double"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When aspect is exact"
+          }
+        }
+      },
+      "GateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "gate": {
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "center": {
+                "type": "string"
+              },
+              "circuit": {
+                "type": "string"
+              },
+              "keynote": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "geneKey": {
+                "type": "object",
+                "properties": {
+                  "shadow": {
+                    "type": "string"
+                  },
+                  "gift": {
+                    "type": "string"
+                  },
+                  "siddhi": {
+                    "type": "string"
+                  }
+                }
+              },
+              "channels": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Channel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CyclesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "chartId": {
+            "type": "string"
+          },
+          "cycles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LifeCycle"
+            }
+          }
+        }
+      },
+      "LifeCycle": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["saturn_return", "chiron_return", "uranus_opposition", "nodal_return"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "exactDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "windowStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "windowEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "age": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["past", "current", "upcoming"]
+          },
+          "daysUntil": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Days until cycle (null if past)"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Validation error",
+              "code": "VALIDATION_ERROR",
+              "details": {
+                "birthTime": "Must be in HH:MM format",
+                "birthLocation.latitude": "Must be between -90 and 90"
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid API key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "missing": {
+                "summary": "Missing API key",
+                "value": {
+                  "error": "API key is missing",
+                  "code": "API_KEY_MISSING",
+                  "message": "Include X-API-Key header with your API key"
+                }
+              },
+              "invalid": {
+                "summary": "Invalid API key",
+                "value": {
+                  "error": "API key is invalid",
+                  "code": "API_KEY_INVALID",
+                  "message": "The provided API key does not exist or has been revoked"
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Not found",
+              "code": "NOT_FOUND",
+              "message": "The requested resource does not exist"
+            }
+          }
+        }
+      },
+      "RateLimitExceeded": {
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "description": "Request limit per window",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Requests remaining in current window",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "description": "Unix timestamp when rate limit resets",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Rate limit exceeded. 1,000 requests per day. Resets in 3600 seconds.",
+              "code": "RATE_LIMIT_EXCEEDED",
+              "limit": 1000,
+              "window": "day",
+              "resetIn": 3600,
+              "upgrade": "Upgrade to Pro tier for 10,000 requests/day"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -18,7 +18,7 @@
  * }
  */
 
-const CACHE_TTL = 60 * 60 * 24 * 30; // 30 days
+import { kvCache, keys, TTL } from '../lib/cache.js';
 
 export async function handleGeocode(request, env) {
   const url = new URL(request.url);
@@ -31,16 +31,10 @@ export async function handleGeocode(request, env) {
     );
   }
 
-  // KV cache check — avoids hammering Nominatim for repeated lookups
-  const cacheKey = `geo:${q.toLowerCase()}`;
-  if (env.CACHE) {
-    try {
-      const cached = await env.CACHE.get(cacheKey, 'json');
-      if (cached) return Response.json({ ...cached, cached: true });
-    } catch {
-      // Non-fatal — fall through to live lookup
-    }
-  }
+  // Unified KV cache check
+  const cacheKey = keys.geo(q);
+  const cached = await kvCache.get(env, cacheKey);
+  if (cached) return Response.json({ ...cached, cached: true });
 
   // ── Step 1: Nominatim geocoding ──────────────────────────────
   let geoData;
@@ -61,7 +55,7 @@ export async function handleGeocode(request, env) {
     geoData = await nominatimRes.json();
   } catch (err) {
     return Response.json(
-      { error: 'Geocoding service unavailable — try again shortly.', detail: err.message },
+      { error: 'Geocoding service unavailable — try again shortly.' }, // BL-R-H2
       { status: 502 }
     );
   }
@@ -95,14 +89,8 @@ export async function handleGeocode(request, env) {
 
   const result = { lat, lng, timezone, displayName: display_name };
 
-  // Cache for 30 days
-  if (env.CACHE) {
-    try {
-      await env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: CACHE_TTL });
-    } catch {
-      // Non-fatal
-    }
-  }
+  // Cache for 30 days via unified cache lib
+  await kvCache.put(env, cacheKey, result, TTL.GEO);
 
   return Response.json(result);
 }

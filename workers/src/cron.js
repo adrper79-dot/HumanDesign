@@ -1,5 +1,5 @@
 /**
- * Scheduled Cron — Daily Transit Snapshot + Digest Delivery
+ * Scheduled Cron — Daily Transit Snapshot + Digest Delivery + Webhook Retries + Push Notifications + Alert Evaluation + Email Drip Campaigns
  *
  * Runs via Cloudflare Workers Cron Triggers.
  * Configured in wrangler.toml: crons = ["0 6 * * *"] (6 AM UTC daily)
@@ -8,6 +8,10 @@
  *   1. Calculate today's transit positions (Layer 2 + 4)
  *   2. Store snapshot in transit_snapshots table
  *   3. For each opted-in user with a phone, generate + send SMS digest
+ *   4. Process failed webhook deliveries (retry queue)
+ *   5. Send push notifications for daily transit digest
+ *   6. Evaluate all active user transit alerts
+ *   7. Send email drip campaigns (welcome series, re-engagement, upgrade nudges)
  */
 
 import { toJulianDay } from '../../src/engine/julian.js';
@@ -15,6 +19,16 @@ import { getAllPositions } from '../../src/engine/planets.js';
 import { mapAllToGates } from '../../src/engine/gates.js';
 import { createQueryFn, QUERIES } from './db/queries.js';
 import { generateDigestForUser, sendSMS } from './handlers/sms.js';
+import { processWebhookRetries } from './lib/webhookDispatcher.js';
+import { sendNotificationToUser } from './handlers/push.js';
+import { evaluateUserAlerts } from './handlers/alerts.js';
+import {
+  sendWelcomeEmail2,
+  sendWelcomeEmail3,
+  sendWelcomeEmail4,
+  sendReengagementEmail,
+  sendUpgradeNudgeEmail
+} from './lib/email.js';
 
 /**
  * Main cron entry point.
@@ -72,6 +86,243 @@ export async function runDailyTransitCron(env) {
     }
 
     console.log(`[CRON] Digest delivery complete: ${sent} sent, ${failed} failed`);
+
+    // ─── Step 4: Process webhook retries ────────────────
+    try {
+      await processWebhookRetries(env);
+      console.log('[CRON] Webhook retry processing complete');
+    } catch (webhookErr) {
+      console.error('[CRON] Webhook retry processing error:', webhookErr);
+      // Don't throw - webhook failures shouldn't break the main cron
+    }
+
+    // ─── Step 5: Send push notifications ────────────────
+    try {
+      // Get users with active push subscriptions and transit_daily preference enabled
+      const { rows: pushUsers } = await query(`
+        SELECT DISTINCT u.id, u.birth_date
+        FROM users u
+        INNER JOIN push_subscriptions ps ON u.id = ps.user_id
+        LEFT JOIN notification_preferences np ON u.id = np.user_id
+        WHERE ps.active = true
+          AND u.birth_date IS NOT NULL
+          AND (np.transit_daily IS NULL OR np.transit_daily = true)
+      `);
+      console.log(`[CRON] ${pushUsers.length} users to receive push notifications`);
+
+      let pushSent = 0, pushFailed = 0;
+
+      for (const user of pushUsers) {
+        try {
+          // Get today's key gates for notification
+          const keyGates = gates.sun ? `Sun in Gate ${gates.sun.gate}` : 'Transit energy active';
+
+          const notification = {
+            title: '🌟 Your Daily Transit Energy',
+            body: `${keyGates}. Open Prime Self to explore today's cosmic weather.`,
+            icon: 'https://primeself.app/icon-192.png',
+            badge: 'https://primeself.app/badge-72.png',
+            tag: `transit-daily-${snapshotDate}`,
+            data: {
+              type: 'transit_daily',
+              date: snapshotDate,
+              url: '/app/transits'
+            }
+          };
+
+          const success = await sendNotificationToUser(env, user.id, 'transit_daily', notification);
+          if (success > 0) {
+            pushSent++;
+          } else {
+            pushFailed++;
+          }
+
+          // Small delay between sends
+          await new Promise(r => setTimeout(r, 100));
+        } catch (pushErr) {
+          console.error(`[CRON] Push notification failed for user ${user.id}:`, pushErr.message);
+          pushFailed++;
+        }
+      }
+
+      console.log(`[CRON] Push notifications sent: ${pushSent} success, ${pushFailed} failed`);
+    } catch (pushErr) {
+      console.error('[CRON] Push notification processing error:', pushErr);
+      // Don't throw - push failures shouldn't break the main cron
+    }
+
+    // ─── Step 6: Evaluate transit alerts ────────────────
+    try {
+      // Get users with active transit alerts
+      const { rows: alertUsers } = await query(`
+        SELECT DISTINCT u.id, u.birth_date
+        FROM users u
+        INNER JOIN transit_alerts ta ON u.id = ta.user_id
+        WHERE ta.active = true AND u.birth_date IS NOT NULL
+      `);
+      console.log(`[CRON] Evaluating alerts for ${alertUsers.length} users`);
+
+      let alertsTriggered = 0;
+
+      for (const user of alertUsers) {
+        try {
+          await evaluateUserAlerts(env, user, gates, positions, snapshotDate);
+          alertsTriggered++;
+
+          // Small delay to avoid overwhelming the system
+          await new Promise(r => setTimeout(r, 50));
+        } catch (alertErr) {
+          console.error(`[CRON] Alert evaluation failed for user ${user.id}:`, alertErr.message);
+        }
+      }
+
+      console.log(`[CRON] Alert evaluation complete: ${alertsTriggered} users processed`);
+    } catch (alertErr) {
+      console.error('[CRON] Alert evaluation processing error:', alertErr);
+      // Don't throw - alert failures shouldn't break the main cron
+    }
+
+    // ─── Step 7: Email Drip Campaigns (BL-ENG-007) ─────
+    try {
+      console.log('[CRON] Starting email drip campaigns...');
+      let emailsSent = 0, emailsFailed = 0;
+
+      // Welcome Email #2 (24 hours after registration)
+      const welcome2Users = await query(`
+        SELECT u.id, u.email, u.created_at, c.chart_type
+        FROM users u
+        LEFT JOIN charts c ON u.id = c.user_id
+        WHERE u.created_at >= NOW() - INTERVAL '25 hours'
+          AND u.created_at <= NOW() - INTERVAL '23 hours'
+          AND u.email_verified != false
+        GROUP BY u.id, u.email, u.created_at, c.chart_type
+      `);
+
+      for (const user of (welcome2Users.rows || [])) {
+        try {
+          await sendWelcomeEmail2(
+            user.email,
+            user.email.split('@')[0],
+            user.chart_type || 'Generator',
+            env.RESEND_API_KEY,
+            env.FROM_EMAIL
+          );
+          emailsSent++;
+        } catch (err) {
+          console.error(`Failed to send welcome email #2 to ${user.email}:`, err);
+          emailsFailed++;
+        }
+      }
+
+      // Welcome Email #3 (72 hours after registration)
+      const welcome3Users = await query(`
+        SELECT u.id, u.email, u.created_at, c.authority
+        FROM users u
+        LEFT JOIN charts c ON u.id = c.user_id
+        WHERE u.created_at >= NOW() - INTERVAL '73 hours'
+          AND u.created_at <= NOW() - INTERVAL '71 hours'
+          AND u.email_verified != false
+        GROUP BY u.id, u.email, u.created_at, c.authority
+      `);
+
+      for (const user of (welcome3Users.rows || [])) {
+        try {
+          await sendWelcomeEmail3(
+            user.email,
+            user.email.split('@')[0],
+            user.authority || 'Sacral',
+            env.RESEND_API_KEY,
+            env.FROM_EMAIL
+          );
+          emailsSent++;
+        } catch (err) {
+          console.error(`Failed to send welcome email #3 to ${user.email}:`, err);
+          emailsFailed++;
+        }
+      }
+
+      // Welcome Email #4 (7 days after registration)
+      const welcome4Users = await query(`
+        SELECT u.id, u.email, u.created_at
+        FROM users u
+        WHERE u.created_at >= NOW() - INTERVAL '7 days 1 hour'
+          AND u.created_at <= NOW() - INTERVAL '6 days 23 hours'
+          AND u.email_verified != false
+      `);
+
+      for (const user of (welcome4Users.rows || [])) {
+        try {
+          await sendWelcomeEmail4(
+            user.email,
+            user.email.split('@')[0],
+            env.RESEND_API_KEY,
+            env.FROM_EMAIL
+          );
+          emailsSent++;
+        } catch (err) {
+          console.error(`Failed to send welcome email #4 to ${user.email}:`, err);
+          emailsFailed++;
+        }
+      }
+
+      // Re-engagement Email (7 days inactive)
+      const reengagementUsers = await query(`
+        SELECT u.id, u.email, u.last_login_at,
+               EXTRACT(DAY FROM (NOW() - u.last_login_at)) AS days_inactive
+        FROM users u
+        WHERE u.last_login_at IS NOT NULL
+          AND u.last_login_at >= NOW() - INTERVAL '8 days'
+          AND u.last_login_at <= NOW() - INTERVAL '6 days'
+          AND u.email_verified != false
+          AND u.created_at < NOW() - INTERVAL '14 days'
+      `);
+
+      for (const user of (reengagementUsers.rows || [])) {
+        try {
+          await sendReengagementEmail(
+            user.email,
+            user.email.split('@')[0],
+            Math.floor(user.days_inactive || 7),
+            env.RESEND_API_KEY,
+            env.FROM_EMAIL
+          );
+          emailsSent++;
+        } catch (err) {
+          console.error(`Failed to send re-engagement email to ${user.email}:`, err);
+          emailsFailed++;
+        }
+      }
+
+      // Upgrade Nudge Email (30 days on free tier)
+      const upgradeNudgeUsers = await query(`
+        SELECT u.id, u.email, u.created_at
+        FROM users u
+        WHERE u.tier = 'free'
+          AND u.created_at >= NOW() - INTERVAL '31 days'
+          AND u.created_at <= NOW() - INTERVAL '29 days'
+          AND u.email_verified != false
+      `);
+
+      for (const user of (upgradeNudgeUsers.rows || [])) {
+        try {
+          await sendUpgradeNudgeEmail(
+            user.email,
+            user.email.split('@')[0],
+            env.RESEND_API_KEY,
+            env.FROM_EMAIL
+          );
+          emailsSent++;
+        } catch (err) {
+          console.error(`Failed to send upgrade nudge to ${user.email}:`, err);
+          emailsFailed++;
+        }
+      }
+
+      console.log(`[CRON] Email drip campaigns complete: ${emailsSent} sent, ${emailsFailed} failed`);
+    } catch (emailErr) {
+      console.error('[CRON] Email drip campaign processing error:', emailErr);
+      // Don't throw - email failures shouldn't break the main cron
+    }
 
     return { snapshotDate, userCount: users.length, sent, failed };
 

@@ -183,14 +183,15 @@ export function translateError(error) {
  * @param {number} status - HTTP status code (default 400)
  * @returns {Response}
  */
-export function errorResponse(error, status = 400) {
+export function errorResponse(error, status = 400, env = null) {
   const { message, hint, technical } = translateError(error);
+  const isDev = env?.ENVIRONMENT === 'development';
   
   return new Response(
     JSON.stringify({ 
       error: message, 
       hint,
-      ...(process.env.NODE_ENV === 'development' && { technical })
+      ...(isDev && { technical })
     }),
     { 
       status,

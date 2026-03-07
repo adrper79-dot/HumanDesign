@@ -287,6 +287,9 @@ const SIX_KNOWLEDGES = [
  * @param {object} data.transits – from Layer 7 (optional)
  * @param {object} data.personalityGates – from Layer 4
  * @param {object} data.designGates – from Layer 4
+ * @param {object} data.validationData – Behavioral validation (optional)
+ * @param {object} data.psychometricData – Big Five + VIA (optional)
+ * @param {array}  data.diaryEntries – Life events (optional)
  * @returns {string} Formatted reference facts
  */
 function buildReferenceFacts(data) {
@@ -443,6 +446,129 @@ function buildReferenceFacts(data) {
     sections.push(`${k.name}: ${k.hdMapping}`);
   }
 
+  // ── Behavioral Validation Data ──
+  if (data.validationData) {
+    const v = data.validationData;
+    sections.push('\n=== BEHAVIORAL VALIDATION (LIVED EXPERIENCE) ===');
+    
+    if (v.decision_pattern) {
+      const patternLabels = {
+        gut_impulse: 'Gut Impulse (immediate yes/no, can\'t explain why)',
+        sleep_on_it: 'Sleep On It (reassess in morning)',
+        emotional_wave: 'Emotional Wave (needs 3+ days to ride the wave)',
+        wait_invitation: 'Wait for Invitation (needs to be asked/invited)',
+        discuss_others: 'Discuss with Others (sounding board, external clarity)',
+        environmental: 'Environmental Clarity (depends on location/energy)'
+      };
+      sections.push(`Decision Pattern: ${patternLabels[v.decision_pattern] || v.decision_pattern}`);
+      sections.push('  → Use this to VALIDATE Authority type through actual behavior');
+    }
+    
+    if (v.energy_pattern) {
+      const energyLabels = {
+        steady_renewing: 'Steady & Self-Renewing (consistent energy all day)',
+        bursts_rest: 'Bursts of Power, Then Rest (intense → depleted cycles)',
+        mirrors_others: 'Mirrors Others (energy depends on who I\'m with)',
+        environment_dependent: 'Environment Dependent (energy changes by location)',
+        discerning_sampling: 'Discerning/Sampling (taste before committing)',
+        experimental_surprise: 'Experimental (surprises myself, unpredictable)'
+      };
+      sections.push(`Energy Pattern: ${energyLabels[v.energy_pattern] || v.energy_pattern}`);
+      sections.push('  → Use this to VALIDATE Type and defined/open centers');
+    }
+    
+    if (v.current_focus) {
+      sections.push(`Current Focus/Challenge: "${v.current_focus}"`);
+      sections.push('  → Make synthesis ACTIONABLE by addressing this directly');
+    }
+  }
+
+  // ── Psychometric Data (Big Five + VIA Strengths) ──
+  if (data.psychometricData) {
+    const p = data.psychometricData;
+    
+    if (p.big_five_scores) {
+      sections.push('\n=== BIG FIVE PERSONALITY (OCEAN) ===');
+      const scores = typeof p.big_five_scores === 'string' 
+        ? JSON.parse(p.big_five_scores) 
+        : p.big_five_scores;
+      
+      const scoreLabels = score => {
+        if (score >= 4.5) return 'Very High';
+        if (score >= 4.0) return 'High';
+        if (score >= 3.0) return 'Moderate';
+        if (score >= 2.0) return 'Low';
+        return 'Very Low';
+      };
+      
+      if (scores.openness !== null) {
+        sections.push(`Openness to Experience: ${scores.openness.toFixed(1)} (${scoreLabels(scores.openness)})`);
+        sections.push('  → Cross-correlate with: defined Ajna, Gate 64, Uranus aspects');
+      }
+      if (scores.conscientiousness !== null) {
+        sections.push(`Conscientiousness: ${scores.conscientiousness.toFixed(1)} (${scoreLabels(scores.conscientiousness)})`);
+        sections.push('  → Cross-correlate with: defined Root, Gate 60, Saturn aspects');
+      }
+      if (scores.extraversion !== null) {
+        sections.push(`Extraversion: ${scores.extraversion.toFixed(1)} (${scoreLabels(scores.extraversion)})`);
+        sections.push('  → Cross-correlate with: defined Throat/Sacral, Generator type');
+      }
+      if (scores.agreeableness !== null) {
+        sections.push(`Agreeableness: ${scores.agreeableness.toFixed(1)} (${scoreLabels(scores.agreeableness)})`);
+        sections.push('  → Cross-correlate with: Tribal circuitry, Venus aspects');
+      }
+      if (scores.neuroticism !== null) {
+        sections.push(`Emotional Stability: ${(6 - scores.neuroticism).toFixed(1)} (reverse of ${scores.neuroticism.toFixed(1)} Neuroticism)`);
+        sections.push('  → Cross-correlate with: undefined Solar Plexus, Pluto/Neptune aspects');
+      }
+    }
+    
+    if (p.via_strengths) {
+      sections.push('\n=== VIA CHARACTER STRENGTHS (TOP 5 SIGNATURE) ===');
+      const strengths = typeof p.via_strengths === 'string' 
+        ? JSON.parse(p.via_strengths) 
+        : p.via_strengths;
+      
+      const topFive = strengths.filter(s => s.isSignature || s.rank <= 5).slice(0, 5);
+      topFive.forEach((s, i) => {
+        sections.push(`${i + 1}. ${s.strength} (score: ${s.score.toFixed(1)})`);
+        sections.push(`   → Cross-correlate with Gene Keys gifts/siddhis and astrological aspects`);
+      });
+    }
+  }
+
+  // ── Life Events Diary ──
+  if (data.diaryEntries && data.diaryEntries.length > 0) {
+    sections.push('\n=== LIFE EVENTS TIMELINE (DIARY) ===');
+    sections.push('User-reported major life events for retroactive validation:');
+    
+    // Sort by date descending (most recent first)
+    const sorted = [...data.diaryEntries].sort((a, b) => 
+      new Date(b.event_date) - new Date(a.event_date)
+    );
+    
+    // Show up to 10 most significant events
+    const majorEvents = sorted
+      .filter(e => e.significance === 'major' || e.significance === 'moderate')
+      .slice(0, 10);
+    
+    majorEvents.forEach(e => {
+      sections.push(`\n${e.event_date} - ${e.event_title} (${e.event_type}, ${e.significance})`);
+      if (e.event_description) {
+        sections.push(`  Details: ${e.event_description}`);
+      }
+      if (e.transit_snapshot) {
+        sections.push(`  → VALIDATE: Correlate this event with transits active on ${e.event_date}`);
+        sections.push(`     Use this to prove chart accuracy through retroactive pattern matching`);
+      }
+    });
+    
+    sections.push('\n→ CRITICAL: Reference these events in synthesis to demonstrate:');
+    sections.push('  1. Chart predicted pattern that user actually lived');
+    sections.push('  2. Specific transit activated specific behavior/event');
+    sections.push('  3. User\'s chart = accurate via retroactive validation');
+  }
+
   return sections.join('\n');
 }
 
@@ -461,6 +587,9 @@ function buildReferenceFacts(data) {
  * @param {object}  chartData.transits       – Layer 7 output (optional)
  * @param {object}  chartData.personalityGates – Layer 4 personality
  * @param {object}  chartData.designGates    – Layer 4 design
+ * @param {object}  [chartData.validationData] – Behavioral validation
+ * @param {object}  [chartData.psychometricData] – Big Five + VIA
+ * @param {array}   [chartData.diaryEntries] – Life events
  * @param {string}  [question]               – User's specific question
  * @returns {object} LLM prompt payload
  */

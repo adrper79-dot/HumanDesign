@@ -6,6 +6,7 @@
  */
 
 import { verifyHS256 } from '../lib/jwt.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 /**
  * Verify JWT and attach decoded payload to request context.
@@ -49,4 +50,28 @@ export async function authenticate(request, env) {
       { status: 401 }
     );
   }
+}
+
+/**
+ * Resolve the authenticated user's full DB record from the JWT payload.
+ *
+ * Returns the full `users` row (minus password_hash) or null if the
+ * request is unauthenticated / user doesn't exist.
+ *
+ * @param {Request} request — must have been processed by authenticate()
+ * @param {object} env — Worker env bindings (needs NEON_CONNECTION_STRING)
+ * @returns {Promise<object|null>}
+ */
+export async function getUserFromRequest(request, env) {
+  const payload = request._user;
+  if (!payload?.sub) return null;
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const result = await query(QUERIES.getUserById, [payload.sub]);
+
+  if (!result.rows || result.rows.length === 0) return null;
+
+  const user = result.rows[0];
+  delete user.password_hash;
+  return user;
 }

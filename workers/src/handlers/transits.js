@@ -14,6 +14,8 @@
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
+import { trackEvent } from './achievements.js';
+import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 
 export async function handleTransits(request, env) {
   const url = new URL(request.url);
@@ -29,19 +31,36 @@ export async function handleTransits(request, env) {
   let natalAstro = null;
 
   if (birthDate && birthTime) {
-    const utc = parseToUTC(birthDate, birthTime, birthTimezone || undefined);
-
-    const chart = calculateFullChart({
-      ...utc,
-      lat, lng
-    });
+    // Cache natal chart computation
+    const cacheKey = keys.chart(birthDate, birthTime, lat, lng);
+    const { data: chart } = await kvCache.getOrSet(
+      env, cacheKey, TTL.CHART,
+      () => {
+        const utc = parseToUTC(birthDate, birthTime, birthTimezone || undefined);
+        return calculateFullChart({ ...utc, lat, lng });
+      }
+    );
 
     natalChart = chart.chart;
     natalAstro = chart.astrology;
   }
 
-  // Calculate current transits
-  const transits = getCurrentTransits(natalChart, natalAstro);
+  // Cache today's transit positions (same for all users on a given day)
+  const today = new Date().toISOString().slice(0, 10);
+  const transitCacheKey = keys.transit(today);
+
+  const { data: transits, cached: transitCacheHit } = await kvCache.getOrSet(
+    env, transitCacheKey, TTL.TRANSIT_DAY,
+    () => getCurrentTransits(natalChart, natalAstro),
+    { memCache: true, memTtlMs: 60_000 } // Also cache in-memory for 1 minute
+  );
+
+  recordCacheAccess(transitCacheHit);
+
+  // Track achievement event (only if authenticated)
+  if (request._user) {
+    await trackEvent(env, request._user.sub, 'transit_checked', null, request._tier || 'free');
+  }
 
   return Response.json({
     ok: true,
