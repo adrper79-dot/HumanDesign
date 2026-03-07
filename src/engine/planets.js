@@ -76,6 +76,13 @@ const ELEMENTS = {
     a: [39.48211675, -0.00031596], e: [0.24882730, 0.00005170],
     I: [17.14001206, 0.00004818],  L: [238.92903833, 145.20780515],
     w: [224.06891629, -0.04062942], O: [110.30393684, -0.01183482]
+  },
+  // BL-R-M3: Chiron (2060) — centaur, ~50.7 yr orbit, needed for Chiron Return cycle
+  // Elements from JPL HORIZONS at J2000.0 epoch; rates approximate for 1900–2100
+  chiron: {
+    a: [13.64838, 0.0],            e: [0.37911, 0.0],
+    I: [6.93500, 0.0],             L: [25.94, 713.86],
+    w: [339.571, 0.0132],          O: [209.253, -0.0094]
   }
 };
 
@@ -426,7 +433,7 @@ export function getAllPositions(jdn) {
   // Computed in J2000 frame, then precessed to ecliptic of date
   const planetNames = [
     'mercury', 'venus', 'mars', 'jupiter',
-    'saturn', 'uranus', 'neptune', 'pluto'
+    'saturn', 'uranus', 'neptune', 'pluto', 'chiron'
   ];
 
   for (const name of planetNames) {

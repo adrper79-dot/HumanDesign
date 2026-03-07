@@ -41,6 +41,33 @@ export function calculateFullChart(params) {
     includeTransits = true
   } = params;
 
+  // BL-R-M8: Validate inputs before calculation
+  if (!Number.isFinite(year) || year < 1 || year > 2200) {
+    throw new Error('Invalid year: must be 1–2200');
+  }
+  if (!Number.isFinite(month) || month < 1 || month > 12) {
+    throw new Error('Invalid month: must be 1–12');
+  }
+  const maxDay = new Date(year, month, 0).getDate(); // last day of the given month
+  if (!Number.isFinite(day) || day < 1 || day > maxDay) {
+    throw new Error(`Invalid day: must be 1–${maxDay} for month ${month}`);
+  }
+  if (!Number.isFinite(hour) || hour < 0 || hour > 23) {
+    throw new Error('Invalid hour: must be 0–23');
+  }
+  if (!Number.isFinite(minute) || minute < 0 || minute > 59) {
+    throw new Error('Invalid minute: must be 0–59');
+  }
+  if (!Number.isFinite(second) || second < 0 || second > 59) {
+    throw new Error('Invalid second: must be 0–59');
+  }
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+    throw new Error('Invalid latitude: must be -90 to 90');
+  }
+  if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+    throw new Error('Invalid longitude: must be -180 to 180');
+  }
+
   // Layer 1: Julian Day Number
   const jdn = toJulianDay(year, month, day, hour, minute, second);
 

@@ -491,6 +491,340 @@ POST /api/sms/send-digest
 
 ---
 
+## Push Notifications (Phase 3+)
+
+### Subscribe to Push
+
+```
+POST /api/push/subscribe
+```
+
+**Auth:** Required (JWT)
+
+Saves a Web Push subscription for a user. Required before sending push notifications.
+
+**Request Body:**
+
+```json
+{
+  "subscription": {
+    "endpoint": "https://fcm.googleapis.com/...",
+    "keys": {
+      "p256dh": "base64-url-encoded-public-key",
+      "auth": "base64-url-encoded-auth"
+    }
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "subscriptionId": "uuid"
+}
+```
+
+---
+
+### Send Notification
+
+```
+POST /api/push/send
+```
+
+**Auth:** Required (JWT)
+
+Sends a push notification immediately. Respects user's quiet hours preference.
+
+**Request Body:**
+
+```json
+{
+  "userId": "user-id",
+  "notificationType": "achievement | alert | digest | system",
+  "title": "Achievement Unlocked",
+  "body": "You've reached 100 chart readings!",
+  "icon": "https://..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "sent": 1,
+  "failed": 0
+}
+```
+
+---
+
+## Alerts (Phase 3+)
+
+### Create Alert
+
+```
+POST /api/alerts
+```
+
+**Auth:** Required (JWT)
+
+Creates a transit alert for the authenticated user's natal chart. Supported alert types: `gate_activation`, `aspect`, `cycle`.
+
+**Request Body:**
+
+```json
+{
+  "type": "aspect",
+  "planet": "mercury",
+  "aspect": "opposition",
+  "orb": 1.5,
+  "webhookUrl": "https://your-app.example.com/webhook"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "alert": {
+    "id": "uuid",
+    "type": "aspect",
+    "planet": "mercury",
+    "aspect": "opposition",
+    "createdAt": "2026-03-08T12:00:00Z"
+  }
+}
+```
+
+---
+
+### List Alerts
+
+```
+GET /api/alerts
+```
+
+**Auth:** Required (JWT)
+
+Returns all active transit alerts for the authenticated user.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "alerts": [
+    {
+      "id": "uuid",
+      "type": "aspect",
+      "planet": "mercury",
+      "aspect": "opposition",
+      "orb": 1.5,
+      "status": "active",
+      "createdAt": "2026-03-08T12:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### Evaluate Alerts
+
+```
+POST /api/alerts/evaluate
+```
+
+**Auth:** None (runs cron on schedule)
+
+Evaluates all active alerts against current transits. Called by Cloudflare Cron at 06:00 UTC daily. Notifies users via push or webhook when alert criteria are met.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "evaluated": 1250,
+  "triggered": 37,
+  "notifications_sent": 37
+}
+```
+
+---
+
+## Achievements (Phase 3+)
+
+### Get Achievements
+
+```
+GET /api/achievements
+```
+
+**Auth:** Required (JWT)
+
+Returns all available achievements and user's progress toward each.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "achievements": [
+    {
+      "id": "reading_master",
+      "name": "Reading Master",
+      "description": "Read 100 charts",
+      "criteria": {
+        "type": "event_count",
+        "event": "chart_read",
+        "threshold": 100
+      },
+      "unlockedAt": null,
+      "progress": {
+        "current": 47,
+        "target": 100,
+        "percentage": 47
+      },
+      "reward": {
+        "type": "points",
+        "amount": 500
+      }
+    }
+  ]
+}
+```
+
+---
+
+### Track Achievement Event
+
+```
+POST /api/achievements/track
+```
+
+**Auth:** Required (JWT)
+
+Records a user action (e.g., chart read, profile generated) and checks for achievement unlocks or milestone progress.
+
+**Request Body:**
+
+```json
+{
+  "event": "chart_read",
+  "data": { "chartId": "uuid" }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "unlocked": ["reading_master"],
+  "milestones": [
+    {
+      "achievement": "reading_master",
+      "milestone": 50,
+      "progress": 50
+    }
+  ]
+}
+```
+
+---
+
+## Diary (Phase 3+)
+
+### Create Diary Entry
+
+```
+POST /api/diary
+```
+
+**Auth:** Required (JWT)
+
+Creates a diary entry and automatically calculates transits for that date.
+
+**Request Body:**
+
+```json
+{
+  "title": "Major life event",
+  "description": "Started new job",
+  "eventDate": "2026-03-08",
+  "emotionalTone": "excited",
+  "location": {
+    "lat": 40.7128,
+    "lng": -74.0060
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "entry": {
+    "id": "uuid",
+    "title": "Major life event",
+    "eventDate": "2026-03-08",
+    "createdAt": "2026-03-08T12:00:00Z",
+    "transits": {
+      "planets": {
+        "sun": { "gate": 33, "degrees": 148.25 },
+        "moon": { "gate": 2, "degrees": 25.00 }
+      },
+      "activeGates": [33, 2, 5, 12],
+      "aspects": [
+        {
+          "planet1": "sun",
+          "planet2": "mercury",
+          "angle": 120,
+          "type": "trine"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### Get Diary Entries
+
+```
+GET /api/diary?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+```
+
+**Auth:** Required (JWT)
+
+Returns diary entries within a date range, with transit data for each entry.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "entries": [
+    {
+      "id": "uuid",
+      "title": "Major life event",
+      "eventDate": "2026-03-08",
+      "transits": { ... },
+      "createdAt": "2026-03-08T12:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
 ## Rate Limits
 
 | Endpoint | Limit |

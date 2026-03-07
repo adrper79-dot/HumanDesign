@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "locale": "pt",
+    "name": "Português",
+    "direction": "ltr"
+  },
+  "nav": {
+    "chart": "Mapa",
+    "keys": "Chaves",
+    "astro": "Astro",
+    "transits": "Trânsitos",
+    "profile": "Perfil",
+    "enhance": "Aprimorar",
+    "diary": "Diário"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "createAccount": "Criar Conta",
+    "signOut": "Sair",
+    "notSignedIn": "Não conectado",
+    "emailRequired": "E-mail e senha obrigatórios.",
+    "sessionExpired": "Sessão expirada — faça login novamente.",
+    "connectionError": "Erro de conexão: {{message}}",
+    "pleaseWait": "Por favor aguarde…",
+    "startJourney": "Comece sua jornada Prime Self.",
+    "accessProfile": "Acesse seu perfil Prime Self e mapas salvos.",
+    "alreadyAccount": "Já tem uma conta?",
+    "noAccount": "Não tem uma conta?",
+    "createOne": "Criar uma",
+    "signInLink": "Entrar",
+    "email": "E-mail",
+    "password": "Senha",
+    "signInUpgrade": "Faça login para atualizar sua conta."
+  },
+  "chart": {
+    "title": "Mapa de Design Humano",
+    "calculate": "Calcular Mapa",
+    "calculating": "Calculando…",
+    "birthDate": "Data de Nascimento",
+    "birthTime": "Hora de Nascimento",
+    "birthLocation": "Local de Nascimento",
+    "lookupLocation": "Buscar",
+    "tryExample": "Tentar Exemplo",
+    "type": "Tipo",
+    "authority": "Autoridade",
+    "profile": "Perfil",
+    "definition": "Definição",
+    "strategy": "Estratégia",
+    "notSelf": "Tema do Não-Eu",
+    "incarnationCross": "Cruz de Encarnação",
+    "definedCenters": "Centros Definidos",
+    "openCenters": "Centros Abertos",
+    "activeChannels": "Canais Ativos",
+    "gates": "Portões",
+    "saveChart": "Salvar Mapa",
+    "viewRaw": "Ver Dados Brutos",
+    "hideRaw": "Ocultar Dados Brutos"
+  },
+  "profile": {
+    "title": "Perfil Prime Self",
+    "generate": "Gerar Perfil",
+    "generating": "Gerando seu Perfil Prime Self…",
+    "listProfiles": "Ver Perfis Salvos",
+    "exportPdf": "Exportar PDF",
+    "shareProfile": "Compartilhar",
+    "question": "Pergunta de foco opcional",
+    "questionPlaceholder": "ex. Qual é minha Forja primária?",
+    "noProfiles": "Nenhum perfil salvo."
+  },
+  "transits": {
+    "title": "Trânsitos Atuais",
+    "loading": "Carregando dados de trânsito…",
+    "today": "Trânsitos de Hoje",
+    "forecast": "Previsão",
+    "gateActivations": "Ativações de Portão",
+    "aspects": "Aspectos de Trânsito",
+    "noData": "Nenhum dado de trânsito disponível."
+  },
+  "composite": {
+    "title": "Mapa Composto",
+    "personA": "Pessoa A",
+    "personB": "Pessoa B",
+    "generate": "Gerar Composto",
+    "electromagnetic": "Conexões Eletromagnéticas",
+    "dominance": "Canais Dominantes",
+    "companionship": "Companheirismo",
+    "compromise": "Compromisso",
+    "dynamics": "Dinâmicas de Relacionamento"
+  },
+  "practitioner": {
+    "title": "Painel do Praticante",
+    "clients": "Clientes",
+    "addClient": "Adicionar Cliente",
+    "clientEmail": "E-mail do cliente",
+    "roster": "Lista de Clientes",
+    "noClients": "Nenhum cliente ainda."
+  },
+  "clusters": {
+    "title": "Inteligência de Grupo",
+    "create": "Criar Grupo",
+    "name": "Nome do Grupo",
+    "description": "Descrição",
+    "members": "Membros",
+    "addMember": "Adicionar Membro",
+    "synthesize": "Sintetizar Grupo",
+    "noClusters": "Nenhum grupo ainda."
+  },
+  "diary": {
+    "title": "Diário de Eventos",
+    "newEntry": "Nova Entrada",
+    "save": "Salvar Entrada",
+    "date": "Data",
+    "mood": "Humor",
+    "energy": "Nível de Energia",
+    "notes": "Notas",
+    "noEntries": "Nenhuma entrada no diário."
+  },
+  "enhance": {
+    "title": "Aprimore seu Perfil",
+    "behavioral": "Validação Comportamental",
+    "bigFive": "Cinco Grandes Fatores",
+    "via": "Forças de Caráter VIA",
+    "save": "Salvar Avaliação"
+  },
+  "onboarding": {
+    "title": "O Arco da Savana",
+    "start": "Começar Jornada",
+    "next": "Próximo Capítulo",
+    "previous": "Anterior",
+    "complete": "Capítulo Completo"
+  },
+  "sms": {
+    "subscribe": "Inscrever-se nos Resumos Diários",
+    "unsubscribe": "Cancelar Inscrição",
+    "phone": "Número de Telefone",
+    "subscribed": "Inscrito nos resumos por SMS",
+    "unsubscribed": "Inscrição cancelada"
+  },
+  "pricing": {
+    "title": "Escolha seu Caminho",
+    "seeker": "Buscador",
+    "guide": "Guia",
+    "practitioner": "Praticante",
+    "perMonth": "/mês",
+    "currentPlan": "Plano Atual",
+    "upgrade": "Atualizar Plano",
+    "billingPortal": "Gerenciar Cobrança"
+  },
+  "share": {
+    "title": "Compartilhar",
+    "copyLink": "Copiar Link",
+    "copied": "Copiado!",
+    "twitter": "Compartilhar no X",
+    "facebook": "Compartilhar no Facebook",
+    "downloadImage": "Baixar Imagem"
+  },
+  "common": {
+    "loading": "Carregando…",
+    "error": "Algo deu errado.",
+    "retry": "Tentar Novamente",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "noResults": "Nenhum resultado encontrado.",
+    "success": "Sucesso!",
+    "features": "Recursos",
+    "learnMore": "Saiba Mais"
+  },
+  "errors": {
+    "networkError": "Erro de rede. Verifique sua conexão.",
+    "serverError": "Erro no servidor. Tente novamente mais tarde.",
+    "notFound": "Não encontrado.",
+    "unauthorized": "Faça login para continuar.",
+    "forbidden": "Você não tem acesso a este recurso.",
+    "quotaExceeded": "Limite de uso atingido. Atualize seu plano.",
+    "invalidInput": "Verifique sua entrada e tente novamente.",
+    "missingField": "Campo obrigatório: {{field}}"
+  }
+}

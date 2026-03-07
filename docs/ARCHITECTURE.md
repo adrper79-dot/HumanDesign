@@ -133,6 +133,37 @@ Optionally routes through a Cloudflare AI Gateway URL for caching + observabilit
 
 ---
 
+## Cryptography & Security (Phase 3+)
+
+All cryptographic operations in `workers/src/` use **Web Crypto API exclusively** (`crypto.subtle.*`, `crypto.getRandomValues`). No Node.js `crypto` module imports.
+
+### Supported Operations
+
+| Operation | Web Crypto API | Use Case |
+|---|---|---|
+| **HMAC-SHA256** | `crypto.subtle.sign('HMAC', key, data)` | API signatures, authentication |
+| **SHA-256 Digest** | `crypto.subtle.digest('SHA-256', data)` | Password verification, content hashing |
+| **PBKDF2** | `crypto.subtle.deriveBits({name: 'PBKDF2', ...})` | Password hashing (100k iterations) |
+| **ECDSA (ES256)** | `crypto.subtle.sign('ECDSA', key, data)` | VAPID JWT signing, JWTs |
+| **ECDH (P-256)** | `crypto.subtle.deriveBits({name: 'ECDH', ...})` | Web Push key agreement |
+| **HKDF-SHA256** | `crypto.subtle.sign` + KDF logic | Web Push key derivation |
+| **AES-128-GCM** | `crypto.subtle.encrypt({name: 'AES-GCM', ...})` | Web Push message encryption (RFC 8291) |
+| **Random** | `crypto.getRandomValues(new Uint8Array(n))` | Salt/nonce generation |
+
+### Web Push Implementation (RFC 8030/8291)
+
+Web Push notifications use standards-based encryption:
+
+1. **VAPID Authorization** (RFC 8292): ES256 JWT signed with P-256 private key
+2. **Message Encryption**: ECDH key agreement + HKDF-SHA256 + AES-128-GCM (RFC 8291)
+3. **Quiet Hours**: Timezone-aware via `Intl.DateTimeFormat`, supports overnight ranges (e.g., 22:00–07:00)
+
+**Implementation**: `workers/src/handlers/push.js` exports `handleSendNotification()` and full RFC 8291 encryption pipeline. Call via `sendNotificationToUser(env, userId, notificationType, notificationPayload)` helper.
+
+**Subscription Management**: Subscriptions stored in `push_subscriptions` table. Expired subscriptions (410 Gone responses) are automatically deactivated.
+
+---
+
 ## Known Issues & Technical Debt
 
 For the full itemized backlog, see [BACKLOG.md](../BACKLOG.md).

@@ -1,7 +1,9 @@
 /**
- * Rate Limiter Middleware (KV-backed)
+ * Rate Limiter Middleware (KV-backed, fixed-window counter)
  *
- * Uses Cloudflare KV for sliding-window rate limiting.
+ * Uses Cloudflare KV for fixed-window rate limiting.
+ * Stores a small { count, windowStart } object instead of
+ * an unbounded array of timestamps (prior sliding-window approach).
  * Configured per-route with different limits.
  */
 
@@ -40,19 +42,19 @@ export async function rateLimit(request, env) {
   const config = RATE_LIMITS[path] || RATE_LIMITS.default;
   const key = `rl:${clientId}:${path}`;
   const now = Math.floor(Date.now() / 1000);
-  const windowStart = now - config.windowSec;
+  const windowStart = now - (now % config.windowSec); // Fixed window boundary
 
-  // Read current window
+  // Read current window counter (small fixed-size object)
   const stored = await kv.get(key, { type: 'json' });
-  let hits = [];
+  let count = 0;
 
-  if (stored && Array.isArray(stored)) {
-    // Filter to current window
-    hits = stored.filter(ts => ts > windowStart);
+  if (stored && stored.window === windowStart) {
+    count = stored.count || 0;
   }
+  // If stored.window differs, the window has rolled over — count resets to 0
 
-  if (hits.length >= config.max) {
-    const retryAfter = Math.ceil(config.windowSec - (now - hits[0]));
+  if (count >= config.max) {
+    const retryAfter = (windowStart + config.windowSec) - now;
     return new Response(
       JSON.stringify({
         error: 'Rate limit exceeded',
@@ -65,23 +67,23 @@ export async function rateLimit(request, env) {
           'Retry-After': String(retryAfter),
           'X-RateLimit-Limit': String(config.max),
           'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(now + retryAfter)
+          'X-RateLimit-Reset': String(windowStart + config.windowSec)
         }
       }
     );
   }
 
-  // Record this hit
-  hits.push(now);
-  await kv.put(key, JSON.stringify(hits), {
-    expirationTtl: config.windowSec + 10 // Cleanup buffer
+  // Increment counter
+  count++;
+  await kv.put(key, JSON.stringify({ count, window: windowStart }), {
+    expirationTtl: config.windowSec + 10 // Auto-cleanup after window expires
   });
 
   // Attach rate limit headers for downstream
   request._rateLimit = {
     limit: config.max,
-    remaining: config.max - hits.length,
-    reset: now + config.windowSec
+    remaining: config.max - count,
+    reset: windowStart + config.windowSec
   };
 
   return null; // Within limits

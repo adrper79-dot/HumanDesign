@@ -21,9 +21,10 @@
  * @param {number} day   – 1–31
  * @param {number} hour  – 0–23 (UTC)
  * @param {number} minute – 0–59 (UTC)
+ * @param {number} second – 0–59 (UTC)
  * @returns {number} Julian Day Number (with decimal)
  */
-export function toJulianDay(year, month, day, hour = 0, minute = 0) {
+export function toJulianDay(year, month, day, hour = 0, minute = 0, second = 0) {
   // Meeus Ch. 7: if month <= 2, treat as month+12 of preceding year
   let Y = year;
   let M = month;
@@ -33,7 +34,7 @@ export function toJulianDay(year, month, day, hour = 0, minute = 0) {
   }
 
   // Day fraction (JDN starts at noon, so 0h UT = -0.5 from JDN integer)
-  const dayFraction = day + (hour + minute / 60) / 24;
+  const dayFraction = day + (hour + minute / 60 + second / 3600) / 24;  // BL-R-M1: include seconds
 
   // Gregorian calendar correction
   let B = 0;
@@ -148,10 +149,11 @@ export function radToDeg(rad) {
  * @param {number} day
  * @param {number} hour  – UTC
  * @param {number} minute – UTC
+ * @param {number} second – UTC
  * @returns {{ jdn: number, sunLongitude: number }}
  */
-export function computeSun(year, month, day, hour, minute) {
-  const jdn = toJulianDay(year, month, day, hour, minute);
+export function computeSun(year, month, day, hour, minute, second) {
+  const jdn = toJulianDay(year, month, day, hour, minute, second);
   const sunLongitude = getSunLongitude(jdn);
   return { jdn, sunLongitude };
 }

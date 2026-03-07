@@ -1,0 +1,244 @@
+{
+  "title": "VIA Character Strengths (Simplified)",
+  "description": "Identify your top 5 character strengths from 24 universal virtues. 24 questions, 3-4 minutes.",
+  "virtues": {
+    "wisdom": ["Creativity", "Curiosity", "Judgment", "Love of Learning", "Perspective"],
+    "courage": ["Bravery", "Perseverance", "Honesty", "Zest"],
+    "humanity": ["Love", "Kindness", "Social Intelligence"],
+    "justice": ["Teamwork", "Fairness", "Leadership"],
+    "temperance": ["Forgiveness", "Humility", "Prudence", "Self-Regulation"],
+    "transcendence": ["Appreciation of Beauty", "Gratitude", "Hope", "Humor", "Spirituality"]
+  },
+  "strengths": [
+    {
+      "id": 1,
+      "name": "Creativity",
+      "virtue": "wisdom",
+      "description": "Thinking of novel and productive ways to do things",
+      "hdCorrelations": ["Gate 1 (Creative Power)", "Gate 3 (Innovation)", "individual circuitry", "Uranus aspects"],
+      "geneKeyCorrelations": ["Key 1 (Entropy → Freshness)", "Key 3 (Chaos → Innovation)", "Key 22 (Grace)"]
+    },
+    {
+      "id": 2,
+      "name": "Curiosity",
+      "virtue": "wisdom",
+      "description": "Taking an interest in ongoing experience; finding all subjects fascinating",
+      "hdCorrelations": ["Gate 63 (Doubt → Inquiry)", "Gate 4 (Mental Answers)", "defined Ajna", "Mercury aspects"],
+      "geneKeyCorrelations": ["Key 63 (Doubt → Inquiry → Truth)", "Key 4 (Intolerance → Understanding)"]
+    },
+    {
+      "id": 3,
+      "name": "Judgment",
+      "virtue": "wisdom",
+      "description": "Thinking things through and examining them from all sides",
+      "hdCorrelations": ["Gate 11 (Ideas)", "Gate 23 (Assimilation)", "Logical circuitry", "Mercury-Saturn aspects"],
+      "geneKeyCorrelations": ["Key 11 (Obscurity → Idealism)", "Key 23 (Complexity → Simplicity)"]
+    },
+    {
+      "id": 4,
+      "name": "Love of Learning",
+      "virtue": "wisdom",
+      "description": "Mastering new skills, topics, and bodies of knowledge",
+      "hdCorrelations": ["Gate 61 (Mystery)", "Gate 64 (Before Completion)", "9th house emphasis", "Jupiter-Mercury aspects"],
+      "geneKeyCorrelations": ["Key 61 (Psychosis → Inspiration)", "Key 64 (Confusion → Illumination)"]
+    },
+    {
+      "id": 5,
+      "name": "Perspective",
+      "virtue": "wisdom",
+      "description": "Being able to provide wise counsel to others",
+      "hdCorrelations": ["Projector type", "Gate 43 (Insight)", "Collective circuitry", "Jupiter aspects"],
+      "geneKeyCorrelations": ["Key 43 (Deafness → Insight → Epiphany)", "Key 14 (Compromise → Competence)"]
+    },
+    {
+      "id": 6,
+      "name": "Bravery",
+      "virtue": "courage",
+      "description": "Not shrinking from threat, challenge, difficulty, or pain",
+      "hdCorrelations": ["Gate 51 (Shock)", "Gate 25 (Innocence)", "Mars dominant", "Aries emphasis"],
+      "geneKeyCorrelations": ["Key 51 (Agitation → Initiative → Awakening)", "Key 25 (Constriction → Acceptance)"]
+    },
+    {
+      "id": 7,
+      "name": "Perseverance",
+      "virtue": "courage",
+      "description": "Finishing what one starts; persisting despite obstacles",
+      "hdCorrelations": ["defined Root", "Gate 60 (Limitation)", "Generator type", "Saturn aspects"],
+      "geneKeyCorrelations": ["Key 60 (Limitation → Realism → Justice)", "Key 52 (Stress → Restraint → Stillness)"]
+    },
+    {
+      "id": 8,
+      "name": "Honesty",
+      "virtue": "courage",
+      "description": "Speaking the truth and presenting oneself genuinely",
+      "hdCorrelations": ["defined Throat", "Gate 12 (Voice)", "Gate 56 (Storytelling)", "Mercury aspects"],
+      "geneKeyCorrelations": ["Key 12 (Vanity → Discrimination → Purity)", "Key 33 (Forgetting → Mindfulness)"]
+    },
+    {
+      "id": 9,
+      "name": "Zest",
+      "virtue": "courage",
+      "description": "Approaching life with excitement and energy",
+      "hdCorrelations": ["defined Sacral", "Generator/MG type", "Gate 34 (Power)", "Mars-Jupiter aspects"],
+      "geneKeyCorrelations": ["Key 34 (Force → Strength → Majesty)", "Key 5 (Impatience → Patience)"]
+    },
+    {
+      "id": 10,
+      "name": "Love",
+      "virtue": "humanity",
+      "description": "Valuing close relations with others; being close to people",
+      "hdCorrelations": ["Gate 15 (Love of Humanity)", "Gate 10 (Self-Love)", "Venus dominant", "7th house emphasis"],
+      "geneKeyCorrelations": ["Key 15 (Dullness → Magnetism → Florescence)", "Key 10 (Self-Obsession → Naturalness)"]
+    },
+    {
+      "id": 11,
+      "name": "Kindness",
+      "virtue": "humanity",
+      "description": "Doing favors and good deeds for others",
+      "hdCorrelations": ["Gate 27 (Caring)", "Tribal circuitry", "Moon-Venus aspects", "Cancer emphasis"],
+      "geneKeyCorrelations": ["Key 27 (Selfishness → Altruism → Selflessness)", "Key 37 (Weakness → Equality)"]
+    },
+    {
+      "id": 12,
+      "name": "Social Intelligence",
+      "virtue": "humanity",
+      "description": "Being aware of the motives and feelings of others",
+      "hdCorrelations": ["undefined Solar Plexus", "Projector type", "Gate 39 (Provocation)", "Moon aspects"],
+      "geneKeyCorrelations": ["Key 39 (Provocation → Dynamism → Liberation)", "Key 55 (Victimization → Freedom)"]
+    },
+    {
+      "id": 13,
+      "name": "Teamwork",
+      "virtue": "justice",
+      "description": "Working well as a member of a group or team",
+      "hdCorrelations": ["Collective circuitry", "Gate 45 (Gathering)", "11th house emphasis", "Aquarius emphasis"],
+      "geneKeyCorrelations": ["Key 45 (Dominance → Communion → Sanctity)", "Key 8 (Mediocrity → Style)"]
+    },
+    {
+      "id": 14,
+      "name": "Fairness",
+      "virtue": "justice",
+      "description": "Treating all people the same according to fairness and justice",
+      "hdCorrelations": ["Gate 60 (Limitation → Justice)", "Logical circuitry", "Libra emphasis", "Saturn aspects"],
+      "geneKeyCorrelations": ["Key 60 (Limitation → Realism → Justice)", "Key 18 (Judgment → Integrity)"]
+    },
+    {
+      "id": 15,
+      "name": "Leadership",
+      "virtue": "justice",
+      "description": "Organizing group activities and seeing they happen",
+      "hdCorrelations": ["Manifestor type", "Gate 31 (Leading)", "Gate 7 (Role of Self)", "Sun in 10th house"],
+      "geneKeyCorrelations": ["Key 31 (Arrogance → Leadership → Humility)", "Key 7 (Division → Guidance)"]
+    },
+    {
+      "id": 16,
+      "name": "Forgiveness",
+      "virtue": "temperance",
+      "description": "Forgiving those who have done wrong",
+      "hdCorrelations": ["Gate 36 (Crisis)", "12th house emphasis", "Neptune aspects", "Pisces emphasis"],
+      "geneKeyCorrelations": ["Key 36 (Turbulence → Humanity → Compassion)", "Key 22 (Dishonor → Graciousness)"]
+    },
+    {
+      "id": 17,
+      "name": "Humility",
+      "virtue": "temperance",
+      "description": "Letting one's accomplishments speak for themselves",
+      "hdCorrelations": ["Profile line 2 (Hermit)", "undefined Throat", "Gate 15 (Humility)", "Saturn aspects"],
+      "geneKeyCorrelations": ["Key 15 (Dullness → Magnetism)", "Key 31 (Arrogance → Leadership → Humility)"]
+    },
+    {
+      "id": 18,
+      "name": "Prudence",
+      "virtue": "temperance",
+      "description": "Being careful about one's choices; not taking undue risks",
+      "hdCorrelations": ["Gate 32 (Continuity)", "defined Root", "Saturn dominant", "Capricorn emphasis"],
+      "geneKeyCorrelations": ["Key 32 (Failure → Preservation → Veneration)", "Key 52 (Stress → Restraint)"]
+    },
+    {
+      "id": 19,
+      "name": "Self-Regulation",
+      "virtue": "temperance",
+      "description": "Regulating what one feels and does",
+      "hdCorrelations": ["defined Root", "Gate 60 (Limitation)", "Emotional authority", "Saturn-Moon aspects"],
+      "geneKeyCorrelations": ["Key 60 (Limitation → Realism)", "Key 52 (Stress → Restraint → Stillness)"]
+    },
+    {
+      "id": 20,
+      "name": "Appreciation of Beauty",
+      "virtue": "transcendence",
+      "description": "Noticing and appreciating beauty and excellence",
+      "hdCorrelations": ["Gate 22 (Grace)", "Venus dominant", "Libra/Taurus emphasis", "Venus-Neptune aspects"],
+      "geneKeyCorrelations": ["Key 22 (Dishonor → Graciousness → Grace)", "Key 14 (Compromise → Competence)"]
+    },
+    {
+      "id": 21,
+      "name": "Gratitude",
+      "virtue": "transcendence",
+      "description": "Being aware of and thankful for good things that happen",
+      "hdCorrelations": ["Gate 37 (Family)", "Tribal circuitry", "Jupiter-Venus aspects", "2nd house emphasis"],
+      "geneKeyCorrelations": ["Key 37 (Weakness → Equality → Tenderness)", "Key 40 (Exhaustion → Resolve)"]
+    },
+    {
+      "id": 22,
+      "name": "Hope",
+      "virtue": "transcendence",
+      "description": "Expecting the best in the future and working to achieve it",
+      "hdCorrelations": ["Gate 16 (Enthusiasm)", "Jupiter dominant", "Sagittarius emphasis", "9th house emphasis"],
+      "geneKeyCorrelations": ["Key 16 (Indifference → Versatility → Mastery)", "Key 35 (Hunger → Adventure)"]
+    },
+    {
+      "id": 23,
+      "name": "Humor",
+      "virtue": "transcendence",
+      "description": "Liking to laugh and tease; bringing smiles to others",
+      "hdCorrelations": ["Gate 56 (Storytelling)", "defined Throat", "Jupiter-Mercury aspects", "Gemini/Sagittarius"],
+      "geneKeyCorrelations": ["Key 56 (Distraction → Enrichment → Intoxication)", "Key 20 (Superficiality → Self-Assurance)"]
+    },
+    {
+      "id": 24,
+      "name": "Spirituality",
+      "virtue": "transcendence",
+      "description": "Having coherent beliefs about higher purpose and meaning",
+      "hdCorrelations": ["Gate 24 (Rationalization → Return)", "12th house emphasis", "Neptune dominant", "Pisces emphasis"],
+      "geneKeyCorrelations": ["Key 24 (Addiction → Invention → Silence)", "Key 61 (Psychosis → Inspiration → Sanctity)"]
+    }
+  ],
+  "questions": [
+    {"id": 1, "strength": "Creativity", "text": "I often think of new ways to approach problems or tasks."},
+    {"id": 2, "strength": "Curiosity", "text": "I am always asking questions about how things work."},
+    {"id": 3, "strength": "Judgment", "text": "I think carefully before making important decisions."},
+    {"id": 4, "strength": "Love of Learning", "text": "I love learning new things, even outside of school or work."},
+    {"id": 5, "strength": "Perspective", "text": "People often come to me for advice or wisdom."},
+    {"id": 6, "strength": "Bravery", "text": "I stand up for what I believe in, even when it's difficult."},
+    {"id": 7, "strength": "Perseverance", "text": "Once I start something, I always see it through to the end."},
+    {"id": 8, "strength": "Honesty", "text": "I am always truthful, even when it's uncomfortable."},
+    {"id": 9, "strength": "Zest", "text": "I approach life with enthusiasm and energy."},
+    {"id": 10, "strength": "Love", "text": "Close relationships are the most important thing in my life."},
+    {"id": 11, "strength": "Kindness", "text": "I go out of my way to help others."},
+    {"id": 12, "strength": "Social Intelligence", "text": "I can easily sense what others are feeling."},
+    {"id": 13, "strength": "Teamwork", "text": "I work well as part of a team or group."},
+    {"id": 14, "strength": "Fairness", "text": "I believe everyone should be treated equally."},
+    {"id": 15, "strength": "Leadership", "text": "I naturally take charge in group situations."},
+    {"id": 16, "strength": "Forgiveness", "text": "I forgive those who have wronged me."},
+    {"id": 17, "strength": "Humility", "text": "I don't need recognition for my accomplishments."},
+    {"id": 18, "strength": "Prudence", "text": "I am careful and cautious in my choices."},
+    {"id": 19, "strength": "Self-Regulation", "text": "I have strong self-control over my emotions and actions."},
+    {"id": 20, "strength": "Appreciation of Beauty", "text": "I notice and appreciate beauty in art, nature, and daily life."},
+    {"id": 21, "strength": "Gratitude", "text": "I regularly express thanks for the good things in my life."},
+    {"id": 22, "strength": "Hope", "text": "I am optimistic about the future."},
+    {"id": 23, "strength": "Humor", "text": "I love to make people laugh."},
+    {"id": 24, "strength": "Spirituality", "text": "I have a strong sense of life's deeper meaning and purpose."}
+  ],
+  "scales": {
+    "labels": ["Not like me at all", "A little like me", "Somewhat like me", "Mostly like me", "Very much like me"],
+    "values": [1, 2, 3, 4, 5]
+  },
+  "scoring": {
+    "note": "Rank strengths by average score. Top 5 are signature strengths. Bottom 5 are lesser strengths (not weaknesses).",
+    "interpretation": {
+      "signatureStrengths": "Top 5 ranked strengths (4.0+)",
+      "middleStrengths": "Moderate strengths (3.0-4.0)",
+      "lesserStrengths": "Bottom 5 ranked (<3.0)"
+    }
+  }
+}

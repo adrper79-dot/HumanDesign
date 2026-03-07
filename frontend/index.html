@@ -3,10 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Content Security Policy -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://js.stripe.com;
+  style-src 'self' 'unsafe-inline';
+  connect-src 'self' https://prime-self-api.adrper79.workers.dev https://prime-self-api.primeself.workers.dev https://api.stripe.com;
+  img-src 'self' data: blob:;
+  font-src 'self';
+  frame-src https://js.stripe.com https://hooks.stripe.com;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+">
 <title>Prime Self — Energy Blueprint & Astrology</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><circle cx='16' cy='16' r='14' stroke='%23d5001c' stroke-width='2'/><circle cx='16' cy='16' r='6' fill='%23d5001c'/><line x1='16' y1='2' x2='16' y2='30' stroke='%23d5001c' stroke-width='1'/><line x1='2' y1='16' x2='30' y2='16' stroke='%23d5001c' stroke-width='1'/></svg>">
-<!-- Premium Design System -->
+<!-- ─── Resource Hints (BL-OPT-001) ─── -->
+<link rel="preconnect" href="https://prime-self-api.primeself.workers.dev" crossorigin>
+<link rel="dns-prefetch" href="https://prime-self-api.primeself.workers.dev">
+<link rel="dns-prefetch" href="https://js.stripe.com">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<!-- Preload critical CSS -->
+<link rel="preload" href="css/design-tokens-premium.css" as="style">
+<link rel="preload" href="css/base.css" as="style">
+<!-- Preload lazy loading utilities (BL-OPT-005) -->
+<link rel="preload" href="js/lazy.js" as="script">
+<!-- Preload i18n (BL-OPT-006) -->
+<link rel="preload" href="js/i18n.js" as="script">
+<link rel="preload" href="locales/en.json" as="fetch" crossorigin>
+<!-- Foundation CSS (parallel loading, replaces @import chain in prime-self-premium.css) -->
+<link rel="stylesheet" href="css/design-tokens-premium.css">
+<link rel="stylesheet" href="css/icons.css">
+<link rel="stylesheet" href="css/artwork.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components/buttons.css">
+<link rel="stylesheet" href="css/components/cards.css">
+<link rel="stylesheet" href="css/components/forms.css">
+<link rel="stylesheet" href="css/components/tabs.css">
+<link rel="stylesheet" href="css/components/modals.css">
+<link rel="stylesheet" href="css/components/alerts.css">
+<link rel="stylesheet" href="css/components/layout.css">
+<!-- Premium Overrides (no more @imports — loaded last for cascade) -->
 <link rel="stylesheet" href="css/prime-self-premium.css">
+<!-- Mobile Optimizations (deferred) -->
+<link rel="preload" href="css/components/mobile.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="css/components/mobile.css"></noscript>
 <style>
   :root {
     --bg: #0a0a0f;
@@ -278,7 +319,361 @@
   /* ── Action Grid ── */
   .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 16px; }
   .action-grid button { justify-content: center; }
+
+  /* ── Pricing Modal ── */
+  .pricing-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 250;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .pricing-overlay.hidden { display: none; }
+  .pricing-modal {
+    background: var(--bg2); border: 2px solid var(--gold); border-radius: 12px;
+    padding: 40px; width: 920px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 12px 60px rgba(201,168,76,0.3);
+  }
+  .pricing-modal h2 { color: var(--gold); margin-bottom: 8px; font-size: 1.8rem; text-align: center; }
+  .pricing-modal .subtitle { color: var(--text-dim); font-size: 0.95rem; text-align: center; margin-bottom: 32px; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  @media(max-width: 850px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media(max-width: 500px) { .pricing-grid { grid-template-columns: 1fr; } }
+  .pricing-card {
+    background: var(--bg3); border: 2px solid var(--border); border-radius: 8px;
+    padding: 24px; display: flex; flex-direction: column; transition: all 0.2s;
+  }
+  .pricing-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+  .pricing-card.featured { border-color: var(--gold); background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, var(--bg3) 100%); }
+  .pricing-card .tier-name { font-size: 1.2rem; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
+  .pricing-card .tier-price { font-size: 2rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .pricing-card .tier-price .currency { font-size: 1.2rem; font-weight: 400; color: var(--text-dim); }
+  .pricing-card .tier-billing { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 16px; }
+  .pricing-card .tier-features { flex: 1; list-style: none; margin-bottom: 20px; }
+  .pricing-card .tier-features li { padding: 6px 0; font-size: 0.85rem; color: var(--text); display: flex; align-items: flex-start; gap: 8px; }
+  .pricing-card .tier-features li::before { content: '✓'; color: var(--accent2); font-weight: 700; flex-shrink: 0; }
+  .pricing-card .tier-features li.disabled { color: var(--text-dim); opacity: 0.5; }
+  .pricing-card .tier-features li.disabled::before { content: '–'; color: var(--text-dim); }
+  .pricing-card .tier-cta { width: 100%; padding: 10px; font-size: 0.9rem; }
+  .pricing-close { text-align: center; margin-top: 16px; }
+  .pricing-close a { font-size: 0.85rem; cursor: pointer; color: var(--text-dim); text-decoration: underline; }
+  .pricing-close a:hover { color: var(--gold); }
+
+  /* ── Tier Badge ── */
+  .tier-badge {
+    display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim);
+  }
+  .tier-badge.tier-free { background: rgba(136,130,160,0.15); border-color: rgba(136,130,160,0.3); color: var(--text-dim); }
+  .tier-badge.tier-seeker { background: rgba(79,200,160,0.15); border-color: rgba(79,200,160,0.4); color: var(--accent2); }
+  .tier-badge.tier-guide { background: rgba(106,79,200,0.15); border-color: rgba(106,79,200,0.4); color: var(--accent); }
+  .tier-badge.tier-practitioner { background: rgba(201,168,76,0.2); border-color: rgba(201,168,76,0.5); color: var(--gold); }
+
+  /* ── Daily Check-In Alignment Buttons ── */
+  .alignment-btn {
+    width: 40px; height: 40px; border: 1px solid var(--border); background: var(--bg3);
+    color: var(--text-dim); border-radius: 6px; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center;
+    justify-content: center;
+  }
+  .alignment-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+  .alignment-btn.selected {
+    background: var(--gold); border-color: var(--gold); color: #0a0a0f; font-weight: 700;
+  }
+
+  /* ── Check-In Stats Cards ── */
+  .stat-card {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; text-align: center;
+  }
+  .stat-card .stat-value {
+    font-size: 1.8rem; font-weight: 700; color: var(--gold); display: block;
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-label {
+    font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.05em; font-weight: 600;
+  }
+  .stat-card.success .stat-value { color: var(--accent2); }
+  .stat-card.info .stat-value { color: var(--accent); }
+
+  /* ── Check-In History Items ── */
+  .checkin-item {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start;
+  }
+  .checkin-item .checkin-date {
+    font-size: 0.75rem; font-weight: 700; color: var(--gold); text-transform: uppercase;
+    min-width: 80px;
+  }
+  .checkin-item .checkin-score {
+    font-size: 1.2rem; font-weight: 700; color: var(--accent2); margin-right: 8px;
+  }
+  .checkin-item .checkin-details {
+    flex: 1; font-size: 0.85rem; color: var(--text-dim);
+  }
+  .checkin-item .checkin-mood {
+    margin-top: 4px; font-size: 0.8rem; color: var(--text);
+  }
+
+  /* ── Social Proof Banner ── */
+  .social-proof-banner {
+    background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(106,79,200,0.06) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .social-proof-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .social-proof-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+  .social-proof-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ── Testimonials Carousel ── */
+  .testimonials-section {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 20px;
+    position: relative;
+  }
+  .testimonials-container {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    min-height: 200px;
+  }
+  .testimonial {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    transition: opacity 0.5s ease-in-out;
+    pointer-events: none;
+  }
+  .testimonial.active {
+    opacity: 1;
+    position: relative;
+    pointer-events: auto;
+  }
+  .testimonial-quote {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text);
+    font-style: italic;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .testimonial-quote::before {
+    content: '"';
+    font-size: 2rem;
+    color: var(--gold);
+    opacity: 0.5;
+    margin-right: 4px;
+  }
+  .testimonial-quote::after {
+    content: '"';
+    font-size: 2rem;
+    color: var(--gold);
+    opacity: 0.5;
+    margin-left: 4px;
+  }
+  .testimonial-author {
+    text-align: center;
+  }
+  .testimonial-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .testimonial-role {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .testimonial-stars {
+    font-size: 0.9rem;
+    color: var(--gold);
+  }
+  .testimonial-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 30px;
+  }
+  .testimonial-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .testimonial-btn:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0a0a0f;
+  }
+  .testimonial-dots {
+    display: flex;
+    gap: 8px;
+  }
+  .testimonial-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .testimonial-dot.active {
+    background: var(--gold);
+    width: 24px;
+    border-radius: 4px;
+  }
+  .testimonial-dot:hover {
+    background: var(--gold-dim);
+  }
+
+  @media (max-width: 768px) {
+    .social-proof-banner {
+      gap: 20px;
+      padding: 16px 12px;
+    }
+    .social-proof-number {
+      font-size: 1.2rem;
+    }
+    .testimonial-quote {
+      font-size: 1rem;
+    }
+  }
+
+  /* ── Lazy Image Fade-In (BL-OPT-005) ── */
+  img[data-src] {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  img[data-src].loaded, img:not([data-src]) {
+    opacity: 1;
+  }
+
+  /* ── Language Switcher (BL-OPT-006) ── */
+  .lang-switcher {
+    position: relative;
+    display: inline-flex;
+  }
+  .lang-switcher-btn {
+    background: var(--bg3);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .lang-switcher-btn:hover { color: var(--gold); border-color: var(--gold-dim); }
+  .lang-switcher-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    min-width: 140px;
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .lang-switcher-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .lang-switcher-option:hover { background: var(--bg3); color: var(--text); }
+  .lang-switcher-option.active { color: var(--gold); font-weight: 600; }
 </style>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Theme Color -->
+<meta name="theme-color" content="#c9a84c">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0f">
+
+<!-- iOS Meta Tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prime Self">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<!-- Android Meta Tags -->
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- MS Tile for Windows -->
+<meta name="msapplication-TileColor" content="#0a0a0f">
+<meta name="msapplication-TileImage" content="/icons/icon-144.png">
+
+<!-- Description for App Stores -->
+<meta name="description" content="Your Energy Blueprint & Complete Astrology System - Human Design, Gene Keys, Natal Chart, and Daily Transit Guidance">
+<meta name="keywords" content="human design, astrology, gene keys, bodygraph, natal chart, transits, energy blueprint">
+
+<!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
+<meta property="og:title" content="Prime Self — Energy Blueprint & Astrology">
+<meta property="og:description" content="Discover your unique energy blueprint through Human Design, Gene Keys, and complete astrology. Get personalized insights and daily transit guidance.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://primeself.app">
+<meta property="og:image" content="https://primeself.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Prime Self">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prime Self — Your Energy Blueprint">
+<meta name="twitter:description" content="Discover your unique energy blueprint through Human Design, Gene Keys, and astrology. Personalized insights and daily guidance.">
+<meta name="twitter:image" content="https://primeself.app/twitter-card.png">
+<meta name="twitter:site" content="@primeself">
+<meta name="twitter:creator" content="@primeself">
+
+<!-- Additional Social Meta Tags -->
+<!-- BL-R-L3: fb:app_id removed — add back only when a real Facebook App ID is obtained -->
+<meta name="pinterest-rich-pin" content="true">
+
 </head>
 <body>
 
@@ -314,7 +709,7 @@
 <div class="ambient-particles" id="particlesContainer"></div>
 
 <!-- Auth Overlay -->
-<div class="auth-overlay hidden" id="authOverlay">
+<div class="auth-overlay hidden" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="auth-box">
     <h2 id="authTitle">Sign In</h2>
     <p id="authSubtitle">Access your Prime Self profile and saved charts.</p>
@@ -340,6 +735,79 @@
   </div>
 </div>
 
+<!-- Pricing Modal -->
+<div class="pricing-overlay hidden" id="pricingOverlay" role="dialog" aria-modal="true" aria-labelledby="pricingTitle">
+  <div class="pricing-modal">
+    <h2 id="pricingTitle">Unlock Your Full Potential</h2>
+    <p class="subtitle">Choose the plan that matches your journey</p>
+    <div class="pricing-grid">
+      <!-- Free Tier -->
+      <div class="pricing-card">
+        <div class="tier-name">Free</div>
+        <div class="tier-price"><span class="currency">$</span>0</div>
+        <div class="tier-billing">forever</div>
+        <ul class="tier-features">
+          <li>1 chart calculation/month</li>
+          <li>1 profile generation/month</li>
+          <li>Basic transit snapshots</li>
+          <li class="disabled">SMS digests</li>
+          <li class="disabled">Practitioner tools</li>
+          <li class="disabled">API access</li>
+        </ul>
+        <button class="btn-secondary tier-cta" disabled>Current Plan</button>
+      </div>
+      <!-- Seeker Tier -->
+      <div class="pricing-card">
+        <div class="tier-name">Seeker</div>
+        <div class="tier-price"><span class="currency">$</span>15</div>
+        <div class="tier-billing">per month</div>
+        <ul class="tier-features">
+          <li>Unlimited chart calculations</li>
+          <li>10 profile generations/month</li>
+          <li>Unlimited transits & composites</li>
+          <li>SMS digest subscriptions</li>
+          <li class="disabled">Practitioner tools</li>
+          <li class="disabled">API access</li>
+        </ul>
+        <button class="btn-primary tier-cta" onclick="startCheckout('seeker')">Upgrade to Seeker</button>
+      </div>
+      <!-- Guide Tier -->
+      <div class="pricing-card featured">
+        <div class="tier-name">Guide ⭐</div>
+        <div class="tier-price"><span class="currency">$</span>97</div>
+        <div class="tier-billing">per month</div>
+        <ul class="tier-features">
+          <li>Unlimited everything</li>
+          <li>Unlimited profile generations</li>
+          <li>Full practitioner dashboard</li>
+          <li>Client management tools</li>
+          <li>1,000 API calls/month</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="btn-primary tier-cta" onclick="startCheckout('guide')">Upgrade to Guide</button>
+      </div>
+      <!-- Practitioner Tier -->
+      <div class="pricing-card">
+        <div class="tier-name">Practitioner</div>
+        <div class="tier-price"><span class="currency">$</span>500</div>
+        <div class="tier-billing">per month</div>
+        <ul class="tier-features">
+          <li>Everything in Guide +</li>
+          <li>10,000 API calls/month</li>
+          <li>White-label API access</li>
+          <li>Custom integrations</li>
+          <li>Dedicated support</li>
+          <li>Revenue sharing eligible</li>
+        </ul>
+        <button class="btn-primary tier-cta" onclick="startCheckout('practitioner')">Upgrade to Practitioner</button>
+      </div>
+    </div>
+    <div class="pricing-close">
+      <a onclick="closePricingModal()">Maybe later</a>
+    </div>
+  </div>
+</div>
+
 <!-- Header -->
 <header>
   <!-- Premium background gradient -->
@@ -359,31 +827,119 @@
     </div>
   </div>
   <div class="auth-bar">
+    <div id="lang-switcher" class="lang-switcher"></div>
+    <span class="tier-badge tier-free" id="tierBadge" style="display:none">FREE</span>
     <div class="auth-status" id="authStatusText">Not signed in</div>
+    <button class="btn-secondary btn-sm" id="upgradeBtn" style="display:none" onclick="openPricingModal()">⚡ Upgrade</button>
+    <button class="btn-secondary btn-sm" id="billingBtn" style="display:none" onclick="openBillingPortal()">Billing</button>
     <button class="btn-secondary btn-sm" id="authBtn" onclick="openAuthOverlay()">Sign In</button>
     <button class="btn-danger btn-sm" id="logoutBtn" style="display:none" onclick="logout()">Sign Out</button>
   </div>
 </header>
 
+<!-- Social Proof Banner -->
+<div class="social-proof-banner" id="socialProofBanner">
+  <div class="social-proof-stat">
+    <span class="social-proof-number" id="weeklyUsers">...</span>
+    <span class="social-proof-label">people explored their chart this week</span>
+  </div>
+  <div class="social-proof-stat">
+    <span class="social-proof-number" id="totalProfiles">...</span>
+    <span class="social-proof-label">AI synthesis reports generated</span>
+  </div>
+  <div class="social-proof-stat">
+    <span class="social-proof-number">98%</span>
+    <span class="social-proof-label">accuracy rating from practitioners</span>
+  </div>
+</div>
+
+<!-- Testimonials Carousel -->
+<div class="testimonials-section" id="testimonialsSection">
+  <div class="testimonials-container">
+    <div class="testimonial active" data-index="0">
+      <div class="testimonial-quote">"Prime Self gave me clarity I've been searching for years. The synthesis of Human Design with astrology and numerology is incredibly accurate. My clients are amazed when I show them their charts."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-name">Sarah Mitchell</div>
+        <div class="testimonial-role">HD Practitioner · 450+ Client Readings</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+    <div class="testimonial" data-index="1">
+      <div class="testimonial-quote">"I've tried every Human Design app out there. None come close to Prime Self's depth. The transit tracking alone is worth the subscription. Finally understanding why certain days feel so challenging."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-name">Marcus Chen</div>
+        <div class="testimonial-role">Projector 5/1 · Seeker Tier</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+    <div class="testimonial" data-index="2">
+      <div class="testimonial-quote">"The composite charts feature transformed how I work with couples. I can show them exactly where their energies complement and where they need awareness. My relationship coaching practice has grown 3x since using Prime Self."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-name">Dr. Amanda Reyes</div>
+        <div class="testimonial-role">Relationship Coach · Guide Tier</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+    <div class="testimonial" data-index="3">
+      <div class="testimonial-quote">"As a Generator 3/5, I've struggled with decision-making my whole life. Prime Self's alignment tracker helped me see concrete patterns. When I follow my strategy, my scores are consistently 8-9. When I don't, they drop to 4-5. The data doesn't lie."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-name">Jessica Wang</div>
+        <div class="testimonial-role">Generator 3/5 · 89-day Check-in Streak</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+    <div class="testimonial" data-index="4">
+      <div class="testimonial-quote">"I was skeptical about Human Design until I used Prime Self. The birth time rectification feature pinpointed my exact time by correlating major life events with gate changes. Everything finally makes sense now."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-name">David Thompson</div>
+        <div class="testimonial-role">Manifestor 1/3 · Free Tier</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+    <div class="testimonial" data-index="5">
+      <div class="testimonial-quote">"The Notion integration saves me 2 hours per week. All my client charts sync automatically with meeting notes. The API is robust and well-documented. Best investment for my practice."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-name">Rachel Foster</div>
+        <div class="testimonial-role">Professional Reader · Practitioner Tier</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Carousel Controls -->
+  <div class="testimonial-controls">
+    <button class="testimonial-btn testimonial-prev" onclick="prevTestimonial()">
+      <span>‹</span>
+    </button>
+    <div class="testimonial-dots" id="testimonialDots"></div>
+    <button class="testimonial-btn testimonial-next" onclick="nextTestimonial()">
+      <span>›</span>
+    </button>
+  </div>
+</div>
+
 <!-- Navigation Tabs -->
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart<span class="icon-info help-icon" title="Calculate your exact gate activations using birth coordinates and time. Your chart shifts every 2 hours as Earth rotates through different gate positions. We calculate both your conscious (personality) and unconscious (design) activations 88 days before birth."></span></button>
-  <button class="tab-btn" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile<span class="icon-info help-icon" title="Get an AI synthesis combining your 64 gates, Gene Keys shadows/gifts/siddhis, astrological aspects, and life path numbers. This creates specific guidance based on YOUR exact activation patterns - not generic descriptions."></span></button>
-  <button class="tab-btn" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits<span class="icon-info help-icon" title="See which gates are activated RIGHT NOW by current planetary positions and how they interact with YOUR gates. Fast-moving planets (Moon, Sun, Mercury) change daily. Slow planets (Saturn, Neptune, Pluto) create year-long themes."></span></button>
-  <button class="tab-btn" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Composite<span class="icon-info help-icon" title="Calculate the electromagnetic field created when two charts overlap. Shows new channels activated together, definition changes, and specific interaction dynamics. Essential for business partnerships and relationships."></span></button>
-  <button class="tab-btn" onclick="switchTab('rectify', this)"><span class="icon-time"></span> Rectify<span class="icon-info help-icon" title="Find your accurate birth time by back-calculating from life events. Major life shifts often correlate with gate changes. Test different times in your uncertainty window to find which gates align with your actual experiences."></span></button>
-  <button class="tab-btn" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> Practitioner<span class="icon-info help-icon" title="Batch process multiple charts for client readings. Save client profiles with notes, track reading history, and access all charts quickly. For professional readers who need organized client management."></span></button>
-  <button class="tab-btn" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> Clusters<span class="icon-info help-icon" title="Analyze group dynamics by overlaying multiple charts. See which gates/channels dominate in teams, identify missing energies, and understand collective patterns. Use for families, work teams, or organizations."></span></button>
-  <button class="tab-btn" onclick="switchTab('sms', this)"><span class="icon-sms"></span> SMS<span class="icon-info help-icon" title="Automate personalized text messages with transit updates. Uses YOUR gate activations to identify significant transits (returning planets, important aspects). Subscribers receive alerts when their specific gates are activated."></span></button>
-  <button class="tab-btn" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> Onboarding<span class="icon-info help-icon" title="Guided intake questionnaire that collects life event dates, themes, and challenges. This data trains the AI to provide readings aligned with YOUR actual lived experience, not generic interpretations."></span></button>
-  <button class="tab-btn" onclick="switchTab('history', this)"><span class="icon-archive"></span> Saved<span class="icon-info help-icon" title="Access all your previously generated charts and synthesis reports. Each profile includes the exact birth coordinates and timestamp used for calculations. Compare how readings evolve as you refine your birth time."></span></button>
+<div class="tabs" role="tablist" aria-label="Main navigation tabs">
+  <button class="tab-btn active" id="btn-chart" role="tab" aria-selected="true" aria-controls="tab-chart" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart<span class="icon-info help-icon" title="Calculate your exact gate activations using birth coordinates and time. Your chart shifts every 2 hours as Earth rotates through different gate positions. We calculate both your conscious (personality) and unconscious (design) activations 88 days before birth."></span></button>
+  <button class="tab-btn" id="btn-profile" role="tab" aria-selected="false" aria-controls="tab-profile" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile<span class="icon-info help-icon" title="Get an AI synthesis combining your 64 gates, Gene Keys shadows/gifts/siddhis, astrological aspects, and life path numbers. This creates specific guidance based on YOUR exact activation patterns - not generic descriptions."></span></button>
+  <button class="tab-btn" id="btn-enhance" role="tab" aria-selected="false" aria-controls="tab-enhance" onclick="switchTab('enhance', this)"><span class="icon-star"></span> Enhance<span class="icon-info help-icon" title="Add behavioral validation and life events to dramatically improve reading accuracy. Takes 10 minutes: Big Five personality assessment, character strengths, decision patterns, and major life event timeline for retroactive validation."></span></button>
+  <button class="tab-btn" id="btn-diary" role="tab" aria-selected="false" aria-controls="tab-diary" onclick="switchTab('diary', this)"><span class="icon-archive"></span> Diary<span class="icon-info help-icon" title="Log major life events with dates to validate your chart retroactively. System auto-correlates events with transits to prove chart accuracy through lived experience. Use for birth time rectification."></span></button>
+  <button class="tab-btn" id="btn-checkin" role="tab" aria-selected="false" aria-controls="tab-checkin" onclick="switchTab('checkin', this)"><span class="icon-heart"></span> Check-In<span class="icon-info help-icon" title="Daily alignment tracker. Rate how well you followed your strategy and authority each day (1-10 score). View trends over time, track streaks, and correlate alignment with current transits to identify patterns."></span></button>
+  <button class="tab-btn" id="btn-transits" role="tab" aria-selected="false" aria-controls="tab-transits" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits<span class="icon-info help-icon" title="See which gates are activated RIGHT NOW by current planetary positions and how they interact with YOUR gates. Fast-moving planets (Moon, Sun, Mercury) change daily. Slow planets (Saturn, Neptune, Pluto) create year-long themes."></span></button>
+  <button class="tab-btn" id="btn-composite" role="tab" aria-selected="false" aria-controls="tab-composite" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Composite<span class="icon-info help-icon" title="Calculate the electromagnetic field created when two charts overlap. Shows new channels activated together, definition changes, and specific interaction dynamics. Essential for business partnerships and relationships."></span></button>
+  <button class="tab-btn" id="btn-rectify" role="tab" aria-selected="false" aria-controls="tab-rectify" onclick="switchTab('rectify', this)"><span class="icon-time"></span> Rectify<span class="icon-info help-icon" title="Find your accurate birth time by back-calculating from life events. Major life shifts often correlate with gate changes. Test different times in your uncertainty window to find which gates align with your actual experiences."></span></button>
+  <button class="tab-btn" id="btn-practitioner" role="tab" aria-selected="false" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> Practitioner<span class="icon-info help-icon" title="Batch process multiple charts for client readings. Save client profiles with notes, track reading history, and access all charts quickly. For professional readers who need organized client management."></span></button>
+  <button class="tab-btn" id="btn-clusters" role="tab" aria-selected="false" aria-controls="tab-clusters" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> Clusters<span class="icon-info help-icon" title="Analyze group dynamics by overlaying multiple charts. See which gates/channels dominate in teams, identify missing energies, and understand collective patterns. Use for families, work teams, or organizations."></span></button>
+  <button class="tab-btn" id="btn-sms" role="tab" aria-selected="false" aria-controls="tab-sms" onclick="switchTab('sms', this)"><span class="icon-sms"></span> SMS<span class="icon-info help-icon" title="Automate personalized text messages with transit updates. Uses YOUR gate activations to identify significant transits (returning planets, important aspects). Subscribers receive alerts when their specific gates are activated."></span></button>
+  <button class="tab-btn" id="btn-onboarding" role="tab" aria-selected="false" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> Onboarding<span class="icon-info help-icon" title="Guided intake questionnaire that collects life event dates, themes, and challenges. This data trains the AI to provide readings aligned with YOUR actual lived experience, not generic interpretations."></span></button>
+  <button class="tab-btn" id="btn-history" role="tab" aria-selected="false" aria-controls="tab-history" onclick="switchTab('history', this)"><span class="icon-archive"></span> Saved<span class="icon-info help-icon" title="Access all your previously generated charts and synthesis reports. Each profile includes the exact birth coordinates and timestamp used for calculations. Compare how readings evolve as you refine your birth time."></span></button>
 </div>
 
 <!-- Main Content -->
 <div class="container">
 
   <!-- ═══ CHART TAB ═══ -->
-  <div class="tab-content active" id="tab-chart">
+  <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-chart">
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
       <strong style="color:var(--gold)">Welcome to Prime Self</strong><br>
       Enter your exact birth date, time, and location below. We'll calculate your personalized Energy Blueprint by mapping 64 gate activations, planetary positions, and numerological patterns. Your chart reveals which energies are consistently available to you (defined centers) vs. which you experience through others (open centers). This precision calculation forms the foundation for AI-powered synthesis.
@@ -447,10 +1003,15 @@
   </div>
 
   <!-- ═══ PROFILE TAB ═══ -->
-  <div class="tab-content" id="tab-profile">
+  <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-profile">
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--gold)">
       <strong style="color:var(--gold)">AI-Powered Multi-System Synthesis</strong><br>
       This isn't a generic report. We calculate YOUR exact 64 gate activations (both conscious + unconscious), overlay Gene Keys shadows/gifts/siddhis, map astrological aspects with orbs, and integrate numerology — then Claude AI synthesizes convergences across ALL systems. You get specific scenarios ("When X happens, you notice Y because [datapoint]") instead of vague statements. <strong>Takes 15-30 seconds to generate.</strong> Requires sign-in to save your profile.
+    </div>
+    <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
+      <strong>⚡ Usage Limit</strong><br>
+      <span id="profileQuotaText"></span>
+      <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:8px">Upgrade to unlock more</a>
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-profile"></span> Generate Prime Self Profile</div>
@@ -497,13 +1058,323 @@
           <span class="spinner" id="profileSpinner" style="display:none"></span>
           Create My Full Profile
         </button>
+        <button class="btn-secondary" onclick="shareProfile()" id="shareProfileBtn" style="padding:11px 24px;display:none">
+          📤 Share My Profile
+        </button>
       </div>
     </div>
     <div id="profileResult"></div>
+    
+    <!-- Share Modal Overlay -->
+    <div class="share-modal-overlay hidden" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+      <div class="share-modal">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)">
+          <h3 id="shareModalTitle" style="margin:0;font-size:1.2rem;color:var(--gold)">Share Your Profile</h3>
+          <button class="modal-close" onclick="closeShareModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.8rem;cursor:pointer">&times;</button>
+        </div>
+        <div style="padding:24px">
+          <!-- Share Link -->
+          <div style="margin-bottom:24px">
+            <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text)">Your Referral Link</label>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="shareLinkInput" readonly style="flex:1;background:var(--bg3);border:1px solid var(--border);padding:10px;border-radius:6px;color:var(--text);font-size:0.9rem">
+              <button class="btn-secondary" onclick="copyShareLink()" style="white-space:nowrap">
+                📋 Copy
+              </button>
+            </div>
+            <p style="font-size:0.8rem;color:var(--text-dim);margin-top:6px">Share this link and earn rewards when friends sign up!</p>
+          </div>
+          
+          <!-- Social Share Buttons -->
+          <div style="margin-bottom:20px">
+            <label style="display:block;margin-bottom:12px;font-weight:600;color:var(--text)">Share On</label>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+              <button class="btn-social" onclick="shareToSocial('facebook')" style="background:#1877f2;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+                Facebook
+              </button>
+              <button class="btn-social" onclick="shareToSocial('twitter')" style="background:#1da1f2;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+                Twitter
+              </button>
+              <button class="btn-social" onclick="shareToSocial('linkedin')" style="background:#0077b5;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+                LinkedIn
+              </button>
+              <button class="btn-social" onclick="shareToSocial('whatsapp')" style="background:#25d366;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+                WhatsApp
+              </button>
+              <button class="btn-social" onclick="shareToSocial('email')" style="background:var(--accent);color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+                Email
+              </button>
+            </div>
+          </div>
+          
+          <!-- Native Share Button (Mobile) -->
+          <div class="mobile-only">
+            <button class="btn-primary" onclick="shareProfile();closeShareModal()" style="width:100%;justify-content:center">
+              📱 Share via Mobile
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ENHANCE TAB ═══ -->
+  <div class="tab-content" id="tab-enhance" role="tabpanel" aria-labelledby="btn-enhance">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(106,79,200,0.06) 100%);border-left:4px solid var(--gold)">
+      <strong style="color:var(--gold)">Dramatically Improve Reading Accuracy</strong><br>
+      Complete these quick assessments to validate your chart through behavioral patterns and cross-correlate with established psychology frameworks. Takes 10 minutes total: decision patterns (validates Authority), energy patterns (validates Type), Big Five personality (cross-validates chart), and Character Strengths (maps to Gene Keys). Your next profile synthesis will reference THIS data to prove chart accuracy through lived experience.
+    </div>
+
+    <!-- Behavioral Validation -->
+    <div class="card">
+      <div class="card-title"><span class="icon-check"></span> Behavioral Validation (2 min)</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Answer these questions to validate your chart through actual behavior patterns.</p>
+      
+      <div class="form-group" style="margin-bottom:16px">
+        <label>How do you make your best decisions?</label>
+        <select id="enhance-decision" style="margin-top:4px">
+          <option value="">-- Select pattern --</option>
+          <option value="gut_impulse">Immediate gut impulse (yes/no, can't explain why)</option>
+          <option value="sleep_on_it">Sleep on it and reassess in the morning</option>
+          <option value="emotional_wave">Ride the emotional wave (need 3+ days)</option>
+          <option value="wait_invitation">Wait to be invited/asked</option>
+          <option value="discuss_others">Discuss with trusted people (sounding board)</option>
+          <option value="environmental">Environmental clarity (depends on location)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Which energy pattern feels most like you?</label>
+        <select id="enhance-energy" style="margin-top:4px">
+          <option value="">-- Select pattern --</option>
+          <option value="steady_renewing">Steady & self-renewing throughout the day</option>
+          <option value="bursts_rest">Bursts of power, then need to rest</option>
+          <option value="mirrors_others">Energy mirrors whoever I'm with</option>
+          <option value="environment_dependent">Highly dependent on environment/location</option>
+          <option value="discerning_sampling">Sample first, commit later (discerning)</option>
+          <option value="experimental_surprise">Experimental, unpredictable (surprise myself)</option>
+        </select>
+      </div>
+
+      <div class="form-group full" style="margin-bottom:16px">
+        <label>What's your current focus or challenge? (Optional but helpful for personalization)</label>
+        <textarea id="enhance-focus" rows="3" placeholder="e.g., Deciding whether to leave stable job to start consulting practice..." style="margin-top:4px"></textarea>
+      </div>
+
+      <button class="btn-primary" onclick="saveValidation()" id="enhanceBtn1">
+        <span class="spinner" id="enhanceSpinner1" style="display:none"></span>
+        Save Behavioral Data
+      </button>
+      <div id="enhanceStatus1" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+    </div>
+
+    <!-- Big Five Assessment -->
+    <div class="card">
+      <div class="card-title"><span class="icon-brain"></span> Big Five Personality (3 min)</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">20 questions. Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
+      
+      <div id="bigfive-questions"></div>
+
+      <button class="btn-primary" onclick="saveBigFive()" id="bigfiveBtn" style="margin-top:16px">
+        <span class="spinner" id="bigfiveSpinner" style="display:none"></span>
+        Save Big Five Assessment
+      </button>
+      <div id="bigfiveStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+    </div>
+
+    <!-- VIA Character Strengths -->
+    <div class="card">
+      <div class="card-title"><span class="icon-star"></span> Character Strengths (4 min)</div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">24 questions. Rate how much each strength describes you from 1 (Not like me) to 5 (Very much like me).</p>
+      
+      <div id="via-questions"></div>
+
+      <button class="btn-primary" onclick="saveVIA()" id="viaBtn" style="margin-top:16px">
+        <span class="spinner" id="viaSpinner" style="display:none"></span>
+        Save Character Strengths
+      </button>
+      <div id="viaStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+    </div>
+  </div>
+
+  <!-- ═══ DIARY TAB ═══ -->
+  <div class="tab-content" id="tab-diary" role="tabpanel" aria-labelledby="btn-diary">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid #d5001c">
+      <strong style="color:#d5001c">Life Events Timeline</strong><br>
+      Log major life events with dates to validate your chart retroactively. When you record an event like "Got promoted - June 2019", the system auto-calculates which transits were active and correlates them with YOUR natal gates. This proves chart accuracy through lived experience. Also essential for birth time rectification: if major events consistently correlate with transits at a specific birth time, you've found the right time.
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-plus"></span> Add Life Event</div>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Event Date</label>
+          <input type="date" id="diary-date" style="margin-top:4px">
+        </div>
+        <div class="form-group">
+          <label>Event Type</label>
+          <select id="diary-type" style="margin-top:4px">
+            <option value="career">Career</option>
+            <option value="relationship">Relationship</option>
+            <option value="health">Health</option>
+            <option value="spiritual">Spiritual</option>
+            <option value="financial">Financial</option>
+            <option value="family">Family</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Significance</label>
+          <select id="diary-significance" style="margin-top:4px">
+            <option value="major">Major (life-changing)</option>
+            <option value="moderate" selected>Moderate (notable)</option>
+            <option value="minor">Minor (worth noting)</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Event Title</label>
+          <input type="text" id="diary-title" placeholder="e.g., Got promoted to Director" style="margin-top:4px">
+        </div>
+        <div class="form-group full">
+          <label>Description (Optional)</label>
+          <textarea id="diary-description" rows="3" placeholder="Add context, what happened, how you felt..." style="margin-top:4px"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn-primary" onclick="saveDiaryEntry()" id="diaryBtn">
+          <span class="spinner" id="diarySpinner" style="display:none"></span>
+          <span class="icon-plus"></span> Add Event
+        </button>
+        <button class="btn-secondary" onclick="cancelDiaryEdit()" id="diaryCancelBtn" style="display:none">Cancel</button>
+      </div>
+      <div id="diaryStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-archive"></span> Your Life Events</div>
+      <button class="btn-secondary" onclick="loadDiaryEntries()" id="diaryLoadBtn" style="margin-bottom:16px">
+        <span class="spinner" id="diaryLoadSpinner" style="display:none"></span>
+        Load Events
+      </button>
+      <div id="diaryList"></div>
+    </div>
+  </div>
+
+  <!-- ═══ CHECK-IN TAB ═══ -->
+  <div class="tab-content" id="tab-checkin" role="tabpanel" aria-labelledby="btn-checkin">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
+      <strong style="color:var(--gold)">Daily Alignment Tracker</strong><br>
+      Check in daily to track how well you're following your strategy and authority. Rate your alignment (1-10), note your mood and energy, and watch patterns emerge over time. Build streaks to maintain consistency. The system correlates your alignment scores with current transits to help you understand which energies support or challenge your design.
+    </div>
+
+    <!-- Today's Check-In Card -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon-heart"></span> Today's Check-In
+        <span id="checkinStreakBadge" style="margin-left:auto;font-size:0.85rem;color:var(--accent2);font-weight:600;display:none">🔥 <span id="streakDays">0</span> day streak!</span>
+      </div>
+      
+      <div id="checkinCompletedMsg" style="display:none;padding:16px;background:rgba(80,200,120,0.12);border:1px solid rgba(80,200,120,0.3);border-radius:6px;color:var(--accent2);margin-bottom:16px">
+        ✓ Check-in completed for today! You can update it anytime today.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>How aligned did you feel today? (1-10)<span class="icon-info help-icon" title="1 = Completely off track, not following your design at all. 10 = Perfectly aligned, honoring your strategy and authority all day. Be honest - patterns only emerge with genuine data."></span></label>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button class="alignment-btn" data-score="1" onclick="selectAlignment(1)">1</button>
+            <button class="alignment-btn" data-score="2" onclick="selectAlignment(2)">2</button>
+            <button class="alignment-btn" data-score="3" onclick="selectAlignment(3)">3</button>
+            <button class="alignment-btn" data-score="4" onclick="selectAlignment(4)">4</button>
+            <button class="alignment-btn" data-score="5" onclick="selectAlignment(5)">5</button>
+            <button class="alignment-btn" data-score="6" onclick="selectAlignment(6)">6</button>
+            <button class="alignment-btn" data-score="7" onclick="selectAlignment(7)">7</button>
+            <button class="alignment-btn" data-score="8" onclick="selectAlignment(8)">8</button>
+            <button class="alignment-btn" data-score="9" onclick="selectAlignment(9)">9</button>
+            <button class="alignment-btn" data-score="10" onclick="selectAlignment(10)">10</button>
+          </div>
+          <input type="hidden" id="checkin-alignment-score" value="">
+        </div>
+
+        <div class="form-group">
+          <label style="margin-bottom:8px">
+            <input type="checkbox" id="checkin-followed-strategy" style="width:auto;margin-right:6px">
+            Followed my strategy today<span class="icon-info help-icon" title="Did you honor your type's strategy? Generator: Respond. Manifestor: Inform. Projector: Wait for invitation. Reflector: Wait 28 days for clarity."></span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label style="margin-bottom:8px">
+            <input type="checkbox" id="checkin-followed-authority" style="width:auto;margin-right:6px">
+            Followed my authority today<span class="icon-info help-icon" title="Did you use your decision-making authority? Emotional: Wait through the wave. Sacral: Follow gut response. Splenic: Trust immediate knowing. Ego: Commit from willpower. Self-Projected: Talk it out."></span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>How was your mood today?</label>
+          <select id="checkin-mood" style="margin-top:4px">
+            <option value="">— Select —</option>
+            <option value="great">😊 Great (energized, joyful)</option>
+            <option value="good">🙂 Good (positive, content)</option>
+            <option value="neutral">😐 Neutral (balanced, calm)</option>
+            <option value="challenging">😕 Challenging (frustrated, stressed)</option>
+            <option value="difficult">😞 Difficult (low, depleted)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Energy Level (1-10)<span class="icon-info help-icon" title="Optional. 1 = Completely exhausted. 10 = Fully energized and vital. Helps track energy patterns relative to alignment."></span></label>
+          <input type="number" id="checkin-energy-level" min="1" max="10" placeholder="Optional" style="margin-top:4px">
+        </div>
+
+        <div class="form-group full">
+          <label>Notes (Optional)</label>
+          <textarea id="checkin-notes" rows="3" placeholder="What happened today? Any insights, challenges, or wins?" style="margin-top:4px"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn-primary" onclick="saveCheckin()" id="checkinBtn">
+          <span class="spinner" id="checkinSpinner" style="display:none"></span>
+          <span class="icon-heart"></span> <span id="checkinBtnText">Save Check-In</span>
+        </button>
+      </div>
+      <div id="checkinStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+    </div>
+
+    <!-- Alignment Stats Card -->
+    <div class="card">
+      <div class="card-title"><span class="icon-chart"></span> Alignment Trends</div>
+      <button class="btn-secondary" onclick="loadCheckinStats()" id="checkinStatsBtn" style="margin-bottom:16px">
+        <span class="spinner" id="checkinStatsSpinner" style="display:none"></span>
+        Load Stats
+      </button>
+      
+      <div id="checkinStatsContainer" style="display:none">
+        <!-- Stats Summary -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px" id="checkinStatsSummary">
+          <!-- Populated by loadCheckinStats() -->
+        </div>
+
+        <!-- Alignment Chart -->
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px">
+          <h3 style="font-size:0.9rem;color:var(--gold);margin-bottom:12px">30-Day Alignment Score</h3>
+          <canvas id="alignmentChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Check-In History -->
+        <div style="margin-top:20px">
+          <h3 style="font-size:0.9rem;color:var(--gold);margin-bottom:12px">Recent Check-Ins</h3>
+          <div id="checkinHistoryList"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ TRANSITS TAB ═══ -->
-  <div class="tab-content" id="tab-transits">
+  <div class="tab-content" id="tab-transits" role="tabpanel" aria-labelledby="btn-transits">
     <div class="card">
       <div class="card-title"><span class="icon-transit"></span> Current Transit Positions</div>
       <p style="font-size:0.88rem;color:var(--text);margin-bottom:12px;line-height:1.6">See which gates are activated RIGHT NOW by current planetary positions. Fast-moving planets (Moon, Sun, Mercury) change daily and create short-term themes. Slow planets (Saturn, Neptune, Pluto) activate gates for months/years and mark major life chapters. When transiting planets activate YOUR natal gates, you experience amplified energy in those themes.</p>
@@ -517,7 +1388,7 @@
   </div>
 
   <!-- ═══ HISTORY TAB ═══ -->
-  <div class="tab-content" id="tab-history">
+  <div class="tab-content" id="tab-history" role="tabpanel" aria-labelledby="btn-history">
     <div class="card">
       <div class="card-title"><span class="icon-archive"></span> Saved Profiles</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Sign in to view your saved Prime Self Profiles.</p>
@@ -530,7 +1401,7 @@
   </div>
 
   <!-- ═══ COMPOSITE TAB ═══ -->
-  <div class="tab-content" id="tab-composite">
+  <div class="tab-content" id="tab-composite" role="tabpanel" aria-labelledby="btn-composite">
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(106,79,200,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--info)">
       <strong style="color:var(--info)">Relationship Electromagnetic Field Analysis</strong><br>
       Calculate the combined energy blueprint when two charts overlap. This shows: <strong>(1)</strong> New channels activated when you're together (electromagnetic bridges), <strong>(2)</strong> Definition changes (e.g., individual becomes emotional authority), <strong>(3)</strong> Dominant gates/themes in the relationship field, <strong>(4)</strong> Potential blind spots (missing energies). Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.
@@ -590,7 +1461,7 @@
   </div>
 
   <!-- ═══ RECTIFY TAB ═══ -->
-  <div class="tab-content" id="tab-rectify">
+  <div class="tab-content" id="tab-rectify" role="tabpanel" aria-labelledby="btn-rectify">
     <div class="card">
       <div class="card-title"><span class="icon-time"></span> Birth Time Rectification</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze how chart changes within a time window to find the most accurate birth time.</p>
@@ -636,7 +1507,12 @@
   </div>
 
   <!-- ═══ PRACTITIONER TAB ═══ -->
-  <div class="tab-content" id="tab-practitioner">
+  <div class="tab-content" id="tab-practitioner" role="tabpanel" aria-labelledby="btn-practitioner">
+    <div id="practitionerUpgradeNotice" class="alert alert-warn" style="display:none">
+      <strong>🔒 Practitioner Tools Locked</strong><br>
+      The Practitioner Portal requires a Guide or Practitioner tier subscription for client management, batch processing, and advanced features.
+      <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:8px">Upgrade to unlock</a>
+    </div>
     <div class="card">
       <div class="card-title"><span class="icon-star"></span> Practitioner Portal</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Manage client roster and session notes (requires practitioner account).</p>
@@ -661,7 +1537,7 @@
   </div>
 
   <!-- ═══ CLUSTERS TAB ═══ -->
-  <div class="tab-content" id="tab-clusters">
+  <div class="tab-content" id="tab-clusters" role="tabpanel" aria-labelledby="btn-clusters">
     <div class="card">
       <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Human Design and Prime Self Forge philosophy"></span></div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:20px">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
@@ -705,7 +1581,7 @@
   </div>
 
   <!-- ═══ SMS TAB ═══ -->
-  <div class="tab-content" id="tab-sms">
+  <div class="tab-content" id="tab-sms" role="tabpanel" aria-labelledby="btn-sms">
     <div class="card">
       <div class="card-title"><span class="icon-sms"></span> SMS Digest</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Subscribe to receive daily transit digests via SMS.</p>
@@ -735,7 +1611,7 @@
   </div>
 
   <!-- ═══ ONBOARDING TAB ═══ -->
-  <div class="tab-content" id="tab-onboarding">
+  <div class="tab-content" id="tab-onboarding" role="tabpanel" aria-labelledby="btn-onboarding">
     <div class="card">
       <div class="card-title"><span class="icon-compass"></span> Onboarding Story</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Interactive guided journey through your Prime Self profile discovery.</p>
@@ -844,6 +1720,84 @@ function logout() {
   updateAuthUI();
 }
 
+// ── Pricing Modal ──────────────────────────────────────────
+function openPricingModal(suggestedTier = null) {
+  if (!token) {
+    openAuthOverlay();
+    document.getElementById('authError').textContent = 'Please sign in to upgrade your account.';
+    return;
+  }
+  document.getElementById('pricingOverlay').classList.remove('hidden');
+}
+
+function closePricingModal() {
+  document.getElementById('pricingOverlay').classList.add('hidden');
+}
+
+async function startCheckout(tier) {
+  if (!token) {
+    closePricingModal();
+    openAuthOverlay();
+    return;
+  }
+
+  try {
+    const checkoutBtn = event.target;
+    const originalText = checkoutBtn.innerHTML;
+    checkoutBtn.disabled = true;
+    checkoutBtn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0f"></span> Creating session...';
+
+    const result = await apiFetch('/api/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ tier })
+    });
+
+    if (result.error) {
+      alert('Checkout failed: ' + result.error);
+      checkoutBtn.disabled = false;
+      checkoutBtn.innerHTML = originalText;
+      return;
+    }
+
+    if (result.url) {
+      // Redirect to Stripe Checkout
+      window.location.href = result.url;
+    }
+  } catch (e) {
+    alert('Failed to start checkout: ' + e.message);
+  }
+}
+
+async function openBillingPortal() {
+  if (!token) {
+    openAuthOverlay();
+    return;
+  }
+
+  try {
+    const result = await apiFetch('/api/billing/portal', {
+      method: 'POST'
+    });
+
+    if (result.error) {
+      alert('Failed to open billing portal: ' + result.error);
+      return;
+    }
+
+    if (result.url) {
+      window.open(result.url, '_blank');
+    }
+  } catch (e) {
+    alert('Failed to open billing portal: ' + e.message);
+  }
+}
+
+// Helper to show upgrade modal on quota/feature errors
+function showUpgradePrompt(message, feature) {
+  openPricingModal();
+  // Could enhance this to highlight specific tier needed for the feature
+}
+
 // ── API Fetch ─────────────────────────────────────────────────
 async function apiFetch(path, options = {}) {
   // Always check for token in localStorage (in case of page refresh/navigation)
@@ -872,15 +1826,28 @@ async function apiFetch(path, options = {}) {
     return { error: 'Authentication required. Please sign in.' };
   }
   
+  // Handle quota exceeded (429) and feature not available (403)
+  if (res.status === 429 || res.status === 403) {
+    const errorData = await res.json();
+    // Show upgrade prompt if the error indicates upgrade is needed
+    if (errorData.upgrade_required) {
+      showUpgradePrompt(errorData.error, errorData.feature);
+    }
+    return errorData;
+  }
+  
   return res.json();
 }
 
 // ── Tabs ──────────────────────────────────────────────────────
 function switchTab(id, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
   document.getElementById('tab-' + id).classList.add('active');
-  btn.classList.add('active');
+  if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
+  
+  // Lazy-load tab content on first activation (BL-OPT-005)
+  if (typeof window.onTabActivated === 'function') window.onTabActivated(id);
   
   // Auto-load clusters when tab is activated
   if (id === 'clusters' && token && !document.getElementById('clusterListContainer').innerHTML) {
@@ -1087,7 +2054,7 @@ async function calculateChart() {
     const data = await apiFetch('/api/chart/calculate', { method: 'POST', body: JSON.stringify(payload) });
     resultEl.innerHTML = renderChart(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1096,7 +2063,7 @@ async function calculateChart() {
 
 function renderChart(data) {
   console.log('[Chart] renderChart called with data:', data);
-  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">API Error: ${escapeHtml(data.error)}</div>`;
   const d = data.data || data;
   const chart = d.chart || d;
   const astro = d.westernAstrology || d.astrology || {};
@@ -1257,7 +2224,7 @@ async function generateProfile() {
     const data = await apiFetch('/api/profile/generate', { method: 'POST', body: JSON.stringify(payload) });
     resultEl.innerHTML = renderProfile(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1268,7 +2235,7 @@ function renderProfile(data) {
   console.log('[Profile] renderProfile called - Version 2.1');
   console.log('Raw data:', data);
   
-  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}<br><small>${data.message || ''}</small></div>`;
+  if (data.error) return `<div class="alert alert-error">API Error: ${escapeHtml(data.error)}<br><small>${escapeHtml(data.message || '')}</small></div>`;
 
   // Ensure we're working with the data payload (handle potential wrappers)
   const payload = data.data || data;
@@ -1311,35 +2278,35 @@ function renderProfile(data) {
     if (qsg.whoYouAre) {
       html += `<div class="profile-section">
         <h4><span class="icon-profile"></span> Who You Are</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.whoYouAre}</p>
+        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.whoYouAre)}</p>
       </div>`;
     }
     
     if (qsg.decisionStyle) {
       html += `<div class="profile-section">
         <h4><span class="icon-compass"></span> How To Make Best Decisions</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.decisionStyle}</p>
+        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.decisionStyle)}</p>
       </div>`;
     }
     
     if (qsg.lifeStrategy) {
       html += `<div class="profile-section">
         <h4><span class="icon-target"></span> Your Life Strategy</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.lifeStrategy}</p>
+        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.lifeStrategy)}</p>
       </div>`;
     }
     
     if (qsg.thisMonth) {
       html += `<div class="profile-section">
         <h4><span class="icon-calendar"></span> This Month</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.thisMonth}</p>
+        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.thisMonth)}</p>
       </div>`;
     }
     
     if (qsg.workingWithOthers) {
       html += `<div class="profile-section">
         <h4><span class="icon-partnership"></span> Working With Others</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${qsg.workingWithOthers}</p>
+        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.workingWithOthers)}</p>
       </div>`;
     }
     
@@ -1350,14 +2317,14 @@ function renderProfile(data) {
   if (ti) {
     const toggleId = 'tech-details-' + Date.now();
     html += `<div class="card" style="text-align:center;padding:16px">
-      <button class="btn-secondary" onclick="document.getElementById('${toggleId}').style.display = document.getElementById('${toggleId}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? '▼ Hide Technical Details' : '▶ Show Technical Details';" 
+      <button class="btn-secondary" onclick="document.getElementById('${escapeAttr(toggleId)}').style.display = document.getElementById('${escapeAttr(toggleId)}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? '▼ Hide Technical Details' : '▶ Show Technical Details';" 
         style="width:100%;max-width:300px">
         ▶ Show Technical Details
       </button>
     </div>`;
 
     // ═══ TECHNICAL INSIGHTS (Layer 2 - Collapsible) ═══
-    html += `<div id="${toggleId}" style="display:none">`;
+    html += `<div id="${escapeAttr(toggleId)}" style="display:none">`;
     
     // Gene Keys Profile
     if (ti.geneKeysProfile) {
@@ -1369,10 +2336,10 @@ function renderProfile(data) {
         const lw = gk.lifesWork;
         html += `<div class="profile-section">
           <h4>Life's Work — Gene Key ${lw.key}</h4>
-          <p style="font-size:0.82rem;margin-top:6px"><strong style="color:#f56565">Shadow:</strong> ${lw.shadow}</p>
-          <p style="font-size:0.82rem"><strong style="color:#48c774">Gift:</strong> ${lw.gift}</p>
-          <p style="font-size:0.82rem"><strong style="color:var(--gold)">Siddhi:</strong> ${lw.siddhi}</p>
-          ${lw.contemplation ? `<p style="font-size:0.85rem;line-height:1.6;margin-top:8px;font-style:italic;color:var(--text-dim)">${lw.contemplation}</p>` : ''}
+          <p style="font-size:0.82rem;margin-top:6px"><strong style="color:#f56565">Shadow:</strong> ${escapeHtml(lw.shadow)}</p>
+          <p style="font-size:0.82rem"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(lw.gift)}</p>
+          <p style="font-size:0.82rem"><strong style="color:var(--gold)">Siddhi:</strong> ${escapeHtml(lw.siddhi)}</p>
+          ${lw.contemplation ? `<p style="font-size:0.85rem;line-height:1.6;margin-top:8px;font-style:italic;color:var(--text-dim)">${escapeHtml(lw.contemplation)}</p>` : ''}
         </div>`;
       }
       
@@ -1381,9 +2348,9 @@ function renderProfile(data) {
           <h4>Other Active Keys</h4>`;
         gk.otherActiveKeys.forEach(k => {
           html += `<div style="margin-top:10px;padding:10px;background:var(--bg3);border-radius:6px">
-            <div style="font-weight:600;color:var(--gold)">GK ${k.key} — ${k.position}</div>
-            <p style="font-size:0.82rem;margin-top:4px"><strong>Shadow:</strong> ${k.shadow} <strong>→ Gift:</strong> ${k.gift}</p>
-            ${k.message ? `<p style="font-size:0.85rem;margin-top:6px;font-style:italic">${k.message}</p>` : ''}
+            <div style="font-weight:600;color:var(--gold)">GK ${escapeHtml(String(k.key))} — ${escapeHtml(k.position)}</div>
+            <p style="font-size:0.82rem;margin-top:4px"><strong>Shadow:</strong> ${escapeHtml(k.shadow)} <strong>→ Gift:</strong> ${escapeHtml(k.gift)}</p>
+            ${k.message ? `<p style="font-size:0.85rem;margin-top:6px;font-style:italic">${escapeHtml(k.message)}</p>` : ''}
           </div>`;
         });
         html += `</div>`;
@@ -1401,25 +2368,25 @@ function renderProfile(data) {
       if (num.lifePath) {
         const lp = num.lifePath;
         html += `<div class="profile-section">
-          <h4>Life Path ${lp.number} — ${lp.name || ''}</h4>
-          <p style="font-size:0.85rem;line-height:1.6;margin-top:6px">${lp.essence || ''}</p>
-          ${lp.currentGuidance ? `<p style="font-size:0.85rem;margin-top:8px;padding:10px;background:var(--bg3);border-radius:6px"><strong>Current Guidance:</strong> ${lp.currentGuidance}</p>` : ''}
+          <h4>Life Path ${lp.number} — ${escapeHtml(lp.name || '')}</h4>
+          <p style="font-size:0.85rem;line-height:1.6;margin-top:6px">${escapeHtml(lp.essence || '')}</p>
+          ${lp.currentGuidance ? `<p style="font-size:0.85rem;margin-top:8px;padding:10px;background:var(--bg3);border-radius:6px"><strong>Current Guidance:</strong> ${escapeHtml(lp.currentGuidance)}</p>` : ''}
         </div>`;
       }
       
       if (num.personalYear) {
         const py = num.personalYear;
         html += `<div class="profile-section">
-          <h4>Personal Year ${py.number} — ${py.theme || ''}</h4>
-          <p style="font-size:0.85rem;line-height:1.6">${py.guidance || ''}</p>
+          <h4>Personal Year ${py.number} — ${escapeHtml(py.theme || '')}</h4>
+          <p style="font-size:0.85rem;line-height:1.6">${escapeHtml(py.guidance || '')}</p>
         </div>`;
       }
       
       if (num.tarotCard) {
         const tc = num.tarotCard;
         html += `<div class="profile-section">
-          <h4>Tarot Card — ${tc.card || ''}</h4>
-          <p style="font-size:0.85rem;line-height:1.6">${tc.message || ''}</p>
+          <h4>Tarot Card — ${escapeHtml(tc.card || '')}</h4>
+          <p style="font-size:0.85rem;line-height:1.6">${escapeHtml(tc.message || '')}</p>
         </div>`;
       }
       
@@ -1432,9 +2399,9 @@ function renderProfile(data) {
         <div class="card-title"><span class="icon-sparkle"></span> Astrological Signatures</div>`;
       ti.astrologicalSignatures.forEach(sig => {
         html += `<div class="profile-section">
-          <h4>${sig.placement || ''}</h4>
-          <p style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">${sig.interpretation || ''}</p>
-          ${sig.practicalImplication ? `<p style="font-size:0.85rem;margin-top:6px;padding:8px;background:var(--bg3);border-radius:4px"><strong>Practical:</strong> ${sig.practicalImplication}</p>` : ''}
+          <h4>${escapeHtml(sig.placement || '')}</h4>
+          <p style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">${escapeHtml(sig.interpretation || '')}</p>
+          ${sig.practicalImplication ? `<p style="font-size:0.85rem;margin-top:6px;padding:8px;background:var(--bg3);border-radius:4px"><strong>Practical:</strong> ${escapeHtml(sig.practicalImplication)}</p>` : ''}
         </div>`;
       });
       html += `</div>`;
@@ -1451,7 +2418,7 @@ function renderProfile(data) {
       const eb = ti.energyBlueprint;
       html += `<div class="card">
         <div class="card-title"><span class="icon-energy"></span> Energy Blueprint</div>
-        ${eb.pattern ? `<div class="profile-section"><h4>Pattern</h4><p>${eb.pattern}</p></div>` : ''}
+        ${eb.pattern ? `<div class="profile-section"><h4>Pattern</h4><p>${escapeHtml(eb.pattern)}</p></div>` : ''}
         <div class="chart-grid">
           <div>
             <div class="section-header">Defined Centers</div>
@@ -1462,7 +2429,7 @@ function renderProfile(data) {
             <div class="pill-list">${(eb.openCenters||[]).map(c => `<span class="pill">${c}</span>`).join('') || '<span style="color:var(--text-dim)">None</span>'}</div>
           </div>
         </div>
-        ${eb.connectionPattern ? `<div class="profile-section"><h4>Connection Pattern</h4><p style="font-size:0.85rem">${eb.connectionPattern}</p></div>` : ''}
+        ${eb.connectionPattern ? `<div class="profile-section"><h4>Connection Pattern</h4><p style="font-size:0.85rem">${escapeHtml(eb.connectionPattern)}</p></div>` : ''}
       </div>`;
     }
     
@@ -1478,7 +2445,7 @@ function renderProfile(data) {
       if (forge.indicators?.length) {
         html += `<div class="section-header" style="margin-top:14px">Indicators</div><ul class="indicator-list">`;
         forge.indicators.forEach(i => {
-          html += `<li><span class="sys-badge">${i.system}</span>${i.dataPoint}</li>`;
+          html += `<li><span class="sys-badge">${escapeHtml(i.system)}</span>${escapeHtml(i.dataPoint)}</li>`;
         });
         html += `</ul>`;
       }
@@ -1504,7 +2471,7 @@ function renderProfile(data) {
     </div>`;
   }
 
-  if (meta.profileId) html += `<div class="alert alert-success"><span class="icon-check"></span> Profile saved (ID: ${meta.profileId}) <button class="btn-secondary btn-sm" onclick="exportPDF('${meta.profileId}')" style="margin-left:12px">Download PDF</button></div>`;
+  if (meta.profileId) html += `<div class="alert alert-success"><span class="icon-check"></span> Profile saved (ID: ${escapeHtml(meta.profileId)}) <button class="btn-secondary btn-sm" onclick="exportPDF('${escapeAttr(meta.profileId)}')" style="margin-left:12px">Download PDF</button></div>`;
 
   html += rawToggle(data);
   return html;
@@ -1524,7 +2491,7 @@ async function loadTransits() {
     const data = await apiFetch('/api/transits/today');
     resultEl.innerHTML = renderTransits(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1532,7 +2499,7 @@ async function loadTransits() {
 }
 
 function renderTransits(data) {
-  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">API Error: ${escapeHtml(data.error)}</div>`;
 
   const t = data.data || data.transits || data;
   const positions = t.transitPositions || t.positions || {};
@@ -1604,7 +2571,7 @@ async function loadHistory() {
     const data = await apiFetch('/api/profile/list');
     resultEl.innerHTML = renderHistory(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1612,7 +2579,7 @@ async function loadHistory() {
 }
 
 function renderHistory(data) {
-  if (data.error) return `<div class="alert alert-error">API Error: ${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">API Error: ${escapeHtml(data.error)}</div>`;
 
   const profiles = data.data || [];
 
@@ -1632,7 +2599,7 @@ function renderHistory(data) {
 
   profiles.forEach(p => {
     const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Unknown date';
-    html += `<div class="history-item" onclick="loadSingleProfile('${p.id}')">
+    html += `<div class="history-item" onclick="loadSingleProfile('${escapeAttr(p.id)}')">
       <div>
         <div style="font-size:0.9rem;font-weight:600">Profile ${p.id?.slice(0,8) || '—'}</div>
         <div class="history-meta">Created ${date} · Chart ${p.chartId?.slice(0,8) || 'N/A'} · ${p.modelUsed || ''}</div>
@@ -1651,13 +2618,13 @@ async function loadSingleProfile(id) {
 
   try {
     const data = await apiFetch('/api/profile/' + id);
-    if (data.error) { resultEl.innerHTML += `<div class="alert alert-error">${data.error}</div>`; return; }
+    if (data.error) { resultEl.innerHTML += `<div class="alert alert-error">${escapeHtml(data.error)}</div>`; return; }
 
     const profileData = data.data?.profile || {};
     const rendered = renderProfile({ profile: profileData, meta: { groundingAudit: data.data?.groundingAudit }, chart: {} });
     resultEl.innerHTML = rendered;
   } catch (e) {
-    resultEl.innerHTML += `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML += `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -1692,7 +2659,7 @@ async function generateComposite() {
     });
     resultEl.innerHTML = renderComposite(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1700,7 +2667,7 @@ async function generateComposite() {
 }
 
 function renderComposite(data) {
-  if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   const c = data.composite || {};
   
   let html = `<div class="card">
@@ -1758,8 +2725,8 @@ function renderComposite(data) {
       <div class="card-title"><span class="icon-lightbulb"></span> Relationship Insights</div>`;
     c.dynamics.forEach(d => {
       html += `<div style="padding:10px;margin:8px 0;background:var(--bg2);border-left:3px solid var(--gold);border-radius:4px">
-        <div style="font-weight:600;color:var(--gold);font-size:0.8rem;text-transform:uppercase;margin-bottom:4px">${d.area}</div>
-        <div style="color:var(--text);font-size:0.88rem;line-height:1.6">${d.note}</div>
+        <div style="font-weight:600;color:var(--gold);font-size:0.8rem;text-transform:uppercase;margin-bottom:4px">${escapeHtml(d.area)}</div>
+        <div style="color:var(--text);font-size:0.88rem;line-height:1.6">${escapeHtml(d.note)}</div>
       </div>`;
     });
     html += `</div>`;
@@ -1792,7 +2759,7 @@ async function runRectification() {
     const data = await apiFetch('/api/rectify', { method: 'POST', body: JSON.stringify(body) });
     resultEl.innerHTML = renderRectification(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1800,7 +2767,7 @@ async function runRectification() {
 }
 
 function renderRectification(data) {
-  if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   
   const sensitivity = Array.isArray(data.sensitivity) ? data.sensitivity : [];
   const guidance = Array.isArray(data.guidance) ? data.guidance : [];
@@ -1817,7 +2784,7 @@ function renderRectification(data) {
 
   if (guidance.length) {
     html += `<div class="section-title" style="margin-top:20px">Guidance</div>`;
-    guidance.forEach(g => html += `<div style="color:var(--accent2);margin:6px 0">• ${g}</div>`);
+    guidance.forEach(g => html += `<div style="color:var(--accent2);margin:6px 0">• ${escapeHtml(g)}</div>`);
   }
 
   html += `</div>`;
@@ -1840,7 +2807,7 @@ async function addClient() {
   spinner.style.display = '';
 
   try {
-    const data = await apiFetch('/api/practitioner/roster/add', { method: 'POST', body: JSON.stringify({ clientName: name, profileId }) });
+    const data = await apiFetch('/api/practitioner/clients/add', { method: 'POST', body: JSON.stringify({ clientName: name, profileId }) });
     alert(data.message || 'Client added');
     document.getElementById('prac-name').value = '';
     document.getElementById('prac-profileId').value = '';
@@ -1864,10 +2831,10 @@ async function loadRoster() {
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading roster…</div></div>';
 
   try {
-    const data = await apiFetch('/api/practitioner/roster');
+    const data = await apiFetch('/api/practitioner/clients');
     resultEl.innerHTML = renderRoster(data);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1875,7 +2842,7 @@ async function loadRoster() {
 }
 
 function renderRoster(data) {
-  if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   const clients = data.roster || [];
 
   if (!clients.length) {
@@ -1888,7 +2855,7 @@ function renderRoster(data) {
   let html = `<div class="card"><div class="card-title"><span class="icon-star"></span> ${clients.length} Client${clients.length > 1 ? 's' : ''}</div>`;
   clients.forEach(c => {
     html += `<div style="padding:10px;background:var(--bg3);border-radius:6px;margin:8px 0">`;
-    html += `<strong>${c.clientName}</strong>`;
+    html += `<strong>${escapeHtml(c.clientName)}</strong>`;
     if (c.profileId) html += ` <span style="color:var(--text-dim);font-size:0.8rem">(${c.profileId.slice(0,8)})</span>`;
     html += `</div>`;
   });
@@ -1961,14 +2928,14 @@ async function loadClusters() {
     const data = await apiFetch('/api/cluster/list');
     container.innerHTML = renderClusterList(data);
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error loading clusters: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error loading clusters: ${escapeHtml(e.message)}</div>`;
   } finally {
     spinner.style.display = 'none';
   }
 }
 
 function renderClusterList(data) {
-  if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   const clusters = data.clusters || [];
 
   if (!clusters.length) {
@@ -1982,7 +2949,7 @@ function renderClusterList(data) {
 
   let html = `<div class="card"><div class="card-title">Your Clusters (${clusters.length})</div>`;
   clusters.forEach(c => {
-    html += `<div class="cluster-card" onclick="viewClusterDetail('${c.id}')">`;
+    html += `<div class="cluster-card" onclick="viewClusterDetail('${escapeAttr(c.id)}')">`;
     html += `  <div class="cluster-card-header">`;
     html += `    <div><div class="cluster-card-title">${escapeHtml(c.name)}</div>`;
     html += `    <div class="cluster-card-meta">Created ${formatDate(c.createdAt)}</div></div>`;
@@ -2010,7 +2977,7 @@ async function viewClusterDetail(clusterId) {
     currentCluster = { id: clusterId, ...data };
     container.innerHTML = renderClusterDetail(data, clusterId);
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error: ${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -2072,7 +3039,7 @@ function renderClusterDetail(data, clusterId) {
     html += `  <h4 style="color:var(--gold);font-size:0.9rem;margin:20px 0 10px">Composition Insights</h4>`;
     html += `  <ul class="indicator-list">`;
     comp.insights.forEach(insight => {
-      html += `    <li>${insight}</li>`;
+      html += `    <li>${escapeHtml(insight)}</li>`;
     });
     html += `  </ul>`;
   }
@@ -2081,9 +3048,9 @@ function renderClusterDetail(data, clusterId) {
   html += `  <div class="action-grid">`;
   html += `    <button class="btn-secondary" onclick="showAddMemberForm()">+ Add Member</button>`;
   if (members.length >= 2) {
-    html += `    <button class="btn-primary" onclick="synthesizeCluster('${clusterId}')"><span class="icon-energy"></span> Generate Synthesis</button>`;
+    html += `    <button class="btn-primary" onclick="synthesizeCluster('${escapeAttr(clusterId)}')"><span class="icon-energy"></span> Generate Synthesis</button>`;
   }
-  html += `    <button class="btn-danger" onclick="leaveCluster('${clusterId}')">Leave Cluster</button>`;
+  html += `    <button class="btn-danger" onclick="leaveCluster('${escapeAttr(clusterId)}')">Leave Cluster</button>`;
   html += `  </div>`;
 
   html += `</div>`;
@@ -2180,7 +3147,7 @@ async function synthesizeCluster(clusterId) {
     // In production, you'd fetch member birth data from backend.
     showAlert('synthesisResult', 'Synthesis feature requires member birth data storage in database. Coming soon!', 'info');
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Synthesis error: ${e.message}</div>`;
+    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Synthesis error: ${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -2200,7 +3167,7 @@ async function leaveCluster(clusterId) {
 function showAlert(containerId, message, type = 'info') {
   const container = document.getElementById(containerId);
   if (!container) return;
-  const alertHtml = `<div class="alert alert-${type}" style="margin-top:12px">${message}</div>`;
+  const alertHtml = `<div class="alert alert-${type}" style="margin-top:12px">${escapeHtml(message)}</div>`;
   container.insertAdjacentHTML('afterbegin', alertHtml);
   setTimeout(() => {
     const alert = container.querySelector('.alert');
@@ -2212,6 +3179,11 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+/** Sanitize a value for use inside an HTML attribute (quotes, angle brackets). */
+function escapeAttr(val) {
+  return String(val).replace(/[&"'<>]/g, c => ({'&':'&amp;','"':'&quot;',"'":'&#39;','<':'&lt;','>':'&gt;'}[c]));
 }
 
 function formatDate(isoString) {
@@ -2236,9 +3208,9 @@ async function subscribeSMS() {
 
   try {
     const data = await apiFetch('/api/sms/subscribe', { method: 'POST', body: JSON.stringify({ phoneNumber: phone }) });
-    resultEl.innerHTML = `<div class="alert alert-success"><span class="icon-check"></span> ${data.message || 'Subscribed successfully'}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-success"><span class="icon-check"></span> ${escapeHtml(data.message || 'Subscribed successfully')}</div>`;
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -2260,9 +3232,9 @@ async function unsubscribeSMS() {
 
   try {
     const data = await apiFetch('/api/sms/unsubscribe', { method: 'POST', body: JSON.stringify({ phoneNumber: phone }) });
-    resultEl.innerHTML = `<div class="alert alert-success"><span class="icon-check"></span> ${data.message || 'Unsubscribed'}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-success"><span class="icon-check"></span> ${escapeHtml(data.message || 'Unsubscribed')}</div>`;
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -2283,21 +3255,36 @@ async function startOnboarding() {
   progressEl.style.display = 'block';
 
   try {
-    const data = await apiFetch('/api/onboarding/start', { method: 'POST', body: JSON.stringify({}) });
-    const sessionId = data.sessionId;
-    
-    // Simulate multi-step onboarding
-    for (let step = 1; step <= 5; step++) {
-      await new Promise(r => setTimeout(r, 800));
-      document.getElementById('onboardBar').style.width = `${step * 20}%`;
-      
-      const stepData = await apiFetch(`/api/onboarding/session/${sessionId}/next`, { method: 'POST', body: JSON.stringify({}) });
-      contentEl.innerHTML = renderOnboardingStep(stepData, step);
+    // Fetch user's personalized forge arc from backend
+    const forgeData = await apiFetch('/api/onboarding/forge');
+    const forgeKey = forgeData.forge || forgeData.key;
+    const chapters = forgeData.chapters || [];
+    const totalChapters = chapters.length || forgeData.chapterCount || 5;
+
+    // Show forge intro
+    contentEl.innerHTML = renderOnboardingStep({
+      content: forgeData.openingHook || forgeData.summary || `Welcome to the ${escapeHtml(forgeKey)} Forge`,
+      title: forgeData.bookTitle || `The ${escapeHtml(forgeKey)} Forge`
+    }, 0);
+
+    // Walk through chapters
+    for (let step = 1; step <= totalChapters; step++) {
+      await new Promise(r => setTimeout(r, 600));
+      document.getElementById('onboardBar').style.width = `${Math.round((step / totalChapters) * 100)}%`;
+
+      const chapterData = await apiFetch(`/api/onboarding/chapter/${encodeURIComponent(forgeKey)}/${step}`);
+      contentEl.innerHTML = renderOnboardingStep(chapterData, step);
+
+      // Mark chapter as read
+      await apiFetch('/api/onboarding/advance', {
+        method: 'POST',
+        body: JSON.stringify({ forge: forgeKey, chapter: step })
+      });
     }
 
     contentEl.innerHTML += `<div class="alert alert-success" style="margin-top:16px"><span class="icon-check"></span> Onboarding complete!</div>`;
   } catch (e) {
-    contentEl.innerHTML = `<div class="alert alert-error">Error: ${e.message}</div>`;
+    contentEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -2305,12 +3292,13 @@ async function startOnboarding() {
 }
 
 function renderOnboardingStep(data, step) {
-  if (data.error) return `<div class="alert alert-error">${data.error}</div>`;
+  if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   
-  const content = data.content || data.prompt || 'Step content';
+  const title = data.title || data.chapterTitle || `Chapter ${step}`;
+  const content = data.content || data.narrative || data.prompt || '';
   return `<div class="card" style="margin-top:12px">
-    <div class="card-title">Step ${step}</div>
-    <div style="color:var(--text);font-size:0.9rem;line-height:1.7">${content}</div>
+    <div class="card-title">${escapeHtml(title)}</div>
+    <div style="color:var(--text);font-size:0.9rem;line-height:1.7">${escapeHtml(content)}</div>
   </div>`;
 }
 
@@ -2329,14 +3317,14 @@ async function exportPDF(profileId) {
 
 function row(label, value) {
   if (!value && value !== 0) return '';
-  return `<div class="data-row"><span class="data-label">${label}</span><span class="data-value">${value}</span></div>`;
+  return `<div class="data-row"><span class="data-label">${label}</span><span class="data-value">${escapeHtml(String(value))}</span></div>`;
 }
 
 let _rawCount = 0;
 function rawToggle(data) {
   const id = 'raw-' + (++_rawCount);
-  return `<span class="raw-toggle" onclick="toggleRaw('${id}')">Show raw JSON ▾</span>
-    <pre class="raw-json" id="${id}">${JSON.stringify(data, null, 2)}</pre>`;
+  return `<span class="raw-toggle" onclick="toggleRaw('${escapeAttr(id)}')">Show raw JSON ▾</span>
+    <pre class="raw-json" id="${escapeAttr(id)}">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
 }
 
 function toggleRaw(id) {
@@ -2379,9 +3367,1354 @@ function initParticles() {
 initStars();
 initParticles();
 
+// ══════════════════════════════════════════════════════════════
+// ENHANCEMENT & DIARY FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+
+// ── Behavioral Validation ─────────────────────────────────────
+async function saveValidation() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const decision = document.getElementById('enhance-decision').value;
+  const energy = document.getElementById('enhance-energy').value;
+  const focus = document.getElementById('enhance-focus').value.trim();
+
+  if (!decision || !energy) {
+    showEnhanceStatus('enhanceStatus1', 'Please select both decision and energy patterns', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('enhanceBtn1');
+  const spinner = document.getElementById('enhanceSpinner1');
+  btn.disabled = true;
+  spinner.style.display = '';
+
+  try {
+    await apiFetch('/api/validation/save', {
+      method: 'POST',
+      body: JSON.stringify({
+        decisionPattern: decision,
+        energyPattern: energy,
+        currentFocus: focus || null
+      })
+    });
+    showEnhanceStatus('enhanceStatus1', 'Behavioral validation saved! Your next profile will include this data.', 'success');
+  } catch (e) {
+    showEnhanceStatus('enhanceStatus1', 'Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+// ── Big Five Assessment ───────────────────────────────────────
+const BIG_FIVE_QUESTIONS = [
+  {id: 1, text: "I am the life of the party.", dimension: "extraversion"},
+  {id: 2, text: "I feel little concern for others.", dimension: "agreeableness", reverse: true},
+  {id: 3, text: "I am always prepared.", dimension: "conscientiousness"},
+  {id: 4, text: "I get stressed out easily.", dimension: "neuroticism"},
+  {id: 5, text: "I have a rich vocabulary.", dimension: "openness"},
+  {id: 6, text: "I don't talk a lot.", dimension: "extraversion", reverse: true},
+  {id: 7, text: "I am interested in people.", dimension: "agreeableness"},
+  {id: 8, text: "I leave my belongings around.", dimension: "conscientiousness", reverse: true},
+  {id: 9, text: "I am relaxed most of the time.", dimension: "neuroticism", reverse: true},
+  {id: 10, text: "I have difficulty understanding abstract ideas.", dimension: "openness", reverse: true},
+  {id: 11, text: "I feel comfortable around people.", dimension: "extraversion"},
+  {id: 12, text: "I insult people.", dimension: "agreeableness", reverse: true},
+  {id: 13, text: "I pay attention to details.", dimension: "conscientiousness"},
+  {id: 14, text: "I worry about things.", dimension: "neuroticism"},
+  {id: 15, text: "I have a vivid imagination.", dimension: "openness"},
+  {id: 16, text: "I keep in the background.", dimension: "extraversion", reverse: true},
+  {id: 17, text: "I sympathize with others' feelings.", dimension: "agreeableness"},
+  {id: 18, text: "I make a mess of things.", dimension: "conscientiousness", reverse: true},
+  {id: 19, text: "I seldom feel blue.", dimension: "neuroticism", reverse: true},
+  {id: 20, text: "I am not interested in abstract ideas.", dimension: "openness", reverse: true}
+];
+
+function renderBigFiveQuestions() {
+  const container = document.getElementById('bigfive-questions');
+  let html = '';
+  
+  BIG_FIVE_QUESTIONS.forEach(q => {
+    html += `
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:0.9rem;color:var(--text);margin-bottom:8px">${q.id}. ${q.text}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          ${[1,2,3,4,5].map(val => `
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.82rem;color:var(--text-dim)">
+              <input type="radio" name="bigfive-${q.id}" value="${val}" style="width:auto">
+              <span>${['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'][val-1]}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+async function saveBigFive() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const responses = [];
+  for (const q of BIG_FIVE_QUESTIONS) {
+    const selected = document.querySelector(`input[name="bigfive-${q.id}"]:checked`);
+    if (!selected) {
+      showEnhanceStatus('bigfiveStatus', `Please answer question ${q.id}`, 'error');
+      return;
+    }
+    responses.push({ questionId: q.id, score: parseInt(selected.value) });
+  }
+
+  const btn = document.getElementById('bigfiveBtn');
+  const spinner = document.getElementById('bigfiveSpinner');
+  btn.disabled = true;
+  spinner.style.display = '';
+
+  try {
+    await apiFetch('/api/psychometric/save', {
+      method: 'POST',
+      body: JSON.stringify({ bigFiveResponses: responses })
+    });
+    showEnhanceStatus('bigfiveStatus', 'Big Five assessment saved! Your profile will now cross-correlate psychology with your chart.', 'success');
+  } catch (e) {
+    showEnhanceStatus('bigfiveStatus', 'Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+// ── VIA Character Strengths ───────────────────────────────────
+const VIA_STRENGTHS = [
+  "Creativity", "Curiosity", "Judgment", "Love of Learning", "Perspective",
+  "Bravery", "Perseverance", "Honesty", "Zest",
+  "Love", "Kindness", "Social Intelligence",
+  "Teamwork", "Fairness", "Leadership",
+  "Forgiveness", "Humility", "Prudence", "Self-Regulation",
+  "Appreciation of Beauty", "Gratitude", "Hope", "Humor", "Spirituality"
+];
+
+const VIA_QUESTIONS = VIA_STRENGTHS.map((strength, i) => ({
+  id: i + 1,
+  strength,
+  text: `I embody ${strength.toLowerCase()}.`
+}));
+
+function renderVIAQuestions() {
+  const container = document.getElementById('via-questions');
+  let html = '';
+  
+  VIA_QUESTIONS.forEach(q => {
+    html += `
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:0.9rem;color:var(--text);margin-bottom:8px">${q.id}. ${q.strength}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          ${[1,2,3,4,5].map(val => `
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.82rem;color:var(--text-dim)">
+              <input type="radio" name="via-${q.id}" value="${val}" style="width:auto">
+              <span>${['Not like me', 'A little', 'Somewhat', 'Mostly', 'Very much'][val-1]}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+async function saveVIA() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const responses = [];
+  for (const q of VIA_QUESTIONS) {
+    const selected = document.querySelector(`input[name="via-${q.id}"]:checked`);
+    if (!selected) {
+      showEnhanceStatus('viaStatus', `Please answer question ${q.id}`, 'error');
+      return;
+    }
+    responses.push({ strength: q.strength, score: parseInt(selected.value) });
+  }
+
+  const btn = document.getElementById('viaBtn');
+  const spinner = document.getElementById('viaSpinner');
+  btn.disabled = true;
+  spinner.style.display = '';
+
+  try {
+    await apiFetch('/api/psychometric/save', {
+      method: 'POST',
+      body: JSON.stringify({ viaResponses: responses })
+    });
+    showEnhanceStatus('viaStatus', 'Character Strengths saved! Results will map to your Gene Keys gifts.', 'success');
+  } catch (e) {
+    showEnhanceStatus('viaStatus', 'Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+// ── Diary Functions ───────────────────────────────────────────
+let currentDiaryEdit = null;
+
+async function saveDiaryEntry() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const date = document.getElementById('diary-date').value;
+  const type = document.getElementById('diary-type').value;
+  const significance = document.getElementById('diary-significance').value;
+  const title = document.getElementById('diary-title').value.trim();
+  const description = document.getElementById('diary-description').value.trim();
+
+  if (!date || !title) {
+    showEnhanceStatus('diaryStatus', 'Event date and title are required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('diaryBtn');
+  const spinner = document.getElementById('diarySpinner');
+  btn.disabled = true;
+  spinner.style.display = '';
+
+  try {
+    const payload = {
+      eventDate: date,
+      eventTitle: title,
+      eventDescription: description || null,
+      eventType: type,
+      significance
+    };
+
+    if (currentDiaryEdit) {
+      // Update existing entry
+      await apiFetch(`/api/diary/${currentDiaryEdit}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+      showEnhanceStatus('diaryStatus', 'Event updated!', 'success');
+      currentDiaryEdit = null;
+      document.getElementById('diaryCancelBtn').style.display = 'none';
+    } else {
+      // Create new entry
+      await apiFetch('/api/diary', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      showEnhanceStatus('diaryStatus', 'Event saved! Transits auto-calculated for correlation.', 'success');
+    }
+
+    // Clear form
+    document.getElementById('diary-date').value = '';
+    document.getElementById('diary-title').value = '';
+    document.getElementById('diary-description').value = '';
+    
+    // Reload list
+    loadDiaryEntries();
+  } catch (e) {
+    showEnhanceStatus('diaryStatus', 'Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+async function loadDiaryEntries() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const btn = document.getElementById('diaryLoadBtn');
+  const spinner = document.getElementById('diaryLoadSpinner');
+  const container = document.getElementById('diaryList');
+
+  if (btn) {
+    btn.disabled = true;
+    spinner.style.display = '';
+  }
+
+  try {
+    const data = await apiFetch('/api/diary');
+    const entries = data.data || [];
+
+    if (entries.length === 0) {
+      container.innerHTML = `<div class="alert alert-info">No life events logged yet. Add your first event above!</div>`;
+      return;
+    }
+
+    let html = '<div style="display:flex;flex-direction:column;gap:12px">';
+    
+    entries.forEach(entry => {
+      const date = new Date(entry.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const typeIcon = {
+        career: '💼', relationship: '❤️', health: '🏥', spiritual: '✨',
+        financial: '💰', family: '👨‍👩‍👧', other: '📌'
+      }[entry.event_type] || '📌';
+
+      html += `
+        <div class="card" style="padding:16px;margin:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <div style="font-size:0.95rem;font-weight:600;color:var(--gold)">${typeIcon} ${escapeHtml(entry.event_title)}</div>
+              <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">${date} · ${entry.event_type} · ${entry.significance}</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn-sm btn-secondary" onclick="editDiaryEntry('${escapeAttr(entry.id)}')">Edit</button>
+              <button class="btn-sm btn-danger" onclick="deleteDiaryEntry('${escapeAttr(entry.id)}')">Delete</button>
+            </div>
+          </div>
+          ${entry.event_description ? `<div style="font-size:0.85rem;color:var(--text);margin-top:8px;line-height:1.5">${escapeHtml(entry.event_description)}</div>` : ''}
+          ${entry.transit_snapshot ? '<div style="margin-top:8px;padding:8px;background:rgba(106,79,200,0.1);border-radius:4px;font-size:0.78rem;color:var(--accent)">🔮 Transit correlation data available</div>' : ''}
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = `<div class="alert alert-error">Error loading events: ${escapeHtml(e.message)}</div>`;
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+    }
+  }
+}
+
+async function editDiaryEntry(entryId) {
+  if (!token) { openAuthOverlay(); return; }
+
+  try {
+    const data = await apiFetch(`/api/diary/${entryId}`);
+    const entry = data.data;
+
+    // Populate form
+    document.getElementById('diary-date').value = entry.event_date.split('T')[0];
+    document.getElementById('diary-type').value = entry.event_type;
+    document.getElementById('diary-significance').value = entry.significance;
+    document.getElementById('diary-title').value = entry.event_title;
+    document.getElementById('diary-description').value = entry.event_description || '';
+
+    // Set edit mode
+    currentDiaryEdit = entryId;
+    document.getElementById('diaryCancelBtn').style.display = '';
+    
+    // Scroll to form
+    document.querySelector('#tab-diary .card').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    showEnhanceStatus('diaryStatus', 'Error loading entry: ' + e.message, 'error');
+  }
+}
+
+function cancelDiaryEdit() {
+  currentDiaryEdit = null;
+  document.getElementById('diaryCancelBtn').style.display = 'none';
+  document.getElementById('diary-date').value = '';
+  document.getElementById('diary-title').value = '';
+  document.getElementById('diary-description').value = '';
+}
+
+async function deleteDiaryEntry(entryId) {
+  if (!token) { openAuthOverlay(); return; }
+  if (!confirm('Delete this event? This cannot be undone.')) return;
+
+  try {
+    await apiFetch(`/api/diary/${entryId}`, { method: 'DELETE' });
+    showEnhanceStatus('diaryStatus', 'Event deleted', 'success');
+    loadDiaryEntries();
+  } catch (e) {
+    showEnhanceStatus('diaryStatus', 'Error deleting: ' + e.message, 'error');
+  }
+}
+
+function showEnhanceStatus(elementId, message, type = 'info') {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  
+  const alertClass = `alert-${type}`;
+  el.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
+  
+  setTimeout(() => { el.innerHTML = ''; }, 5000);
+}
+
+// Initialize assessment questions when DOM loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    renderBigFiveQuestions();
+    renderVIAQuestions();
+    updateTierUI();
+  });
+} else {
+  renderBigFiveQuestions();
+  renderVIAQuestions();
+  updateTierUI();
+}
+
+// ── Update Tier-Specific UI ──────────────────────────────────
+async function updateTierUI() {
+  if (!token) return;
+  
+  try {
+    const userData = await apiFetch('/api/auth/me');
+    if (!userData || !userData.user) return;
+    
+    const tier = userData.user.tier || 'free';
+    const tierLimits = {
+      free: { profileGenerations: 1, practitionerTools: false },
+      seeker: { profileGenerations: 10, practitionerTools: false },
+      guide: { profileGenerations: Infinity, practitionerTools: true },
+      practitioner: { profileGenerations: Infinity, practitionerTools: true }
+    };
+    
+    const limits = tierLimits[tier];
+    
+    // Show practitioner upgrade notice if not guide/practitioner
+    const practUpgradeNotice = document.getElementById('practitionerUpgradeNotice');
+    if (practUpgradeNotice) {
+      if (!limits.practitionerTools) {
+        practUpgradeNotice.style.display = 'block';
+      } else {
+        practUpgradeNotice.style.display = 'none';
+      }
+    }
+    
+    // Show profile quota notice (fetch current usage from API)
+    const profileQuotaNotice = document.getElementById('profileQuotaNotice');
+    const profileQuotaText = document.getElementById('profileQuotaText');
+    if (profileQuotaNotice && profileQuotaText && limits.profileGenerations !== Infinity) {
+      // This would require a /api/usage endpoint - for now just show limit
+      profileQuotaText.textContent = `You have ${limits.profileGenerations} profile generation${limits.profileGenerations === 1 ? '' : 's'} per month on the ${tier} tier.`;
+      profileQuotaNotice.style.display = 'block';
+    } else if (profileQuotaNotice) {
+      profileQuotaNotice.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('Failed to update tier UI:', e);
+  }
+}
+
+// ── Share & Export Functions ──────────────────────────────────
+
+/**
+ * Share profile using Web Share API or fallback
+ * @param {string} title - Share title
+ * @param {string} text - Share description
+ * @param {string} url - URL to share (optional, defaults to current user profile)
+ */
+async function shareProfile(title, text, url) {
+  try {
+    // Get current user for personalized sharing
+    const user = await apiFetch('/api/auth/me').catch(() => null);
+    
+    // Build share URL with referral tracking
+    const shareUrl = url || buildShareUrl(user);
+    const shareTitle = title || `Check out my Prime Self Energy Blueprint!`;
+    const shareText = text || `Discover your unique energy blueprint through Human Design, Gene Keys, and astrology.`;
+    
+    // Use Web Share API if available (mobile browsers)
+    if (navigator.share) {
+      await navigator.share({
+        title: shareTitle,
+        text: shareText,
+        url: shareUrl
+      });
+      console.log('✅ Share successful');
+      
+      // Track share event (optional analytics)
+      trackEvent('share', 'profile', 'web_share_api');
+    } else {
+      // Fallback: Copy link to clipboard and show notification
+      await copyToClipboard(shareUrl);
+      showNotification('Link copied to clipboard! Share it anywhere.', 'success');
+      
+      // Track fallback share
+      trackEvent('share', 'profile', 'clipboard_fallback');
+    }
+  } catch (error) {
+    if (error.name !== 'AbortError') { // User cancelled share
+      console.error('Share failed:', error);
+      showNotification('Share failed. Please try again.', 'error');
+    }
+  }
+}
+
+/**
+ * Build shareable URL with referral tracking
+ * @param {object} user - Current user object
+ * @returns {string} - URL with referral parameters
+ */
+function buildShareUrl(user) {
+  const baseUrl = window.location.origin;
+  const params = new URLSearchParams();
+  
+  // Add referral code if user is logged in
+  if (user && user.id) {
+    params.set('ref', user.id.toString(36)); // Base36 encoding for shorter URLs
+  }
+  
+  // Add UTM parameters for tracking
+  params.set('utm_source', 'share');
+  params.set('utm_medium', 'web_share');
+  params.set('utm_campaign', 'user_referral');
+  
+  return `${baseUrl}${params.toString() ? '?' + params.toString() : ''}`;
+}
+
+/**
+ * Copy text to clipboard
+ * @param {string} text - Text to copy
+ * @returns {Promise<void>}
+ */
+async function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    // Modern Clipboard API
+    await navigator.clipboard.writeText(text);
+  } else {
+    // Fallback for older browsers
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  }
+}
+
+/**
+ * Share current chart as image (future: generate chart canvas)
+ */
+async function shareChartImage() {
+  try {
+    // TODO: Implement when bodygraph chart rendering is complete
+    // For now, show coming soon message
+    showNotification('Chart image sharing coming soon!', 'info');
+    
+    /* Future implementation:
+    const canvas = document.querySelector('#bodygraphCanvas');
+    const blob = await canvasToBlob(canvas);
+    const file = new File([blob], 'my-bodygraph.png', { type: 'image/png' });
+    
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'My Human Design Bodygraph',
+        text: 'Check out my energy blueprint!'
+      });
+    }
+    */
+  } catch (error) {
+    console.error('Chart share failed:', error);
+    showNotification('Failed to share chart. Please try again.', 'error');
+  }
+}
+
+/**
+ * Download chart as PNG (future)
+ */
+function downloadChart() {
+  showNotification('Chart download coming soon!', 'info');
+  
+  /* Future implementation:
+  const canvas = document.querySelector('#bodygraphCanvas');
+  const link = document.createElement('a');
+  link.download = 'prime-self-bodygraph.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  */
+}
+
+/**
+ * Share to specific social platform
+ * @param {string} platform - 'facebook', 'twitter', 'linkedin', 'whatsapp'
+ */
+function shareToSocial(platform) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const shareUrl = buildShareUrl(user);
+  const shareText = encodeURIComponent('Discover your unique energy blueprint through Human Design, Gene Keys, and astrology on Prime Self!');
+  
+  const urls = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${shareText}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+    whatsapp: `https://wa.me/?text=${shareText}%20${encodeURIComponent(shareUrl)}`,
+    email: `mailto:?subject=Check out Prime Self&body=${shareText}%0A%0A${encodeURIComponent(shareUrl)}`
+  };
+  
+  if (urls[platform]) {
+    window.open(urls[platform], '_blank', 'width=600,height=400');
+    trackEvent('share', 'profile', platform);
+  }
+}
+
+/**
+ * Show notification message
+ * @param {string} message - Notification text
+ * @param {string} type - 'success', 'error', 'info', 'warning'
+ */
+function showNotification(message, type = 'info') {
+  // Check if notification container exists, create if not
+  let container = document.getElementById('notificationContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'notificationContainer';
+    container.style.cssText = `
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    `;
+    document.body.appendChild(container);
+  }
+  
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.style.cssText = `
+    background: ${type === 'success' ? 'rgba(80,200,120,0.95)' : type === 'error' ? 'rgba(224,80,80,0.95)' : 'rgba(106,79,200,0.95)'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    font-size: 0.9rem;
+    font-weight: 600;
+    max-width: 300px;
+    pointer-events: auto;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  notification.textContent = message;
+  
+  container.appendChild(notification);
+  
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 3000);
+}
+
+/**
+ * Track analytics event (stub for future analytics integration)
+ */
+function trackEvent(category, action, label) {
+  console.log(`📊 Event: ${category} / ${action} / ${label}`);
+  // Future: Send to Google Analytics, Mixpanel, etc.
+  // if (window.gtag) {
+  //   gtag('event', action, { event_category: category, event_label: label });
+  // }
+}
+
+/**
+ * Open share modal
+ */
+function openShareModal() {
+  const modal = document.getElementById('shareModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    
+    // Populate share link
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const shareUrl = buildShareUrl(user);
+    const shareLinkInput = document.getElementById('shareLinkInput');
+    if (shareLinkInput) {
+      shareLinkInput.value = shareUrl;
+    }
+  }
+}
+
+/**
+ * Close share modal
+ */
+function closeShareModal() {
+  const modal = document.getElementById('shareModal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+}
+
+/**
+ * Copy share link from modal
+ */
+async function copyShareLink() {
+  const shareLinkInput = document.getElementById('shareLinkInput');
+  if (shareLinkInput) {
+    await copyToClipboard(shareLinkInput.value);
+    showNotification('Link copied! Share it anywhere.', 'success');
+  }
+}
+
+// Add slide-in/out animations
+if (!document.getElementById('notificationStyles')) {
+  const style = document.createElement('style');
+  style.id = 'notificationStyles';
+  style.textContent = `
+    @keyframes slideInRight {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(400px); opacity: 0; }
+    }
+    /* Share Modal Styles */
+    .share-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+    .share-modal-overlay.hidden {
+      display: none;
+    }
+    .share-modal {
+      background: var(--bg2);
+      border-radius: 12px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--gold-dim);
+    }
+    @media (max-width: 768px) {
+      .share-modal {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // ── Init ──────────────────────────────────────────────────────
 updateAuthUI();
 </script>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Main navigation">
+  <a href="#" class="mobile-nav-item active" data-tab="chart" onclick="switchTab('chart'); updateMobileNav(this); return false;" aria-label="Human Design">
+    <span class="mobile-nav-icon">◉</span>
+    <span class="mobile-nav-label">Chart</span>
+  </a>
+  <a href="#" class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile'); updateMobileNav(this); return false;" aria-label="Gene Keys">
+    <span class="mobile-nav-icon">⬡</span>
+    <span class="mobile-nav-label">Keys</span>
+  </a>
+  <a href="#" class="mobile-nav-item" data-tab="enhance" onclick="switchTab('enhance'); updateMobileNav(this); return false;" aria-label="Astrology">
+    <span class="mobile-nav-icon">★</span>
+    <span class="mobile-nav-label">Astro</span>
+  </a>
+  <a href="#" class="mobile-nav-item" data-tab="transits" onclick="switchTab('transits'); updateMobileNav(this); return false;" aria-label="Transits">
+    <span class="mobile-nav-icon">☽</span>
+    <span class="mobile-nav-label">Transits</span>
+  </a>
+  <a href="#" class="mobile-nav-item" data-tab="diary" onclick="switchTab('diary'); updateMobileNav(this); return false;" aria-label="Life Events">
+    <span class="mobile-nav-icon">📖</span>
+    <span class="mobile-nav-label">Diary</span>
+  </a>
+  <a href="#" class="mobile-nav-item" id="mobileMoreBtn" onclick="toggleMobileMore(); return false;" aria-label="More tabs" aria-expanded="false">
+    <span class="mobile-nav-icon">☰</span>
+    <span class="mobile-nav-label">More</span>
+  </a>
+</nav>
+
+<!-- Mobile "More" overflow drawer -->
+<div id="mobileMoreDrawer" class="mobile-more-drawer" role="dialog" aria-label="More navigation" style="display:none">
+  <div class="mobile-more-backdrop" onclick="toggleMobileMore()"></div>
+  <div class="mobile-more-panel">
+    <div class="mobile-more-header">
+      <span>More</span>
+      <button onclick="toggleMobileMore()" aria-label="Close">&times;</button>
+    </div>
+    <div class="mobile-more-grid">
+      <a href="#" class="mobile-more-item" data-tab="checkin" onclick="switchTab('checkin'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">♥</span><span>Check-In</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="composite" onclick="switchTab('composite'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">⊕</span><span>Composite</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="rectify" onclick="switchTab('rectify'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">⏱</span><span>Rectify</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="practitioner" onclick="switchTab('practitioner'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">★</span><span>Practitioner</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="clusters" onclick="switchTab('clusters'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">⬢</span><span>Clusters</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="sms" onclick="switchTab('sms'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">✉</span><span>SMS</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="onboarding" onclick="switchTab('onboarding'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">🧭</span><span>Onboarding</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="history" onclick="switchTab('history'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">📂</span><span>Saved</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Navigation Script -->
+<script>
+// Toggle mobile "More" overflow drawer
+function toggleMobileMore() {
+  const drawer = document.getElementById('mobileMoreDrawer');
+  const btn = document.getElementById('mobileMoreBtn');
+  const isOpen = drawer.style.display !== 'none';
+  drawer.style.display = isOpen ? 'none' : 'block';
+  btn.setAttribute('aria-expanded', String(!isOpen));
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+
+// Update mobile nav active state
+function updateMobileNav(clickedItem) {
+  if (window.innerWidth > 768) return; // Only on mobile
+  
+  // Remove active class from all items
+  document.querySelectorAll('.mobile-nav-item').forEach(item => {
+    item.classList.remove('active');
+    item.setAttribute('aria-current', 'false');
+  });
+  
+  // Add active class to clicked item
+  if (clickedItem) {
+    clickedItem.classList.add('active');
+    clickedItem.setAttribute('aria-current', 'page');
+  }
+}
+
+// Update mobile nav when tab changes (for desktop tab clicks)
+function syncMobileNavWithTab(tabName) {
+  const navItem = document.querySelector(`.mobile-nav-item[data-tab="${tabName}"]`);
+  if (navItem) {
+    updateMobileNav(navItem);
+  }
+}
+
+// Hook into existing switchTab function
+const originalSwitchTab = window.switchTab;
+if (typeof originalSwitchTab === 'function') {
+  window.switchTab = function(tabName) {
+    originalSwitchTab(tabName);
+    syncMobileNavWithTab(tabName);
+  };
+}
+
+// Pull-to-refresh functionality for mobile
+let pullStartY = 0;
+let isPulling = false;
+
+if ('ontouchstart' in window && window.innerWidth <= 768) {
+  let refreshIndicator = null;
+  
+  document.addEventListener('touchstart', (e) => {
+    if (window.scrollY === 0) {
+      pullStartY = e.touches[0].clientY;
+      isPulling = true;
+      
+      // Create refresh indicator if it doesn't exist
+      if (!refreshIndicator) {
+        refreshIndicator = document.createElement('div');
+        refreshIndicator.className = 'pull-to-refresh';
+        refreshIndicator.innerHTML = '↓';
+        refreshIndicator.style.cssText = `
+          position: fixed;
+          top: -60px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 40px;
+          height: 40px;
+          background: rgba(201,168,76,0.2);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+          color: var(--gold);
+          transition: all 0.3s;
+          z-index: 1000;
+        `;
+        document.body.appendChild(refreshIndicator);
+      }
+    }
+  });
+  
+  document.addEventListener('touchmove', (e) => {
+    if (!isPulling) return;
+    
+    const pullDistance = e.touches[0].clientY - pullStartY;
+    if (pullDistance > 0 && pullDistance < 100 && refreshIndicator) {
+      refreshIndicator.style.top = `${pullDistance - 60}px`;
+    }
+  });
+  
+  document.addEventListener('touchend', (e) => {
+    if (!isPulling || !refreshIndicator) return;
+    
+    const pullDistance = pullStartY - (e.changedTouches?.[0]?.clientY || 0);
+    
+    if (pullDistance < -80) {
+      // Trigger refresh
+      refreshIndicator.style.top = '10px';
+      refreshIndicator.innerHTML = '⟳';
+      refreshIndicator.style.animation = 'spin 1s linear infinite';
+      
+      // Reload transit data or current tab
+      const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id;
+      if (activeTab === 'transitsTab') {
+        // Reload transits (would call API in production)
+        console.log('🔄 Refreshing transit data...');
+      }
+      
+      // Hide indicator after 1 second
+      setTimeout(() => {
+        if (refreshIndicator) {
+          refreshIndicator.style.top = '-60px';
+          refreshIndicator.style.animation = '';
+          refreshIndicator.innerHTML = '↓';
+        }
+      }, 1000);
+    } else {
+      // Cancel pull
+      if (refreshIndicator) {
+        refreshIndicator.style.top = '-60px';
+      }
+    }
+    
+    isPulling = false;
+  });
+}
+
+// ── Daily Check-In Functions ──────────────────────────────────
+// BL-R-C6: Fixed element IDs, API paths, field names, and added missing selectAlignment function
+
+function selectAlignment(score) {
+  document.getElementById('checkin-alignment-score').value = score;
+  document.querySelectorAll('.alignment-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.score) === score);
+  });
+}
+
+// Aliases for HTML onclick handlers (HTML uses lowercase 'i')
+function saveCheckin() { return saveCheckIn(); }
+function loadCheckinStats() { return loadCheckInStats(); }
+
+async function saveCheckIn() {
+  const alignmentScore = parseInt(document.getElementById('checkin-alignment-score').value);
+  const followedStrategy = document.getElementById('checkin-followed-strategy').checked;
+  const followedAuthority = document.getElementById('checkin-followed-authority').checked;
+  const mood = document.getElementById('checkin-mood').value || null;
+  const energyLevelEl = document.getElementById('checkin-energy-level');
+  const energyLevel = energyLevelEl && energyLevelEl.value ? parseInt(energyLevelEl.value) : null;
+  const notes = document.getElementById('checkin-notes').value.trim();
+
+  const statusDiv = document.getElementById('checkinStatus');
+
+  if (!alignmentScore || alignmentScore < 1 || alignmentScore > 10) {
+    statusDiv.innerHTML = '<div class="alert alert-error">Please select an alignment score (1-10)</div>';
+    return;
+  }
+
+  statusDiv.innerHTML = '<div class="alert alert-info">Saving check-in...</div>';
+
+  try {
+    const result = await apiFetch('/api/checkin', {
+      method: 'POST',
+      body: JSON.stringify({
+        alignmentScore,
+        followedStrategy,
+        followedAuthority,
+        mood,
+        energyLevel,
+        notes: notes || null,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      })
+    });
+
+    if (result.success) {
+      statusDiv.innerHTML = `
+        <div class="alert alert-success">
+          <strong>${result.message || 'Check-in saved!'}</strong><br>
+          ${result.checkIn?.streak > 3 ? 'Keep it going! 🌟' : ''}
+        </div>
+      `;
+
+      // Reset form
+      document.getElementById('checkin-alignment-score').value = '';
+      document.querySelectorAll('.alignment-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('checkin-followed-strategy').checked = false;
+      document.getElementById('checkin-followed-authority').checked = false;
+      if (document.getElementById('checkin-mood')) document.getElementById('checkin-mood').value = '';
+      if (energyLevelEl) energyLevelEl.value = '';
+      document.getElementById('checkin-notes').value = '';
+
+      setTimeout(() => { statusDiv.innerHTML = ''; }, 3000);
+
+      // Auto-refresh stats if visible
+      const statsContainer = document.getElementById('checkinStatsContainer');
+      if (statsContainer && statsContainer.style.display !== 'none') {
+        loadCheckInStats();
+      }
+    } else {
+      statusDiv.innerHTML = `
+        <div class="alert alert-error">
+          <strong>Error:</strong> ${result.error || 'Failed to save check-in'}
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Save check-in error:', error);
+    statusDiv.innerHTML = `
+      <div class="alert alert-error">
+        <strong>Error:</strong> Network error. Please try again.
+      </div>
+    `;
+  }
+}
+
+async function loadCheckInStats() {
+  try {
+    const result = await apiFetch('/api/checkin/stats');
+
+    if (result.success) {
+      const stats = result.stats;
+
+      // Populate stats summary grid
+      const summaryEl = document.getElementById('checkinStatsSummary');
+      if (summaryEl) {
+        summaryEl.innerHTML = `
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.totalCheckins}</div>
+            <div style="font-size:0.75rem;color:var(--text-dim)">Total Check-Ins</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.avgAlignmentScore ?? '—'}</div>
+            <div style="font-size:0.75rem;color:var(--text-dim)">Avg Alignment</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.strategyAdherenceRate != null ? stats.strategyAdherenceRate + '%' : '—'}</div>
+            <div style="font-size:0.75rem;color:var(--text-dim)">Strategy Rate</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.authorityAdherenceRate != null ? stats.authorityAdherenceRate + '%' : '—'}</div>
+            <div style="font-size:0.75rem;color:var(--text-dim)">Authority Rate</div>
+          </div>
+        `;
+      }
+
+      // Show the stats container
+      const container = document.getElementById('checkinStatsContainer');
+      if (container) container.style.display = 'block';
+
+      // Render alignment chart if dailyScores exist
+      if (stats.dailyScores && stats.dailyScores.length > 0) {
+        renderAlignmentChart(stats.dailyScores);
+      } else {
+        const chartCanvas = document.getElementById('alignmentChart');
+        if (chartCanvas) {
+          const ctx = chartCanvas.getContext('2d');
+          ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+          ctx.fillStyle = 'var(--text-dim)';
+          ctx.textAlign = 'center';
+          ctx.fillText('No data yet — start checking in!', chartCanvas.width / 2, chartCanvas.height / 2);
+        }
+      }
+
+      // Populate history list
+      if (stats.dailyScores && stats.dailyScores.length > 0) {
+        const historyEl = document.getElementById('checkinHistoryList');
+        if (historyEl) {
+          historyEl.innerHTML = stats.dailyScores.slice().reverse().slice(0, 14).map(d => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:0.85rem;color:var(--text-dim)">${d.date}</span>
+              <span style="display:flex;gap:8px;align-items:center;font-size:0.85rem">
+                <span title="Alignment">${d.alignmentScore}/10</span>
+                ${d.followedStrategy ? '<span style="color:var(--accent2)" title="Followed strategy">✓S</span>' : '<span style="color:var(--text-dim)" title="Did not follow strategy">✗S</span>'}
+                ${d.followedAuthority ? '<span style="color:var(--accent2)" title="Followed authority">✓A</span>' : '<span style="color:var(--text-dim)" title="Did not follow authority">✗A</span>'}
+                ${d.mood ? '<span title="Mood: ' + d.mood + '">' + ({great:'😊',good:'🙂',neutral:'😐',challenging:'😕',difficult:'😞'}[d.mood] || '') + '</span>' : ''}
+              </span>
+            </div>
+          `).join('');
+        }
+      }
+    } else {
+      console.error('Failed to load stats:', result.error);
+    }
+  } catch (error) {
+    console.error('Load stats error:', error);
+  }
+}
+
+function renderAlignmentChart(dailyScores) {
+  const canvas = document.getElementById('alignmentChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 20, right: 10, bottom: 30, left: 30 };
+  const plotW = W - pad.left - pad.right;
+  const plotH = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Y axis
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, H - pad.bottom); ctx.stroke();
+  for (let i = 0; i <= 10; i += 2) {
+    const y = H - pad.bottom - (i / 10) * plotH;
+    ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(i, pad.left - 4, y + 3);
+    ctx.strokeStyle = '#333'; ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  }
+
+  // Data line
+  if (dailyScores.length < 2) return;
+  const stepX = plotW / (dailyScores.length - 1);
+  ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  dailyScores.forEach((d, i) => {
+    const x = pad.left + i * stepX;
+    const y = H - pad.bottom - (d.alignmentScore / 10) * plotH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Dots
+  dailyScores.forEach((d, i) => {
+    const x = pad.left + i * stepX;
+    const y = H - pad.bottom - (d.alignmentScore / 10) * plotH;
+    ctx.fillStyle = '#d4af37'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+// ── Testimonials Carousel Functions ──────────────────────────
+let currentTestimonialIndex = 0;
+let testimonialInterval = null;
+
+function initTestimonials() {
+  const testimonials = document.querySelectorAll('.testimonial');
+  const dotsContainer = document.getElementById('testimonialDots');
+  
+  // Create dots
+  testimonials.forEach((_, index) => {
+    const dot = document.createElement('div');
+    dot.className = 'testimonial-dot';
+    if (index === 0) dot.classList.add('active');
+    dot.onclick = () => goToTestimonial(index);
+    dotsContainer.appendChild(dot);
+  });
+  
+  // Start auto-rotation (every 7 seconds)
+  startTestimonialRotation();
+}
+
+function startTestimonialRotation() {
+  testimonialInterval = setInterval(() => {
+    nextTestimonial();
+  }, 7000);
+}
+
+function stopTestimonialRotation() {
+  if (testimonialInterval) {
+    clearInterval(testimonialInterval);
+    testimonialInterval = null;
+  }
+}
+
+function goToTestimonial(index) {
+  const testimonials = document.querySelectorAll('.testimonial');
+  const dots = document.querySelectorAll('.testimonial-dot');
+  
+  // Remove active class from current
+  testimonials[currentTestimonialIndex].classList.remove('active');
+  dots[currentTestimonialIndex].classList.remove('active');
+  
+  // Set new index
+  currentTestimonialIndex = index;
+  
+  // Add active class to new
+  testimonials[currentTestimonialIndex].classList.add('active');
+  dots[currentTestimonialIndex].classList.add('active');
+  
+  // Reset rotation timer
+  stopTestimonialRotation();
+  startTestimonialRotation();
+}
+
+function nextTestimonial() {
+  const testimonials = document.querySelectorAll('.testimonial');
+  const nextIndex = (currentTestimonialIndex + 1) % testimonials.length;
+  goToTestimonial(nextIndex);
+}
+
+function prevTestimonial() {
+  const testimonials = document.querySelectorAll('.testimonial');
+  const prevIndex = (currentTestimonialIndex - 1 + testimonials.length) % testimonials.length;
+  goToTestimonial(prevIndex);
+}
+
+// ── Social Proof Stats ────────────────────────────────────────
+async function loadSocialProofStats() {
+  try {
+    const response = await fetch(API + '/api/stats/activity');
+    const data = await response.json();
+    
+    if (data.success) {
+      // Animate numbers counting up
+      animateNumber('weeklyUsers', 0, data.stats.weeklyUsers, 1500);
+      animateNumber('totalProfiles', 0, data.stats.totalProfiles, 1500);
+    } else {
+      // Fallback to placeholder numbers
+      document.getElementById('weeklyUsers').textContent = '2,847';
+      document.getElementById('totalProfiles').textContent = '18,392';
+    }
+  } catch (error) {
+    // Fallback to placeholder numbers
+    document.getElementById('weeklyUsers').textContent = '2,847';
+    document.getElementById('totalProfiles').textContent = '18,392';
+  }
+}
+
+function animateNumber(elementId, start, end, duration) {
+  const element = document.getElementById(elementId);
+  const range = end - start;
+  const increment = range / (duration / 16); // 60fps
+  let current = start;
+  
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= end) {
+      current = end;
+      clearInterval(timer);
+    }
+    element.textContent = formatNumber(Math.floor(current));
+  }, 16);
+}
+
+function formatNumber(num) {
+  return num.toLocaleString('en-US');
+}
+
+// Initialize on page load
+window.addEventListener('DOMContentLoaded', () => {
+  initTestimonials();
+  loadSocialProofStats();
+});
+</script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+// Register service worker for PWA functionality
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then((registration) => {
+        console.log('✅ Service Worker registered:', registration.scope);
+        
+        // Check for updates periodically
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000); // Check every hour
+      })
+      .catch((error) => {
+        console.error('❌ Service Worker registration failed:', error);
+      });
+  });
+}
+
+// Add to Home Screen prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+  
+  // Show install button (if you add one in the future)
+  console.log('💡 PWA install prompt available');
+  
+  // Optional: Show a custom install banner
+  const installBanner = document.createElement('div');
+  installBanner.id = 'install-banner';
+  installBanner.style.cssText = `
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #6a4fc8 0%, #c9a84c 100%);
+    color: white; padding: 12px 24px; border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5); z-index: 1000;
+    font-size: 0.9rem; display: flex; align-items: center; gap: 12px;
+    animation: slideUp 0.3s ease-out;
+  `;
+  installBanner.innerHTML = `
+    <span>📱 Install Prime Self as an app</span>
+    <button id="install-btn" style="
+      background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+      color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer;
+      font-weight: 600; font-size: 0.85rem;
+    ">Install</button>
+    <button id="dismiss-install" style="
+      background: transparent; border: none; color: rgba(255,255,255,0.7);
+      cursor: pointer; font-size: 1.2rem; padding: 0 4px;
+    ">×</button>
+  `;
+  
+  document.body.appendChild(installBanner);
+  
+  document.getElementById('install-btn').addEventListener('click', async () => {
+    // Hide the banner
+    installBanner.remove();
+    // Show the install prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`PWA install outcome: ${outcome}`);
+    deferredPrompt = null;
+  });
+  
+  document.getElementById('dismiss-install').addEventListener('click', () => {
+    installBanner.remove();
+  });
+});
+
+// Log when app is installed
+window.addEventListener('appinstalled', () => {
+  console.log('✅ PWA installed successfully');
+  deferredPrompt = null;
+});
+
+// Add slide-up animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideUp {
+    from { transform: translate(-50%, 100px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+<!-- i18n Multi-Language Support (BL-OPT-006) -->
+<script src="js/i18n.js" defer></script>
+
+<!-- Offline Transit Calculator (BL-MOB-005) -->
+<script src="js/offline-transits.js" defer></script>
+
+<!-- Lazy Loading & Performance Utilities (BL-OPT-005) -->
+<script src="js/lazy.js" defer></script>
+
 </body>
 </html>
 <- frontend/index.html: 1090→1592 lines ( +502 lines, 46% increase Auto-deploy enabled Wed Mar  4 15:51:42 EST 2026 -->

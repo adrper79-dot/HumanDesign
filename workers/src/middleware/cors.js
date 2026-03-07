@@ -1,5 +1,19 @@
 /**
  * CORS Middleware
+ *
+ * CSRF Protection Model (BL-R-H14):
+ *   1. Auth uses Bearer tokens in Authorization header (not cookies).
+ *      Browsers never auto-attach this header, so cross-origin forms/links
+ *      cannot forge authenticated requests.
+ *   2. Tokens are stored in localStorage, which is same-origin only.
+ *   3. Access-Control-Allow-Credentials is intentionally OMITTED, so
+ *      even if cookies were added in the future they would not be sent
+ *      cross-origin.
+ *   4. Notion OAuth uses a server-generated `state` parameter (stored in
+ *      DB with 10-minute expiry) to prevent OAuth CSRF.
+ *   5. Stripe webhooks are verified via HMAC signature, not cookies.
+ *
+ * No additional CSRF token layer is needed given this architecture.
  */
 
 // Allowed origins for CORS requests

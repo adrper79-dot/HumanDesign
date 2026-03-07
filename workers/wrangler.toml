@@ -6,6 +6,10 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
+# Stripe Price IDs (update these after creating products in Stripe Dashboard)
+STRIPE_PRICE_SEEKER = "price_placeholder_seeker"
+STRIPE_PRICE_GUIDE = "price_placeholder_guide"
+STRIPE_PRICE_PRACTITIONER = "price_placeholder_practitioner"
 
 # KV namespace for rate limiting + chart cache
 # Create with: wrangler kv namespace create CACHE
@@ -30,3 +34,5 @@ crons = ["0 6 * * *"]
 # TELNYX_PHONE_NUMBER
 # JWT_SECRET
 # AI_GATEWAY_URL
+# STRIPE_SECRET_KEY
+# STRIPE_WEBHOOK_SECRET

@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "locale": "en",
+    "name": "English",
+    "direction": "ltr"
+  },
+  "nav": {
+    "chart": "Chart",
+    "keys": "Keys",
+    "astro": "Astro",
+    "transits": "Transits",
+    "profile": "Profile",
+    "enhance": "Enhance",
+    "diary": "Diary"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "signOut": "Sign Out",
+    "notSignedIn": "Not signed in",
+    "emailRequired": "Email and password required.",
+    "sessionExpired": "Session expired — please sign in again.",
+    "connectionError": "Connection error: {{message}}",
+    "pleaseWait": "Please wait…",
+    "startJourney": "Start your Prime Self journey.",
+    "accessProfile": "Access your Prime Self profile and saved charts.",
+    "alreadyAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "createOne": "Create one",
+    "signInLink": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "signInUpgrade": "Please sign in to upgrade your account."
+  },
+  "chart": {
+    "title": "Human Design Chart",
+    "calculate": "Calculate Chart",
+    "calculating": "Calculating…",
+    "birthDate": "Birth Date",
+    "birthTime": "Birth Time",
+    "birthLocation": "Birth Location",
+    "lookupLocation": "Look Up",
+    "tryExample": "Try Example",
+    "type": "Type",
+    "authority": "Authority",
+    "profile": "Profile",
+    "definition": "Definition",
+    "strategy": "Strategy",
+    "notSelf": "Not-Self Theme",
+    "incarnationCross": "Incarnation Cross",
+    "definedCenters": "Defined Centers",
+    "openCenters": "Open Centers",
+    "activeChannels": "Active Channels",
+    "gates": "Gates",
+    "saveChart": "Save Chart",
+    "viewRaw": "View Raw Data",
+    "hideRaw": "Hide Raw Data"
+  },
+  "profile": {
+    "title": "Prime Self Profile",
+    "generate": "Generate Profile",
+    "generating": "Generating your Prime Self Profile…",
+    "listProfiles": "View Saved Profiles",
+    "exportPdf": "Export PDF",
+    "shareProfile": "Share",
+    "question": "Optional focus question",
+    "questionPlaceholder": "e.g. What is my primary Forge?",
+    "noProfiles": "No saved profiles yet."
+  },
+  "transits": {
+    "title": "Current Transits",
+    "loading": "Loading transit data…",
+    "today": "Today's Transits",
+    "forecast": "Forecast",
+    "gateActivations": "Gate Activations",
+    "aspects": "Transit Aspects",
+    "noData": "No transit data available."
+  },
+  "composite": {
+    "title": "Composite Chart",
+    "personA": "Person A",
+    "personB": "Person B",
+    "generate": "Generate Composite",
+    "electromagnetic": "Electromagnetic Connections",
+    "dominance": "Dominance Channels",
+    "companionship": "Companionship",
+    "compromise": "Compromise",
+    "dynamics": "Relationship Dynamics"
+  },
+  "practitioner": {
+    "title": "Practitioner Dashboard",
+    "clients": "Clients",
+    "addClient": "Add Client",
+    "clientEmail": "Client email address",
+    "roster": "Client Roster",
+    "noClients": "No clients yet."
+  },
+  "clusters": {
+    "title": "Group Intelligence",
+    "create": "Create Cluster",
+    "name": "Cluster Name",
+    "description": "Description",
+    "members": "Members",
+    "addMember": "Add Member",
+    "synthesize": "Synthesize Group",
+    "noClusters": "No clusters yet."
+  },
+  "diary": {
+    "title": "Life Event Diary",
+    "newEntry": "New Entry",
+    "save": "Save Entry",
+    "date": "Date",
+    "mood": "Mood",
+    "energy": "Energy Level",
+    "notes": "Notes",
+    "noEntries": "No diary entries yet."
+  },
+  "enhance": {
+    "title": "Enhance Your Profile",
+    "behavioral": "Behavioral Validation",
+    "bigFive": "Big Five Personality",
+    "via": "VIA Character Strengths",
+    "save": "Save Assessment"
+  },
+  "onboarding": {
+    "title": "The Savannah Arc",
+    "start": "Begin Journey",
+    "next": "Next Chapter",
+    "previous": "Previous",
+    "complete": "Chapter Complete"
+  },
+  "sms": {
+    "subscribe": "Subscribe to Daily Digests",
+    "unsubscribe": "Unsubscribe",
+    "phone": "Phone Number",
+    "subscribed": "Subscribed to SMS digests",
+    "unsubscribed": "Unsubscribed from SMS digests"
+  },
+  "pricing": {
+    "title": "Choose Your Path",
+    "seeker": "Seeker",
+    "guide": "Guide",
+    "practitioner": "Practitioner",
+    "perMonth": "/month",
+    "currentPlan": "Current Plan",
+    "upgrade": "Upgrade",
+    "billingPortal": "Manage Billing"
+  },
+  "share": {
+    "title": "Share",
+    "copyLink": "Copy Link",
+    "copied": "Copied!",
+    "twitter": "Share on X",
+    "facebook": "Share on Facebook",
+    "downloadImage": "Download Image"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong.",
+    "retry": "Try Again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "search": "Search",
+    "noResults": "No results found.",
+    "success": "Success!",
+    "features": "Features",
+    "learnMore": "Learn More"
+  },
+  "errors": {
+    "networkError": "Network error. Please check your connection.",
+    "serverError": "Server error. Please try again later.",
+    "notFound": "Not found.",
+    "unauthorized": "Please sign in to continue.",
+    "forbidden": "You don't have access to this feature.",
+    "quotaExceeded": "Usage limit reached. Upgrade for more.",
+    "invalidInput": "Please check your input and try again.",
+    "missingField": "Missing required field: {{field}}"
+  }
+}

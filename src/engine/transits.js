@@ -11,17 +11,13 @@
  * All calculations internal to UTC.
  */
 
-import { toJulianDay } from './julian.js';
+import { toJulianDay, normalizeDegrees } from './julian.js';  // BL-R-M17: import shared utility
 import { getAllPositions } from './planets.js';
 import { mapAllToGates } from './gates.js';
+import { jdnToCalendar } from './design.js';                  // BL-R-M17: import shared utility
+import { getSignFromLongitude } from './astro.js';             // BL-R-M17: import shared utility
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
-
-const ZODIAC_SIGNS = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer',
-  'Leo', 'Virgo', 'Libra', 'Scorpio',
-  'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-];
 
 const ASPECT_TYPES = [
   { name: 'Conjunction',  angle: 0,   orb: 6 },
@@ -46,20 +42,10 @@ const SPEEDS = {
 
 // ─── HELPERS ────────────────────────────────────────────────────
 
-function normalizeDegrees(d) {
-  return ((d % 360) + 360) % 360;
-}
-
 function angleDiff(a, b) {
   let d = normalizeDegrees(a - b);
   if (d > 180) d -= 360;
   return d;
-}
-
-function signFromLongitude(lon) {
-  const n = normalizeDegrees(lon);
-  const idx = Math.floor(n / 30);
-  return { sign: ZODIAC_SIGNS[idx], degrees: n - idx * 30, signIndex: idx };
 }
 
 function nowUTCtoJDN() {
@@ -72,25 +58,6 @@ function nowUTCtoJDN() {
 
 function dateToJDN(year, month, day) {
   return toJulianDay(year, month, day, 12, 0, 0); // noon UTC
-}
-
-/** JDN → { year, month, day } (inverse of Julian Day, Meeus Ch. 7) */
-function jdnToCalendar(jdn) {
-  const z = Math.floor(jdn + 0.5);
-  const f = jdn + 0.5 - z;
-  let a = z;
-  if (z >= 2299161) {
-    const alpha = Math.floor((z - 1867216.25) / 36524.25);
-    a = z + 1 + alpha - Math.floor(alpha / 4);
-  }
-  const b = a + 1524;
-  const c = Math.floor((b - 122.1) / 365.25);
-  const d = Math.floor(365.25 * c);
-  const e = Math.floor((b - d) / 30.6001);
-  const day = b - d - Math.floor(30.6001 * e) + f;
-  const month = e < 14 ? e - 1 : e - 13;
-  const year = month > 2 ? c - 4716 : c - 4715;
-  return { year, month, day: Math.floor(day) };
 }
 
 function formatDate(year, month, day) {
@@ -232,7 +199,7 @@ export function getCurrentTransits(natalChart, natalAstro, momentJDN) {
   // Step 3: Build zodiac sign info for each transit planet
   const transitPlanets = {};
   for (const [body, data] of Object.entries(transitPositions)) {
-    const sign = signFromLongitude(data.longitude);
+    const sign = getSignFromLongitude(data.longitude);
     const gateInfo = transitGates[body];
     transitPlanets[body] = {
       longitude: data.longitude,
@@ -436,4 +403,292 @@ export function getTransitForecast(
 
 function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+// ─── LONG-ARC LIFE CYCLES ───────────────────────────────────────
+
+/**
+ * Calculate major life cycles for a given natal chart.
+ * Returns upcoming cycle events (returns, oppositions, squares).
+ * 
+ * @param {object} natalPositions - Natal planet positions (from chart.astrology)
+ * @param {number} natalJDN - Natal Julian Day Number
+ * @param {object} options - { lookAheadYears: number }
+ * @returns {Array} Cycle events with dates and descriptions
+ */
+export function calculateLifeCycles(natalPositions, natalJDN, options = {}) {
+  const lookAheadYears = options.lookAheadYears || 5; // Default 5-year window
+  const nowJDN = nowUTCtoJDN();
+  const ageYears = (nowJDN - natalJDN) / 365.25;
+  
+  const cycles = [];
+
+  // Define major cycle periods (in years)
+  const CYCLE_DEFINITIONS = [
+    // Saturn Cycle (~29.5 years)
+    {
+      planet: 'saturn',
+      name: 'Saturn Return',
+      period: 29.46,
+      type: 'return',
+      description: 'Major life restructuring, maturity milestone, career evaluation',
+      intensity: 'transformative',
+      orb: 2 // years before/after to show "approaching"
+    },
+    {
+      planet: 'saturn',
+      name: 'Saturn Square',
+      period: 29.46,
+      type: 'square',
+      phase: [7.365, 14.73, 22.095], // quarters of cycle
+      description: 'Challenge period, course corrections needed',
+      intensity: 'challenging',
+      orb: 1
+    },
+    {
+      planet: 'saturn',
+      name: 'Saturn Opposition',
+      period: 29.46,
+      type: 'opposition',
+      phase: [14.73],
+      description: 'Mid-cycle crisis, reevaluation of life direction',
+      intensity: 'pivotal',
+      orb: 1.5
+    },
+
+    // Jupiter Cycle (~11.86 years)
+    {
+      planet: 'jupiter',
+      name: 'Jupiter Return',
+      period: 11.86,
+      type: 'return',
+      description: 'Expansion cycle, new opportunities, growth phase',
+      intensity: 'opportunistic',
+      orb: 0.5
+    },
+
+    // Uranus Opposition (~42 years - "Mid-life Crisis")
+    {
+      planet: 'uranus',
+      name: 'Uranus Opposition',
+      period: 84,
+      type: 'opposition',
+      phase: [42],
+      description: 'Mid-life awakening, radical life changes, authenticity push',
+      intensity: 'revolutionary',
+      orb: 2
+    },
+    {
+      planet: 'uranus',
+      name: 'Uranus Square',
+      period: 84,
+      type: 'square',
+      phase: [21, 63],
+      description: 'Breakthrough or breakdown, rebellion against constraints',
+      intensity: 'disruptive',
+      orb: 1.5
+    },
+
+    // Chiron Return (~50 years - "Wounded Healer")
+    {
+      planet: 'chiron',
+      name: 'Chiron Return',
+      period: 50.76,
+      type: 'return',
+      description: 'Healing mastery, teaching others from your wounds, spiritual maturity',
+      intensity: 'healing',
+      orb: 2
+    },
+
+    // Neptune (slower cycles - less common)
+    {
+      planet: 'neptune',
+      name: 'Neptune Square',
+      period: 164,
+      type: 'square',
+      phase: [41],
+      description: 'Spiritual disillusionment or awakening, dissolving old dreams',
+      intensity: 'mystical',
+      orb: 2
+    },
+
+    // Pluto Square (~40-45 years depending on orbit)
+    {
+      planet: 'pluto',
+      name: 'Pluto Square',
+      period: 248,
+      type: 'square',
+      phase: [40],
+      description: 'Deep transformation, power struggles, rebirth',
+      intensity: 'transformative',
+      orb: 2
+    }
+  ];
+
+  // Calculate each cycle
+  for (const cycleDef of CYCLE_DEFINITIONS) {
+    const { planet, name, period, type, phase, description, intensity, orb } = cycleDef;
+    
+    // Skip if natal chart doesn't have this planet
+    if (!natalPositions[planet]) continue;
+
+    const natalLon = natalPositions[planet].longitude;
+
+    // Calculate cycle occurrences
+    if (type === 'return') {
+      // Returns happen every 'period' years
+      const numReturns = Math.ceil((ageYears + lookAheadYears) / period);
+      
+      for (let i = 1; i <= numReturns; i++) {
+        const returnAge = period * i;
+        const returnJDN = natalJDN + (returnAge * 365.25);
+        const returnDate = jdnToCalendar(returnJDN);
+        const yearsUntil = returnAge - ageYears;
+
+        // Only show if within lookAhead window or recently passed
+        if (yearsUntil >= -0.5 && yearsUntil <= lookAheadYears) {
+          const status = yearsUntil < 0 
+            ? 'recent'
+            : yearsUntil < orb 
+              ? 'approaching' 
+              : 'upcoming';
+
+          cycles.push({
+            planet,
+            cycle: name,
+            type: 'return',
+            occurrence: i,
+            date: formatDate(returnDate.year, returnDate.month, returnDate.day),
+            ageAtCycle: Math.round(returnAge * 10) / 10,
+            yearsUntil: Math.round(yearsUntil * 10) / 10,
+            status,
+            intensity,
+            description,
+            guidance: getCycleGuidance(planet, type, status)
+          });
+        }
+      }
+    } 
+    else if (type === 'opposition' || type === 'square') {
+      // These happen at specific phases of the cycle
+      const phases = phase || [];
+      
+      for (const phaseAge of phases) {
+        // Calculate how many full cycles until this phase
+        const cycleNumber = Math.floor(ageYears / period);
+        const nextPhaseAge = (cycleNumber * period) + phaseAge;
+        const followingPhaseAge = ((cycleNumber + 1) * period) + phaseAge;
+
+        for (const targetAge of [nextPhaseAge, followingPhaseAge]) {
+          const phaseJDN = natalJDN + (targetAge * 365.25);
+          const phaseDate = jdnToCalendar(phaseJDN);
+          const yearsUntil = targetAge - ageYears;
+
+          if (yearsUntil >= -0.5 && yearsUntil <= lookAheadYears) {
+            const status = yearsUntil < 0 
+              ? 'recent'
+              : yearsUntil < orb 
+                ? 'approaching' 
+                : 'upcoming';
+
+            cycles.push({
+              planet,
+              cycle: name,
+              type,
+              date: formatDate(phaseDate.year, phaseDate.month, phaseDate.day),
+              ageAtCycle: Math.round(targetAge * 10) / 10,
+              yearsUntil: Math.round(yearsUntil * 10) / 10,
+              status,
+              intensity,
+              description,
+              guidance: getCycleGuidance(planet, type, status)
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // Sort by yearsUntil (soonest first)
+  cycles.sort((a, b) => a.yearsUntil - b.yearsUntil);
+
+  // Add current age context
+  const summary = {
+    currentAge: Math.round(ageYears * 10) / 10,
+    upcomingCycles: cycles.filter(c => c.status === 'approaching' || c.status === 'upcoming').length,
+    activeCycles: cycles.filter(c => c.status === 'approaching').length,
+    recentCycles: cycles.filter(c => c.status === 'recent').length,
+    nextMajorCycle: cycles.find(c => c.intensity === 'transformative' || c.intensity === 'revolutionary') || null
+  };
+
+  return {
+    summary,
+    cycles
+  };
+}
+
+/**
+ * Get actionable guidance for each cycle type
+ */
+function getCycleGuidance(planet, type, status) {
+  const guidance = {
+    saturn: {
+      return: {
+        approaching: 'Prepare for major life restructuring. Review commitments, release what no longer serves.',
+        upcoming: 'A 2-3 year period of maturation and responsibility consolidation is ahead.',
+        recent: 'Integrate lessons learned. New structures are forming.'
+      },
+      opposition: {
+        approaching: 'Mid-cycle evaluation time. What needs to change?',
+        upcoming: 'A pivotal reassessment of life direction approaches.',
+        recent: 'Course corrections are being implemented.'
+      },
+      square: {
+        approaching: 'Tension building. Address unresolved issues now.',
+        upcoming: 'A challenging period requiring persistence and discipline.',
+        recent: 'Obstacles were growth opportunities in disguise.'
+      }
+    },
+    jupiter: {
+      return: {
+        approaching: 'Expansion phase beginning. Say yes to opportunities.',
+        upcoming: 'A year of growth, learning, and new possibilities.',
+        recent: 'Integrate new wisdom and experiences gained.'
+      }
+    },
+    uranus: {
+      opposition: {
+        approaching: 'Mid-life awakening approaching. Embrace authentic self.',
+        upcoming: 'Prepare for radical changes. Freedom vs. security themes.',
+        recent: 'Life has been revolutionized. Find new stability.'
+      },
+      square: {
+        approaching: 'Breakthrough moment coming. Question everything.',
+        upcoming: 'Rebellion against constraints. Innovation required.',
+        recent: 'Liberation achieved. Integrate sudden changes.'
+      }
+    },
+    chiron: {
+      return: {
+        approaching: 'Your wounds become your medicine. Prepare to teach.',
+        upcoming: 'A period of deep healing and spiritual maturity.',
+        recent: 'You are now the wounded healer. Share your gifts.'
+      }
+    },
+    neptune: {
+      square: {
+        approaching: 'Spiritual crossroads ahead. Surrender or confusion?',
+        upcoming: 'Dreams dissolve or transform. Trust the process.',
+        recent: 'Illusions cleared. New vision emerging.'
+      }
+    },
+    pluto: {
+      square: {
+        approaching: 'Transformation accelerating. Release control.',
+        upcoming: 'Death and rebirth cycle. Power dynamics shift.',
+        recent: 'You are reborn. Claim your power.'
+      }
+    }
+  };
+
+  return guidance[planet]?.[type]?.[status] || 'Navigate this cycle with awareness and intention.';
 }

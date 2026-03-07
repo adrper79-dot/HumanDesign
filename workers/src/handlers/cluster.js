@@ -15,6 +15,7 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { callLLM } from '../lib/llm.js';
+import { trackEvent } from './achievements.js';
 
 // ─── Forge Role Mapping ─────────────────────────────────────────
 const FORGE_ROLES = {
@@ -128,7 +129,12 @@ async function handleCreate(request, env) {
     );
   }
   
-  const { name, challenge, createdBy } = body;
+  const { name, challenge } = body;
+  const createdBy = request._user?.sub; // Always use JWT identity, never body
+
+  if (!createdBy) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
 
   if (!name || !challenge) {
     return Response.json(
@@ -137,9 +143,16 @@ async function handleCreate(request, env) {
     );
   }
 
+  if (typeof name === 'string' && name.length > 200) {
+    return Response.json({ error: 'name exceeds maximum length of 200 characters' }, { status: 400 });
+  }
+  if (typeof challenge === 'string' && challenge.length > 2000) {
+    return Response.json({ error: 'challenge exceeds maximum length of 2000 characters' }, { status: 400 });
+  }
+
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const result = await query(QUERIES.createCluster, [name, createdBy || null, challenge]);
+  const result = await query(QUERIES.createCluster, [name, createdBy, challenge]);
 
   return Response.json({
     ok: true,
@@ -159,7 +172,7 @@ async function handleCreate(request, env) {
  * Requires authentication.
  */
 async function handleList(request, env) {
-  const userId = request._user?.userId;
+  const userId = request._user?.sub;  // BL-R-H5: JWT payload uses 'sub', not 'userId'
   
   if (!userId) {
     return Response.json(
@@ -209,7 +222,7 @@ async function handleList(request, env) {
  * Requires authentication.
  */
 async function handleLeave(request, env, clusterId) {
-  const userId = request._user?.userId;
+  const userId = request._user?.sub;  // BL-R-H5: JWT payload uses 'sub', not 'userId'
   
   if (!userId) {
     return Response.json(
@@ -268,11 +281,16 @@ async function handleJoin(request, env, clusterId) {
     );
   }
   
-  const { userId, birthDate, birthTime, birthTimezone, lat, lng } = body;
+  const userId = request._user?.sub; // Always use JWT identity, never body
+  const { birthDate, birthTime, birthTimezone, lat, lng } = body;
 
-  if (!userId || !birthDate || !birthTime || lat === undefined || lng === undefined) {
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  if (!birthDate || !birthTime || lat === undefined || lng === undefined) {
     return Response.json(
-      { error: 'Missing required fields: userId, birthDate, birthTime, lat, lng' },
+      { error: 'Missing required fields: birthDate, birthTime, lat, lng' },
       { status: 400 }
     );
   }
@@ -291,6 +309,11 @@ async function handleJoin(request, env, clusterId) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   await query(QUERIES.addClusterMember, [clusterId, userId, forgeRole.role]);
+
+  // Track achievement event
+  if (request._user) {
+    await trackEvent(env, request._user.sub, 'cluster_joined', { clusterId }, request._tier || 'free');
+  }
 
   return Response.json({
     ok: true,
@@ -405,7 +428,7 @@ async function handleSynthesize(request, env, clusterId) {
     synthesis = await callClusterLLM(prompt, env);
   } catch (err) {
     return Response.json(
-      { error: 'Cluster synthesis LLM call failed', message: err.message },
+      { error: 'Cluster synthesis failed. Please try again.' }, // BL-R-H2
       { status: 502 }
     );
   }

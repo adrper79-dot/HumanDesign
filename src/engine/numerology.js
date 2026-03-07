@@ -229,5 +229,6 @@ export function calculateNumerology(birthDate, currentDate = new Date()) {
  */
 export function calculateNumerologyFromBirthData(year, month, day) {
   const birthDate = new Date(year, month - 1, day); // JS months are 0-indexed
+  birthDate.setFullYear(year); // force correct year for years 0-99 (JS maps 0-99 → 1900-1999)
   return calculateNumerology(birthDate);
 }

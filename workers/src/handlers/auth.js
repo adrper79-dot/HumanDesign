@@ -11,7 +11,7 @@
  */
 
 import { signJWT, verifyHS256 } from '../lib/jwt.js';
-
+import { sendWelcomeEmail1 } from '../lib/email.js';
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 
@@ -170,6 +170,20 @@ async function handleRegister(request, env) {
     env.JWT_SECRET,
     REFRESH_TOKEN_TTL
   );
+
+  // Send welcome email (BL-ENG-007)
+  // Fire and forget - don't block registration on email send
+  if (env.RESEND_API_KEY) {
+    sendWelcomeEmail1(
+      email.toLowerCase(),
+      email.split('@')[0], // Use email prefix as name fallback
+      env.RESEND_API_KEY,
+      env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+    ).catch(err => {
+      console.error('Failed to send welcome email:', err);
+      // Don't fail registration if email fails
+    });
+  }
 
   return Response.json({
     ok: true,

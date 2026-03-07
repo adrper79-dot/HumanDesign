@@ -77,7 +77,7 @@ export async function handleSaveChart(request, env) {
   } catch (err) {
     console.error('Chart save failed:', err);
     return Response.json(
-      { error: 'Failed to save chart', detail: err.message },
+      { error: 'Failed to save chart' }, // BL-R-H2
       { status: 500 }
     );
   }
@@ -126,7 +126,7 @@ export async function handleChartHistory(request, env) {
   } catch (err) {
     console.error('Chart history fetch failed:', err);
     return Response.json(
-      { error: 'Failed to fetch chart history', detail: err.message },
+      { error: 'Failed to fetch chart history' },
       { status: 500 }
     );
   }

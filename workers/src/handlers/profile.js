@@ -26,19 +26,14 @@ import {
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { callLLM } from '../lib/llm.js';
-
-/** 24-hour TTL for cached natal charts (seconds). */
-const CHART_CACHE_TTL = 86400;
-
-/**
- * Build a deterministic cache key from birth parameters.
- * Natal chart is fully deterministic for the same inputs.
- */
-function chartCacheKey(birthDate, birthTime, lat, lng) {
-  return `chart:${birthDate}:${birthTime}:${lat}:${lng}`;
-}
+import { enforceUsageQuota, recordUsage } from '../middleware/tierEnforcement.js';
+import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 
 export async function handleProfile(request, env) {
+  // Enforce usage quota for profile generation
+  const quotaCheck = await enforceUsageQuota(request, env, 'profile_generation', 'profileGenerations');
+  if (quotaCheck) return quotaCheck;
+
   let body;
   try {
     body = await request.json();
@@ -65,54 +60,64 @@ export async function handleProfile(request, env) {
   // Convert to UTC using shared utility
   const utc = parseToUTC(birthDate, birthTime, birthTimezone);
 
-  // ── Chart Caching (Build Bible step 2) ──
-  const cacheKey = chartCacheKey(birthDate, birthTime, lat, lng);
-  let chart = null;
-  let cacheHit = false;
+  // ── Chart Caching via unified cache lib ──
+  const cacheKey = keys.chart(birthDate, birthTime, lat, lng);
 
-  // Try KV cache for natal chart (Layers 1-6)
-  if (env.CACHE) {
-    try {
-      const cached = await env.CACHE.get(cacheKey, 'json');
-      if (cached) {
-        // Cache hit — recompute only transits (Layer 7)
-        chart = cached;
-        chart.transits = getCurrentTransits(chart.chart, chart.astrology);
-        cacheHit = true;
-      }
-    } catch {
-      // Cache read failed — fall through to fresh calculation
+  const { data: chart, cached: cacheHit } = await kvCache.getOrSet(
+    env, cacheKey, TTL.CHART,
+    () => {
+      const fullChart = calculateFullChart({
+        ...utc,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+      });
+      // Store natal-only (transits recomputed fresh every time)
+      return { ...fullChart, transits: null };
+    }
+  );
+
+  recordCacheAccess(cacheHit);
+
+  // Always recompute transits (Layer 7) — they change daily
+  chart.transits = getCurrentTransits(chart.chart, chart.astrology);
+
+  // Fetch validation data, psychometric data, and diary entries (if user is authenticated)
+  const userId = request._user?.sub;
+  let validationData = null;
+  let psychometricData = null;
+  let diaryEntries = null;
+
+  if (userId) {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    
+    // Parallel DB reads (same pattern as profile-stream.js)
+    const [valResult, psyResult, diaryResult] = await Promise.allSettled([
+      query(QUERIES.getValidationData, [userId]),
+      query(QUERIES.getPsychometricData, [userId]),
+      query(QUERIES.getDiaryEntries, [userId, 50, 0])
+    ]);
+
+    if (valResult.status === 'fulfilled' && valResult.value.rows.length > 0) {
+      validationData = valResult.value.rows[0];
+    }
+    if (psyResult.status === 'fulfilled' && psyResult.value.rows.length > 0) {
+      psychometricData = psyResult.value.rows[0];
+    }
+    if (diaryResult.status === 'fulfilled' && diaryResult.value.rows.length > 0) {
+      diaryEntries = diaryResult.value.rows;
     }
   }
 
-  // Cache miss — run full Layers 1-6, then Layer 7
-  if (!chart) {
-    chart = calculateFullChart({
-      ...utc,
-      lat: parseFloat(lat),
-      lng: parseFloat(lng)
-    });
-
-    // Cache the natal portion (everything except transits) in KV
-    if (env.CACHE) {
-      try {
-        const natalOnly = { ...chart, transits: null };
-        await env.CACHE.put(cacheKey, JSON.stringify(natalOnly), {
-          expirationTtl: CHART_CACHE_TTL
-        });
-      } catch {
-        // Cache write failed — non-fatal
-      }
-    }
-  }
-
-  // Build Layer 8 prompt
+  // Build Layer 8 prompt with all available data
   const promptPayload = buildSynthesisPrompt({
     hdChart: chart.chart,
     astroChart: chart.astrology,
     transits: chart.transits,
     personalityGates: chart.personalityGates,
-    designGates: chart.designGates
+    designGates: chart.designGates,
+    validationData,
+    psychometricData,
+    diaryEntries
   }, question);
 
   // Call LLM via AI Gateway
@@ -121,7 +126,7 @@ export async function handleProfile(request, env) {
     llmResponse = await callLLM(promptPayload, env);
   } catch (err) {
     return Response.json(
-      { error: 'LLM call failed', message: err.message },
+      { error: 'Profile generation failed. Please try again.' }, // BL-R-H2
       { status: 502 }
     );
   }
@@ -158,7 +163,7 @@ export async function handleProfile(request, env) {
   // Save chart + profile to Neon for history & caching
   let chartId = null;
   let profileId = null;
-  const userId = request._user?.sub || null; // From JWT auth
+  // userId already declared at line 110
 
   if (env.NEON_CONNECTION_STRING && userId) {
     try {
@@ -265,7 +270,7 @@ export async function handleGetProfile(request, env, profileId) {
       }
     });
   } catch (err) {
-    return Response.json({ error: 'Database error', detail: err.message }, { status: 500 });
+    return Response.json({ error: 'Database error' }, { status: 500 });
   }
 }
 
@@ -293,6 +298,6 @@ export async function handleListProfiles(request, env) {
     }));
     return Response.json({ ok: true, data: profiles });
   } catch (err) {
-    return Response.json({ error: 'Database error', detail: err.message }, { status: 500 });
+    return Response.json({ error: 'Database error' }, { status: 500 });
   }
 }

@@ -13,6 +13,63 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { callLLM } from '../lib/llm.js';
+import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+
+// ─── Telnyx Webhook Signature Verification ───────────────────
+
+/**
+ * Verify Telnyx webhook signature using their public key.
+ * Telnyx signs webhooks with ed25519; headers: telnyx-signature-ed25519 + telnyx-timestamp.
+ * @see https://developers.telnyx.com/docs/v2/development/api-guide/webhooks#webhook-signing
+ */
+async function verifyTelnyxSignature(request, env) {
+  const publicKeyBase64 = env.TELNYX_PUBLIC_KEY;
+  if (!publicKeyBase64) {
+    // If no public key configured, log warning and skip verification
+    console.warn('TELNYX_PUBLIC_KEY not configured — skipping webhook verification');
+    return true;
+  }
+
+  const signature = request.headers.get('telnyx-signature-ed25519');
+  const timestamp = request.headers.get('telnyx-timestamp');
+
+  if (!signature || !timestamp) {
+    return false;
+  }
+
+  // Tolerance: reject events older than 5 minutes (replay protection)
+  const tolerance = 300; // seconds
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(timestamp, 10)) > tolerance) {
+    return false;
+  }
+
+  try {
+    // Import the ed25519 public key
+    const keyBytes = Uint8Array.from(atob(publicKeyBase64), c => c.charCodeAt(0));
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'Ed25519', namedCurve: 'Ed25519' },
+      false,
+      ['verify']
+    );
+
+    // Telnyx signs: timestamp + "|" + raw body
+    const body = await request.clone().text();
+    const signedPayload = `${timestamp}|${body}`;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(signedPayload);
+
+    // Decode hex signature
+    const sigBytes = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+
+    return await crypto.subtle.verify('Ed25519', cryptoKey, sigBytes, data);
+  } catch (err) {
+    console.error('Telnyx signature verification failed:', err);
+    return false;
+  }
+}
 
 // ─── Telnyx API ──────────────────────────────────────────────
 
@@ -75,6 +132,9 @@ export async function handleSMS(request, env, path) {
   }
 
   if (path === '/api/sms/subscribe' && request.method === 'POST') {
+    // Check if user has SMS digest feature
+    const featureCheck = await enforceFeatureAccess(request, env, 'smsDigests');
+    if (featureCheck) return featureCheck;
     return handleSubscribe(request, env);
   }
 
@@ -94,6 +154,12 @@ export async function handleSMS(request, env, path) {
  * Processes commands: START, STOP, STATUS, and free-text queries.
  */
 async function handleWebhook(request, env) {
+  // Verify Telnyx webhook signature
+  const isValid = await verifyTelnyxSignature(request, env);
+  if (!isValid) {
+    return Response.json({ error: 'Invalid webhook signature' }, { status: 401 });
+  }
+
   let payload;
   try {
     payload = await request.json();
@@ -200,6 +266,14 @@ async function handleSendDigest(request, env) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   if (body.all) {
+    // Require practitioner tier or above for mass SMS
+    const userTier = request._user?.tier || request._tier || 'free';
+    if (!['practitioner', 'admin'].includes(userTier)) {
+      return Response.json(
+        { error: 'Mass SMS requires practitioner tier or above' },
+        { status: 403 }
+      );
+    }
     // Send to all opted-in users
     const usersResult = await query(
       `SELECT * FROM users WHERE sms_opted_in = true AND phone IS NOT NULL`
@@ -297,7 +371,7 @@ async function generateDigestForUser(user, env) {
  * Requires authentication.
  */
 async function handleSubscribe(request, env) {
-  const userId = request._user?.userId;
+  const userId = request._user?.sub;  // BL-R-H5: JWT payload uses 'sub', not 'userId'
   
   if (!userId) {
     return Response.json(
@@ -339,7 +413,7 @@ async function handleSubscribe(request, env) {
     // Update user's phone and SMS opt-in status
     await query(
       `UPDATE users 
-       SET phone = $1, sms_opt_in = true 
+       SET phone = $1, sms_opted_in = true 
        WHERE id = $2`,
       [phone, userId]
     );
@@ -379,7 +453,7 @@ async function handleSubscribe(request, env) {
  * Requires authentication.
  */
 async function handleUnsubscribe(request, env) {
-  const userId = request._user?.userId;
+  const userId = request._user?.sub;  // BL-R-H5: JWT payload uses 'sub', not 'userId'
   
   if (!userId) {
     return Response.json(
@@ -402,7 +476,7 @@ async function handleUnsubscribe(request, env) {
     // Update SMS opt-in status
     await query(
       `UPDATE users 
-       SET sms_opt_in = false 
+       SET sms_opted_in = false 
        WHERE id = $1`,
       [userId]
     );

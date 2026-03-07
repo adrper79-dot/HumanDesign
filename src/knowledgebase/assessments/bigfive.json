@@ -1,0 +1,172 @@
+{
+  "title": "Big Five Personality Assessment (OCEAN)",
+  "description": "Scientific personality measurement across five core dimensions. 20 questions, 2-3 minutes.",
+  "dimensions": {
+    "openness": {
+      "label": "Openness to Experience",
+      "description": "Imagination, curiosity, artistic interests, willingness to try new things",
+      "hdCorrelations": ["defined Ajna", "Gate 64 (Confusion → Clarity)", "Gate 61 (Mystery)", "Uranus aspects", "9th house emphasis"],
+      "astroCorrelations": ["Uranus dominant", "Aquarius/Sagittarius emphasis", "strong 9th house", "Neptune-Mercury aspects"]
+    },
+    "conscientiousness": {
+      "label": "Conscientiousness",
+      "description": "Organization, self-discipline, reliability, goal-directed behavior",
+      "hdCorrelations": ["defined Root", "Gate 60 (Limitation/Structure)", "Gate 5 (Fixed Patterns)", "Saturn dominant", "Logical circuitry"],
+      "astroCorrelations": ["Saturn dominant", "Capricorn/Virgo emphasis", "strong 6th/10th house", "Saturn-Sun aspects"]
+    },
+    "extraversion": {
+      "label": "Extraversion",
+      "description": "Sociability, assertiveness, energy from others, expressiveness",
+      "hdCorrelations": ["defined Throat", "defined Sacral", "Generator/MG type", "Gate 12 (Voice)", "Collective circuitry"],
+      "astroCorrelations": ["Jupiter dominant", "Leo/Sagittarius emphasis", "strong 1st/5th house", "Sun-Jupiter aspects"]
+    },
+    "agreeableness": {
+      "label": "Agreeableness",
+      "description": "Compassion, cooperation, trust, helpfulness, consideration",
+      "hdCorrelations": ["Tribal circuitry", "Gate 37 (Family)", "Gate 27 (Caring)", "Venus dominant", "defined Heart center"],
+      "astroCorrelations": ["Venus dominant", "Libra/Cancer emphasis", "strong 7th house", "Venus-Moon aspects"]
+    },
+    "neuroticism": {
+      "label": "Emotional Stability (reverse scored)",
+      "description": "Emotional volatility, anxiety, moodiness, worry (low score = stable)",
+      "hdCorrelations": ["undefined Solar Plexus", "Gate 55 (Emotional Depth)", "Emotional authority", "Pluto/Neptune aspects"],
+      "astroCorrelations": ["Pluto/Neptune dominant", "Scorpio/Pisces emphasis", "heavy 8th/12th house", "Moon-Neptune aspects"]
+    }
+  },
+  "questions": [
+    {
+      "id": 1,
+      "text": "I am the life of the party.",
+      "dimension": "extraversion",
+      "reverse": false
+    },
+    {
+      "id": 2,
+      "text": "I feel little concern for others.",
+      "dimension": "agreeableness",
+      "reverse": true
+    },
+    {
+      "id": 3,
+      "text": "I am always prepared.",
+      "dimension": "conscientiousness",
+      "reverse": false
+    },
+    {
+      "id": 4,
+      "text": "I get stressed out easily.",
+      "dimension": "neuroticism",
+      "reverse": false
+    },
+    {
+      "id": 5,
+      "text": "I have a rich vocabulary.",
+      "dimension": "openness",
+      "reverse": false
+    },
+    {
+      "id": 6,
+      "text": "I don't talk a lot.",
+      "dimension": "extraversion",
+      "reverse": true
+    },
+    {
+      "id": 7,
+      "text": "I am interested in people.",
+      "dimension": "agreeableness",
+      "reverse": false
+    },
+    {
+      "id": 8,
+      "text": "I leave my belongings around.",
+      "dimension": "conscientiousness",
+      "reverse": true
+    },
+    {
+      "id": 9,
+      "text": "I am relaxed most of the time.",
+      "dimension": "neuroticism",
+      "reverse": true
+    },
+    {
+      "id": 10,
+      "text": "I have difficulty understanding abstract ideas.",
+      "dimension": "openness",
+      "reverse": true
+    },
+    {
+      "id": 11,
+      "text": "I feel comfortable around people.",
+      "dimension": "extraversion",
+      "reverse": false
+    },
+    {
+      "id": 12,
+      "text": "I insult people.",
+      "dimension": "agreeableness",
+      "reverse": true
+    },
+    {
+      "id": 13,
+      "text": "I pay attention to details.",
+      "dimension": "conscientiousness",
+      "reverse": false
+    },
+    {
+      "id": 14,
+      "text": "I worry about things.",
+      "dimension": "neuroticism",
+      "reverse": false
+    },
+    {
+      "id": 15,
+      "text": "I have a vivid imagination.",
+      "dimension": "openness",
+      "reverse": false
+    },
+    {
+      "id": 16,
+      "text": "I keep in the background.",
+      "dimension": "extraversion",
+      "reverse": true
+    },
+    {
+      "id": 17,
+      "text": "I sympathize with others' feelings.",
+      "dimension": "agreeableness",
+      "reverse": false
+    },
+    {
+      "id": 18,
+      "text": "I make a mess of things.",
+      "dimension": "conscientiousness",
+      "reverse": true
+    },
+    {
+      "id": 19,
+      "text": "I seldom feel blue.",
+      "dimension": "neuroticism",
+      "reverse": true
+    },
+    {
+      "id": 20,
+      "text": "I am not interested in abstract ideas.",
+      "dimension": "openness",
+      "reverse": true
+    }
+  ],
+  "scales": {
+    "labels": ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    "values": [1, 2, 3, 4, 5]
+  },
+  "scoring": {
+    "note": "Average the scores for each dimension. Reverse-scored items are flipped (6 - score). Results are 1-5 scale per dimension.",
+    "interpretation": {
+      "veryLow": [1.0, 2.0],
+      "low": [2.0, 3.0],
+      "moderate": [3.0, 4.0],
+      "high": [4.0, 4.5],
+      "veryHigh": [4.5, 5.0]
+    }
+  }
+}
