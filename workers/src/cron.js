@@ -96,18 +96,19 @@ export async function runDailyTransitCron(env) {
       // Don't throw - webhook failures shouldn't break the main cron
     }
 
+    // ─── Step 4b: Refresh check-in streaks materialized view (BL-S15-H2) ───
+    try {
+      await query('SELECT refresh_checkin_streaks()');
+      console.log('[CRON] Check-in streaks materialized view refreshed');
+    } catch (streakErr) {
+      console.error('[CRON] Streak refresh error:', streakErr);
+      // Non-critical — streaks will be stale but functional
+    }
+
     // ─── Step 5: Send push notifications ────────────────
     try {
       // Get users with active push subscriptions and transit_daily preference enabled
-      const { rows: pushUsers } = await query(`
-        SELECT DISTINCT u.id, u.birth_date
-        FROM users u
-        INNER JOIN push_subscriptions ps ON u.id = ps.user_id
-        LEFT JOIN notification_preferences np ON u.id = np.user_id
-        WHERE ps.active = true
-          AND u.birth_date IS NOT NULL
-          AND (np.transit_daily IS NULL OR np.transit_daily = true)
-      `);
+      const { rows: pushUsers } = await query(QUERIES.cronGetPushUsers);
       console.log(`[CRON] ${pushUsers.length} users to receive push notifications`);
 
       let pushSent = 0, pushFailed = 0;
@@ -154,12 +155,7 @@ export async function runDailyTransitCron(env) {
     // ─── Step 6: Evaluate transit alerts ────────────────
     try {
       // Get users with active transit alerts
-      const { rows: alertUsers } = await query(`
-        SELECT DISTINCT u.id, u.birth_date
-        FROM users u
-        INNER JOIN transit_alerts ta ON u.id = ta.user_id
-        WHERE ta.active = true AND u.birth_date IS NOT NULL
-      `);
+      const { rows: alertUsers } = await query(QUERIES.cronGetAlertUsers);
       console.log(`[CRON] Evaluating alerts for ${alertUsers.length} users`);
 
       let alertsTriggered = 0;
@@ -188,15 +184,7 @@ export async function runDailyTransitCron(env) {
       let emailsSent = 0, emailsFailed = 0;
 
       // Welcome Email #2 (24 hours after registration)
-      const welcome2Users = await query(`
-        SELECT u.id, u.email, u.created_at, c.chart_type
-        FROM users u
-        LEFT JOIN charts c ON u.id = c.user_id
-        WHERE u.created_at >= NOW() - INTERVAL '25 hours'
-          AND u.created_at <= NOW() - INTERVAL '23 hours'
-          AND u.email_verified != false
-        GROUP BY u.id, u.email, u.created_at, c.chart_type
-      `);
+      const welcome2Users = await query(QUERIES.cronGetWelcome2Users);
 
       for (const user of (welcome2Users.rows || [])) {
         try {
@@ -215,15 +203,7 @@ export async function runDailyTransitCron(env) {
       }
 
       // Welcome Email #3 (72 hours after registration)
-      const welcome3Users = await query(`
-        SELECT u.id, u.email, u.created_at, c.authority
-        FROM users u
-        LEFT JOIN charts c ON u.id = c.user_id
-        WHERE u.created_at >= NOW() - INTERVAL '73 hours'
-          AND u.created_at <= NOW() - INTERVAL '71 hours'
-          AND u.email_verified != false
-        GROUP BY u.id, u.email, u.created_at, c.authority
-      `);
+      const welcome3Users = await query(QUERIES.cronGetWelcome3Users);
 
       for (const user of (welcome3Users.rows || [])) {
         try {
@@ -242,13 +222,7 @@ export async function runDailyTransitCron(env) {
       }
 
       // Welcome Email #4 (7 days after registration)
-      const welcome4Users = await query(`
-        SELECT u.id, u.email, u.created_at
-        FROM users u
-        WHERE u.created_at >= NOW() - INTERVAL '7 days 1 hour'
-          AND u.created_at <= NOW() - INTERVAL '6 days 23 hours'
-          AND u.email_verified != false
-      `);
+      const welcome4Users = await query(QUERIES.cronGetWelcome4Users);
 
       for (const user of (welcome4Users.rows || [])) {
         try {
@@ -266,16 +240,7 @@ export async function runDailyTransitCron(env) {
       }
 
       // Re-engagement Email (7 days inactive)
-      const reengagementUsers = await query(`
-        SELECT u.id, u.email, u.last_login_at,
-               EXTRACT(DAY FROM (NOW() - u.last_login_at)) AS days_inactive
-        FROM users u
-        WHERE u.last_login_at IS NOT NULL
-          AND u.last_login_at >= NOW() - INTERVAL '8 days'
-          AND u.last_login_at <= NOW() - INTERVAL '6 days'
-          AND u.email_verified != false
-          AND u.created_at < NOW() - INTERVAL '14 days'
-      `);
+      const reengagementUsers = await query(QUERIES.cronGetReengagementUsers);
 
       for (const user of (reengagementUsers.rows || [])) {
         try {
@@ -294,14 +259,7 @@ export async function runDailyTransitCron(env) {
       }
 
       // Upgrade Nudge Email (30 days on free tier)
-      const upgradeNudgeUsers = await query(`
-        SELECT u.id, u.email, u.created_at
-        FROM users u
-        WHERE u.tier = 'free'
-          AND u.created_at >= NOW() - INTERVAL '31 days'
-          AND u.created_at <= NOW() - INTERVAL '29 days'
-          AND u.email_verified != false
-      `);
+      const upgradeNudgeUsers = await query(QUERIES.cronGetUpgradeNudgeUsers);
 
       for (const user of (upgradeNudgeUsers.rows || [])) {
         try {

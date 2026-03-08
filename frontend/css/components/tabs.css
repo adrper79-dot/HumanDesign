@@ -141,6 +141,7 @@
 /* Panel content wrapper */
 .tab-content {
   /* Inherits from .container in base.css */
+  min-height: 0;
 }
 
 

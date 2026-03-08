@@ -188,12 +188,22 @@ export async function handleGetLeaderboard(request, env, ctx) {
     const { rows: userRankRows } = await query(QUERIES.getUserRank, [user.id]);
     const userRank = userRankRows[0] || null;
     
-    // Mask emails for privacy (show first 3 chars + domain)
+    // BL-R-L12: Mask emails for privacy. Short local parts (< 4 chars) are
+    // fully masked to prevent identification. Longer ones show first 3 chars.
+    function maskEmail(email) {
+      const atIdx = email.indexOf('@');
+      if (atIdx < 0) return '***';
+      const local = email.slice(0, atIdx);
+      const domain = email.slice(atIdx); // includes @
+      if (local.length < 4) return `***${domain}`;
+      return `${local.slice(0, 3)}***${domain}`;
+    }
+
     const maskedLeaderboard = leaderboard.map((entry, index) => ({
       rank: offset + index + 1,
-      email: entry.user_id === user.id 
+      email: entry.user_id === user.id
         ? entry.email  // Show full email for current user
-        : entry.email.replace(/(.{3}).*(@.*)/, '$1***$2'),
+        : maskEmail(entry.email),
       tier: entry.tier,
       totalPoints: entry.total_points,
       totalAchievements: entry.total_achievements,

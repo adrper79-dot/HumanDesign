@@ -32,11 +32,8 @@ const J2000 = 2451545.0;
 // Each property is [value_at_J2000, rate_per_century].
 
 const ELEMENTS = {
-  earth: {
-    a: [1.00000261, 0.00000562], e: [0.01671123, -0.00004392],
-    I: [-0.00001531, -0.01294668], L: [100.46457166, 35999.37244981],
-    w: [102.93768193, 0.32327364],  O: [0.0, 0.0]
-  },
+  // Note: Earth uses getEarthPosition() (Meeus solar theory) rather than
+  // Keplerian elements — more accurate for the Earth-Sun distance and longitude.
   mercury: {
     a: [0.38709927, 0.00000037], e: [0.20563593, 0.00001906],
     I: [7.00497902, -0.00594749], L: [252.25032350, 149472.67411175],
@@ -411,8 +408,9 @@ export function getAllPositions(jdn) {
   // Sun (Meeus Ch. 25 — already verified in Layer 1, ecliptic of date)
   const sunLon = getSunLongitude(jdn);
 
-  // Earth's heliocentric position in J2000 (for geocentric conversion)
-  const earth = getHelioPosition(T, ELEMENTS.earth);
+  // Earth's heliocentric position — Meeus solar theory (more accurate than
+  // Keplerian elements for Earth because it uses the full equation of center)
+  const earth = getEarthPosition(T); // BL-R-M5
 
   // Moon (direct geocentric — Meeus Ch. 47, ecliptic of date)
   const moonLon = getMoonLongitude(T);

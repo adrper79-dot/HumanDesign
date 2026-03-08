@@ -22,7 +22,7 @@
 --   node run-migration.js --status   # Show applied migrations
 
 -- ─── Extensions ──────────────────────────────────────────────
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- uuid-ossp removed: gen_random_uuid() is built into PostgreSQL 13+
 
 -- ─── Migration Tracking ──────────────────────────────────────
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_migrations_name ON schema_migrations (migration_n
 
 -- ─── Users ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email         TEXT UNIQUE,
   phone         TEXT UNIQUE,
   password_hash TEXT,          -- PBKDF2-SHA256 hash (salt:hash base64)
@@ -55,7 +55,7 @@ CREATE INDEX IF NOT EXISTS idx_users_phone ON users (phone);
 
 -- ─── Charts ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS charts (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
   hd_json       JSONB NOT NULL,
   astro_json    JSONB,
@@ -66,7 +66,7 @@ CREATE INDEX IF NOT EXISTS idx_charts_user ON charts (user_id, calculated_at DES
 
 -- ─── Profiles ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS profiles (
-  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         UUID REFERENCES users(id) ON DELETE CASCADE,
   chart_id        UUID REFERENCES charts(id) ON DELETE SET NULL,
   profile_json    JSONB NOT NULL,
@@ -79,7 +79,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_user ON profiles (user_id, created_at DE
 
 -- ─── Transit Snapshots ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS transit_snapshots (
-  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   snapshot_date   DATE UNIQUE NOT NULL,
   positions_json  JSONB NOT NULL,
   created_at      TIMESTAMPTZ DEFAULT now()
@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_transit_date ON transit_snapshots (snapshot_date)
 
 -- ─── Practitioners ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS practitioners (
-  id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id   UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   certified BOOLEAN DEFAULT false,
   tier      TEXT DEFAULT 'free'
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS practitioner_clients (
 
 -- ─── Clusters ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clusters (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL,
   created_by  UUID REFERENCES users(id) ON DELETE SET NULL,
   challenge   TEXT,
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS cluster_members (
 
 -- ─── SMS Messages ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS sms_messages (
-  id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id   UUID REFERENCES users(id) ON DELETE CASCADE,
   direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound')),
   body      TEXT NOT NULL,
@@ -134,7 +134,7 @@ CREATE INDEX IF NOT EXISTS idx_sms_user ON sms_messages (user_id, sent_at DESC);
 
 -- ─── Behavioral Validation Data ─────────────────────────────
 CREATE TABLE IF NOT EXISTS validation_data (
-  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   decision_pattern    TEXT,   -- How they make decisions (validates Authority)
   energy_pattern      TEXT,   -- Energy mechanics (validates Type)
@@ -147,7 +147,7 @@ CREATE INDEX IF NOT EXISTS idx_validation_user ON validation_data (user_id);
 
 -- ─── Psychometric Assessment Data ───────────────────────────
 CREATE TABLE IF NOT EXISTS psychometric_data (
-  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   big_five_scores     JSONB,  -- { openness: 4.2, conscientiousness: 3.8, ... }
   via_strengths       JSONB,  -- [{ rank: 1, strength: 'Curiosity', score: 4.8 }, ...]
@@ -159,7 +159,7 @@ CREATE INDEX IF NOT EXISTS idx_psychometric_user ON psychometric_data (user_id);
 
 -- ─── Diary / Life Events Journal ────────────────────────────
 CREATE TABLE IF NOT EXISTS diary_entries (
-  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             UUID REFERENCES users(id) ON DELETE CASCADE,
   event_date          DATE NOT NULL,
   event_title         TEXT NOT NULL,
@@ -176,7 +176,7 @@ CREATE INDEX IF NOT EXISTS idx_diary_date ON diary_entries (event_date);
 
 -- ─── Subscriptions ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS subscriptions (
-  id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id                 UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   stripe_customer_id      TEXT UNIQUE NOT NULL,
   stripe_subscription_id  TEXT UNIQUE,
@@ -195,7 +195,7 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_tier ON subscriptions (tier);
 
 -- ─── Payment Events ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS payment_events (
-  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   subscription_id     UUID REFERENCES subscriptions(id) ON DELETE CASCADE,
   stripe_event_id     TEXT UNIQUE NOT NULL,
   event_type          TEXT NOT NULL,
@@ -212,7 +212,7 @@ CREATE INDEX IF NOT EXISTS idx_payment_events_stripe ON payment_events (stripe_e
 
 -- ─── Usage Tracking ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS usage_records (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
   action        TEXT NOT NULL,  -- 'chart_calculation', 'profile_generation', 'api_call', 'sms_sent'
   endpoint      TEXT,           -- API endpoint called
@@ -225,7 +225,7 @@ CREATE INDEX IF NOT EXISTS idx_usage_action ON usage_records (action, created_at
 
 -- ─── Share Events ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS share_events (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
   share_type    TEXT NOT NULL,  -- 'celebrity_match', 'chart', 'achievement', 'referral'
   share_data    JSONB,          -- Context data (celebrity name, achievement ID, etc.)
@@ -238,7 +238,7 @@ CREATE INDEX IF NOT EXISTS idx_share_events_type ON share_events (share_type, cr
 
 -- ─── Refresh Tokens ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash  TEXT NOT NULL UNIQUE,       -- SHA-256 hash of the JWT
   family_id   UUID NOT NULL,              -- rotation family — shared across a refresh chain

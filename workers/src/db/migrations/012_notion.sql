@@ -4,7 +4,7 @@
 -- ─── OAuth State Tokens ──────────────────────────────────────
 -- Temporary storage for OAuth state tokens (CSRF protection)
 CREATE TABLE IF NOT EXISTS oauth_states (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
   provider      TEXT NOT NULL,  -- 'notion', 'google', etc.
   state         TEXT UNIQUE NOT NULL,
@@ -19,7 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_oauth_states_expires ON oauth_states (expires_at)
 -- ─── Notion Connections ───────────────────────────────────────
 -- Store Notion OAuth access tokens and workspace info
 CREATE TABLE IF NOT EXISTS notion_connections (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id           UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   access_token      TEXT NOT NULL,
   workspace_id      TEXT NOT NULL,
@@ -37,7 +37,7 @@ CREATE INDEX IF NOT EXISTS idx_notion_connections_workspace ON notion_connection
 -- ─── Notion Syncs ─────────────────────────────────────────────
 -- Track synced databases and last sync time
 CREATE TABLE IF NOT EXISTS notion_syncs (
-  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             UUID REFERENCES users(id) ON DELETE CASCADE,
   sync_type           TEXT NOT NULL,  -- 'clients', 'profiles', etc.
   notion_database_id  TEXT NOT NULL,
@@ -51,7 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_notion_syncs_type ON notion_syncs (sync_type);
 -- ─── Notion Pages ─────────────────────────────────────────────
 -- Track exported pages for reference
 CREATE TABLE IF NOT EXISTS notion_pages (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id           UUID REFERENCES users(id) ON DELETE CASCADE,
   profile_id        UUID REFERENCES profiles(id) ON DELETE CASCADE,
   notion_page_id    TEXT NOT NULL,

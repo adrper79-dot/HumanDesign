@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0a0a0f"/>
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#c9a84c" stroke-width="12" opacity="0.8"/>
+  <!-- Inner ring (bodygraph reference) -->
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#c9a84c" stroke-width="6" opacity="0.4"/>
+  <!-- Center mark -->
+  <circle cx="256" cy="256" r="24" fill="#c9a84c"/>
+  <!-- 9 centers — simplified Human Design bodygraph nodes -->
+  <!-- Head (top) -->
+  <circle cx="256" cy="80"  r="14" fill="#c9a84c" opacity="0.85"/>
+  <!-- Ajna -->
+  <circle cx="256" cy="128" r="14" fill="#c9a84c" opacity="0.75"/>
+  <!-- Throat -->
+  <circle cx="256" cy="192" r="14" fill="#c9a84c" opacity="0.75"/>
+  <!-- G Center (center) – already drawn as center mark -->
+  <!-- Heart (right of center) -->
+  <circle cx="316" cy="240" r="14" fill="#c9a84c" opacity="0.75"/>
+  <!-- Spleen (left) -->
+  <circle cx="196" cy="300" r="14" fill="#c9a84c" opacity="0.75"/>
+  <!-- Sacral (bottom center) -->
+  <circle cx="256" cy="340" r="14" fill="#c9a84c" opacity="0.85"/>
+  <!-- Solar Plexus (right lower) -->
+  <circle cx="316" cy="300" r="14" fill="#c9a84c" opacity="0.75"/>
+  <!-- Root (bottom) -->
+  <circle cx="256" cy="416" r="14" fill="#c9a84c" opacity="0.75"/>
+  <!-- PS initials -->
+  <text x="256" y="510" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" font-weight="700" fill="#c9a84c" opacity="0.6">PRIME SELF</text>
+</svg>

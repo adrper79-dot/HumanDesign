@@ -192,10 +192,12 @@
   
   /* ─── Gradients: Premium Depth ─────────────── */
   
+  --gradient-accent-glow: radial-gradient(
     rgba(213, 0, 28, 0.15) 0%,
     rgba(213, 0, 28, 0) 70%
   );
   
+  --gradient-gold-glow: radial-gradient(
     rgba(212, 175, 55, 0.1) 0%,
     rgba(212, 175, 55, 0) 70%
   );
@@ -205,6 +207,7 @@
     radial-gradient(at 100% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
     radial-gradient(at 100% 100%, rgba(10, 132, 255, 0.06) 0%, transparent 50%);
   
+  --gradient-surface: linear-gradient(
     var(--color-graphite) 0%,
     var(--color-charcoal) 100%
   );

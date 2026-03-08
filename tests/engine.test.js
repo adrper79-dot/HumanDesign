@@ -583,3 +583,248 @@ describe('Edge Cases', () => {
     expect(fc.events.filter(e => e.event.includes('enters Gate')).length).toBe(0);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════
+// TYPE DETERMINATION — All 5 Types + Authority Variants (BL-S15-M4)
+// ═══════════════════════════════════════════════════════════════
+// These tests exercise calculateChart with synthetic gate inputs
+// that produce each Type / Authority combination deterministically.
+//
+// The gate set is carefully chosen so that the resulting active
+// channels define exactly the centers needed for each type.
+
+/**
+ * Build minimal personality/design gate objects.
+ * Specify gate numbers for each side; lines default to 1.
+ * Any planet key not mentioned gets gate 99 (no channel uses 99).
+ */
+function makeGates(personalityGateNums, designGateNums) {
+  const BODIES = ['sun', 'earth', 'moon', 'mercury', 'venus', 'mars',
+    'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'northNode', 'southNode'];
+
+  function buildSide(gateNums) {
+    const side = {};
+    for (let i = 0; i < BODIES.length; i++) {
+      side[BODIES[i]] = { gate: gateNums[i] ?? 99, line: (i === 0) ? 4 : 1 };
+    }
+    return side;
+  }
+
+  return { p: buildSide(personalityGateNums), d: buildSide(designGateNums) };
+}
+
+describe('Type Determination — All 5 Types', () => {
+
+  it('Reflector: no defined centers', () => {
+    // Gates with no matching channel partners → no channels → no centers
+    const { p, d } = makeGates(
+      [61, 4, 8, 16, 21, 25, 2, 7, 13, 46, 1, 10, 15],
+      [63, 11, 12, 48, 45, 51, 14, 31, 33, 29, 5, 34, 9]
+    );
+
+    // None of these pairs form channels — we need to be careful
+    // Actually let me use truly isolated gates: only ONE gate from each channel pair
+    // Channel 1-8: give 1 to P, but NOT 8 to D (D gets 12 instead).  Etc.
+    // Simplest: give all bodies gate 99 (a gate not in any channel)
+    const pReflector = {};
+    const dReflector = {};
+    const BODIES = ['sun', 'earth', 'moon', 'mercury', 'venus', 'mars',
+      'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'northNode', 'southNode'];
+    for (const body of BODIES) {
+      pReflector[body] = { gate: 99, line: 4 };
+      dReflector[body] = { gate: 99, line: 1 };
+    }
+
+    const chart = calculateChart(pReflector, dReflector);
+    expect(chart.type).toBe('Reflector');
+    expect(chart.authority).toBe('Lunar');
+    expect(chart.definition).toBe('None');
+    expect(chart.definedCenters).toHaveLength(0);
+    expect(chart.strategy).toBe('Wait a Lunar Cycle');
+    expect(chart.notSelfTheme).toBe('Disappointment');
+  });
+
+  it('Generator: Sacral defined, no motor→Throat', () => {
+    // Channel 3-60: Sacral↔Root. Sacral defined, but no throat connection.
+    const { p, d } = makeGates(
+      [3],   // P: gate 3 (Sacral end of 3-60)
+      [60]   // D: gate 60 (Root end of 3-60)
+    );
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Generator');
+    expect(chart.authority).toBe('Sacral');
+    expect(chart.strategy).toBe('Wait to Respond');
+    expect(chart.notSelfTheme).toBe('Frustration');
+    expect(chart.definedCenters).toContain('Sacral');
+    expect(chart.definedCenters).toContain('Root');
+    expect(chart.definedCenters).not.toContain('Throat');
+  });
+
+  it('Manifesting Generator: Sacral defined + motor→Throat', () => {
+    // Channel 20-34: Throat↔Sacral (direct motor-to-throat)
+    const { p, d } = makeGates(
+      [20],   // P: gate 20 (Throat end)
+      [34]    // D: gate 34 (Sacral end)
+    );
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Manifesting Generator');
+    expect(chart.definedCenters).toContain('Sacral');
+    expect(chart.definedCenters).toContain('Throat');
+    expect(chart.strategy).toBe('Wait to Respond, then Inform');
+    expect(chart.notSelfTheme).toBe('Frustration / Anger');
+  });
+
+  it('Manifestor: no Sacral, motor→Throat', () => {
+    // Channel 21-45: Heart↔Throat (Heart is a motor)
+    const { p, d } = makeGates(
+      [21],   // P: gate 21 (Heart end)
+      [45]    // D: gate 45 (Throat end)
+    );
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Manifestor');
+    expect(chart.authority).toBe('Ego Manifested');
+    expect(chart.definedCenters).toContain('Heart');
+    expect(chart.definedCenters).toContain('Throat');
+    expect(chart.definedCenters).not.toContain('Sacral');
+    expect(chart.strategy).toBe('Inform');
+    expect(chart.notSelfTheme).toBe('Anger');
+  });
+
+  it('Projector: no Sacral, no motor→Throat, centers defined', () => {
+    // Channel 4-63: Ajna↔Head (neither is a motor, no Sacral, no Throat)
+    const { p, d } = makeGates(
+      [4],    // P: gate 4 (Ajna end)
+      [63]    // D: gate 63 (Head end)
+    );
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Projector');
+    expect(chart.definedCenters).toContain('Ajna');
+    expect(chart.definedCenters).toContain('Head');
+    expect(chart.definedCenters).not.toContain('Sacral');
+    expect(chart.strategy).toBe('Wait for the Invitation');
+    expect(chart.notSelfTheme).toBe('Bitterness');
+  });
+});
+
+describe('Authority Variants', () => {
+
+  it('Emotional authority (SolarPlexus defined)', () => {
+    // Channel 6-59: SolarPlexus↔Sacral
+    const { p, d } = makeGates([6], [59]);
+    const chart = calculateChart(p, d);
+    expect(chart.authority).toBe('Emotional - Solar Plexus');
+  });
+
+  it('Sacral authority (Sacral defined, no SolarPlexus)', () => {
+    // Channel 3-60: Sacral↔Root
+    const { p, d } = makeGates([3], [60]);
+    const chart = calculateChart(p, d);
+    expect(chart.authority).toBe('Sacral');
+  });
+
+  it('Splenic authority (Spleen defined, no SolarPlexus/Sacral)', () => {
+    // Channel 28-38: Spleen↔Root  (Projector — no Sacral, no motor→Throat)
+    const { p, d } = makeGates([28], [38]);
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Projector');
+    expect(chart.authority).toBe('Splenic');
+  });
+
+  it('Ego Manifested authority (Heart→Throat, Manifestor)', () => {
+    // Channel 21-45: Heart↔Throat
+    const { p, d } = makeGates([21], [45]);
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Manifestor');
+    expect(chart.authority).toBe('Ego Manifested');
+  });
+
+  it('Ego Projected authority (Heart defined, NOT connected to Throat)', () => {
+    // Channel 25-51: G↔Heart. Heart defined but not connected to Throat.
+    const { p, d } = makeGates([25], [51]);
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Projector');
+    expect(chart.authority).toBe('Ego Projected');
+  });
+
+  it('Self-Projected authority (G defined, no SolarPlexus/Sacral/Spleen/Heart)', () => {
+    // Channel 1-8: G↔Throat. G defined, Throat defined, no motors besides Throat path.
+    // Type: Manifestor? No — G is NOT a motor. Let's check:
+    // G is not in MOTOR_CENTERS. Throat has no path to a motor. So no motor→Throat → Projector.
+    // Wait — G↔Throat means Throat IS defined, but only connected to G (not a motor).
+    const { p, d } = makeGates([1], [8]);
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Projector');
+    expect(chart.authority).toBe('Self-Projected');
+  });
+
+  it('Mental (None) authority (only Head/Ajna defined)', () => {
+    // Channel 4-63: Ajna↔Head
+    const { p, d } = makeGates([4], [63]);
+    const chart = calculateChart(p, d);
+    expect(chart.type).toBe('Projector');
+    expect(chart.authority).toBe('Mental (None)');
+  });
+
+  it('Lunar authority (Reflector)', () => {
+    const pReflector = {};
+    const dReflector = {};
+    const BODIES = ['sun', 'earth', 'moon', 'mercury', 'venus', 'mars',
+      'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'northNode', 'southNode'];
+    for (const body of BODIES) {
+      pReflector[body] = { gate: 99, line: 4 };
+      dReflector[body] = { gate: 99, line: 1 };
+    }
+    const chart = calculateChart(pReflector, dReflector);
+    expect(chart.authority).toBe('Lunar');
+  });
+});
+
+describe('Definition Variants', () => {
+
+  it('None definition (Reflector)', () => {
+    const pReflector = {};
+    const dReflector = {};
+    const BODIES = ['sun', 'earth', 'moon', 'mercury', 'venus', 'mars',
+      'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'northNode', 'southNode'];
+    for (const body of BODIES) {
+      pReflector[body] = { gate: 99, line: 4 };
+      dReflector[body] = { gate: 99, line: 1 };
+    }
+    const chart = calculateChart(pReflector, dReflector);
+    expect(chart.definition).toBe('None');
+  });
+
+  it('Single Definition (one connected group)', () => {
+    // Channel 20-34: Throat↔Sacral. Single group.
+    const { p, d } = makeGates([20], [34]);
+    const chart = calculateChart(p, d);
+    expect(chart.definition).toBe('Single Definition');
+    expect(chart.connectedComponents).toHaveLength(1);
+  });
+
+  it('Split Definition (two separate groups)', () => {
+    // Group 1: Channel 20-34 (Throat↔Sacral)
+    // Group 2: Channel 4-63 (Ajna↔Head)
+    // These are disconnected → Split Definition
+    const { p, d } = makeGates(
+      [20,  99, 4],     // P: sun=20(Throat), earth=99, moon=4(Ajna)
+      [34,  99, 63]     // D: sun=34(Sacral), earth=99, moon=63(Head)
+    );
+    const chart = calculateChart(p, d);
+    expect(chart.definition).toBe('Split Definition');
+    expect(chart.connectedComponents).toHaveLength(2);
+  });
+
+  it('Triple Split Definition (three separate groups)', () => {
+    // Group 1: Channel 20-34 (Throat↔Sacral)
+    // Group 2: Channel 4-63 (Ajna↔Head)
+    // Group 3: Channel 28-38 (Spleen↔Root)
+    const { p, d } = makeGates(
+      [20, 99, 4,  99, 28],   // P: sun=20, moon=4, venus=28
+      [34, 99, 63, 99, 38]    // D: sun=34, moon=63, venus=38
+    );
+    const chart = calculateChart(p, d);
+    expect(chart.definition).toBe('Triple Split Definition');
+    expect(chart.connectedComponents).toHaveLength(3);
+  });
+});

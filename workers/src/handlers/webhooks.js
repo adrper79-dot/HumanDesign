@@ -220,7 +220,7 @@ async function getWebhook(request, env, user, webhookId) {
         id: webhook.id,
         url: webhook.url,
         events: typeof webhook.events === 'string' ? JSON.parse(webhook.events) : webhook.events,
-        secret: webhook.secret,
+        // BL-R-H4: secret omitted — HMAC signing secret shown once at creation only
         active: webhook.active,
         createdAt: webhook.created_at
       }

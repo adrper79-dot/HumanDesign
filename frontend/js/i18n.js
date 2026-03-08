@@ -44,6 +44,7 @@
   let currentLocale = DEFAULT;
   const localeCache = {};   // { en: {...}, es: {...} }
   const listeners = [];     // onChange callbacks
+  let _outsideClickHandler = null; // BL-R-L7: store ref to avoid duplicate listeners
 
   // ─── Locale detection ────────────────────────────────────────────────
 
@@ -231,11 +232,15 @@
       btn.setAttribute('aria-expanded', !open);
     });
 
-    // Close on outside click
-    document.addEventListener('click', () => {
+    // Close on outside click — BL-R-L7: remove previous listener before adding new one
+    if (_outsideClickHandler) {
+      document.removeEventListener('click', _outsideClickHandler);
+    }
+    _outsideClickHandler = function() {
       dropdown.hidden = true;
       btn.setAttribute('aria-expanded', 'false');
-    });
+    };
+    document.addEventListener('click', _outsideClickHandler);
 
     container.appendChild(btn);
     container.appendChild(dropdown);

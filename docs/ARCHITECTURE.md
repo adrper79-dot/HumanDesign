@@ -73,23 +73,28 @@ Entry point: `src/engine/index.js` — exports `calculateFullChart({ year, month
 
 ## Database Schema
 
-Managed via `workers/src/db/migrate.sql` (canonical DDL) and `workers/src/db/migrate.js` (runner). All timestamps are UTC.
+Managed via `workers/src/db/migrate.sql` (base DDL) + numbered migrations in `workers/src/db/migrations/`. Runner: `workers/src/db/migrate.js`. All timestamps UTC.
 
-```sql
-users                   -- email, password_hash, phone, birth_date, birth_time, birth_tz, lat, lng
-charts                  -- user_id, hd_json (JSONB), astro_json (JSONB), numerology_json (JSONB)
-profiles                -- user_id, chart_id, profile_json (JSONB), model_used, grounding_audit (JSONB)
-practitioners           -- user_id (FK), certified, tier
-practitioner_clients    -- practitioner_id, client_user_id
-clusters                -- name, created_by, challenge
-cluster_members         -- cluster_id, user_id, forge_role
-transit_snapshots       -- snapshot_date (UNIQUE), positions_json (JSONB)
-sms_messages            -- user_id, phone, message_type, status, telnyx_message_id
+**49 tables · 1 materialized view · 8 views · 4 functions · 1 active trigger**
+
+See [ARCHITECTURE.md § 5.3](../ARCHITECTURE.md) for the full table-by-table catalog.
+
+```
+Base (migrate.sql)    18 tables — users, charts, profiles, transit_snapshots, subscriptions, etc.
+003_billing            4 tables — invoices, usage_tracking, promo_codes, referrals
+004_achievements       4 tables — user_achievements, achievement_events, user_streaks, user_achievement_stats
+008_webhooks           2 tables — webhooks, webhook_deliveries
+009_push               3 tables — push_subscriptions, push_notifications, notification_preferences
+010_alerts             3 tables — transit_alerts, alert_deliveries, alert_templates
+011_api_keys           2 tables — api_keys, api_usage
+012_notion             4 tables — oauth_states, notion_connections, notion_syncs, notion_pages
+013_checkins           3 tables + 1 mat. view — daily_checkins, checkin_reminders, alignment_trends, checkin_streaks
+014_analytics          6 tables — analytics_events, analytics_daily, funnel_events, experiments, experiment_*
+015_optimization       indexes only — adds tier column to users + performance indexes
+016_streak_fix         drops trigger — adds get_user_streak() function, cron-based refresh
 ```
 
-Foreign keys with `ON DELETE CASCADE` on user-owned rows. Chart and profile data stored as `JSONB`.
-
-> **Known issue (BL-C3):** `migrate.js` and `migrate.sql` have drifted — see [BACKLOG.md](../BACKLOG.md#bl-c3--schema-drift-between-migratejs-and-migratesql).
+Foreign keys use `ON DELETE CASCADE` on user-owned rows. Chart/profile data stored as `JSONB`.
 
 ---
 

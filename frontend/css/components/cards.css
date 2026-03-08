@@ -49,7 +49,8 @@
 }
 
 .card-body {
-  /* Default card content area */
+  /* Default card content area — inherits card padding */
+  min-height: 0;
 }
 
 .card-footer {

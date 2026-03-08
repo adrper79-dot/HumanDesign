@@ -187,80 +187,128 @@ src/knowledgebase/
     (nearly empty at launch — add only VERIFIED cross-system correlations)
 ```
 
-### 5.3 Neon Database Schema (Core Tables)
+### 5.3 Neon Database Schema
 
-```sql
--- Users
-CREATE TABLE users (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email         TEXT UNIQUE,
-  phone         TEXT,
-  birth_date    DATE NOT NULL,
-  birth_time    TIME,
-  birth_tz      TEXT NOT NULL,         -- IANA timezone
-  birth_lat     DECIMAL(9,6) NOT NULL,
-  birth_lng     DECIMAL(9,6) NOT NULL,
-  created_at    TIMESTAMPTZ DEFAULT now()
-);
+> **49 tables · 1 materialized view · 8 views · 4 functions · 1 active trigger**
+>
+> Base schema in `workers/src/db/migrate.sql`. Numbered migrations in `workers/src/db/migrations/`.
+> Applied via `npm run migrate` which tracks each migration in `schema_migrations`.
 
--- Calculated Charts (cached)
-CREATE TABLE charts (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID REFERENCES users(id),
-  hd_json       JSONB NOT NULL,       -- Stream 1
-  astro_json    JSONB NOT NULL,       -- Stream 2
-  calculated_at TIMESTAMPTZ DEFAULT now()
-);
+#### Base Schema (`migrate.sql`) — 18 tables
 
--- Transit Snapshots (daily cron)
-CREATE TABLE transit_snapshots (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  snapshot_date DATE NOT NULL UNIQUE,
-  positions_json JSONB NOT NULL,
-  created_at    TIMESTAMPTZ DEFAULT now()
-);
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `schema_migrations` | Migration tracking | `migration_name TEXT UNIQUE`, `checksum TEXT` |
+| `users` | User accounts | `id UUID PK`, `email`, `phone`, `birth_date/time/tz/lat/lng`, `stripe_customer_id`, `referral_code`, `tier` |
+| `charts` | Cached HD+Astro calculations | `user_id FK→users`, `hd_json JSONB`, `astro_json JSONB` |
+| `profiles` | Generated Prime Self readings | `user_id`, `chart_id`, `profile_json JSONB`, `model_used`, `grounding_audit JSONB` |
+| `transit_snapshots` | Daily cron transit snapshots | `snapshot_date DATE UNIQUE`, `positions_json JSONB` |
+| `practitioners` | Practitioner accounts | `user_id UNIQUE FK→users`, `certified`, `tier` |
+| `practitioner_clients` | Practitioner↔client roster | CPK(`practitioner_id`, `client_user_id`) |
+| `clusters` | Forge cluster sessions | `name`, `created_by FK→users`, `challenge` |
+| `cluster_members` | Cluster membership | CPK(`cluster_id`, `user_id`), `forge_role` |
+| `sms_messages` | SMS conversation log | `user_id`, `direction CHECK(inbound/outbound)`, `body` |
+| `validation_data` | User self-assessment data | `user_id UNIQUE`, `decision_pattern`, `energy_pattern`, `current_focus` |
+| `psychometric_data` | Big Five / VIA scores | `user_id UNIQUE`, `big_five_scores JSONB`, `via_strengths JSONB` |
+| `diary_entries` | Life event diary | `user_id`, `event_date`, `event_type`, `transit_snapshot JSONB` |
+| `subscriptions` | Stripe subscription state | `user_id UNIQUE`, `stripe_subscription_id UNIQUE`, `tier`, `status` |
+| `payment_events` | Stripe webhook events | `subscription_id FK`, `stripe_event_id UNIQUE`, `amount`, `raw_event JSONB` |
+| `usage_records` | Per-request usage log | `user_id`, `action`, `endpoint`, `quota_cost` |
+| `share_events` | Social sharing events | `user_id`, `share_type`, `platform`, `share_data JSONB` |
+| `refresh_tokens` | JWT refresh token families | `user_id`, `token_hash UNIQUE`, `family_id UUID`, `expires_at` |
 
--- Prime Self Profiles (generated readings)
-CREATE TABLE profiles (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID REFERENCES users(id),
-  chart_id      UUID REFERENCES charts(id),
-  profile_json  JSONB NOT NULL,
-  model_used    TEXT NOT NULL,
-  grounding_audit JSONB NOT NULL,
-  created_at    TIMESTAMPTZ DEFAULT now()
-);
+#### Migration 003 — Billing (`003_billing.sql`) — 4 tables + 3 views
 
--- Practitioner Rosters
-CREATE TABLE practitioners (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       UUID REFERENCES users(id),
-  certified     BOOLEAN DEFAULT false,
-  tier          TEXT DEFAULT 'free'
-);
+| Table | Purpose |
+|-------|---------|
+| `invoices` | Stripe invoice records (`stripe_invoice_id UNIQUE`, `amount_paid`, `status`) |
+| `usage_tracking` | Feature usage counters per billing period |
+| `promo_codes` | Discount codes with Stripe sync |
+| `referrals` | Referral tracking (`referrer_user_id`, `referred_user_id`, `converted`) |
 
-CREATE TABLE practitioner_clients (
-  practitioner_id UUID REFERENCES practitioners(id),
-  client_user_id  UUID REFERENCES users(id),
-  PRIMARY KEY (practitioner_id, client_user_id)
-);
+Views: `subscription_analytics`, `monthly_revenue`, `user_subscription_status`
 
--- Clusters
-CREATE TABLE clusters (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name          TEXT NOT NULL,
-  created_by    UUID REFERENCES users(id),
-  challenge     TEXT NOT NULL,
-  created_at    TIMESTAMPTZ DEFAULT now()
-);
+#### Migration 004 — Achievements (`004_achievements.sql`) — 4 tables + 3 views
 
-CREATE TABLE cluster_members (
-  cluster_id    UUID REFERENCES clusters(id),
-  user_id       UUID REFERENCES users(id),
-  forge_role    TEXT,
-  PRIMARY KEY (cluster_id, user_id)
-);
-```
+| Table | Purpose |
+|-------|---------|
+| `user_achievements` | Unlocked achievements with points |
+| `achievement_events` | Raw event stream for achievement evaluation |
+| `user_streaks` | Daily login / transit checked streaks |
+| `user_achievement_stats` | Aggregated points & percentages (trigger-maintained) |
+
+Views: `achievement_popularity`, `achievement_leaderboard`, `user_event_counts`
+
+#### Migration 008 — Webhooks (`008_webhooks.sql`) — 2 tables
+
+| Table | Purpose |
+|-------|---------|
+| `webhooks` | User-configured webhook URLs + event subscriptions |
+| `webhook_deliveries` | Delivery log with retry tracking |
+
+#### Migration 009 — Push Notifications (`009_push_subscriptions.sql`) — 3 tables
+
+| Table | Purpose |
+|-------|---------|
+| `push_subscriptions` | Web Push subscriptions (`endpoint`, `p256dh`, `auth`) |
+| `push_notifications` | Delivery log per notification type |
+| `notification_preferences` | Per-user notification toggles + quiet hours |
+
+#### Migration 010 — Transit Alerts (`010_transit_alerts.sql`) — 3 tables
+
+| Table | Purpose |
+|-------|---------|
+| `transit_alerts` | User-defined alert rules (gate activation, aspects, cycles) |
+| `alert_deliveries` | Per-day delivery tracking |
+| `alert_templates` | Curated alert presets by category |
+
+#### Migration 011 — API Keys (`011_api_keys.sql`) — 2 tables
+
+| Table | Purpose |
+|-------|---------|
+| `api_keys` | Developer API keys with scopes & rate limits |
+| `api_usage` | Per-request API usage telemetry |
+
+#### Migration 012 — Notion Integration (`012_notion.sql`) — 4 tables
+
+| Table | Purpose |
+|-------|---------|
+| `oauth_states` | OAuth CSRF state tokens |
+| `notion_connections` | User Notion workspace auth tokens |
+| `notion_syncs` | Sync job tracking per database |
+| `notion_pages` | Synced page IDs & URLs |
+
+#### Migration 013 — Daily Check-ins (`013_daily_checkins.sql`) — 3 tables + 1 mat. view
+
+| Table | Purpose |
+|-------|---------|
+| `daily_checkins` | Daily alignment/energy/strategy tracking |
+| `checkin_reminders` | Per-user reminder preferences |
+| `alignment_trends` | Aggregated alignment data by period |
+
+Materialized view: `checkin_streaks` — consecutive check-in streak calculation.
+Refreshed by cron (trigger dropped in migration 016).
+
+#### Migration 014 — Analytics (`014_analytics.sql`) — 5 tables + 2 views
+
+| Table | Purpose |
+|-------|---------|
+| `analytics_events` | Raw event stream (page views, actions) |
+| `analytics_daily` | Daily rollup aggregates |
+| `funnel_events` | Conversion funnel step tracking |
+| `experiments` | A/B experiment definitions |
+| `experiment_assignments` | User ↔ variant assignments |
+| `experiment_conversions` | Conversion events per experiment |
+
+Views: `v_active_users` (DAU/WAU/MAU), `v_event_trends` (30-day trends)
+
+#### Migration 015 — Query Optimization (`015_query_optimization.sql`)
+
+No new tables. Adds `tier` column to `users` + performance indexes across all major tables.
+
+#### Migration 016 — Streak Trigger Fix (`016_fix_checkin_streak_trigger.sql`)
+
+No new tables. Drops per-statement trigger on `daily_checkins`. Adds `get_user_streak()` function for real-time streak lookup. `refresh_checkin_streaks()` converted to standalone cron-callable function.
 
 ---
 

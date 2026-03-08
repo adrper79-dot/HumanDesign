@@ -22,8 +22,14 @@ const { Client } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const CONNECTION_STRING = process.env.NEON_CONNECTION_STRING || 
-  'postgresql://neondb_owner:***REMOVED***@ep-rapid-bird-aicgk9v2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require';
+const CONNECTION_STRING = process.env.NEON_CONNECTION_STRING || process.argv[2];
+
+if (!CONNECTION_STRING) {
+  console.error('❌ Missing database connection string.');
+  console.error('   Set NEON_CONNECTION_STRING environment variable or pass as argument:');
+  console.error('   NEON_CONNECTION_STRING="postgresql://..." node run-migration.js');
+  process.exit(1);
+}
 
 function sha256(content) {
   return createHash('sha256').update(content).digest('hex');

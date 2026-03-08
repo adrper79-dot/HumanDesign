@@ -416,7 +416,7 @@ export default {
   async fetch(request, env, ctx) {
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-      return handleOptions(request);
+      return handleOptions(request, env.ENVIRONMENT);
     }
 
     const url = new URL(request.url);
@@ -427,13 +427,13 @@ export default {
       // Authentication check (protected routes)
       if (requiresAuth(path)) {
         const authResult = await authenticate(request, env);
-        if (authResult) return addCorsHeaders(authResult, request);
+        if (authResult) return addCorsHeaders(authResult, request, env.ENVIRONMENT);
       }
 
       // Rate limiting (all API routes)
       if (path.startsWith('/api/')) {
         const rlResult = await rateLimit(request, env);
-        if (rlResult) return addCorsHeaders(rlResult, request);
+        if (rlResult) return addCorsHeaders(rlResult, request, env.ENVIRONMENT);
       }
 
       let response;
@@ -478,7 +478,7 @@ export default {
         }));
       }
 
-      return addCorsHeaders(response, request);
+      return addCorsHeaders(response, request, env.ENVIRONMENT);
 
     } catch (err) {
       console.error('Worker error:', err);
@@ -497,7 +497,7 @@ export default {
         }),
       ]));
       const errResponse = errorResponse(err, err.status || 500, env);
-      return addCorsHeaders(errResponse, request);
+      return addCorsHeaders(errResponse, request, env.ENVIRONMENT);
     }
   },
 
@@ -512,9 +512,9 @@ export default {
   }
 };
 
-function addCorsHeaders(response, request) {
+function addCorsHeaders(response, request, environment) {
   const headers = new Headers(response.headers);
-  const dynamicCorsHeaders = getCorsHeaders(request);
+  const dynamicCorsHeaders = getCorsHeaders(request, environment);
   for (const [key, value] of Object.entries(dynamicCorsHeaders)) {
     headers.set(key, value);
   }

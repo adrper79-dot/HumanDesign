@@ -166,6 +166,21 @@ function calculatePlacidusHouses(lst, eps, lat) {
   const ic = normalizeDegrees(mc + 180);
   const dsc = normalizeDegrees(asc + 180);
 
+  // BL-R-M7: Placidus is undefined for polar latitudes (±>66.5°) because the
+  // Placidus semi-arc calculation requires tan(lat)*tan(decl) < 1. If that
+  // condition is violated, fall back to Equal House and emit a warning flag.
+  const POLAR_LAT = 66.5; // degrees — inside the polar circle
+  if (Math.abs(lat) >= POLAR_LAT) {
+    const houses = { 1: asc, 4: ic, 7: dsc, 10: mc };
+    for (let h = 2; h <= 12; h++) {
+      if (h === 4 || h === 7 || h === 10) continue;
+      houses[h] = normalizeDegrees(asc + (h - 1) * 30);
+    }
+    houses._system  = 'equal';
+    houses._warning = 'polar latitude — Placidus undefined; Equal House used';
+    return houses;
+  }
+
   const houses = { 1: asc, 4: ic, 7: dsc, 10: mc };
 
   /**
@@ -398,6 +413,8 @@ export function calculateAstrology(positions, lat, lng, jdn) {
     houses: houseCusps,
     aspects,
     ascendant: { ...ascendant, longitude: houses[1] },
-    midheaven: { ...midheaven, longitude: houses[10] }
+    midheaven: { ...midheaven, longitude: houses[10] },
+    houseSystem: houses._system  || 'placidus',
+    polarWarning: houses._warning || undefined
   };
 }

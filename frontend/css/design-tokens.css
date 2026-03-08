@@ -287,9 +287,10 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    /* Uncomment when implementing light mode */
+    /* Placeholder: uncomment when implementing light mode */
     /* --bg-primary: var(--color-neutral-50); */
     /* --text-primary: var(--color-neutral-950); */
+    color-scheme: light;
   }
 }
 
