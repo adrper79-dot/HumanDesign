@@ -17,7 +17,7 @@ git push origin main
 
 Write-Host '==> Deploying Cloudflare Workers'
 Set-Location (Join-Path $root 'workers')
-npx wrangler deploy --force
+npx wrangler deploy
 
 Write-Host '==> Verifying production'
 node verify-production.js
