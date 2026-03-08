@@ -12,6 +12,7 @@
     "deploy": "npm run deploy:workers && npm run verify:prod"
   },
   "devDependencies": {
+    "@cloudflare/mcp-server-cloudflare": "^0.2.0",
     "vitest": "^3.2.1"
   },
   "engines": {
