@@ -37,11 +37,7 @@ async function getTransitsForEventDate(eventDate, userBirthData, env, userId) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
     // Get user's natal chart and astro data
-    const { rows: chartRows } = await query(`
-      SELECT hd_json, astro_json FROM charts
-      WHERE user_id = $1
-      ORDER BY calculated_at DESC LIMIT 1
-    `, [userId]);
+    const { rows: chartRows } = await query(QUERIES.getLatestChartWithAstro, [userId]);
     
     if (!chartRows[0]) {
       return { date: eventDate, transitData: null, calculated: new Date().toISOString() };

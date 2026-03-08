@@ -13,7 +13,7 @@
 
 import { nanoid } from 'nanoid';
 import { trackEvent } from './achievements.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { sendNotificationToUser } from './push.js';
 import { createStripeClient } from '../lib/stripe.js';
@@ -59,7 +59,7 @@ export async function handleGenerateCode(request, env, ctx) {
       
       // Check if code already exists
       const { rows: existingRows } = await query(
-        'SELECT id FROM users WHERE referral_code = $1',
+        QUERIES.getUserByReferralCode,
         [code]
       );
       
@@ -79,7 +79,7 @@ export async function handleGenerateCode(request, env, ctx) {
     
     // Update user with referral code
     await query(
-      'UPDATE users SET referral_code = $1, updated_at = NOW() WHERE id = $2',
+      QUERIES.setUserReferralCode,
       [code, user.id]
     );
     
@@ -123,56 +123,23 @@ export async function handleGetStats(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get total referrals
-    const { rows: totalRows } = await query(`
-      SELECT COUNT(*)::int as count
-      FROM referrals
-      WHERE referrer_user_id = $1
-    `, [user.id]);
+    const { rows: totalRows } = await query(QUERIES.countReferrals, [user.id]);
     const totalReferrals = totalRows[0];
     
     // Get converted referrals (paid subscriptions)
-    const { rows: convertedRows } = await query(`
-      SELECT COUNT(*)::int as count
-      FROM referrals
-      WHERE referrer_user_id = $1 AND converted = true
-    `, [user.id]);
+    const { rows: convertedRows } = await query(QUERIES.countConvertedReferrals, [user.id]);
     const convertedReferrals = convertedRows[0];
     
     // Get total rewards earned
-    const { rows: rewardsRows } = await query(`
-      SELECT 
-        COUNT(*)::int as rewards_count,
-        COALESCE(SUM(reward_value), 0)::int as total_value
-      FROM referrals
-      WHERE referrer_user_id = $1 AND reward_granted = true
-    `, [user.id]);
+    const { rows: rewardsRows } = await query(QUERIES.getReferralRewardStats, [user.id]);
     const rewardsEarned = rewardsRows[0];
     
     // Get pending rewards (converted but not yet granted)
-    const { rows: pendingRows } = await query(`
-      SELECT COUNT(*)::int as count
-      FROM referrals
-      WHERE referrer_user_id = $1 AND converted = true AND reward_granted = false
-    `, [user.id]);
+    const { rows: pendingRows } = await query(QUERIES.countPendingReferralRewards, [user.id]);
     const pendingRewards = pendingRows[0];
     
     // Get recent referrals with details
-    const { rows: recentReferrals } = await query(`
-      SELECT 
-        r.id,
-        u.email as referred_email,
-        r.converted,
-        r.conversion_date,
-        r.reward_granted,
-        r.reward_type,
-        r.reward_value,
-        r.created_at
-      FROM referrals r
-      JOIN users u ON r.referred_user_id = u.id
-      WHERE r.referrer_user_id = $1
-      ORDER BY r.created_at DESC
-      LIMIT 10
-    `, [user.id]);
+    const { rows: recentReferrals } = await query(QUERIES.getRecentReferrals, [user.id]);
     
     const conversionRate = totalReferrals.count > 0 
       ? (convertedReferrals.count / totalReferrals.count * 100).toFixed(1)
@@ -240,31 +207,11 @@ export async function handleGetHistory(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get total count
-    const { rows: totalRows } = await query(`
-      SELECT COUNT(*)::int as count
-      FROM referrals
-      WHERE referrer_user_id = $1
-    `, [user.id]);
+    const { rows: totalRows } = await query(QUERIES.countReferrals, [user.id]);
     const totalCount = totalRows[0];
     
     // Get paginated history
-    const { rows: referrals } = await query(`
-      SELECT 
-        r.id,
-        u.email as referred_email,
-        r.referral_code,
-        r.converted,
-        r.conversion_date,
-        r.reward_granted,
-        r.reward_type,
-        r.reward_value,
-        r.created_at
-      FROM referrals r
-      JOIN users u ON r.referred_user_id = u.id
-      WHERE r.referrer_user_id = $1
-      ORDER BY r.created_at DESC
-      LIMIT $2 OFFSET $3
-    `, [user.id, limit, offset]);
+    const { rows: referrals } = await query(QUERIES.getReferralHistory, [user.id, limit, offset]);
     
     return new Response(JSON.stringify({
       success: true,
@@ -330,11 +277,7 @@ export async function handleValidateCode(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Find user with referral code
-    const { rows: referrerRows } = await query(`
-      SELECT id, email, referral_code
-      FROM users
-      WHERE referral_code = $1
-    `, [code.toUpperCase()]);
+    const { rows: referrerRows } = await query(QUERIES.validateReferralCode, [code.toUpperCase()]);
     const referrer = referrerRows[0] || null;
     
     if (!referrer) {
@@ -409,11 +352,7 @@ export async function handleApplyCode(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Find referrer
-    const { rows: referrerRows } = await query(`
-      SELECT id, email, referral_code
-      FROM users
-      WHERE referral_code = $1
-    `, [code.toUpperCase()]);
+    const { rows: referrerRows } = await query(QUERIES.validateReferralCode, [code.toUpperCase()]);
     const referrer = referrerRows[0] || null;
     
     if (!referrer) {
@@ -426,9 +365,7 @@ export async function handleApplyCode(request, env, ctx) {
     }
     
     // Check if user already has a referral
-    const { rows: existingRows } = await query(`
-      SELECT id FROM referrals WHERE referred_user_id = $1
-    `, [user.id]);
+    const { rows: existingRows } = await query(QUERIES.checkExistingReferral, [user.id]);
     
     if (existingRows.length > 0) {
       return new Response(JSON.stringify({
@@ -452,12 +389,7 @@ export async function handleApplyCode(request, env, ctx) {
     }
     
     // Create referral record
-    await query(`
-      INSERT INTO referrals (
-        referrer_user_id, referred_user_id, referral_code,
-        converted, reward_granted
-      ) VALUES ($1, $2, $3, false, false)
-    `, [referrer.id, user.id, code.toUpperCase()]);
+    await query(QUERIES.insertReferral, [referrer.id, user.id, code.toUpperCase()]);
     
     // Track achievement event for the referrer (they got a new referral)
     await trackEvent(env, referrer.id, 'referral_signup', { referredUserId: user.id }, 'free');
@@ -505,20 +437,7 @@ export async function handleGetRewards(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get pending rewards (converted but not granted)
-    const { rows: pendingRewards } = await query(`
-      SELECT 
-        r.id,
-        u.email as referred_email,
-        r.conversion_date,
-        'free_month' as reward_type,
-        1500 as reward_value
-      FROM referrals r
-      JOIN users u ON r.referred_user_id = u.id
-      WHERE r.referrer_user_id = $1 
-        AND r.converted = true 
-        AND r.reward_granted = false
-      ORDER BY r.conversion_date DESC
-    `, [user.id]);
+    const { rows: pendingRewards } = await query(QUERIES.getPendingReferralRewards, [user.id]);
     
     const totalPendingValue = pendingRewards.reduce((sum, r) => sum + r.reward_value, 0);
     
@@ -586,10 +505,7 @@ export async function handleClaimReward(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get referral
-    const { rows: refRows } = await query(`
-      SELECT * FROM referrals 
-      WHERE id = $1 AND referrer_user_id = $2
-    `, [referralId, user.id]);
+    const { rows: refRows } = await query(QUERIES.getReferralById, [referralId, user.id]);
     const referral = refRows[0] || null;
     
     if (!referral) {
@@ -621,21 +537,12 @@ export async function handleClaimReward(request, env, ctx) {
     }
     
     // Mark reward as granted
-    await query(`
-      UPDATE referrals 
-      SET reward_granted = true,
-          reward_type = 'free_month',
-          reward_value = 1500,
-          updated_at = NOW()
-      WHERE id = $1
-    `, [referralId]);
+    await query(QUERIES.claimReferralReward, [referralId]);
     
     // Apply $15 credit to referrer's Stripe account (covers one month of Seeker)
     if (env.STRIPE_SECRET_KEY) {
       try {
-        const { rows: userRows } = await query(`
-          SELECT stripe_customer_id FROM users WHERE id = $1
-        `, [user.id]);
+        const { rows: userRows } = await query(QUERIES.getUserStripeCustomerId, [user.id]);
         const stripeCustomerId = userRows[0]?.stripe_customer_id;
         
         if (stripeCustomerId) {
@@ -689,11 +596,7 @@ export async function markReferralAsConverted(env, userId) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Find referral record for this user
-    const { rows: refRows } = await query(`
-      SELECT id, referrer_user_id
-      FROM referrals
-      WHERE referred_user_id = $1 AND converted = false
-    `, [userId]);
+    const { rows: refRows } = await query(QUERIES.getUnconvertedReferral, [userId]);
     const referral = refRows[0] || null;
     
     if (!referral) {
@@ -702,13 +605,7 @@ export async function markReferralAsConverted(env, userId) {
     }
     
     // Mark as converted
-    await query(`
-      UPDATE referrals
-      SET converted = true,
-          conversion_date = NOW(),
-          updated_at = NOW()
-      WHERE id = $1
-    `, [referral.id]);
+    await query(QUERIES.markReferralConverted, [referral.id]);
     
     console.log('Referral marked as converted:', {
       referralId: referral.id,

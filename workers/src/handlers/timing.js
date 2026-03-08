@@ -126,13 +126,7 @@ export async function handleTiming(request, env) {
   // Get user's saved chart
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const chartResult = await query(
-    `SELECT c.id, c.hd_json, c.astro_json, c.calculated_at,
-            u.birth_date, u.birth_time, u.birth_tz, u.birth_lat, u.birth_lng
-     FROM charts c
-     JOIN users u ON u.id = c.user_id
-     WHERE c.user_id = $1
-     ORDER BY c.calculated_at DESC
-     LIMIT 1`,
+    QUERIES.getChartWithBirthDataAndAstro,
     [user.id]
   );
 

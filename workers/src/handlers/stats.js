@@ -5,7 +5,7 @@
  *   GET /api/stats/activity - Public activity statistics for social proof
  */
 
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 /**
  * GET /api/stats/activity - Get public activity statistics
@@ -23,27 +23,21 @@ export async function handleGetActivityStats(request, env, ctx) {
   try {
     // Get weekly active users (users with charts calculated in last 7 days)
     const weeklyUsersResult = await query(
-      `SELECT COUNT(DISTINCT user_id) as count
-       FROM analytics_events
-       WHERE event_name = 'chart_calculate'
-       AND created_at >= NOW() - INTERVAL '7 days'`,
+      QUERIES.getWeeklyActiveUsers,
       []
     );
     const weeklyUsers = parseInt(weeklyUsersResult.rows[0]?.count || 0);
 
     // Get total profiles generated (all-time synthesis count)
     const totalProfilesResult = await query(
-      `SELECT COUNT(*) as count
-       FROM profiles
-       WHERE status = 'completed'`,
+      QUERIES.getTotalProfiles,
       []
     );
     const totalProfiles = parseInt(totalProfilesResult.rows[0]?.count || 0);
 
     // Get total charts calculated (all-time)
     const totalChartsResult = await query(
-      `SELECT COUNT(*) as count
-       FROM charts`,
+      QUERIES.getTotalCharts,
       []
     );
     const totalCharts = parseInt(totalChartsResult.rows[0]?.count || 0);
@@ -86,11 +80,7 @@ export async function handleGetLeaderboard(request, env, ctx) {
 
   try {
     const result = await query(
-      `SELECT u.email, uas.total_points, uas.total_achievements
-       FROM user_achievement_stats uas
-       JOIN users u ON u.id = uas.user_id
-       ORDER BY uas.total_points DESC
-       LIMIT 10`,
+      QUERIES.getStatsLeaderboard,
       []
     );
 

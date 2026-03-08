@@ -14,7 +14,7 @@
  */
 
 import { getUserFromRequest } from '../middleware/auth.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 import { dispatchWebhookEvent } from '../lib/webhookDispatcher.js';
 import { sendNotificationToUser } from './push.js';
 
@@ -68,23 +68,7 @@ export async function handleAlerts(request, env, path) {
 async function listAlerts(request, env, user) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT 
-        id, 
-        alert_type, 
-        config, 
-        name, 
-        description, 
-        active, 
-        notify_push, 
-        notify_webhook,
-        created_at,
-        (SELECT COUNT(*)::int FROM alert_deliveries WHERE alert_id = transit_alerts.id) as trigger_count,
-        (SELECT MAX(triggered_at) FROM alert_deliveries WHERE alert_id = transit_alerts.id) as last_triggered
-      FROM transit_alerts
-      WHERE user_id = $1
-      ORDER BY created_at DESC
-    `, [user.id]);
+    const { rows } = await query(QUERIES.listUserAlerts, [user.id]);
 
     return Response.json({
       ok: true,
@@ -150,9 +134,7 @@ async function createAlert(request, env, user) {
 
     // Check alert limit (free tier: 3, seeker: 10, practitioner: unlimited)
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: countRows } = await query(`
-      SELECT COUNT(*)::int as count FROM transit_alerts WHERE user_id = $1
-    `, [user.id]);
+    const { rows: countRows } = await query(QUERIES.countUserAlerts, [user.id]);
     const existingCount = countRows[0];
 
     const tierLimits = { free: 3, seeker: 10, practitioner: Infinity };
@@ -168,15 +150,7 @@ async function createAlert(request, env, user) {
     }
 
     // Insert alert
-    const { rows: insertRows } = await query(`
-      INSERT INTO transit_alerts (
-        user_id, alert_type, config, name, description, 
-        notify_push, notify_webhook, active
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, true)
-      RETURNING id, alert_type, config, name, description, 
-                notify_push, notify_webhook, active, created_at
-    `, [
+    const { rows: insertRows } = await query(QUERIES.insertAlert, [
       user.id,
       type,
       JSON.stringify(config),
@@ -218,9 +192,7 @@ async function createAlert(request, env, user) {
 async function getAlert(request, env, user, alertId) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT * FROM transit_alerts WHERE id = $1 AND user_id = $2
-    `, [alertId, user.id]);
+    const { rows } = await query(QUERIES.getAlertById, [alertId, user.id]);
     const alert = rows[0] || null;
 
     if (!alert) {
@@ -261,6 +233,7 @@ async function updateAlert(request, env, user, alertId) {
     const updates = await request.json();
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
+    // DYNAMIC: builds SET clause at runtime — cannot centralise into QUERIES
     // Build dynamic UPDATE query
     const fields = [];
     const values = [];
@@ -340,10 +313,7 @@ async function updateAlert(request, env, user, alertId) {
 async function deleteAlert(request, env, user, alertId) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      DELETE FROM transit_alerts WHERE id = $1 AND user_id = $2
-      RETURNING id
-    `, [alertId, user.id]);
+    const { rows } = await query(QUERIES.deleteAlert, [alertId, user.id]);
 
     if (rows.length === 0) {
       return Response.json({
@@ -374,24 +344,14 @@ async function listTemplates(request, env, user) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     // Get user's natal chart to personalize templates
-    const { rows: chartRows } = await query(`
-      SELECT hd_json FROM charts 
-      WHERE user_id = $1
-      ORDER BY calculated_at DESC 
-      LIMIT 1
-    `, [user.id]);
+    const { rows: chartRows } = await query(QUERIES.getLatestChart, [user.id]);
     const chart = chartRows[0] || null;
 
     const chartData = chart ? (typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json) : null;
     const natalGates = chartData ? chartData.gates : {};
 
     // Get templates appropriate for user's tier
-    const { rows: templateRows } = await query(`
-      SELECT * FROM alert_templates 
-      WHERE active = true 
-        AND (tier_required = 'free' OR tier_required = $1)
-      ORDER BY popularity DESC, category
-    `, [user.tier || 'free']);
+    const { rows: templateRows } = await query(QUERIES.getAlertTemplates, [user.tier || 'free']);
 
     return Response.json({
       ok: true,
@@ -422,9 +382,7 @@ async function createAlertFromTemplate(request, env, user, templateId) {
   try {
     // Get template
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: templateRows } = await query(`
-      SELECT * FROM alert_templates WHERE id = $1 AND active = true
-    `, [templateId]);
+    const { rows: templateRows } = await query(QUERIES.getAlertTemplateById, [templateId]);
     const template = templateRows[0] || null;
 
     if (!template) {
@@ -449,12 +407,7 @@ async function createAlertFromTemplate(request, env, user, templateId) {
     }
 
     // Get user's natal chart
-    const { rows: chartRows } = await query(`
-      SELECT hd_json FROM charts 
-      WHERE user_id = $1
-      ORDER BY calculated_at DESC 
-      LIMIT 1
-    `, [user.id]);
+    const { rows: chartRows } = await query(QUERIES.getLatestChart, [user.id]);
     const chart = chartRows[0] || null;
 
     if (!chart) {
@@ -472,26 +425,19 @@ async function createAlertFromTemplate(request, env, user, templateId) {
     const config = personalizeTemplate(templateConfig, natalGates);
 
     // Create alert
-    const { rows: insertRows } = await query(`
-      INSERT INTO transit_alerts (
-        user_id, alert_type, config, name, description, 
-        notify_push, notify_webhook, active
-      )
-      VALUES ($1, $2, $3, $4, $5, true, false, true)
-      RETURNING id, alert_type, config, name, created_at
-    `, [
+    const { rows: insertRows } = await query(QUERIES.insertAlert, [
       user.id,
       template.alert_type,
       JSON.stringify(config),
       template.name,
-      template.description
+      template.description,
+      true,
+      false
     ]);
     const result = insertRows[0];
 
     // Increment template popularity
-    await query(`
-      UPDATE alert_templates SET popularity = popularity + 1 WHERE id = $1
-    `, [templateId]);
+    await query(QUERIES.incrementTemplatePopularity, [templateId]);
 
     console.log(`[ALERTS] Created alert from template ${templateId} for user ${user.id}`);
 
@@ -525,27 +471,9 @@ async function getAlertHistory(request, env, user) {
 
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    const { rows: deliveryRows } = await query(`
-      SELECT 
-        ad.id,
-        ad.triggered_at,
-        ad.trigger_date,
-        ad.alert_type,
-        ad.config,
-        ad.transit_data,
-        ad.push_sent,
-        ad.webhook_sent,
-        ta.name as alert_name
-      FROM alert_deliveries ad
-      LEFT JOIN transit_alerts ta ON ad.alert_id = ta.id
-      WHERE ad.user_id = $1
-      ORDER BY ad.triggered_at DESC
-      LIMIT $2 OFFSET $3
-    `, [user.id, limit, offset]);
+    const { rows: deliveryRows } = await query(QUERIES.getAlertDeliveryHistory, [user.id, limit, offset]);
 
-    const { rows: totalRows } = await query(`
-      SELECT COUNT(*)::int as count FROM alert_deliveries WHERE user_id = $1
-    `, [user.id]);
+    const { rows: totalRows } = await query(QUERIES.countAlertDeliveries, [user.id]);
     const total = totalRows[0];
 
     return Response.json({
@@ -651,9 +579,7 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     // Get user's active alerts
-    const { rows: alertRows } = await query(`
-      SELECT * FROM transit_alerts WHERE user_id = $1 AND active = true
-    `, [user.id]);
+    const { rows: alertRows } = await query(QUERIES.getUserActiveAlerts, [user.id]);
 
     for (const alert of alertRows) {
       const config = typeof alert.config === 'string' ? JSON.parse(alert.config) : alert.config;
@@ -683,11 +609,7 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
 
           // Get natal planet longitude from user's chart
           if (!user._natalPositions) {
-            const { rows: chartRows } = await query(`
-              SELECT hd_json FROM charts
-              WHERE user_id = $1
-              ORDER BY calculated_at DESC LIMIT 1
-            `, [user.id]);
+            const { rows: chartRows } = await query(QUERIES.getLatestChart, [user.id]);
             const chartData = chartRows[0]?.hd_json;
             const parsed = chartData ? (typeof chartData === 'string' ? JSON.parse(chartData) : chartData) : null;
             user._natalPositions = parsed?.planets || {};  // Cache on user object for this eval cycle
@@ -726,11 +648,7 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
 
           // Get natal position
           if (!user._natalPositions) {
-            const { rows: chartRows } = await query(`
-              SELECT hd_json FROM charts
-              WHERE user_id = $1
-              ORDER BY calculated_at DESC LIMIT 1
-            `, [user.id]);
+            const { rows: chartRows } = await query(QUERIES.getLatestChart, [user.id]);
             const chartData = chartRows[0]?.hd_json;
             const parsed = chartData ? (typeof chartData === 'string' ? JSON.parse(chartData) : chartData) : null;
             user._natalPositions = parsed?.planets || {};
@@ -765,21 +683,12 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
 
       if (triggered) {
         // Check if already delivered today
-        const { rows: existingRows } = await query(`
-          SELECT id FROM alert_deliveries 
-          WHERE alert_id = $1 AND trigger_date = $2
-        `, [alert.id, today]);
+        const { rows: existingRows } = await query(QUERIES.checkAlertDeliveredToday, [alert.id, today]);
         const existing = existingRows[0] || null;
 
         if (!existing) {
           // Record delivery
-          const { rows: deliveryRows } = await query(`
-            INSERT INTO alert_deliveries (
-              alert_id, user_id, trigger_date, alert_type, config, transit_data
-            )
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id
-          `, [
+          const { rows: deliveryRows } = await query(QUERIES.insertAlertDelivery, [
             alert.id,
             user.id,
             today,
@@ -823,10 +732,7 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
             const success = await sendNotificationToUser(env, user.id, 'transit_alert', notification);
             
             if (success > 0) {
-              await query(`
-                UPDATE alert_deliveries SET push_sent = true, push_sent_at = NOW()
-                WHERE id = $1
-              `, [delivery.id]);
+              await query(QUERIES.markAlertDeliveryPush, [delivery.id]);
             }
           }
 
@@ -844,10 +750,7 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
               }
             });
 
-            await query(`
-              UPDATE alert_deliveries SET webhook_sent = true, webhook_sent_at = NOW()
-              WHERE id = $1
-            `, [delivery.id]);
+            await query(QUERIES.markAlertDeliveryWebhook, [delivery.id]);
           }
 
           console.log(`[ALERTS] Alert ${alert.id} triggered for user ${user.id}: ${alert.alert_type}`);

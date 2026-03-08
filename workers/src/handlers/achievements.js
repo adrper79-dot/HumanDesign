@@ -19,7 +19,7 @@ import {
   getAchievementProgress,
   calculateIndividualProgress
 } from '../lib/achievements.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { sendNotificationToUser } from './push.js';
 
@@ -34,39 +34,23 @@ export async function handleGetAchievements(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get user's unlocked achievements
-    const { rows: unlockedRows } = await query(`
-      SELECT achievement_id, unlocked_at, points_awarded
-      FROM user_achievements
-      WHERE user_id = $1
-      ORDER BY unlocked_at DESC
-    `, [user.id]);
+    const { rows: unlockedRows } = await query(QUERIES.getUserUnlockedAchievements, [user.id]);
     
     const unlockedSet = new Set(unlockedRows.map(r => r.achievement_id));
     const unlockedMap = new Map(unlockedRows.map(r => [r.achievement_id, r]));
     
     // Get user's event counts for progress calculation
-    const { rows: eventRows } = await query(`
-      SELECT event_type, COUNT(*)::int as count
-      FROM achievement_events
-      WHERE user_id = $1
-      GROUP BY event_type
-    `, [user.id]);
+    const { rows: eventRows } = await query(QUERIES.getAchievementEventCounts, [user.id]);
     const events = {};
     for (const row of eventRows) events[row.event_type] = row.count;
 
     // Get user's streaks
-    const { rows: streakRows } = await query(`
-      SELECT streak_type, current_streak
-      FROM user_streaks
-      WHERE user_id = $1
-    `, [user.id]);
+    const { rows: streakRows } = await query(QUERIES.getUserStreaks, [user.id]);
     const streaks = {};
     for (const row of streakRows) streaks[row.streak_type] = row.current_streak;
 
     // Get total points
-    const { rows: statsRows } = await query(`
-      SELECT total_points FROM user_achievement_stats WHERE user_id = $1
-    `, [user.id]);
+    const { rows: statsRows } = await query(QUERIES.getUserAchievementStats, [user.id]);
     
     const userProgress = {
       events,
@@ -130,27 +114,16 @@ export async function handleGetProgress(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get unlocked achievements
-    const { rows: unlockedRows } = await query(`
-      SELECT achievement_id, unlocked_at, points_awarded
-      FROM user_achievements
-      WHERE user_id = $1
-      ORDER BY unlocked_at DESC
-    `, [user.id]);
+    const { rows: unlockedRows } = await query(QUERIES.getUserUnlockedAchievements, [user.id]);
     
     const unlockedSet = new Set(unlockedRows.map(r => r.achievement_id));
     
     // Get stats
-    const { rows: statsRows } = await query(`
-      SELECT * FROM user_achievement_stats WHERE user_id = $1
-    `, [user.id]);
+    const { rows: statsRows } = await query(QUERIES.getUserAchievementStatsFull, [user.id]);
     const stats = statsRows[0] || null;
     
     // Get streaks
-    const { rows: streaks } = await query(`
-      SELECT streak_type, current_streak, longest_streak, last_activity_date
-      FROM user_streaks
-      WHERE user_id = $1
-    `, [user.id]);
+    const { rows: streaks } = await query(QUERIES.getUserStreaksFull, [user.id]);
     
     const streaksMap = {};
     for (const streak of streaks) {
@@ -209,38 +182,10 @@ export async function handleGetLeaderboard(request, env, ctx) {
     const offset = Math.min(parseInt(url.searchParams.get('offset')) || 0, 10000);  // BL-R-M15
     
     // Get leaderboard (top users by points)
-    const { rows: leaderboard } = await query(`
-      SELECT 
-        u.id as user_id,
-        u.email,
-        u.tier,
-        uas.total_points,
-        uas.total_achievements,
-        uas.achievement_percentage,
-        uas.last_achievement_date,
-        ROW_NUMBER() OVER (ORDER BY uas.total_points DESC, uas.total_achievements DESC) as rank
-      FROM users u
-      JOIN user_achievement_stats uas ON u.id = uas.user_id
-      WHERE uas.total_points > 0
-      ORDER BY uas.total_points DESC, uas.total_achievements DESC
-      LIMIT $1 OFFSET $2
-    `, [limit, offset]);
+    const { rows: leaderboard } = await query(QUERIES.getLeaderboard, [limit, offset]);
     
     // Get user's own rank
-    const { rows: userRankRows } = await query(`
-      SELECT 
-        user_id,
-        total_points,
-        total_achievements,
-        achievement_percentage,
-        (
-          SELECT COUNT(*)::int + 1
-          FROM user_achievement_stats
-          WHERE total_points > (SELECT total_points FROM user_achievement_stats WHERE user_id = $1)
-        ) as rank
-      FROM user_achievement_stats
-      WHERE user_id = $1
-    `, [user.id]);
+    const { rows: userRankRows } = await query(QUERIES.getUserRank, [user.id]);
     const userRank = userRankRows[0] || null;
     
     // Mask emails for privacy (show first 3 chars + domain)
@@ -335,10 +280,7 @@ export async function trackEvent(env, userId, eventType, eventData = null, userT
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // 1. Insert event
-    await query(`
-      INSERT INTO achievement_events (user_id, event_type, event_data)
-      VALUES ($1, $2, $3)
-    `, [userId, eventType, JSON.stringify(eventData)]);
+    await query(QUERIES.insertAchievementEvent, [userId, eventType, JSON.stringify(eventData)]);
     
     // 2. Update streaks if applicable
     if (eventType === 'daily_login' || eventType === 'transit_checked') {
@@ -349,9 +291,7 @@ export async function trackEvent(env, userId, eventType, eventData = null, userT
     const userProgress = await getUserProgress(env, userId, userTier);
     
     // 4. Get already unlocked achievements
-    const { rows: unlockedRows } = await query(`
-      SELECT achievement_id FROM user_achievements WHERE user_id = $1
-    `, [userId]);
+    const { rows: unlockedRows } = await query(QUERIES.getUserUnlockedIds, [userId]);
     const unlockedSet = new Set(unlockedRows.map(r => r.achievement_id));
     
     // 5. Check for newly unlocked achievements
@@ -359,10 +299,7 @@ export async function trackEvent(env, userId, eventType, eventData = null, userT
     
     // 6. Award newly unlocked achievements
     for (const achievement of newlyUnlocked) {
-      await query(`
-        INSERT INTO user_achievements (user_id, achievement_id, points_awarded)
-        VALUES ($1, $2, $3)
-      `, [userId, achievement.id, achievement.points]);
+      await query(QUERIES.insertUserAchievement, [userId, achievement.id, achievement.points]);
       
       console.log(`Achievement unlocked:`, {
         userId,
@@ -401,17 +338,12 @@ async function updateStreak(env, userId, streakType) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   
   // Get existing streak
-  const { rows: streakRows } = await query(`
-    SELECT * FROM user_streaks WHERE user_id = $1 AND streak_type = $2
-  `, [userId, streakType]);
+  const { rows: streakRows } = await query(QUERIES.getStreakByType, [userId, streakType]);
   const streak = streakRows[0] || null;
   
   if (!streak) {
     // Create new streak
-    await query(`
-      INSERT INTO user_streaks (user_id, streak_type, current_streak, longest_streak, last_activity_date)
-      VALUES ($1, $2, 1, 1, $3)
-    `, [userId, streakType, today]);
+    await query(QUERIES.insertStreak, [userId, streakType, today]);
     return;
   }
   
@@ -430,19 +362,11 @@ async function updateStreak(env, userId, streakType) {
     const newStreak = streak.current_streak + 1;
     const newLongest = Math.max(newStreak, streak.longest_streak);
     
-    await query(`
-      UPDATE user_streaks
-      SET current_streak = $1, longest_streak = $2, last_activity_date = $3
-      WHERE id = $4
-    `, [newStreak, newLongest, today, streak.id]);
+    await query(QUERIES.updateStreakIncrement, [newStreak, newLongest, today, streak.id]);
     
   } else {
     // Streak broken, reset to 1
-    await query(`
-      UPDATE user_streaks
-      SET current_streak = 1, last_activity_date = $1
-      WHERE id = $2
-    `, [today, streak.id]);
+    await query(QUERIES.resetStreak, [today, streak.id]);
   }
 }
 
@@ -453,12 +377,7 @@ async function getUserProgress(env, userId, userTier) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Get event counts
-  const { rows: eventRows } = await query(`
-    SELECT event_type, COUNT(*)::int as count
-    FROM achievement_events
-    WHERE user_id = $1
-    GROUP BY event_type
-  `, [userId]);
+  const { rows: eventRows } = await query(QUERIES.getAchievementEventCounts, [userId]);
   
   const events = {};
   for (const row of eventRows) {
@@ -466,11 +385,7 @@ async function getUserProgress(env, userId, userTier) {
   }
   
   // Get streaks
-  const { rows: streakRows } = await query(`
-    SELECT streak_type, current_streak
-    FROM user_streaks
-    WHERE user_id = $1
-  `, [userId]);
+  const { rows: streakRows } = await query(QUERIES.getUserStreaks, [userId]);
   
   const streaks = {};
   for (const row of streakRows) {
@@ -478,9 +393,7 @@ async function getUserProgress(env, userId, userTier) {
   }
   
   // Get total points
-  const { rows: statsRows } = await query(`
-    SELECT total_points FROM user_achievement_stats WHERE user_id = $1
-  `, [userId]);
+  const { rows: statsRows } = await query(QUERIES.getUserAchievementStats, [userId]);
   const stats = statsRows[0] || null;
   
   return {
@@ -497,9 +410,7 @@ async function getUserProgress(env, userId, userTier) {
 async function checkPointMilestones(env, userId, userProgress) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const { rows: statsRows } = await query(`
-    SELECT total_points FROM user_achievement_stats WHERE user_id = $1
-  `, [userId]);
+  const { rows: statsRows } = await query(QUERIES.getUserAchievementStats, [userId]);
   
   const totalPoints = statsRows[0]?.total_points || 0;
   
@@ -514,17 +425,12 @@ async function checkPointMilestones(env, userId, userProgress) {
   for (const milestone of milestones) {
     if (totalPoints >= milestone.threshold) {
       // Check if already unlocked
-      const { rows: existingRows } = await query(`
-        SELECT id FROM user_achievements WHERE user_id = $1 AND achievement_id = $2
-      `, [userId, milestone.id]);
+      const { rows: existingRows } = await query(QUERIES.checkAchievementUnlocked, [userId, milestone.id]);
       
       if (!existingRows[0]) {
         // Unlock milestone
         const achievement = ACHIEVEMENTS[milestone.id];
-        await query(`
-          INSERT INTO user_achievements (user_id, achievement_id, points_awarded)
-          VALUES ($1, $2, $3)
-        `, [userId, milestone.id, achievement.points]);
+        await query(QUERIES.insertUserAchievement, [userId, milestone.id, achievement.points]);
         
         console.log(`Milestone unlocked:`, {
           userId,

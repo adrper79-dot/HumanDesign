@@ -159,9 +159,7 @@ async function handleCheckoutCompleted(event, query, stripe, env) {
     ]);
 
     // BL-R-C4: Also update users.tier and stripe_customer_id (was only in billing.js)
-    await q(`
-      UPDATE users SET tier = $1, stripe_customer_id = $2, updated_at = NOW() WHERE id = $3
-    `, [tier, customerId, userId]);
+    await q(QUERIES.updateUserTierAndStripe, [tier, customerId, userId]);
   });
 
   // Track referral conversion
@@ -203,7 +201,7 @@ async function handleSubscriptionUpdated(event, query, env) {
     ]);
 
     // BL-R-C4: Also sync users.tier to match subscription state
-    await q(`UPDATE users SET tier = $1, updated_at = NOW() WHERE id = $2`, [tier, userId]);
+    await q(QUERIES.updateUserTier, [tier, userId]);
   });
 
   console.log(`Subscription updated for user ${userId}, tier: ${tier}, status: ${subscription.status}`);
@@ -239,7 +237,7 @@ async function handleSubscriptionDeleted(event, query) {
     ]);
 
     // BL-R-C4: Also downgrade user tier in users table
-    await q(`UPDATE users SET tier = 'free', updated_at = NOW() WHERE id = $1`, [userId]);
+    await q(QUERIES.updateUserTier, ['free', userId]);
   });
 
   console.log(`Subscription cancelled for user ${userId}, downgraded to free tier`);

@@ -14,7 +14,7 @@
 
 import { generateApiKey } from '../middleware/apiKey.js';
 import { getUserFromRequest } from '../middleware/auth.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 /**
  * Main handler for /api/keys routes
@@ -113,11 +113,7 @@ async function generateKey(request, env, user) {
     // Check key limit (free users: 2 keys, paid users: 10 keys)
     const keyLimit = user.tier === 'free' ? 2 : 10;
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: countRows } = await query(`
-      SELECT COUNT(*)::int as count
-      FROM api_keys
-      WHERE user_id = $1 AND active = true
-    `, [user.id]);
+    const { rows: countRows } = await query(QUERIES.countActiveApiKeys, [user.id]);
     const existingKeysResult = countRows[0];
 
     if (existingKeysResult.count >= keyLimit) {
@@ -175,27 +171,7 @@ async function generateKey(request, env, user) {
 async function listKeys(request, env, user) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT 
-        k.id,
-        k.name,
-        k.scopes,
-        k.tier,
-        k.rate_limit_per_hour,
-        k.rate_limit_per_day,
-        k.active,
-        k.expires_at,
-        k.last_used_at,
-        k.created_at,
-        COUNT(u.id)::int as total_requests,
-        COUNT(CASE WHEN u.created_at > NOW() - INTERVAL '1 day' THEN 1 END)::int as requests_today,
-        COUNT(CASE WHEN u.response_status >= 400 THEN 1 END)::int as error_count
-      FROM api_keys k
-      LEFT JOIN api_usage u ON k.id = u.key_id
-      WHERE k.user_id = $1
-      GROUP BY k.id
-      ORDER BY k.created_at DESC
-    `, [user.id]);
+    const { rows } = await query(QUERIES.listApiKeys, [user.id]);
 
     const keys = rows.map(key => ({
       id: key.id,
@@ -243,14 +219,7 @@ async function listKeys(request, env, user) {
 async function getKey(request, env, user, keyId) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT 
-        id, name, scopes, tier, 
-        rate_limit_per_hour, rate_limit_per_day,
-        active, expires_at, last_used_at, created_at
-      FROM api_keys
-      WHERE id = $1 AND user_id = $2
-    `, [keyId, user.id]);
+    const { rows } = await query(QUERIES.getApiKeyById, [keyId, user.id]);
     const result = rows[0] || null;
 
     if (!result) {
@@ -302,10 +271,7 @@ async function deleteKey(request, env, user, keyId) {
   try {
     // Check ownership
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT id FROM api_keys
-      WHERE id = $1 AND user_id = $2
-    `, [keyId, user.id]);
+    const { rows } = await query(QUERIES.checkApiKeyOwnership, [keyId, user.id]);
     const result = rows[0] || null;
 
     if (!result) {
@@ -319,11 +285,7 @@ async function deleteKey(request, env, user, keyId) {
     }
 
     // Soft delete (deactivate instead of actual delete to preserve usage history)
-    await query(`
-      UPDATE api_keys
-      SET active = false, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-    `, [keyId]);
+    await query(QUERIES.deactivateApiKey, [keyId]);
 
     return new Response(JSON.stringify({
       success: true,
@@ -354,11 +316,7 @@ async function getUsageStats(request, env, user, keyId) {
   try {
     // Check ownership
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: keyRows } = await query(`
-      SELECT id, name, tier, rate_limit_per_day
-      FROM api_keys
-      WHERE id = $1 AND user_id = $2
-    `, [keyId, user.id]);
+    const { rows: keyRows } = await query(QUERIES.getApiKeyForUsage, [keyId, user.id]);
     const keyResult = keyRows[0] || null;
 
     if (!keyResult) {
@@ -376,40 +334,14 @@ async function getUsageStats(request, env, user, keyId) {
     const days = parseInt(url.searchParams.get('days') || '7');
 
     // Get overall stats
-    const { rows: statsRows } = await query(`
-      SELECT 
-        COUNT(*)::int as total_requests,
-        COUNT(CASE WHEN response_status >= 400 THEN 1 END)::int as error_count,
-        COUNT(CASE WHEN created_at > NOW() - INTERVAL '1 hour' THEN 1 END)::int as requests_last_hour,
-        COUNT(CASE WHEN created_at > NOW() - INTERVAL '1 day' THEN 1 END)::int as requests_last_day,
-        AVG(response_time_ms) as avg_response_time,
-        MAX(created_at) as last_request_at
-      FROM api_usage
-      WHERE key_id = $1 AND created_at > NOW() - ($2 * INTERVAL '1 day')
-    `, [keyId, days]);
+    const { rows: statsRows } = await query(QUERIES.getApiKeyUsageStats, [keyId, days]);
     const statsResult = statsRows[0];
 
     // Get top endpoints
-    const { rows: endpointRows } = await query(`
-      SELECT endpoint, COUNT(*)::int as count
-      FROM api_usage
-      WHERE key_id = $1 AND created_at > NOW() - ($2 * INTERVAL '1 day')
-      GROUP BY endpoint
-      ORDER BY count DESC
-      LIMIT 10
-    `, [keyId, days]);
+    const { rows: endpointRows } = await query(QUERIES.getApiKeyTopEndpoints, [keyId, days]);
 
     // Get daily usage (for chart)
-    const { rows: dailyRows } = await query(`
-      SELECT 
-        created_at::date as date,
-        COUNT(*)::int as requests,
-        COUNT(CASE WHEN response_status >= 400 THEN 1 END)::int as errors
-      FROM api_usage
-      WHERE key_id = $1 AND created_at > NOW() - ($2 * INTERVAL '1 day')
-      GROUP BY created_at::date
-      ORDER BY date DESC
-    `, [keyId, days]);
+    const { rows: dailyRows } = await query(QUERIES.getApiKeyDailyUsage, [keyId, days]);
 
     return new Response(JSON.stringify({
       success: true,

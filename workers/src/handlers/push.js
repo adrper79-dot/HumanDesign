@@ -13,7 +13,7 @@
  */
 
 import { getUserFromRequest } from '../middleware/auth.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 // ─── Web Push Protocol Helpers (RFC 8030 / RFC 8291) ─────────────────────
 
@@ -232,17 +232,12 @@ async function subscribe(request, env, user) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Check if subscription already exists
-    const { rows: existingRows } = await query(`
-      SELECT id FROM push_subscriptions WHERE endpoint = $1
-    `, [endpoint]);
+    const { rows: existingRows } = await query(QUERIES.getPushSubscriptionByEndpoint, [endpoint]);
     const existing = existingRows[0] || null;
 
     if (existing) {
       // Update last_used timestamp
-      await query(`
-        UPDATE push_subscriptions SET last_used = NOW(), updated_at = NOW()
-        WHERE endpoint = $1
-      `, [endpoint]);
+      await query(QUERIES.updatePushSubscriptionLastUsed, [endpoint]);
 
       return Response.json({
         ok: true,
@@ -252,22 +247,14 @@ async function subscribe(request, env, user) {
     }
 
     // Insert new subscription
-    const { rows: insertRows } = await query(`
-      INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, active)
-      VALUES ($1, $2, $3, $4, $5, true)
-      RETURNING id, endpoint, active, subscription_time
-    `, [user.id, endpoint, keys.p256dh, keys.auth, userAgent]);
+    const { rows: insertRows } = await query(QUERIES.insertPushSubscription, [user.id, endpoint, keys.p256dh, keys.auth, userAgent]);
     const result = insertRows[0];
 
     // Create default notification preferences if not exists
-    const { rows: prefsRows } = await query(`
-      SELECT user_id FROM notification_preferences WHERE user_id = $1
-    `, [user.id]);
+    const { rows: prefsRows } = await query(QUERIES.getNotificationPrefsById, [user.id]);
 
     if (prefsRows.length === 0) {
-      await query(`
-        INSERT INTO notification_preferences (user_id) VALUES ($1)
-      `, [user.id]);
+      await query(QUERIES.insertDefaultNotificationPrefs, [user.id]);
     }
 
     console.log(`[PUSH] New subscription registered for user ${user.id}: ${result.id}`);
@@ -306,11 +293,7 @@ async function unsubscribe(request, env, user) {
 
     // Delete subscription (cascade will delete notification logs)
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      DELETE FROM push_subscriptions
-      WHERE user_id = $1 AND endpoint = $2
-      RETURNING id
-    `, [user.id, endpoint]);
+    const { rows } = await query(QUERIES.deletePushSubscription, [user.id, endpoint]);
 
     if (rows.length === 0) {
       return Response.json({
@@ -341,11 +324,7 @@ async function sendTestNotification(request, env, user) {
   try {
     // Get user's active subscriptions
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: subRows } = await query(`
-      SELECT id, endpoint, p256dh, auth
-      FROM push_subscriptions
-      WHERE user_id = $1 AND active = true
-    `, [user.id]);
+    const { rows: subRows } = await query(QUERIES.getActivePushSubscriptions, [user.id]);
 
     if (subRows.length === 0) {
       return Response.json({
@@ -399,9 +378,7 @@ async function sendTestNotification(request, env, user) {
 async function getPreferences(request, env, user) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT * FROM notification_preferences WHERE user_id = $1
-    `, [user.id]);
+    const { rows } = await query(QUERIES.getNotificationPreferences, [user.id]);
     const prefs = rows[0] || null;
 
     if (!prefs) {
@@ -456,6 +433,7 @@ async function updatePreferences(request, env, user) {
 
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
+    // DYNAMIC: builds SET clause at runtime — cannot centralise into QUERIES
     // Build UPDATE query dynamically
     const fields = [];
     const values = [];
@@ -545,23 +523,9 @@ async function getNotificationHistory(request, env, user) {
 
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    const { rows: notifRows } = await query(`
-      SELECT 
-        id,
-        notification_type,
-        title,
-        body,
-        sent_at,
-        success
-      FROM push_notifications
-      WHERE user_id = $1
-      ORDER BY sent_at DESC
-      LIMIT $2 OFFSET $3
-    `, [user.id, limit, offset]);
+    const { rows: notifRows } = await query(QUERIES.getPushNotificationHistory, [user.id, limit, offset]);
 
-    const { rows: totalRows } = await query(`
-      SELECT COUNT(*)::int as count FROM push_notifications WHERE user_id = $1
-    `, [user.id]);
+    const { rows: totalRows } = await query(QUERIES.countPushNotifications, [user.id]);
     const total = totalRows[0];
 
     return Response.json({
@@ -614,19 +578,15 @@ export async function sendPushNotification(env, subscription, notification) {
       console.error('[PUSH] VAPID keys not configured');
       
       // Log failed notification
-      await query(`
-        INSERT INTO push_notifications (
-          subscription_id, user_id, notification_type, title, body,
-          response_status, response_body, success
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, false)
-      `, [
+      await query(QUERIES.insertPushNotification, [
         subscription.id,
         subscription.user_id,
         notification.data?.type || 'unknown',
         notification.title,
         notification.body,
         500,
-        'VAPID keys not configured'
+        'VAPID keys not configured',
+        false
       ]);
       
       return false;
@@ -661,19 +621,12 @@ export async function sendPushNotification(env, subscription, notification) {
 
     // If 410 Gone, subscription expired — deactivate it
     if (response.status === 410 || response.status === 404) {
-      await query(`
-        UPDATE push_subscriptions SET active = false WHERE id = $1
-      `, [subscription.id]).catch(() => {});
+      await query(QUERIES.deactivatePushSubscription, [subscription.id]).catch(() => {});
       console.log(`[PUSH] Subscription ${subscription.id} expired, deactivated`);
     }
     
     // Log notification result
-    await query(`
-      INSERT INTO push_notifications (
-        subscription_id, user_id, notification_type, title, body, icon, badge, tag,
-        data, response_status, response_body, success
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-    `, [
+    await query(QUERIES.insertPushNotificationFull, [
       subscription.id,
       subscription.user_id || 0,
       notification.data?.type || 'unknown',
@@ -695,19 +648,15 @@ export async function sendPushNotification(env, subscription, notification) {
     // Log failed notification
     try {
       const query = createQueryFn(env.NEON_CONNECTION_STRING);
-      await query(`
-        INSERT INTO push_notifications (
-          subscription_id, user_id, notification_type, title, body,
-          response_status, response_body, success
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, false)
-      `, [
+      await query(QUERIES.insertPushNotification, [
         subscription.id,
         subscription.user_id || 0,
         notification.data?.type || 'unknown',
         notification.title,
         notification.body,
         500,
-        error.message
+        error.message,
+        false
       ]);
     } catch (logError) {
       console.error('[PUSH] Failed to log notification error:', logError);
@@ -730,9 +679,7 @@ export async function sendNotificationToUser(env, userId, notificationType, noti
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     // Check user's notification preferences
-    const { rows: prefRows } = await query(`
-      SELECT * FROM notification_preferences WHERE user_id = $1
-    `, [userId]);
+    const { rows: prefRows } = await query(QUERIES.getNotificationPreferences, [userId]);
     const prefs = prefRows[0] || null;
 
     // Check if user has disabled this notification type
@@ -778,11 +725,7 @@ export async function sendNotificationToUser(env, userId, notificationType, noti
     }
 
     // Get all active subscriptions for user
-    const { rows: subRows } = await query(`
-      SELECT id, user_id, endpoint, p256dh, auth
-      FROM push_subscriptions
-      WHERE user_id = $1 AND active = true
-    `, [userId]);
+    const { rows: subRows } = await query(QUERIES.getActivePushSubscriptionsFull, [userId]);
 
     if (subRows.length === 0) {
       console.log(`[PUSH] No active subscriptions for user ${userId}`);

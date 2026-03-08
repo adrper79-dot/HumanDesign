@@ -13,7 +13,7 @@
  * All queries read from analytics_daily when possible to minimize DB load.
  */
 
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 import { FUNNELS } from '../lib/analytics.js';
 
 /**
@@ -63,41 +63,16 @@ async function getOverview(env, url) {
   // Parallel queries for dashboard panels
   const [activeUsers, todayEvents, signups, topEvents] = await Promise.all([
     // DAU / WAU / MAU
-    query(`
-      SELECT
-        COUNT(DISTINCT CASE WHEN created_at >= CURRENT_DATE THEN user_id END) AS dau,
-        COUNT(DISTINCT CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN user_id END) AS wau,
-        COUNT(DISTINCT CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN user_id END) AS mau
-      FROM analytics_events
-      WHERE user_id IS NOT NULL
-    `),
+    query(QUERIES.getAnalyticsActiveUsers),
 
     // Events today
-    query(`
-      SELECT COUNT(*) AS count
-      FROM analytics_events
-      WHERE created_at >= CURRENT_DATE
-    `),
+    query(QUERIES.getAnalyticsEventsToday),
 
     // Signups this week vs last week
-    query(`
-      SELECT
-        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') AS this_week,
-        COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '14 days'
-                         AND created_at < CURRENT_DATE - INTERVAL '7 days') AS last_week
-      FROM analytics_events
-      WHERE event_name = 'signup'
-    `),
+    query(QUERIES.getAnalyticsSignupComparison),
 
     // Top events (last 7 days)
-    query(`
-      SELECT event_name, COUNT(*) AS count, COUNT(DISTINCT user_id) AS unique_users
-      FROM analytics_events
-      WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
-      GROUP BY event_name
-      ORDER BY count DESC
-      LIMIT 15
-    `),
+    query(QUERIES.getAnalyticsTopEvents),
   ]);
 
   const au = activeUsers.rows[0] || { dau: 0, wau: 0, mau: 0 };
@@ -137,6 +112,7 @@ async function getEventTrends(env, url) {
   const days = Math.min(Number(url.searchParams.get('days') || 30), 90);
   const eventFilter = url.searchParams.get('event');
 
+  // DYNAMIC: builds WHERE clause at runtime (optional event filter) — cannot centralise into QUERIES
   // BL-R-C3: Use parameterized queries only — never interpolate into SQL
   const validDays = Number.isFinite(days) ? days : 30;
   let sql = `
@@ -193,16 +169,7 @@ async function getFunnelAnalysis(env, funnelName) {
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const result = await query(`
-    SELECT
-      step_name,
-      step_order,
-      COUNT(DISTINCT user_id) AS users
-    FROM funnel_events
-    WHERE funnel_name = $1
-    GROUP BY step_name, step_order
-    ORDER BY step_order ASC
-  `, [funnelName]);
+  const result = await query(QUERIES.getAnalyticsFunnelSteps, [funnelName]);
 
   const steps = funnelDef.steps.map(s => {
     const match = result.rows.find(r => r.step_name === s.name);
@@ -247,33 +214,7 @@ async function getRetention(env, url) {
   const validWeeks = Number.isFinite(weeks) ? weeks : 12;
 
   // Signup cohorts and their return activity
-  const result = await query(`
-    WITH cohorts AS (
-      SELECT
-        user_id,
-        DATE_TRUNC('week', MIN(created_at)) AS cohort_week
-      FROM analytics_events
-      WHERE event_name = 'signup' AND user_id IS NOT NULL
-      GROUP BY user_id
-    ),
-    activity AS (
-      SELECT DISTINCT
-        c.user_id,
-        c.cohort_week,
-        DATE_TRUNC('week', ae.created_at) AS activity_week
-      FROM cohorts c
-      JOIN analytics_events ae ON ae.user_id = c.user_id
-      WHERE ae.created_at >= c.cohort_week
-        AND ae.created_at < c.cohort_week + ($1 * INTERVAL '1 week')
-    )
-    SELECT
-      cohort_week,
-      EXTRACT(WEEK FROM activity_week - cohort_week)::INT AS week_offset,
-      COUNT(DISTINCT user_id) AS active_users
-    FROM activity
-    GROUP BY cohort_week, week_offset
-    ORDER BY cohort_week DESC, week_offset ASC
-  `, [validWeeks]);
+  const result = await query(QUERIES.getAnalyticsRetention, [validWeeks]);
 
   // Build cohort matrix
   const cohorts = {};
@@ -315,41 +256,13 @@ async function getErrorAnalytics(env, url) {
 
   const [errorRate, topErrors, errorTrend] = await Promise.all([
     // Error rate (errors / total events)
-    query(`
-      SELECT
-        COUNT(*) FILTER (WHERE event_name = 'error') AS errors,
-        COUNT(*) AS total,
-        ROUND(COUNT(*) FILTER (WHERE event_name = 'error') * 100.0 / GREATEST(COUNT(*), 1), 2) AS error_rate_pct
-      FROM analytics_events
-      WHERE created_at >= CURRENT_DATE - ($1 * INTERVAL '1 day')
-    `, [validDays]),
+    query(QUERIES.getAnalyticsErrorRate, [validDays]),
 
     // Top errors by message
-    query(`
-      SELECT
-        properties->>'message' AS error_message,
-        properties->>'endpoint' AS endpoint,
-        properties->>'severity' AS severity,
-        COUNT(*) AS count
-      FROM analytics_events
-      WHERE event_name = 'error'
-        AND created_at >= CURRENT_DATE - ($1 * INTERVAL '1 day')
-      GROUP BY properties->>'message', properties->>'endpoint', properties->>'severity'
-      ORDER BY count DESC
-      LIMIT 20
-    `, [validDays]),
+    query(QUERIES.getAnalyticsTopErrors, [validDays]),
 
     // Error count per day
-    query(`
-      SELECT
-        DATE(created_at) AS date,
-        COUNT(*) AS count
-      FROM analytics_events
-      WHERE event_name = 'error'
-        AND created_at >= CURRENT_DATE - ($1 * INTERVAL '1 day')
-      GROUP BY DATE(created_at)
-      ORDER BY date DESC
-    `, [validDays]),
+    query(QUERIES.getAnalyticsErrorTrend, [validDays]),
   ]);
 
   const rate = errorRate.rows[0] || { errors: 0, total: 0, error_rate_pct: 0 };
@@ -382,35 +295,13 @@ async function getRevenueMetrics(env) {
 
   const [mrr, tierBreakdown, churn] = await Promise.all([
     // Current MRR from active subscriptions
-    query(`
-      SELECT
-        COUNT(*) FILTER (WHERE tier = 'seeker' AND status = 'active') AS seeker_count,
-        COUNT(*) FILTER (WHERE tier = 'guide' AND status = 'active') AS guide_count,
-        COUNT(*) FILTER (WHERE tier = 'practitioner' AND status = 'active') AS practitioner_count,
-        COUNT(*) FILTER (WHERE status = 'active') AS total_active,
-        COUNT(*) FILTER (WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days') AS recent_churn
-      FROM subscriptions
-    `).catch(() => ({ rows: [{}] })),
+    query(QUERIES.getAnalyticsMrr).catch(() => ({ rows: [{}] })),
 
     // Tier distribution
-    query(`
-      SELECT tier, COUNT(*) AS count
-      FROM users
-      GROUP BY tier
-      ORDER BY count DESC
-    `).catch(() => ({ rows: [] })),
+    query(QUERIES.getAnalyticsTierDistribution).catch(() => ({ rows: [] })),
 
     // Monthly churned revenue
-    query(`
-      SELECT
-        DATE_TRUNC('month', updated_at) AS month,
-        COUNT(*) AS churned_count
-      FROM subscriptions
-      WHERE status = 'canceled'
-        AND updated_at >= CURRENT_DATE - INTERVAL '6 months'
-      GROUP BY DATE_TRUNC('month', updated_at)
-      ORDER BY month DESC
-    `).catch(() => ({ rows: [] })),
+    query(QUERIES.getAnalyticsMonthlyChurn).catch(() => ({ rows: [] })),
   ]);
 
   const m = mrr.rows[0] || {};
