@@ -11,7 +11,15 @@
     "transits": "Trânsitos",
     "profile": "Perfil",
     "enhance": "Aprimorar",
-    "diary": "Diário"
+    "diary": "Diário",
+    "checkin": "Check-In",
+    "composite": "Composto",
+    "rectify": "Retificar",
+    "practitioner": "Praticante",
+    "clusters": "Grupos",
+    "sms": "SMS",
+    "onboarding": "Início",
+    "saved": "Salvos"
   },
   "auth": {
     "signIn": "Entrar",
@@ -30,7 +38,11 @@
     "signInLink": "Entrar",
     "email": "E-mail",
     "password": "Senha",
-    "signInUpgrade": "Faça login para atualizar sua conta."
+    "signInUpgrade": "Faça login para atualizar sua conta.",
+    "continueWithout": "Continuar sem fazer login",
+    "creatingSession": "Criando sessão…",
+    "signInRequired": "Faça login para gerar um perfil.",
+    "billing": "Cobrança"
   },
   "chart": {
     "title": "Mapa de Design Humano",
@@ -54,7 +66,16 @@
     "gates": "Portões",
     "saveChart": "Salvar Mapa",
     "viewRaw": "Ver Dados Brutos",
-    "hideRaw": "Ocultar Dados Brutos"
+    "hideRaw": "Ocultar Dados Brutos",
+    "birthLocationPlaceholder": "Cidade, Estado, País — ex. São Paulo, Brasil",
+    "timezone": "Fuso horário",
+    "lookingUp": "Buscando…",
+    "generateMyChart": "Gerar Meu Mapa",
+    "welcomeTitle": "Bem-vindo ao Prime Self",
+    "welcomeBody": "Insira seus dados de nascimento para descobrir sua impressão energética única através de Human Design, Astrologia Ocidental, Numerologia e Gene Keys.",
+    "birthData": "Dados de Nascimento",
+    "enterLocation": "Insira uma cidade primeiro.",
+    "lookUpFirst": "Insira um local de nascimento e clique em \"Buscar\" primeiro."
   },
   "profile": {
     "title": "Perfil Prime Self",
@@ -65,7 +86,15 @@
     "shareProfile": "Compartilhar",
     "question": "Pergunta de foco opcional",
     "questionPlaceholder": "ex. Qual é minha Forja primária?",
-    "noProfiles": "Nenhum perfil salvo."
+    "noProfiles": "Nenhum perfil salvo.",
+    "questionLabel": "Pergunta específica (opcional — deixe em branco para perfil completo)",
+    "aiSynthesis": "Síntese Multi-Sistema com IA",
+    "aiSynthesisBody": "Receba uma síntese personalizada dos quatro sistemas: Human Design, Astrologia, Numerologia e Gene Keys — com IA.",
+    "generateTitle": "Gerar Perfil Prime Self",
+    "generatingAi": "Gerando síntese com IA… Isso pode levar 10-20 segundos.",
+    "signInToView": "Faça login para ver seus perfis salvos.",
+    "savedProfiles": "Perfis Salvos",
+    "loadingProfiles": "Carregando perfis…"
   },
   "transits": {
     "title": "Trânsitos Atuais",
@@ -74,7 +103,9 @@
     "forecast": "Previsão",
     "gateActivations": "Ativações de Portão",
     "aspects": "Aspectos de Trânsito",
-    "noData": "Nenhum dado de trânsito disponível."
+    "noData": "Nenhum dado de trânsito disponível.",
+    "fetching": "Obtendo trânsitos…",
+    "currentPositions": "Posições de Trânsito Atuais"
   },
   "composite": {
     "title": "Mapa Composto",
@@ -85,7 +116,8 @@
     "dominance": "Canais Dominantes",
     "companionship": "Companheirismo",
     "compromise": "Compromisso",
-    "dynamics": "Dinâmicas de Relacionamento"
+    "dynamics": "Dinâmicas de Relacionamento",
+    "generating": "Gerando composto…"
   },
   "practitioner": {
     "title": "Painel do Praticante",
@@ -93,7 +125,8 @@
     "addClient": "Adicionar Cliente",
     "clientEmail": "E-mail do cliente",
     "roster": "Lista de Clientes",
-    "noClients": "Nenhum cliente ainda."
+    "noClients": "Nenhum cliente ainda.",
+    "loadingRoster": "Carregando lista…"
   },
   "clusters": {
     "title": "Inteligência de Grupo",
@@ -103,7 +136,8 @@
     "members": "Membros",
     "addMember": "Adicionar Membro",
     "synthesize": "Sintetizar Grupo",
-    "noClusters": "Nenhum grupo ainda."
+    "noClusters": "Nenhum grupo ainda.",
+    "loading": "Carregando seus grupos…"
   },
   "diary": {
     "title": "Diário de Eventos",
@@ -113,7 +147,23 @@
     "mood": "Humor",
     "energy": "Nível de Energia",
     "notes": "Notas",
-    "noEntries": "Nenhuma entrada no diário."
+    "noEntries": "Nenhuma entrada no diário.",
+    "addEvent": "Adicionar Evento de Vida",
+    "eventDate": "Data do Evento",
+    "noEvents": "Nenhum evento registrado ainda. Adicione seu primeiro evento acima!",
+    "eventTitle": "Título do Evento",
+    "eventDescription": "Descrição",
+    "eventType": "Tipo de Evento",
+    "significance": "Significância",
+    "yourEvents": "Seus Eventos de Vida",
+    "typeCareer": "Carreira",
+    "typeRelationship": "Relacionamento",
+    "typeHealth": "Saúde",
+    "typeSpiritual": "Espiritual",
+    "typeOther": "Outro",
+    "sigMajor": "Maior",
+    "sigModerate": "Moderado",
+    "sigMinor": "Menor"
   },
   "enhance": {
     "title": "Aprimore seu Perfil",
@@ -121,6 +171,24 @@
     "bigFive": "Cinco Grandes Fatores",
     "via": "Forças de Caráter VIA",
     "save": "Salvar Avaliação"
+  },
+  "checkin": {
+    "title": "Check-In de Alinhamento Diário",
+    "howAligned": "Quão alinhado você se sentiu hoje?",
+    "saveCheckin": "Salvar Check-In",
+    "trends": "Tendências de Alinhamento",
+    "saving": "Salvando check-in…",
+    "selectScore": "Selecione uma pontuação de alinhamento (1-10)",
+    "moodGreat": "Ótimo",
+    "moodGood": "Bom",
+    "moodNeutral": "Neutro",
+    "moodLow": "Baixo",
+    "moodStruggling": "Difícil"
+  },
+  "rectify": {
+    "title": "Retificação da Hora de Nascimento",
+    "analyze": "Analisar Janela de Tempo",
+    "analyzing": "Analisando janela de tempo…"
   },
   "onboarding": {
     "title": "O Arco da Savana",
@@ -144,7 +212,11 @@
     "perMonth": "/mês",
     "currentPlan": "Plano Atual",
     "upgrade": "Atualizar Plano",
-    "billingPortal": "Gerenciar Cobrança"
+    "billingPortal": "Gerenciar Cobrança",
+    "unlockTitle": "Desbloqueie Seu Potencial Completo",
+    "choosePlan": "Escolha o plano ideal para sua jornada",
+    "upgradeTo": "Atualizar para {{tier}}",
+    "maybeLater": "Talvez depois"
   },
   "share": {
     "title": "Compartilhar",
@@ -152,7 +224,11 @@
     "copied": "Copiado!",
     "twitter": "Compartilhar no X",
     "facebook": "Compartilhar no Facebook",
-    "downloadImage": "Baixar Imagem"
+    "downloadImage": "Baixar Imagem",
+    "shareProfile": "Compartilhe Seu Perfil",
+    "referralLink": "Seu Link de Indicação",
+    "shareOn": "Compartilhar Em",
+    "earnRewards": "Ganhe recompensas indicando amigos"
   },
   "common": {
     "loading": "Carregando…",
@@ -180,6 +256,16 @@
     "forbidden": "Você não tem acesso a este recurso.",
     "quotaExceeded": "Limite de uso atingido. Atualize seu plano.",
     "invalidInput": "Verifique sua entrada e tente novamente.",
-    "missingField": "Campo obrigatório: {{field}}"
+    "missingField": "Campo obrigatório: {{field}}",
+    "prefix": "Erro: {{message}}"
+  },
+  "social": {
+    "chartExplored": "pessoas exploraram seu mapa esta semana",
+    "reportsGenerated": "relatórios gerados",
+    "accuracyRating": "nota de precisão"
+  },
+  "offline": {
+    "offlineMode": "Modo Offline — Usando dados em cache",
+    "backOnline": "De volta online — Sincronizando…"
   }
 }

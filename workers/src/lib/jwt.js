@@ -1,7 +1,14 @@
 /**
  * JWT Utilities (HS256)
  * Shared implementation for signing and verifying JWTs.
+ *
+ * Standard claims added to every token:
+ *   iss  – issuer  ("primeself")
+ *   aud  – audience ("primeself-api")
  */
+
+const JWT_ISSUER   = 'primeself';
+const JWT_AUDIENCE = 'primeself-api';
 
 /**
  * Sign a JWT with HS256 algorithm.
@@ -16,6 +23,8 @@ export async function signJWT(payload, secret, ttlSeconds) {
 
   const fullPayload = {
     ...payload,
+    iss: JWT_ISSUER,
+    aud: JWT_AUDIENCE,
     iat: now,
     exp: now + ttlSeconds
   };
@@ -48,11 +57,13 @@ export async function signJWT(payload, secret, ttlSeconds) {
 
 /**
  * Verify a JWT with HS256 algorithm.
+ * Checks signature, expiration, issuer and audience in one step.
  * @param {string} token - JWT token
  * @param {string} secret - Secret key for HMAC verification
- * @returns {Promise<object|null>} - Decoded payload or null if invalid
+ * @param {object} [opts] - { skipExp: false }
+ * @returns {Promise<object|null>} - Decoded payload or null if invalid/expired
  */
-export async function verifyHS256(token, secret) {
+export async function verifyHS256(token, secret, opts = {}) {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
 
@@ -80,7 +91,14 @@ export async function verifyHS256(token, secret) {
   if (!valid) return null;
 
   const payloadStr = new TextDecoder().decode(base64UrlDecode(payloadB64));
-  return JSON.parse(payloadStr);
+  const payload = JSON.parse(payloadStr);
+
+  // Validate standard claims
+  if (payload.iss && payload.iss !== JWT_ISSUER) return null;
+  if (payload.aud && payload.aud !== JWT_AUDIENCE) return null;
+  if (!opts.skipExp && payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+  return payload;
 }
 
 /**
@@ -112,4 +130,16 @@ export function base64UrlDecode(str) {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes.buffer;
+}
+
+/**
+ * SHA-256 hex digest of a string.
+ * Used to hash refresh tokens before storing them in the DB.
+ * @param {string} input
+ * @returns {Promise<string>} - Hex-encoded SHA-256 hash
+ */
+export async function sha256(input) {
+  const data = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(hashBuffer)].map(b => b.toString(16).padStart(2, '0')).join('');
 }

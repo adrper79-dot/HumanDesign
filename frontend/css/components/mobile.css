@@ -6,7 +6,7 @@
 /* ── Touch Target Standards ────────────────────────────────── */
 /* All interactive elements minimum 44px (iOS/Android guidelines) */
 :root {
-  --touch-target-min: 44px;
+  /* --touch-target-min inherited from design-tokens.css */
   --mobile-padding: 16px;
   --mobile-header-height: 56px;
   --mobile-nav-height: 64px;
@@ -66,7 +66,7 @@
     height: var(--mobile-nav-height);
     background: linear-gradient(180deg, rgba(13,13,26,0.95) 0%, rgba(10,10,15,0.98) 100%);
     backdrop-filter: blur(20px);
-    border-top: 1px solid var(--gold-dim);
+    border-top: 1px solid var(--border-emphasis, #7a6030);
     justify-content: space-around;
     align-items: center;
     padding: 8px 0;
@@ -84,7 +84,7 @@
     min-width: var(--touch-target-min);
     min-height: var(--touch-target-min);
     border-radius: 8px;
-    color: var(--text-dim);
+    color: var(--text-secondary, #8882a0);
     text-decoration: none;
     cursor: pointer;
     transition: all 0.2s;
@@ -97,7 +97,7 @@
   }
   
   .mobile-nav-item.active {
-    color: var(--gold);
+    color: var(--interactive-primary, #c9a84c);
     background: rgba(201, 168, 76, 0.15);
   }
   
@@ -144,9 +144,9 @@
   .modal-header {
     position: sticky;
     top: 0;
-    background: var(--bg2);
+    background: var(--bg-secondary, #111118);
     z-index: 10;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-subtle, #2a2a3a);
     padding: 16px;
   }
   
@@ -228,10 +228,10 @@
   }
   
   .pull-to-refresh.refreshing {
-    animation: spin 1s linear infinite;
+    animation: spin-centered 1s linear infinite;
   }
   
-  @keyframes spin {
+  @keyframes spin-centered {
     from { transform: translateX(-50%) rotate(0deg); }
     to { transform: translateX(-50%) rotate(360deg); }
   }
@@ -437,7 +437,7 @@
   }
   
   .mobile-nav {
-    border-top: 2px solid var(--gold);
+    border-top: 2px solid var(--interactive-primary, #c9a84c);
   }
 }
 
@@ -482,8 +482,8 @@
   bottom: 64px; /* above mobile nav */
   left: 0;
   right: 0;
-  background: var(--bg2, #111118);
-  border-top: 1px solid var(--gold-dim, #7a6030);
+  background: var(--bg-secondary, #111118);
+  border-top: 1px solid var(--border-emphasis, #7a6030);
   border-radius: 16px 16px 0 0;
   padding: 8px 16px 16px;
   animation: slideUp 0.2s ease-out;
@@ -501,17 +501,17 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 4px 12px;
-  color: var(--gold, #c9a84c);
+  color: var(--interactive-primary, #c9a84c);
   font-weight: 600;
   font-size: 0.95rem;
-  border-bottom: 1px solid var(--border, #2a2a3a);
+  border-bottom: 1px solid var(--border-subtle, #2a2a3a);
   margin-bottom: 12px;
 }
 
 .mobile-more-header button {
   background: none;
   border: none;
-  color: var(--text-dim, #8882a0);
+  color: var(--text-secondary, #8882a0);
   font-size: 1.5rem;
   padding: 4px 8px;
   cursor: pointer;
@@ -535,7 +535,7 @@
   gap: 6px;
   padding: 12px 4px;
   border-radius: 10px;
-  color: var(--text, #e8e6f0);
+  color: var(--text-primary, #e8e6f0);
   text-decoration: none;
   font-size: 0.75rem;
   font-weight: 500;

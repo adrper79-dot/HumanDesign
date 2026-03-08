@@ -11,7 +11,15 @@
     "transits": "Transits",
     "profile": "Profile",
     "enhance": "Enhance",
-    "diary": "Diary"
+    "diary": "Diary",
+    "checkin": "Check-In",
+    "composite": "Composite",
+    "rectify": "Rectify",
+    "practitioner": "Practitioner",
+    "clusters": "Clusters",
+    "sms": "SMS",
+    "onboarding": "Onboarding",
+    "saved": "Saved"
   },
   "auth": {
     "signIn": "Sign In",
@@ -30,7 +38,11 @@
     "signInLink": "Sign in",
     "email": "Email",
     "password": "Password",
-    "signInUpgrade": "Please sign in to upgrade your account."
+    "signInUpgrade": "Please sign in to upgrade your account.",
+    "continueWithout": "Continue without signing in",
+    "creatingSession": "Creating session…",
+    "signInRequired": "Sign in required to generate a profile.",
+    "billing": "Billing"
   },
   "chart": {
     "title": "Human Design Chart",
@@ -39,8 +51,12 @@
     "birthDate": "Birth Date",
     "birthTime": "Birth Time",
     "birthLocation": "Birth Location",
+    "birthLocationPlaceholder": "City, State, Country — e.g. Tampa, FL, USA",
+    "timezone": "Timezone",
     "lookupLocation": "Look Up",
+    "lookingUp": "Looking up…",
     "tryExample": "Try Example",
+    "generateMyChart": "Generate My Chart",
     "type": "Type",
     "authority": "Authority",
     "profile": "Profile",
@@ -54,7 +70,12 @@
     "gates": "Gates",
     "saveChart": "Save Chart",
     "viewRaw": "View Raw Data",
-    "hideRaw": "Hide Raw Data"
+    "hideRaw": "Hide Raw Data",
+    "welcomeTitle": "Welcome to Prime Self",
+    "welcomeBody": "Enter your birth data below to discover your unique energetic blueprint across Human Design, Western Astrology, Numerology, and Gene Keys.",
+    "birthData": "Birth Data",
+    "enterLocation": "Enter a city first.",
+    "lookUpFirst": "Please enter a birth location and click \"Look Up\" first."
   },
   "profile": {
     "title": "Prime Self Profile",
@@ -64,23 +85,34 @@
     "exportPdf": "Export PDF",
     "shareProfile": "Share",
     "question": "Optional focus question",
+    "questionLabel": "Specific Question (optional — leave blank for full profile)",
     "questionPlaceholder": "e.g. What is my primary Forge?",
-    "noProfiles": "No saved profiles yet."
+    "noProfiles": "No saved profiles yet.",
+    "aiSynthesis": "AI-Powered Multi-System Synthesis",
+    "aiSynthesisBody": "Get a deeply personalized synthesis combining all four systems: Human Design, Western Astro, Numerology, and Gene Keys — powered by AI.",
+    "generateTitle": "Generate Prime Self Profile",
+    "generatingAi": "Generating AI synthesis… This may take 10-20 seconds.",
+    "signInToView": "Sign in to view your saved profiles.",
+    "savedProfiles": "Saved Profiles",
+    "loadingProfiles": "Loading profiles…"
   },
   "transits": {
     "title": "Current Transits",
     "loading": "Loading transit data…",
+    "fetching": "Fetching transits…",
     "today": "Today's Transits",
     "forecast": "Forecast",
     "gateActivations": "Gate Activations",
     "aspects": "Transit Aspects",
-    "noData": "No transit data available."
+    "noData": "No transit data available.",
+    "currentPositions": "Current Transit Positions"
   },
   "composite": {
     "title": "Composite Chart",
     "personA": "Person A",
     "personB": "Person B",
     "generate": "Generate Composite",
+    "generating": "Generating composite…",
     "electromagnetic": "Electromagnetic Connections",
     "dominance": "Dominance Channels",
     "companionship": "Companionship",
@@ -93,7 +125,8 @@
     "addClient": "Add Client",
     "clientEmail": "Client email address",
     "roster": "Client Roster",
-    "noClients": "No clients yet."
+    "noClients": "No clients yet.",
+    "loadingRoster": "Loading roster…"
   },
   "clusters": {
     "title": "Group Intelligence",
@@ -103,17 +136,34 @@
     "members": "Members",
     "addMember": "Add Member",
     "synthesize": "Synthesize Group",
-    "noClusters": "No clusters yet."
+    "noClusters": "No clusters yet.",
+    "loading": "Loading your clusters…"
   },
   "diary": {
     "title": "Life Event Diary",
     "newEntry": "New Entry",
+    "addEvent": "Add Life Event",
     "save": "Save Entry",
     "date": "Date",
+    "eventDate": "Event Date",
     "mood": "Mood",
     "energy": "Energy Level",
     "notes": "Notes",
-    "noEntries": "No diary entries yet."
+    "noEntries": "No diary entries yet.",
+    "noEvents": "No life events logged yet. Add your first event above!",
+    "eventTitle": "Event Title",
+    "eventDescription": "Description",
+    "eventType": "Event Type",
+    "significance": "Significance",
+    "yourEvents": "Your Life Events",
+    "typeCareer": "Career",
+    "typeRelationship": "Relationship",
+    "typeHealth": "Health",
+    "typeSpiritual": "Spiritual",
+    "typeOther": "Other",
+    "sigMajor": "Major",
+    "sigModerate": "Moderate",
+    "sigMinor": "Minor"
   },
   "enhance": {
     "title": "Enhance Your Profile",
@@ -121,6 +171,24 @@
     "bigFive": "Big Five Personality",
     "via": "VIA Character Strengths",
     "save": "Save Assessment"
+  },
+  "checkin": {
+    "title": "Daily Alignment Check-In",
+    "howAligned": "How aligned did you feel today?",
+    "saveCheckin": "Save Check-In",
+    "trends": "Alignment Trends",
+    "saving": "Saving check-in…",
+    "selectScore": "Please select an alignment score (1-10)",
+    "moodGreat": "Great",
+    "moodGood": "Good",
+    "moodNeutral": "Neutral",
+    "moodLow": "Low",
+    "moodStruggling": "Struggling"
+  },
+  "rectify": {
+    "title": "Birth Time Rectification",
+    "analyze": "Analyze Time Window",
+    "analyzing": "Analyzing time window…"
   },
   "onboarding": {
     "title": "The Savannah Arc",
@@ -138,21 +206,29 @@
   },
   "pricing": {
     "title": "Choose Your Path",
+    "unlockTitle": "Unlock Your Full Potential",
+    "choosePlan": "Choose the plan that matches your journey",
     "seeker": "Seeker",
     "guide": "Guide",
     "practitioner": "Practitioner",
     "perMonth": "/month",
     "currentPlan": "Current Plan",
     "upgrade": "Upgrade",
+    "upgradeTo": "Upgrade to {{tier}}",
+    "maybeLater": "Maybe Later",
     "billingPortal": "Manage Billing"
   },
   "share": {
     "title": "Share",
+    "shareProfile": "Share Your Profile",
     "copyLink": "Copy Link",
     "copied": "Copied!",
     "twitter": "Share on X",
     "facebook": "Share on Facebook",
-    "downloadImage": "Download Image"
+    "downloadImage": "Download Image",
+    "referralLink": "Your Referral Link",
+    "shareOn": "Share On",
+    "earnRewards": "Earn rewards by referring friends"
   },
   "common": {
     "loading": "Loading…",
@@ -180,6 +256,16 @@
     "forbidden": "You don't have access to this feature.",
     "quotaExceeded": "Usage limit reached. Upgrade for more.",
     "invalidInput": "Please check your input and try again.",
-    "missingField": "Missing required field: {{field}}"
+    "missingField": "Missing required field: {{field}}",
+    "prefix": "Error: {{message}}"
+  },
+  "social": {
+    "chartExplored": "people explored their chart this week",
+    "reportsGenerated": "reports generated",
+    "accuracyRating": "accuracy rating"
+  },
+  "offline": {
+    "offlineMode": "Offline Mode — Using cached data",
+    "backOnline": "Back online — Syncing…"
   }
 }

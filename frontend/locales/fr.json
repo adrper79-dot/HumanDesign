@@ -11,7 +11,15 @@
     "transits": "Transits",
     "profile": "Profil",
     "enhance": "Améliorer",
-    "diary": "Journal"
+    "diary": "Journal",
+    "checkin": "Bilan",
+    "composite": "Composite",
+    "rectify": "Rectifier",
+    "practitioner": "Praticien",
+    "clusters": "Groupes",
+    "sms": "SMS",
+    "onboarding": "Démarrage",
+    "saved": "Enregistrés"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -30,7 +38,11 @@
     "signInLink": "Se connecter",
     "email": "E-mail",
     "password": "Mot de passe",
-    "signInUpgrade": "Connectez-vous pour mettre à niveau votre compte."
+    "signInUpgrade": "Connectez-vous pour mettre à niveau votre compte.",
+    "continueWithout": "Continuer sans se connecter",
+    "creatingSession": "Création de session…",
+    "signInRequired": "Connexion requise pour générer un profil.",
+    "billing": "Facturation"
   },
   "chart": {
     "title": "Carte de Design Humain",
@@ -54,7 +66,16 @@
     "gates": "Portes",
     "saveChart": "Enregistrer la Carte",
     "viewRaw": "Voir les données brutes",
-    "hideRaw": "Masquer les données brutes"
+    "hideRaw": "Masquer les données brutes",
+    "birthLocationPlaceholder": "Ville, État, Pays — ex. Paris, France",
+    "timezone": "Fuseau horaire",
+    "lookingUp": "Recherche en cours…",
+    "generateMyChart": "Générer Ma Carte",
+    "welcomeTitle": "Bienvenue sur Prime Self",
+    "welcomeBody": "Entrez vos données de naissance pour découvrir votre empreinte énergétique unique à travers le Human Design, l'Astrologie Occidentale, la Numérologie et les Gene Keys.",
+    "birthData": "Données de Naissance",
+    "enterLocation": "Entrez d'abord une ville.",
+    "lookUpFirst": "Veuillez entrer un lieu de naissance et cliquer sur \"Rechercher\"."
   },
   "profile": {
     "title": "Profil Prime Self",
@@ -65,7 +86,15 @@
     "shareProfile": "Partager",
     "question": "Question de focus optionnelle",
     "questionPlaceholder": "ex. Quelle est ma Forge principale ?",
-    "noProfiles": "Aucun profil enregistré."
+    "noProfiles": "Aucun profil enregistré.",
+    "questionLabel": "Question spécifique (optionnel — laissez vide pour profil complet)",
+    "aiSynthesis": "Synthèse Multi-Système par IA",
+    "aiSynthesisBody": "Obtenez une synthèse personnalisée des quatre systèmes : Human Design, Astrologie, Numérologie et Gene Keys — par IA.",
+    "generateTitle": "Générer le Profil Prime Self",
+    "generatingAi": "Génération de la synthèse IA… Cela peut prendre 10-20 secondes.",
+    "signInToView": "Connectez-vous pour voir vos profils enregistrés.",
+    "savedProfiles": "Profils Enregistrés",
+    "loadingProfiles": "Chargement des profils…"
   },
   "transits": {
     "title": "Transits Actuels",
@@ -74,7 +103,9 @@
     "forecast": "Prévisions",
     "gateActivations": "Activations de Portes",
     "aspects": "Aspects de Transit",
-    "noData": "Aucune donnée de transit disponible."
+    "noData": "Aucune donnée de transit disponible.",
+    "fetching": "Récupération des transits…",
+    "currentPositions": "Positions de Transit Actuelles"
   },
   "composite": {
     "title": "Carte Composite",
@@ -85,7 +116,8 @@
     "dominance": "Canaux de Dominance",
     "companionship": "Compagnonnage",
     "compromise": "Compromis",
-    "dynamics": "Dynamiques Relationnelles"
+    "dynamics": "Dynamiques Relationnelles",
+    "generating": "Génération de la composite…"
   },
   "practitioner": {
     "title": "Tableau de Bord Praticien",
@@ -93,7 +125,8 @@
     "addClient": "Ajouter un Client",
     "clientEmail": "E-mail du client",
     "roster": "Liste des Clients",
-    "noClients": "Aucun client pour le moment."
+    "noClients": "Aucun client pour le moment.",
+    "loadingRoster": "Chargement de la liste…"
   },
   "clusters": {
     "title": "Intelligence de Groupe",
@@ -103,7 +136,8 @@
     "members": "Membres",
     "addMember": "Ajouter un Membre",
     "synthesize": "Synthétiser le Groupe",
-    "noClusters": "Aucun groupe pour le moment."
+    "noClusters": "Aucun groupe pour le moment.",
+    "loading": "Chargement de vos groupes…"
   },
   "diary": {
     "title": "Journal des Événements",
@@ -113,7 +147,23 @@
     "mood": "Humeur",
     "energy": "Niveau d'Énergie",
     "notes": "Notes",
-    "noEntries": "Aucune entrée dans le journal."
+    "noEntries": "Aucune entrée dans le journal.",
+    "addEvent": "Ajouter un Événement",
+    "eventDate": "Date de l'Événement",
+    "noEvents": "Aucun événement enregistré. Ajoutez votre premier événement ci-dessus !",
+    "eventTitle": "Titre de l'Événement",
+    "eventDescription": "Description",
+    "eventType": "Type d'Événement",
+    "significance": "Importance",
+    "yourEvents": "Vos Événements de Vie",
+    "typeCareer": "Carrière",
+    "typeRelationship": "Relation",
+    "typeHealth": "Santé",
+    "typeSpiritual": "Spirituel",
+    "typeOther": "Autre",
+    "sigMajor": "Majeur",
+    "sigModerate": "Modéré",
+    "sigMinor": "Mineur"
   },
   "enhance": {
     "title": "Améliorez votre Profil",
@@ -121,6 +171,24 @@
     "bigFive": "Big Five Personnalité",
     "via": "Forces de Caractère VIA",
     "save": "Enregistrer l'Évaluation"
+  },
+  "checkin": {
+    "title": "Bilan d'Alignement Quotidien",
+    "howAligned": "À quel point vous êtes-vous senti aligné aujourd'hui ?",
+    "saveCheckin": "Enregistrer le Bilan",
+    "trends": "Tendances d'Alignement",
+    "saving": "Enregistrement du bilan…",
+    "selectScore": "Veuillez sélectionner un score d'alignement (1-10)",
+    "moodGreat": "Excellent",
+    "moodGood": "Bien",
+    "moodNeutral": "Neutre",
+    "moodLow": "Faible",
+    "moodStruggling": "Difficile"
+  },
+  "rectify": {
+    "title": "Rectification de l'Heure de Naissance",
+    "analyze": "Analyser la Fenêtre Temporelle",
+    "analyzing": "Analyse de la fenêtre temporelle…"
   },
   "onboarding": {
     "title": "L'Arc de la Savane",
@@ -144,7 +212,11 @@
     "perMonth": "/mois",
     "currentPlan": "Plan Actuel",
     "upgrade": "Mettre à niveau",
-    "billingPortal": "Gérer la Facturation"
+    "billingPortal": "Gérer la Facturation",
+    "unlockTitle": "Libérez Votre Plein Potentiel",
+    "choosePlan": "Choisissez le plan qui correspond à votre parcours",
+    "upgradeTo": "Passer à {{tier}}",
+    "maybeLater": "Peut-être plus tard"
   },
   "share": {
     "title": "Partager",
@@ -152,7 +224,11 @@
     "copied": "Copié !",
     "twitter": "Partager sur X",
     "facebook": "Partager sur Facebook",
-    "downloadImage": "Télécharger l'Image"
+    "downloadImage": "Télécharger l'Image",
+    "shareProfile": "Partagez Votre Profil",
+    "referralLink": "Votre Lien de Parrainage",
+    "shareOn": "Partager Sur",
+    "earnRewards": "Gagnez des récompenses en parrainant des amis"
   },
   "common": {
     "loading": "Chargement…",
@@ -180,6 +256,16 @@
     "forbidden": "Vous n'avez pas accès à cette fonctionnalité.",
     "quotaExceeded": "Limite d'utilisation atteinte. Passez à un plan supérieur.",
     "invalidInput": "Veuillez vérifier votre saisie et réessayer.",
-    "missingField": "Champ requis : {{field}}"
+    "missingField": "Champ requis : {{field}}",
+    "prefix": "Erreur : {{message}}"
+  },
+  "social": {
+    "chartExplored": "personnes ont exploré leur carte cette semaine",
+    "reportsGenerated": "rapports générés",
+    "accuracyRating": "note de précision"
+  },
+  "offline": {
+    "offlineMode": "Mode Hors Ligne — Utilisation des données en cache",
+    "backOnline": "De retour en ligne — Synchronisation…"
   }
 }

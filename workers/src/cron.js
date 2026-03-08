@@ -1,5 +1,5 @@
 /**
- * Scheduled Cron — Daily Transit Snapshot + Digest Delivery + Webhook Retries + Push Notifications + Alert Evaluation + Email Drip Campaigns
+ * Scheduled Cron — Daily Transit Snapshot + Digest Delivery + Webhook Retries + Push Notifications + Alert Evaluation + Email Drip Campaigns + Token Cleanup
  *
  * Runs via Cloudflare Workers Cron Triggers.
  * Configured in wrangler.toml: crons = ["0 6 * * *"] (6 AM UTC daily)
@@ -322,6 +322,14 @@ export async function runDailyTransitCron(env) {
     } catch (emailErr) {
       console.error('[CRON] Email drip campaign processing error:', emailErr);
       // Don't throw - email failures shouldn't break the main cron
+    }
+
+    // ─── Step 8: Purge expired / old revoked refresh tokens ─
+    try {
+      await query(QUERIES.deleteExpiredRefreshTokens, []);
+      console.log('[CRON] Expired refresh tokens purged');
+    } catch (purgeErr) {
+      console.error('[CRON] Refresh token purge error:', purgeErr);
     }
 
     return { snapshotDate, userCount: users.length, sent, failed };

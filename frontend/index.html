@@ -711,26 +711,26 @@
 <!-- Auth Overlay -->
 <div class="auth-overlay hidden" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="auth-box">
-    <h2 id="authTitle">Sign In</h2>
-    <p id="authSubtitle">Access your Prime Self profile and saved charts.</p>
+    <h2 id="authTitle" data-i18n="auth.signIn">Sign In</h2>
+    <p id="authSubtitle" data-i18n="auth.accessProfile">Access your Prime Self profile and saved charts.</p>
     <form onsubmit="submitAuth(); return false;">
     <div class="form-group" style="margin-bottom:12px">
-      <label>Email</label>
+      <label data-i18n="auth.email">Email</label>
       <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label>Password</label>
+      <label data-i18n="auth.password">Password</label>
       <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
     </div>
     <div class="auth-error" id="authError"></div>
-    <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:11px">Sign In</button>
+    <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:11px" data-i18n="auth.signIn">Sign In</button>
     </form>
     <div class="auth-toggle">
-      <span id="authToggleText">Don't have an account?</span>
-      <a onclick="toggleAuthMode()" id="authToggleLink">Create one</a>
+      <span id="authToggleText" data-i18n="auth.noAccount">Don't have an account?</span>
+      <a onclick="toggleAuthMode()" id="authToggleLink" data-i18n="auth.createOne">Create one</a>
     </div>
     <div style="text-align:center;margin-top:10px">
-      <a style="font-size:0.78rem;cursor:pointer;color:var(--text-dim)" onclick="closeAuthOverlay()">Continue without signing in</a>
+      <a style="font-size:0.78rem;cursor:pointer;color:var(--text-dim)" onclick="closeAuthOverlay()" data-i18n="auth.continueWithout">Continue without signing in</a>
     </div>
   </div>
 </div>
@@ -738,8 +738,8 @@
 <!-- Pricing Modal -->
 <div class="pricing-overlay hidden" id="pricingOverlay" role="dialog" aria-modal="true" aria-labelledby="pricingTitle">
   <div class="pricing-modal">
-    <h2 id="pricingTitle">Unlock Your Full Potential</h2>
-    <p class="subtitle">Choose the plan that matches your journey</p>
+    <h2 id="pricingTitle" data-i18n="pricing.unlockTitle">Unlock Your Full Potential</h2>
+    <p class="subtitle" data-i18n="pricing.choosePlan">Choose the plan that matches your journey</p>
     <div class="pricing-grid">
       <!-- Free Tier -->
       <div class="pricing-card">
@@ -754,13 +754,13 @@
           <li class="disabled">Practitioner tools</li>
           <li class="disabled">API access</li>
         </ul>
-        <button class="btn-secondary tier-cta" disabled>Current Plan</button>
+        <button class="btn-secondary tier-cta" disabled data-i18n="pricing.currentPlan">Current Plan</button>
       </div>
       <!-- Seeker Tier -->
       <div class="pricing-card">
-        <div class="tier-name">Seeker</div>
+        <div class="tier-name" data-i18n="pricing.seeker">Seeker</div>
         <div class="tier-price"><span class="currency">$</span>15</div>
-        <div class="tier-billing">per month</div>
+        <div class="tier-billing" data-i18n="pricing.perMonth">per month</div>
         <ul class="tier-features">
           <li>Unlimited chart calculations</li>
           <li>10 profile generations/month</li>
@@ -773,9 +773,9 @@
       </div>
       <!-- Guide Tier -->
       <div class="pricing-card featured">
-        <div class="tier-name">Guide ⭐</div>
+        <div class="tier-name" data-i18n="pricing.guide">Guide ⭐</div>
         <div class="tier-price"><span class="currency">$</span>97</div>
-        <div class="tier-billing">per month</div>
+        <div class="tier-billing" data-i18n="pricing.perMonth">per month</div>
         <ul class="tier-features">
           <li>Unlimited everything</li>
           <li>Unlimited profile generations</li>
@@ -788,9 +788,9 @@
       </div>
       <!-- Practitioner Tier -->
       <div class="pricing-card">
-        <div class="tier-name">Practitioner</div>
+        <div class="tier-name" data-i18n="pricing.practitioner">Practitioner</div>
         <div class="tier-price"><span class="currency">$</span>500</div>
-        <div class="tier-billing">per month</div>
+        <div class="tier-billing" data-i18n="pricing.perMonth">per month</div>
         <ul class="tier-features">
           <li>Everything in Guide +</li>
           <li>10,000 API calls/month</li>
@@ -803,7 +803,7 @@
       </div>
     </div>
     <div class="pricing-close">
-      <a onclick="closePricingModal()">Maybe later</a>
+      <a onclick="closePricingModal()" data-i18n="pricing.maybeLater">Maybe later</a>
     </div>
   </div>
 </div>
@@ -829,11 +829,11 @@
   <div class="auth-bar">
     <div id="lang-switcher" class="lang-switcher"></div>
     <span class="tier-badge tier-free" id="tierBadge" style="display:none">FREE</span>
-    <div class="auth-status" id="authStatusText">Not signed in</div>
+    <div class="auth-status" id="authStatusText" data-i18n="auth.notSignedIn">Not signed in</div>
     <button class="btn-secondary btn-sm" id="upgradeBtn" style="display:none" onclick="openPricingModal()">⚡ Upgrade</button>
-    <button class="btn-secondary btn-sm" id="billingBtn" style="display:none" onclick="openBillingPortal()">Billing</button>
-    <button class="btn-secondary btn-sm" id="authBtn" onclick="openAuthOverlay()">Sign In</button>
-    <button class="btn-danger btn-sm" id="logoutBtn" style="display:none" onclick="logout()">Sign Out</button>
+    <button class="btn-secondary btn-sm" id="billingBtn" style="display:none" onclick="openBillingPortal()" data-i18n="auth.billing">Billing</button>
+    <button class="btn-secondary btn-sm" id="authBtn" onclick="openAuthOverlay()" data-i18n="auth.signIn">Sign In</button>
+    <button class="btn-danger btn-sm" id="logoutBtn" style="display:none" onclick="logout()" data-i18n="auth.signOut">Sign Out</button>
   </div>
 </header>
 
@@ -841,15 +841,15 @@
 <div class="social-proof-banner" id="socialProofBanner">
   <div class="social-proof-stat">
     <span class="social-proof-number" id="weeklyUsers">...</span>
-    <span class="social-proof-label">people explored their chart this week</span>
+    <span class="social-proof-label" data-i18n="social.chartExplored">people explored their chart this week</span>
   </div>
   <div class="social-proof-stat">
     <span class="social-proof-number" id="totalProfiles">...</span>
-    <span class="social-proof-label">AI synthesis reports generated</span>
+    <span class="social-proof-label" data-i18n="social.reportsGenerated">AI synthesis reports generated</span>
   </div>
   <div class="social-proof-stat">
     <span class="social-proof-number">98%</span>
-    <span class="social-proof-label">accuracy rating from practitioners</span>
+    <span class="social-proof-label" data-i18n="social.accuracyRating">accuracy rating from practitioners</span>
   </div>
 </div>
 
@@ -920,19 +920,19 @@
 
 <!-- Navigation Tabs -->
 <div class="tabs" role="tablist" aria-label="Main navigation tabs">
-  <button class="tab-btn active" id="btn-chart" role="tab" aria-selected="true" aria-controls="tab-chart" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart<span class="icon-info help-icon" title="Calculate your exact gate activations using birth coordinates and time. Your chart shifts every 2 hours as Earth rotates through different gate positions. We calculate both your conscious (personality) and unconscious (design) activations 88 days before birth."></span></button>
-  <button class="tab-btn" id="btn-profile" role="tab" aria-selected="false" aria-controls="tab-profile" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile<span class="icon-info help-icon" title="Get an AI synthesis combining your 64 gates, Gene Keys shadows/gifts/siddhis, astrological aspects, and life path numbers. This creates specific guidance based on YOUR exact activation patterns - not generic descriptions."></span></button>
-  <button class="tab-btn" id="btn-enhance" role="tab" aria-selected="false" aria-controls="tab-enhance" onclick="switchTab('enhance', this)"><span class="icon-star"></span> Enhance<span class="icon-info help-icon" title="Add behavioral validation and life events to dramatically improve reading accuracy. Takes 10 minutes: Big Five personality assessment, character strengths, decision patterns, and major life event timeline for retroactive validation."></span></button>
-  <button class="tab-btn" id="btn-diary" role="tab" aria-selected="false" aria-controls="tab-diary" onclick="switchTab('diary', this)"><span class="icon-archive"></span> Diary<span class="icon-info help-icon" title="Log major life events with dates to validate your chart retroactively. System auto-correlates events with transits to prove chart accuracy through lived experience. Use for birth time rectification."></span></button>
-  <button class="tab-btn" id="btn-checkin" role="tab" aria-selected="false" aria-controls="tab-checkin" onclick="switchTab('checkin', this)"><span class="icon-heart"></span> Check-In<span class="icon-info help-icon" title="Daily alignment tracker. Rate how well you followed your strategy and authority each day (1-10 score). View trends over time, track streaks, and correlate alignment with current transits to identify patterns."></span></button>
-  <button class="tab-btn" id="btn-transits" role="tab" aria-selected="false" aria-controls="tab-transits" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits<span class="icon-info help-icon" title="See which gates are activated RIGHT NOW by current planetary positions and how they interact with YOUR gates. Fast-moving planets (Moon, Sun, Mercury) change daily. Slow planets (Saturn, Neptune, Pluto) create year-long themes."></span></button>
-  <button class="tab-btn" id="btn-composite" role="tab" aria-selected="false" aria-controls="tab-composite" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Composite<span class="icon-info help-icon" title="Calculate the electromagnetic field created when two charts overlap. Shows new channels activated together, definition changes, and specific interaction dynamics. Essential for business partnerships and relationships."></span></button>
-  <button class="tab-btn" id="btn-rectify" role="tab" aria-selected="false" aria-controls="tab-rectify" onclick="switchTab('rectify', this)"><span class="icon-time"></span> Rectify<span class="icon-info help-icon" title="Find your accurate birth time by back-calculating from life events. Major life shifts often correlate with gate changes. Test different times in your uncertainty window to find which gates align with your actual experiences."></span></button>
-  <button class="tab-btn" id="btn-practitioner" role="tab" aria-selected="false" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> Practitioner<span class="icon-info help-icon" title="Batch process multiple charts for client readings. Save client profiles with notes, track reading history, and access all charts quickly. For professional readers who need organized client management."></span></button>
-  <button class="tab-btn" id="btn-clusters" role="tab" aria-selected="false" aria-controls="tab-clusters" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> Clusters<span class="icon-info help-icon" title="Analyze group dynamics by overlaying multiple charts. See which gates/channels dominate in teams, identify missing energies, and understand collective patterns. Use for families, work teams, or organizations."></span></button>
-  <button class="tab-btn" id="btn-sms" role="tab" aria-selected="false" aria-controls="tab-sms" onclick="switchTab('sms', this)"><span class="icon-sms"></span> SMS<span class="icon-info help-icon" title="Automate personalized text messages with transit updates. Uses YOUR gate activations to identify significant transits (returning planets, important aspects). Subscribers receive alerts when their specific gates are activated."></span></button>
-  <button class="tab-btn" id="btn-onboarding" role="tab" aria-selected="false" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> Onboarding<span class="icon-info help-icon" title="Guided intake questionnaire that collects life event dates, themes, and challenges. This data trains the AI to provide readings aligned with YOUR actual lived experience, not generic interpretations."></span></button>
-  <button class="tab-btn" id="btn-history" role="tab" aria-selected="false" aria-controls="tab-history" onclick="switchTab('history', this)"><span class="icon-archive"></span> Saved<span class="icon-info help-icon" title="Access all your previously generated charts and synthesis reports. Each profile includes the exact birth coordinates and timestamp used for calculations. Compare how readings evolve as you refine your birth time."></span></button>
+  <button class="tab-btn active" id="btn-chart" role="tab" aria-selected="true" aria-controls="tab-chart" onclick="switchTab('chart', this)"><span class="icon-chart"></span> <span data-i18n="nav.chart">Chart</span><span class="icon-info help-icon" title="Calculate your exact gate activations using birth coordinates and time. Your chart shifts every 2 hours as Earth rotates through different gate positions. We calculate both your conscious (personality) and unconscious (design) activations 88 days before birth."></span></button>
+  <button class="tab-btn" id="btn-profile" role="tab" aria-selected="false" aria-controls="tab-profile" onclick="switchTab('profile', this)"><span class="icon-profile"></span> <span data-i18n="nav.profile">Profile</span><span class="icon-info help-icon" title="Get an AI synthesis combining your 64 gates, Gene Keys shadows/gifts/siddhis, astrological aspects, and life path numbers. This creates specific guidance based on YOUR exact activation patterns - not generic descriptions."></span></button>
+  <button class="tab-btn" id="btn-enhance" role="tab" aria-selected="false" aria-controls="tab-enhance" onclick="switchTab('enhance', this)"><span class="icon-star"></span> <span data-i18n="nav.enhance">Enhance</span><span class="icon-info help-icon" title="Add behavioral validation and life events to dramatically improve reading accuracy. Takes 10 minutes: Big Five personality assessment, character strengths, decision patterns, and major life event timeline for retroactive validation."></span></button>
+  <button class="tab-btn" id="btn-diary" role="tab" aria-selected="false" aria-controls="tab-diary" onclick="switchTab('diary', this)"><span class="icon-archive"></span> <span data-i18n="nav.diary">Diary</span><span class="icon-info help-icon" title="Log major life events with dates to validate your chart retroactively. System auto-correlates events with transits to prove chart accuracy through lived experience. Use for birth time rectification."></span></button>
+  <button class="tab-btn" id="btn-checkin" role="tab" aria-selected="false" aria-controls="tab-checkin" onclick="switchTab('checkin', this)"><span class="icon-heart"></span> <span data-i18n="nav.checkin">Check-In</span><span class="icon-info help-icon" title="Daily alignment tracker. Rate how well you followed your strategy and authority each day (1-10 score). View trends over time, track streaks, and correlate alignment with current transits to identify patterns."></span></button>
+  <button class="tab-btn" id="btn-transits" role="tab" aria-selected="false" aria-controls="tab-transits" onclick="switchTab('transits', this)"><span class="icon-transit"></span> <span data-i18n="nav.transits">Transits</span><span class="icon-info help-icon" title="See which gates are activated RIGHT NOW by current planetary positions and how they interact with YOUR gates. Fast-moving planets (Moon, Sun, Mercury) change daily. Slow planets (Saturn, Neptune, Pluto) create year-long themes."></span></button>
+  <button class="tab-btn" id="btn-composite" role="tab" aria-selected="false" aria-controls="tab-composite" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> <span data-i18n="nav.composite">Composite</span><span class="icon-info help-icon" title="Calculate the electromagnetic field created when two charts overlap. Shows new channels activated together, definition changes, and specific interaction dynamics. Essential for business partnerships and relationships."></span></button>
+  <button class="tab-btn" id="btn-rectify" role="tab" aria-selected="false" aria-controls="tab-rectify" onclick="switchTab('rectify', this)"><span class="icon-time"></span> <span data-i18n="nav.rectify">Rectify</span><span class="icon-info help-icon" title="Find your accurate birth time by back-calculating from life events. Major life shifts often correlate with gate changes. Test different times in your uncertainty window to find which gates align with your actual experiences."></span></button>
+  <button class="tab-btn" id="btn-practitioner" role="tab" aria-selected="false" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> <span data-i18n="nav.practitioner">Practitioner</span><span class="icon-info help-icon" title="Batch process multiple charts for client readings. Save client profiles with notes, track reading history, and access all charts quickly. For professional readers who need organized client management."></span></button>
+  <button class="tab-btn" id="btn-clusters" role="tab" aria-selected="false" aria-controls="tab-clusters" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> <span data-i18n="nav.clusters">Clusters</span><span class="icon-info help-icon" title="Analyze group dynamics by overlaying multiple charts. See which gates/channels dominate in teams, identify missing energies, and understand collective patterns. Use for families, work teams, or organizations."></span></button>
+  <button class="tab-btn" id="btn-sms" role="tab" aria-selected="false" aria-controls="tab-sms" onclick="switchTab('sms', this)"><span class="icon-sms"></span> <span data-i18n="nav.sms">SMS</span><span class="icon-info help-icon" title="Automate personalized text messages with transit updates. Uses YOUR gate activations to identify significant transits (returning planets, important aspects). Subscribers receive alerts when their specific gates are activated."></span></button>
+  <button class="tab-btn" id="btn-onboarding" role="tab" aria-selected="false" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> <span data-i18n="nav.onboarding">Onboarding</span><span class="icon-info help-icon" title="Guided intake questionnaire that collects life event dates, themes, and challenges. This data trains the AI to provide readings aligned with YOUR actual lived experience, not generic interpretations."></span></button>
+  <button class="tab-btn" id="btn-history" role="tab" aria-selected="false" aria-controls="tab-history" onclick="switchTab('history', this)"><span class="icon-archive"></span> <span data-i18n="nav.saved">Saved</span><span class="icon-info help-icon" title="Access all your previously generated charts and synthesis reports. Each profile includes the exact birth coordinates and timestamp used for calculations. Compare how readings evolve as you refine your birth time."></span></button>
 </div>
 
 <!-- Main Content -->
@@ -941,34 +941,34 @@
   <!-- ═══ CHART TAB ═══ -->
   <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-chart">
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
-      <strong style="color:var(--gold)">Welcome to Prime Self</strong><br>
+      <strong style="color:var(--gold)" data-i18n="chart.welcomeTitle">Welcome to Prime Self</strong><br>
       Enter your exact birth date, time, and location below. We'll calculate your personalized Energy Blueprint by mapping 64 gate activations, planetary positions, and numerological patterns. Your chart reveals which energies are consistently available to you (defined centers) vs. which you experience through others (open centers). This precision calculation forms the foundation for AI-powered synthesis.
     </div>
     <div class="card">
-      <div class="card-title"><span class="icon-chart"></span> Birth Data</div>
+      <div class="card-title"><span class="icon-chart"></span> <span data-i18n="chart.birthData">Birth Data</span></div>
       <div class="form-grid">
         <div class="form-group">
-          <label>Birth Date</label>
+          <label data-i18n="chart.birthDate">Birth Date</label>
           <input type="date" id="c-date" value="1990-06-15">
         </div>
         <div class="form-group">
-          <label>Birth Time<span class="icon-info help-icon" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE bodygraph shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
+          <label><span data-i18n="chart.birthTime">Birth Time</span><span class="icon-info help-icon" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE bodygraph shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
           <input type="time" id="c-time" value="14:30">
         </div>
         <div class="form-group full">
-          <label>Birth Location<span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
+          <label><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
           <div style="display:flex;gap:8px">
-            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" style="flex:1"
+            <input type="text" id="c-location" placeholder="City, State, Country" data-i18n-placeholder="chart.birthLocationPlaceholder" — e.g. Tampa, FL, USA" style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('c')" id="c-geoBtn"
-              style="white-space:nowrap;padding:0 16px;font-size:0.85rem">Look Up</button>
+              style="white-space:nowrap;padding:0 16px;font-size:0.85rem" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
           <div id="c-geo-status" style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)"></div>
           <input type="hidden" id="c-lat">
           <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
-          <label>Timezone<span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
+          <label><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
           <select id="c-tz">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -993,9 +993,9 @@
       <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-primary" onclick="calculateChart()" id="calcBtn">
           <span class="spinner" id="calcSpinner" style="display:none"></span>
-          Generate My Chart
+          <span data-i18n="chart.generateMyChart">Generate My Chart</span>
         </button>
-        <button class="btn-secondary" onclick="prefillExample()">Try Example</button>
+        <button class="btn-secondary" onclick="prefillExample()" data-i18n="chart.tryExample">Try Example</button>
       </div>
     </div>
 
@@ -1005,7 +1005,7 @@
   <!-- ═══ PROFILE TAB ═══ -->
   <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-profile">
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--gold)">
-      <strong style="color:var(--gold)">AI-Powered Multi-System Synthesis</strong><br>
+      <strong style="color:var(--gold)" data-i18n="profile.aiSynthesis">AI-Powered Multi-System Synthesis</strong><br>
       This isn't a generic report. We calculate YOUR exact 64 gate activations (both conscious + unconscious), overlay Gene Keys shadows/gifts/siddhis, map astrological aspects with orbs, and integrate numerology — then Claude AI synthesizes convergences across ALL systems. You get specific scenarios ("When X happens, you notice Y because [datapoint]") instead of vague statements. <strong>Takes 15-30 seconds to generate.</strong> Requires sign-in to save your profile.
     </div>
     <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
@@ -1014,30 +1014,30 @@
       <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:8px">Upgrade to unlock more</a>
     </div>
     <div class="card">
-      <div class="card-title"><span class="icon-profile"></span> Generate Prime Self Profile</div>
+      <div class="card-title"><span class="icon-profile"></span> <span data-i18n="profile.generateTitle">Generate Prime Self Profile</span></div>
       <div class="form-grid">
         <div class="form-group">
-          <label>Birth Date</label>
+          <label data-i18n="chart.birthDate">Birth Date</label>
           <input type="date" id="p-date" value="1990-06-15">
         </div>
         <div class="form-group">
-          <label>Birth Time</label>
+          <label data-i18n="chart.birthTime">Birth Time</label>
           <input type="time" id="p-time" value="14:30">
         </div>
         <div class="form-group full">
-          <label>Birth Location</label>
+          <label data-i18n="chart.birthLocation">Birth Location</label>
           <div style="display:flex;gap:8px">
-            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" style="flex:1"
+            <input type="text" id="p-location" placeholder="City, State, Country" data-i18n-placeholder="chart.birthLocationPlaceholder" — e.g. Tampa, FL, USA" style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('p')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('p')" id="p-geoBtn"
-              style="white-space:nowrap;padding:0 16px;font-size:0.85rem">Look Up</button>
+              style="white-space:nowrap;padding:0 16px;font-size:0.85rem" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
           <div id="p-geo-status" style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)"></div>
           <input type="hidden" id="p-lat">
           <input type="hidden" id="p-lng">
         </div>
         <div class="form-group full">
-          <label>Timezone <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
+          <label><span data-i18n="chart.timezone">Timezone</span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
           <select id="p-tz">
             <option value="America/New_York">America/New_York</option>
             <option value="America/Los_Angeles">America/Los_Angeles</option>
@@ -1049,14 +1049,14 @@
           </select>
         </div>
         <div class="form-group full">
-          <label>Specific Question (optional — leave blank for full profile)</label>
-          <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?">
+          <label data-i18n="profile.questionLabel">Specific Question (optional — leave blank for full profile)</label>
+          <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder">
         </div>
       </div>
       <div style="margin-top:18px">
         <button class="btn-primary" onclick="generateProfile()" id="profileBtn" style="padding:11px 24px">
           <span class="spinner" id="profileSpinner" style="display:none"></span>
-          Create My Full Profile
+          <span data-i18n="profile.generate">Create My Full Profile</span>
         </button>
         <button class="btn-secondary" onclick="shareProfile()" id="shareProfileBtn" style="padding:11px 24px;display:none">
           📤 Share My Profile
@@ -1069,25 +1069,25 @@
     <div class="share-modal-overlay hidden" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
       <div class="share-modal">
         <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)">
-          <h3 id="shareModalTitle" style="margin:0;font-size:1.2rem;color:var(--gold)">Share Your Profile</h3>
+          <h3 id="shareModalTitle" style="margin:0;font-size:1.2rem;color:var(--gold)" data-i18n="share.shareProfile">Share Your Profile</h3>
           <button class="modal-close" onclick="closeShareModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.8rem;cursor:pointer">&times;</button>
         </div>
         <div style="padding:24px">
           <!-- Share Link -->
           <div style="margin-bottom:24px">
-            <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text)">Your Referral Link</label>
+            <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text)" data-i18n="share.referralLink">Your Referral Link</label>
             <div style="display:flex;gap:8px">
               <input type="text" id="shareLinkInput" readonly style="flex:1;background:var(--bg3);border:1px solid var(--border);padding:10px;border-radius:6px;color:var(--text);font-size:0.9rem">
               <button class="btn-secondary" onclick="copyShareLink()" style="white-space:nowrap">
                 📋 Copy
               </button>
             </div>
-            <p style="font-size:0.8rem;color:var(--text-dim);margin-top:6px">Share this link and earn rewards when friends sign up!</p>
+            <p style="font-size:0.8rem;color:var(--text-dim);margin-top:6px" data-i18n="share.earnRewards">Share this link and earn rewards when friends sign up!</p>
           </div>
           
           <!-- Social Share Buttons -->
           <div style="margin-bottom:20px">
-            <label style="display:block;margin-bottom:12px;font-weight:600;color:var(--text)">Share On</label>
+            <label style="display:block;margin-bottom:12px;font-weight:600;color:var(--text)" data-i18n="share.shareOn">Share On</label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
               <button class="btn-social" onclick="shareToSocial('facebook')" style="background:#1877f2;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
                 Facebook
@@ -1127,7 +1127,7 @@
 
     <!-- Behavioral Validation -->
     <div class="card">
-      <div class="card-title"><span class="icon-check"></span> Behavioral Validation (2 min)</div>
+      <div class="card-title"><span class="icon-check"></span> <span data-i18n="enhance.behavioral">Behavioral Validation</span> (2 min)</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Answer these questions to validate your chart through actual behavior patterns.</p>
       
       <div class="form-group" style="margin-bottom:16px">
@@ -1170,7 +1170,7 @@
 
     <!-- Big Five Assessment -->
     <div class="card">
-      <div class="card-title"><span class="icon-brain"></span> Big Five Personality (3 min)</div>
+      <div class="card-title"><span class="icon-brain"></span> <span data-i18n="enhance.bigFive">Big Five Personality</span> (3 min)</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">20 questions. Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
       
       <div id="bigfive-questions"></div>
@@ -1184,14 +1184,14 @@
 
     <!-- VIA Character Strengths -->
     <div class="card">
-      <div class="card-title"><span class="icon-star"></span> Character Strengths (4 min)</div>
+      <div class="card-title"><span class="icon-star"></span> <span data-i18n="enhance.via">Character Strengths</span> (4 min)</div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">24 questions. Rate how much each strength describes you from 1 (Not like me) to 5 (Very much like me).</p>
       
       <div id="via-questions"></div>
 
       <button class="btn-primary" onclick="saveVIA()" id="viaBtn" style="margin-top:16px">
         <span class="spinner" id="viaSpinner" style="display:none"></span>
-        Save Character Strengths
+        <span data-i18n="enhance.save">Save Character Strengths</span>
       </button>
       <div id="viaStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
     </div>
@@ -1205,15 +1205,15 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="icon-plus"></span> Add Life Event</div>
+      <div class="card-title"><span class="icon-plus"></span> <span data-i18n="diary.addEvent">Add Life Event</span></div>
       
       <div class="form-grid">
         <div class="form-group">
-          <label>Event Date</label>
+          <label data-i18n="diary.eventDate">Event Date</label>
           <input type="date" id="diary-date" style="margin-top:4px">
         </div>
         <div class="form-group">
-          <label>Event Type</label>
+          <label data-i18n="diary.eventType">Event Type</label>
           <select id="diary-type" style="margin-top:4px">
             <option value="career">Career</option>
             <option value="relationship">Relationship</option>
@@ -1225,7 +1225,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Significance</label>
+          <label data-i18n="diary.significance">Significance</label>
           <select id="diary-significance" style="margin-top:4px">
             <option value="major">Major (life-changing)</option>
             <option value="moderate" selected>Moderate (notable)</option>
@@ -1233,11 +1233,11 @@
           </select>
         </div>
         <div class="form-group full">
-          <label>Event Title</label>
+          <label data-i18n="diary.eventTitle">Event Title</label>
           <input type="text" id="diary-title" placeholder="e.g., Got promoted to Director" style="margin-top:4px">
         </div>
         <div class="form-group full">
-          <label>Description (Optional)</label>
+          <label data-i18n="diary.eventDescription">Description (Optional)</label>
           <textarea id="diary-description" rows="3" placeholder="Add context, what happened, how you felt..." style="margin-top:4px"></textarea>
         </div>
       </div>
@@ -1247,13 +1247,13 @@
           <span class="spinner" id="diarySpinner" style="display:none"></span>
           <span class="icon-plus"></span> Add Event
         </button>
-        <button class="btn-secondary" onclick="cancelDiaryEdit()" id="diaryCancelBtn" style="display:none">Cancel</button>
+        <button class="btn-secondary" onclick="cancelDiaryEdit()" id="diaryCancelBtn" style="display:none" data-i18n="common.cancel">Cancel</button>
       </div>
       <div id="diaryStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="icon-archive"></span> Your Life Events</div>
+      <div class="card-title"><span class="icon-archive"></span> <span data-i18n="diary.yourEvents">Your Life Events</span></div>
       <button class="btn-secondary" onclick="loadDiaryEntries()" id="diaryLoadBtn" style="margin-bottom:16px">
         <span class="spinner" id="diaryLoadSpinner" style="display:none"></span>
         Load Events
@@ -1265,7 +1265,7 @@
   <!-- ═══ CHECK-IN TAB ═══ -->
   <div class="tab-content" id="tab-checkin" role="tabpanel" aria-labelledby="btn-checkin">
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
-      <strong style="color:var(--gold)">Daily Alignment Tracker</strong><br>
+      <strong style="color:var(--gold)" data-i18n="checkin.title">Daily Alignment Tracker</strong><br>
       Check in daily to track how well you're following your strategy and authority. Rate your alignment (1-10), note your mood and energy, and watch patterns emerge over time. Build streaks to maintain consistency. The system correlates your alignment scores with current transits to help you understand which energies support or challenge your design.
     </div>
 
@@ -1282,7 +1282,7 @@
 
       <div class="form-grid">
         <div class="form-group full">
-          <label>How aligned did you feel today? (1-10)<span class="icon-info help-icon" title="1 = Completely off track, not following your design at all. 10 = Perfectly aligned, honoring your strategy and authority all day. Be honest - patterns only emerge with genuine data."></span></label>
+          <label><span data-i18n="checkin.howAligned">How aligned did you feel today?</span> (1-10)<span class="icon-info help-icon" title="1 = Completely off track, not following your design at all. 10 = Perfectly aligned, honoring your strategy and authority all day. Be honest - patterns only emerge with genuine data."></span></label>
           <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
             <button class="alignment-btn" data-score="1" onclick="selectAlignment(1)">1</button>
             <button class="alignment-btn" data-score="2" onclick="selectAlignment(2)">2</button>
@@ -1338,7 +1338,7 @@
       <div style="margin-top:16px;display:flex;gap:10px">
         <button class="btn-primary" onclick="saveCheckin()" id="checkinBtn">
           <span class="spinner" id="checkinSpinner" style="display:none"></span>
-          <span class="icon-heart"></span> <span id="checkinBtnText">Save Check-In</span>
+          <span class="icon-heart"></span> <span id="checkinBtnText" data-i18n="checkin.saveCheckin">Save Check-In</span>
         </button>
       </div>
       <div id="checkinStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
@@ -1346,7 +1346,7 @@
 
     <!-- Alignment Stats Card -->
     <div class="card">
-      <div class="card-title"><span class="icon-chart"></span> Alignment Trends</div>
+      <div class="card-title"><span class="icon-chart"></span> <span data-i18n="checkin.trends">Alignment Trends</span></div>
       <button class="btn-secondary" onclick="loadCheckinStats()" id="checkinStatsBtn" style="margin-bottom:16px">
         <span class="spinner" id="checkinStatsSpinner" style="display:none"></span>
         Load Stats
@@ -1376,7 +1376,7 @@
   <!-- ═══ TRANSITS TAB ═══ -->
   <div class="tab-content" id="tab-transits" role="tabpanel" aria-labelledby="btn-transits">
     <div class="card">
-      <div class="card-title"><span class="icon-transit"></span> Current Transit Positions</div>
+      <div class="card-title"><span class="icon-transit"></span> <span data-i18n="transits.currentPositions">Current Transit Positions</span></div>
       <p style="font-size:0.88rem;color:var(--text);margin-bottom:12px;line-height:1.6">See which gates are activated RIGHT NOW by current planetary positions. Fast-moving planets (Moon, Sun, Mercury) change daily and create short-term themes. Slow planets (Saturn, Neptune, Pluto) activate gates for months/years and mark major life chapters. When transiting planets activate YOUR natal gates, you experience amplified energy in those themes.</p>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Displays: Gene Key/line activations + Western Astrology signs/degrees/houses</p>
       <button class="btn-primary" onclick="loadTransits()" id="transitBtn">
@@ -1390,8 +1390,8 @@
   <!-- ═══ HISTORY TAB ═══ -->
   <div class="tab-content" id="tab-history" role="tabpanel" aria-labelledby="btn-history">
     <div class="card">
-      <div class="card-title"><span class="icon-archive"></span> Saved Profiles</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Sign in to view your saved Prime Self Profiles.</p>
+      <div class="card-title"><span class="icon-archive"></span> <span data-i18n="profile.savedProfiles">Saved Profiles</span></div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px" data-i18n="profile.signInToView">Sign in to view your saved Prime Self Profiles.</p>
       <button class="btn-primary" onclick="loadHistory()" id="historyBtn">
         <span class="spinner" id="historySpinner" style="display:none"></span>
         View Saved Charts
@@ -1407,15 +1407,15 @@
       Calculate the combined energy blueprint when two charts overlap. This shows: <strong>(1)</strong> New channels activated when you're together (electromagnetic bridges), <strong>(2)</strong> Definition changes (e.g., individual becomes emotional authority), <strong>(3)</strong> Dominant gates/themes in the relationship field, <strong>(4)</strong> Potential blind spots (missing energies). Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.
     </div>
     <div class="card">
-      <div class="card-title"><span class="icon-partnership"></span> Composite Chart</div>
+      <div class="card-title"><span class="icon-partnership"></span> <span data-i18n="composite.title">Composite Chart</span></div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze relationship dynamics between two people.</p>
       
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px">Person A</h4>
+      <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px" data-i18n="composite.personA">Person A</h4>
       <div class="form-grid">
-        <div class="form-group"><label>Birth Date</label><input type="date" id="comp-dateA" value="1990-06-15"></div>
-        <div class="form-group"><label>Birth Time</label><input type="time" id="comp-timeA" value="14:30"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" value="1990-06-15"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" value="14:30"></div>
         <div class="form-group full">
-          <label>Birth Location
+          <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
           <div style="display:flex;gap:8px;align-items:flex-start">
@@ -1423,7 +1423,7 @@
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-A')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-A')" id="comp-A-geoBtn"
-              style="height:40px;padding:0 16px;white-space:nowrap">Look Up</button>
+              style="height:40px;padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
           <div id="comp-A-geo-status" style="font-size:0.75rem;margin-top:4px;min-height:1rem"></div>
         </div>
@@ -1431,12 +1431,12 @@
         <input type="hidden" id="comp-A-lng" value="-74.0060">
       </div>
 
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:20px 0 8px">Person B</h4>
+      <h4 style="color:var(--gold);font-size:0.9rem;margin:20px 0 8px" data-i18n="composite.personB">Person B</h4>
       <div class="form-grid">
-        <div class="form-group"><label>Birth Date</label><input type="date" id="comp-dateB" value="1988-03-22"></div>
-        <div class="form-group"><label>Birth Time</label><input type="time" id="comp-timeB" value="09:15"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" value="1988-03-22"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" value="09:15"></div>
         <div class="form-group full">
-          <label>Birth Location
+          <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
           <div style="display:flex;gap:8px;align-items:flex-start">
@@ -1444,7 +1444,7 @@
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-B')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-B')" id="comp-B-geoBtn"
-              style="height:40px;padding:0 16px;white-space:nowrap">Look Up</button>
+              style="height:40px;padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
           <div id="comp-B-geo-status" style="font-size:0.75rem;margin-top:4px;min-height:1rem"></div>
         </div>
@@ -1454,7 +1454,7 @@
 
       <button class="btn-primary" onclick="generateComposite()" id="compBtn" style="margin-top:16px">
         <span class="spinner" id="compSpinner" style="display:none"></span>
-        Check Our Compatibility
+        <span data-i18n="composite.generate">Check Our Compatibility</span>
       </button>
     </div>
     <div id="compResult"></div>
@@ -1463,14 +1463,14 @@
   <!-- ═══ RECTIFY TAB ═══ -->
   <div class="tab-content" id="tab-rectify" role="tabpanel" aria-labelledby="btn-rectify">
     <div class="card">
-      <div class="card-title"><span class="icon-time"></span> Birth Time Rectification</div>
+      <div class="card-title"><span class="icon-time"></span> <span data-i18n="rectify.title">Birth Time Rectification</span></div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze how chart changes within a time window to find the most accurate birth time.</p>
       
       <div class="form-grid">
-        <div class="form-group"><label>Birth Date</label><input type="date" id="rect-date" value="1990-06-15"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="rect-date" value="1990-06-15"></div>
         <div class="form-group"><label>Approximate Time</label><input type="time" id="rect-time" value="14:30"></div>
         <div class="form-group">
-          <label>Birth Location
+          <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
           <div style="display:flex;gap:8px;align-items:flex-start">
@@ -1478,7 +1478,7 @@
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('rect')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('rect')" id="rect-geoBtn"
-              style="height:40px;padding:0 16px;white-space:nowrap">Look Up</button>
+              style="height:40px;padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
           <div id="rect-geo-status" style="font-size:0.75rem;margin-top:4px;min-height:1rem"></div>
         </div>
@@ -1500,7 +1500,7 @@
 
       <button class="btn-primary" onclick="runRectification()" id="rectBtn" style="margin-top:16px">
         <span class="spinner" id="rectSpinner" style="display:none"></span>
-        Find My Birth Time
+        <span data-i18n="rectify.analyze">Find My Birth Time</span>
       </button>
     </div>
     <div id="rectResult"></div>
@@ -1514,10 +1514,10 @@
       <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:8px">Upgrade to unlock</a>
     </div>
     <div class="card">
-      <div class="card-title"><span class="icon-star"></span> Practitioner Portal</div>
+      <div class="card-title"><span class="icon-star"></span> <span data-i18n="practitioner.title">Practitioner Portal</span></div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Manage client roster and session notes (requires practitioner account).</p>
       
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px">Add Client</h4>
+      <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px" data-i18n="practitioner.addClient">Add Client</h4>
       <div class="form-grid">
         <div class="form-group"><label>Client Name</label><input type="text" id="prac-name" placeholder="Jane Smith"></div>
         <div class="form-group"><label>Profile ID</label><input type="text" id="prac-profileId" placeholder="Optional"></div>
@@ -1527,7 +1527,7 @@
         Add to Roster
       </button>
 
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:24px 0 8px">My Roster</h4>
+      <h4 style="color:var(--gold);font-size:0.9rem;margin:24px 0 8px" data-i18n="practitioner.roster">My Roster</h4>
       <button class="btn-secondary" onclick="loadRoster()" id="pracLoadBtn">
         <span class="spinner" id="pracLoadSpinner" style="display:none"></span>
         View My Clients
@@ -1555,7 +1555,7 @@
         <h4 style="color:var(--gold);font-size:0.95rem;margin-bottom:14px">Create New Cluster</h4>
         <div class="form-grid">
           <div class="form-group">
-            <label>Cluster Name<span class="icon-info help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'"></span></label>
+            <label><span data-i18n="clusters.name">Cluster Name</span><span class="icon-info help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'"></span></label>
             <input type="text" id="cluster-name" placeholder="e.g., Product Team Alpha">
           </div>
           <div class="form-group full">
@@ -1566,9 +1566,9 @@
         <div style="display:flex;gap:10px;margin-top:14px">
           <button class="btn-primary" onclick="createCluster()" id="clusterCreateBtn">
             <span class="spinner" id="clusterCreateSpinner" style="display:none"></span>
-            Create Cluster
+            <span data-i18n="clusters.create">Create Cluster</span>
           </button>
-          <button class="btn-secondary" onclick="hideCreateClusterForm()">Cancel</button>
+          <button class="btn-secondary" onclick="hideCreateClusterForm()" data-i18n="common.cancel">Cancel</button>
         </div>
       </div>
     </div>
@@ -1588,7 +1588,7 @@
       
       <div class="form-grid">
         <div class="form-group">
-          <label>Phone Number
+          <label><span data-i18n="sms.phone">Phone Number</span>
             <span class="help-icon" title="Include country code (e.g., +1 for US/Canada, +44 for UK). Example: +1-775-717-2255">?</span>
           </label>
           <input type="tel" id="sms-phone" placeholder="+1-555-123-4567">
@@ -1598,11 +1598,11 @@
       <div style="display:flex;gap:12px;margin-top:16px">
         <button class="btn-primary" onclick="subscribeSMS()" id="smsSubBtn">
           <span class="spinner" id="smsSubSpinner" style="display:none"></span>
-          Subscribe
+          <span data-i18n="sms.subscribe">Subscribe</span>
         </button>
         <button class="btn-danger" onclick="unsubscribeSMS()" id="smsUnsubBtn">
           <span class="spinner" id="smsUnsubSpinner" style="display:none"></span>
-          Unsubscribe
+          <span data-i18n="sms.unsubscribe">Unsubscribe</span>
         </button>
       </div>
 
@@ -1613,12 +1613,12 @@
   <!-- ═══ ONBOARDING TAB ═══ -->
   <div class="tab-content" id="tab-onboarding" role="tabpanel" aria-labelledby="btn-onboarding">
     <div class="card">
-      <div class="card-title"><span class="icon-compass"></span> Onboarding Story</div>
+      <div class="card-title"><span class="icon-compass"></span> <span data-i18n="onboarding.title">Onboarding Story</span></div>
       <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Interactive guided journey through your Prime Self profile discovery.</p>
       
       <button class="btn-primary" onclick="startOnboarding()" id="onboardBtn">
         <span class="spinner" id="onboardSpinner" style="display:none"></span>
-        Begin Onboarding
+        <span data-i18n="onboarding.start">Begin Onboarding</span>
       </button>
 
       <div id="onboardProgress" style="margin-top:20px;display:none">
@@ -1649,7 +1649,7 @@ function updateAuthUI() {
     btnEl.style.display = 'none';
     logoutEl.style.display = '';
   } else {
-    statusEl.textContent = 'Not signed in';
+    statusEl.textContent = window.t('auth.notSignedIn');
     statusEl.className = 'auth-status';
     btnEl.style.display = '';
     logoutEl.style.display = 'none';
@@ -1669,11 +1669,11 @@ function closeAuthOverlay() {
 function toggleAuthMode() {
   authMode = authMode === 'login' ? 'register' : 'login';
   const isReg = authMode === 'register';
-  document.getElementById('authTitle').textContent = isReg ? 'Create Account' : 'Sign In';
-  document.getElementById('authSubtitle').textContent = isReg ? 'Start your Prime Self journey.' : 'Access your Prime Self profile and saved charts.';
-  document.getElementById('authSubmit').textContent = isReg ? 'Create Account' : 'Sign In';
-  document.getElementById('authToggleText').textContent = isReg ? 'Already have an account?' : "Don't have an account?";
-  document.getElementById('authToggleLink').textContent = isReg ? 'Sign in' : 'Create one';
+  document.getElementById('authTitle').textContent = isReg ? window.t('auth.createAccount') : window.t('auth.signIn');
+  document.getElementById('authSubtitle').textContent = isReg ? window.t('auth.startJourney') : window.t('auth.accessProfile');
+  document.getElementById('authSubmit').textContent = isReg ? window.t('auth.createAccount') : window.t('auth.signIn');
+  document.getElementById('authToggleText').textContent = isReg ? window.t('auth.alreadyAccount') : window.t('auth.noAccount');
+  document.getElementById('authToggleLink').textContent = isReg ? window.t('auth.signInLink') : window.t('auth.createOne');
   document.getElementById('authError').textContent = '';
 }
 
@@ -1683,10 +1683,10 @@ async function submitAuth() {
   const errorEl = document.getElementById('authError');
   const btn = document.getElementById('authSubmit');
 
-  if (!email || !password) { errorEl.textContent = 'Email and password required.'; return; }
+  if (!email || !password) { errorEl.textContent = window.t('auth.emailRequired'); return; }
 
   btn.disabled = true;
-  btn.textContent = 'Please wait…';
+  btn.textContent = window.t('auth.pleaseWait');
   errorEl.textContent = '';
 
   try {
@@ -1706,10 +1706,10 @@ async function submitAuth() {
     updateAuthUI();
     closeAuthOverlay();
   } catch (e) {
-    errorEl.textContent = 'Connection error: ' + e.message;
+    errorEl.textContent = window.t('auth.connectionError', { message: e.message });
   } finally {
     btn.disabled = false;
-    btn.textContent = authMode === 'register' ? 'Create Account' : 'Sign In';
+    btn.textContent = authMode === 'register' ? window.t('auth.createAccount') : window.t('auth.signIn');
   }
 }
 
@@ -1724,7 +1724,7 @@ function logout() {
 function openPricingModal(suggestedTier = null) {
   if (!token) {
     openAuthOverlay();
-    document.getElementById('authError').textContent = 'Please sign in to upgrade your account.';
+    document.getElementById('authError').textContent = window.t('auth.signInUpgrade');
     return;
   }
   document.getElementById('pricingOverlay').classList.remove('hidden');
@@ -1745,7 +1745,7 @@ async function startCheckout(tier) {
     const checkoutBtn = event.target;
     const originalText = checkoutBtn.innerHTML;
     checkoutBtn.disabled = true;
-    checkoutBtn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0f"></span> Creating session...';
+    checkoutBtn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0f"></span> ' + window.t('auth.creatingSession');
 
     const result = await apiFetch('/api/billing/checkout', {
       method: 'POST',
@@ -1821,7 +1821,7 @@ async function apiFetch(path, options = {}) {
       localStorage.removeItem('ps_email');
       updateAuthUI();
       openAuthOverlay();
-      document.getElementById('authError').textContent = 'Session expired — please sign in again.';
+      document.getElementById('authError').textContent = window.t('auth.sessionExpired');
     }
     return { error: 'Authentication required. Please sign in.' };
   }
@@ -1978,12 +1978,12 @@ async function geocodeLocation(prefix) {
   const statusEl   = document.getElementById(prefix + '-geo-status');
   const geoBtn     = document.getElementById(prefix + '-geoBtn');
   const q = locationEl.value.trim();
-  if (!q) { statusEl.style.color = '#f56565'; statusEl.textContent = 'Enter a city first.'; return; }
+  if (!q) { statusEl.style.color = '#f56565'; statusEl.textContent = window.t('chart.enterLocation'); return; }
 
   geoBtn.disabled = true;
   geoBtn.textContent = '…';
   statusEl.style.color = 'var(--text-dim)';
-  statusEl.textContent = 'Looking up…';
+  statusEl.textContent = window.t('chart.lookingUp');
 
   try {
     const data = await apiFetch('/api/geocode?q=' + encodeURIComponent(q));
@@ -2004,7 +2004,7 @@ async function geocodeLocation(prefix) {
     statusEl.textContent = '✗ Error: ' + e.message;
   } finally {
     geoBtn.disabled = false;
-    geoBtn.textContent = 'Look Up';
+    geoBtn.textContent = window.t('chart.lookupLocation');
   }
 }
 
@@ -2033,7 +2033,7 @@ async function calculateChart() {
       await geocodeLocation('c');
     }
     if (isNaN(parseFloat(document.getElementById('c-lat').value))) {
-      resultEl.innerHTML = '<div class="alert alert-error"><span class="icon-info"></span> Please enter a birth location and click “Look Up” first.</div>';
+      resultEl.innerHTML = '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
       return;
     }
   }
@@ -2180,7 +2180,7 @@ function renderChart(data) {
 async function generateProfile() {
   if (!token) {
     openAuthOverlay();
-    document.getElementById('authError').textContent = 'Sign in required to generate a profile.';
+    document.getElementById('authError').textContent = window.t('auth.signInRequired');
     return;
   }
 
@@ -2203,7 +2203,7 @@ async function generateProfile() {
     }
     if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
       document.getElementById('profileResult').innerHTML =
-        '<div class="alert alert-error"><span class="icon-info"></span> Please enter a birth location and click “Look Up” first.</div>';
+        '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
       document.getElementById('profileBtn').disabled = false;
       document.getElementById('profileSpinner').style.display = 'none';
       return;
@@ -2485,7 +2485,7 @@ async function loadTransits() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Fetching transits…</div></div>';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('transits.fetching') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/transits/today');
@@ -2565,7 +2565,7 @@ async function loadHistory() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading profiles…</div></div>';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('profile.loadingProfiles') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/profile/list');
@@ -2650,7 +2650,7 @@ async function generateComposite() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Generating composite…</div></div>';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('composite.generating') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/composite', { 
@@ -2753,7 +2753,7 @@ async function runRectification() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Analyzing time window…</div></div>';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('rectify.analyzing') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/rectify', { method: 'POST', body: JSON.stringify(body) });
@@ -2828,7 +2828,7 @@ async function loadRoster() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading roster…</div></div>';
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('practitioner.loadingRoster') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/practitioner/clients');
@@ -2922,7 +2922,7 @@ async function loadClusters() {
   const container = document.getElementById('clusterListContainer');
 
   spinner.style.display = '';
-  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your clusters…</div></div>';
+  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('clusters.loading') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/cluster/list');
@@ -3140,7 +3140,7 @@ async function addMemberToCluster() {
 
 async function synthesizeCluster(clusterId) {
   const container = document.getElementById('synthesisResult');
-  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Generating AI synthesis… This may take 10-20 seconds.</div></div>';
+  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('profile.generatingAi') + '</div></div>';
 
   try {
     // Note: The API expects members array with birth data. For now, show a placeholder.
@@ -3638,7 +3638,7 @@ async function loadDiaryEntries() {
     const entries = data.data || [];
 
     if (entries.length === 0) {
-      container.innerHTML = `<div class="alert alert-info">No life events logged yet. Add your first event above!</div>`;
+      container.innerHTML = `<div class="alert alert-info">${window.t('diary.noEvents')}</div>`;
       return;
     }
 
@@ -4108,23 +4108,23 @@ updateAuthUI();
 <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Main navigation">
   <a href="#" class="mobile-nav-item active" data-tab="chart" onclick="switchTab('chart'); updateMobileNav(this); return false;" aria-label="Human Design">
     <span class="mobile-nav-icon">◉</span>
-    <span class="mobile-nav-label">Chart</span>
+    <span class="mobile-nav-label" data-i18n="nav.chart">Chart</span>
   </a>
   <a href="#" class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile'); updateMobileNav(this); return false;" aria-label="Gene Keys">
     <span class="mobile-nav-icon">⬡</span>
-    <span class="mobile-nav-label">Keys</span>
+    <span class="mobile-nav-label" data-i18n="nav.keys">Keys</span>
   </a>
   <a href="#" class="mobile-nav-item" data-tab="enhance" onclick="switchTab('enhance'); updateMobileNav(this); return false;" aria-label="Astrology">
     <span class="mobile-nav-icon">★</span>
-    <span class="mobile-nav-label">Astro</span>
+    <span class="mobile-nav-label" data-i18n="nav.astro">Astro</span>
   </a>
   <a href="#" class="mobile-nav-item" data-tab="transits" onclick="switchTab('transits'); updateMobileNav(this); return false;" aria-label="Transits">
     <span class="mobile-nav-icon">☽</span>
-    <span class="mobile-nav-label">Transits</span>
+    <span class="mobile-nav-label" data-i18n="nav.transits">Transits</span>
   </a>
   <a href="#" class="mobile-nav-item" data-tab="diary" onclick="switchTab('diary'); updateMobileNav(this); return false;" aria-label="Life Events">
     <span class="mobile-nav-icon">📖</span>
-    <span class="mobile-nav-label">Diary</span>
+    <span class="mobile-nav-label" data-i18n="nav.diary">Diary</span>
   </a>
   <a href="#" class="mobile-nav-item" id="mobileMoreBtn" onclick="toggleMobileMore(); return false;" aria-label="More tabs" aria-expanded="false">
     <span class="mobile-nav-icon">☰</span>
@@ -4142,28 +4142,28 @@ updateAuthUI();
     </div>
     <div class="mobile-more-grid">
       <a href="#" class="mobile-more-item" data-tab="checkin" onclick="switchTab('checkin'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">♥</span><span>Check-In</span>
+        <span class="mobile-more-icon">♥</span><span data-i18n="nav.checkin">Check-In</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="composite" onclick="switchTab('composite'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">⊕</span><span>Composite</span>
+        <span class="mobile-more-icon">⊕</span><span data-i18n="nav.composite">Composite</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="rectify" onclick="switchTab('rectify'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">⏱</span><span>Rectify</span>
+        <span class="mobile-more-icon">⏱</span><span data-i18n="nav.rectify">Rectify</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="practitioner" onclick="switchTab('practitioner'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">★</span><span>Practitioner</span>
+        <span class="mobile-more-icon">★</span><span data-i18n="nav.practitioner">Practitioner</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="clusters" onclick="switchTab('clusters'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">⬢</span><span>Clusters</span>
+        <span class="mobile-more-icon">⬢</span><span data-i18n="nav.clusters">Clusters</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="sms" onclick="switchTab('sms'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">✉</span><span>SMS</span>
+        <span class="mobile-more-icon">✉</span><span data-i18n="nav.sms">SMS</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="onboarding" onclick="switchTab('onboarding'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">🧭</span><span>Onboarding</span>
+        <span class="mobile-more-icon">🧭</span><span data-i18n="nav.onboarding">Onboarding</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="history" onclick="switchTab('history'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">📂</span><span>Saved</span>
+        <span class="mobile-more-icon">📂</span><span data-i18n="nav.saved">Saved</span>
       </a>
     </div>
   </div>
@@ -4326,11 +4326,11 @@ async function saveCheckIn() {
   const statusDiv = document.getElementById('checkinStatus');
 
   if (!alignmentScore || alignmentScore < 1 || alignmentScore > 10) {
-    statusDiv.innerHTML = '<div class="alert alert-error">Please select an alignment score (1-10)</div>';
+    statusDiv.innerHTML = '<div class="alert alert-error">' + window.t('checkin.selectScore') + '</div>';
     return;
   }
 
-  statusDiv.innerHTML = '<div class="alert alert-info">Saving check-in...</div>';
+  statusDiv.innerHTML = '<div class="alert alert-info">' + window.t('checkin.saving') + '</div>';
 
   try {
     const result = await apiFetch('/api/checkin', {

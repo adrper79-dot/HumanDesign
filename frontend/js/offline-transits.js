@@ -335,7 +335,7 @@
     offlineBanner.className = 'offline-indicator';
     offlineBanner.innerHTML = `
       <span class="offline-icon">⚡</span>
-      <span class="offline-text">Offline Mode — Using cached data</span>
+      <span class="offline-text">${window.t ? window.t('offline.offlineMode') : 'Offline Mode — Using cached data'}</span>
     `;
     offlineBanner.style.cssText = `
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000;
@@ -373,11 +373,11 @@
     createOfflineBanner();
 
     if (!online) {
-      offlineBanner.querySelector('.offline-text').textContent = 'Offline Mode — Using cached data';
+      offlineBanner.querySelector('.offline-text').textContent = window.t ? window.t('offline.offlineMode') : 'Offline Mode — Using cached data';
       offlineBanner.className = 'offline-indicator';
       offlineBanner.style.display = 'block';
     } else {
-      offlineBanner.querySelector('.offline-text').textContent = 'Back online — Syncing…';
+      offlineBanner.querySelector('.offline-text').textContent = window.t ? window.t('offline.backOnline') : 'Back online — Syncing…';
       offlineBanner.className = 'offline-indicator online';
       offlineBanner.style.display = 'block';
 

@@ -275,15 +275,7 @@ select option {
   color: var(--text-primary);
 }
 
-label {
-  display: block;
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  margin-bottom: var(--space-2);
-}
+/* label selector defined in components/forms.css */
 
 
 /* ═══════════════════════════════════════════════════════════

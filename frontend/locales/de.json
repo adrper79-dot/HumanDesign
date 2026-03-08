@@ -11,7 +11,15 @@
     "transits": "Transite",
     "profile": "Profil",
     "enhance": "Verbessern",
-    "diary": "Tagebuch"
+    "diary": "Tagebuch",
+    "checkin": "Check-In",
+    "composite": "Komposit",
+    "rectify": "Rektifizierung",
+    "practitioner": "Praktiker",
+    "clusters": "Gruppen",
+    "sms": "SMS",
+    "onboarding": "Einführung",
+    "saved": "Gespeichert"
   },
   "auth": {
     "signIn": "Anmelden",
@@ -30,7 +38,11 @@
     "signInLink": "Anmelden",
     "email": "E-Mail",
     "password": "Passwort",
-    "signInUpgrade": "Bitte melde dich an, um dein Konto zu aktualisieren."
+    "signInUpgrade": "Bitte melde dich an, um dein Konto zu aktualisieren.",
+    "continueWithout": "Ohne Anmeldung fortfahren",
+    "creatingSession": "Sitzung wird erstellt…",
+    "signInRequired": "Anmeldung erforderlich, um ein Profil zu generieren.",
+    "billing": "Abrechnung"
   },
   "chart": {
     "title": "Human Design Karte",
@@ -54,7 +66,16 @@
     "gates": "Tore",
     "saveChart": "Karte speichern",
     "viewRaw": "Rohdaten anzeigen",
-    "hideRaw": "Rohdaten ausblenden"
+    "hideRaw": "Rohdaten ausblenden",
+    "birthLocationPlaceholder": "Stadt, Bundesland, Land — z.B. Berlin, Deutschland",
+    "timezone": "Zeitzone",
+    "lookingUp": "Suche läuft…",
+    "generateMyChart": "Meine Karte erstellen",
+    "welcomeTitle": "Willkommen bei Prime Self",
+    "welcomeBody": "Gib deine Geburtsdaten ein, um deinen einzigartigen energetischen Bauplan in Human Design, Westlicher Astrologie, Numerologie und Gene Keys zu entdecken.",
+    "birthData": "Geburtsdaten",
+    "enterLocation": "Gib zuerst eine Stadt ein.",
+    "lookUpFirst": "Bitte gib einen Geburtsort ein und klicke auf „Nachschlagen“."
   },
   "profile": {
     "title": "Prime Self Profil",
@@ -65,7 +86,15 @@
     "shareProfile": "Teilen",
     "question": "Optionale Fokusfrage",
     "questionPlaceholder": "z.B. Was ist meine primäre Schmiede?",
-    "noProfiles": "Noch keine gespeicherten Profile."
+    "noProfiles": "Noch keine gespeicherten Profile.",
+    "questionLabel": "Spezifische Frage (optional — leer lassen für vollständiges Profil)",
+    "aiSynthesis": "KI-gestützte Multi-System-Synthese",
+    "aiSynthesisBody": "Erhalte eine personalisierte Synthese aller vier Systeme: Human Design, Westliche Astrologie, Numerologie und Gene Keys — KI-gestützt.",
+    "generateTitle": "Prime Self Profil generieren",
+    "generatingAi": "KI-Synthese wird generiert… Dies kann 10-20 Sekunden dauern.",
+    "signInToView": "Melde dich an, um gespeicherte Profile anzuzeigen.",
+    "savedProfiles": "Gespeicherte Profile",
+    "loadingProfiles": "Profile werden geladen…"
   },
   "transits": {
     "title": "Aktuelle Transite",
@@ -74,7 +103,9 @@
     "forecast": "Vorhersage",
     "gateActivations": "Tor-Aktivierungen",
     "aspects": "Transit-Aspekte",
-    "noData": "Keine Transitdaten verfügbar."
+    "noData": "Keine Transitdaten verfügbar.",
+    "fetching": "Transite werden abgerufen…",
+    "currentPositions": "Aktuelle Transitpositionen"
   },
   "composite": {
     "title": "Kompositkarte",
@@ -85,7 +116,8 @@
     "dominance": "Dominanzkanäle",
     "companionship": "Kameradschaft",
     "compromise": "Kompromiss",
-    "dynamics": "Beziehungsdynamik"
+    "dynamics": "Beziehungsdynamik",
+    "generating": "Komposit wird generiert…"
   },
   "practitioner": {
     "title": "Praktiker-Dashboard",
@@ -93,7 +125,8 @@
     "addClient": "Klient hinzufügen",
     "clientEmail": "E-Mail des Klienten",
     "roster": "Klientenliste",
-    "noClients": "Noch keine Klienten."
+    "noClients": "Noch keine Klienten.",
+    "loadingRoster": "Liste wird geladen…"
   },
   "clusters": {
     "title": "Gruppenintelligenz",
@@ -103,7 +136,8 @@
     "members": "Mitglieder",
     "addMember": "Mitglied hinzufügen",
     "synthesize": "Gruppe synthetisieren",
-    "noClusters": "Noch keine Gruppen."
+    "noClusters": "Noch keine Gruppen.",
+    "loading": "Gruppen werden geladen…"
   },
   "diary": {
     "title": "Lebensereignis-Tagebuch",
@@ -113,7 +147,23 @@
     "mood": "Stimmung",
     "energy": "Energielevel",
     "notes": "Notizen",
-    "noEntries": "Noch keine Tagebucheinträge."
+    "noEntries": "Noch keine Tagebucheinträge.",
+    "addEvent": "Lebensereignis hinzufügen",
+    "eventDate": "Ereignisdatum",
+    "noEvents": "Noch keine Lebensereignisse erfasst. Füge dein erstes Ereignis oben hinzu!",
+    "eventTitle": "Ereignistitel",
+    "eventDescription": "Beschreibung",
+    "eventType": "Ereignistyp",
+    "significance": "Bedeutung",
+    "yourEvents": "Deine Lebensereignisse",
+    "typeCareer": "Karriere",
+    "typeRelationship": "Beziehung",
+    "typeHealth": "Gesundheit",
+    "typeSpiritual": "Spirituell",
+    "typeOther": "Sonstiges",
+    "sigMajor": "Bedeutend",
+    "sigModerate": "Mittel",
+    "sigMinor": "Gering"
   },
   "enhance": {
     "title": "Profil verbessern",
@@ -121,6 +171,24 @@
     "bigFive": "Big Five Persönlichkeit",
     "via": "VIA Charakterstärken",
     "save": "Bewertung speichern"
+  },
+  "checkin": {
+    "title": "Täglicher Alignment-Check-In",
+    "howAligned": "Wie ausgerichtet hast du dich heute gefühlt?",
+    "saveCheckin": "Check-In speichern",
+    "trends": "Alignment-Trends",
+    "saving": "Check-In wird gespeichert…",
+    "selectScore": "Bitte wähle einen Alignment-Wert (1-10)",
+    "moodGreat": "Großartig",
+    "moodGood": "Gut",
+    "moodNeutral": "Neutral",
+    "moodLow": "Niedrig",
+    "moodStruggling": "Schwierig"
+  },
+  "rectify": {
+    "title": "Geburtszeit-Rektifizierung",
+    "analyze": "Zeitfenster analysieren",
+    "analyzing": "Zeitfenster wird analysiert…"
   },
   "onboarding": {
     "title": "Der Savannen-Bogen",
@@ -143,8 +211,12 @@
     "practitioner": "Praktiker",
     "perMonth": "/Monat",
     "currentPlan": "Aktueller Plan",
-    "upgrade": "Upgrade",
-    "billingPortal": "Abrechnung verwalten"
+    "upgrade": "Upgraden",
+    "billingPortal": "Abrechnung verwalten",
+    "unlockTitle": "Entfalte dein volles Potenzial",
+    "choosePlan": "Wähle den Plan, der zu deiner Reise passt",
+    "upgradeTo": "Auf {{tier}} upgraden",
+    "maybeLater": "Vielleicht später"
   },
   "share": {
     "title": "Teilen",
@@ -152,7 +224,11 @@
     "copied": "Kopiert!",
     "twitter": "Auf X teilen",
     "facebook": "Auf Facebook teilen",
-    "downloadImage": "Bild herunterladen"
+    "downloadImage": "Bild herunterladen",
+    "shareProfile": "Dein Profil teilen",
+    "referralLink": "Dein Empfehlungslink",
+    "shareOn": "Teilen auf",
+    "earnRewards": "Verdiene Belohnungen durch Empfehlungen"
   },
   "common": {
     "loading": "Laden…",
@@ -180,6 +256,16 @@
     "forbidden": "Kein Zugriff auf diese Funktion.",
     "quotaExceeded": "Nutzungslimit erreicht. Upgrade für mehr.",
     "invalidInput": "Bitte Eingabe überprüfen und erneut versuchen.",
-    "missingField": "Pflichtfeld fehlt: {{field}}"
+    "missingField": "Pflichtfeld fehlt: {{field}}",
+    "prefix": "Fehler: {{message}}"
+  },
+  "social": {
+    "chartExplored": "Personen haben diese Woche ihre Karte erkundet",
+    "reportsGenerated": "Berichte generiert",
+    "accuracyRating": "Genauigkeitsbewertung"
+  },
+  "offline": {
+    "offlineMode": "Offline-Modus — Zwischengespeicherte Daten werden verwendet",
+    "backOnline": "Wieder online — Synchronisierung…"
   }
 }
