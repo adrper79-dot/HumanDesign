@@ -21,7 +21,7 @@ import { trackEvent } from './achievements.js';
 import { ACHIEVEMENTS } from '../lib/achievements.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
-import { getCelebrityMatch } from './famous.js';
+import { getCelebrityMatch } from '../lib/celebrityMatch.js';
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 
