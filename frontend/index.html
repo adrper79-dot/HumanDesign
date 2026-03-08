@@ -53,12 +53,13 @@
     --bg: #0a0a0f;
     --bg2: #111118;
     --bg3: #1a1a24;
-    --border: #2a2a3a;
+    --border: #32324a;           /* was #2a2a3a — now visible against bg3 */
     --gold: #c9a84c;
-    --gold-dim: #7a6030;
-    --text: #e8e6f0;
-    --text-dim: #8882a0;
-    --accent: #6a4fc8;
+    --gold-dim: #8a6e38;         /* was #7a6030 — slightly brighter */
+    --text: #eceaf4;             /* was #e8e6f0 — cleaner white */
+    --text-dim: #b0acc8;         /* was #8882a0 — major bump for readability */
+    --text-muted: #7a76a0;       /* NEW: truly muted, used only for metadata */
+    --accent: #7a5fd8;           /* was #6a4fc8 — slightly brighter */
     --accent2: #4fc8a0;
     --red: #e05050;
     --green: #50c878;
@@ -67,7 +68,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 15px; }
+  html { font-size: 16px; }     /* was 15px — improves readability across the board */
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
   /* ── Header ── */
@@ -100,14 +101,46 @@
   button:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* ── Tabs ── */
-  .tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 4px; overflow-x: auto; }
+  .tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; padding: 0 16px; gap: 2px; overflow-x: auto; position: relative; }
   .tab-btn {
     background: none; border: none; color: var(--text-dim);
-    padding: 14px 18px; font-size: 0.88rem; font-weight: 500; cursor: pointer;
+    padding: 14px 14px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
     border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap;
   }
-  .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab-btn:hover { color: var(--text); border-bottom-color: rgba(201,168,76,0.3); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
+  .tab-btn.primary-tab { color: var(--text); }     /* primary tabs always brighter */
+  .tab-btn.primary-tab:hover { color: var(--gold); }
+  .tab-divider { width: 1px; background: var(--border); align-self: stretch; margin: 8px 4px; flex-shrink: 0; }
+  /* More dropdown */
+  .more-menu-btn { position: relative; }
+  .more-dropdown {
+    display: none; position: absolute; top: calc(100% + 1px); right: 0; z-index: 200;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px; min-width: 180px; box-shadow: var(--shadow);
+  }
+  .more-dropdown.open { display: block; }
+  .more-dropdown .tab-btn { display: flex; width: 100%; text-align: left; border-radius: 6px; padding: 9px 12px; border-bottom: none !important; font-size: 0.83rem; }
+  .more-dropdown .tab-btn:hover { background: rgba(201,168,76,0.08); color: var(--gold); }
+  .more-dropdown .tab-btn.active { background: rgba(201,168,76,0.12); color: var(--gold); border-bottom: none !important; }
+  /* Step indicator banner */
+  .step-guide {
+    background: linear-gradient(135deg, rgba(201,168,76,0.07) 0%, rgba(122,95,216,0.05) 100%);
+    border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .step-item {
+    display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px;
+    padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: background 0.15s;
+  }
+  .step-item:hover { background: rgba(201,168,76,0.08); }
+  .step-item.done .step-num { background: var(--green); color: #0a0a0f; }
+  .step-item.active-step .step-num { background: var(--gold); color: #0a0a0f; box-shadow: 0 0 0 3px rgba(201,168,76,0.25); }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--border); color: var(--text-dim); font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-label { font-size: 0.82rem; }
+  .step-label strong { display: block; color: var(--text); font-size: 0.88rem; }
+  .step-label span { color: var(--text-dim); font-size: 0.78rem; }
+  .step-arrow { color: var(--border); font-size: 1.1rem; flex-shrink: 0; }
 
   /* ── Layout ── */
   .container { max-width: 1000px; margin: 0 auto; padding: 28px 24px; }
@@ -127,7 +160,7 @@
   @media(max-width: 600px) { .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; } }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-group.full { grid-column: 1 / -1; }
-  label { font-size: 0.78rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  label { font-size: 0.8rem; font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
   input, select, textarea {
     background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
     color: var(--text); padding: 9px 12px; font-size: 0.9rem; transition: border 0.15s;
@@ -243,10 +276,13 @@
 
   /* ── Transit row ── */
   .transit-row {
-    display: grid; grid-template-columns: 100px 1fr auto;
-    align-items: center; gap: 12px; padding: 10px 14px;
+    display: grid; grid-template-columns: 130px 1fr auto;
+    align-items: start; gap: 12px; padding: 10px 14px;
     background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;
+    transition: border-color 0.15s;
   }
+  .transit-row:hover { border-color: rgba(201,168,76,0.3); }
+  .transit-row-hit { border-color: rgba(201,168,76,0.25) !important; background: rgba(201,168,76,0.04) !important; }
   .planet-name { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
   .planet-pos { font-size: 0.8rem; color: var(--text); }
   .gate-badge {
@@ -262,15 +298,15 @@
     cursor: pointer; transition: border-color 0.15s;
   }
   .history-item:hover { border-color: var(--gold-dim); }
-  .history-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 3px; }
+  .history-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
 
   /* ── Raw JSON toggler ── */
-  .raw-toggle { font-size: 0.75rem; color: var(--text-dim); cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
+  .raw-toggle { font-size: 0.75rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
   .raw-json { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.72rem; overflow-x: auto; margin-top: 8px; white-space: pre-wrap; color: #90c890; max-height: 400px; overflow-y: auto; }
   .raw-json.open { display: block; }
 
   /* ── Empty state ── */
-  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-dim); }
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
   .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
   .empty-state p { font-size: 0.88rem; }
 
@@ -920,19 +956,27 @@
 
 <!-- Navigation Tabs -->
 <div class="tabs" role="tablist" aria-label="Main navigation tabs">
-  <button class="tab-btn active" id="btn-chart" role="tab" aria-selected="true" aria-controls="tab-chart" onclick="switchTab('chart', this)"><span class="icon-chart"></span> <span data-i18n="nav.chart">Chart</span><span class="icon-info help-icon" title="Calculate your exact gate activations using birth coordinates and time. Your chart shifts every 2 hours as Earth rotates through different gate positions. We calculate both your conscious (personality) and unconscious (design) activations 88 days before birth."></span></button>
-  <button class="tab-btn" id="btn-profile" role="tab" aria-selected="false" aria-controls="tab-profile" onclick="switchTab('profile', this)"><span class="icon-profile"></span> <span data-i18n="nav.profile">Profile</span><span class="icon-info help-icon" title="Get an AI synthesis combining your 64 gates, Gene Keys shadows/gifts/siddhis, astrological aspects, and life path numbers. This creates specific guidance based on YOUR exact activation patterns - not generic descriptions."></span></button>
-  <button class="tab-btn" id="btn-enhance" role="tab" aria-selected="false" aria-controls="tab-enhance" onclick="switchTab('enhance', this)"><span class="icon-star"></span> <span data-i18n="nav.enhance">Enhance</span><span class="icon-info help-icon" title="Add behavioral validation and life events to dramatically improve reading accuracy. Takes 10 minutes: Big Five personality assessment, character strengths, decision patterns, and major life event timeline for retroactive validation."></span></button>
-  <button class="tab-btn" id="btn-diary" role="tab" aria-selected="false" aria-controls="tab-diary" onclick="switchTab('diary', this)"><span class="icon-archive"></span> <span data-i18n="nav.diary">Diary</span><span class="icon-info help-icon" title="Log major life events with dates to validate your chart retroactively. System auto-correlates events with transits to prove chart accuracy through lived experience. Use for birth time rectification."></span></button>
-  <button class="tab-btn" id="btn-checkin" role="tab" aria-selected="false" aria-controls="tab-checkin" onclick="switchTab('checkin', this)"><span class="icon-heart"></span> <span data-i18n="nav.checkin">Check-In</span><span class="icon-info help-icon" title="Daily alignment tracker. Rate how well you followed your strategy and authority each day (1-10 score). View trends over time, track streaks, and correlate alignment with current transits to identify patterns."></span></button>
-  <button class="tab-btn" id="btn-transits" role="tab" aria-selected="false" aria-controls="tab-transits" onclick="switchTab('transits', this)"><span class="icon-transit"></span> <span data-i18n="nav.transits">Transits</span><span class="icon-info help-icon" title="See which gates are activated RIGHT NOW by current planetary positions and how they interact with YOUR gates. Fast-moving planets (Moon, Sun, Mercury) change daily. Slow planets (Saturn, Neptune, Pluto) create year-long themes."></span></button>
-  <button class="tab-btn" id="btn-composite" role="tab" aria-selected="false" aria-controls="tab-composite" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> <span data-i18n="nav.composite">Composite</span><span class="icon-info help-icon" title="Calculate the electromagnetic field created when two charts overlap. Shows new channels activated together, definition changes, and specific interaction dynamics. Essential for business partnerships and relationships."></span></button>
-  <button class="tab-btn" id="btn-rectify" role="tab" aria-selected="false" aria-controls="tab-rectify" onclick="switchTab('rectify', this)"><span class="icon-time"></span> <span data-i18n="nav.rectify">Rectify</span><span class="icon-info help-icon" title="Find your accurate birth time by back-calculating from life events. Major life shifts often correlate with gate changes. Test different times in your uncertainty window to find which gates align with your actual experiences."></span></button>
-  <button class="tab-btn" id="btn-practitioner" role="tab" aria-selected="false" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this)"><span class="icon-star"></span> <span data-i18n="nav.practitioner">Practitioner</span><span class="icon-info help-icon" title="Batch process multiple charts for client readings. Save client profiles with notes, track reading history, and access all charts quickly. For professional readers who need organized client management."></span></button>
-  <button class="tab-btn" id="btn-clusters" role="tab" aria-selected="false" aria-controls="tab-clusters" onclick="switchTab('clusters', this)"><span class="icon-cluster"></span> <span data-i18n="nav.clusters">Clusters</span><span class="icon-info help-icon" title="Analyze group dynamics by overlaying multiple charts. See which gates/channels dominate in teams, identify missing energies, and understand collective patterns. Use for families, work teams, or organizations."></span></button>
-  <button class="tab-btn" id="btn-sms" role="tab" aria-selected="false" aria-controls="tab-sms" onclick="switchTab('sms', this)"><span class="icon-sms"></span> <span data-i18n="nav.sms">SMS</span><span class="icon-info help-icon" title="Automate personalized text messages with transit updates. Uses YOUR gate activations to identify significant transits (returning planets, important aspects). Subscribers receive alerts when their specific gates are activated."></span></button>
-  <button class="tab-btn" id="btn-onboarding" role="tab" aria-selected="false" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this)"><span class="icon-compass"></span> <span data-i18n="nav.onboarding">Onboarding</span><span class="icon-info help-icon" title="Guided intake questionnaire that collects life event dates, themes, and challenges. This data trains the AI to provide readings aligned with YOUR actual lived experience, not generic interpretations."></span></button>
-  <button class="tab-btn" id="btn-history" role="tab" aria-selected="false" aria-controls="tab-history" onclick="switchTab('history', this)"><span class="icon-archive"></span> <span data-i18n="nav.saved">Saved</span><span class="icon-info help-icon" title="Access all your previously generated charts and synthesis reports. Each profile includes the exact birth coordinates and timestamp used for calculations. Compare how readings evolve as you refine your birth time."></span></button>
+  <!-- PRIMARY: always visible -->
+  <button class="tab-btn primary-tab active" id="btn-chart" role="tab" aria-selected="true" aria-controls="tab-chart" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart</button>
+  <button class="tab-btn primary-tab" id="btn-profile" role="tab" aria-selected="false" aria-controls="tab-profile" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile</button>
+  <button class="tab-btn primary-tab" id="btn-transits" role="tab" aria-selected="false" aria-controls="tab-transits" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits</button>
+  <button class="tab-btn primary-tab" id="btn-checkin" role="tab" aria-selected="false" aria-controls="tab-checkin" onclick="switchTab('checkin', this)"><span class="icon-heart"></span> Check-In</button>
+  <div class="tab-divider" aria-hidden="true"></div>
+  <!-- SECONDARY: inside More dropdown -->
+  <div class="more-menu-btn" style="display:flex;align-items:center">
+    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:4px">More <span id="more-arrow" style="font-size:0.65rem;transition:transform 0.15s">▾</span></button>
+    <div class="more-dropdown" id="more-dropdown" role="menu">
+      <button class="tab-btn" id="btn-enhance" role="menuitem" aria-controls="tab-enhance" onclick="switchTab('enhance', this); closeMoreMenu()"><span class="icon-star"></span> Enhance <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— deepen your reading</span></button>
+      <button class="tab-btn" id="btn-diary" role="menuitem" aria-controls="tab-diary" onclick="switchTab('diary', this); closeMoreMenu()"><span class="icon-archive"></span> Diary <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— log life events</span></button>
+      <button class="tab-btn" id="btn-composite" role="menuitem" aria-controls="tab-composite" onclick="switchTab('composite', this); closeMoreMenu()"><span class="icon-partnership"></span> Composite <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— compare two charts</span></button>
+      <button class="tab-btn" id="btn-rectify" role="menuitem" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Rectify <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— refine birth time</span></button>
+      <button class="tab-btn" id="btn-history" role="menuitem" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— your charts</span></button>
+      <button class="tab-btn" id="btn-onboarding" role="menuitem" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Onboarding</button>
+      <button class="tab-btn" id="btn-practitioner" role="menuitem" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this); closeMoreMenu()"><span class="icon-star"></span> Practitioner</button>
+      <button class="tab-btn" id="btn-clusters" role="menuitem" aria-controls="tab-clusters" onclick="switchTab('clusters', this); closeMoreMenu()"><span class="icon-cluster"></span> Clusters</button>
+      <button class="tab-btn" id="btn-sms" role="menuitem" aria-controls="tab-sms" onclick="switchTab('sms', this); closeMoreMenu()"><span class="icon-sms"></span> SMS Alerts</button>
+    </div>
+  </div>
 </div>
 
 <!-- Main Content -->
@@ -940,6 +984,25 @@
 
   <!-- ═══ CHART TAB ═══ -->
   <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-chart">
+
+    <!-- 3-step journey guide — collapses once user has generated a profile -->
+    <div class="step-guide" id="step-guide-banner">
+      <div class="step-item active-step" id="sg-chart" onclick="switchTab('chart', document.getElementById('btn-chart'))" title="Enter your birth details">
+        <div class="step-num">1</div>
+        <div class="step-label"><strong>Your Chart</strong><span>Enter birth date, time &amp; place</span></div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step-item" id="sg-profile" onclick="switchTab('profile', document.getElementById('btn-profile'))" title="Get your AI synthesis">
+        <div class="step-num">2</div>
+        <div class="step-label"><strong>Your Profile</strong><span>AI synthesis of your gates</span></div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step-item" id="sg-transits" onclick="switchTab('transits', document.getElementById('btn-transits'))" title="See today's planetary influence">
+        <div class="step-num">3</div>
+        <div class="step-label"><strong>Today's Energy</strong><span>How planets affect you now</span></div>
+      </div>
+    </div>
+
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
       <strong style="color:var(--gold)" data-i18n="chart.welcomeTitle">Welcome to Prime Self</strong><br>
       Enter your exact birth date, time, and location below. We'll calculate your personalized Energy Blueprint by mapping 64 gate activations, planetary positions, and numerological patterns. Your chart reveals which energies are consistently available to you (defined centers) vs. which you experience through others (open centers). This precision calculation forms the foundation for AI-powered synthesis.
@@ -1376,12 +1439,27 @@
   <!-- ═══ TRANSITS TAB ═══ -->
   <div class="tab-content" id="tab-transits" role="tabpanel" aria-labelledby="btn-transits">
     <div class="card">
-      <div class="card-title"><span class="icon-transit"></span> <span data-i18n="transits.currentPositions">Current Transit Positions</span></div>
-      <p style="font-size:0.88rem;color:var(--text);margin-bottom:12px;line-height:1.6">See which gates are activated RIGHT NOW by current planetary positions. Fast-moving planets (Moon, Sun, Mercury) change daily and create short-term themes. Slow planets (Saturn, Neptune, Pluto) activate gates for months/years and mark major life chapters. When transiting planets activate YOUR natal gates, you experience amplified energy in those themes.</p>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Displays: Gene Key/line activations + Western Astrology signs/degrees/houses</p>
+      <div class="card-title"><span class="icon-transit"></span> Today's Planetary Energy</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:4px">Fast Planets</div>
+          <div style="font-size:0.83rem;color:var(--text);line-height:1.5">Moon, Sun, Mercury — shift <strong>daily</strong>. Short-term mood and communication themes.</div>
+        </div>
+        <div style="background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:4px">Medium Planets</div>
+          <div style="font-size:0.83rem;color:var(--text);line-height:1.5">Mars, Jupiter — shift <strong>weeks to months</strong>. Drive, ambition, and opportunity cycles.</div>
+        </div>
+        <div style="background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:4px">Slow Planets</div>
+          <div style="font-size:0.83rem;color:var(--text);line-height:1.5">Saturn, Neptune, Pluto — shift <strong>years</strong>. Major life chapters and deep transformation.</div>
+        </div>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px;line-height:1.6">
+        <strong style="color:var(--gold)">✦ Natal hits</strong> — when a transiting planet lands on one of YOUR birth gates, that theme is amplified in your life right now. These are highlighted in gold below.
+      </p>
       <button class="btn-primary" onclick="loadTransits()" id="transitBtn">
         <span class="spinner" id="transitSpinner" style="display:none"></span>
-        See Today's Energy
+        <span class="icon-transit"></span> See Today's Energy
       </button>
     </div>
     <div id="transitResult"></div>
@@ -1843,17 +1921,71 @@ async function apiFetch(path, options = {}) {
 function switchTab(id, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
-  document.getElementById('tab-' + id).classList.add('active');
+  const panel = document.getElementById('tab-' + id);
+  if (panel) panel.classList.add('active');
   if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
   
+  // Update step guide progress
+  updateStepGuide(id);
+
   // Lazy-load tab content on first activation (BL-OPT-005)
   if (typeof window.onTabActivated === 'function') window.onTabActivated(id);
   
   // Auto-load clusters when tab is activated
-  if (id === 'clusters' && token && !document.getElementById('clusterListContainer').innerHTML) {
+  if (id === 'clusters' && token && !document.getElementById('clusterListContainer')?.innerHTML) {
     loadClusters();
   }
 }
+
+function toggleMoreMenu(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('more-dropdown');
+  const arrow = document.getElementById('more-arrow');
+  const isOpen = dd.classList.toggle('open');
+  arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
+  document.getElementById('btn-more').setAttribute('aria-expanded', isOpen);
+}
+
+function closeMoreMenu() {
+  const dd = document.getElementById('more-dropdown');
+  const arrow = document.getElementById('more-arrow');
+  if (dd) { dd.classList.remove('open'); }
+  if (arrow) arrow.style.transform = '';
+  const btn = document.getElementById('btn-more');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+// Close more menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.more-menu-btn')) closeMoreMenu();
+});
+
+// Step guide: tracks user progress through the 3-step journey
+function updateStepGuide(activeTab) {
+  const steps = [
+    { id: 'sg-chart', tab: 'chart' },
+    { id: 'sg-profile', tab: 'profile' },
+    { id: 'sg-transits', tab: 'transits' }
+  ];
+  steps.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (!el) return;
+    el.classList.remove('active-step');
+    if (s.tab === activeTab) el.classList.add('active-step');
+  });
+  // Mark steps as done based on localStorage state
+  if (localStorage.getItem('chartGenerated')) {
+    const c = document.getElementById('sg-chart');
+    if (c) { c.classList.add('done'); c.classList.remove('active-step'); }
+  }
+  if (localStorage.getItem('profileGenerated')) {
+    const p = document.getElementById('sg-profile');
+    if (p) { p.classList.add('done'); p.classList.remove('active-step'); }
+  }
+}
+
+// Call on load to set initial step state
+document.addEventListener('DOMContentLoaded', () => updateStepGuide('chart'));
 
 // ── Astrological Chart Wheel ─────────────────────────────────
 function renderAstroChart(astro) {
@@ -2509,49 +2641,81 @@ function renderTransits(data) {
   }
 
   const PLANET_SYMBOLS = { Sun:'☉', Moon:'☽', Mercury:'☿', Venus:'♀', Mars:'♂', Jupiter:'♃', Saturn:'♄', Uranus:'♅', Neptune:'♆', Pluto:'♇', NorthNode:'☊', TrueNode:'☊', Chiron:'⚷' };
-  const PLANET_MEANINGS = {
-    Sun: 'Core identity and life force',
-    Moon: 'Emotional nature and instincts',
-    Mercury: 'Communication and thinking style',
-    Venus: 'Values, love, and beauty',
-    Mars: 'Drive, passion, and action',
-    Jupiter: 'Expansion, wisdom, and luck',
-    Saturn: 'Structure, discipline, and lessons',
-    Uranus: 'Innovation and breakthrough',
-    Neptune: 'Dreams, intuition, and spirituality',
-    Pluto: 'Transformation and power',
-    NorthNode: 'Life direction and soul purpose',
-    TrueNode: 'Life direction and soul purpose',
-    Chiron: 'The wounded healer, where we heal others through our own wounds'
+  const PLANET_SPEED = { Sun:'changes gate weekly', Moon:'changes gate every 2–3 days', Mercury:'changes gate every few days', Venus:'changes gate weekly', Mars:'changes gate every 2 weeks', Jupiter:'activates a gate for ~1 month', Saturn:'activates a gate for ~3 months', Uranus:'activates a gate for ~1 year', Neptune:'activates a gate for ~2 years', Pluto:'activates a gate for ~2–3 years', NorthNode:'activates a gate for ~1 month', TrueNode:'activates a gate for ~1 month', Chiron:'activates a gate for ~1 year' };
+  const PLANET_THEME = {
+    Sun: 'What the collective is focused on. The theme you\'ll feel most in conversation and media.',
+    Moon: 'The emotional undertow right now. Moods, instincts, and what people need for security.',
+    Mercury: 'How people are thinking and communicating. Good or bad time for contracts, difficult talks.',
+    Venus: 'What feels beautiful and worthwhile. Relationships, aesthetics, and what you value.',
+    Mars: 'The collective drive and friction level. Energy for action — or conflict if misused.',
+    Jupiter: 'Where expansion and luck are concentrated. The area of life that wants to grow.',
+    Saturn: 'What requires discipline and structure. The lesson being taught by life right now.',
+    Uranus: 'Where disruption and breakthrough are happening. Expect the unexpected in this gate\'s themes.',
+    Neptune: 'Where illusion or spiritual insight is thickest. Be discerning with information in this gate.',
+    Pluto: 'The deepest transformation underway in the collective. Power, death, and rebirth of this gate\'s themes.',
+    NorthNode: 'The collective soul\'s growth direction right now.',
+    TrueNode: 'The collective soul\'s growth direction right now.',
+    Chiron: 'Where collective wounding and healing are surfacing. A chance to help others through your own experience.'
   };
 
+  // Collect natal hits if available
+  const natalHits = (t.gateActivations || []).filter(a => a.natalGatePresent);
+  const natalGateSet = new Set(natalHits.map(a => String(a.gate)));
+
+  // Summary banner
   let html = `<div class="card">
-    <div class="card-title"><span class="icon-transit"></span> Transit Positions — ${t.date || new Date().toLocaleDateString()}</div>
-    <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">Current planetary positions affecting the collective energy. Hover over planet names for their meanings.</p>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <div class="card-title" style="margin-bottom:0"><span class="icon-transit"></span> ${t.date || new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})}</div>
+      ${natalHits.length ? `<div style="background:rgba(201,168,76,0.15);border:1px solid var(--gold-dim);border-radius:20px;padding:5px 14px;font-size:0.82rem;color:var(--gold);font-weight:600">✦ ${natalHits.length} planet${natalHits.length>1?'s':''} touching your natal gates today</div>` : ''}
+    </div>`;
+
+  // Natal hits first — most relevant to the user
+  if (natalHits.length) {
+    html += `<div style="margin-bottom:20px">
+      <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gold-dim);margin-bottom:10px">✦ Personal — Activating Your Gates</div>`;
+    natalHits.forEach(a => {
+      const sym = PLANET_SYMBOLS[a.transitPlanet] || '';
+      const pos = positions[a.transitPlanet] || {};
+      const speed = PLANET_SPEED[a.transitPlanet] || '';
+      const theme = PLANET_THEME[a.transitPlanet] || '';
+      html += `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:8px;padding:14px 16px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <div style="font-size:0.95rem;font-weight:700;color:var(--gold)">${sym} ${a.transitPlanet} → your Gate ${a.gate}</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:0.78rem;color:var(--text-dim)">${pos.sign || ''} ${pos.degrees != null ? (pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees) : ''}°</span>
+            <span class="gate-badge">Gate ${pos.gate || a.gate}.${pos.line || '?'}</span>
+          </div>
+        </div>
+        <div style="font-size:0.83rem;color:var(--text);margin-top:8px;line-height:1.55">${theme}</div>
+        <div style="font-size:0.75rem;color:var(--text-dim);margin-top:5px">⏱ Duration: ${speed}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // All planets — collective picture
+  html += `<div>
+    <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:10px">All Planetary Positions — Collective Field</div>`;
 
   for (const [body, pos] of Object.entries(positions)) {
     const sym = PLANET_SYMBOLS[body] || '';
-    const meaning = PLANET_MEANINGS[body] || 'Planetary influence';
-    html += `<div class="transit-row">
-      <div class="planet-name">${sym} ${body} <span class="icon-info help-icon" title="${meaning}" style="font-size:0.65rem;margin-left:2px"></span></div>
-      <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
-      <div class="gate-badge">Gate ${pos.gate || '?'}.${pos.line || '?'}</div>
+    const theme = PLANET_THEME[body] || 'Planetary influence';
+    const speed = PLANET_SPEED[body] || '';
+    const isNatalHit = natalGateSet.has(String(pos.gate));
+    html += `<div class="transit-row${isNatalHit ? ' transit-row-hit' : ''}">
+      <div>
+        <div class="planet-name">${sym} ${body}</div>
+        <div style="font-size:0.74rem;color:var(--text-muted);margin-top:2px">${speed}</div>
+      </div>
+      <div>
+        <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
+        <div style="font-size:0.78rem;color:var(--text-dim);margin-top:3px;line-height:1.4">${theme}</div>
+      </div>
+      <div class="gate-badge" title="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}">Gate ${pos.gate || '?'}.${pos.line || '?'}</div>
     </div>`;
   }
 
-  if (t.gateActivations?.length) {
-    const natalHits = t.gateActivations.filter(a => a.natalGatePresent);
-    if (natalHits.length) {
-      html += `<div class="section-header" style="margin-top:16px">Natal Gate Activations</div>`;
-      natalHits.forEach(a => {
-        html += `<div style="font-size:0.82rem;padding:7px 10px;background:rgba(201,168,76,0.08);border-left:2px solid var(--gold-dim);margin-bottom:4px">
-          ✦ Gate ${a.gate} activated by transit ${a.transitPlanet} (${a.speed || ''})
-        </div>`;
-      });
-    }
-  }
-
-  html += `</div>` + rawToggle(data);
+  html += `</div></div>` + rawToggle(data);
   return html;
 }
 
