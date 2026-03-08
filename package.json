@@ -6,7 +6,10 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "deploy:workers": "cd workers && npx wrangler deploy --force",
+    "verify:prod": "node workers/verify-production.js",
+    "deploy": "npm run deploy:workers && npm run verify:prod"
   },
   "devDependencies": {
     "vitest": "^3.2.1"
