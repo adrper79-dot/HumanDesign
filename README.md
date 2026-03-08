@@ -7,10 +7,26 @@
 
 ---
 
-## ✨ Try It Now
+## 🚨 Current Status (Updated March 8, 2026)
 
-**Live Demo:** [https://prime-self-ui.pages.dev](https://prime-self-ui.pages.dev)  
-*(Generate your chart instantly—no sign-up required for basic features)*
+**Code Quality**: ✅ Excellent (190/190 tests passing)  
+**Production Deployment**: ❌ **BROKEN** — Requires immediate attention
+
+**Production Issues**:
+- Multiple API routes returning 404/500 errors
+- CSP violations blocking Cloudflare analytics
+- Database connection issues
+
+**See**: [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) for complete analysis and fix procedures.
+
+---
+
+## ✨ Try It Now (When Production is Restored)
+
+**Live Demo:** [https://selfprime.net](https://selfprime.net)  
+**API Status:** [Health Check](https://prime-self-api.adrper79.workers.dev/api/health)
+
+*(Currently experiencing technical difficulties — code complete, deployment in progress)*
 
 ---
 

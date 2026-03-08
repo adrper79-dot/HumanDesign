@@ -1,9 +1,26 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-07 (Sprint 15 deep audit)
+**Last audited:** 2026-03-08 (Production Deployment Audit)
 **Test suite:** 190/190 passing (vitest 3.2.4)
-**Completion status:** Sprints 1–14 COMPLETE ✅ | Sprint 15: 10 new items (3 Critical, 3 High, 4 Medium)
-**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity
+**Code status:** Sprints 1–14 COMPLETE ✅ | Sprint 15: 10 new items (3 Critical, 3 High, 4 Medium)
+**Deployment status:** 🚨 **PRODUCTION BROKEN** — Stale code deployed, multiple 404/500 errors
+**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification**
+
+---
+
+## 🚨 PRODUCTION STATUS (Added 2026-03-08)
+
+**Critical Issue**: Production deployment at `prime-self-api.adrper79.workers.dev` is running stale code.
+
+**Broken Endpoints** (404/500 errors):
+- ❌ `/api/auth/me` → 404 (route exists in code)
+- ❌ `/api/validation/*` → 404 (route exists in code)
+- ❌ `/api/psychometric/*` → 404 (route exists in code)  
+- ❌ `/api/diary` → 500 (handler implemented, DB connection issue)
+- ❌ `/api/transits/forecast` → 400 (frontend missing params)
+- ❌ CSP violations (Cloudflare Insights blocked, fonts blocked)
+
+**Action Required**: See [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) for complete analysis and fix procedures.
 
 ---
 
