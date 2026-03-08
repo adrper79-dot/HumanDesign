@@ -18,7 +18,7 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import celebsData from '../data/celebrities.json' assert { type: 'json' };
 import { trackEvent } from './achievements.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 
 /**
@@ -41,15 +41,7 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get user's most recent chart
-    const { rows: charts } = await query(`
-      SELECT c.id, c.hd_json, c.calculated_at,
-             u.birth_date, u.birth_time, u.birth_tz, u.birth_lat, u.birth_lng
-      FROM charts c
-      JOIN users u ON u.id = c.user_id
-      WHERE c.user_id = $1
-      ORDER BY c.calculated_at DESC
-      LIMIT 1
-    `, [user.id]);
+    const { rows: charts } = await query(QUERIES.getUserChartWithBirthData, [user.id]);
     
     if (charts.length === 0) {
       return new Response(JSON.stringify({
@@ -133,15 +125,7 @@ export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get user's most recent chart
-    const { rows: charts } = await query(`
-      SELECT c.id, c.hd_json, c.calculated_at,
-             u.birth_date, u.birth_time, u.birth_tz, u.birth_lat, u.birth_lng
-      FROM charts c
-      JOIN users u ON u.id = c.user_id
-      WHERE c.user_id = $1
-      ORDER BY c.calculated_at DESC
-      LIMIT 1
-    `, [user.id]);
+    const { rows: charts } = await query(QUERIES.getUserChartWithBirthData, [user.id]);
     
     if (charts.length === 0) {
       return new Response(JSON.stringify({

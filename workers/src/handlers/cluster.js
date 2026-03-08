@@ -186,11 +186,7 @@ async function handleList(request, env) {
     
     // Get all cluster memberships for this user
     const memberships = await query(
-      `SELECT c.id, c.name, c.challenge, c.created_at, cm.joined_at
-       FROM cluster_members cm
-       JOIN clusters c ON c.id = cm.cluster_id
-       WHERE cm.user_id = $1
-       ORDER BY cm.joined_at DESC`,
+      QUERIES.listUserClusters,
       [userId]
     );
 
@@ -236,9 +232,7 @@ async function handleLeave(request, env, clusterId) {
     
     // Remove the user from the cluster
     const result = await query(
-      `DELETE FROM cluster_members 
-       WHERE cluster_id = $1 AND user_id = $2
-       RETURNING cluster_id`,
+      QUERIES.leaveCluster,
       [clusterId, userId]
     );
 

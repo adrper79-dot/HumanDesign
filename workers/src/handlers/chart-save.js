@@ -104,11 +104,7 @@ export async function handleChartHistory(request, env) {
     
     // Query for user's charts
     const result = await query(
-      `SELECT id, calculated_at, hd_json::jsonb->'chart'->'type' as type
-       FROM charts 
-       WHERE user_id = $1 
-       ORDER BY calculated_at DESC 
-       LIMIT 50`,
+      QUERIES.getChartHistory,
       [userId]
     );
 

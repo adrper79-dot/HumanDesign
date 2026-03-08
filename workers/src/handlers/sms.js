@@ -189,7 +189,7 @@ async function handleWebhook(request, env) {
     // Opt-out: mark user as unsubscribed
     try {
       await query(
-        `UPDATE users SET sms_opted_in = false WHERE phone = $1`,
+        QUERIES.smsOptOut,
         [from]
       );
       await sendSMS(from, 'You\'ve been unsubscribed from Prime Self transit digests. Text START to re-subscribe.', env);
@@ -203,7 +203,7 @@ async function handleWebhook(request, env) {
     // Opt-in
     try {
       await query(
-        `UPDATE users SET sms_opted_in = true WHERE phone = $1`,
+        QUERIES.smsOptIn,
         [from]
       );
       await sendSMS(from, 'Welcome to Prime Self transit digests! You\'ll receive daily transit insights based on your chart. Text STOP to unsubscribe.', env);
@@ -276,7 +276,7 @@ async function handleSendDigest(request, env) {
     }
     // Send to all opted-in users
     const usersResult = await query(
-      `SELECT * FROM users WHERE sms_opted_in = true AND phone IS NOT NULL`
+      QUERIES.getSmsSubscribedUsers
     );
 
     const users = usersResult.rows || [];
@@ -412,9 +412,7 @@ async function handleSubscribe(request, env) {
     
     // Update user's phone and SMS opt-in status
     await query(
-      `UPDATE users 
-       SET phone = $1, sms_opted_in = true 
-       WHERE id = $2`,
+      QUERIES.smsSubscribeByUserId,
       [phone, userId]
     );
 
@@ -467,7 +465,7 @@ async function handleUnsubscribe(request, env) {
     
     // Get user's phone for confirmation SMS
     const userResult = await query(
-      `SELECT phone FROM users WHERE id = $1`,
+      QUERIES.getUserPhone,
       [userId]
     );
 
@@ -475,9 +473,7 @@ async function handleUnsubscribe(request, env) {
 
     // Update SMS opt-in status
     await query(
-      `UPDATE users 
-       SET sms_opted_in = false 
-       WHERE id = $1`,
+      QUERIES.smsUnsubscribeByUserId,
       [userId]
     );
 

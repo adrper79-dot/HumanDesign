@@ -11,7 +11,7 @@
  */
 
 import { getUserFromRequest } from '../middleware/auth.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 import { dispatchWebhookEvent } from '../lib/webhookDispatcher.js';
 
@@ -133,11 +133,7 @@ async function registerWebhook(request, env, user) {
 
     // Create webhook
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      INSERT INTO webhooks (user_id, url, events, secret, active)
-      VALUES ($1, $2, $3, $4, true)
-      RETURNING id, url, events, secret, active, created_at
-    `, [
+    const { rows } = await query(QUERIES.insertWebhook, [
       user.id,
       url,
       JSON.stringify(events),
@@ -173,15 +169,7 @@ async function registerWebhook(request, env, user) {
 async function listWebhooks(request, env, user) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT id, url, events, active, created_at,
-             (SELECT COUNT(*)::int FROM webhook_deliveries WHERE webhook_id = webhooks.id) as delivery_count,
-             (SELECT COUNT(*)::int FROM webhook_deliveries 
-              WHERE webhook_id = webhooks.id AND response_status >= 200 AND response_status < 300) as successful_count
-      FROM webhooks
-      WHERE user_id = $1
-      ORDER BY created_at DESC
-    `, [user.id]);
+    const { rows } = await query(QUERIES.listWebhooks, [user.id]);
 
     return Response.json({
       ok: true,
@@ -216,11 +204,7 @@ async function listWebhooks(request, env, user) {
 async function getWebhook(request, env, user, webhookId) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT id, url, events, secret, active, created_at
-      FROM webhooks
-      WHERE id = $1 AND user_id = $2
-    `, [webhookId, user.id]);
+    const { rows } = await query(QUERIES.getWebhookById, [webhookId, user.id]);
     const webhook = rows[0] || null;
 
     if (!webhook) {
@@ -257,11 +241,7 @@ async function getWebhook(request, env, user, webhookId) {
 async function deleteWebhook(request, env, user, webhookId) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      DELETE FROM webhooks
-      WHERE id = $1 AND user_id = $2
-      RETURNING id
-    `, [webhookId, user.id]);
+    const { rows } = await query(QUERIES.deleteWebhook, [webhookId, user.id]);
 
     if (rows.length === 0) {
       return Response.json({
@@ -290,11 +270,7 @@ async function deleteWebhook(request, env, user, webhookId) {
 async function testWebhook(request, env, user, webhookId) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(`
-      SELECT id, url, events, secret
-      FROM webhooks
-      WHERE id = $1 AND user_id = $2
-    `, [webhookId, user.id]);
+    const { rows } = await query(QUERIES.getWebhookForTest, [webhookId, user.id]);
     const webhook = rows[0] || null;
 
     if (!webhook) {
@@ -338,9 +314,7 @@ async function getDeliveryHistory(request, env, user, webhookId) {
   try {
     // Verify webhook ownership
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: webhookRows } = await query(`
-      SELECT id FROM webhooks WHERE id = $1 AND user_id = $2
-    `, [webhookId, user.id]);
+    const { rows: webhookRows } = await query(QUERIES.checkWebhookOwnership, [webhookId, user.id]);
 
     if (webhookRows.length === 0) {
       return Response.json({
@@ -354,17 +328,9 @@ async function getDeliveryHistory(request, env, user, webhookId) {
     const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 100);  // BL-R-M15
     const offset = Math.min(parseInt(url.searchParams.get('offset')) || 0, 10000);  // BL-R-M15
 
-    const { rows: deliveryRows } = await query(`
-      SELECT id, event_type, response_status, delivered_at, attempts, created_at
-      FROM webhook_deliveries
-      WHERE webhook_id = $1
-      ORDER BY created_at DESC
-      LIMIT $2 OFFSET $3
-    `, [webhookId, limit, offset]);
+    const { rows: deliveryRows } = await query(QUERIES.getWebhookDeliveries, [webhookId, limit, offset]);
 
-    const { rows: totalRows } = await query(`
-      SELECT COUNT(*)::int as count FROM webhook_deliveries WHERE webhook_id = $1
-    `, [webhookId]);
+    const { rows: totalRows } = await query(QUERIES.countWebhookDeliveries, [webhookId]);
     const total = totalRows[0];
 
     return Response.json({

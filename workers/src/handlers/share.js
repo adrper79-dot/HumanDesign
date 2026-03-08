@@ -107,9 +107,8 @@ export async function handleShareCelebrity(request, env, ctx) {
     // Record share in database
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     await query(
-      `INSERT INTO share_events (user_id, share_type, share_data, platform)
-       VALUES ($1, 'celebrity_match', $2, $3)`,
-      [user.id, JSON.stringify({
+      QUERIES.insertShareEvent,
+      [user.id, 'celebrity_match', JSON.stringify({
         celebrityId,
         celebrityName: match.celebrity.name,
         percentage: match.similarity.percentage
@@ -196,9 +195,8 @@ export async function handleShareChart(request, env, ctx) {
     // Record share
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     await query(
-      `INSERT INTO share_events (user_id, share_type, share_data, platform)
-       VALUES ($1, 'chart', $2, $3)`,
-      [user.id, JSON.stringify({
+      QUERIES.insertShareEvent,
+      [user.id, 'chart', JSON.stringify({
         type: fullChart.chart.type,
         profile: fullChart.chart.profile
       }), platform || 'unknown']
@@ -269,7 +267,7 @@ export async function handleShareAchievement(request, env, ctx) {
     // Verify user has unlocked this achievement
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const unlockResult = await query(
-      `SELECT id FROM user_achievements WHERE user_id = $1 AND achievement_id = $2 LIMIT 1`,
+      QUERIES.checkAchievementUnlocked,
       [user.id, achievementId]
     );
     
@@ -315,9 +313,8 @@ export async function handleShareAchievement(request, env, ctx) {
     
     // Record share
     await query(
-      `INSERT INTO share_events (user_id, share_type, share_data, platform)
-       VALUES ($1, 'achievement', $2, $3)`,
-      [user.id, JSON.stringify({
+      QUERIES.insertShareEvent,
+      [user.id, 'achievement', JSON.stringify({
         achievementId,
         achievementName: achievement.name
       }), platform || 'unknown']
@@ -404,9 +401,8 @@ export async function handleShareReferral(request, env, ctx) {
     // Record share
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     await query(
-      `INSERT INTO share_events (user_id, share_type, share_data, platform)
-       VALUES ($1, 'referral', $2, $3)`,
-      [user.id, JSON.stringify({
+      QUERIES.insertShareEvent,
+      [user.id, 'referral', JSON.stringify({
         referralCode
       }), platform || 'unknown']
     );
@@ -453,33 +449,24 @@ export async function handleGetShareStats(request, env, ctx) {
 
     // Get total shares by type
     const sharesByTypeResult = await query(
-      `SELECT share_type, COUNT(*)::int as count
-       FROM share_events
-       WHERE user_id = $1
-       GROUP BY share_type`,
+      QUERIES.getSharesByType,
       [user.id]
     );
     const sharesByType = sharesByTypeResult.rows || [];
     
     // Get recent shares
     const recentResult = await query(
-      `SELECT share_type, platform, created_at
-       FROM share_events
-       WHERE user_id = $1
-       ORDER BY created_at DESC
-       LIMIT 10`,
+      QUERIES.getRecentShares,
       [user.id]
     );
     const recentShares = recentResult.rows || [];
     
     // Get referral conversion rate (shares → signups)
     const referralResult = await query(
-      `SELECT COUNT(*)::int as referred_count
-       FROM referrals
-       WHERE referrer_user_id = $1`,
+      QUERIES.countReferrals,
       [user.id]
     );
-    const referredUsers = referralResult.rows?.[0]?.referred_count || 0;
+    const referredUsers = referralResult.rows?.[0]?.total || 0;
     
     const totalShares = sharesByType.reduce((sum, row) => sum + row.count, 0);
 

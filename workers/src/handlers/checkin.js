@@ -12,7 +12,7 @@
  */
 
 import { trackEvent } from './achievements.js';
-import { createQueryFn } from '../db/queries.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 
@@ -105,23 +105,7 @@ export async function handleCheckinCreate(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Insert or update today's check-in
-    const { rows: results } = await query(`
-      INSERT INTO daily_checkins (
-        user_id, checkin_date, alignment_score, followed_strategy, followed_authority,
-        notes, mood, energy_level, transit_snapshot
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      ON CONFLICT (user_id, checkin_date) DO UPDATE SET
-        alignment_score = EXCLUDED.alignment_score,
-        followed_strategy = EXCLUDED.followed_strategy,
-        followed_authority = EXCLUDED.followed_authority,
-        notes = EXCLUDED.notes,
-        mood = EXCLUDED.mood,
-        energy_level = EXCLUDED.energy_level,
-        transit_snapshot = EXCLUDED.transit_snapshot,
-        updated_at = NOW()
-      RETURNING *
-    `, [
+    const { rows: results } = await query(QUERIES.upsertCheckin, [
       user.id,
       checkinDate,
       alignmentScore,
@@ -145,11 +129,7 @@ export async function handleCheckinCreate(request, env, ctx) {
     }, user.tier);
 
     // Get updated streak info
-    const { rows: streakResults } = await query(`
-      SELECT current_streak, last_checkin_date, streak_start_date
-      FROM checkin_streaks
-      WHERE user_id = $1
-    `, [user.id]);
+    const { rows: streakResults } = await query(QUERIES.getCheckinStreak, [user.id]);
 
     const streak = streakResults[0] || { current_streak: 1, last_checkin_date: checkinDate, streak_start_date: checkinDate };
 
@@ -196,10 +176,7 @@ export async function handleCheckinToday(request, env, ctx) {
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: results } = await query(`
-      SELECT * FROM daily_checkins
-      WHERE user_id = $1 AND checkin_date = $2
-    `, [user.id, today]);
+    const { rows: results } = await query(QUERIES.getCheckinByDate, [user.id, today]);
 
     if (results.length === 0) {
       return Response.json({
@@ -251,17 +228,10 @@ export async function handleCheckinHistory(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get check-in history
-    const { rows: checkins } = await query(`
-      SELECT * FROM daily_checkins
-      WHERE user_id = $1
-      ORDER BY checkin_date DESC
-      LIMIT $2 OFFSET $3
-    `, [user.id, days, offset]);
+    const { rows: checkins } = await query(QUERIES.getCheckinHistory, [user.id, days, offset]);
 
     // Get total count
-    const { rows: countResults } = await query(`
-      SELECT COUNT(*)::int as total FROM daily_checkins WHERE user_id = $1
-    `, [user.id]);
+    const { rows: countResults } = await query(QUERIES.countCheckins, [user.id]);
 
     const total = countResults[0]?.total || 0;
 
@@ -314,18 +284,7 @@ export async function handleCheckinStats(request, env, ctx) {
     const periodStartStr = periodStart.toISOString().split('T')[0];
 
     // Get check-ins for period
-    const { rows: checkins } = await query(`
-      SELECT 
-        alignment_score,
-        followed_strategy,
-        followed_authority,
-        mood,
-        energy_level,
-        checkin_date
-      FROM daily_checkins
-      WHERE user_id = $1 AND checkin_date >= $2
-      ORDER BY checkin_date ASC
-    `, [user.id, periodStartStr]);
+    const { rows: checkins } = await query(QUERIES.getCheckinStatsForPeriod, [user.id, periodStartStr]);
 
     if (checkins.length === 0) {
       return Response.json({
@@ -413,11 +372,7 @@ export async function handleCheckinStreak(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get current streak from materialized view
-    const { rows: streakResults } = await query(`
-      SELECT current_streak, last_checkin_date, streak_start_date
-      FROM checkin_streaks
-      WHERE user_id = $1
-    `, [user.id]);
+    const { rows: streakResults } = await query(QUERIES.getCheckinStreak, [user.id]);
 
     if (streakResults.length === 0) {
       return Response.json({
@@ -434,11 +389,7 @@ export async function handleCheckinStreak(request, env, ctx) {
     const streak = streakResults[0];
 
     // Calculate longest streak (all-time)
-    const { rows: allCheckins } = await query(`
-      SELECT checkin_date FROM daily_checkins
-      WHERE user_id = $1
-      ORDER BY checkin_date ASC
-    `, [user.id]);
+    const { rows: allCheckins } = await query(QUERIES.getCheckinDatesOrdered, [user.id]);
 
     let longestStreak = 0;
     let currentStreak = 0;
@@ -517,17 +468,7 @@ export async function handleSetCheckinReminder(request, env, ctx) {
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: results } = await query(`
-      INSERT INTO checkin_reminders (user_id, enabled, reminder_time, timezone, notification_method)
-      VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (user_id) DO UPDATE SET
-        enabled = EXCLUDED.enabled,
-        reminder_time = EXCLUDED.reminder_time,
-        timezone = EXCLUDED.timezone,
-        notification_method = EXCLUDED.notification_method,
-        updated_at = NOW()
-      RETURNING *
-    `, [
+    const { rows: results } = await query(QUERIES.upsertCheckinReminder, [
       user.id,
       enabled,
       reminderTime,
@@ -566,9 +507,7 @@ export async function handleGetCheckinReminder(request, env, ctx) {
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows: results } = await query(`
-      SELECT * FROM checkin_reminders WHERE user_id = $1
-    `, [user.id]);
+    const { rows: results } = await query(QUERIES.getCheckinReminder, [user.id]);
 
     if (results.length === 0) {
       return Response.json({

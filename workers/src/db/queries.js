@@ -462,5 +462,966 @@ export const QUERIES = {
       AND created_at <= $3
     GROUP BY action
     ORDER BY total_cost DESC
+  `,
+
+  // ─── Achievements ─────────────────────────────────────────
+
+  getUserUnlockedAchievements: `
+    SELECT achievement_id, unlocked_at, points_awarded
+    FROM user_achievements
+    WHERE user_id = $1
+    ORDER BY unlocked_at DESC
+  `,
+
+  getAchievementEventCounts: `
+    SELECT event_type, COUNT(*)::int as count
+    FROM achievement_events
+    WHERE user_id = $1
+    GROUP BY event_type
+  `,
+
+  getUserStreaks: `
+    SELECT streak_type, current_streak
+    FROM user_streaks
+    WHERE user_id = $1
+  `,
+
+  getUserStreaksFull: `
+    SELECT streak_type, current_streak, longest_streak, last_activity_date
+    FROM user_streaks
+    WHERE user_id = $1
+  `,
+
+  getUserAchievementStats: `
+    SELECT total_points FROM user_achievement_stats WHERE user_id = $1
+  `,
+
+  getUserAchievementStatsFull: `
+    SELECT * FROM user_achievement_stats WHERE user_id = $1
+  `,
+
+  getLeaderboard: `
+    SELECT 
+      u.id as user_id, u.email, u.tier,
+      uas.total_points, uas.total_achievements, uas.achievement_percentage,
+      uas.last_achievement_date,
+      ROW_NUMBER() OVER (ORDER BY uas.total_points DESC, uas.total_achievements DESC) as rank
+    FROM users u
+    JOIN user_achievement_stats uas ON u.id = uas.user_id
+    WHERE uas.total_points > 0
+    ORDER BY uas.total_points DESC, uas.total_achievements DESC
+    LIMIT $1 OFFSET $2
+  `,
+
+  getUserRank: `
+    SELECT 
+      user_id, total_points, total_achievements, achievement_percentage,
+      (SELECT COUNT(*)::int + 1 FROM user_achievement_stats
+       WHERE total_points > (SELECT total_points FROM user_achievement_stats WHERE user_id = $1)
+      ) as rank
+    FROM user_achievement_stats
+    WHERE user_id = $1
+  `,
+
+  insertAchievementEvent: `
+    INSERT INTO achievement_events (user_id, event_type, event_data)
+    VALUES ($1, $2, $3)
+  `,
+
+  getUserUnlockedIds: `
+    SELECT achievement_id FROM user_achievements WHERE user_id = $1
+  `,
+
+  insertUserAchievement: `
+    INSERT INTO user_achievements (user_id, achievement_id, points_awarded)
+    VALUES ($1, $2, $3)
+  `,
+
+  checkAchievementUnlocked: `
+    SELECT id FROM user_achievements WHERE user_id = $1 AND achievement_id = $2
+  `,
+
+  getStreakByType: `
+    SELECT * FROM user_streaks WHERE user_id = $1 AND streak_type = $2
+  `,
+
+  insertStreak: `
+    INSERT INTO user_streaks (user_id, streak_type, current_streak, longest_streak, last_activity_date)
+    VALUES ($1, $2, 1, 1, $3)
+  `,
+
+  updateStreakIncrement: `
+    UPDATE user_streaks
+    SET current_streak = $1, longest_streak = $2, last_activity_date = $3
+    WHERE id = $4
+  `,
+
+  resetStreak: `
+    UPDATE user_streaks
+    SET current_streak = 1, last_activity_date = $1
+    WHERE id = $2
+  `,
+
+  // ─── Transit Alerts ───────────────────────────────────────
+
+  listUserAlerts: `
+    SELECT 
+      id, alert_type, config, name, description, active, 
+      notify_push, notify_webhook, created_at,
+      (SELECT COUNT(*)::int FROM alert_deliveries WHERE alert_id = transit_alerts.id) as trigger_count,
+      (SELECT MAX(triggered_at) FROM alert_deliveries WHERE alert_id = transit_alerts.id) as last_triggered
+    FROM transit_alerts
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+  `,
+
+  countUserAlerts: `
+    SELECT COUNT(*)::int as count FROM transit_alerts WHERE user_id = $1
+  `,
+
+  insertAlert: `
+    INSERT INTO transit_alerts (
+      user_id, alert_type, config, name, description,
+      notify_push, notify_webhook, active
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+    RETURNING id, alert_type, config, name, description,
+              notify_push, notify_webhook, active, created_at
+  `,
+
+  getAlertById: `
+    SELECT * FROM transit_alerts WHERE id = $1 AND user_id = $2
+  `,
+
+  deleteAlert: `
+    DELETE FROM transit_alerts WHERE id = $1 AND user_id = $2
+    RETURNING id
+  `,
+
+  getUserActiveAlerts: `
+    SELECT * FROM transit_alerts WHERE user_id = $1 AND active = true
+  `,
+
+  checkAlertDeliveredToday: `
+    SELECT id FROM alert_deliveries
+    WHERE alert_id = $1 AND trigger_date = $2
+  `,
+
+  insertAlertDelivery: `
+    INSERT INTO alert_deliveries (
+      alert_id, user_id, trigger_date, alert_type, config, transit_data
+    )
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id
+  `,
+
+  markAlertDeliveryPush: `
+    UPDATE alert_deliveries SET push_sent = true, push_sent_at = NOW()
+    WHERE id = $1
+  `,
+
+  markAlertDeliveryWebhook: `
+    UPDATE alert_deliveries SET webhook_sent = true, webhook_sent_at = NOW()
+    WHERE id = $1
+  `,
+
+  getAlertDeliveryHistory: `
+    SELECT 
+      ad.id, ad.triggered_at, ad.trigger_date, ad.alert_type,
+      ad.config, ad.transit_data, ad.push_sent, ad.webhook_sent,
+      ta.name as alert_name
+    FROM alert_deliveries ad
+    LEFT JOIN transit_alerts ta ON ad.alert_id = ta.id
+    WHERE ad.user_id = $1
+    ORDER BY ad.triggered_at DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  countAlertDeliveries: `
+    SELECT COUNT(*)::int as count FROM alert_deliveries WHERE user_id = $1
+  `,
+
+  getAlertTemplates: `
+    SELECT * FROM alert_templates
+    WHERE active = true
+      AND (tier_required = 'free' OR tier_required = $1)
+    ORDER BY popularity DESC, category
+  `,
+
+  getAlertTemplateById: `
+    SELECT * FROM alert_templates WHERE id = $1 AND active = true
+  `,
+
+  incrementTemplatePopularity: `
+    UPDATE alert_templates SET popularity = popularity + 1 WHERE id = $1
+  `,
+
+  // ─── Push Notifications ───────────────────────────────────
+
+  getPushSubscriptionByEndpoint: `
+    SELECT id FROM push_subscriptions WHERE endpoint = $1
+  `,
+
+  updatePushSubscriptionLastUsed: `
+    UPDATE push_subscriptions SET last_used = NOW(), updated_at = NOW()
+    WHERE endpoint = $1
+  `,
+
+  insertPushSubscription: `
+    INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, active)
+    VALUES ($1, $2, $3, $4, $5, true)
+    RETURNING id, endpoint, active, subscription_time
+  `,
+
+  getNotificationPrefsById: `
+    SELECT user_id FROM notification_preferences WHERE user_id = $1
+  `,
+
+  insertDefaultNotificationPrefs: `
+    INSERT INTO notification_preferences (user_id) VALUES ($1)
+  `,
+
+  deletePushSubscription: `
+    DELETE FROM push_subscriptions
+    WHERE user_id = $1 AND endpoint = $2
+    RETURNING id
+  `,
+
+  getActivePushSubscriptions: `
+    SELECT id, endpoint, p256dh, auth
+    FROM push_subscriptions
+    WHERE user_id = $1 AND active = true
+  `,
+
+  getNotificationPreferences: `
+    SELECT * FROM notification_preferences WHERE user_id = $1
+  `,
+
+  deactivatePushSubscription: `
+    UPDATE push_subscriptions SET active = false WHERE id = $1
+  `,
+
+  insertPushNotification: `
+    INSERT INTO push_notifications (
+      subscription_id, user_id, notification_type, title, body,
+      response_status, response_body, success
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+  `,
+
+  insertPushNotificationFull: `
+    INSERT INTO push_notifications (
+      subscription_id, user_id, notification_type, title, body, icon, badge, tag,
+      data, response_status, response_body, success
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+  `,
+
+  getPushNotificationHistory: `
+    SELECT id, notification_type, title, body, sent_at, success
+    FROM push_notifications
+    WHERE user_id = $1
+    ORDER BY sent_at DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  countPushNotifications: `
+    SELECT COUNT(*)::int as count FROM push_notifications WHERE user_id = $1
+  `,
+
+  getActivePushSubscriptionsFull: `
+    SELECT id, user_id, endpoint, p256dh, auth
+    FROM push_subscriptions
+    WHERE user_id = $1 AND active = true
+  `,
+
+  // ─── Referrals ────────────────────────────────────────────
+
+  getUserByReferralCode: `
+    SELECT id FROM users WHERE referral_code = $1
+  `,
+
+  setUserReferralCode: `
+    UPDATE users SET referral_code = $1, updated_at = NOW() WHERE id = $2
+  `,
+
+  countReferrals: `
+    SELECT COUNT(*)::int as count FROM referrals WHERE referrer_user_id = $1
+  `,
+
+  countConvertedReferrals: `
+    SELECT COUNT(*)::int as count
+    FROM referrals
+    WHERE referrer_user_id = $1 AND converted = true
+  `,
+
+  getReferralRewardStats: `
+    SELECT 
+      COUNT(*)::int as rewards_count,
+      COALESCE(SUM(reward_value), 0)::int as total_value
+    FROM referrals
+    WHERE referrer_user_id = $1 AND reward_granted = true
+  `,
+
+  countPendingReferralRewards: `
+    SELECT COUNT(*)::int as count
+    FROM referrals
+    WHERE referrer_user_id = $1 AND converted = true AND reward_granted = false
+  `,
+
+  getRecentReferrals: `
+    SELECT 
+      r.id, u.email as referred_email, r.converted, r.conversion_date,
+      r.reward_granted, r.reward_type, r.reward_value, r.created_at
+    FROM referrals r
+    JOIN users u ON r.referred_user_id = u.id
+    WHERE r.referrer_user_id = $1
+    ORDER BY r.created_at DESC
+    LIMIT 10
+  `,
+
+  getReferralHistory: `
+    SELECT 
+      r.id, u.email as referred_email, r.referral_code, r.converted,
+      r.conversion_date, r.reward_granted, r.reward_type, r.reward_value, r.created_at
+    FROM referrals r
+    JOIN users u ON r.referred_user_id = u.id
+    WHERE r.referrer_user_id = $1
+    ORDER BY r.created_at DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  validateReferralCode: `
+    SELECT id, email, referral_code FROM users WHERE referral_code = $1
+  `,
+
+  checkExistingReferral: `
+    SELECT id FROM referrals WHERE referred_user_id = $1
+  `,
+
+  insertReferral: `
+    INSERT INTO referrals (
+      referrer_user_id, referred_user_id, referral_code, converted, reward_granted
+    ) VALUES ($1, $2, $3, false, false)
+  `,
+
+  getPendingReferralRewards: `
+    SELECT 
+      r.id, u.email as referred_email, r.conversion_date,
+      'free_month' as reward_type, 1500 as reward_value
+    FROM referrals r
+    JOIN users u ON r.referred_user_id = u.id
+    WHERE r.referrer_user_id = $1 AND r.converted = true AND r.reward_granted = false
+    ORDER BY r.conversion_date DESC
+  `,
+
+  getReferralById: `
+    SELECT * FROM referrals WHERE id = $1 AND referrer_user_id = $2
+  `,
+
+  claimReferralReward: `
+    UPDATE referrals 
+    SET reward_granted = true, reward_type = 'free_month', reward_value = 1500, updated_at = NOW()
+    WHERE id = $1
+  `,
+
+  getUserStripeCustomerId: `
+    SELECT stripe_customer_id FROM users WHERE id = $1
+  `,
+
+  getUnconvertedReferral: `
+    SELECT id, referrer_user_id
+    FROM referrals
+    WHERE referred_user_id = $1 AND converted = false
+  `,
+
+  markReferralConverted: `
+    UPDATE referrals
+    SET converted = true, conversion_date = NOW(), updated_at = NOW()
+    WHERE id = $1
+  `,
+
+  // ─── Billing ──────────────────────────────────────────────
+
+  updateUserStripeCustomerId: `
+    UPDATE users SET stripe_customer_id = $1 WHERE id = $2
+  `,
+
+  getActiveSubscription: `
+    SELECT * FROM subscriptions
+    WHERE user_id = $1 AND status = 'active'
+    ORDER BY created_at DESC
+    LIMIT 1
+  `,
+
+  updateSubscriptionStatus2: `
+    UPDATE subscriptions 
+    SET status = $1, updated_at = NOW()
+    WHERE id = $2
+  `,
+
+  updateSubscriptionCancellation: `
+    UPDATE subscriptions 
+    SET status = $1, cancel_at_period_end = $2, updated_at = NOW()
+    WHERE id = $3
+  `,
+
+  updateUserTier: `
+    UPDATE users SET tier = $1, updated_at = NOW() WHERE id = $2
+  `,
+
+  updateSubscriptionTier: `
+    UPDATE subscriptions SET tier = $1, updated_at = NOW() WHERE id = $2
+  `,
+
+  insertCheckoutSubscription: `
+    INSERT INTO subscriptions (
+      user_id, tier, stripe_subscription_id, stripe_customer_id,
+      status, current_period_start, current_period_end,
+      created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, 'active', NOW(), NOW() + INTERVAL '30 days', NOW(), NOW())
+  `,
+
+  updateUserTierAndStripe: `
+    UPDATE users 
+    SET tier = $1, stripe_customer_id = $2, updated_at = NOW()
+    WHERE id = $3
+  `,
+
+  updateSubscriptionPeriod: `
+    UPDATE subscriptions 
+    SET status = $1, current_period_end = $2, cancel_at_period_end = $3, updated_at = NOW()
+    WHERE stripe_subscription_id = $4
+  `,
+
+  getSubscriptionUserByStripeId: `
+    SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1
+  `,
+
+  cancelSubscriptionByStripeId: `
+    UPDATE subscriptions SET status = 'canceled', updated_at = NOW()
+    WHERE stripe_subscription_id = $1
+  `,
+
+  insertInvoicePaid: `
+    INSERT INTO invoices (subscription_id, stripe_invoice_id, amount_paid, status, paid_at, created_at)
+    SELECT id, $1, $2, 'paid', NOW(), NOW()
+    FROM subscriptions WHERE stripe_subscription_id = $3
+  `,
+
+  insertInvoiceFailed: `
+    INSERT INTO invoices (subscription_id, stripe_invoice_id, amount_paid, status, created_at)
+    SELECT id, $1, 0, 'failed', NOW()
+    FROM subscriptions WHERE stripe_subscription_id = $2
+  `,
+
+  // ─── Notion Integration ───────────────────────────────────
+
+  insertOAuthState: `
+    INSERT INTO oauth_states (user_id, provider, state, expires_at)
+    VALUES ($1, 'notion', $2, $3)
+  `,
+
+  verifyOAuthState: `
+    SELECT user_id, expires_at FROM oauth_states
+    WHERE provider = 'notion' AND state = $1 AND expires_at > NOW()
+  `,
+
+  deleteOAuthState: `
+    DELETE FROM oauth_states WHERE provider = 'notion' AND state = $1
+  `,
+
+  upsertNotionConnection: `
+    INSERT INTO notion_connections (user_id, access_token, workspace_id, workspace_name, bot_id, owner_type, owner_user_id, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+    ON CONFLICT (user_id) DO UPDATE SET
+      access_token = excluded.access_token,
+      workspace_id = excluded.workspace_id,
+      workspace_name = excluded.workspace_name,
+      bot_id = excluded.bot_id,
+      owner_type = excluded.owner_type,
+      owner_user_id = excluded.owner_user_id,
+      updated_at = NOW()
+  `,
+
+  getNotionConnection: `
+    SELECT workspace_id, workspace_name, created_at, updated_at
+    FROM notion_connections WHERE user_id = $1
+  `,
+
+  getNotionAccessToken: `
+    SELECT access_token, workspace_id FROM notion_connections WHERE user_id = $1
+  `,
+
+  getNotionSyncRecord: `
+    SELECT notion_database_id FROM notion_syncs
+    WHERE user_id = $1 AND sync_type = 'clients'
+  `,
+
+  insertNotionSync: `
+    INSERT INTO notion_syncs (user_id, sync_type, notion_database_id, created_at)
+    VALUES ($1, 'clients', $2, NOW())
+  `,
+
+  updateNotionSyncTime: `
+    UPDATE notion_syncs SET last_synced_at = NOW()
+    WHERE user_id = $1 AND sync_type = 'clients'
+  `,
+
+  getNotionExportProfile: `
+    SELECT p.profile_json, c.hd_json, u.email
+    FROM profiles p
+    JOIN charts c ON p.chart_id = c.id
+    JOIN users u ON p.user_id = u.id
+    WHERE p.id = $1 AND p.user_id = $2
+  `,
+
+  getNotionAccessTokenOnly: `
+    SELECT access_token FROM notion_connections WHERE user_id = $1
+  `,
+
+  deleteNotionConnection: `
+    DELETE FROM notion_connections WHERE user_id = $1
+  `,
+
+  deleteNotionSyncs: `
+    DELETE FROM notion_syncs WHERE user_id = $1
+  `,
+
+  getPractitionerClients2: `
+    SELECT 
+      pc.client_user_id, u.email, u.birth_date, u.created_at as joined_at,
+      c.id as chart_id, c.hd_json
+    FROM practitioner_clients pc
+    JOIN users u ON pc.client_user_id = u.id
+    LEFT JOIN charts c ON c.user_id = u.id
+    WHERE pc.practitioner_id = $1
+    ORDER BY c.calculated_at DESC
+  `,
+
+  // ─── Webhooks Management ──────────────────────────────────
+
+  insertWebhook: `
+    INSERT INTO webhooks (user_id, url, events, secret, active)
+    VALUES ($1, $2, $3, $4, true)
+    RETURNING id, url, events, secret, active, created_at
+  `,
+
+  listWebhooks: `
+    SELECT id, url, events, active, created_at,
+           (SELECT COUNT(*)::int FROM webhook_deliveries WHERE webhook_id = webhooks.id) as delivery_count,
+           (SELECT COUNT(*)::int FROM webhook_deliveries 
+            WHERE webhook_id = webhooks.id AND response_status >= 200 AND response_status < 300) as successful_count
+    FROM webhooks
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+  `,
+
+  getWebhookById: `
+    SELECT id, url, events, secret, active, created_at
+    FROM webhooks WHERE id = $1 AND user_id = $2
+  `,
+
+  deleteWebhook: `
+    DELETE FROM webhooks WHERE id = $1 AND user_id = $2
+    RETURNING id
+  `,
+
+  getWebhookForTest: `
+    SELECT id, url, events, secret
+    FROM webhooks WHERE id = $1 AND user_id = $2
+  `,
+
+  checkWebhookOwnership: `
+    SELECT id FROM webhooks WHERE id = $1 AND user_id = $2
+  `,
+
+  getWebhookDeliveries: `
+    SELECT id, event_type, response_status, delivered_at, attempts, created_at
+    FROM webhook_deliveries
+    WHERE webhook_id = $1
+    ORDER BY created_at DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  countWebhookDeliveries: `
+    SELECT COUNT(*)::int as count FROM webhook_deliveries WHERE webhook_id = $1
+  `,
+
+  // ─── API Keys ─────────────────────────────────────────────
+
+  countActiveApiKeys: `
+    SELECT COUNT(*)::int as count FROM api_keys WHERE user_id = $1 AND active = true
+  `,
+
+  listApiKeys: `
+    SELECT 
+      k.id, k.name, k.scopes, k.tier,
+      k.rate_limit_per_hour, k.rate_limit_per_day,
+      k.active, k.expires_at, k.last_used_at, k.created_at,
+      COUNT(u.id)::int as total_requests,
+      COUNT(CASE WHEN u.created_at > NOW() - INTERVAL '1 day' THEN 1 END)::int as requests_today,
+      COUNT(CASE WHEN u.response_status >= 400 THEN 1 END)::int as error_count
+    FROM api_keys k
+    LEFT JOIN api_usage u ON k.id = u.key_id
+    WHERE k.user_id = $1
+    GROUP BY k.id
+    ORDER BY k.created_at DESC
+  `,
+
+  getApiKeyById: `
+    SELECT 
+      id, name, scopes, tier,
+      rate_limit_per_hour, rate_limit_per_day,
+      active, expires_at, last_used_at, created_at
+    FROM api_keys WHERE id = $1 AND user_id = $2
+  `,
+
+  checkApiKeyOwnership: `
+    SELECT id FROM api_keys WHERE id = $1 AND user_id = $2
+  `,
+
+  deactivateApiKey: `
+    UPDATE api_keys SET active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1
+  `,
+
+  getApiKeyForUsage: `
+    SELECT id, name, tier, rate_limit_per_day
+    FROM api_keys WHERE id = $1 AND user_id = $2
+  `,
+
+  getApiKeyUsageStats: `
+    SELECT 
+      COUNT(*)::int as total_requests,
+      COUNT(CASE WHEN response_status >= 400 THEN 1 END)::int as error_count,
+      COUNT(CASE WHEN created_at > NOW() - INTERVAL '1 hour' THEN 1 END)::int as requests_last_hour,
+      COUNT(CASE WHEN created_at > NOW() - INTERVAL '1 day' THEN 1 END)::int as requests_last_day,
+      AVG(response_time_ms) as avg_response_time,
+      MAX(created_at) as last_request_at
+    FROM api_usage
+    WHERE key_id = $1 AND created_at > NOW() - ($2 * INTERVAL '1 day')
+  `,
+
+  getApiKeyTopEndpoints: `
+    SELECT endpoint, COUNT(*)::int as count
+    FROM api_usage
+    WHERE key_id = $1 AND created_at > NOW() - ($2 * INTERVAL '1 day')
+    GROUP BY endpoint
+    ORDER BY count DESC
+    LIMIT 10
+  `,
+
+  getApiKeyDailyUsage: `
+    SELECT 
+      created_at::date as date,
+      COUNT(*)::int as requests,
+      COUNT(CASE WHEN response_status >= 400 THEN 1 END)::int as errors
+    FROM api_usage
+    WHERE key_id = $1 AND created_at > NOW() - ($2 * INTERVAL '1 day')
+    GROUP BY created_at::date
+    ORDER BY date DESC
+  `,
+
+  // ─── Daily Check-ins ──────────────────────────────────────
+
+  upsertCheckin: `
+    INSERT INTO daily_checkins (
+      user_id, checkin_date, alignment_score, followed_strategy, followed_authority,
+      notes, mood, energy_level, transit_snapshot
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ON CONFLICT (user_id, checkin_date) DO UPDATE SET
+      alignment_score = EXCLUDED.alignment_score,
+      followed_strategy = EXCLUDED.followed_strategy,
+      followed_authority = EXCLUDED.followed_authority,
+      notes = EXCLUDED.notes,
+      mood = EXCLUDED.mood,
+      energy_level = EXCLUDED.energy_level,
+      transit_snapshot = EXCLUDED.transit_snapshot,
+      updated_at = NOW()
+    RETURNING *
+  `,
+
+  getCheckinByDate: `
+    SELECT * FROM daily_checkins WHERE user_id = $1 AND checkin_date = $2
+  `,
+
+  getCheckinHistory: `
+    SELECT * FROM daily_checkins
+    WHERE user_id = $1
+    ORDER BY checkin_date DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  countCheckins: `
+    SELECT COUNT(*)::int as total FROM daily_checkins WHERE user_id = $1
+  `,
+
+  getCheckinStatsForPeriod: `
+    SELECT 
+      alignment_score, followed_strategy, followed_authority,
+      mood, energy_level, checkin_date
+    FROM daily_checkins
+    WHERE user_id = $1 AND checkin_date >= $2
+    ORDER BY checkin_date ASC
+  `,
+
+  getCheckinStreak: `
+    SELECT current_streak, last_checkin_date, streak_start_date
+    FROM checkin_streaks WHERE user_id = $1
+  `,
+
+  getCheckinDatesOrdered: `
+    SELECT checkin_date FROM daily_checkins
+    WHERE user_id = $1 ORDER BY checkin_date ASC
+  `,
+
+  upsertCheckinReminder: `
+    INSERT INTO checkin_reminders (user_id, enabled, reminder_time, timezone, notification_method)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (user_id) DO UPDATE SET
+      enabled = EXCLUDED.enabled,
+      reminder_time = EXCLUDED.reminder_time,
+      timezone = EXCLUDED.timezone,
+      notification_method = EXCLUDED.notification_method,
+      updated_at = NOW()
+    RETURNING *
+  `,
+
+  getCheckinReminder: `
+    SELECT * FROM checkin_reminders WHERE user_id = $1
+  `,
+
+  // ─── Share Events ─────────────────────────────────────────
+
+  insertShareEvent: `
+    INSERT INTO share_events (user_id, share_type, share_data, platform)
+    VALUES ($1, $2, $3, $4)
+  `,
+
+  getSharesByType: `
+    SELECT share_type, COUNT(*)::int as count
+    FROM share_events WHERE user_id = $1
+    GROUP BY share_type
+  `,
+
+  getRecentShares: `
+    SELECT share_type, platform, created_at
+    FROM share_events WHERE user_id = $1
+    ORDER BY created_at DESC LIMIT 10
+  `,
+
+  // ─── Stats ────────────────────────────────────────────────
+
+  getWeeklyActiveUsers: `
+    SELECT COUNT(DISTINCT user_id) as count
+    FROM analytics_events
+    WHERE event_name = 'chart_calculate'
+      AND created_at >= NOW() - INTERVAL '7 days'
+  `,
+
+  getTotalProfiles: `
+    SELECT COUNT(*) as count FROM profiles WHERE status = 'completed'
+  `,
+
+  getTotalCharts: `
+    SELECT COUNT(*) as count FROM charts
+  `,
+
+  getStatsLeaderboard: `
+    SELECT u.email, uas.total_points, uas.total_achievements
+    FROM user_achievement_stats uas
+    JOIN users u ON u.id = uas.user_id
+    ORDER BY uas.total_points DESC
+    LIMIT 10
+  `,
+
+  // ─── Famous/Celebrity ─────────────────────────────────────
+
+  getUserChartWithBirthData: `
+    SELECT c.id, c.hd_json, c.calculated_at,
+           u.birth_date, u.birth_time, u.birth_tz, u.birth_lat, u.birth_lng
+    FROM charts c
+    JOIN users u ON u.id = c.user_id
+    WHERE c.user_id = $1
+    ORDER BY c.calculated_at DESC
+    LIMIT 1
+  `,
+
+  // ─── Analytics Dashboard ──────────────────────────────────
+
+  getAnalyticsActiveUsers: `
+    SELECT
+      COUNT(DISTINCT CASE WHEN created_at >= CURRENT_DATE THEN user_id END) AS dau,
+      COUNT(DISTINCT CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN user_id END) AS wau,
+      COUNT(DISTINCT CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN user_id END) AS mau
+    FROM analytics_events
+    WHERE user_id IS NOT NULL
+  `,
+  getAnalyticsEventsToday: `
+    SELECT COUNT(*) AS count
+    FROM analytics_events
+    WHERE created_at >= CURRENT_DATE
+  `,
+  getAnalyticsSignupComparison: `
+    SELECT
+      COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') AS this_week,
+      COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '14 days'
+                       AND created_at < CURRENT_DATE - INTERVAL '7 days') AS last_week
+    FROM analytics_events
+    WHERE event_name = 'signup'
+  `,
+  getAnalyticsTopEvents: `
+    SELECT event_name, COUNT(*) AS count, COUNT(DISTINCT user_id) AS unique_users
+    FROM analytics_events
+    WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
+    GROUP BY event_name
+    ORDER BY count DESC
+    LIMIT 15
+  `,
+  getAnalyticsFunnelSteps: `
+    SELECT
+      step_name,
+      step_order,
+      COUNT(DISTINCT user_id) AS users
+    FROM funnel_events
+    WHERE funnel_name = $1
+    GROUP BY step_name, step_order
+    ORDER BY step_order ASC
+  `,
+  getAnalyticsRetention: `
+    WITH cohorts AS (
+      SELECT
+        user_id,
+        DATE_TRUNC('week', MIN(created_at)) AS cohort_week
+      FROM analytics_events
+      WHERE event_name = 'signup' AND user_id IS NOT NULL
+      GROUP BY user_id
+    ),
+    activity AS (
+      SELECT DISTINCT
+        c.user_id,
+        c.cohort_week,
+        DATE_TRUNC('week', ae.created_at) AS activity_week
+      FROM cohorts c
+      JOIN analytics_events ae ON ae.user_id = c.user_id
+      WHERE ae.created_at >= c.cohort_week
+        AND ae.created_at < c.cohort_week + ($1 * INTERVAL '1 week')
+    )
+    SELECT
+      cohort_week,
+      EXTRACT(WEEK FROM activity_week - cohort_week)::INT AS week_offset,
+      COUNT(DISTINCT user_id) AS active_users
+    FROM activity
+    GROUP BY cohort_week, week_offset
+    ORDER BY cohort_week DESC, week_offset ASC
+  `,
+  getAnalyticsErrorRate: `
+    SELECT
+      COUNT(*) FILTER (WHERE event_name = 'error') AS errors,
+      COUNT(*) AS total,
+      ROUND(COUNT(*) FILTER (WHERE event_name = 'error') * 100.0 / GREATEST(COUNT(*), 1), 2) AS error_rate_pct
+    FROM analytics_events
+    WHERE created_at >= CURRENT_DATE - ($1 * INTERVAL '1 day')
+  `,
+  getAnalyticsTopErrors: `
+    SELECT
+      properties->>'message' AS error_message,
+      properties->>'endpoint' AS endpoint,
+      properties->>'severity' AS severity,
+      COUNT(*) AS count
+    FROM analytics_events
+    WHERE event_name = 'error'
+      AND created_at >= CURRENT_DATE - ($1 * INTERVAL '1 day')
+    GROUP BY properties->>'message', properties->>'endpoint', properties->>'severity'
+    ORDER BY count DESC
+    LIMIT 20
+  `,
+  getAnalyticsErrorTrend: `
+    SELECT
+      DATE(created_at) AS date,
+      COUNT(*) AS count
+    FROM analytics_events
+    WHERE event_name = 'error'
+      AND created_at >= CURRENT_DATE - ($1 * INTERVAL '1 day')
+    GROUP BY DATE(created_at)
+    ORDER BY date DESC
+  `,
+  getAnalyticsMrr: `
+    SELECT
+      COUNT(*) FILTER (WHERE tier = 'seeker' AND status = 'active') AS seeker_count,
+      COUNT(*) FILTER (WHERE tier = 'guide' AND status = 'active') AS guide_count,
+      COUNT(*) FILTER (WHERE tier = 'practitioner' AND status = 'active') AS practitioner_count,
+      COUNT(*) FILTER (WHERE status = 'active') AS total_active,
+      COUNT(*) FILTER (WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days') AS recent_churn
+    FROM subscriptions
+  `,
+  getAnalyticsTierDistribution: `
+    SELECT tier, COUNT(*) AS count
+    FROM users
+    GROUP BY tier
+    ORDER BY count DESC
+  `,
+  getAnalyticsMonthlyChurn: `
+    SELECT
+      DATE_TRUNC('month', updated_at) AS month,
+      COUNT(*) AS churned_count
+    FROM subscriptions
+    WHERE status = 'canceled'
+      AND updated_at >= CURRENT_DATE - INTERVAL '6 months'
+    GROUP BY DATE_TRUNC('month', updated_at)
+    ORDER BY month DESC
+  `,
+
+  // ─── SMS ──────────────────────────────────────────────────
+
+  smsOptOut: `UPDATE users SET sms_opted_in = false WHERE phone = $1`,
+  smsOptIn: `UPDATE users SET sms_opted_in = true WHERE phone = $1`,
+  getSmsSubscribedUsers: `SELECT * FROM users WHERE sms_opted_in = true AND phone IS NOT NULL`,
+  smsSubscribeByUserId: `UPDATE users SET phone = $1, sms_opted_in = true WHERE id = $2`,
+  getUserPhone: `SELECT phone FROM users WHERE id = $1`,
+  smsUnsubscribeByUserId: `UPDATE users SET sms_opted_in = false WHERE id = $1`,
+
+  // ─── Clusters ─────────────────────────────────────────────
+
+  listUserClusters: `
+    SELECT c.id, c.name, c.challenge, c.created_at, cm.joined_at
+    FROM cluster_members cm
+    JOIN clusters c ON c.id = cm.cluster_id
+    WHERE cm.user_id = $1
+    ORDER BY cm.joined_at DESC
+  `,
+  leaveCluster: `
+    DELETE FROM cluster_members
+    WHERE cluster_id = $1 AND user_id = $2
+    RETURNING cluster_id
+  `,
+
+  // ─── Chart History ────────────────────────────────────────
+
+  getChartHistory: `
+    SELECT id, calculated_at, hd_json::jsonb->'chart'->'type' as type
+    FROM charts
+    WHERE user_id = $1
+    ORDER BY calculated_at DESC
+    LIMIT 50
+  `,
+
+  // ─── Diary ────────────────────────────────────────────────
+
+  getLatestChartWithAstro: `
+    SELECT hd_json, astro_json FROM charts
+    WHERE user_id = $1
+    ORDER BY calculated_at DESC LIMIT 1
+  `,
+
+  // ─── Timing Engine ────────────────────────────────────────
+
+  getChartWithBirthDataAndAstro: `
+    SELECT c.id, c.hd_json, c.astro_json, c.calculated_at,
+           u.birth_date, u.birth_time, u.birth_tz, u.birth_lat, u.birth_lng
+    FROM charts c
+    JOIN users u ON u.id = c.user_id
+    WHERE c.user_id = $1
+    ORDER BY c.calculated_at DESC
+    LIMIT 1
   `
 };

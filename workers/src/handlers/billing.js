@@ -75,7 +75,7 @@ export async function handleCheckout(request, env, ctx) {
     if (!user.stripe_customer_id) {
       const query = createQueryFn(env.NEON_CONNECTION_STRING);
       await query(
-        'UPDATE users SET stripe_customer_id = $1 WHERE id = $2',
+        QUERIES.updateUserStripeCustomerId,
         [customerId, user.id]
       );
     }
@@ -192,12 +192,7 @@ export async function handleGetSubscription(request, env, ctx) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get subscription from database
-    const { rows: subRows } = await query(`
-      SELECT * FROM subscriptions 
-      WHERE user_id = $1 AND status = 'active'
-      ORDER BY created_at DESC
-      LIMIT 1
-    `, [user.id]);
+    const { rows: subRows } = await query(QUERIES.getActiveSubscription, [user.id]);
     const subscription = subRows[0] || null;
     
     if (!subscription) {
@@ -218,11 +213,7 @@ export async function handleGetSubscription(request, env, ctx) {
       
       // Update local status if changed
       if (stripeSubscription.status !== subscription.status) {
-        await query(`
-          UPDATE subscriptions 
-          SET status = $1, updated_at = NOW()
-          WHERE id = $2
-        `, [stripeSubscription.status, subscription.id]);
+        await query(QUERIES.updateSubscriptionStatus2, [stripeSubscription.status, subscription.id]);
       }
       
       return new Response(JSON.stringify({
@@ -290,12 +281,7 @@ export async function handleCancelSubscription(request, env, ctx) {
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    const { rows: subRows } = await query(`
-      SELECT * FROM subscriptions 
-      WHERE user_id = $1 AND status = 'active'
-      ORDER BY created_at DESC
-      LIMIT 1
-    `, [user.id]);
+    const { rows: subRows } = await query(QUERIES.getActiveSubscription, [user.id]);
     const subscription = subRows[0] || null;
     
     if (!subscription) {
@@ -320,22 +306,11 @@ export async function handleCancelSubscription(request, env, ctx) {
     
     // Update database
     const newStatus = immediately ? 'canceled' : 'active';
-    await query(`
-      UPDATE subscriptions 
-      SET status = $1, 
-          cancel_at_period_end = $2,
-          updated_at = NOW()
-      WHERE id = $3
-    `, [newStatus, canceledSubscription.cancel_at_period_end, subscription.id]);
+    await query(QUERIES.updateSubscriptionCancellation, [newStatus, canceledSubscription.cancel_at_period_end, subscription.id]);
     
     // If canceled immediately, downgrade user to free tier
     if (immediately) {
-      await query(`
-        UPDATE users 
-        SET tier = 'free',
-            updated_at = NOW()
-        WHERE id = $1
-      `, [user.id]);
+      await query(QUERIES.updateUserTier, ['free', user.id]);
     }
     
     return new Response(JSON.stringify({
@@ -382,12 +357,7 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    const { rows: subRows } = await query(`
-      SELECT * FROM subscriptions 
-      WHERE user_id = $1 AND status = 'active'
-      ORDER BY created_at DESC
-      LIMIT 1
-    `, [user.id]);
+    const { rows: subRows } = await query(QUERIES.getActiveSubscription, [user.id]);
     const subscription = subRows[0] || null;
     
     if (!subscription) {
@@ -430,17 +400,9 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     );
     
     // Update database
-    await query(`
-      UPDATE subscriptions 
-      SET tier = $1, updated_at = NOW()
-      WHERE id = $2
-    `, [tier, subscription.id]);
+    await query(QUERIES.updateSubscriptionTier, [tier, subscription.id]);
     
-    await query(`
-      UPDATE users 
-      SET tier = $1, updated_at = NOW()
-      WHERE id = $2
-    `, [tier, user.id]);
+    await query(QUERIES.updateUserTier, [tier, user.id]);
     
     return new Response(JSON.stringify({
       success: true,
@@ -543,20 +505,10 @@ async function handleCheckoutCompleted(session, env) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Create subscription record
-  await query(`
-    INSERT INTO subscriptions (
-      user_id, tier, stripe_subscription_id, stripe_customer_id,
-      status, current_period_start, current_period_end,
-      created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, 'active', NOW(), NOW() + INTERVAL '30 days', NOW(), NOW())
-  `, [userId, tier, subscriptionId, customerId]);
+  await query(QUERIES.insertCheckoutSubscription, [userId, tier, subscriptionId, customerId]);
   
   // Update user tier
-  await query(`
-    UPDATE users 
-    SET tier = $1, stripe_customer_id = $2, updated_at = NOW()
-    WHERE id = $3
-  `, [tier, customerId, userId]);
+  await query(QUERIES.updateUserTierAndStripe, [tier, customerId, userId]);
   
   console.log('Subscription created for user:', userId);
   
@@ -573,14 +525,7 @@ async function handleSubscriptionUpdated(subscription, env) {
   
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  await query(`
-    UPDATE subscriptions 
-    SET status = $1, 
-        current_period_end = $2,
-        cancel_at_period_end = $3,
-        updated_at = NOW()
-    WHERE stripe_subscription_id = $4
-  `, [
+  await query(QUERIES.updateSubscriptionPeriod, [
     status,
     currentPeriodEnd,
     subscription.cancel_at_period_end,
@@ -596,25 +541,15 @@ async function handleSubscriptionDeleted(subscription, env) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Get user ID from subscription
-  const { rows: subRows } = await query(`
-    SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1
-  `, [subscriptionId]);
+  const { rows: subRows } = await query(QUERIES.getSubscriptionUserByStripeId, [subscriptionId]);
   const sub = subRows[0] || null;
   
   if (sub) {
     // Update subscription status
-    await query(`
-      UPDATE subscriptions 
-      SET status = 'canceled', updated_at = NOW()
-      WHERE stripe_subscription_id = $1
-    `, [subscriptionId]);
+    await query(QUERIES.cancelSubscriptionByStripeId, [subscriptionId]);
     
     // Downgrade user to free tier
-    await query(`
-      UPDATE users 
-      SET tier = 'free', updated_at = NOW()
-      WHERE id = $1
-    `, [sub.user_id]);
+    await query(QUERIES.updateUserTier, ['free', sub.user_id]);
     
     console.log('User downgraded to free tier:', sub.user_id);
   }
@@ -629,15 +564,7 @@ async function handleInvoicePaid(invoice, env) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Record payment in invoices table
-  await query(`
-    INSERT INTO invoices (
-      subscription_id, stripe_invoice_id, amount_paid, 
-      status, paid_at, created_at
-    )
-    SELECT id, $1, $2, 'paid', NOW(), NOW()
-    FROM subscriptions
-    WHERE stripe_subscription_id = $3
-  `, [invoice.id, amountPaid, subscriptionId]);
+  await query(QUERIES.insertInvoicePaid, [invoice.id, amountPaid, subscriptionId]);
 }
 
 async function handleInvoicePaymentFailed(invoice, env) {
@@ -648,15 +575,7 @@ async function handleInvoicePaymentFailed(invoice, env) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Record failed payment
-  await query(`
-    INSERT INTO invoices (
-      subscription_id, stripe_invoice_id, amount_paid, 
-      status, created_at
-    )
-    SELECT id, $1, 0, 'failed', NOW()
-    FROM subscriptions
-    WHERE stripe_subscription_id = $2
-  `, [invoice.id, subscriptionId]);
+  await query(QUERIES.insertInvoiceFailed, [invoice.id, subscriptionId]);
   
   // Send email notification about payment failure
   if (invoice.customer_email && env.RESEND_API_KEY) {
