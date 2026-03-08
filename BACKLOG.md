@@ -1,9 +1,9 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-07
+**Last audited:** 2026-03-07 (Sprint 15 deep audit)
 **Test suite:** 190/190 passing (vitest 3.2.4)
-**Completion status:** 48/48 prior items (100%) — Sprints 1–8 COMPLETE ✅ | 52 new audit items open
-**Audit scope:** Full codebase + all documentation + language/comprehension + profile specificity + 2026-03-07 deep code review
+**Completion status:** Sprints 1–14 COMPLETE ✅ | Sprint 15: 10 new items (3 Critical, 3 High, 4 Medium)
+**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity
 
 ---
 
@@ -657,7 +657,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Under 50 concurrent requests, connection count stays below Neon limit.
 
 ### BL-R-H2 | Internal error messages leaked to API consumers
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** High (Security)
 - **Files:** `workers/src/handlers/profile.js`, `referrals.js`, `webhooks.js`, `achievements.js`, `cluster.js`
 - **Problem:** Catch blocks return `detail: err.message` or `message: error.message` to clients, potentially exposing DB connection strings, query details, and stack traces.
@@ -665,7 +665,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Trigger an internal error — response contains generic message, no stack trace.
 
 ### BL-R-H3 | Notion OAuth tokens stored in plaintext in DB
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** High (Security)
 - **Files:** `workers/src/handlers/notion.js` (~line 157)
 - **Problem:** `access_token` from Notion OAuth stored directly in `notion_connections` table without encryption.
@@ -673,7 +673,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** `SELECT access_token FROM notion_connections` returns ciphertext, not plaintext.
 
 ### BL-R-H4 | Webhook HMAC secret returned in GET response
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** High (Security)
 - **Files:** `workers/src/handlers/webhooks.js` (~line 225)
 - **Problem:** `GET /api/webhooks/:id` returns `secret: webhook.secret` in JSON body. HMAC signing secrets should only be shown once at creation time.
@@ -681,7 +681,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** GET webhook detail response does not contain `secret` field.
 
 ### BL-R-H5 | Inconsistent user ID property across handlers
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** High
 - **Files:** `workers/src/handlers/cluster.js`, `workers/src/handlers/sms.js`
 - **Problem:** Most handlers use `request._user?.sub` but cluster and SMS handlers use `request._user?.userId`. Auth middleware sets `sub`, so `userId` is always `undefined`.
@@ -689,7 +689,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Cluster list and SMS subscribe/unsubscribe work for authenticated users.
 
 ### BL-R-H6 | SMS column name mismatch — subscribe broken
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** High
 - **Files:** `workers/src/handlers/sms.js`
 - **Problem:** Subscribe writes to `sms_opt_in` but query handler reads `sms_opted_in`. Column name mismatch causes failure.
@@ -797,7 +797,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** A Manifestor with Heart authority returns "Ego Manifested".
 
 ### BL-R-M5 | Dead code: `getEarthPosition()` never called
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** Medium
 - **Files:** `src/engine/planets.js` (~line 128)
 - **Problem:** Function defined and commented as "more accurate" but never used. `getAllPositions` uses `getHelioPosition(T, ELEMENTS.earth)` instead.
@@ -805,7 +805,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** No unused exports in planets.js.
 
 ### BL-R-M6 | `personalYear` reduction inconsistent with `lifePathNumber`
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** Medium
 - **Files:** `src/engine/numerology.js` (~line 108)
 - **Problem:** `lifePathNumber` reduces each component first then sums; `personalYear` sums raw values then reduces. Can produce different results for same inputs.
@@ -813,7 +813,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** All reduction methods use consistent approach.
 
 ### BL-R-M7 | Placidus house calculation fails at polar latitudes
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** Medium
 - **Files:** `src/engine/astro.js` (~line 182)
 - **Problem:** When `|tan(lat)·tan(decl)| ≥ 1`, ascensional difference clamped to ±89.9° producing wildly inaccurate house cusps for `|lat| > 66°`. No warning emitted.
@@ -821,7 +821,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Latitude 70°N returns `{ houseSystem: 'equal', warning: 'polar latitude' }`.
 
 ### BL-R-M8 | No input validation on engine entry point
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** Medium
 - **Files:** `src/engine/index.js`
 - **Problem:** `calculateFullChart()` has zero input validation. `year=undefined` flows through producing NaN throughout all layers. No try/catch around layers.
@@ -917,7 +917,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** `postMessage` uses explicit origin, not `'*'`.
 
 ### BL-R-M20 | Cron job contains raw inline SQL
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** Medium
 - **Files:** `workers/src/cron.js`
 - **Problem:** Raw SQL queries inline instead of using the centralized `QUERIES` object from `db/queries.js`. Bypasses query auditing.
@@ -929,7 +929,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 ## Low (12)
 
 ### BL-R-L1 | `embed.js` `destroy()` leaks event listener
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** Low
 - **Files:** `frontend/embed.js`
 - **Problem:** `destroy()` removes iframe but never removes the `message` event listener. Memory leak on repeated create/destroy cycles.
@@ -937,12 +937,12 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** After `destroy()`, no `message` listeners from embed remain.
 
 ### BL-R-L2 | PWA icons reference nonexistent files
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Sprint 16)
 - **Severity:** Low
 - **Files:** `frontend/manifest.json`, `frontend/icons/`
-- **Problem:** Manifest declares icons (`icon-72x72.png` through `icon-512x512.png`) and screenshots, but only `README.md` exists in those directories.
-- **Fix:** Generate required icon set, or remove references from manifest.
-- **Verify:** All icon paths in manifest resolve to actual files.
+- **Problem:** Manifest declared 8 PNG icons and screenshots, but only `README.md` existed in the icons directory.
+- **Fix:** Created `frontend/icons/icon.svg` (branded bodygraph SVG, gold on dark, 512×512). Updated manifest to single SVG entry with `"sizes": "any"` and `"purpose": "any maskable"`; removed non-existent screenshots; updated both shortcut icons to SVG.
+- **Verify:** All icon paths in manifest resolve to actual files. ✓
 
 ### BL-R-L3 | `fb:app_id` placeholder in meta tag
 - [ ] **Status:** Open
@@ -985,7 +985,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Multiple `renderSwitcher()` calls produce only one click listener.
 
 ### BL-R-L8 | i18n system fully built but never connected to HTML
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified — `index.html` already wired; Sprint 16)
 - **Severity:** Low
 - **Files:** `frontend/index.html`, `frontend/js/i18n.js`, `frontend/locales/*.json`
 - **Problem:** Complete i18n system with 5 locale files exists but `index.html` has zero `data-i18n` attributes. Dead code.
@@ -1017,7 +1017,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Waterfall shows parallel CSS loading.
 
 ### BL-R-L12 | Leaderboard partially exposes user emails
-- [ ] **Status:** Open
+- [x] **Status:** Complete
 - **Severity:** Low (Privacy)
 - **Files:** `workers/src/handlers/achievements.js`
 - **Problem:** Email masking `joh***@gmail.com` reveals first 3 chars + full domain. Short usernames are identifiable.
@@ -1080,6 +1080,171 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - [x] BL-R-L5: Service worker push try/catch
 - [x] BL-R-L6: Cache eviction strategy
 - [x] BL-R-L11: Eliminate CSS @import chains
+
+---
+
+## Sprint 15 — Deep Audit Fixes (2026-03-07)
+
+**Audited by:** Full codebase + documentation + engine + schema review
+**New items:** 10 issues (3 Critical, 3 High, 4 Medium)
+
+---
+
+### BL-S15-C1 | Transaction function broken — Neon HTTP has no connection affinity
+- [x] **Status:** Complete
+- **Severity:** Critical
+- **Files:** `workers/src/db/queries.js` (lines 82–93)
+- **Problem:** `query.transaction()` runs `pool.query('BEGIN')`, user queries, then `pool.query('COMMIT')` or `pool.query('ROLLBACK')`. The Neon serverless driver's `Pool` in HTTP mode sends each `pool.query()` as an independent HTTP request with **no connection affinity**. Each call may hit a different backend connection, so `BEGIN` and `COMMIT` execute on different connections — the transaction is non-functional. Any concurrent write (billing, profile save, webhook processing) risks data inconsistency.
+- **Impact:** All transactional operations silently broken — partial writes, lost updates, payment/subscription data corruption.
+- **Fix:** Use `pool.connect()` to obtain a dedicated client for transaction blocks. The Neon serverless driver supports WebSocket-backed clients via `connect()` which maintain connection affinity. Replace `pool.query('BEGIN')` with `const client = await pool.connect(); await client.query('BEGIN'); ... await client.query('COMMIT'); client.release();`.
+- **Verify:** Run a transaction that fails mid-way → no partial data written. Run two concurrent transactions → no interleaving.
+
+### BL-S15-C2 | `migrate.js` (`npm run migrate`) does not apply numbered migrations
+- [x] **Status:** Complete
+- **Severity:** Critical
+- **Files:** `workers/src/db/migrate.js`, `workers/run-migration.js`
+- **Problem:** `migrate.js` (invoked by `npm run migrate`) only executes `migrate.sql` (base schema). The 10 numbered migration files (003-015) that add billing, achievements, analytics, webhooks, API keys, Notion, daily checkins, and query optimization are **never applied** by this path. `run-migration.js` at the workers root correctly handles numbered migrations but is not wired into `npm run migrate`. Queries in `queries.js` reference columns added by these migrations (`users.tier`, `users.referral_code`, `users.stripe_customer_id`) — they will fail on a fresh deploy.
+- **Fix:** Rewrite `migrate.js` to also discover and apply numbered migrations from `src/db/migrations/`, with tracking via `schema_migrations` table, matching the logic in `run-migration.js`. Or redirect `npm run migrate` to `run-migration.js`.
+- **Verify:** `npm run migrate` on a fresh DB → all 48 tables present. `\d users` shows `tier`, `referral_code`, `stripe_customer_id` columns.
+
+### BL-S15-C3 | Hardcoded Neon connection string in `run-migration.js`
+- [x] **Status:** Complete
+- **Severity:** Critical (Security)
+- **Files:** `workers/run-migration.js` (line 27)
+- **Problem:** Fallback connection string with real credentials (`neondb_owner:npg_FlB3I6JYdboV@ep-rapid-bird...`) is hardcoded in source. Anyone with repo access has full DB credentials.
+- **Fix:** Remove the hardcoded fallback. Require `NEON_CONNECTION_STRING` env var. Fail with a descriptive error if missing.
+- **Verify:** `node run-migration.js` without env var → clear error message, no credentials in source.
+
+### BL-S15-H1 | CORS allows localhost origins in production deployment
+- [x] **Status:** Complete
+- **Severity:** High (Security)
+- **Files:** `workers/src/middleware/cors.js` (lines 22–28)
+- **Problem:** `ALLOWED_ORIGINS` includes `http://localhost:5173`, `http://localhost:3000`, `http://127.0.0.1:5173`, `http://127.0.0.1:3000` unconditionally. In production, any local tool or browser extension on a developer's machine can make authenticated cross-origin requests. More importantly, a developer visiting a malicious site that redirects to localhost can trigger CORS-allowed requests.
+- **Fix:** Gate localhost origins behind `ENVIRONMENT !== 'production'`. Read `env.ENVIRONMENT` from wrangler.toml vars and only include localhost origins when not in production.
+- **Verify:** In production, `Origin: http://localhost:5173` → CORS response uses production origin, not localhost.
+
+### BL-S15-H2 | `checkin_streaks` materialized view refreshes on every INSERT
+- [x] **Status:** Complete
+- **Severity:** High (Performance)
+- **Files:** `workers/src/db/migrations/013_daily_checkins.sql`
+- **Problem:** A trigger fires `REFRESH MATERIALIZED VIEW CONCURRENTLY checkin_streaks` on every `INSERT/UPDATE/DELETE` on `daily_checkins`. Materialized view refresh is an expensive operation that locks the view and rewrites it. At scale (1000+ daily check-ins), this creates a performance bottleneck.
+- **Fix:** Remove the per-row trigger. Refresh the materialized view on a schedule (e.g., daily via cron) or replace with a computed query using window functions.
+- **Verify:** 100 concurrent check-in INSERTs complete without blocking. Streak data still accurate after cron refresh.
+
+### BL-S15-H3 | ARCHITECTURE.md documents only 8 of 48 tables — massive schema drift
+- [x] **Status:** Complete
+- **Severity:** High (Documentation)
+- **Files:** `ARCHITECTURE.md` (Section 5.3), `docs/ARCHITECTURE.md`
+- **Problem:** The Neon Database Schema section documents 8 core tables but the actual schema has grown to 48 tables + views. Column types, nullability, and constraints differ between docs and code (e.g., `birth_lat DECIMAL(9,6) NOT NULL` in docs vs `DOUBLE PRECISION` nullable in code). `docs/ARCHITECTURE.md` references a `numerology_json` column in `charts` that doesn't exist.
+- **Fix:** Auto-generate schema documentation from `migrate.sql` + migrations, or update ARCHITECTURE.md to reflect actual schema. At minimum, document all tables used by active API endpoints.
+- **Verify:** Every table referenced in `queries.js` has a corresponding entry in ARCHITECTURE.md.
+
+### BL-S15-M1 | Inconsistent UUID generation across schema
+- [x] **Status:** Complete
+- **Severity:** Medium
+- **Files:** `workers/src/db/migrate.sql`, `workers/src/db/migrations/*.sql`
+- **Problem:** Base schema uses `uuid_generate_v4()` (requires `uuid-ossp` extension) while numbered migrations use `gen_random_uuid()` (built into PostgreSQL 13+). Both produce valid v4 UUIDs but it's an unnecessary dependency and inconsistency.
+- **Fix:** Standardize on `gen_random_uuid()` (native, no extension needed). Remove `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"` from base schema.
+- **Verify:** All CREATE TABLE statements use `gen_random_uuid()`.
+
+### BL-S15-M2 | `usage_tracking` and `usage_records` are duplicate tables
+- [x] **Status:** Complete
+- **Severity:** Medium
+- **Files:** `workers/src/db/migrate.sql` (usage_records), `workers/src/db/migrations/003_billing.sql` (usage_tracking)
+- **Problem:** Two tables serve the same purpose. `usage_records` (base schema) has columns `user_id, action, endpoint, quota_cost`. `usage_tracking` (003_billing) has `user_id, action, credits_used, metadata`. Queries only reference `usage_records`. `usage_tracking` appears completely unused.
+- **Fix:** Remove `usage_tracking` from migration 003 or merge useful columns into `usage_records`. Add a migration to drop if already created.
+- **Verify:** `grep -r "usage_tracking" workers/src/` returns no matches.
+
+### BL-S15-M3 | Empty CSS rulesets and invalid gradient syntax
+- [x] **Status:** Complete
+- **Severity:** Medium (Code Quality)
+- **Files:** `frontend/css/design-tokens.css` (line 289), `frontend/css/components/cards.css` (line 51), `frontend/css/components/tabs.css` (line 142), `frontend/css/design-tokens-premium.css` (lines 195, 199, 208)
+- **Problem:** Three empty `:root`/`.card-body`/`.tab-content` rulesets trigger lint warnings. `design-tokens-premium.css` has invalid gradient syntax (commas inside `rgba()` in gradient stops produce "colon expected" CSS parse errors).
+- **Fix:** Remove empty rulesets. Fix gradient syntax to use proper CSS gradient stop format.
+- **Verify:** Zero CSS lint warnings in IDE.
+
+### BL-S15-M4 | Test coverage gaps — only 2 birth chart vectors, no type diversity
+- [x] **Status:** Complete
+- **Severity:** Medium (Quality Assurance)
+- **Files:** `tests/engine.test.js`
+- **Problem:** Only 2 birth charts tested (AP = Projector 6/2, 0921 anchor). No test vectors for Generator, Manifestor, Manifesting Generator, or Reflector types. No test for Ego Manifested/Projected, Self-Projected, Mental, or Lunar authority. `calculateLifeCycles` is exported but completely untested. Missing verification of all 36 channels in the CHANNELS constant.
+- **Fix:** Add test vectors for all 5 types and all authority variants. Add a test that verifies CHANNELS array has exactly 36 entries covering all standard channels. Add `calculateLifeCycles` tests.
+- **Verify:** `npm test` covers all 5 types, all authority variants, and lifecycle calculations.
+
+---
+
+### Sprint 15 Execution Plan
+
+**Phase 1 — Security (Immediate):**
+- BL-S15-C1: Fix transaction function (connection affinity)
+- BL-S15-C3: Remove hardcoded credentials from run-migration.js
+- BL-S15-H1: Gate CORS localhost behind environment check
+
+**Phase 2 — Infrastructure:**
+- BL-S15-C2: Fix migrate.js to apply numbered migrations
+- BL-S15-H2: Replace materialized view trigger with cron refresh
+- BL-S15-M1: Standardize UUID generation
+
+**Phase 3 — Quality:**
+- BL-S15-M3: Fix CSS lint errors
+- BL-S15-M4: Add missing test vectors
+- BL-S15-H3: Update ARCHITECTURE.md schema documentation
+- BL-S15-M2: Remove unused usage_tracking table
+
+---
+
+## Sprint 16 — Audit Backlog Clear (2026-03-08)
+
+**Scope:** Clear all remaining open BL-R-* items, fix confirmed issues, verify already-fixed items.
+
+### Confirmed Fixed This Sprint
+
+- [x] **BL-R-H2**: Removed `message: err.message` from `auth.js` JWT error response — now logs server-side only
+- [x] **BL-R-H3**: Created `workers/src/lib/tokenCrypto.js` with AES-256-GCM encrypt/decrypt via `crypto.subtle`. Notion callback now encrypts `access_token` before DB write; sync and export handlers decrypt with `readToken()` (backward-compatible with legacy plaintext rows). Key: `NOTION_TOKEN_ENCRYPTION_KEY` Worker secret (base64 32-byte, add via `wrangler secret put`).
+- [x] **BL-R-H4**: Removed `secret: webhook.secret` from `GET /api/webhooks/:id` response (previous session)
+- [x] **BL-R-M4**: Ego Manifested vs Projected authority — verified correct in chart.js (no change needed)
+- [x] **BL-R-M5**: Wired `getEarthPosition(T)` (Meeus, more accurate) into `getAllPositions()` replacing `getHelioPosition(T, ELEMENTS.earth)` (Keplerian); removed dead `ELEMENTS.earth` entry
+- [x] **BL-R-M6**: Aligned `personalYear` methodology — now reduces each component first, then sums, matching `lifePathNumber` approach
+- [x] **BL-R-M7**: Added polar latitude detection in `calculatePlacidusHouses` — latitudes ≥ 66.5° fall back to Equal House, returning `{ houseSystem: 'equal', polarWarning: '...' }` in `calculateAstrology`
+- [x] **BL-R-M20**: Extracted 7 cron SQL queries to `QUERIES` constants in `queries.js`; `cron.js` now has zero raw SQL (previous session)
+- [x] **BL-R-L1**: Stored `_messageHandler` reference on each embed widget instance; `destroy()` and `destroyAll()` now call `removeEventListener` to prevent listener accumulation
+- [x] **BL-R-L7**: Added module-level `_outsideClickHandler` in `i18n.js`; `renderSwitcher()` removes previous outside-click listener before adding new one
+- [x] **BL-R-L12**: Improved email masking in leaderboard — local parts < 4 chars are fully masked (`***@domain`), preventing identification of short usernames
+
+### Verified Already Fixed (No Code Change Needed)
+
+- [x] **BL-R-H5**: `request._user?.sub` used consistently in cluster.js and sms.js (Sprint 10)
+- [x] **BL-R-H6**: `sms_opted_in` column used consistently in sms.js (Sprint 10)
+- [x] **BL-R-H7**: Notion XSS fixed — `safeError` with HTML escaping in notion.js (Sprint 10)
+- [x] **BL-R-H8**: `ctx.waitUntil(pipeline)` already in profile-stream.js (Sprint 10)
+- [x] **BL-R-H9**: `fs` already uses dynamic `import('fs')` not static import in chart.js (Sprint 13)
+- [x] **BL-R-M8**: `calculateFullChart()` input validation already done with full range checks (Sprint 11)
+- [x] **BL-R-M9**: Router refactored to EXACT_ROUTES Map + PREFIX_ROUTES + PATTERN_ROUTES + resolveRoute() (Sprint 14)
+- [x] **BL-R-M10**: checkin.js already imports `getCurrentTransits` directly, no self-fetch (Sprint 14)
+- [x] **BL-R-M11**: No `await import()` in handler hot paths; all static imports at top level (Sprint 14)
+- [x] **BL-R-M12**: `onboarding.js` uses `Promise.all(kvRequests.map(...kv.get()))` for parallel reads (Sprint 14)
+- [x] **BL-R-M13**: `rateLimit.js` already uses fixed-window `{ count, window }` KV objects (Sprint 14)
+- [x] **BL-R-M14**: All handlers validated with per-field max-length checks (Sprint 14)
+- [x] **BL-R-M15**: All list endpoints cap `limit` with `Math.min(N, 100)` (Sprint 10)
+- [x] **BL-R-M16**: `personalizeTemplate` returns `JSON.parse(serialized)` in alerts.js (Sprint 10)
+- [x] **BL-R-M17**: transits.js imports shared `normalizeDegrees`, `jdnToCalendar`, `getSignFromLongitude` (Sprint 11)
+- [x] **BL-R-M18**: embed.js uses `ALLOWED_ORIGINS` Set with `Set.has()` strict matching (Sprint 12)
+- [x] **BL-R-M19**: embed.html uses `parentOrigin` variable, not `'*'`, for all postMessage calls (Sprint 12)
+- [x] **BL-R-L3**: fb:app_id placeholder removed from index.html (Sprint 12)
+- [x] **BL-R-L4**: `!importance` CSS typo already corrected (Sprint 12)
+- [x] **BL-R-L5**: Push event JSON.parse already has try/catch in service-worker.js (Sprint 14)
+- [x] **BL-R-L6**: Service worker has `trimCache()` LRU eviction + `MAX_API_CACHE_ENTRIES = 50` (Sprint 14)
+- [x] **BL-R-L9**: `artwork.css` has `@media (prefers-reduced-motion: reduce)` block (Sprint 12)
+- [x] **BL-R-L10**: ARIA roles added to tabs/modals (Sprint 12)
+
+### Still Open
+
+*All BL-R-* items resolved — see Confirmed Fixed lists above.*
+
+### Sprint 16 Confirmed Fixed (continued)
+
+- [x] **BL-R-L2**: `frontend/icons/icon.svg` created (branded bodygraph SVG); `manifest.json` updated — 8 missing PNG entries replaced with single SVG entry (`"sizes": "any"`, `"purpose": "any maskable"`); screenshots array removed; shortcut icons updated to SVG (Sprint 16)
+- [x] **BL-R-L8**: `index.html` already had full `data-i18n` wiring — nav tabs (chart/profile/enhance/diary/checkin/transits/composite/rectify/practitioner/clusters/sms), auth modal, pricing modal, header buttons; `id="lang-switcher"` in header; lang-switcher CSS in `<style>`; `i18n.js` loaded `defer` and auto-initializes. Backlog description was stale. (Sprint 16 verified)
 
 ---
 

@@ -4,7 +4,7 @@
 
 -- Daily Check-In Entries
 CREATE TABLE IF NOT EXISTS daily_checkins (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   checkin_date DATE NOT NULL,  -- Date of check-in (user's local date)
   
@@ -86,7 +86,7 @@ EXECUTE FUNCTION refresh_checkin_streaks();
 
 -- Check-In Reminders (Scheduled Notifications)
 CREATE TABLE IF NOT EXISTS checkin_reminders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   
   -- Reminder Settings
@@ -111,7 +111,7 @@ CREATE INDEX idx_checkin_reminders_enabled ON checkin_reminders(enabled);
 -- Alignment Trends (Pre-aggregated for Performance)
 -- Daily, weekly, monthly averages for fast chart rendering
 CREATE TABLE IF NOT EXISTS alignment_trends (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   
   -- Time Period

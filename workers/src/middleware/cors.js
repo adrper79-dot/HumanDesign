@@ -16,10 +16,16 @@
  * No additional CSRF token layer is needed given this architecture.
  */
 
-// Allowed origins for CORS requests
-const ALLOWED_ORIGINS = [
+// Production-only origins — always allowed
+const PRODUCTION_ORIGINS = [
   'https://selfprime.net',             // Production custom domain
   'https://prime-self-ui.pages.dev',  // Production frontend (Cloudflare Pages)
+];
+
+// Development origins — only allowed when ENVIRONMENT !== 'production'
+// BL-S15-H1: Gate localhost behind environment check to prevent
+// cross-origin requests from dev tools in production.
+const DEV_ORIGINS = [
   'http://localhost:5173',             // Vite dev server
   'http://localhost:3000',             // Alternative dev port
   'http://127.0.0.1:5173',
@@ -27,14 +33,29 @@ const ALLOWED_ORIGINS = [
 ];
 
 /**
+ * Build allowed origins list based on environment.
+ * @param {string} [environment] — from env.ENVIRONMENT (wrangler.toml vars)
+ * @returns {string[]}
+ */
+function getAllowedOrigins(environment) {
+  if (environment === 'production') {
+    return PRODUCTION_ORIGINS;
+  }
+  return [...PRODUCTION_ORIGINS, ...DEV_ORIGINS];
+}
+
+/**
  * Get CORS headers based on the request's Origin header.
  * Only allows specific origins to prevent unauthorized authenticated requests.
+ * @param {Request} request
+ * @param {string} [environment] — from env.ENVIRONMENT
  */
-export function getCorsHeaders(request) {
+export function getCorsHeaders(request, environment) {
   const origin = request.headers.get('Origin');
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin)
+  const allowed = getAllowedOrigins(environment);
+  const allowedOrigin = allowed.includes(origin)
     ? origin
-    : ALLOWED_ORIGINS[0]; // Default to production
+    : PRODUCTION_ORIGINS[0]; // Default to production
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
@@ -47,15 +68,15 @@ export function getCorsHeaders(request) {
 
 // Legacy export for backward compatibility (uses production origin)
 export const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGINS[0],
+  'Access-Control-Allow-Origin': PRODUCTION_ORIGINS[0],
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400'
 };
 
-export function handleOptions(request) {
+export function handleOptions(request, environment) {
   return new Response(null, {
     status: 204,
-    headers: getCorsHeaders(request)
+    headers: getCorsHeaders(request, environment)
   });
 }

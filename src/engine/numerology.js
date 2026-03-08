@@ -105,8 +105,12 @@ export function birthdayNumber(day) {
  * @returns {object} Personal Year object
  */
 export function personalYear(birthMonth, birthDay, currentYear) {
-  const sum = birthMonth + birthDay + currentYear;
-  const number = reduceToSingleDigit(sum);
+  // BL-R-M6: Align with lifePathNumber — reduce each component first, then sum and reduce
+  // This mirrors standard Pythagorean method and is consistent across all calculations.
+  const monthSum = reduceToSingleDigit(birthMonth);
+  const daySum   = reduceToSingleDigit(birthDay);
+  const yearSum  = reduceToSingleDigit(currentYear);
+  const number   = reduceToSingleDigit(monthSum + daySum + yearSum);
   const theme = PERSONAL_YEAR_THEMES[number] || 'Unknown';
   return { number, theme, year: currentYear };
 }

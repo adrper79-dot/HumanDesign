@@ -13,6 +13,7 @@
 import { NotionClient } from '../lib/notion.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
+import { importEncryptionKey, encryptToken, readToken } from '../lib/tokenCrypto.js'; // BL-R-H3
 
 /**
  * GET /api/notion/auth
@@ -133,11 +134,23 @@ export async function handleNotionCallback(request, env, ctx) {
     }
     
     const tokenData = await tokenResponse.json();
-    
-    // Store access token and workspace info
+
+    // BL-R-H3: Encrypt access token before storing in DB
+    let storedToken;
+    if (env.NOTION_TOKEN_ENCRYPTION_KEY) {
+      const encKey = await importEncryptionKey(env.NOTION_TOKEN_ENCRYPTION_KEY);
+      storedToken = await encryptToken(tokenData.access_token, encKey);
+    } else {
+      // If key not yet configured, log warning and store plaintext
+      // (readToken() handles legacy plaintext transparently)
+      console.warn('[Notion] NOTION_TOKEN_ENCRYPTION_KEY not set — storing token unencrypted. Add secret via: wrangler secret put NOTION_TOKEN_ENCRYPTION_KEY');
+      storedToken = tokenData.access_token;
+    }
+
+    // Store encrypted token and workspace info
     await query(QUERIES.upsertNotionConnection, [
       userId,
-      tokenData.access_token,
+      storedToken,
       tokenData.workspace_id,
       tokenData.workspace_name,
       tokenData.bot_id,
@@ -248,8 +261,14 @@ export async function handleSyncClients(request, env, ctx) {
     
     const accessToken = connections[0].access_token;
     
+    // BL-R-H3: Decrypt token if stored encrypted
+    const encKey = env.NOTION_TOKEN_ENCRYPTION_KEY
+      ? await importEncryptionKey(env.NOTION_TOKEN_ENCRYPTION_KEY)
+      : null;
+    const plainAccessToken = await readToken(accessToken, encKey);
+
     // Get or create Notion database for clients
-    const notion = new NotionClient(accessToken);
+    const notion = new NotionClient(plainAccessToken);
     
     // Check if database already exists
     let { rows: dbRecords } = await query(QUERIES.getNotionSyncRecord, [user.id]);
@@ -350,7 +369,13 @@ export async function handleExportProfile(request, env, ctx, profileId) {
     }
     
     const accessToken = connections[0].access_token;
-    
+
+    // BL-R-H3: Decrypt token if stored encrypted
+    const encKey2 = env.NOTION_TOKEN_ENCRYPTION_KEY
+      ? await importEncryptionKey(env.NOTION_TOKEN_ENCRYPTION_KEY)
+      : null;
+    const plainAccessToken = await readToken(accessToken, encKey2);
+
     // Get profile
     const { rows: profiles } = await query(QUERIES.getNotionExportProfile, [profileId, user.id]);
     
@@ -366,7 +391,7 @@ export async function handleExportProfile(request, env, ctx, profileId) {
     const chartData = typeof profile.hd_json === 'string' ? JSON.parse(profile.hd_json) : profile.hd_json;
     
     // Create Notion page
-    const notion = new NotionClient(accessToken);
+    const notion = new NotionClient(plainAccessToken);
     const page = await notion.createProfilePage({
       email: profile.email,
       type: chartData.type,

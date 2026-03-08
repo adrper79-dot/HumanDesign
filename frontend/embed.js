@@ -97,7 +97,8 @@
       // BL-R-M18: Strict origin validation — only accept from exact primeself.app or localhost origins
       const ALLOWED_ORIGINS = new Set(['https://primeself.app', 'http://localhost:3000', 'http://localhost:8787']);
 
-      window.addEventListener('message', function(event) {
+      // BL-R-L1: Store handler reference so destroy() can remove it and avoid listener leak
+      instance._messageHandler = function(event) {
         if (!ALLOWED_ORIGINS.has(event.origin)) {
           return;
         }
@@ -131,7 +132,9 @@
             instance.config.onError(message.error);
           }
         }
-      });
+      };
+
+      window.addEventListener('message', instance._messageHandler);
     },
 
     /**
@@ -153,6 +156,10 @@
       
       if (index !== -1) {
         const instance = this.instances[index];
+        // BL-R-L1: Remove the message listener to avoid unbounded listener accumulation
+        if (instance._messageHandler) {
+          window.removeEventListener('message', instance._messageHandler);
+        }
         instance.container.innerHTML = '';
         this.instances.splice(index, 1);
       }
@@ -163,6 +170,10 @@
      */
     destroyAll: function() {
       this.instances.forEach(instance => {
+        // BL-R-L1: Remove each instance's message listener before clearing
+        if (instance._messageHandler) {
+          window.removeEventListener('message', instance._messageHandler);
+        }
         instance.container.innerHTML = '';
       });
       this.instances = [];

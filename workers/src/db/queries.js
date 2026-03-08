@@ -70,18 +70,44 @@ export function createQueryFn(connectionString) {
 
   /**
    * Run multiple queries inside a single transaction.
-   * @param {(q: Function) => Promise<T>} fn — receives the same query function
+   *
+   * BL-S15-C1: Uses pool.connect() to obtain a dedicated client with
+   * connection affinity. Neon's serverless Pool in HTTP mode sends each
+   * pool.query() as an independent request with no connection guarantee,
+   * so BEGIN/COMMIT/ROLLBACK via pool.query() would execute on different
+   * connections — making the transaction non-functional. A connected client
+   * (WebSocket-backed) maintains a single connection for the entire block.
+   *
+   * @param {(q: Function) => Promise<T>} fn — receives a query function bound to the transaction client
    * @returns {Promise<T>}
    */
   query.transaction = async function transaction(fn) {
-    await pool.query('BEGIN');
+    const client = await pool.connect();
     try {
-      const result = await fn(query);
-      await pool.query('COMMIT');
+      await client.query('BEGIN');
+
+      // Provide a query function bound to this specific client
+      const txQuery = async (sqlText, params = []) => {
+        try {
+          return await client.query(sqlText, params);
+        } catch (error) {
+          console.error('Transaction query error:', error);
+          throw error;
+        }
+      };
+
+      const result = await fn(txQuery);
+      await client.query('COMMIT');
       return result;
     } catch (error) {
-      await pool.query('ROLLBACK');
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        console.error('Transaction rollback failed:', rollbackError);
+      }
       throw error;
+    } finally {
+      client.release();
     }
   };
 
@@ -1212,7 +1238,7 @@ export const QUERIES = {
 
   getCheckinStreak: `
     SELECT current_streak, last_checkin_date, streak_start_date
-    FROM checkin_streaks WHERE user_id = $1
+    FROM get_user_streak($1)
   `,
 
   getCheckinDatesOrdered: `
@@ -1470,5 +1496,72 @@ export const QUERIES = {
     WHERE c.user_id = $1
     ORDER BY c.calculated_at DESC
     LIMIT 1
+  `,
+
+  // ─── Cron Queries (BL-R-M20) ─────────────────────────────
+
+  cronGetPushUsers: `
+    SELECT DISTINCT u.id, u.birth_date
+    FROM users u
+    INNER JOIN push_subscriptions ps ON u.id = ps.user_id
+    LEFT JOIN notification_preferences np ON u.id = np.user_id
+    WHERE ps.active = true
+      AND u.birth_date IS NOT NULL
+      AND (np.transit_daily IS NULL OR np.transit_daily = true)
+  `,
+
+  cronGetAlertUsers: `
+    SELECT DISTINCT u.id, u.birth_date
+    FROM users u
+    INNER JOIN transit_alerts ta ON u.id = ta.user_id
+    WHERE ta.active = true AND u.birth_date IS NOT NULL
+  `,
+
+  cronGetWelcome2Users: `
+    SELECT u.id, u.email, u.created_at, c.chart_type
+    FROM users u
+    LEFT JOIN charts c ON u.id = c.user_id
+    WHERE u.created_at >= NOW() - INTERVAL '25 hours'
+      AND u.created_at <= NOW() - INTERVAL '23 hours'
+      AND u.email_verified != false
+    GROUP BY u.id, u.email, u.created_at, c.chart_type
+  `,
+
+  cronGetWelcome3Users: `
+    SELECT u.id, u.email, u.created_at, c.authority
+    FROM users u
+    LEFT JOIN charts c ON u.id = c.user_id
+    WHERE u.created_at >= NOW() - INTERVAL '73 hours'
+      AND u.created_at <= NOW() - INTERVAL '71 hours'
+      AND u.email_verified != false
+    GROUP BY u.id, u.email, u.created_at, c.authority
+  `,
+
+  cronGetWelcome4Users: `
+    SELECT u.id, u.email, u.created_at
+    FROM users u
+    WHERE u.created_at >= NOW() - INTERVAL '7 days 1 hour'
+      AND u.created_at <= NOW() - INTERVAL '6 days 23 hours'
+      AND u.email_verified != false
+  `,
+
+  cronGetReengagementUsers: `
+    SELECT u.id, u.email, u.last_login_at,
+           EXTRACT(DAY FROM (NOW() - u.last_login_at)) AS days_inactive
+    FROM users u
+    WHERE u.last_login_at IS NOT NULL
+      AND u.last_login_at >= NOW() - INTERVAL '8 days'
+      AND u.last_login_at <= NOW() - INTERVAL '6 days'
+      AND u.email_verified != false
+      AND u.created_at < NOW() - INTERVAL '14 days'
+  `,
+
+  cronGetUpgradeNudgeUsers: `
+    SELECT u.id, u.email, u.created_at
+    FROM users u
+    WHERE u.tier = 'free'
+      AND u.created_at >= NOW() - INTERVAL '31 days'
+      AND u.created_at <= NOW() - INTERVAL '29 days'
+      AND u.email_verified != false
   `
 };

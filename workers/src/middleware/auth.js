@@ -45,8 +45,9 @@ export async function authenticate(request, env) {
     request._user = payload;
     return null; // Authenticated
   } catch (err) {
+    console.error('[auth] Token verification failed:', err.message); // BL-R-H2
     return Response.json(
-      { error: 'Token verification failed', message: err.message },
+      { error: 'Token verification failed' },
       { status: 401 }
     );
   }
