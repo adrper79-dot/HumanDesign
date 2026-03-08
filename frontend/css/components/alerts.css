@@ -81,7 +81,7 @@
 .alert-success {
   background: rgba(80, 200, 120, 0.12);
   border-color: rgba(80, 200, 120, 0.3);
-  color: var(--status-info);
+  color: var(--status-success);
 }
 
 .alert-success .alert-icon::before {

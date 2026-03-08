@@ -128,6 +128,39 @@ export const QUERIES = {
     FROM users WHERE phone = $1
   `,
 
+  // ─── Refresh Tokens ─────────────────────────────────────────
+  insertRefreshToken: `
+    INSERT INTO refresh_tokens (user_id, token_hash, family_id, expires_at)
+    VALUES ($1, $2, $3, to_timestamp($4))
+    RETURNING id
+  `,
+
+  getRefreshTokenByHash: `
+    SELECT id, user_id, token_hash, family_id, expires_at, revoked_at, created_at
+    FROM refresh_tokens
+    WHERE token_hash = $1
+  `,
+
+  revokeRefreshToken: `
+    UPDATE refresh_tokens SET revoked_at = now()
+    WHERE id = $1 AND revoked_at IS NULL
+  `,
+
+  revokeRefreshTokenFamily: `
+    UPDATE refresh_tokens SET revoked_at = now()
+    WHERE family_id = $1 AND revoked_at IS NULL
+  `,
+
+  revokeAllUserRefreshTokens: `
+    UPDATE refresh_tokens SET revoked_at = now()
+    WHERE user_id = $1 AND revoked_at IS NULL
+  `,
+
+  deleteExpiredRefreshTokens: `
+    DELETE FROM refresh_tokens
+    WHERE expires_at < now() OR (revoked_at IS NOT NULL AND revoked_at < now() - INTERVAL '7 days')
+  `,
+
   // Charts
   saveChart: `
     INSERT INTO charts (user_id, hd_json, astro_json)

@@ -26,9 +26,10 @@
  *   POST /api/sms/send-digest          – Trigger digest send
  *   POST /api/sms/subscribe            – Subscribe to SMS digests
  *   POST /api/sms/unsubscribe          – Unsubscribe from SMS digests
- *   POST /api/auth/register            – Create account, get JWT
- *   POST /api/auth/login               – Email-based login, get JWT
- *   POST /api/auth/refresh             – Refresh access token
+ *   POST /api/auth/register            – Create account, get JWT pair
+ *   POST /api/auth/login               – Email-based login, get JWT pair
+ *   POST /api/auth/refresh             – Rotate refresh token, get new JWT pair
+ *   POST /api/auth/logout              – Revoke all refresh tokens
  *   GET  /api/auth/me                  – Get current user info
  *   GET  /api/geocode                  – City → lat/lng + timezone
  *   GET  /api/health                   – Health check
@@ -222,6 +223,7 @@ import { runDailyTransitCron } from './cron.js';
 // Routes that require authentication
 const AUTH_ROUTES = new Set([
   '/api/auth/me',
+  '/api/auth/logout',
   '/api/profile/generate',
   '/api/sms/send-digest'
 ]);

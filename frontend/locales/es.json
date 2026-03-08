@@ -11,7 +11,15 @@
     "transits": "Tránsitos",
     "profile": "Perfil",
     "enhance": "Mejorar",
-    "diary": "Diario"
+    "diary": "Diario",
+    "checkin": "Check-In",
+    "composite": "Compuesta",
+    "rectify": "Rectificar",
+    "practitioner": "Practicante",
+    "clusters": "Grupos",
+    "sms": "SMS",
+    "onboarding": "Inicio",
+    "saved": "Guardados"
   },
   "auth": {
     "signIn": "Iniciar Sesión",
@@ -30,7 +38,11 @@
     "signInLink": "Iniciar sesión",
     "email": "Correo electrónico",
     "password": "Contraseña",
-    "signInUpgrade": "Inicia sesión para mejorar tu cuenta."
+    "signInUpgrade": "Inicia sesión para mejorar tu cuenta.",
+    "continueWithout": "Continuar sin iniciar sesión",
+    "creatingSession": "Creando sesión…",
+    "signInRequired": "Inicia sesión para generar un perfil.",
+    "billing": "Facturación"
   },
   "chart": {
     "title": "Carta de Diseño Humano",
@@ -54,7 +66,16 @@
     "gates": "Puertas",
     "saveChart": "Guardar Carta",
     "viewRaw": "Ver Datos Crudos",
-    "hideRaw": "Ocultar Datos Crudos"
+    "hideRaw": "Ocultar Datos Crudos",
+    "birthLocationPlaceholder": "Ciudad, Estado, País — ej. Madrid, España",
+    "timezone": "Zona horaria",
+    "lookingUp": "Buscando…",
+    "generateMyChart": "Generar Mi Carta",
+    "welcomeTitle": "Bienvenido a Prime Self",
+    "welcomeBody": "Ingresa tus datos de nacimiento para descubrir tu huella energética única a través de Human Design, Astrología Occidental, Numerología y Gene Keys.",
+    "birthData": "Datos de Nacimiento",
+    "enterLocation": "Ingresa una ciudad primero.",
+    "lookUpFirst": "Ingresa un lugar de nacimiento y haz clic en \"Buscar\" primero."
   },
   "profile": {
     "title": "Perfil Prime Self",
@@ -65,7 +86,15 @@
     "shareProfile": "Compartir",
     "question": "Pregunta de enfoque opcional",
     "questionPlaceholder": "ej. ¿Cuál es mi Forja primaria?",
-    "noProfiles": "No tienes perfiles guardados."
+    "noProfiles": "No tienes perfiles guardados.",
+    "questionLabel": "Pregunta específica (opcional — dejar en blanco para perfil completo)",
+    "aiSynthesis": "Síntesis Multi-Sistema con IA",
+    "aiSynthesisBody": "Obtén una síntesis personalizada de los cuatro sistemas: Human Design, Astrología, Numerología y Gene Keys — impulsada por IA.",
+    "generateTitle": "Generar Perfil Prime Self",
+    "generatingAi": "Generando síntesis con IA… Esto puede tardar 10-20 segundos.",
+    "signInToView": "Inicia sesión para ver tus perfiles guardados.",
+    "savedProfiles": "Perfiles Guardados",
+    "loadingProfiles": "Cargando perfiles…"
   },
   "transits": {
     "title": "Tránsitos Actuales",
@@ -74,7 +103,9 @@
     "forecast": "Pronóstico",
     "gateActivations": "Activaciones de Puertas",
     "aspects": "Aspectos de Tránsito",
-    "noData": "No hay datos de tránsito disponibles."
+    "noData": "No hay datos de tránsito disponibles.",
+    "fetching": "Obteniendo tránsitos…",
+    "currentPositions": "Posiciones de Tránsito Actuales"
   },
   "composite": {
     "title": "Carta Compuesta",
@@ -85,7 +116,8 @@
     "dominance": "Canales Dominantes",
     "companionship": "Compañerismo",
     "compromise": "Compromiso",
-    "dynamics": "Dinámicas de Relación"
+    "dynamics": "Dinámicas de Relación",
+    "generating": "Generando compuesta…"
   },
   "practitioner": {
     "title": "Panel del Practicante",
@@ -93,7 +125,8 @@
     "addClient": "Agregar Cliente",
     "clientEmail": "Correo del cliente",
     "roster": "Lista de Clientes",
-    "noClients": "No tienes clientes aún."
+    "noClients": "No tienes clientes aún.",
+    "loadingRoster": "Cargando lista…"
   },
   "clusters": {
     "title": "Inteligencia Grupal",
@@ -103,7 +136,8 @@
     "members": "Miembros",
     "addMember": "Agregar Miembro",
     "synthesize": "Sintetizar Grupo",
-    "noClusters": "No tienes grupos aún."
+    "noClusters": "No tienes grupos aún.",
+    "loading": "Cargando tus grupos…"
   },
   "diary": {
     "title": "Diario de Eventos",
@@ -113,7 +147,23 @@
     "mood": "Ánimo",
     "energy": "Nivel de Energía",
     "notes": "Notas",
-    "noEntries": "No hay entradas en tu diario."
+    "noEntries": "No hay entradas en tu diario.",
+    "addEvent": "Agregar Evento de Vida",
+    "eventDate": "Fecha del Evento",
+    "noEvents": "¡No hay eventos registrados aún. Agrega tu primer evento arriba!",
+    "eventTitle": "Título del Evento",
+    "eventDescription": "Descripción",
+    "eventType": "Tipo de Evento",
+    "significance": "Importancia",
+    "yourEvents": "Tus Eventos de Vida",
+    "typeCareer": "Carrera",
+    "typeRelationship": "Relación",
+    "typeHealth": "Salud",
+    "typeSpiritual": "Espiritual",
+    "typeOther": "Otro",
+    "sigMajor": "Mayor",
+    "sigModerate": "Moderado",
+    "sigMinor": "Menor"
   },
   "enhance": {
     "title": "Mejora tu Perfil",
@@ -121,6 +171,24 @@
     "bigFive": "Cinco Grandes Rasgos",
     "via": "Fortalezas de Carácter VIA",
     "save": "Guardar Evaluación"
+  },
+  "checkin": {
+    "title": "Check-In de Alineación Diaria",
+    "howAligned": "¿Qué tan alineado te sentiste hoy?",
+    "saveCheckin": "Guardar Check-In",
+    "trends": "Tendencias de Alineación",
+    "saving": "Guardando check-in…",
+    "selectScore": "Selecciona una puntuación de alineación (1-10)",
+    "moodGreat": "Genial",
+    "moodGood": "Bien",
+    "moodNeutral": "Neutral",
+    "moodLow": "Bajo",
+    "moodStruggling": "Difícil"
+  },
+  "rectify": {
+    "title": "Rectificación de Hora de Nacimiento",
+    "analyze": "Analizar Ventana de Tiempo",
+    "analyzing": "Analizando ventana de tiempo…"
   },
   "onboarding": {
     "title": "El Arco de la Sabana",
@@ -144,7 +212,11 @@
     "perMonth": "/mes",
     "currentPlan": "Plan Actual",
     "upgrade": "Mejorar Plan",
-    "billingPortal": "Gestionar Facturación"
+    "billingPortal": "Gestionar Facturación",
+    "unlockTitle": "Desbloquea Tu Potencial Completo",
+    "choosePlan": "Elige el plan que se ajuste a tu viaje",
+    "upgradeTo": "Mejorar a {{tier}}",
+    "maybeLater": "Quizás después"
   },
   "share": {
     "title": "Compartir",
@@ -152,7 +224,11 @@
     "copied": "¡Copiado!",
     "twitter": "Compartir en X",
     "facebook": "Compartir en Facebook",
-    "downloadImage": "Descargar Imagen"
+    "downloadImage": "Descargar Imagen",
+    "shareProfile": "Comparte Tu Perfil",
+    "referralLink": "Tu Enlace de Referido",
+    "shareOn": "Compartir En",
+    "earnRewards": "Gana recompensas refiriendo amigos"
   },
   "common": {
     "loading": "Cargando…",
@@ -180,6 +256,16 @@
     "forbidden": "No tienes acceso a esta función.",
     "quotaExceeded": "Límite de uso alcanzado. Mejora tu plan.",
     "invalidInput": "Verifica tu entrada e intenta de nuevo.",
-    "missingField": "Campo requerido: {{field}}"
+    "missingField": "Campo requerido: {{field}}",
+    "prefix": "Error: {{message}}"
+  },
+  "social": {
+    "chartExplored": "personas exploraron su carta esta semana",
+    "reportsGenerated": "informes generados",
+    "accuracyRating": "calificación de precisión"
+  },
+  "offline": {
+    "offlineMode": "Modo Sin Conexión — Usando datos en caché",
+    "backOnline": "De vuelta en línea — Sincronizando…"
   }
 }

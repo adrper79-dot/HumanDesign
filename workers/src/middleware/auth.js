@@ -2,7 +2,7 @@
  * JWT Authentication Middleware
  *
  * Validates Bearer tokens using shared secret (HS256).
- * For production, swap to RS256 with JWKS endpoint.
+ * verifyHS256 now checks signature, exp, iss, and aud in one call.
  */
 
 import { verifyHS256 } from '../lib/jwt.js';
@@ -28,15 +28,15 @@ export async function authenticate(request, env) {
 
     if (!payload) {
       return Response.json(
-        { error: 'Invalid token' },
+        { error: 'Invalid or expired token' },
         { status: 401 }
       );
     }
 
-    // Check expiration
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+    // Only accept access tokens in the Authorization header
+    if (payload.type !== 'access') {
       return Response.json(
-        { error: 'Token expired' },
+        { error: 'Invalid token type' },
         { status: 401 }
       );
     }

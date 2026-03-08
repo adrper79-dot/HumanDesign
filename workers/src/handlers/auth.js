@@ -1,16 +1,21 @@
 /**
  * Auth Endpoints
  *
- *   POST /api/auth/register   – Create account, get JWT
- *   POST /api/auth/login      – Email-based login, get JWT
- *   POST /api/auth/refresh    – Refresh token
+ *   POST /api/auth/register   – Create account, get JWT pair
+ *   POST /api/auth/login      – Email-based login, get JWT pair
+ *   POST /api/auth/refresh    – Rotate refresh token, get new JWT pair
+ *   POST /api/auth/logout     – Revoke all refresh tokens for user
  *   GET  /api/auth/me         – Get current user info
  *
- * Uses HS256 JWTs (matches auth.js middleware).
+ * Uses HS256 JWTs with standard iss/aud claims (see lib/jwt.js).
+ * Refresh tokens are stored (hashed) in the refresh_tokens table
+ * and rotated on every use.  Re-use of a revoked token triggers
+ * automatic revocation of the entire token family (theft detection).
+ *
  * Passwords are hashed with PBKDF2 via Web Crypto API.
  */
 
-import { signJWT, verifyHS256 } from '../lib/jwt.js';
+import { signJWT, verifyHS256, sha256 } from '../lib/jwt.js';
 import { sendWelcomeEmail1 } from '../lib/email.js';
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
@@ -23,7 +28,7 @@ const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30; // 30 days
 
 export async function handleAuth(request, env, path) {
   // Known auth paths
-  const knownPaths = ['/api/auth/register', '/api/auth/login', '/api/auth/refresh', '/api/auth/me'];
+  const knownPaths = ['/api/auth/register', '/api/auth/login', '/api/auth/refresh', '/api/auth/logout', '/api/auth/me'];
   
   // GET requests
   if (request.method === 'GET') {
@@ -40,6 +45,7 @@ export async function handleAuth(request, env, path) {
     if (path === '/api/auth/register') return handleRegister(request, env);
     if (path === '/api/auth/login') return handleLogin(request, env);
     if (path === '/api/auth/refresh') return handleRefresh(request, env);
+    if (path === '/api/auth/logout') return handleLogout(request, env);
     return Response.json({ error: 'Not found' }, { status: 404 });
   }
 
@@ -165,11 +171,17 @@ async function handleRegister(request, env) {
     ACCESS_TOKEN_TTL
   );
 
+  const familyId = crypto.randomUUID();
   const refreshToken = await signJWT(
-    { sub: userId, type: 'refresh' },
+    { sub: userId, type: 'refresh', fid: familyId },
     env.JWT_SECRET,
     REFRESH_TOKEN_TTL
   );
+
+  // Store hashed refresh token in DB
+  const tokenHash = await sha256(refreshToken);
+  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
+  await query(QUERIES.insertRefreshToken, [userId, tokenHash, familyId, expiresAtEpoch]);
 
   // Send welcome email (BL-ENG-007)
   // Fire and forget - don't block registration on email send
@@ -244,11 +256,17 @@ async function handleLogin(request, env) {
     ACCESS_TOKEN_TTL
   );
 
+  const familyId = crypto.randomUUID();
   const refreshToken = await signJWT(
-    { sub: user.id, type: 'refresh' },
+    { sub: user.id, type: 'refresh', fid: familyId },
     env.JWT_SECRET,
     REFRESH_TOKEN_TTL
   );
+
+  // Store hashed refresh token in DB
+  const tokenHash = await sha256(refreshToken);
+  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
+  await query(QUERIES.insertRefreshToken, [user.id, tokenHash, familyId, expiresAtEpoch]);
 
   return Response.json({
     ok: true,
@@ -259,7 +277,7 @@ async function handleLogin(request, env) {
   });
 }
 
-// ─── Refresh Token ───────────────────────────────────────────
+// ─── Refresh Token (with rotation & theft detection) ─────────
 
 async function handleRefresh(request, env) {
   let body;
@@ -281,7 +299,7 @@ async function handleRefresh(request, env) {
     );
   }
 
-  // Verify refresh token
+  // Verify JWT signature & standard claims (iss, aud, exp)
   const payload = await verifyHS256(refreshToken, env.JWT_SECRET);
   if (!payload || payload.type !== 'refresh') {
     return Response.json(
@@ -290,16 +308,38 @@ async function handleRefresh(request, env) {
     );
   }
 
-  // Check expiration
-  if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const tokenHash = await sha256(refreshToken);
+
+  // Look up hashed token in DB
+  const stored = await query(QUERIES.getRefreshTokenByHash, [tokenHash]);
+  const row = stored.rows?.[0];
+
+  if (!row) {
+    // Token not found — may be a replay of a previously rotated token.
+    // Revoke entire family as a precaution (theft detection).
+    if (payload.fid) {
+      await query(QUERIES.revokeRefreshTokenFamily, [payload.fid]);
+    }
     return Response.json(
-      { error: 'Refresh token expired' },
+      { error: 'Refresh token not recognised — all sessions revoked' },
       { status: 401 }
     );
   }
 
+  if (row.revoked_at) {
+    // Already revoked — possible token theft. Revoke entire family.
+    await query(QUERIES.revokeRefreshTokenFamily, [row.family_id]);
+    return Response.json(
+      { error: 'Refresh token reuse detected — all sessions revoked' },
+      { status: 401 }
+    );
+  }
+
+  // Revoke the current token (one-time-use)
+  await query(QUERIES.revokeRefreshToken, [row.id]);
+
   // Look up user
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const result = await query(QUERIES.getUserById, [payload.sub]);
   const user = result.rows?.[0];
 
@@ -310,18 +350,48 @@ async function handleRefresh(request, env) {
     );
   }
 
-  // Issue new access token
+  // Issue new token pair — same family
   const accessToken = await signJWT(
     { sub: user.id, email: user.email, type: 'access' },
     env.JWT_SECRET,
     ACCESS_TOKEN_TTL
   );
 
+  const newRefreshToken = await signJWT(
+    { sub: user.id, type: 'refresh', fid: row.family_id },
+    env.JWT_SECRET,
+    REFRESH_TOKEN_TTL
+  );
+
+  // Store new refresh token
+  const newHash = await sha256(newRefreshToken);
+  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
+  await query(QUERIES.insertRefreshToken, [user.id, newHash, row.family_id, expiresAtEpoch]);
+
   return Response.json({
     ok: true,
     accessToken,
+    refreshToken: newRefreshToken,
     expiresIn: ACCESS_TOKEN_TTL
   });
+}
+
+// ─── Logout (Revoke All Tokens) ─────────────────────────────
+
+async function handleLogout(request, env) {
+  const userId = request._user?.sub;
+
+  if (!userId) {
+    return Response.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  await query(QUERIES.revokeAllUserRefreshTokens, [userId]);
+
+  return Response.json({ ok: true, message: 'All sessions revoked' });
 }
 
 // ─── Password Hashing (PBKDF2 via Web Crypto) ───────────────

@@ -231,7 +231,7 @@
 .badge-success {
   background: rgba(80, 200, 120, 0.15);
   border: var(--border-width-thin) solid rgba(80, 200, 120, 0.3);
-  color: var(--status-info);
+  color: var(--status-success);
 }
 
 .badge-error {
