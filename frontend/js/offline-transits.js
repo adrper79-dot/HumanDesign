@@ -183,6 +183,27 @@
   async function prefetchTransits() {
     if (!isOnline || typeof window.apiFetch !== 'function') return;
 
+    // Check if user is authenticated and has a birth chart
+    // Before attempting to fetch personalized forecasts
+    let userChart = null;
+    try {
+      const meResp = await window.apiFetch('/api/auth/me');
+      if (meResp && meResp.ok) {
+        const meData = await meResp.json();
+        if (meData.user && meData.user.default_birth_date) {
+          userChart = {
+            birthDate: meData.user.default_birth_date,
+            birthTime: meData.user.default_birth_time || '12:00',
+            birthTimezone: meData.user.default_birth_timezone || 'UTC',
+            lat: meData.user.default_birth_lat || 0,
+            lng: meData.user.default_birth_lng || 0,
+          };
+        }
+      }
+    } catch {
+      // User not authenticated — will use generic transits only
+    }
+
     const today = new Date();
     let fetched = 0;
 
@@ -196,10 +217,28 @@
       if (cached && (Date.now() - cached.fetchedAt) < MAX_CACHE_AGE_MS) continue;
 
       try {
-        // Use forecast endpoint for future dates
-        const endpoint = i === 0
-          ? '/api/transits/today'
-          : `/api/transits/forecast?startDate=${dateStr}&endDate=${dateStr}`;
+        // For today, use generic transits (works for everyone)
+        // For future dates with user chart, use personalized forecast
+        let endpoint;
+        if (i === 0) {
+          endpoint = '/api/transits/today';
+        } else if (userChart) {
+          // User authenticated with birth data — fetch personalized forecast
+          const params = new URLSearchParams({
+            birthDate: userChart.birthDate,
+            birthTime: userChart.birthTime,
+            birthTimezone: userChart.birthTimezone,
+            lat: userChart.lat,
+            lng: userChart.lng,
+            startDate: dateStr,
+            endDate: dateStr,
+          });
+          endpoint = `/api/transits/forecast?${params.toString()}`;
+        } else {
+          // Not authenticated — skip forecast (would return 400)
+          continue;
+        }
+
         const resp = await window.apiFetch(endpoint);
         if (resp && resp.ok) {
           await cacheTransit(dateStr, resp);
