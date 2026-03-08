@@ -152,7 +152,6 @@
   --leading-snug: 1.375;
   --leading-normal: 1.5;
   --leading-relaxed: 1.625;
-  --leading-loose: 2;
   
   /* Letter Spacing */
   --tracking-tighter: -0.05em;
@@ -186,27 +185,13 @@
      LAYOUT
      ══════════════════════════════════════════════════════════ */
   
-  /* Breakpoints (use in media queries) */
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
-  
   /* Container Widths */
-  --container-sm: 640px;
-  --container-md: 768px;
   --container-lg: 1024px;
-  --container-xl: 1280px;
   
   /* Z-Index Stack */
-  --z-base: 0;
-  --z-dropdown: 10;
   --z-sticky: 20;
-  --z-fixed: 30;
   --z-modal-backdrop: 40;
   --z-modal: 50;
-  --z-popover: 60;
   --z-tooltip: 70;
   
   
@@ -214,7 +199,6 @@
      BORDERS & RADII
      ══════════════════════════════════════════════════════════ */
   
-  --radius-none: 0;
   --radius-sm: 0.25rem;   /* 4px */
   --radius-md: 0.375rem;  /* 6px */
   --radius-lg: 0.5rem;    /* 8px */
@@ -224,7 +208,6 @@
   
   --border-width-thin: 1px;
   --border-width-medium: 2px;
-  --border-width-thick: 4px;
   
   
   /* ═══════════════════════════════════════════════════════════
@@ -239,16 +222,12 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4),
                0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   
   --shadow-focus: 0 0 0 3px rgba(201, 168, 76, 0.3);
   --shadow-focus-error: 0 0 0 3px rgba(224, 80, 80, 0.3);
   
   /* Blur */
   --blur-sm: 4px;
-  --blur-md: 8px;
-  --blur-lg: 16px;
-  --blur-xl: 24px;
   
   
   /* ═══════════════════════════════════════════════════════════
@@ -256,7 +235,6 @@
      ══════════════════════════════════════════════════════════ */
   
   /* Durations */
-  --duration-instant: 0ms;
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 350ms;
@@ -266,14 +244,12 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   /* Common Transitions */
   --transition-colors: color var(--duration-normal) var(--ease-in-out),
                        background-color var(--duration-normal) var(--ease-in-out),
                        border-color var(--duration-normal) var(--ease-in-out);
   --transition-transform: transform var(--duration-normal) var(--ease-out);
-  --transition-opacity: opacity var(--duration-normal) var(--ease-in-out);
   --transition-all: all var(--duration-normal) var(--ease-in-out);
   
   
