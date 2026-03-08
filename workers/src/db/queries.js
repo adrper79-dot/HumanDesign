@@ -56,6 +56,9 @@ function getPool(connectionString) {
  * @returns {Function} query function (sql, params) => Promise<{rows}>
  */
 export function createQueryFn(connectionString) {
+  if (!connectionString) {
+    throw new Error('NEON_CONNECTION_STRING is not configured. Add it via: `npx wrangler secret put NEON_CONNECTION_STRING`');
+  }
   const pool = getPool(connectionString);
 
   async function query(sqlText, params = []) {

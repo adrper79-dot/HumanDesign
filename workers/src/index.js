@@ -444,12 +444,26 @@ export default {
       if (route) {
         response = await route.handler(request, env, ctx, ...route.args);
       } else if (path === '/api/health') {
-        response = Response.json({
+        // Basic health — allow `?full=1` to include presence flags for required secrets (no values)
+        const url = new URL(request.url);
+        const full = url.searchParams.get('full');
+        const base = {
           status: 'ok',
           version: '0.2.0',
           timestamp: new Date().toISOString(),
           cache: getCacheMetrics(),
-        });
+        };
+        if (full === '1') {
+          const secrets = {
+            hasNeon: !!env?.NEON_CONNECTION_STRING,
+            hasJwt: !!env?.JWT_SECRET,
+            hasStripe: !!env?.STRIPE_SECRET_KEY,
+            hasTelnyx: !!env?.TELNYX_API_KEY,
+          };
+          response = Response.json(Object.assign(base, { secrets }));
+        } else {
+          response = Response.json(base);
+        }
       } else if (path === '/api/cache/invalidate' && request.method === 'POST') {
         const body = await request.json().catch(() => ({}));
         const prefix = body.prefix || '';

@@ -139,6 +139,8 @@ npx wrangler dev
 # Worker listens at http://localhost:8787
 ```
 
+Note: To enable the Cloudflare MCP server integration (used by some development workflows), copy `.vscode/mcp.example.json` to `.vscode/mcp.json` and ensure your OS environment provides `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (do not commit these secrets).
+
 ---
 
 ## Deployment

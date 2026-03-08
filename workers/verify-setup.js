@@ -7,8 +7,12 @@
 
 import { neonConfig, Pool } from '@neondatabase/serverless';
 
-const CONNECTION_STRING = process.env.NEON_CONNECTION_STRING || 
-  'postgresql://neondb_owner:***REMOVED***@ep-rapid-bird-aicgk9v2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require';
+const CONNECTION_STRING = process.env.NEON_CONNECTION_STRING;
+
+if (!CONNECTION_STRING) {
+  console.error('❌ NEON_CONNECTION_STRING is not set. Set it via `export NEON_CONNECTION_STRING="..."` or `npx wrangler secret put NEON_CONNECTION_STRING` for Workers.');
+  process.exit(1);
+}
 
 async function verify() {
   console.log('🔍 Verifying Stripe Integration Setup\n');
