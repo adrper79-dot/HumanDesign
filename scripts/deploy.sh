@@ -17,7 +17,7 @@ git push origin main
 
 echo "==> Deploying Cloudflare Workers"
 cd workers
-npx wrangler deploy --force
+npx wrangler deploy
 
 echo "==> Verifying production"
 node verify-production.js
