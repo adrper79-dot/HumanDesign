@@ -19,7 +19,7 @@
   header {
     height: var(--mobile-header-height);
     padding: 0 var(--mobile-padding);
-    z-index: 200; /* Above content, below modals */
+    z-index: var(--z-sticky); /* Above content, below modals */
   }
   
   .logo {
@@ -35,7 +35,7 @@
     min-height: var(--touch-target-min);
     min-width: var(--touch-target-min);
     padding: 12px 20px;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     -webkit-tap-highlight-color: rgba(201, 168, 76, 0.3);
   }
   
@@ -47,7 +47,7 @@
   /* ── Forms: Mobile Input Optimization ──────────────────── */
   input, textarea, select {
     min-height: var(--touch-target-min);
-    font-size: 16px; /* Prevents iOS zoom on focus */
+    font-size: var(--text-base); /* Prevents iOS zoom on focus (>=16px) */
     padding: 12px 16px;
   }
   
@@ -260,7 +260,7 @@
   }
   
   label {
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     margin-bottom: 8px;
   }
   
@@ -322,10 +322,10 @@
     font-size: 15px;
   }
   
-  h1 { font-size: 1.8rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.2rem; }
-  h4 { font-size: 1rem; }
+  h1 { font-size: var(--text-3xl); }
+  h2 { font-size: var(--text-2xl); }
+  h3 { font-size: var(--text-xl); }
+  h4 { font-size: var(--text-base); }
   
   p, li {
     line-height: 1.6;

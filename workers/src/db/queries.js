@@ -530,7 +530,8 @@ export const QUERIES = {
   `,
 
   getUserAchievementStatsFull: `
-    SELECT * FROM user_achievement_stats WHERE user_id = $1
+    SELECT user_id, total_points, total_achievements, achievement_percentage, last_achievement_date, updated_at
+    FROM user_achievement_stats WHERE user_id = $1
   `,
 
   getLeaderboard: `
@@ -575,7 +576,8 @@ export const QUERIES = {
   `,
 
   getStreakByType: `
-    SELECT * FROM user_streaks WHERE user_id = $1 AND streak_type = $2
+    SELECT id, user_id, streak_type, current_streak, longest_streak, last_activity_date, created_at, updated_at
+    FROM user_streaks WHERE user_id = $1 AND streak_type = $2
   `,
 
   insertStreak: `
@@ -623,7 +625,8 @@ export const QUERIES = {
   `,
 
   getAlertById: `
-    SELECT * FROM transit_alerts WHERE id = $1 AND user_id = $2
+    SELECT id, user_id, alert_type, config, name, description, active, notify_push, notify_webhook, created_at, updated_at
+    FROM transit_alerts WHERE id = $1 AND user_id = $2
   `,
 
   deleteAlert: `
@@ -632,7 +635,8 @@ export const QUERIES = {
   `,
 
   getUserActiveAlerts: `
-    SELECT * FROM transit_alerts WHERE user_id = $1 AND active = true
+    SELECT id, user_id, alert_type, config, name, description, active, notify_push, notify_webhook, created_at, updated_at
+    FROM transit_alerts WHERE user_id = $1 AND active = true
   `,
 
   checkAlertDeliveredToday: `
@@ -675,14 +679,16 @@ export const QUERIES = {
   `,
 
   getAlertTemplates: `
-    SELECT * FROM alert_templates
+    SELECT id, name, description, category, alert_type, config_template, recommended_for, tier_required, popularity, active, created_at
+    FROM alert_templates
     WHERE active = true
       AND (tier_required = 'free' OR tier_required = $1)
     ORDER BY popularity DESC, category
   `,
 
   getAlertTemplateById: `
-    SELECT * FROM alert_templates WHERE id = $1 AND active = true
+    SELECT id, name, description, category, alert_type, config_template, recommended_for, tier_required, popularity, active, created_at
+    FROM alert_templates WHERE id = $1 AND active = true
   `,
 
   incrementTemplatePopularity: `
@@ -727,7 +733,9 @@ export const QUERIES = {
   `,
 
   getNotificationPreferences: `
-    SELECT * FROM notification_preferences WHERE user_id = $1
+    SELECT user_id, transit_daily, gate_activation, cycle_approaching, transit_alert, weekly_digest,
+           quiet_hours_start, quiet_hours_end, timezone, daily_digest_time, weekly_digest_day, created_at, updated_at
+    FROM notification_preferences WHERE user_id = $1
   `,
 
   deactivatePushSubscription: `
@@ -847,7 +855,8 @@ export const QUERIES = {
   `,
 
   getReferralById: `
-    SELECT * FROM referrals WHERE id = $1 AND referrer_user_id = $2
+    SELECT id, referrer_user_id, referred_user_id, referral_code, converted, conversion_date, reward_granted, reward_type, reward_value, created_at, updated_at
+    FROM referrals WHERE id = $1 AND referrer_user_id = $2
   `,
 
   claimReferralReward: `
@@ -879,7 +888,9 @@ export const QUERIES = {
   `,
 
   getActiveSubscription: `
-    SELECT * FROM subscriptions
+    SELECT id, user_id, stripe_customer_id, stripe_subscription_id, tier, status,
+           current_period_start, current_period_end, cancel_at_period_end, created_at, updated_at
+    FROM subscriptions
     WHERE user_id = $1 AND status = 'active'
     ORDER BY created_at DESC
     LIMIT 1
@@ -1170,15 +1181,17 @@ export const QUERIES = {
       energy_level = EXCLUDED.energy_level,
       transit_snapshot = EXCLUDED.transit_snapshot,
       updated_at = NOW()
-    RETURNING *
+    RETURNING id, user_id, checkin_date, alignment_score, followed_strategy, followed_authority, notes, mood, energy_level, transit_snapshot, created_at, updated_at
   `,
 
   getCheckinByDate: `
-    SELECT * FROM daily_checkins WHERE user_id = $1 AND checkin_date = $2
+    SELECT id, user_id, checkin_date, alignment_score, followed_strategy, followed_authority, notes, mood, energy_level, transit_snapshot, created_at, updated_at
+    FROM daily_checkins WHERE user_id = $1 AND checkin_date = $2
   `,
 
   getCheckinHistory: `
-    SELECT * FROM daily_checkins
+    SELECT id, user_id, checkin_date, alignment_score, followed_strategy, followed_authority, notes, mood, energy_level, transit_snapshot, created_at, updated_at
+    FROM daily_checkins
     WHERE user_id = $1
     ORDER BY checkin_date DESC
     LIMIT $2 OFFSET $3
@@ -1216,11 +1229,12 @@ export const QUERIES = {
       timezone = EXCLUDED.timezone,
       notification_method = EXCLUDED.notification_method,
       updated_at = NOW()
-    RETURNING *
+    RETURNING id, user_id, enabled, reminder_time, timezone, notification_method, last_sent_at, created_at, updated_at
   `,
 
   getCheckinReminder: `
-    SELECT * FROM checkin_reminders WHERE user_id = $1
+    SELECT id, user_id, enabled, reminder_time, timezone, notification_method, last_sent_at, created_at, updated_at
+    FROM checkin_reminders WHERE user_id = $1
   `,
 
   // ─── Share Events ─────────────────────────────────────────
@@ -1408,7 +1422,7 @@ export const QUERIES = {
 
   smsOptOut: `UPDATE users SET sms_opted_in = false WHERE phone = $1`,
   smsOptIn: `UPDATE users SET sms_opted_in = true WHERE phone = $1`,
-  getSmsSubscribedUsers: `SELECT * FROM users WHERE sms_opted_in = true AND phone IS NOT NULL`,
+  getSmsSubscribedUsers: `SELECT id, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng FROM users WHERE sms_opted_in = true AND phone IS NOT NULL`,
   smsSubscribeByUserId: `UPDATE users SET phone = $1, sms_opted_in = true WHERE id = $2`,
   getUserPhone: `SELECT phone FROM users WHERE id = $1`,
   smsUnsubscribeByUserId: `UPDATE users SET sms_opted_in = false WHERE id = $1`,
