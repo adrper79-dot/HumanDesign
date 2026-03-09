@@ -5,7 +5,7 @@
  * BL-OPT-001: Updated with cache versioning and complete asset list
  */
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v9';
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
@@ -22,6 +22,7 @@ const STATIC_ASSETS = [
   '/css/prime-self-premium.css',
   '/css/artwork.css',
   '/css/icons.css',
+  '/css/app.css',
   '/css/components/buttons.css',
   '/css/components/cards.css',
   '/css/components/forms.css',
@@ -33,8 +34,29 @@ const STATIC_ASSETS = [
   '/js/lazy.js',
   '/js/i18n.js',
   '/js/offline-transits.js',
+  '/js/asset-randomizer.js',
+  '/js/explanations.js',
+  '/js/hd-data.js',
+  '/js/bodygraph.js',
+  '/js/share-card.js',
   '/locales/en.json',
-  '/manifest.json'
+  '/manifest.json',
+  // Brand variant v1 assets
+  '/icons/icon-192.png',
+  '/icons/favicon-32.png',
+  '/logo-poster.jpg',
+  '/logo-animation.mp4',
+  '/logo-animation.webm',
+  // Brand variant v2 assets
+  '/icons/icon-192-v2.png',
+  '/icons/favicon-32-v2.png',
+  '/logo-poster-v2.jpg',
+  '/logo-animation-v2.mp4',
+  '/logo-animation-v2.webm',
+  // Background video
+  '/bg-video-poster.jpg'
+  // NOTE: bg-video.mp4 and bg-video.webm are NOT pre-cached (too large).
+  // They are cached on first play via the runtime cache strategy below.
 ];
 
 /**
@@ -124,9 +146,28 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Return cached version if available
+          // Return cached version if available and not too old
           return caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
+              // BL-FIX: Enforce API_CACHE_MAX_AGE_MS to avoid serving arbitrarily stale data
+              const dateHeader = cachedResponse.headers.get('date');
+              if (dateHeader) {
+                const age = Date.now() - new Date(dateHeader).getTime();
+                if (age > API_CACHE_MAX_AGE_MS) {
+                  // Cache entry too old — treat as unavailable
+                  return new Response(
+                    JSON.stringify({
+                      error: 'Offline',
+                      message: 'You are currently offline and cached data has expired.'
+                    }),
+                    {
+                      status: 503,
+                      statusText: 'Service Unavailable',
+                      headers: { 'Content-Type': 'application/json' }
+                    }
+                  );
+                }
+              }
               return cachedResponse;
             }
             // Return offline fallback for API errors

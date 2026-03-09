@@ -132,12 +132,12 @@ async function createAlert(request, env, user) {
       }, { status: 400 });
     }
 
-    // Check alert limit (free tier: 3, seeker: 10, practitioner: unlimited)
+    // Check alert limit per tier (BL-FIX-H2: added guide tier)
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const { rows: countRows } = await query(QUERIES.countUserAlerts, [user.id]);
     const existingCount = countRows[0];
 
-    const tierLimits = { free: 3, seeker: 10, practitioner: Infinity };
+    const tierLimits = { free: 3, seeker: 10, guide: 25, practitioner: Infinity };
     const limit = tierLimits[user.tier] || 3;
 
     if (existingCount.count >= limit) {

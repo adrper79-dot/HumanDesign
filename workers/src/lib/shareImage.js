@@ -10,6 +10,17 @@
  * Uses HTML Canvas API with WASM compilation for Cloudflare Workers
  */
 
+// BL-FIX: Escape user input for safe SVG text interpolation
+function escapeXml(str) {
+  if (typeof str !== 'string') return String(str ?? '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 /**
  * Generate celebrity match share image
  * @param {Object} match - Celebrity match data
@@ -52,16 +63,16 @@ export function generateCelebrityMatchImage(match, userChart) {
               stroke-dasharray="${(percentage / 100) * 754} 754" 
               transform="rotate(-90 600 280)" filter="url(#glow)"/>
       <text x="600" y="300" font-family="Arial, sans-serif" font-size="72" font-weight="bold" 
-            fill="#48bb78" text-anchor="middle">${percentage}%</text>
+            fill="#48bb78" text-anchor="middle">${escapeXml(percentage)}%</text>
       
       <!-- Match text -->
       <text x="600" y="450" font-family="Arial, sans-serif" font-size="42" font-weight="bold" 
             fill="#ffffff" text-anchor="middle">
-        I'm ${percentage}% like
+        I'm ${escapeXml(percentage)}% like
       </text>
       <text x="600" y="510" font-family="Arial, sans-serif" font-size="52" font-weight="bold" 
             fill="#fbbf24" text-anchor="middle">
-        ${celebrity.name}
+        ${escapeXml(celebrity.name)}
       </text>
       
       <!-- Bottom CTA -->
@@ -115,7 +126,7 @@ export function generateChartShareImage(chart) {
         </text>
         <text x="550" y="45" font-family="Arial, sans-serif" font-size="32" font-weight="bold" 
               fill="#ffffff" text-anchor="end">
-          ${type}
+          ${escapeXml(type)}
         </text>
         
         <!-- Profile -->
@@ -125,7 +136,7 @@ export function generateChartShareImage(chart) {
         </text>
         <text x="550" y="135" font-family="Arial, sans-serif" font-size="32" font-weight="bold" 
               fill="#ffffff" text-anchor="end">
-          ${profile}
+          ${escapeXml(profile)}
         </text>
         
         <!-- Authority -->
@@ -135,7 +146,7 @@ export function generateChartShareImage(chart) {
         </text>
         <text x="550" y="225" font-family="Arial, sans-serif" font-size="32" font-weight="bold" 
               fill="#ffffff" text-anchor="end">
-          ${authority}
+          ${escapeXml(authority)}
         </text>
       </g>
       
@@ -193,7 +204,7 @@ export function generateReferralInviteImage(referrer, referralCode) {
       <!-- Referral code -->
       <text x="600" y="520" font-family="Arial, sans-serif" font-size="28" 
             fill="#e0e7ff" text-anchor="middle">
-        Use code: ${referralCode}
+        Use code: ${escapeXml(referralCode)}
       </text>
       
       <!-- CTA -->
@@ -256,26 +267,26 @@ export function generateAchievementShareImage(achievement) {
       <!-- Icon (emoji) -->
       <text x="600" y="320" font-family="Arial, sans-serif" font-size="120" 
             text-anchor="middle" filter="url(#shine)">
-        ${icon}
+        ${escapeXml(icon)}
       </text>
       
       <!-- Achievement name -->
       <text x="600" y="420" font-family="Arial, sans-serif" font-size="48" font-weight="bold" 
             fill="${tierColor}" text-anchor="middle">
-        ${name}
+        ${escapeXml(name)}
       </text>
       
       <!-- Points -->
       <text x="600" y="490" font-family="Arial, sans-serif" font-size="32" 
             fill="#ffffff" text-anchor="middle">
-        +${points} points
+        +${escapeXml(points)} points
       </text>
       
       <!-- Tier badge -->
       <rect x="520" y="510" width="160" height="50" fill="rgba(255,255,255,0.2)" rx="25"/>
       <text x="600" y="545" font-family="Arial, sans-serif" font-size="24" font-weight="bold" 
             fill="${tierColor}" text-anchor="middle" text-transform="uppercase">
-        ${tier}
+        ${escapeXml(tier)}
       </text>
       
       <!-- CTA -->

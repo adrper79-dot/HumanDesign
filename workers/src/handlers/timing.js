@@ -149,10 +149,11 @@ export async function handleTiming(request, env) {
   const body = await request.json();
   const { 
     intention = 'launch_project',
-    windowDays = 90,
-    minScore = 60,
     includeWeekends = true
   } = body;
+  // BL-FIX: Clamp windowDays and minScore to prevent DoS via massive iteration
+  const windowDays = Math.min(365, Math.max(1, parseInt(body.windowDays || '90', 10) || 90));
+  const minScore = Math.min(100, Math.max(0, parseInt(body.minScore || '60', 10) || 60));
 
   // Validate intention template
   const template = INTENTION_TEMPLATES[intention];

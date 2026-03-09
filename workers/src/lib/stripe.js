@@ -79,9 +79,6 @@ export function getTierConfig(env) {
   };
 }
 
-// Legacy TIERS export for backward compatibility
-export const TIERS = getTierConfig({});
-
 // ─── Stripe Client ───────────────────────────────────────────
 
 /**

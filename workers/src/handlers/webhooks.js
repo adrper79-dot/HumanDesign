@@ -74,7 +74,8 @@ export async function handleWebhooks(request, env, path) {
  */
 async function registerWebhook(request, env, user) {
   // Enforce Practitioner tier (webhooks are a premium feature)
-  const tierCheck = enforceFeatureAccess(user, 'practitionerTools');
+  // BL-FIX: enforceFeatureAccess expects (request, env, feature) — not (user, feature)
+  const tierCheck = await enforceFeatureAccess(request, env, 'practitionerTools');
   if (tierCheck) return tierCheck;
 
   try {

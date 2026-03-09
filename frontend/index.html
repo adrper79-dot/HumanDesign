@@ -10,6 +10,7 @@
   style-src 'self' 'unsafe-inline';
   connect-src 'self' https://prime-self-api.adrper79.workers.dev https://prime-self-api.primeself.workers.dev https://api.stripe.com https://cloudflareinsights.com;
   img-src 'self' data: blob:;
+  media-src 'self';
   font-src 'self' data:;
   frame-src https://js.stripe.com https://hooks.stripe.com;
   object-src 'none';
@@ -17,13 +18,18 @@
   form-action 'self';
 ">
 <title>Prime Self — Energy Blueprint & Astrology</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'><circle cx='16' cy='16' r='14' stroke='%23d5001c' stroke-width='2'/><circle cx='16' cy='16' r='6' fill='%23d5001c'/><line x1='16' y1='2' x2='16' y2='30' stroke='%23d5001c' stroke-width='1'/><line x1='2' y1='16' x2='30' y2='16' stroke='%23d5001c' stroke-width='1'/></svg>">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<!-- ─── Asset Randomizer (v1/v2 brand variants per session) ─── -->
+<script src="js/asset-randomizer.js"></script>
 <!-- ─── Resource Hints (BL-OPT-001) ─── -->
 <link rel="preconnect" href="https://prime-self-api.primeself.workers.dev" crossorigin>
 <link rel="dns-prefetch" href="https://prime-self-api.primeself.workers.dev">
 <link rel="dns-prefetch" href="https://js.stripe.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <!-- Preload critical CSS -->
+<link rel="preload" href="css/design-tokens.css" as="style">
 <link rel="preload" href="css/design-tokens-premium.css" as="style">
 <link rel="preload" href="css/base.css" as="style">
 <!-- Preload lazy loading utilities (BL-OPT-005) -->
@@ -31,7 +37,13 @@
 <!-- Preload i18n (BL-OPT-006) -->
 <link rel="preload" href="js/i18n.js" as="script">
 <link rel="preload" href="locales/en.json" as="fetch" crossorigin>
+<!-- Explanations data module (must load before renderChart) -->
+<script src="js/explanations.js"></script>
+<script src="js/hd-data.js"></script>
+<script src="js/bodygraph.js"></script>
+<script src="js/share-card.js"></script>
 <!-- Foundation CSS (parallel loading, replaces @import chain in prime-self-premium.css) -->
+<link rel="stylesheet" href="css/design-tokens.css">
 <link rel="stylesheet" href="css/design-tokens-premium.css">
 <link rel="stylesheet" href="css/icons.css">
 <link rel="stylesheet" href="css/artwork.css">
@@ -48,620 +60,8 @@
 <!-- Mobile Optimizations (deferred) -->
 <link rel="preload" href="css/components/mobile.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="css/components/mobile.css"></noscript>
-<style>
-  :root {
-    --bg: #0a0a0f;
-    --bg2: #111118;
-    --bg3: #1a1a24;
-    --border: #32324a;           /* was #2a2a3a — now visible against bg3 */
-    --gold: #c9a84c;
-    --gold-dim: #8a6e38;         /* was #7a6030 — slightly brighter */
-    --text: #eceaf4;             /* was #e8e6f0 — cleaner white */
-    --text-dim: #b0acc8;         /* was #8882a0 — major bump for readability */
-    --text-muted: #7a76a0;       /* NEW: truly muted, used only for metadata */
-    --accent: #7a5fd8;           /* was #6a4fc8 — slightly brighter */
-    --accent2: #4fc8a0;
-    --red: #e05050;
-    --green: #50c878;
-    --radius: 10px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.5);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 16px; }     /* was 15px — improves readability across the board */
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
-
-  /* ── Header ── */
-  header {
-    background: linear-gradient(135deg, #0d0d1a 0%, #1a1230 100%);
-    border-bottom: 1px solid var(--gold-dim);
-    padding: 0 24px;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 60px; position: sticky; top: 0; z-index: 100;
-  }
-  .logo { font-size: 1.3rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
-  .logo span { color: var(--text-dim); font-weight: 300; font-size: 0.85rem; margin-left: 8px; }
-  .auth-bar { display: flex; align-items: center; gap: 12px; }
-  .auth-status { font-size: 0.8rem; color: var(--text-dim); }
-  .auth-status.logged-in { color: var(--accent2); }
-
-  /* ── Buttons ── */
-  button, .btn {
-    cursor: pointer; border: none; border-radius: 6px; padding: 8px 16px;
-    font-size: 0.85rem; font-weight: 600; transition: all 0.15s; display: inline-flex;
-    align-items: center; gap: 6px;
-  }
-  .btn-primary { background: var(--gold); color: #0a0a0f; }
-  .btn-primary:hover { background: #e0be6a; }
-  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--gold-dim); color: var(--gold); }
-  .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
-  .btn-danger:hover { background: var(--red); color: white; }
-  .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* ── Tabs ── */
-  .tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; padding: 0 16px; gap: 2px; overflow-x: auto; position: relative; }
-  .tab-btn {
-    background: none; border: none; color: var(--text-dim);
-    padding: 14px 14px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
-    border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap;
-  }
-  .tab-btn:hover { color: var(--text); border-bottom-color: rgba(201,168,76,0.3); }
-  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
-  .tab-btn.primary-tab { color: var(--text); }     /* primary tabs always brighter */
-  .tab-btn.primary-tab:hover { color: var(--gold); }
-  .tab-divider { width: 1px; background: var(--border); align-self: stretch; margin: 8px 4px; flex-shrink: 0; }
-  /* More dropdown */
-  .more-menu-btn { position: relative; }
-  .more-dropdown {
-    display: none; position: absolute; top: calc(100% + 1px); right: 0; z-index: 200;
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-    padding: 6px; min-width: 180px; box-shadow: var(--shadow);
-  }
-  .more-dropdown.open { display: block; }
-  .more-dropdown .tab-btn { display: flex; width: 100%; text-align: left; border-radius: 6px; padding: 9px 12px; border-bottom: none !important; font-size: 0.83rem; }
-  .more-dropdown .tab-btn:hover { background: rgba(201,168,76,0.08); color: var(--gold); }
-  .more-dropdown .tab-btn.active { background: rgba(201,168,76,0.12); color: var(--gold); border-bottom: none !important; }
-  /* Step indicator banner */
-  .step-guide {
-    background: linear-gradient(135deg, rgba(201,168,76,0.07) 0%, rgba(122,95,216,0.05) 100%);
-    border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px;
-    margin-bottom: 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-  }
-  .step-item {
-    display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px;
-    padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: background 0.15s;
-  }
-  .step-item:hover { background: rgba(201,168,76,0.08); }
-  .step-item.done .step-num { background: var(--green); color: #0a0a0f; }
-  .step-item.active-step .step-num { background: var(--gold); color: #0a0a0f; box-shadow: 0 0 0 3px rgba(201,168,76,0.25); }
-  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--border); color: var(--text-dim); font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .step-label { font-size: 0.82rem; }
-  .step-label strong { display: block; color: var(--text); font-size: 0.88rem; }
-  .step-label span { color: var(--text-dim); font-size: 0.78rem; }
-  .step-arrow { color: var(--border); font-size: 1.1rem; flex-shrink: 0; }
-
-  /* ── Layout ── */
-  .container { max-width: 1000px; margin: 0 auto; padding: 28px 24px; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* ── Cards ── */
-  .card {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow);
-  }
-  .card-title { font-size: 1rem; font-weight: 700; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-
-  /* ── Forms ── */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-  @media(max-width: 600px) { .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; } }
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
-  .form-group.full { grid-column: 1 / -1; }
-  label { font-size: 0.8rem; font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
-  input, select, textarea {
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
-    color: var(--text); padding: 9px 12px; font-size: 0.9rem; transition: border 0.15s;
-    width: 100%;
-  }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
-  select option { background: var(--bg3); }
-
-  /* ── Auth Modal ── */
-  .auth-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px);
-  }
-  .auth-overlay.hidden { display: none; }
-  .auth-box {
-    background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 12px;
-    padding: 32px; width: 360px; max-width: 95vw; box-shadow: 0 8px 40px rgba(0,0,0,0.7);
-  }
-  .auth-box h2 { color: var(--gold); margin-bottom: 6px; font-size: 1.3rem; }
-  .auth-box p { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 24px; }
-  .auth-toggle { text-align: center; margin-top: 16px; font-size: 0.82rem; color: var(--text-dim); }
-  .auth-toggle a { color: var(--gold); cursor: pointer; text-decoration: underline; }
-  .auth-error { color: var(--red); font-size: 0.82rem; margin-top: 8px; min-height: 18px; }
-
-  /* ── Status / Alerts ── */
-  .alert {
-    padding: 12px 16px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 16px;
-    display: flex; align-items: flex-start; gap: 8px;
-  }
-  .alert-info { background: rgba(106,79,200,0.15); border: 1px solid rgba(106,79,200,0.4); color: #b8a8f0; }
-  .alert-success { background: rgba(80,200,120,0.12); border: 1px solid rgba(80,200,120,0.3); color: var(--accent2); }
-  .alert-error { background: rgba(224,80,80,0.12); border: 1px solid rgba(224,80,80,0.3); color: var(--red); }
-  .alert-warn { background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); }
-
-  /* ── Tooltips ── */
-  .help-icon {
-    display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center;
-    background: rgba(106,79,200,0.2); color: var(--accent); border-radius: 50%;
-    font-size: 0.7rem; font-weight: 700; cursor: help; margin-left: 4px;
-    position: relative; user-select: none;
-  }
-  .help-icon:hover { background: rgba(106,79,200,0.4); }
-  .help-icon[title]:hover::after {
-    content: attr(title); position: absolute; left: 50%; bottom: calc(100% + 8px);
-    transform: translateX(-50%); background: var(--bg2); color: var(--text);
-    padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
-    font-size: 0.8rem; font-weight: 400; white-space: normal; width: 260px;
-    box-shadow: var(--shadow); z-index: 10000; pointer-events: none; line-height: 1.4;
-  }
-  .help-icon[title]:hover::before {
-    content: ''; position: absolute; left: 50%; bottom: calc(100% + 2px);
-    transform: translateX(-50%); border: 6px solid transparent;
-    border-top-color: var(--border); z-index: 10001;
-  }
-
-  /* ── Loading spinner ── */
-  .spinner {
-    display: inline-block; width: 16px; height: 16px;
-    border: 2px solid rgba(201,168,76,0.3); border-top-color: var(--gold);
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-card {
-    text-align: center; padding: 40px; color: var(--text-dim);
-    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-  }
-  .loading-card .spinner { width: 32px; height: 32px; border-width: 3px; margin-bottom: 16px; }
-
-  /* ── Result displays ── */
-  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media(max-width:640px) { .chart-grid { grid-template-columns: 1fr; } }
-  .data-block { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-  .data-block h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 10px; }
-  .data-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-  .data-row:last-child { border-bottom: none; }
-  .data-label { font-size: 0.8rem; color: var(--text-dim); }
-  .data-value { font-size: 0.88rem; color: var(--text); font-weight: 500; text-align: right; max-width: 55%; }
-
-  /* ── Forge badge ── */
-  .forge-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(106,79,200,0.15));
-    border: 1px solid var(--gold-dim); border-radius: 100px;
-    padding: 8px 16px; font-size: 0.88rem; font-weight: 700; color: var(--gold);
-    margin-bottom: 12px;
-  }
-  .confidence-pill {
-    font-size: 0.7rem; font-weight: 600; text-transform: uppercase; padding: 2px 8px;
-    border-radius: 100px; background: rgba(80,200,120,0.2); color: var(--accent2);
-  }
-  .confidence-pill.medium { background: rgba(201,168,76,0.2); color: var(--gold); }
-  .confidence-pill.low { background: rgba(224,80,80,0.2); color: var(--red); }
-
-  /* ── Section headers ── */
-  .section-header {
-    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em;
-    color: var(--text-dim); margin: 18px 0 8px; border-left: 2px solid var(--gold-dim);
-    padding-left: 8px;
-  }
-  .profile-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
-  .profile-section h4 { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
-
-  /* ── Tags / Pills ── */
-  .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .pill { background: rgba(106,79,200,0.2); border: 1px solid rgba(106,79,200,0.4); border-radius: 100px; padding: 3px 10px; font-size: 0.78rem; color: #c8b8f8; }
-  .pill.green { background: rgba(80,200,120,0.15); border-color: rgba(80,200,120,0.3); color: var(--accent2); }
-  .pill.gold { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.3); color: var(--gold); }
-
-  /* ── Grounding audit bar ── */
-  .audit-bar-wrap { background: var(--bg); height: 6px; border-radius: 3px; overflow: hidden; margin: 8px 0; }
-  .audit-bar { height: 100%; background: linear-gradient(90deg, var(--red), var(--gold), var(--green)); border-radius: 3px; transition: width 0.6s ease; }
-
-  /* ── Transit row ── */
-  .transit-row {
-    display: grid; grid-template-columns: 130px 1fr auto;
-    align-items: start; gap: 12px; padding: 10px 14px;
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;
-    transition: border-color 0.15s;
-  }
-  .transit-row:hover { border-color: rgba(201,168,76,0.3); }
-  .transit-row-hit { border-color: rgba(201,168,76,0.25) !important; background: rgba(201,168,76,0.04) !important; }
-  .planet-name { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
-  .planet-pos { font-size: 0.8rem; color: var(--text); }
-  .gate-badge {
-    background: rgba(106,79,200,0.25); border: 1px solid rgba(106,79,200,0.5);
-    color: #c8b8f8; border-radius: 5px; padding: 3px 8px; font-size: 0.78rem; font-weight: 700;
-  }
-
-  /* ── Profile history card ── */
-  .history-item {
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-    padding: 16px 18px; margin-bottom: 10px;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    cursor: pointer; transition: border-color 0.15s;
-  }
-  .history-item:hover { border-color: var(--gold-dim); }
-  .history-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
-
-  /* ── Raw JSON toggler ── */
-  .raw-toggle { font-size: 0.75rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
-  .raw-json { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.72rem; overflow-x: auto; margin-top: 8px; white-space: pre-wrap; color: #90c890; max-height: 400px; overflow-y: auto; }
-  .raw-json.open { display: block; }
-
-  /* ── Empty state ── */
-  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
-  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
-  .empty-state p { font-size: 0.88rem; }
-
-  /* ── Indicator list ── */
-  .indicator-list { list-style: none; }
-  .indicator-list li {
-    padding: 7px 10px; border-left: 2px solid var(--accent); background: rgba(106,79,200,0.08);
-    margin-bottom: 5px; border-radius: 0 5px 5px 0; font-size: 0.82rem;
-  }
-  .indicator-list li .sys-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; background: rgba(106,79,200,0.3); border-radius: 3px; padding: 1px 5px; margin-right: 6px; color: #c8b8f8; }
-  .indicator-list li .sys-badge.astro { background: rgba(79,200,160,0.3); color: var(--accent2); }
-
-  /* ── Cluster Cards ── */
-  .cluster-card {
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-    padding: 18px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
-  }
-  .cluster-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
-  .cluster-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
-  .cluster-card-title { font-size: 1rem; font-weight: 700; color: var(--gold); }
-  .cluster-card-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
-  .cluster-card-challenge { font-size: 0.85rem; color: var(--text); margin-top: 8px; font-style: italic; }
-  .cluster-member-count { background: rgba(79,200,160,0.2); color: var(--accent2); padding: 3px 10px; border-radius: 100px; font-size: 0.78rem; font-weight: 600; }
-
-  /* ── Forge Role Badges ── */
-  .forge-role-badge {
-    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
-    border-radius: 100px; font-size: 0.78rem; font-weight: 600;
-    background: rgba(201,168,76,0.15); border: 1px solid var(--gold-dim); color: var(--gold);
-  }
-  .forge-role-badge.power { background: rgba(224,80,80,0.15); border-color: rgba(224,80,80,0.4); color: #f08080; }
-  .forge-role-badge.craft { background: rgba(80,200,120,0.15); border-color: rgba(80,200,120,0.4); color: #80e0a0; }
-  .forge-role-badge.vision { background: rgba(106,79,200,0.15); border-color: rgba(106,79,200,0.4); color: #b8a8f0; }
-  .forge-role-badge.mirrors { background: rgba(79,200,200,0.15); border-color: rgba(79,200,200,0.4); color: #80e0e0; }
-
-  /* ── Composition Bar Chart ── */
-  .composition-bar { background: var(--bg); height: 32px; border-radius: 6px; overflow: hidden; display: flex; margin: 12px 0; }
-  .composition-segment { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: white; transition: all 0.3s; }
-  .composition-segment:hover { filter: brightness(1.2); }
-  .composition-segment.manifestor { background: #e05050; }
-  .composition-segment.generator { background: #50c878; }
-  .composition-segment.mg { background: #60d888; }
-  .composition-segment.projector { background: #6a4fc8; }
-  .composition-segment.reflector { background: #4fc8c8; }
-
-  /* ── Action Grid ── */
-  .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 16px; }
-  .action-grid button { justify-content: center; }
-
-  /* ── Pricing Modal ── */
-  .pricing-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 250;
-    display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(6px);
-  }
-  .pricing-overlay.hidden { display: none; }
-  .pricing-modal {
-    background: var(--bg2); border: 2px solid var(--gold); border-radius: 12px;
-    padding: 40px; width: 920px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 12px 60px rgba(201,168,76,0.3);
-  }
-  .pricing-modal h2 { color: var(--gold); margin-bottom: 8px; font-size: 1.8rem; text-align: center; }
-  .pricing-modal .subtitle { color: var(--text-dim); font-size: 0.95rem; text-align: center; margin-bottom: 32px; }
-  .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  @media(max-width: 850px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media(max-width: 500px) { .pricing-grid { grid-template-columns: 1fr; } }
-  .pricing-card {
-    background: var(--bg3); border: 2px solid var(--border); border-radius: 8px;
-    padding: 24px; display: flex; flex-direction: column; transition: all 0.2s;
-  }
-  .pricing-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
-  .pricing-card.featured { border-color: var(--gold); background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, var(--bg3) 100%); }
-  .pricing-card .tier-name { font-size: 1.2rem; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
-  .pricing-card .tier-price { font-size: 2rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-  .pricing-card .tier-price .currency { font-size: 1.2rem; font-weight: 400; color: var(--text-dim); }
-  .pricing-card .tier-billing { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 16px; }
-  .pricing-card .tier-features { flex: 1; list-style: none; margin-bottom: 20px; }
-  .pricing-card .tier-features li { padding: 6px 0; font-size: 0.85rem; color: var(--text); display: flex; align-items: flex-start; gap: 8px; }
-  .pricing-card .tier-features li::before { content: '✓'; color: var(--accent2); font-weight: 700; flex-shrink: 0; }
-  .pricing-card .tier-features li.disabled { color: var(--text-dim); opacity: 0.5; }
-  .pricing-card .tier-features li.disabled::before { content: '–'; color: var(--text-dim); }
-  .pricing-card .tier-cta { width: 100%; padding: 10px; font-size: 0.9rem; }
-  .pricing-close { text-align: center; margin-top: 16px; }
-  .pricing-close a { font-size: 0.85rem; cursor: pointer; color: var(--text-dim); text-decoration: underline; }
-  .pricing-close a:hover { color: var(--gold); }
-
-  /* ── Tier Badge ── */
-  .tier-badge {
-    display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem;
-    font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-    background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim);
-  }
-  .tier-badge.tier-free { background: rgba(136,130,160,0.15); border-color: rgba(136,130,160,0.3); color: var(--text-dim); }
-  .tier-badge.tier-seeker { background: rgba(79,200,160,0.15); border-color: rgba(79,200,160,0.4); color: var(--accent2); }
-  .tier-badge.tier-guide { background: rgba(106,79,200,0.15); border-color: rgba(106,79,200,0.4); color: var(--accent); }
-  .tier-badge.tier-practitioner { background: rgba(201,168,76,0.2); border-color: rgba(201,168,76,0.5); color: var(--gold); }
-
-  /* ── Daily Check-In Alignment Buttons ── */
-  .alignment-btn {
-    width: 40px; height: 40px; border: 1px solid var(--border); background: var(--bg3);
-    color: var(--text-dim); border-radius: 6px; font-size: 0.9rem; font-weight: 600;
-    cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center;
-    justify-content: center;
-  }
-  .alignment-btn:hover { border-color: var(--gold-dim); color: var(--text); }
-  .alignment-btn.selected {
-    background: var(--gold); border-color: var(--gold); color: #0a0a0f; font-weight: 700;
-  }
-
-  /* ── Check-In Stats Cards ── */
-  .stat-card {
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
-    padding: 12px; text-align: center;
-  }
-  .stat-card .stat-value {
-    font-size: 1.8rem; font-weight: 700; color: var(--gold); display: block;
-    margin-bottom: 4px;
-  }
-  .stat-card .stat-label {
-    font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;
-    letter-spacing: 0.05em; font-weight: 600;
-  }
-  .stat-card.success .stat-value { color: var(--accent2); }
-  .stat-card.info .stat-value { color: var(--accent); }
-
-  /* ── Check-In History Items ── */
-  .checkin-item {
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
-    padding: 12px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start;
-  }
-  .checkin-item .checkin-date {
-    font-size: 0.75rem; font-weight: 700; color: var(--gold); text-transform: uppercase;
-    min-width: 80px;
-  }
-  .checkin-item .checkin-score {
-    font-size: 1.2rem; font-weight: 700; color: var(--accent2); margin-right: 8px;
-  }
-  .checkin-item .checkin-details {
-    flex: 1; font-size: 0.85rem; color: var(--text-dim);
-  }
-  .checkin-item .checkin-mood {
-    margin-top: 4px; font-size: 0.8rem; color: var(--text);
-  }
-
-  /* ── Social Proof Banner ── */
-  .social-proof-banner {
-    background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(106,79,200,0.06) 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 40px;
-    flex-wrap: wrap;
-  }
-  .social-proof-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .social-proof-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--gold);
-    font-variant-numeric: tabular-nums;
-  }
-  .social-proof-label {
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    text-align: center;
-  }
-
-  /* ── Testimonials Carousel ── */
-  .testimonials-section {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 40px 20px;
-    position: relative;
-  }
-  .testimonials-container {
-    max-width: 800px;
-    margin: 0 auto;
-    position: relative;
-    min-height: 200px;
-  }
-  .testimonial {
-    opacity: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    transition: opacity 0.5s ease-in-out;
-    pointer-events: none;
-  }
-  .testimonial.active {
-    opacity: 1;
-    position: relative;
-    pointer-events: auto;
-  }
-  .testimonial-quote {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: var(--text);
-    font-style: italic;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  .testimonial-quote::before {
-    content: '"';
-    font-size: 2rem;
-    color: var(--gold);
-    opacity: 0.5;
-    margin-right: 4px;
-  }
-  .testimonial-quote::after {
-    content: '"';
-    font-size: 2rem;
-    color: var(--gold);
-    opacity: 0.5;
-    margin-left: 4px;
-  }
-  .testimonial-author {
-    text-align: center;
-  }
-  .testimonial-name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--gold);
-    margin-bottom: 4px;
-  }
-  .testimonial-role {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-  .testimonial-stars {
-    font-size: 0.9rem;
-    color: var(--gold);
-  }
-  .testimonial-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    margin-top: 30px;
-  }
-  .testimonial-btn {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .testimonial-btn:hover {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: #0a0a0f;
-  }
-  .testimonial-dots {
-    display: flex;
-    gap: 8px;
-  }
-  .testimonial-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .testimonial-dot.active {
-    background: var(--gold);
-    width: 24px;
-    border-radius: 4px;
-  }
-  .testimonial-dot:hover {
-    background: var(--gold-dim);
-  }
-
-  @media (max-width: 768px) {
-    .social-proof-banner {
-      gap: 20px;
-      padding: 16px 12px;
-    }
-    .social-proof-number {
-      font-size: 1.2rem;
-    }
-    .testimonial-quote {
-      font-size: 1rem;
-    }
-  }
-
-  /* ── Lazy Image Fade-In (BL-OPT-005) ── */
-  img[data-src] {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  img[data-src].loaded, img:not([data-src]) {
-    opacity: 1;
-  }
-
-  /* ── Language Switcher (BL-OPT-006) ── */
-  .lang-switcher {
-    position: relative;
-    display: inline-flex;
-  }
-  .lang-switcher-btn {
-    background: var(--bg3);
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .lang-switcher-btn:hover { color: var(--gold); border-color: var(--gold-dim); }
-  .lang-switcher-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 4px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 4px;
-    min-width: 140px;
-    z-index: 200;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-  .lang-switcher-option {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    padding: 6px 10px;
-    font-size: 0.8rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.12s;
-  }
-  .lang-switcher-option:hover { background: var(--bg3); color: var(--text); }
-  .lang-switcher-option.active { color: var(--gold); font-weight: 600; }
-</style>
+<!-- App-specific styles (extracted from inline block — Phase 4) -->
+<link rel="stylesheet" href="css/app.css">
 
 <!-- PWA Manifest -->
 <link rel="manifest" href="/manifest.json">
@@ -674,7 +74,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Prime Self">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
 
 <!-- Android Meta Tags -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -682,6 +83,17 @@
 <!-- MS Tile for Windows -->
 <meta name="msapplication-TileColor" content="#0a0a0f">
 <meta name="msapplication-TileImage" content="/icons/icon-144.png">
+<link rel="apple-touch-startup-image" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" href="/icons/splash-640x1136.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="/icons/splash-750x1334.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" href="/icons/splash-828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="/icons/splash-1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="/icons/splash-1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="/icons/splash-1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" href="/icons/splash-1242x2208.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" href="/icons/splash-1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="/icons/splash-1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" href="/icons/splash-1536x2048.png">
+<link rel="apple-touch-startup-image" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" href="/icons/splash-2048x2732.png">
 
 <!-- Description for App Stores -->
 <meta name="description" content="Your Energy Blueprint & Complete Astrology System - Human Design, Gene Keys, Natal Chart, and Daily Transit Guidance">
@@ -695,6 +107,7 @@
 <meta property="og:image" content="https://primeself.app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Prime Self — Your Energy Blueprint">
 <meta property="og:site_name" content="Prime Self">
 <meta property="og:locale" content="en_US">
 
@@ -713,13 +126,13 @@
 </head>
 <body class="theme-premium">
 
-<!-- Lava Lamp Background -->
-<div class="lava-lamp-bg">
-  <div class="lava-blob lava-blob-1"></div>
-  <div class="lava-blob lava-blob-2"></div>
-  <div class="lava-blob lava-blob-3"></div>
-  <div class="lava-blob lava-blob-4"></div>
-</div>
+<!-- ─── Fullscreen Background Video (seamless loop) ─── -->
+<video id="bgVideo" class="bg-video" autoplay muted loop playsinline
+       poster="bg-video-poster.jpg"
+       aria-hidden="true">
+  <source src="bg-video.webm" type="video/webm">
+  <source src="bg-video.mp4" type="video/mp4">
+</video>
 
 <!-- Crescent Moon -->
 <div class="crescent-moon">
@@ -734,19 +147,22 @@
 <!-- Stars -->
 <div class="stars" id="starsContainer"></div>
 
-<!-- Floating Orbs -->
-<div class="floating-orbs">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-</div>
-
-<!-- Ambient Particles -->
+<!-- Ambient Particles (reduced from 30 to 10 for performance) -->
 <div class="ambient-particles" id="particlesContainer"></div>
 
 <!-- Auth Overlay -->
 <div class="auth-overlay hidden" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="auth-box">
+    <!-- Logo Animation (randomized v1/v2) -->
+    <div style="text-align:center;margin-bottom:16px">
+      <video data-logo-video autoplay muted playsinline loop
+             poster="logo-poster.jpg"
+             style="max-width:180px;height:auto;border-radius:12px">
+        <source src="logo-animation.webm" type="video/webm">
+        <source src="logo-animation.mp4" type="video/mp4">
+        <img data-logo-poster src="logo-poster.jpg" alt="Prime Self" style="max-width:180px">
+      </video>
+    </div>
     <h2 id="authTitle" data-i18n="auth.signIn">Sign In</h2>
     <p id="authSubtitle" data-i18n="auth.accessProfile">Access your Prime Self profile and saved charts.</p>
     <form onsubmit="submitAuth(); return false;">
@@ -805,7 +221,7 @@
           <li class="disabled">Practitioner tools</li>
           <li class="disabled">API access</li>
         </ul>
-        <button class="btn-primary tier-cta" onclick="startCheckout('seeker')">Upgrade to Seeker</button>
+        <button class="btn-primary tier-cta" onclick="startCheckout('seeker', event)">Upgrade to Seeker</button>
       </div>
       <!-- Guide Tier -->
       <div class="pricing-card featured">
@@ -820,7 +236,7 @@
           <li>1,000 API calls/month</li>
           <li>Priority support</li>
         </ul>
-        <button class="btn-primary tier-cta" onclick="startCheckout('guide')">Upgrade to Guide</button>
+        <button class="btn-primary tier-cta" onclick="startCheckout('guide', event)">Upgrade to Guide</button>
       </div>
       <!-- Practitioner Tier -->
       <div class="pricing-card">
@@ -835,7 +251,7 @@
           <li>Dedicated support</li>
           <li>Revenue sharing eligible</li>
         </ul>
-        <button class="btn-primary tier-cta" onclick="startCheckout('practitioner')">Upgrade to Practitioner</button>
+        <button class="btn-primary tier-cta" onclick="startCheckout('practitioner', event)">Upgrade to Practitioner</button>
       </div>
     </div>
     <div class="pricing-close">
@@ -850,12 +266,8 @@
   <div class="geometric-bg"></div>
   <div class="logo-lockup">
     <div class="logo-lockup-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <circle cx="12" cy="12" r="4" fill="currentColor"/>
-        <line x1="12" y1="2" x2="12" y2="22" stroke-width="1"/>
-        <line x1="2" y1="12" x2="22" y2="12" stroke-width="1"/>
-      </svg>
+      <img data-logo-poster src="/icons/icon-72.png" alt="Prime Self"
+           width="28" height="28" style="border-radius:6px">
     </div>
     <div class="logo-lockup-text">
       <div class="logo-lockup-primary">Prime Self</div>
@@ -873,104 +285,36 @@
   </div>
 </header>
 
-<!-- Social Proof Banner -->
+<!-- Value Proposition Banner (replaces fake social proof + testimonials) -->
 <div class="social-proof-banner" id="socialProofBanner">
   <div class="social-proof-stat">
-    <span class="social-proof-number" id="weeklyUsers">...</span>
-    <span class="social-proof-label" data-i18n="social.chartExplored">people explored their chart this week</span>
+    <span class="social-proof-number">4</span>
+    <span class="social-proof-label">systems combined: Human Design · Gene Keys · Astrology · Numerology</span>
+  </div>
+  <div class="social-proof-stat">
+    <span class="social-proof-number">64</span>
+    <span class="social-proof-label">gates calculated per chart — conscious &amp; unconscious</span>
   </div>
   <div class="social-proof-stat">
     <span class="social-proof-number" id="totalProfiles">...</span>
     <span class="social-proof-label" data-i18n="social.reportsGenerated">AI synthesis reports generated</span>
   </div>
-  <div class="social-proof-stat">
-    <span class="social-proof-number">98%</span>
-    <span class="social-proof-label" data-i18n="social.accuracyRating">accuracy rating from practitioners</span>
-  </div>
-</div>
-
-<!-- Testimonials Carousel -->
-<div class="testimonials-section" id="testimonialsSection">
-  <div class="testimonials-container">
-    <div class="testimonial active" data-index="0">
-      <div class="testimonial-quote">"Prime Self gave me clarity I've been searching for years. The synthesis of Human Design with astrology and numerology is incredibly accurate. My clients are amazed when I show them their charts."</div>
-      <div class="testimonial-author">
-        <div class="testimonial-name">Sarah Mitchell</div>
-        <div class="testimonial-role">HD Practitioner · 450+ Client Readings</div>
-        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      </div>
-    </div>
-    <div class="testimonial" data-index="1">
-      <div class="testimonial-quote">"I've tried every Human Design app out there. None come close to Prime Self's depth. The transit tracking alone is worth the subscription. Finally understanding why certain days feel so challenging."</div>
-      <div class="testimonial-author">
-        <div class="testimonial-name">Marcus Chen</div>
-        <div class="testimonial-role">Projector 5/1 · Seeker Tier</div>
-        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      </div>
-    </div>
-    <div class="testimonial" data-index="2">
-      <div class="testimonial-quote">"The composite charts feature transformed how I work with couples. I can show them exactly where their energies complement and where they need awareness. My relationship coaching practice has grown 3x since using Prime Self."</div>
-      <div class="testimonial-author">
-        <div class="testimonial-name">Dr. Amanda Reyes</div>
-        <div class="testimonial-role">Relationship Coach · Guide Tier</div>
-        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      </div>
-    </div>
-    <div class="testimonial" data-index="3">
-      <div class="testimonial-quote">"As a Generator 3/5, I've struggled with decision-making my whole life. Prime Self's alignment tracker helped me see concrete patterns. When I follow my strategy, my scores are consistently 8-9. When I don't, they drop to 4-5. The data doesn't lie."</div>
-      <div class="testimonial-author">
-        <div class="testimonial-name">Jessica Wang</div>
-        <div class="testimonial-role">Generator 3/5 · 89-day Check-in Streak</div>
-        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      </div>
-    </div>
-    <div class="testimonial" data-index="4">
-      <div class="testimonial-quote">"I was skeptical about Human Design until I used Prime Self. The birth time rectification feature pinpointed my exact time by correlating major life events with gate changes. Everything finally makes sense now."</div>
-      <div class="testimonial-author">
-        <div class="testimonial-name">David Thompson</div>
-        <div class="testimonial-role">Manifestor 1/3 · Free Tier</div>
-        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      </div>
-    </div>
-    <div class="testimonial" data-index="5">
-      <div class="testimonial-quote">"The Notion integration saves me 2 hours per week. All my client charts sync automatically with meeting notes. The API is robust and well-documented. Best investment for my practice."</div>
-      <div class="testimonial-author">
-        <div class="testimonial-name">Rachel Foster</div>
-        <div class="testimonial-role">Professional Reader · Practitioner Tier</div>
-        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Carousel Controls -->
-  <div class="testimonial-controls">
-    <button class="testimonial-btn testimonial-prev" onclick="prevTestimonial()">
-      <span>‹</span>
-    </button>
-    <div class="testimonial-dots" id="testimonialDots"></div>
-    <button class="testimonial-btn testimonial-next" onclick="nextTestimonial()">
-      <span>›</span>
-    </button>
-  </div>
 </div>
 
 <!-- Navigation Tabs -->
 <div class="tabs" role="tablist" aria-label="Main navigation tabs">
-  <!-- PRIMARY: always visible -->
-  <button class="tab-btn primary-tab active" id="btn-chart" role="tab" aria-selected="true" aria-controls="tab-chart" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Chart</button>
-  <button class="tab-btn primary-tab" id="btn-profile" role="tab" aria-selected="false" aria-controls="tab-profile" onclick="switchTab('profile', this)"><span class="icon-profile"></span> Profile</button>
-  <button class="tab-btn primary-tab" id="btn-transits" role="tab" aria-selected="false" aria-controls="tab-transits" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Transits</button>
-  <button class="tab-btn primary-tab" id="btn-checkin" role="tab" aria-selected="false" aria-controls="tab-checkin" onclick="switchTab('checkin', this)"><span class="icon-heart"></span> Check-In</button>
+  <!-- PRIMARY: 4 main groups -->
+  <button class="tab-btn primary-tab active" id="btn-blueprint" role="tab" aria-selected="true" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Blueprint</button>
+  <button class="tab-btn primary-tab" id="btn-today" role="tab" aria-selected="false" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Today</button>
+  <button class="tab-btn primary-tab" id="btn-relationships" role="tab" aria-selected="false" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Relationships</button>
+  <button class="tab-btn primary-tab" id="btn-grow" role="tab" aria-selected="false" onclick="switchTab('enhance', this)"><span class="icon-star"></span> Grow</button>
   <div class="tab-divider" aria-hidden="true"></div>
-  <!-- SECONDARY: inside More dropdown -->
+  <!-- TOOLS: inside More dropdown -->
   <div class="more-menu-btn" style="display:flex;align-items:center">
-    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:4px">More <span id="more-arrow" style="font-size:0.65rem;transition:transform 0.15s">▾</span></button>
+    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:4px">Tools <span id="more-arrow" style="font-size:0.65rem;transition:transform 0.15s">▾</span></button>
     <div class="more-dropdown" id="more-dropdown" role="menu">
-      <button class="tab-btn" id="btn-enhance" role="menuitem" aria-controls="tab-enhance" onclick="switchTab('enhance', this); closeMoreMenu()"><span class="icon-star"></span> Enhance <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— deepen your reading</span></button>
-      <button class="tab-btn" id="btn-diary" role="menuitem" aria-controls="tab-diary" onclick="switchTab('diary', this); closeMoreMenu()"><span class="icon-archive"></span> Diary <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— log life events</span></button>
-      <button class="tab-btn" id="btn-composite" role="menuitem" aria-controls="tab-composite" onclick="switchTab('composite', this); closeMoreMenu()"><span class="icon-partnership"></span> Composite <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— compare two charts</span></button>
-      <button class="tab-btn" id="btn-rectify" role="menuitem" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Rectify <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— refine birth time</span></button>
-      <button class="tab-btn" id="btn-history" role="menuitem" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved <span style="font-size:0.72rem;color:var(--text-muted);margin-left:4px">— your charts</span></button>
+      <button class="tab-btn" id="btn-history" role="menuitem" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved Charts</button>
+      <button class="tab-btn" id="btn-rectify" role="menuitem" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Birth Time Rectify</button>
       <button class="tab-btn" id="btn-onboarding" role="menuitem" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Onboarding</button>
       <button class="tab-btn" id="btn-practitioner" role="menuitem" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this); closeMoreMenu()"><span class="icon-star"></span> Practitioner</button>
       <button class="tab-btn" id="btn-clusters" role="menuitem" aria-controls="tab-clusters" onclick="switchTab('clusters', this); closeMoreMenu()"><span class="icon-cluster"></span> Clusters</button>
@@ -982,8 +326,30 @@
 <!-- Main Content -->
 <div class="container">
 
+  <!-- ═══ OVERVIEW TAB (Phase 7) ═══ -->
+  <div class="tab-content" id="tab-overview" role="tabpanel" aria-labelledby="btn-blueprint">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchTab('overview')">✦ Overview</button>
+      <button class="sub-tab" onclick="switchTab('chart')">⊙ Chart</button>
+      <button class="sub-tab" onclick="switchTab('profile')">⬡ AI Profile</button>
+    </div>
+    <div id="overviewContent">
+      <div class="card" style="text-align:center;padding:30px">
+        <div style="font-size:2rem;margin-bottom:12px">✦</div>
+        <h3 style="color:var(--gold);margin:0 0 8px;font-size:1.1rem">Your Prime Self Overview</h3>
+        <p style="color:var(--text-dim);font-size:0.88rem;max-width:450px;margin:0 auto 20px;line-height:1.6">Generate a chart to see your personalized overview — key insights from your energy blueprint, planetary positions, and active transits in one place.</p>
+        <button class="btn-primary" onclick="switchTab('chart')">Generate Your Chart →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ CHART TAB ═══ -->
-  <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-chart">
+  <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-blueprint">
+    <div class="sub-tabs">
+      <button class="sub-tab" onclick="switchTab('overview')">✦ Overview</button>
+      <button class="sub-tab active" onclick="switchTab('chart')">⊙ Chart</button>
+      <button class="sub-tab" onclick="switchTab('profile')">⬡ AI Profile</button>
+    </div>
 
     <!-- 3-step journey guide — collapses once user has generated a profile -->
     <div class="step-guide" id="step-guide-banner">
@@ -1066,7 +432,12 @@
   </div>
 
   <!-- ═══ PROFILE TAB ═══ -->
-  <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-profile">
+  <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-blueprint">
+    <div class="sub-tabs">
+      <button class="sub-tab" onclick="switchTab('overview')">✦ Overview</button>
+      <button class="sub-tab" onclick="switchTab('chart')">⊙ Chart</button>
+      <button class="sub-tab active" onclick="switchTab('profile')">⬡ AI Profile</button>
+    </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--gold)">
       <strong style="color:var(--gold)" data-i18n="profile.aiSynthesis">AI-Powered Multi-System Synthesis</strong><br>
       This isn't a generic report. We calculate YOUR exact 64 gate activations (both conscious + unconscious), overlay Gene Keys shadows/gifts/siddhis, map astrological aspects with orbs, and integrate numerology — then Claude AI synthesizes convergences across ALL systems. You get specific scenarios ("When X happens, you notice Y because [datapoint]") instead of vague statements. <strong>Takes 15-30 seconds to generate.</strong> Requires sign-in to save your profile.
@@ -1182,7 +553,11 @@
   </div>
 
   <!-- ═══ ENHANCE TAB ═══ -->
-  <div class="tab-content" id="tab-enhance" role="tabpanel" aria-labelledby="btn-enhance">
+  <div class="tab-content" id="tab-enhance" role="tabpanel" aria-labelledby="btn-grow">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchTab('enhance')">★ Enhance</button>
+      <button class="sub-tab" onclick="switchTab('diary')">📖 Diary</button>
+    </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(106,79,200,0.06) 100%);border-left:4px solid var(--gold)">
       <strong style="color:var(--gold)">Dramatically Improve Reading Accuracy</strong><br>
       Complete these quick assessments to validate your chart through behavioral patterns and cross-correlate with established psychology frameworks. Takes 10 minutes total: decision patterns (validates Authority), energy patterns (validates Type), Big Five personality (cross-validates chart), and Character Strengths (maps to Gene Keys). Your next profile synthesis will reference THIS data to prove chart accuracy through lived experience.
@@ -1261,7 +636,11 @@
   </div>
 
   <!-- ═══ DIARY TAB ═══ -->
-  <div class="tab-content" id="tab-diary" role="tabpanel" aria-labelledby="btn-diary">
+  <div class="tab-content" id="tab-diary" role="tabpanel" aria-labelledby="btn-grow">
+    <div class="sub-tabs">
+      <button class="sub-tab" onclick="switchTab('enhance')">★ Enhance</button>
+      <button class="sub-tab active" onclick="switchTab('diary')">📖 Diary</button>
+    </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid #d5001c">
       <strong style="color:#d5001c">Life Events Timeline</strong><br>
       Log major life events with dates to validate your chart retroactively. When you record an event like "Got promoted - June 2019", the system auto-calculates which transits were active and correlates them with YOUR natal gates. This proves chart accuracy through lived experience. Also essential for birth time rectification: if major events consistently correlate with transits at a specific birth time, you've found the right time.
@@ -1326,7 +705,11 @@
   </div>
 
   <!-- ═══ CHECK-IN TAB ═══ -->
-  <div class="tab-content" id="tab-checkin" role="tabpanel" aria-labelledby="btn-checkin">
+  <div class="tab-content" id="tab-checkin" role="tabpanel" aria-labelledby="btn-today">
+    <div class="sub-tabs">
+      <button class="sub-tab" onclick="switchTab('transits')">☽ Transits</button>
+      <button class="sub-tab active" onclick="switchTab('checkin')">♥ Check-In</button>
+    </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
       <strong style="color:var(--gold)" data-i18n="checkin.title">Daily Alignment Tracker</strong><br>
       Check in daily to track how well you're following your strategy and authority. Rate your alignment (1-10), note your mood and energy, and watch patterns emerge over time. Build streaks to maintain consistency. The system correlates your alignment scores with current transits to help you understand which energies support or challenge your design.
@@ -1437,7 +820,11 @@
   </div>
 
   <!-- ═══ TRANSITS TAB ═══ -->
-  <div class="tab-content" id="tab-transits" role="tabpanel" aria-labelledby="btn-transits">
+  <div class="tab-content" id="tab-transits" role="tabpanel" aria-labelledby="btn-today">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchTab('transits')">☽ Transits</button>
+      <button class="sub-tab" onclick="switchTab('checkin')">♥ Check-In</button>
+    </div>
     <div class="card">
       <div class="card-title"><span class="icon-transit"></span> Today's Planetary Energy</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
@@ -1795,6 +1182,16 @@ function logout() {
   token = null; userEmail = null;
   localStorage.removeItem('ps_token');
   localStorage.removeItem('ps_email');
+  localStorage.removeItem('primeSelf_birthData');
+  localStorage.removeItem('chartGenerated');
+  localStorage.removeItem('profileGenerated');
+  localStorage.removeItem('user');
+  // Clear cached API responses from service worker
+  if ('caches' in window) {
+    caches.keys().then(names => names.forEach(name => {
+      if (name.startsWith('prime-self-')) caches.delete(name);
+    }));
+  }
   updateAuthUI();
 }
 
@@ -1812,7 +1209,7 @@ function closePricingModal() {
   document.getElementById('pricingOverlay').classList.add('hidden');
 }
 
-async function startCheckout(tier) {
+async function startCheckout(tier, event) {
   if (!token) {
     closePricingModal();
     openAuthOverlay();
@@ -1820,10 +1217,12 @@ async function startCheckout(tier) {
   }
 
   try {
-    const checkoutBtn = event.target;
-    const originalText = checkoutBtn.innerHTML;
-    checkoutBtn.disabled = true;
-    checkoutBtn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0f"></span> ' + window.t('auth.creatingSession');
+    const checkoutBtn = event ? event.target : null;
+    const originalText = checkoutBtn ? checkoutBtn.innerHTML : '';
+    if (checkoutBtn) {
+      checkoutBtn.disabled = true;
+      checkoutBtn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0f"></span> ' + window.t('auth.creatingSession');
+    }
 
     const result = await apiFetch('/api/billing/checkout', {
       method: 'POST',
@@ -1832,14 +1231,26 @@ async function startCheckout(tier) {
 
     if (result.error) {
       alert('Checkout failed: ' + result.error);
-      checkoutBtn.disabled = false;
-      checkoutBtn.innerHTML = originalText;
+      if (checkoutBtn) {
+        checkoutBtn.disabled = false;
+        checkoutBtn.innerHTML = originalText;
+      }
       return;
     }
 
     if (result.url) {
-      // Redirect to Stripe Checkout
-      window.location.href = result.url;
+      // BL-FIX: Validate redirect URL to prevent open redirect
+      try {
+        const redirectUrl = new URL(result.url);
+        if (redirectUrl.hostname.endsWith('.stripe.com')) {
+          window.location.href = result.url;
+        } else {
+          console.error('Invalid checkout URL:', redirectUrl.hostname);
+          alert('Invalid checkout redirect. Please try again.');
+        }
+      } catch {
+        alert('Invalid checkout URL received.');
+      }
     }
   } catch (e) {
     alert('Failed to start checkout: ' + e.message);
@@ -1918,12 +1329,24 @@ async function apiFetch(path, options = {}) {
 }
 
 // ── Tabs ──────────────────────────────────────────────────────
+// Tab group mapping: which primary button stays active for each sub-tab
+const TAB_GROUPS = {
+  overview: 'btn-blueprint', chart: 'btn-blueprint', profile: 'btn-blueprint',
+  transits: 'btn-today', checkin: 'btn-today',
+  composite: 'btn-relationships',
+  enhance: 'btn-grow', diary: 'btn-grow'
+};
+
 function switchTab(id, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
+  document.querySelectorAll('.tabs .tab-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
   const panel = document.getElementById('tab-' + id);
   if (panel) panel.classList.add('active');
-  if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
+
+  // Activate the correct primary tab button (group-aware)
+  const groupBtn = TAB_GROUPS[id] ? document.getElementById(TAB_GROUPS[id]) : btn;
+  if (groupBtn) { groupBtn.classList.add('active'); groupBtn.setAttribute('aria-selected', 'true'); }
+  else if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
   
   // Update step guide progress
   updateStepGuide(id);
@@ -1935,6 +1358,9 @@ function switchTab(id, btn) {
   if (id === 'clusters' && token && !document.getElementById('clusterListContainer')?.innerHTML) {
     loadClusters();
   }
+
+  // Update mobile nav active state
+  if (typeof updateMobileNavForTab === 'function') updateMobileNavForTab(id);
 }
 
 function toggleMoreMenu(e) {
@@ -2172,7 +1598,7 @@ async function calculateChart() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Calculating chart…</div></div>';
+  resultEl.innerHTML = skeletonChart();
 
   try {
     const payload = {
@@ -2185,12 +1611,88 @@ async function calculateChart() {
 
     const data = await apiFetch('/api/chart/calculate', { method: 'POST', body: JSON.stringify(payload) });
     resultEl.innerHTML = renderChart(data);
+    // Save birth data to localStorage after successful chart calculation
+    saveBirthData();
+    // Update overview tab with fresh data
+    if (typeof updateOverview === 'function') updateOverview(data);
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
   }
+}
+
+// ── Birth Data Persistence (localStorage) ─────────────────────
+const BIRTH_DATA_KEY = 'primeSelf_birthData';
+
+function saveBirthData() {
+  try {
+    const data = {
+      date: document.getElementById('c-date')?.value,
+      time: document.getElementById('c-time')?.value,
+      location: document.getElementById('c-location')?.value,
+      lat: document.getElementById('c-lat')?.value,
+      lng: document.getElementById('c-lng')?.value,
+      tz: document.getElementById('c-tz')?.value,
+      savedAt: Date.now()
+    };
+    if (data.date && data.time) {
+      localStorage.setItem(BIRTH_DATA_KEY, JSON.stringify(data));
+      console.log('[BirthData] Saved to localStorage');
+    }
+  } catch (e) { console.warn('[BirthData] Save failed:', e); }
+}
+
+function restoreBirthData() {
+  try {
+    const raw = localStorage.getItem(BIRTH_DATA_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data.date || !data.time) return false;
+
+    // Restore into ALL forms that share birth fields: chart (c-*), profile (p-*), composite A (comp-*A)
+    const prefixes = ['c', 'p'];
+    prefixes.forEach(prefix => {
+      const dateEl = document.getElementById(`${prefix}-date`);
+      const timeEl = document.getElementById(`${prefix}-time`);
+      const locEl  = document.getElementById(`${prefix}-location`);
+      const latEl  = document.getElementById(`${prefix}-lat`);
+      const lngEl  = document.getElementById(`${prefix}-lng`);
+      const tzEl   = document.getElementById(`${prefix}-tz`);
+
+      if (dateEl) dateEl.value = data.date;
+      if (timeEl) timeEl.value = data.time;
+      if (locEl && data.location) locEl.value = data.location;
+      if (latEl && data.lat) latEl.value = data.lat;
+      if (lngEl && data.lng) lngEl.value = data.lng;
+      if (tzEl && data.tz) tzEl.value = data.tz;
+    });
+
+    // Also fill Composite Person A
+    const compDateA = document.getElementById('comp-dateA');
+    const compTimeA = document.getElementById('comp-timeA');
+    if (compDateA && data.date) compDateA.value = data.date;
+    if (compTimeA && data.time) compTimeA.value = data.time;
+
+    // Show geo status
+    if (data.lat && data.lng && data.location) {
+      ['c', 'p'].forEach(prefix => {
+        const statusEl = document.getElementById(`${prefix}-geo-status`);
+        if (statusEl) statusEl.innerHTML = `<span style="color:var(--accent2)">✓ Restored: ${escapeHtml(data.location)} (${parseFloat(data.lat).toFixed(2)}, ${parseFloat(data.lng).toFixed(2)})</span>`;
+      });
+    }
+
+    console.log('[BirthData] Restored from localStorage');
+    return true;
+  } catch (e) { console.warn('[BirthData] Restore failed:', e); return false; }
+}
+
+// Restore on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', restoreBirthData);
+} else {
+  restoreBirthData();
 }
 
 function renderChart(data) {
@@ -2211,40 +1713,93 @@ function renderChart(data) {
       <div class="data-block">
         <h4>Core Energy</h4>
         ${row('Pattern <span class="icon-info help-icon" title="Your energy type: Builder (consistent energy), Guide (recognition-based), Initiator (spontaneous), Builder-Initiator (hybrid), or Reflector (lunar mirror)"></span>', chart.type)}
+        ${getExplanation(TYPE_EXPLANATIONS, chart.type)}
         ${row('Decision Style <span class="icon-info help-icon" title="How you make aligned decisions: Emotional Wave, Sacral Response, Splenic Instinct, Heart Will, etc."></span>', chart.authority)}
+        ${getExplanation(AUTHORITY_EXPLANATIONS, chart.authority)}
         ${row('Strategy <span class="icon-info help-icon" title="Your interaction approach: To Respond, Wait for Invitation, Inform Before Acting, or Wait a Lunar Cycle"></span>', chart.strategy)}
+        ${getExplanation(STRATEGY_EXPLANATIONS, chart.strategy)}
         ${row('Life Role <span class="icon-info help-icon" title="Your personality archetype (e.g., 1/3 Investigator-Martyr, 6/2 Role Model-Hermit). First number is conscious, second is unconscious"></span>', chart.profile)}
+        ${getExplanation(PROFILE_EXPLANATIONS, chart.profile)}
         ${row('Circuit Type <span class="icon-info help-icon" title="How your energy centers connect: Single, Split, Triple Split, or Quad Split. Affects how you process and share energy"></span>', chart.definition)}
+        ${getExplanation(DEFINITION_EXPLANATIONS, chart.definition)}
         ${row('Not-Self Theme <span class="icon-info help-icon" title="The emotional signal that you are out of alignment with your pattern and strategy"></span>', chart.notSelfTheme)}
+        ${getExplanation(NOT_SELF_EXPLANATIONS, chart.notSelfTheme)}
       </div>
       <div class="data-block">
         <h4>Purpose Vector <span class="icon-info help-icon" title="Your life purpose formed by the 4 main gene key activations: conscious Sun/Earth and unconscious Sun/Earth"></span></h4>
-        ${row('Cross', chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null) || (chart.cross?.gates ? chart.cross.gates.join(', ') : '—'))}
+        ${(() => {
+          const crossName = chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null);
+          const sunGate = chart.cross?.gates?.[0] || chart.personalitySunGate;
+          const sunLine = chart.cross?.line || chart.personalitySunLine;
+          const lookedUp = (!crossName && sunGate && sunLine) ? getCrossName(sunGate, sunLine) : '';
+          return row('Cross', crossName || lookedUp || (chart.cross?.gates ? chart.cross.gates.join(', ') : '—'));
+        })()}
         ${row('Type', chart.cross?.type || chart.crossType || '—')}
         ${row('Quarter', chart.cross?.quarter || '—')}
       </div>
     </div>`;
 
   if (chart.definedCenters?.length) {
+    const allCenters = ['Head','Ajna','Throat','G','Heart','SolarPlexus','Sacral','Spleen','Root'];
+    const openCenters = allCenters.filter(c => !chart.definedCenters.includes(c));
     html += `<div class="section-header">Energy Centers <span class="icon-info help-icon" title="The 9 bio-energy hubs in your chart. Defined (colored) centers are consistent; Open (white) centers amplify and sample others' energy"></span></div>
-    <div class="data-block" style="margin-top:8px">
-      <div style="display:flex;flex-wrap:wrap;gap:16px">
-        <div>
+    <div class="chart-grid" style="gap:16px">
+        <div style="flex:1;min-width:200px">
           <div class="data-label" style="margin-bottom:6px">Defined</div>
-          <div class="pill-list">${chart.definedCenters.map(c => `<span class="pill green">${c}</span>`).join('')}</div>
+          ${chart.definedCenters.map(c => {
+            const ce = window.CENTER_EXPLANATIONS?.[c];
+            const ci = window.getCenterInfo ? getCenterInfo(c) : null;
+            const motorTag = ci?.motor ? ' <span style="font-size:0.65rem;background:rgba(224,80,80,0.15);color:var(--red);padding:1px 5px;border-radius:3px;font-weight:600">MOTOR</span>' : '';
+            const bioTip = ci?.bio ? ` title="${escapeAttr(ci.bio)}"` : '';
+            return `<div style="margin-bottom:8px">
+              <span class="pill green"${bioTip}>${escapeHtml(c)}</span>${motorTag}${ce ? ` <span style="font-size:0.72rem;color:var(--text-muted)">— ${escapeHtml(ce.governs)}</span>` : ''}
+              ${ce ? `<div class="center-explain">${escapeHtml(ce.defined)}</div>` : ''}
+            </div>`;
+          }).join('')}
         </div>
-        <div>
+        <div style="flex:1;min-width:200px">
           <div class="data-label" style="margin-bottom:6px">Open / Undefined</div>
-          <div class="pill-list">${(['Head','Ajna','Throat','G','Heart','SolarPlexus','Sacral','Spleen','Root'].filter(c => !chart.definedCenters.includes(c))).map(c => `<span class="pill">${c}</span>`).join('')}</div>
+          ${openCenters.map(c => {
+            const ce = window.CENTER_EXPLANATIONS?.[c];
+            const ci = window.getCenterInfo ? getCenterInfo(c) : null;
+            const motorTag = ci?.motor ? ' <span style="font-size:0.65rem;background:rgba(224,80,80,0.15);color:var(--red);padding:1px 5px;border-radius:3px;font-weight:600">MOTOR</span>' : '';
+            const bioTip = ci?.bio ? ` title="${escapeAttr(ci.bio)}"` : '';
+            return `<div style="margin-bottom:8px">
+              <span class="pill"${bioTip}>${escapeHtml(c)}</span>${motorTag}${ce ? ` <span style="font-size:0.72rem;color:var(--text-muted)">— ${escapeHtml(ce.governs)}</span>` : ''}
+              ${ce ? `<div class="center-explain">${escapeHtml(ce.open)}</div>` : ''}
+            </div>`;
+          }).join('')}
         </div>
       </div>
     </div>`;
   }
 
+  // Interactive Bodygraph (Phase 7)
+  const _bgId = 'bodygraph-' + Date.now();
+  html += `<div class="section-header">Your Bodygraph <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
+  <div class="card" style="padding:16px;text-align:center">
+    <div id="${_bgId}" style="min-height:200px"></div>
+    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:8px">Tap a center or channel to explore</div>
+  </div>`;
+  // Deferred render after DOM insertion
+  setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_bgId, chart); }, 50);
+
   if (chart.activeChannels?.length) {
-    html += `<div class="section-header">Active Channels <span class="icon-info help-icon" title="Energy pathways connecting two defined centers. These are consistent talents and themes in your life"></span></div>
-    <div class="pill-list" style="margin-top:8px">
-      ${chart.activeChannels.map(ch => `<span class="pill gold">${ch.channel || (ch.gates?.[0] + '-' + ch.gates?.[1])} ${ch.centers ? '('+ch.centers.join('↔')+')' : ''}</span>`).join('')}
+    html += `<div class="section-header">Active Channels <span class="icon-info help-icon" title="Channels link two centers, creating a fixed energy flow. Each channel represents a specific talent or life force"></span></div>
+    <div class="card" style="padding:16px">
+      ${chart.activeChannels.map(ch => {
+        const chKey = ch.channel || (ch.gates?.[0] + '-' + ch.gates?.[1]);
+        const info = getChannelInfo(chKey);
+        const chMeta = window.getChannelMeta ? getChannelMeta(chKey) : null;
+        const centers = ch.centers ? '(' + ch.centers.join('↔') + ')' : (chMeta ? '(' + chMeta.centers.join('↔') + ')' : '');
+        const circuitBadge = chMeta ? ` <span style="font-size:0.68rem;background:rgba(106,79,200,0.15);color:var(--accent);padding:1px 6px;border-radius:3px;font-weight:600">${chMeta.circuit}</span>` : '';
+        const hexLabel = ch.gates?.length === 2 ? ch.gates.map(g => { const h = window.getGateHex ? getGateHex(g) : ''; return h ? `<span class="gate-name-tag">G${g} ${h}</span>` : ''; }).join(' ') : '';
+        return `<div style="margin-bottom:10px">
+          <span class="pill gold">${chKey} ${centers}</span>${circuitBadge}${info ? ` <span class="channel-name">— ${info.name}</span>` : ''}
+          ${hexLabel ? `<div style="margin-top:2px">${hexLabel}</div>` : ''}
+          ${info ? `<div class="channel-detail">${info.desc}</div>` : ''}
+        </div>`;
+      }).join('')}
     </div>`;
   }
 
@@ -2299,6 +1854,42 @@ function renderChart(data) {
     html += renderAstroChart(astro);
   }
 
+  // "What This Means For You" synthesis summary
+  const definedCount = chart.definedCenters?.length || 0;
+  const openCount = 9 - definedCount;
+  const channelCount = chart.activeChannels?.length || 0;
+  const crossDisplay = (() => {
+    const n = chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null);
+    const sg = chart.cross?.gates?.[0] || chart.personalitySunGate;
+    const sl = chart.cross?.line || chart.personalitySunLine;
+    return n || (sg && sl && typeof getCrossName === 'function' ? getCrossName(sg, sl) : '') || '';
+  })();
+  const motorCenters = (chart.definedCenters || []).filter(c => typeof isMotorCenter === 'function' && isMotorCenter(c));
+
+  html += `<div class="card" style="border-left:3px solid var(--gold);margin-top:20px">
+    <div class="card-title"><span class="icon-chart"></span> What This Means For You</div>
+    <div style="font-size:0.88rem;color:var(--text);line-height:1.7">
+      <p style="margin:0 0 10px">You are a <strong>${chart.type || 'unique'}</strong> with <strong>${chart.authority || 'inner'}</strong> authority.
+      Your strategy is to <strong>${(chart.strategy || '').toLowerCase()}</strong>, and your life role is <strong>${chart.profile || '—'}</strong>.</p>
+      <p style="margin:0 0 10px">With <strong>${definedCount} defined</strong> and <strong>${openCount} open</strong> center${openCount !== 1 ? 's' : ''},
+      ${definedCount > openCount
+        ? 'you carry consistent, reliable energy in most of your chart — you know who you are.'
+        : definedCount === openCount
+          ? 'you have a balanced mix of fixed and receptive energy — both grounded and adaptable.'
+          : 'you are highly receptive and sensitive to your environment — a natural empath who samples others\' energy.'}
+      ${motorCenters.length ? ` You have <strong>${motorCenters.length} motor center${motorCenters.length > 1 ? 's' : ''}</strong> defined (${motorCenters.join(', ')}), giving you consistent drive and fuel.` : ''}</p>
+      ${channelCount ? `<p style="margin:0 0 10px"><strong>${channelCount} active channel${channelCount > 1 ? 's' : ''}</strong> create${channelCount === 1 ? 's' : ''} fixed energy flows between your centers — these are your reliable gifts and talents.</p>` : ''}
+      ${crossDisplay ? `<p style="margin:0 0 10px">Your incarnation cross — <strong>${crossDisplay}</strong> — describes your life purpose and the theme you are here to live out.</p>` : ''}
+      <p style="margin:0;font-size:0.82rem;color:var(--text-muted)">When you feel <em>${(chart.notSelfTheme || 'out of alignment').toLowerCase()}</em>, it\'s a signal to return to your strategy. Experiment with your design — don\'t take it on faith.</p>
+    </div>
+    <button class="btn-primary" style="margin-top:14px;font-size:0.85rem;padding:8px 20px" onclick="if(typeof showShareCard==='function') showShareCard(window._lastChart)">
+      📤 Share Your Design
+    </button>
+  </div>`;
+
+  // Store chart data for share card
+  window._lastChart = chart;
+
   // Meta
   if (meta.chartId) {
     html += `<div class="alert alert-success"><span class="icon-check"></span> Chart saved (ID: ${meta.chartId})</div>`;
@@ -2322,11 +1913,7 @@ async function generateProfile() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = `<div class="loading-card">
-    <div class="spinner"></div>
-    <div style="margin-top:8px;font-size:0.95rem">Synthesizing your Prime Self Profile…</div>
-    <div style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)">Claude is analyzing your energy blueprint + astrology data. This takes 15–30 seconds.</div>
-  </div>`;
+  resultEl.innerHTML = skeletonProfile();
 
   // Auto-geocode if location text is present but coordinates not yet resolved
   if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
@@ -2554,11 +2141,11 @@ function renderProfile(data) {
         <div class="chart-grid">
           <div>
             <div class="section-header">Defined Centers</div>
-            <div class="pill-list">${(eb.definedCenters||[]).map(c => `<span class="pill green">${c}</span>`).join('') || '<span style="color:var(--text-dim)">None</span>'}</div>
+            <div class="pill-list">${(eb.definedCenters||[]).map(c => `<span class="pill green">${escapeHtml(c)}</span>`).join('') || '<span style="color:var(--text-dim)">None</span>'}</div>
           </div>
           <div>
             <div class="section-header">Open Centers</div>
-            <div class="pill-list">${(eb.openCenters||[]).map(c => `<span class="pill">${c}</span>`).join('') || '<span style="color:var(--text-dim)">None</span>'}</div>
+            <div class="pill-list">${(eb.openCenters||[]).map(c => `<span class="pill">${escapeHtml(c)}</span>`).join('') || '<span style="color:var(--text-dim)">None</span>'}</div>
           </div>
         </div>
         ${eb.connectionPattern ? `<div class="profile-section"><h4>Connection Pattern</h4><p style="font-size:0.85rem">${escapeHtml(eb.connectionPattern)}</p></div>` : ''}
@@ -2617,7 +2204,7 @@ async function loadTransits() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('transits.fetching') + '</div></div>';
+  resultEl.innerHTML = skeletonTransits();
 
   try {
     const data = await apiFetch('/api/transits/today');
@@ -2680,7 +2267,7 @@ function renderTransits(data) {
       const theme = PLANET_THEME[a.transitPlanet] || '';
       html += `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:8px;padding:14px 16px;margin-bottom:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-          <div style="font-size:0.95rem;font-weight:700;color:var(--gold)">${sym} ${a.transitPlanet} → your Gate ${a.gate}</div>
+          <div style="font-size:0.95rem;font-weight:700;color:var(--gold)">${sym} ${a.transitPlanet} → your Gate ${a.gate}${getGateName(a.gate) ? ` <span class="gate-name-tag">— ${getGateName(a.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(a.gate) ? ` <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;font-style:italic">☰ ${getGateHex(a.gate)}</span>` : ''}</div>
           <div style="display:flex;gap:6px;align-items:center">
             <span style="font-size:0.78rem;color:var(--text-dim)">${pos.sign || ''} ${pos.degrees != null ? (pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees) : ''}°</span>
             <span class="gate-badge">Gate ${pos.gate || a.gate}.${pos.line || '?'}</span>
@@ -2711,11 +2298,39 @@ function renderTransits(data) {
         <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
         <div style="font-size:0.78rem;color:var(--text-dim);margin-top:3px;line-height:1.4">${theme}</div>
       </div>
-      <div class="gate-badge" title="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}">Gate ${pos.gate || '?'}.${pos.line || '?'}</div>
+      <div class="gate-badge" title="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ' ('+getGateHex(pos.gate)+')' : ''}">Gate ${pos.gate || '?'}.${pos.line || '?'}${getGateName(pos.gate) ? ` <span class="gate-name-tag">${getGateName(pos.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ` <span style="font-size:0.7rem;color:var(--text-muted);font-style:italic">☰ ${getGateHex(pos.gate)}</span>` : ''}</div>
     </div>`;
   }
 
-  html += `</div></div>` + rawToggle(data);
+  html += `</div>`;
+
+  // Transit Timeline — visual duration bars
+  const DURATION_DAYS = { Sun:7, Moon:2.5, Mercury:5, Venus:7, Mars:14, Jupiter:30, Saturn:90, Uranus:365, Neptune:730, Pluto:1000, NorthNode:30, TrueNode:30, Chiron:365 };
+  const maxDays = Math.max(...Object.values(DURATION_DAYS));
+  html += `<div style="margin-top:20px">
+    <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:14px">⏱ Transit Duration Timeline</div>
+    <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:10px">Approximate time each planet activates its current gate</div>`;
+  
+  const sortedPlanets = Object.keys(positions).sort((a, b) => (DURATION_DAYS[a] || 7) - (DURATION_DAYS[b] || 7));
+  for (const body of sortedPlanets) {
+    const days = DURATION_DAYS[body] || 7;
+    const pct = Math.max(5, (days / maxDays) * 100);
+    const pos = positions[body] || {};
+    const sym = PLANET_SYMBOLS[body] || '';
+    const isNatalHit = natalGateSet.has(String(pos.gate));
+    const barColor = isNatalHit ? 'var(--gold)' : 'var(--accent, #6a4fc8)';
+    const label = days < 10 ? days + 'd' : days < 60 ? Math.round(days/7) + 'w' : days < 400 ? Math.round(days/30) + 'mo' : Math.round(days/365) + 'yr';
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:80px;font-size:0.78rem;color:var(--text-dim);text-align:right;flex-shrink:0">${sym} ${body}</div>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden;position:relative">
+        <div style="width:${pct}%;height:100%;background:${barColor};border-radius:8px;opacity:0.7;transition:width 0.5s"></div>
+      </div>
+      <div style="width:40px;font-size:0.72rem;color:var(--text-muted);flex-shrink:0">${label}</div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  html += `</div>` + rawToggle(data);
   return html;
 }
 
@@ -3479,6 +3094,39 @@ async function exportPDF(profileId) {
   }
 }
 
+// ── Skeleton Loading Templates ────────────────────────────────
+function skeletonChart() {
+  return `<div class="skeleton-card">
+    <div class="skeleton-line tall w-60"></div>
+    <div class="skeleton-grid">
+      <div><div class="skeleton-line"></div><div class="skeleton-line w-75"></div><div class="skeleton-line w-60"></div><div class="skeleton-line w-50"></div><div class="skeleton-line w-75"></div><div class="skeleton-line w-40"></div></div>
+      <div><div class="skeleton-line"></div><div class="skeleton-line w-60"></div><div class="skeleton-line w-75"></div></div>
+    </div>
+    <div class="skeleton-line tall w-40" style="margin-top:16px"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="skeleton-pill"></span><span class="skeleton-pill" style="width:80px"></span><span class="skeleton-pill" style="width:50px"></span><span class="skeleton-pill" style="width:70px"></span></div>
+    <div class="skeleton-line tall w-40" style="margin-top:16px"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="skeleton-pill" style="width:100px"></span><span class="skeleton-pill" style="width:90px"></span></div>
+  </div>`;
+}
+
+function skeletonProfile() {
+  return `<div class="skeleton-card">
+    <div class="skeleton-line tall w-50"></div>
+    <div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line w-75"></div>
+    <div class="skeleton-line" style="margin-top:16px"></div><div class="skeleton-line"></div><div class="skeleton-line w-60"></div>
+    <div class="skeleton-line" style="margin-top:16px"></div><div class="skeleton-line"></div><div class="skeleton-line w-50"></div>
+  </div>
+  <div style="text-align:center;margin-top:12px;font-size:0.82rem;color:var(--text-muted)">Synthesizing your Prime Self Profile — this takes 15-30 seconds…</div>`;
+}
+
+function skeletonTransits() {
+  return `<div class="skeleton-card">
+    <div class="skeleton-line tall w-50"></div>
+    <div class="skeleton-line w-75"></div>
+    ${[1,2,3,4,5].map(() => `<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px"><div class="skeleton-circle"></div><div style="flex:1"><div class="skeleton-line w-60"></div><div class="skeleton-line w-40"></div></div><span class="skeleton-pill" style="width:70px"></span></div>`).join('')}
+  </div>`;
+}
+
 function row(label, value) {
   if (!value && value !== 0) return '';
   return `<div class="data-row"><span class="data-label">${label}</span><span class="data-value">${escapeHtml(String(value))}</span></div>`;
@@ -3494,6 +3142,100 @@ function rawToggle(data) {
 function toggleRaw(id) {
   const el = document.getElementById(id);
   el.classList.toggle('open');
+}
+
+// ── Overview Synthesis Tab (Phase 7) ──────────────────────────────
+function updateOverview(chartResponse) {
+  const container = document.getElementById('overviewContent');
+  if (!container) return;
+
+  const d = chartResponse.data || chartResponse;
+  const chart = d.chart || d;
+  const astro = d.westernAstrology || d.astrology || {};
+
+  const definedCount = chart.definedCenters?.length || 0;
+  const openCount = 9 - definedCount;
+  const channelCount = chart.activeChannels?.length || 0;
+  const crossName = chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null)
+    || (chart.cross?.gates?.[0] && chart.cross?.line && typeof getCrossName === 'function'
+      ? getCrossName(chart.cross.gates[0], chart.cross.line) : '');
+  const motorCenters = (chart.definedCenters || []).filter(c => typeof isMotorCenter === 'function' && isMotorCenter(c));
+
+  // Build the overview
+  let html = '';
+
+  // Quick Stats Row
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;margin-bottom:18px">
+    <div class="card" style="padding:14px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--gold)">${chart.type || '—'}</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Energy Pattern</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--text)">${chart.profile || '—'}</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Life Role</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--accent)">${definedCount}/${openCount}</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Defined/Open</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--gold)">${channelCount}</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Active Channels</div>
+    </div>
+  </div>`;
+
+  // Strategy + Authority card
+  html += `<div class="card" style="border-left:3px solid var(--gold);margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Your Strategy</div>
+        <div style="font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px">${chart.strategy || '—'}</div>
+        ${typeof getExplanation === 'function' ? getExplanation(STRATEGY_EXPLANATIONS, chart.strategy) : ''}
+      </div>
+      <div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Decision Style</div>
+        <div style="font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px">${chart.authority || '—'}</div>
+        ${typeof getExplanation === 'function' ? getExplanation(AUTHORITY_EXPLANATIONS, chart.authority) : ''}
+      </div>
+    </div>
+  </div>`;
+
+  // Purpose / Cross
+  if (crossName) {
+    html += `<div class="card" style="margin-bottom:16px">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Your Life Purpose</div>
+      <div style="font-size:1.1rem;font-weight:700;color:var(--text)">${crossName}</div>
+      <div style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">Your incarnation cross describes the overarching theme of your life journey.</div>
+    </div>`;
+  }
+
+  // Mini bodygraph
+  const _ovBgId = 'overview-bodygraph-' + Date.now();
+  html += `<div class="card" style="margin-bottom:16px;text-align:center">
+    <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Your Bodygraph</div>
+    <div id="${_ovBgId}"></div>
+    <div style="font-size:0.7rem;color:var(--text-muted);margin-top:6px">Tap centers and channels to explore</div>
+  </div>`;
+
+  // Not-Self alert
+  if (chart.notSelfTheme) {
+    html += `<div class="card" style="border-left:3px solid var(--red);margin-bottom:16px">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">⚠ Watch For</div>
+      <div style="font-size:0.9rem;color:var(--text)">When you feel <em>${chart.notSelfTheme.toLowerCase()}</em>, it's a signal you may be out of alignment with your design.</div>
+    </div>`;
+  }
+
+  // Quick links
+  html += `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px">
+    <button class="btn-primary" style="font-size:0.82rem;padding:8px 18px" onclick="switchTab('chart')">View Full Chart</button>
+    <button class="btn-primary" style="font-size:0.82rem;padding:8px 18px;background:var(--accent)" onclick="switchTab('profile')">Generate AI Profile</button>
+    <button class="btn-primary" style="font-size:0.82rem;padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim)" onclick="switchTab('transits')">Today's Transits</button>
+  </div>`;
+
+  container.innerHTML = html;
+
+  // Deferred bodygraph render
+  setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_ovBgId, chart); }, 50);
 }
 
 // ── Ambient Art Initialization ────────────────────────────────────
@@ -3516,7 +3258,7 @@ function initParticles() {
   const container = document.getElementById('particlesContainer');
   if (!container) return;
   
-  const particleCount = 30;
+  const particleCount = 10;
   for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');
     particle.className = 'particle';
@@ -3901,16 +3643,24 @@ function showEnhanceStatus(elementId, message, type = 'info') {
   setTimeout(() => { el.innerHTML = ''; }, 5000);
 }
 
-// Initialize assessment questions when DOM loads
+// Initialize assessment questions lazily when Enhance tab is first activated
+let _enhanceQuestionsLoaded = false;
+function loadEnhanceQuestions() {
+  if (_enhanceQuestionsLoaded) return;
+  _enhanceQuestionsLoaded = true;
+  renderBigFiveQuestions();
+  renderVIAQuestions();
+}
+
+window.onTabActivated = function(tabId) {
+  if (tabId === 'enhance') loadEnhanceQuestions();
+};
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    renderBigFiveQuestions();
-    renderVIAQuestions();
     updateTierUI();
   });
 } else {
-  renderBigFiveQuestions();
-  renderVIAQuestions();
   updateTierUI();
 }
 
@@ -4007,13 +3757,19 @@ async function shareProfile(title, text, url) {
  * @param {object} user - Current user object
  * @returns {string} - URL with referral parameters
  */
-function buildShareUrl(user) {
+function buildShareUrl() {
   const baseUrl = window.location.origin;
   const params = new URLSearchParams();
   
-  // Add referral code if user is logged in
-  if (user && user.id) {
-    params.set('ref', user.id.toString(36)); // Base36 encoding for shorter URLs
+  // Add referral code if user is logged in — use userEmail since 'user' object is not stored
+  if (userEmail) {
+    // Create a short hash from email for referral tracking
+    let hash = 0;
+    for (let i = 0; i < userEmail.length; i++) {
+      hash = ((hash << 5) - hash) + userEmail.charCodeAt(i);
+      hash |= 0;
+    }
+    params.set('ref', Math.abs(hash).toString(36));
   }
   
   // Add UTM parameters for tracking
@@ -4094,8 +3850,7 @@ function downloadChart() {
  * @param {string} platform - 'facebook', 'twitter', 'linkedin', 'whatsapp'
  */
 function shareToSocial(platform) {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const shareUrl = buildShareUrl(user);
+  const shareUrl = buildShareUrl();
   const shareText = encodeURIComponent('Discover your unique energy blueprint through Human Design, Gene Keys, and astrology on Prime Self!');
   
   const urls = {
@@ -4184,8 +3939,7 @@ function openShareModal() {
     modal.classList.remove('hidden');
     
     // Populate share link
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const shareUrl = buildShareUrl(user);
+    const shareUrl = buildShareUrl();
     const shareLinkInput = document.getElementById('shareLinkInput');
     if (shareLinkInput) {
       shareLinkInput.value = shareUrl;
@@ -4270,27 +4024,23 @@ updateAuthUI();
 
 <!-- Mobile Bottom Navigation -->
 <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Main navigation">
-  <a href="#" class="mobile-nav-item active" data-tab="chart" onclick="switchTab('chart'); updateMobileNav(this); return false;" aria-label="Human Design">
+  <a href="#" class="mobile-nav-item active" data-tab="chart" data-group="blueprint" onclick="switchTab('chart'); return false;" aria-label="Energy Blueprint">
     <span class="mobile-nav-icon">◉</span>
-    <span class="mobile-nav-label" data-i18n="nav.chart">Chart</span>
+    <span class="mobile-nav-label" data-i18n="nav.chart">Blueprint</span>
   </a>
-  <a href="#" class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile'); updateMobileNav(this); return false;" aria-label="Gene Keys">
-    <span class="mobile-nav-icon">⬡</span>
-    <span class="mobile-nav-label" data-i18n="nav.keys">Keys</span>
-  </a>
-  <a href="#" class="mobile-nav-item" data-tab="enhance" onclick="switchTab('enhance'); updateMobileNav(this); return false;" aria-label="Astrology">
-    <span class="mobile-nav-icon">★</span>
-    <span class="mobile-nav-label" data-i18n="nav.astro">Astro</span>
-  </a>
-  <a href="#" class="mobile-nav-item" data-tab="transits" onclick="switchTab('transits'); updateMobileNav(this); return false;" aria-label="Transits">
+  <a href="#" class="mobile-nav-item" data-tab="transits" data-group="today" onclick="switchTab('transits'); return false;" aria-label="Today's Energy">
     <span class="mobile-nav-icon">☽</span>
-    <span class="mobile-nav-label" data-i18n="nav.transits">Transits</span>
+    <span class="mobile-nav-label" data-i18n="nav.transits">Today</span>
   </a>
-  <a href="#" class="mobile-nav-item" data-tab="diary" onclick="switchTab('diary'); updateMobileNav(this); return false;" aria-label="Life Events">
-    <span class="mobile-nav-icon">📖</span>
-    <span class="mobile-nav-label" data-i18n="nav.diary">Diary</span>
+  <a href="#" class="mobile-nav-item" data-tab="composite" data-group="relationships" onclick="switchTab('composite'); return false;" aria-label="Relationships">
+    <span class="mobile-nav-icon">⊕</span>
+    <span class="mobile-nav-label" data-i18n="nav.composite">Relate</span>
   </a>
-  <a href="#" class="mobile-nav-item" id="mobileMoreBtn" onclick="toggleMobileMore(); return false;" aria-label="More tabs" aria-expanded="false">
+  <a href="#" class="mobile-nav-item" data-tab="enhance" data-group="grow" onclick="switchTab('enhance'); return false;" aria-label="Grow & Deepen">
+    <span class="mobile-nav-icon">★</span>
+    <span class="mobile-nav-label" data-i18n="nav.enhance">Grow</span>
+  </a>
+  <a href="#" class="mobile-nav-item" id="mobileMoreBtn" onclick="toggleMobileMore(); return false;" aria-label="More tools" aria-expanded="false">
     <span class="mobile-nav-icon">☰</span>
     <span class="mobile-nav-label">More</span>
   </a>
@@ -4305,14 +4055,14 @@ updateAuthUI();
       <button onclick="toggleMobileMore()" aria-label="Close">&times;</button>
     </div>
     <div class="mobile-more-grid">
-      <a href="#" class="mobile-more-item" data-tab="checkin" onclick="switchTab('checkin'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">♥</span><span data-i18n="nav.checkin">Check-In</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="composite" onclick="switchTab('composite'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">⊕</span><span data-i18n="nav.composite">Composite</span>
+      <a href="#" class="mobile-more-item" data-tab="history" onclick="switchTab('history'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">📂</span><span data-i18n="nav.saved">Saved Charts</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="rectify" onclick="switchTab('rectify'); toggleMobileMore(); return false;">
         <span class="mobile-more-icon">⏱</span><span data-i18n="nav.rectify">Rectify</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="onboarding" onclick="switchTab('onboarding'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">🧭</span><span data-i18n="nav.onboarding">Onboarding</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="practitioner" onclick="switchTab('practitioner'); toggleMobileMore(); return false;">
         <span class="mobile-more-icon">★</span><span data-i18n="nav.practitioner">Practitioner</span>
@@ -4321,13 +4071,7 @@ updateAuthUI();
         <span class="mobile-more-icon">⬢</span><span data-i18n="nav.clusters">Clusters</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="sms" onclick="switchTab('sms'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">✉</span><span data-i18n="nav.sms">SMS</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="onboarding" onclick="switchTab('onboarding'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">🧭</span><span data-i18n="nav.onboarding">Onboarding</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="history" onclick="switchTab('history'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">📂</span><span data-i18n="nav.saved">Saved</span>
+        <span class="mobile-more-icon">✉</span><span data-i18n="nav.sms">SMS Alerts</span>
       </a>
     </div>
   </div>
@@ -4362,22 +4106,31 @@ function updateMobileNav(clickedItem) {
   }
 }
 
-// Update mobile nav when tab changes (for desktop tab clicks)
-function syncMobileNavWithTab(tabName) {
-  const navItem = document.querySelector(`.mobile-nav-item[data-tab="${tabName}"]`);
+// Group-aware mobile nav: highlights the correct parent tab for sub-tabs
+const MOBILE_TAB_GROUPS = {
+  chart: 'blueprint', profile: 'blueprint',
+  transits: 'today', checkin: 'today',
+  composite: 'relationships',
+  enhance: 'grow', diary: 'grow'
+};
+
+function updateMobileNavForTab(tabName) {
+  const group = MOBILE_TAB_GROUPS[tabName];
+  document.querySelectorAll('.mobile-nav-item').forEach(item => {
+    item.classList.remove('active');
+    item.setAttribute('aria-current', 'false');
+  });
+  // Try to find by group first, then by tab
+  let navItem = group ? document.querySelector(`.mobile-nav-item[data-group="${group}"]`) : null;
+  if (!navItem) navItem = document.querySelector(`.mobile-nav-item[data-tab="${tabName}"]`);
   if (navItem) {
-    updateMobileNav(navItem);
+    navItem.classList.add('active');
+    navItem.setAttribute('aria-current', 'page');
   }
 }
 
-// Hook into existing switchTab function
-const originalSwitchTab = window.switchTab;
-if (typeof originalSwitchTab === 'function') {
-  window.switchTab = function(tabName) {
-    originalSwitchTab(tabName);
-    syncMobileNavWithTab(tabName);
-  };
-}
+// Sync is now handled by updateMobileNavForTab called from switchTab
+// No need to wrap switchTab from mobile nav script
 
 // Pull-to-refresh functionality for mobile
 let pullStartY = 0;
@@ -4513,7 +4266,7 @@ async function saveCheckIn() {
     if (result.success) {
       statusDiv.innerHTML = `
         <div class="alert alert-success">
-          <strong>${result.message || 'Check-in saved!'}</strong><br>
+          <strong>${escapeHtml(result.message || 'Check-in saved!')}</strong><br>
           ${result.checkIn?.streak > 3 ? 'Keep it going! 🌟' : ''}
         </div>
       `;
@@ -4537,7 +4290,7 @@ async function saveCheckIn() {
     } else {
       statusDiv.innerHTML = `
         <div class="alert alert-error">
-          <strong>Error:</strong> ${result.error || 'Failed to save check-in'}
+          <strong>Error:</strong> ${escapeHtml(result.error || 'Failed to save check-in')}
         </div>
       `;
     }
@@ -4563,19 +4316,19 @@ async function loadCheckInStats() {
       if (summaryEl) {
         summaryEl.innerHTML = `
           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.totalCheckins}</div>
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(String(stats.totalCheckins))}</div>
             <div style="font-size:0.75rem;color:var(--text-dim)">Total Check-Ins</div>
           </div>
           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.avgAlignmentScore ?? '—'}</div>
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(String(stats.avgAlignmentScore ?? '—'))}</div>
             <div style="font-size:0.75rem;color:var(--text-dim)">Avg Alignment</div>
           </div>
           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.strategyAdherenceRate != null ? stats.strategyAdherenceRate + '%' : '—'}</div>
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(stats.strategyAdherenceRate != null ? stats.strategyAdherenceRate + '%' : '—')}</div>
             <div style="font-size:0.75rem;color:var(--text-dim)">Strategy Rate</div>
           </div>
           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${stats.authorityAdherenceRate != null ? stats.authorityAdherenceRate + '%' : '—'}</div>
+            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(stats.authorityAdherenceRate != null ? stats.authorityAdherenceRate + '%' : '—')}</div>
             <div style="font-size:0.75rem;color:var(--text-dim)">Authority Rate</div>
           </div>
         `;
@@ -4610,7 +4363,7 @@ async function loadCheckInStats() {
                 <span title="Alignment">${d.alignmentScore}/10</span>
                 ${d.followedStrategy ? '<span style="color:var(--accent2)" title="Followed strategy">✓S</span>' : '<span style="color:var(--text-dim)" title="Did not follow strategy">✗S</span>'}
                 ${d.followedAuthority ? '<span style="color:var(--accent2)" title="Followed authority">✓A</span>' : '<span style="color:var(--text-dim)" title="Did not follow authority">✗A</span>'}
-                ${d.mood ? '<span title="Mood: ' + d.mood + '">' + ({great:'😊',good:'🙂',neutral:'😐',challenging:'😕',difficult:'😞'}[d.mood] || '') + '</span>' : ''}
+                ${d.mood ? '<span title="Mood: ' + escapeAttr(d.mood) + '">' + ({great:'😊',good:'🙂',neutral:'😐',challenging:'😕',difficult:'😞'}[d.mood] || '') + '</span>' : ''}
               </span>
             </div>
           `).join('');
@@ -4665,96 +4418,31 @@ function renderAlignmentChart(dailyScores) {
   });
 }
 
-// ── Testimonials Carousel Functions ──────────────────────────
-let currentTestimonialIndex = 0;
-let testimonialInterval = null;
-
-function initTestimonials() {
-  const testimonials = document.querySelectorAll('.testimonial');
-  const dotsContainer = document.getElementById('testimonialDots');
-  
-  // Create dots
-  testimonials.forEach((_, index) => {
-    const dot = document.createElement('div');
-    dot.className = 'testimonial-dot';
-    if (index === 0) dot.classList.add('active');
-    dot.onclick = () => goToTestimonial(index);
-    dotsContainer.appendChild(dot);
-  });
-  
-  // Start auto-rotation (every 7 seconds)
-  startTestimonialRotation();
-}
-
-function startTestimonialRotation() {
-  testimonialInterval = setInterval(() => {
-    nextTestimonial();
-  }, 7000);
-}
-
-function stopTestimonialRotation() {
-  if (testimonialInterval) {
-    clearInterval(testimonialInterval);
-    testimonialInterval = null;
-  }
-}
-
-function goToTestimonial(index) {
-  const testimonials = document.querySelectorAll('.testimonial');
-  const dots = document.querySelectorAll('.testimonial-dot');
-  
-  // Remove active class from current
-  testimonials[currentTestimonialIndex].classList.remove('active');
-  dots[currentTestimonialIndex].classList.remove('active');
-  
-  // Set new index
-  currentTestimonialIndex = index;
-  
-  // Add active class to new
-  testimonials[currentTestimonialIndex].classList.add('active');
-  dots[currentTestimonialIndex].classList.add('active');
-  
-  // Reset rotation timer
-  stopTestimonialRotation();
-  startTestimonialRotation();
-}
-
-function nextTestimonial() {
-  const testimonials = document.querySelectorAll('.testimonial');
-  const nextIndex = (currentTestimonialIndex + 1) % testimonials.length;
-  goToTestimonial(nextIndex);
-}
-
-function prevTestimonial() {
-  const testimonials = document.querySelectorAll('.testimonial');
-  const prevIndex = (currentTestimonialIndex - 1 + testimonials.length) % testimonials.length;
-  goToTestimonial(prevIndex);
-}
-
-// ── Social Proof Stats ────────────────────────────────────────
+// ── Social Proof Stats (real data only — no fake fallbacks) ──
 async function loadSocialProofStats() {
   try {
     const response = await fetch(API + '/api/stats/activity');
     const data = await response.json();
-    
-    if (data.success) {
-      // Animate numbers counting up
-      animateNumber('weeklyUsers', 0, data.stats.weeklyUsers, 1500);
-      animateNumber('totalProfiles', 0, data.stats.totalProfiles, 1500);
+    if (data.success && data.stats) {
+      const el = document.getElementById('totalProfiles');
+      if (el && data.stats.totalProfiles) {
+        animateNumber('totalProfiles', 0, data.stats.totalProfiles, 1500);
+      }
     } else {
-      // Fallback to placeholder numbers
-      document.getElementById('weeklyUsers').textContent = '2,847';
-      document.getElementById('totalProfiles').textContent = '18,392';
+      // No fake fallback — hide the stat if no real data
+      const el = document.getElementById('totalProfiles');
+      if (el) el.closest('.social-proof-stat').style.display = 'none';
     }
   } catch (error) {
-    // Fallback to placeholder numbers
-    document.getElementById('weeklyUsers').textContent = '2,847';
-    document.getElementById('totalProfiles').textContent = '18,392';
+    // No fake fallback — hide the stat if API unreachable
+    const el = document.getElementById('totalProfiles');
+    if (el) el.closest('.social-proof-stat').style.display = 'none';
   }
 }
 
 function animateNumber(elementId, start, end, duration) {
   const element = document.getElementById(elementId);
+  if (!element) return;
   const range = end - start;
   const increment = range / (duration / 16); // 60fps
   let current = start;
@@ -4775,7 +4463,6 @@ function formatNumber(num) {
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
-  initTestimonials();
   loadSocialProofStats();
 });
 </script>
@@ -4878,6 +4565,40 @@ document.head.appendChild(style);
 
 <!-- Lazy Loading & Performance Utilities (BL-OPT-005) -->
 <script src="js/lazy.js" defer></script>
+
+<!-- Background Video Loader (seamless fade-in once playing) -->
+<script>
+(function() {
+  const vid = document.getElementById('bgVideo');
+  if (!vid) return;
+  
+  // Mark loaded when video can play — triggers CSS opacity transition
+  function onReady() {
+    vid.setAttribute('data-loaded', '');
+  }
+  
+  // If video is already ready
+  if (vid.readyState >= 3) {
+    onReady();
+  } else {
+    vid.addEventListener('canplay', onReady, { once: true });
+  }
+  
+  // Fallback: if video fails to load, keep it hidden (CSS particles still show)
+  vid.addEventListener('error', function() {
+    vid.style.display = 'none';
+  }, { once: true });
+  
+  // Pause video when page is not visible (save battery)
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      vid.pause();
+    } else {
+      vid.play().catch(function() {});
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

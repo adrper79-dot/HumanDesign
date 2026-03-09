@@ -62,8 +62,9 @@ export async function runDailyTransitCron(env) {
     console.log(`[CRON] Transit snapshot saved for ${snapshotDate}`);
 
     // ─── Step 3: Send digests to opted-in users ─────────
+    // BL-FIX: Use named query instead of SELECT * to avoid exposing password_hash in memory
     const usersResult = await query(
-      `SELECT * FROM users WHERE sms_opted_in = true AND phone IS NOT NULL AND birth_date IS NOT NULL`
+      QUERIES.getSmsSubscribedUsers + ` AND birth_date IS NOT NULL`
     );
 
     const users = usersResult.rows || [];
