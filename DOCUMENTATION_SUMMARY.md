@@ -434,7 +434,7 @@ Migrations 003–018 define: `subscriptions`, `payment_events`, `usage_records`,
 3. **Two API spec documents** with different field names and response shapes
 4. **Three competing CSS color systems** — design-tokens.css, design-tokens-premium.css, inline styles define the same custom properties with different values
 5. **Duplicate Stripe webhook handlers** — both `webhook.js` and `billing.js` process Stripe events (webhook.js is preferred: uses transactions)
-6. **Table count disagreement**: Root ARCHITECTURE.md says 48; docs/ARCHITECTURE.md says 49; live DB has ~15-18; Sprint 17 audit found 48 with `usage_tracking` never created
+6. **Table count disagreement**: Root ARCHITECTURE.md says 48; live DB has ~15-18; Sprint 17 audit found 48 with `usage_tracking` never created
 
 ### Critical Gaps
 1. **No production deployment of current code** — all audits confirm stale code is running
@@ -459,9 +459,8 @@ Migrations 003–018 define: `subscriptions`, `payment_events`, `usage_records`,
 
 ## 9. DOCUMENT INVENTORY BY TOPIC
 
-### Architecture (6 docs)
-- `ARCHITECTURE.md` (root) — Master architecture reference
-- `docs/ARCHITECTURE.md` — Condensed version
+### Architecture (5 docs)
+- `ARCHITECTURE.md` — Master architecture reference (comprehensive canonical authority)
 - `BUILD_BIBLE.md` — Layer-by-layer implementation reference
 - `BUILD_LOG.md` — Complete implementation history (7,424 lines)
 - `docs/LESSONS_LEARNED.md` — Debugging patterns, verification methodology, common gotchas

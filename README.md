@@ -293,7 +293,7 @@ All chart calculations verified against two reference charts:
 
 ## Documentation
 
-- [Architecture overview](docs/ARCHITECTURE.md) — system design and data flow
+- [Architecture overview](ARCHITECTURE.md) — system design and data flow
 - [API reference](docs/API_SPEC.md) — endpoint documentation (see spec accuracy notice at top)
 - [Operations runbook](docs/OPERATION.md) — deployment, secrets, monitoring, rollback
 - [Lessons learned](docs/LESSONS_LEARNED.md) — debugging cases, audit findings, preventive measures

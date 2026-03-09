@@ -452,7 +452,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 ### BL-L12 | Trademarked/IP terminology exposure risk
 - [x] **Status:** Done (2026-03-04)
 - **Severity:** Critical (Legal)
-- **Files:** `README.md`, `frontend/index.html`, `ARCHITECTURE.md`, `docs/ARCHITECTURE.md`
+- **Files:** `README.md`, `frontend/index.html`, `ARCHITECTURE.md`
 - **Problem:** Direct use of potentially trademarked terms throughout codebase without IP-safe alternatives consistently applied.
 - **Impact:** Legal exposure, potential cease & desist
 - **Fix:** Completed comprehensive audit and replacement of all trademarked terminology in user-facing text. Replaced with IP-safe alternatives: "Energy Blueprint" (instead of trademarked system name), "Pattern/Guide/Builder" (instead of trademarked types), "Decision Style" (instead of Authority), "Purpose Vector" (instead of Incarnation Cross), "Gene Keys" (maintained as Gene Keys project has open attribution model). All user-visible documentation now uses safe terminology.
@@ -1151,7 +1151,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 ### BL-S15-H3 | ARCHITECTURE.md documents only 8 of 48 tables — massive schema drift
 - [x] **Status:** Complete
 - **Severity:** High (Documentation)
-- **Files:** `ARCHITECTURE.md` (Section 5.3), `docs/ARCHITECTURE.md`
+- **Files:** `ARCHITECTURE.md` (Section 5.3)
 - **Problem:** The Neon Database Schema section documents 8 core tables but the actual schema has grown to 48 tables + views. Column types, nullability, and constraints differ between docs and code (e.g., `birth_lat DECIMAL(9,6) NOT NULL` in docs vs `DOUBLE PRECISION` nullable in code). `docs/ARCHITECTURE.md` references a `numerology_json` column in `charts` that doesn't exist.
 - **Fix:** Auto-generate schema documentation from `migrate.sql` + migrations, or update ARCHITECTURE.md to reflect actual schema. At minimum, document all tables used by active API endpoints.
 - **Verify:** Every table referenced in `queries.js` has a corresponding entry in ARCHITECTURE.md.
