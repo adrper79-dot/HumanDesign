@@ -1600,29 +1600,29 @@ export const QUERIES = {
   // ─── Promo Codes ──────────────────────────────────────────
 
   getPromoCode: `
-    SELECT id, code, discount_type, discount_value, max_redemptions, redemption_count,
+    SELECT id, code, discount_type, discount_value, max_redemptions, redemptions,
            valid_until, applicable_tiers, active
     FROM promo_codes
     WHERE code = $1 AND active = TRUE
   `,
 
   validatePromoCode: `
-    SELECT id, code, discount_type, discount_value, max_redemptions, redemption_count,
+    SELECT id, code, discount_type, discount_value, max_redemptions, redemptions,
            valid_until, applicable_tiers
     FROM promo_codes
     WHERE code = $1
       AND active = TRUE
       AND (valid_until IS NULL OR valid_until > NOW())
-      AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+      AND (max_redemptions IS NULL OR redemptions < max_redemptions)
   `,
 
   redeemPromoCode: `
     UPDATE promo_codes
-    SET redemption_count = redemption_count + 1
+    SET redemptions = redemptions + 1
     WHERE code = $1
       AND active = TRUE
       AND (valid_until IS NULL OR valid_until > NOW())
-      AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+      AND (max_redemptions IS NULL OR redemptions < max_redemptions)
     RETURNING id, code, discount_type, discount_value
   `,
 
@@ -1633,7 +1633,7 @@ export const QUERIES = {
   `,
 
   listPromoCodes: `
-    SELECT id, code, discount_type, discount_value, max_redemptions, redemption_count,
+    SELECT id, code, discount_type, discount_value, max_redemptions, redemptions,
            valid_until, applicable_tiers, active, created_at
     FROM promo_codes
     ORDER BY created_at DESC

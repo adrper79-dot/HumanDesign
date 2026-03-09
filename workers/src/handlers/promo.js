@@ -41,14 +41,14 @@ export async function handleValidatePromo(request, env, code) {
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const rows = await query(QUERIES.validatePromoCode, [code.toUpperCase()]);
+  const { rows } = await query(QUERIES.validatePromoCode, [code.toUpperCase()]);
 
   if (!rows || rows.length === 0) {
     return Response.json({ valid: false, error: 'Code not found or expired' }, { status: 200 });
   }
 
   const promo = rows[0];
-  const savings = promo.discount_type === 'percent'
+  const savings = promo.discount_type === 'percentage'
     ? `${promo.discount_value}% off`
     : `$${(promo.discount_value / 100).toFixed(2)} off`;
 
@@ -60,7 +60,7 @@ export async function handleValidatePromo(request, env, code) {
     savings,
     applicable_tiers: promo.applicable_tiers,
     redemptions_remaining: promo.max_redemptions
-      ? promo.max_redemptions - promo.redemption_count
+      ? promo.max_redemptions - promo.redemptions
       : null
   });
 }
@@ -95,7 +95,7 @@ export async function handleApplyPromo(request, env) {
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const rows = await query(QUERIES.redeemPromoCode, [code.toUpperCase()]);
+  const { rows } = await query(QUERIES.redeemPromoCode, [code.toUpperCase()]);
 
   if (!rows || rows.length === 0) {
     return Response.json({ error: 'Code not found or already exhausted' }, { status: 200, ok: false });
@@ -143,8 +143,8 @@ export async function handleCreatePromo(request, env) {
   if (!code || !discount_type || discount_value == null) {
     return Response.json({ error: 'code, discount_type, discount_value are required' }, { status: 400 });
   }
-  if (!['percent', 'fixed'].includes(discount_type)) {
-    return Response.json({ error: 'discount_type must be percent or fixed' }, { status: 400 });
+  if (!['percentage', 'fixed_amount'].includes(discount_type)) {
+    return Response.json({ error: 'discount_type must be percentage or fixed_amount' }, { status: 400 });
   }
   if (typeof discount_value !== 'number' || discount_value <= 0) {
     return Response.json({ error: 'discount_value must be a positive number' }, { status: 400 });
@@ -155,13 +155,13 @@ export async function handleCreatePromo(request, env) {
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   try {
-    const rows = await query(QUERIES.createPromoCode, [
+    const { rows } = await query(QUERIES.createPromoCode, [
       code.toUpperCase(),
       discount_type,
       discount_value,
       max_redemptions || null,
       valid_until || null,
-      applicable_tiers || null
+      applicable_tiers ? JSON.stringify(applicable_tiers) : null
     ]);
     return Response.json({ success: true, promo: rows[0] }, { status: 201 });
   } catch (err) {
@@ -183,6 +183,6 @@ export async function handleListPromos(request, env) {
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const rows = await query(QUERIES.listPromoCodes, []);
+  const { rows } = await query(QUERIES.listPromoCodes, []);
   return Response.json({ promos: rows || [] });
 }
