@@ -133,8 +133,9 @@ function findGateActivations(transitGates, natalChart) {
   const natalChannelGates = new Set();
   if (natalChart && natalChart.activeChannels) {
     for (const ch of natalChart.activeChannels) {
-      natalChannelGates.add(ch.gate1);
-      natalChannelGates.add(ch.gate2);
+      // BL-FIX: Use ch.gates[0]/ch.gates[1] per chart.js structure, not ch.gate1/ch.gate2
+      natalChannelGates.add(ch.gates?.[0]);
+      natalChannelGates.add(ch.gates?.[1]);
     }
   }
 

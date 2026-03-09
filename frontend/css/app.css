@@ -18,12 +18,28 @@ header {
   padding: 0 24px;
   display: flex; align-items: center; justify-content: space-between;
   height: 60px; position: sticky; top: 0; z-index: 100;
+  gap: 12px;
 }
 .logo { font-size: 1.3rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
 .logo span { color: var(--text-dim); font-weight: 300; font-size: 0.85rem; margin-left: 8px; }
-.auth-bar { display: flex; align-items: center; gap: 12px; } /* [DUP] layout.css */
-.auth-status { font-size: 0.8rem; color: var(--text-dim); } /* [DUP] layout.css */
+.auth-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; } /* [DUP] layout.css */
+.auth-status { font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; } /* [DUP] layout.css */
 .auth-status.logged-in { color: var(--accent2); } /* [DUP] layout.css */
+
+/* Header mobile adjustments */
+@media (max-width: 768px) {
+  header {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .logo { font-size: 1.1rem; }
+  .logo span { display: none; }
+  .auth-bar { gap: 6px; }
+  .auth-bar .btn-sm { 
+    padding: 4px 8px; 
+    font-size: 0.72rem; 
+  }
+}
 
 /* ── Buttons [DUP] buttons.css ── */
 button, .btn {
@@ -424,7 +440,7 @@ select option { background: var(--bg3); }
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
   flex-wrap: wrap;
 }
 .social-proof-stat {
@@ -432,26 +448,38 @@ select option { background: var(--bg3); }
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  min-width: 0; /* Allow shrinking */
 }
 .social-proof-number {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--gold);
   font-variant-numeric: tabular-nums;
 }
 .social-proof-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-dim);
   text-align: center;
+  max-width: 200px;
 }
 
 @media (max-width: 768px) {
   .social-proof-banner {
-    gap: 20px;
-    padding: 16px 12px;
+    gap: 16px;
+    padding: 12px 10px;
+    justify-content: space-around;
+  }
+  .social-proof-stat {
+    flex: 1;
+    min-width: 80px;
+    max-width: 120px;
   }
   .social-proof-number {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+  }
+  .social-proof-label {
+    font-size: 0.65rem;
+    max-width: none;
   }
 }
 
