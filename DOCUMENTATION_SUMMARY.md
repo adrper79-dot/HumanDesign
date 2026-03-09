@@ -1,7 +1,9 @@
 # Prime Self — Comprehensive Documentation Summary
 
-**Generated**: Based on full reading of all 41 design/architecture/standards documents  
-**Scope**: Architecture, API Design, Database, Frontend, Security, Deployment, UX/Design System
+**Generated**: Based on full reading of all 42 design/architecture/standards documents  
+**Last Updated**: March 9, 2026  
+**Scope**: Architecture, API Design, Database, Frontend, Security, Deployment, UX/Design System, Social Media Integration  
+**Sprint Status**: Sprint 18 — UX Overhaul & Social Media (40 items in progress)
 
 ---
 
@@ -98,6 +100,137 @@ Migrations 003–018 define: `subscriptions`, `payment_events`, `usage_records`,
 
 ### Critical Schema Issues
 - **32 phantom tables** — code references tables from migrations that were never applied to production
+
+---
+
+## 4. UX & DESIGN SYSTEM (Sprint 18)
+
+### Critical UX Issues Identified (March 9, 2026)
+**Source**: [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) — Comprehensive audit with Reddit sentiment analysis and competitive research
+
+#### Color System Conflicts (BL-UX-C1)
+- **Problem**: Three competing color systems override each other unpredictably
+  - `design-tokens.css` defines `--bg-primary: #0a0a0f`, `--text-primary: #e8e6f0`
+  - `design-tokens-premium.css` overrides with `--text-primary: #ffffff`, `--interactive-primary: #d5001c` (Porsche Red)
+  - `index.html` inline styles define THIRD system: `--bg: #0a0a0f`, `--text: #eceaf4`, `--gold: #c9a84c`
+- **Impact**: Buttons show gold but design system defines red as primary. Impossible to maintain.
+- **Fix**: Consolidate to single token system, remove all inline :root variables
+
+#### WCAG Accessibility Failures (BL-UX-C2)
+- **Contrast failures**: `--text-dim: #b0acc8` on `--bg2: #1a1a24` = 4.2:1 (fails AA 4.5:1 minimum)
+- **Affects**: Data labels, section headers, meta text, history items, planet explanations
+- **Fix**: Bump `--color-neutral-400` to `#c4c0d8` (5.5:1), `--text-muted` to `#918db0` (4.5:1)
+
+#### Missing "Why It Matters" Explanations (BL-UX-C3)
+- **Problem**: Chart shows "Generator 3/5" with ZERO explanation of what this means for user's life
+- **Reddit #1 complaint**: "App told me I'm a Generator but didn't explain what that means"
+- **Fix**: Add 1-2 sentence plain-English explanations for every HD term
+  - Generator: "Consistent renewable energy. Designed to find work you love and master it."
+  - Emotional Authority: "Never decide in the moment. Ride your emotional wave first."
+  - To Respond: "Don't initiate from your mind. Wait for life to present options."
+
+#### Tab Overload (BL-UX-C6)
+- **Problem**: 13 total tabs (Chart, Profile, Transits, Check-In, More▾ + 8 hidden tabs)
+- **Steve Jobs principle**: "People can't prioritize 13 things"
+- **Fix**: Restructure to 4 primary tabs:
+  - My Blueprint (merge Chart + Profile)
+  - Today's Energy (merge Transits + Check-In)
+  - Relationships (Composite)
+  - Deepen (Enhance)
+  - More▾ (Diary, Rectify, Saved, Practitioner, Clusters, SMS, Onboarding)
+
+#### Fake Testimonials (BL-UX-C4)
+- **Problem**: 6 fabricated testimonials with fake names ("Sarah Mitchell, HD Practitioner · 450+ Client Readings")
+- **Reddit feedback**: Fake testimonials are the #1 trust killer
+- **Fix**: Remove entirely OR replace with real testimonials + "Early access beta testers" disclaimer
+
+#### Birth Data Duplication (BL-UX-C5)
+- **Problem**: Users enter birth data 3 separate times (Chart tab, Profile tab, Composite tab)
+- **Fix**: Store in localStorage after first entry, auto-populate all forms, show "Using your birth data: [details] [Change]" banner
+
+### Social Media Integration Roadmap
+
+#### High Priority (BL-SOCIAL-H1, H2, H3)
+1. **Twitter/X Sharing** — Pre-filled tweets with chart insights and referral link
+   - Template: "Just discovered I'm a {Type} {Profile} ✨ My decision style: {Authority}. Check out your energy blueprint at {link}"
+2. **Instagram Image Export** — 1080x1080 PNG with bodygraph + user info + Prime Self branding
+   - Format: Bodygraph visual, "Type: Generator 3/5", "Authority: Emotional", watermark
+3. **Facebook Sharing** — Open Graph meta tags + share dialog with rich preview
+   - Uses og-image-1200x630.png, pre-filled share text
+
+#### Medium Priority (BL-SOCIAL-M1, M2, M3, M4)
+1. **TikTok** — Vertical 9:16 format chart images, caption with hashtags ready to paste
+2. **Threads** — Meta's Twitter alternative, 500-char optimized posts
+3. **Bluesky** — Decentralized network integration, share intent API
+4. **Analytics Dashboard** — Track share counts and conversion rates per platform
+   - Schema: `social_shares (id, user_id, platform, shared_at, referral_code, utm_source, converted)`
+
+### Design System Status
+- **Actual files**: `design-tokens.css`, `design-tokens-premium.css`, `base.css`, `app.css`
+- **Target architecture** (not yet implemented): `css/components/` directory with buttons.css, cards.css, forms.css, tabs.css, modals.css, alerts.css, layout.css
+- **Token canonical source**: `design-tokens.css` defines `--color-gold-500: #c9a84c` as single source of truth
+- **Premium tokens**: Porsche/Apple-inspired overlay, but conflicting gold definitions cause issues
+
+### Competitive Analysis
+
+| Feature | myBodyGraph | Co-Star | Chani | **Prime Self** |
+|---------|------------|---------|-------|----------------|
+| HD Chart | ✅ Deep | ❌ | ❌ | ✅ Deep |
+| Gene Keys | ❌ | ❌ | ❌ | ✅ **Unique** |
+| Western Astrology | ❌ | ✅ | ✅ | ✅ |
+| Numerology | ❌ | ❌ | ❌ | ✅ **Unique** |
+| Multi-system synthesis | ❌ | ❌ | ❌ | ✅ **Only one** |
+| Plain language | ❌ | ✅ Good | ✅ Great | ⚠️ **Needs work** |
+| Visual design | ⚠️ Dated | ✅ Excellent | ✅ Beautiful | ⚠️ Good bones |
+| Mobile UX | ❌ Poor | ✅ Native app | ✅ Native app | ⚠️ PWA, needs polish |
+| Price | Free-$50 | Free-$3 | Free-$12 | Free-$500 |
+
+**Prime Self's moat**: Multi-system synthesis — only tool combining HD + Gene Keys + Astrology + Numerology  
+**Critical weakness**: Plain language explanations and visual polish — must fix before marketing
+
+### Sprint 18 Implementation Priority
+
+**🔴 This Week (Critical — Must fix before marketing)**:
+1. Color token consolidation — single source of truth
+2. WCAG contrast fixes
+3. Add plain-English explanations for Type, Authority, Strategy, Profile
+4. Center descriptions (defined vs open)
+5. Remove fake testimonials
+6. Consolidate birth data entry (localStorage)
+7. Fix mobile nav label mismatches
+8. Extract inline CSS to design system
+9. Add center pill explanations
+
+**🟡 This Month (Important)**:
+1. Load gate names/descriptions from `src/data/`
+2. Add channel descriptions
+3. Skeleton loading screens
+4. Gene Keys journey explanations
+5. Transit natal hit personalization
+6. Fix spacing/font size inconsistencies
+7. Optimize lava lamp background
+8. Persistent step guide
+9. Card visual hierarchy
+10. Code splitting (extract inline JS)
+11. Keyboard navigation fixes
+12. Screen reader accessibility
+13. Touch target sizing (44px minimum)
+
+**🟢 This Quarter (Differentiators)**:
+1. Interactive bodygraph (click to learn)
+2. Share-ready image generator
+3. Real social proof stats
+4. Simplified pricing tiers
+5. Transit timeline view
+6. Progressive onboarding
+7. Remove "coming soon" features
+8. Beautiful chart wheel
+9. Aspect explanations
+10. Daily forecast
+
+**Social Media** (7 items across High/Medium priority):
+- Twitter, Instagram, Facebook (High)
+- TikTok, Threads, Bluesky, Analytics (Medium)
 - **Missing columns on `users`**: `tier`, `stripe_customer_id`, `email_verified`, `last_login_at`, `referral_code`
 - **Missing columns on `charts`**: `chart_type`, `authority`, `type`
 - **SQLite syntax in early migrations** (003, 004) — rewritten to PostgreSQL in deep-dive audit but must be re-applied

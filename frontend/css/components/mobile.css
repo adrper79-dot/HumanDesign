@@ -185,7 +185,7 @@
     position: sticky;
     top: 0;
     background: var(--bg-secondary, #111118);
-    z-index: 10;
+    z-index: var(--z-sticky);
     border-bottom: 1px solid var(--border-subtle, #2a2a3a);
     padding: 16px;
   }
@@ -439,6 +439,20 @@
   }
 }
 
+/* ── Small Screens: Transit Row Stacking (≤600px) ──────────── */
+@media (max-width: 600px) {
+  .transit-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  
+  .planet-name,
+  .planet-pos,
+  .gate-badge {
+    text-align: left;
+  }
+}
+
 /* ── Extra Small Devices (320px - 480px) ───────────────────── */
 @media (max-width: 480px) {
   html {
@@ -525,7 +539,7 @@
 .mobile-more-drawer {
   position: fixed;
   inset: 0;
-  z-index: 300;
+  z-index: var(--z-tooltip);
 }
 
 .mobile-more-backdrop {

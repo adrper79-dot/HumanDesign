@@ -19,7 +19,8 @@
 > - Gold: `--color-gold-500: #c9a84c` is the single source of truth (design-tokens.css)  
 > - `design-tokens-premium.css` now correctly uses `var(--color-gold-500)` not `#d4af37`  
 > - Focus rings: `--border-focus` inherits from design-tokens.css gold (premium.css override removed)  
-> - Z-index stack correct: dropdown(100) → mobile-nav(150) → backdrop(200) → modal(210) → tooltip(300) → notification(400)
+> - Z-index stack (9 levels): sticky(20) → header(90) → dropdown(100) → mobile-nav(150) → modal-backdrop(200) → modal(210) → tooltip(300) → notification(400) → onboarding(500)
+> - All hardcoded z-index integers replaced with design tokens (2026-03-09 normalization pass)
 
 ## 📋 Table of Contents
 

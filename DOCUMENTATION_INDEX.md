@@ -1,7 +1,8 @@
 # Prime Self — Documentation Index
 
 **Purpose**: Master index of all documentation  
-**Last Updated**: March 8, 2026
+**Last Updated**: March 9, 2026  
+**Sprint Status**: Sprint 18 UX Overhaul & Social Media Integration (40 items)
 
 ---
 
@@ -41,8 +42,7 @@ New to the project? Start with these:
 ### User Experience
 
 | Document | Purpose |
-|----------|---------|
-| [docs/GLOSSARY.md](docs/GLOSSARY.md) | Terminology, concepts explained simply |
+|----------|---------|| [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) | **NEW:** Comprehensive UX audit with Reddit research & competitive analysis || [docs/GLOSSARY.md](docs/GLOSSARY.md) | Terminology, concepts explained simply |
 | [frontend/DESIGN_SYSTEM.md](frontend/DESIGN_SYSTEM.md) | UI patterns, components, design tokens |
 | [frontend/ACCESSIBILITY_AUDIT.md](frontend/ACCESSIBILITY_AUDIT.md) | WCAG compliance issues, remediation plan |
 | [docs/UX_IMPROVEMENTS.md](docs/UX_IMPROVEMENTS.md) | UX enhancement recommendations |
@@ -63,12 +63,14 @@ New to the project? Start with these:
 
 ## 🔍 Current Status Reports
 
-**LATEST**: [docs/AUDIT_2026-03-08.md](docs/AUDIT_2026-03-08.md) — Production deployment audit
+**LATEST**: [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) — Comprehensive UX audit (March 9, 2026)
 
 ### Critical Status Documents
 
 | Document | Date | Status |
 |----------|------|--------|
+| [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) | 2026-03-09 | 🔴 **CRITICAL** — UX overhaul required before marketing |
+| [BACKLOG.md](BACKLOG.md) | 2026-03-09 | Sprint 18: 40 UX items + social media integration |
 | [docs/AUDIT_2026-03-08.md](docs/AUDIT_2026-03-08.md) | 2026-03-08 | 🚨 **CRITICAL** — Production audit |
 | [docs/FRONTEND_AUDIT.md](docs/FRONTEND_AUDIT.md) | 2026-03-04 | Frontend code quality review |
 | [RAW_SQL_AUDIT.md](RAW_SQL_AUDIT.md) | 2026-03-04 | Database query audit (D1 → Neon migration) |
