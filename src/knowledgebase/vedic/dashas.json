@@ -1,0 +1,101 @@
+{
+  "ketu": {
+    "lord": "ketu",
+    "years": 7,
+    "nature": "separative, spiritual, past-karma",
+    "theme": "Liberation through letting go — dissolution of ego constructs, karmic release, spiritual awakening",
+    "shadow": "Confusion, detachment from practical reality, loss without understanding why, isolation. Ketu strips what is inauthentic but offers nothing material in replacement.",
+    "gift": "The profound spiritual clarity that only comes after the material is removed. Ketu periods force the question: what remains when everything else is gone? What survives is genuine.",
+    "lifeAreas": "spirituality, solitude, investigation, past-life patterns emerging, sudden endings that prove to be beginnings",
+    "primeInsight": "A Ketu dasha is not a period of loss — it is a period of precision removal. Everything stripped away was obscuring something that is actually you. The task is to stop resisting the dissolution.",
+    "practicalGuidance": "Release without grasping. Investigate your deepest conditioning. Spiritual practice accelerates enormously. External ambition yields poor returns; inner work yields exceptional ones."
+  },
+  "venus": {
+    "lord": "venus",
+    "years": 20,
+    "nature": "benefic, expansive, relational",
+    "theme": "The full flowering of beauty, love, abundance, and creative expression — often the most materially prosperous period",
+    "shadow": "Indulgence without direction. Relationships that absorb life-force without adding to it. Comfort that prevents necessary growth. Beauty pursued as identity rather than expressed as gift.",
+    "gift": "The deepest and most sustained access to creative power, relational intelligence, and material abundance. Venus dashas often mark the peak productive creative periods of a life.",
+    "lifeAreas": "relationships, marriage, arts, luxury, business especially in beauty-related fields, pleasure, diplomatic skill",
+    "primeInsight": "Venus dashas exist to show you what life can be when the creative and relational forces are aligned. The shadow is treating this abundance as personal right rather than generous overflow.",
+    "practicalGuidance": "Create. Love generously. Invest in beauty as a serious practice. Key relationships begun now carry unusual staying power. Avoid excess — the pleasure available is genuine but finite."
+  },
+  "sun": {
+    "lord": "sun",
+    "years": 6,
+    "nature": "individuating, leadership, visibility",
+    "theme": "Emergence into true individual identity — stepping forward as a distinct self rather than a social role",
+    "shadow": "Government and father-figure conflicts. Ego inflation mistaken for genuine authority. Demanding recognition before earning it. Burns too bright and isolates.",
+    "gift": "The clarity of genuine self-knowledge and the confidence to lead from that knowledge. Sun periods reveal what you actually are versus what you have been performing.",
+    "lifeAreas": "career advancement, government dealings, leadership, authority, health (vitality), father or paternal figures",
+    "primeInsight": "Sun dashas strip away the borrowed identities and demand you lead as yourself. The humbling and the elevation are the same event — you discover that your genuine self is both smaller and more real than the persona.",
+    "practicalGuidance": "Step forward rather than hide. Accept leadership roles if offered. Address any unresolved issues with authority figures. Health practices matter more than usual."
+  },
+  "moon": {
+    "lord": "moon",
+    "years": 10,
+    "nature": "nurturing, emotional, fluctuating",
+    "theme": "Deep immersion in emotional intelligence, the mother and feminine principle, the public and collective feeling-field",
+    "shadow": "Mood instability, emotional overwhelm, codependency, excessive sensitivity that prevents function. Over-attachment to comfort and security.",
+    "gift": "Profound emotional intelligence and the capacity to connect with the feeling-body of the collective. Relationships of genuine depth and nourishment. Access to the unconscious.",
+    "lifeAreas": "motherhood or mother relationships, public life, emotional healing, home and family, fluctuating income, intuitive business",
+    "primeInsight": "Moon dashas are about becoming emotionally honest — with yourself and with others. The wild fluctuations are revealing where your emotional intelligence has gaps. When you surf the waves rather than fight them, this period produces remarkable intuitive depth.",
+    "practicalGuidance": "Care for the body and the home. Allow emotional process its full time. Public visibility may increase — use it wisely. Be patient with the cyclic nature of progress."
+  },
+  "mars": {
+    "lord": "mars",
+    "years": 7,
+    "nature": "action, assertion, conflict and resolution",
+    "theme": "Forceful action in the world — initiating, competing, protecting, cutting through obstacles",
+    "shadow": "Reckless action, aggression, accidents, conflicts that escalate unnecessarily. Mars energy misapplied is pure destruction. Impatience with anything that resists immediate force.",
+    "gift": "The raw power to execute — to start what needs to be started, to end what needs to end, to protect what is genuinely worth protecting. Mars dashas are when ideas become action.",
+    "lifeAreas": "athletic performance, military or competitive contexts, surgery, starting new projects, confronting long-avoided conflicts",
+    "primeInsight": "Mars dashas demand that you act. The question is whether you are acting from genuine purpose or from fear, reactive habit, or unprocessed anger. Conscious Mars energy is clean, direct, and effective.",
+    "practicalGuidance": "Take the initiative you've been postponing. Direct the competitive drive toward constructive targets. Physical training and discipline help channel the energy. Avoid reactive conflicts."
+  },
+  "rahu": {
+    "lord": "rahu",
+    "years": 18,
+    "nature": "expansive, obsessive, karmically intense, North Node",
+    "theme": "The great amplifier — wherever Rahu focuses creates rapid growth, intensity, obsession, and often extraordinary achievement alongside shadow exposure",
+    "shadow": "Obsession, excess, illusion, confusion about what is real versus what is projection. Rahu amplifies the ego's desires and delivers them — along with everything the ego didn't account for.",
+    "gift": "Rahu's superpower is manifestation at scale. When aligned with genuine dharma, Rahu dashas produce extraordinary achievement and expansion. The cosmic appetite becomes creative force.",
+    "lifeAreas": "foreign countries or cultures, technology and innovation, politics, unconventional paths, sudden rises in status, obsessive creative projects",
+    "primeInsight": "Rahu dashas are where karma from past choices is both delivered and created. What you build now will shape the next several chapters. The intensity is not a warning — it is the energy available to you.",
+    "practicalGuidance": "Direct the amplified energy consciously. Ethics matter more than usual — Rahu magnifies both genuine contribution and shortcuts. Cross-cultural experiences are highly productive. Stay grounded."
+  },
+  "jupiter": {
+    "lord": "jupiter",
+    "years": 16,
+    "nature": "benefic, expansive, dharmic, teaching",
+    "theme": "Expansion through wisdom — growth in philosophy, teaching, higher learning, dharmic alignment, and genuine prosperity",
+    "shadow": "Excessive expansion beyond what can be sustained. Over-confidence in one's own philosophy. Laziness disguised as wisdom. The teacher who no longer learns.",
+    "gift": "The great benefic's influence produces genuine prosperity — financial, philosophical, relational, and spiritual. Jupiter dashas favor those living in alignment with their dharma.",
+    "lifeAreas": "higher education, spiritual practice, philosophical development, teaching, children, international expansion, wealth",
+    "primeInsight": "Jupiter rewards wisdom actually lived, not wisdom only understood intellectually. The expansion available in this period is real — but it flows toward authentic dharmic action and creates stagnation when directed toward ego aggrandizement.",
+    "practicalGuidance": "Teach, mentor, study. Expand where you're genuinely qualified. Spiritual practice deepens unusually fast. Financial investments in value-aligned ventures tend to prosper. Be humble."
+  },
+  "saturn": {
+    "lord": "saturn",
+    "years": 19,
+    "nature": "disciplining, karmic, structural, inevitably transformative",
+    "theme": "The great restructuring — reality demands alignment between what you genuinely are and how you are living",
+    "shadow": "Depression, excessive burden, limitation felt as punishment, fear, isolation. When structure is resisted, Saturn becomes suffering without transformation.",
+    "gift": "The most enduringly valuable structures of a lifetime are built in Saturn dashas — precisely because they are built under full karmic accountability. What survives Saturn is genuinely strong.",
+    "lifeAreas": "career restructuring, discipline and health practices, father or authority figures, long-term investments, karmic resolution, anything requiring sustained effort over years",
+    "primeInsight": "Saturn dashas are not cruel — they are honest. Every weight you are carrying that is not genuinely yours becomes more unbearable. Every structure that is genuinely yours becomes more solid. Saturn is pruning for the harvest.",
+    "practicalGuidance": "Do the real work rather than the impressive work. Confront karmic debts rather than delay them. Physical health requires attention. Simplify. The fruits of this period are built slowly and last longest."
+  },
+  "mercury": {
+    "lord": "mercury",
+    "years": 17,
+    "nature": "intellectual, communicative, analytical, commercial",
+    "theme": "The flowering of intellectual and communicative gifts — business intelligence, writing, teaching, technical mastery",
+    "shadow": "Overthinking, anxiety, scattered attention across too many domains. Intellectual processing that never arrives at wisdom. Nervousness and analysis paralysis.",
+    "gift": "Extraordinary intellectual productivity — writing, communication, analysis, trade, and teaching all flourish. Mercury dashas favor those who think for a living.",
+    "lifeAreas": "business and commerce, writing and publishing, education, siblings, short-distance travel, technology, linguistic abilities",
+    "primeInsight": "Mercury is the planet of the market — in the deepest sense, the exchange of ideas, value, and connection. During this dasha, the quality of your mind is your primary asset. Cultivate clarity over cleverness.",
+    "practicalGuidance": "Write. Communicate. Study. Build the skills that will sustain the next phase. Business ventures with a strong mental component perform well. Guard against anxiety by anchoring intellectual energy in the body."
+  }
+}

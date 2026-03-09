@@ -40,6 +40,13 @@ import lifePathsData from '../../src/knowledgebase/numerology/lifePaths.json';
 import personalYearsData from '../../src/knowledgebase/numerology/personalYears.json';
 import tarotCardsData from '../../src/knowledgebase/numerology/tarotCards.json';
 
+// Vedic (Jyotish) knowledgebase
+import nakshatrasData from '../../src/knowledgebase/vedic/nakshatras.json';
+import dashasData from '../../src/knowledgebase/vedic/dashas.json';
+
+// Celtic Ogham knowledgebase
+import oghamTreesData from '../../src/knowledgebase/ogham/trees.json';
+
 // Prime Self knowledgebase
 import forgesData from '../../src/knowledgebase/prime_self/forges.json';
 import knowledgesData from '../../src/knowledgebase/prime_self/knowledges.json';
@@ -71,6 +78,13 @@ globalThis.__PRIME_DATA = {
     'numerology/lifePaths.json': lifePathsData,
     'numerology/personalYears.json': personalYearsData,
     'numerology/tarotCards.json': tarotCardsData,
+    
+    // Vedic (Jyotish)
+    'vedic/nakshatras.json': nakshatrasData,
+    'vedic/dashas.json': dashasData,
+    
+    // Celtic Ogham
+    'ogham/trees.json': oghamTreesData,
     
     // Prime Self
     'prime_self/forges.json': forgesData,

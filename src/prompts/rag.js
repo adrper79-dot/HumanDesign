@@ -516,6 +516,75 @@ export function buildRAGContext(chartData) {
       if (numSections.length) sections.push(`### NUMEROLOGY INSIGHTS\n${numSections.join('\n\n')}`);
     }
 
+    // Vedic Astrology Overlay
+    if (chartData.vedic && !chartData.vedic.error) {
+      const v = chartData.vedic;
+      const nakshatras = loadKB('vedic', 'nakshatras.json');
+      const dashas     = loadKB('vedic', 'dashas.json');
+      const vedSections = [];
+
+      // Moon nakshatra depth
+      if (v.moonNakshatra) {
+        const nak = v.moonNakshatra;
+        // Key in JSON uses name lowercased + spaces → underscores
+        const nakKey = nak.name.toLowerCase().replace(/\s+/g, '_');
+        const nakData = nakshatras[nakKey];
+        if (nakData) {
+          vedSections.push(
+            `**Moon Nakshatra: ${nak.name}** (Pada ${nak.pada}, lord: ${nak.lord})\n` +
+            `  ${nakData.meaning}\n` +
+            `  **Shadow:** ${nakData.shadow}\n` +
+            `  **Gift:** ${nakData.gift}\n` +
+            `  **Prime Insight:** ${nakData.primeInsight}`
+          );
+        } else {
+          vedSections.push(`**Moon Nakshatra: ${nak.name}** (Pada ${nak.pada}, lord: ${nak.lord})`);
+        }
+      }
+
+      // Current Vimshottari Dasha
+      if (v.dasha?.current) {
+        const lord = v.dasha.current.lord;
+        const dashaData = dashas[lord];
+        if (dashaData) {
+          vedSections.push(
+            `**Current Dasha: ${lord.charAt(0).toUpperCase() + lord.slice(1)}** — ${v.dasha.current.yearsRemaining} yrs remaining\n` +
+            `  Theme: ${dashaData.theme}\n` +
+            `  **Shadow:** ${dashaData.shadow}\n` +
+            `  **Gift:** ${dashaData.gift}\n` +
+            `  **Practical Guidance:** ${dashaData.practicalGuidance}`
+          );
+        }
+      }
+
+      // Sidereal Sun sign (if meaningfully different from tropical)
+      if (v.siderealPlacements?.sun) {
+        const sidSun = v.siderealPlacements.sun;
+        vedSections.push(`**Sidereal Sun: ${sidSun.sign}** (${sidSun.degreesInSign}°) — Vedic solar identity layer`);
+      }
+
+      if (vedSections.length) sections.push(`### VEDIC ASTROLOGY (JYOTISH) OVERLAY\n\n${vedSections.join('\n\n')}`);
+    }
+
+    // Celtic Ogham Birth Tree
+    if (chartData.ogham && !chartData.ogham.error) {
+      const og = chartData.ogham;
+      const trees = loadKB('ogham', 'trees.json');
+      if (og.treeKey && trees[og.treeKey]) {
+        const tree = trees[og.treeKey];
+        sections.push(
+          `### CELTIC OGHAM BIRTH TREE: ${tree.name.toUpperCase()}\n\n` +
+          `**${tree.name}** (${tree.letter}) — ${tree.period}\n` +
+          `${tree.meaning}\n\n` +
+          `**Qualities:** ${tree.qualities.join(', ')}\n\n` +
+          `**Shadow:** ${tree.shadow}\n\n` +
+          `**Gift:** ${tree.gift}\n\n` +
+          `**Prime Insight:** ${tree.primeInsight}\n\n` +
+          `**Prime Self Alignment:** ${tree.primeSelfAlignment}`
+        );
+      }
+    }
+
     // Prime Self: Six Knowledges
     const knowledges = loadKB('prime_self', 'knowledges.json');
     if (Object.keys(knowledges).length > 1) {
