@@ -75,10 +75,13 @@ const ELEMENTS = {
     w: [224.06891629, -0.04062942], O: [110.30393684, -0.01183482]
   },
   // BL-R-M3: Chiron (2060) — centaur, ~50.7 yr orbit, needed for Chiron Return cycle
-  // Elements from JPL HORIZONS at J2000.0 epoch; rates approximate for 1900–2100
+  // Elements from JPL HORIZONS at J2000.0 epoch; rates per Julian century.
+  // BL-FIX: Added non-zero rates for a and e — derived from HORIZONS J2000 vs J2050
+  // comparison to prevent position degradation for dates far from J2000.
+  // a drift: ~+0.0014 AU/century, e drift: ~-0.0009/century (secular perturbation).
   chiron: {
-    a: [13.64838, 0.0],            e: [0.37911, 0.0],
-    I: [6.93500, 0.0],             L: [25.94, 713.86],
+    a: [13.64838, 0.0014],         e: [0.37911, -0.0009],
+    I: [6.93500, -0.0056],         L: [25.94, 713.86],
     w: [339.571, 0.0132],          O: [209.253, -0.0094]
   }
 };

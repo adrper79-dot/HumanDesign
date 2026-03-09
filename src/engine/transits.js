@@ -19,6 +19,8 @@ import { getSignFromLongitude } from './astro.js';             // BL-R-M17: impo
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
 
+// TODO: ASPECT_TYPES is duplicated from astro.js (which uses orbLum/orbPlan).
+// Refactor to import from a shared module to keep orb values in sync.
 const ASPECT_TYPES = [
   { name: 'Conjunction',  angle: 0,   orb: 6 },
   { name: 'Opposition',   angle: 180, orb: 6 },
@@ -30,14 +32,14 @@ const ASPECT_TYPES = [
 
 /** Slow-moving planets — these make longer-lasting transits */
 const OUTER_PLANETS = new Set([
-  'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'
+  'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron'
 ]);
 
 /** Transit speed classification (approximate degrees/day) */
 const SPEEDS = {
   sun: 0.9856, moon: 13.176, mercury: 1.38, venus: 1.20,
   mars: 0.524, jupiter: 0.083, saturn: 0.034, uranus: 0.012,
-  neptune: 0.006, pluto: 0.004, northNode: -0.053, southNode: -0.053
+  neptune: 0.006, pluto: 0.004, chiron: 0.02, northNode: -0.053, southNode: -0.053
 };
 
 // ─── HELPERS ────────────────────────────────────────────────────

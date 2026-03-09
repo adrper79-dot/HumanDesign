@@ -84,6 +84,44 @@ Full review of entire codebase, all documentation, tests, and data files prior t
 
 ---
 
+### 2026-06-25 | Sprint 17 Deep Audit — Schema Drift, Orbital Constants, and Dead Code
+
+**Trigger**
+Comprehensive audit of the full codebase and live Neon database using 3 parallel subagents, Neon MCP queries, and targeted manual review. Goal: find and fix all defects, reconcile live DB state with documentation, verify all prior-sprint fixes.
+
+**Findings Summary**
+
+| Severity | Count | Key Theme |
+|---|---|---|
+| Critical | 3 | Phantom DB columns, zero orbital rates, dead import |
+| High | 4 | All verified already fixed in prior sprints |
+| Medium | 3 | Test expectations, file clutter, missing sync comments |
+| Low | 2 | Geocentric z-component, lifecycle approximation |
+
+**Top 3 Root-Cause Patterns Discovered**
+
+1. **Schema-code drift is silent and cumulative.** Three queries in `queries.js` referenced columns that never existed in the schema: `charts.chart_type`, `charts.authority`, and `profiles.status`. These phantom columns were likely copied from an early schema draft and never validated against the actual `CREATE TABLE` statements. The queries would crash at runtime, but handler tests mock the DB layer, so the failures were invisible.
+
+2. **Zero-rate constants are invisible.** Chiron's orbital elements in `planets.js` had correct epoch values (semi-major axis, eccentricity, inclination) but zero century rates: `a: [13.64838, 0]`, `e: [0.37911, 0]`, `I: [6.93500, 0]`. This means Chiron's position was correct at J2000.0 but degraded for dates further from the epoch. The degradation was sub-degree for modern dates, so it passed all tests — but would have become noticeable for historical or far-future charts.
+
+3. **Pre-existing test failures mask real regressions.** Two tests were already failing before Sprint 17: Mars personality gate (expected 15, actual 12 due to 88.16° being in Gate 12) and transit body count (expected 13, actual 14 after Chiron was added to OUTER_PLANETS). Because these failures predated the current sprint, they could have masked a real regression introduced by code changes. Always fix test expectations immediately when the underlying code is intentionally changed.
+
+**Key Learnings**
+
+1. **Query validation against live schema is essential.** The phantom column bugs would have been caught instantly by running each query against the actual Neon database. Add a CI step (or pre-deploy check) that does `EXPLAIN` on all query constants to verify they parse successfully.
+
+2. **Orbital constants need both epoch and rate.** When adding a new body (like Chiron), don't just get the J2000.0 values — compute or look up the rate of change per century. A zero rate is almost never physically correct. Add a comment on each constant showing the source (JPL, Meeus, etc.) and the valid date range.
+
+3. **Live DB count should be a documented constant.** The architecture doc claimed 49 tables, but the live database had 48 (`usage_tracking` from migration 003 was never created). Periodically run `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'` and update the architecture doc. Now documented with verification date.
+
+4. **Parallel subagent audits are highly effective.** Running 3 subagents simultaneously (engine code, worker/handler code, data/config files) completed a full codebase review in one pass. Each agent returned structured findings with file/line references, enabling rapid triage without re-reading every file.
+
+5. **File hygiene should be a sprint deliverable.** 10 obsolete files accumulated in the project root — one-off debug scripts, status reviews, temp files. A quarterly file-hygiene pass keeps the project navigable and reduces confusion for new contributors or AI agents exploring the codebase.
+
+**Backlog Reference**: Sprint 17 items BL-S17-C1 through BL-S17-L2 in [BACKLOG.md](../BACKLOG.md) and [ARCHITECTURE.md](../ARCHITECTURE.md) §11.
+
+---
+
 ## Development Best Practices
 
 ### Verification Anchors

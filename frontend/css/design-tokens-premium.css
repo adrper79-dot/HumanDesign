@@ -57,10 +57,10 @@
   --text-secondary: rgba(255, 255, 255, 0.85);
   --text-tertiary: rgba(255, 255, 255, 0.55);
   
-  /* Interactive */
-  --interactive-primary: var(--color-porsche-red);
-  --interactive-primary-hover: var(--color-porsche-red-light);
-  --interactive-primary-active: var(--color-porsche-red-dark);
+  /* Interactive — Gold primary (consistent with shorthand aliases) */
+  --interactive-primary: var(--color-gold);
+  --interactive-primary-hover: var(--color-gold-light);
+  --interactive-primary-active: var(--color-gold-dark);
   --interactive-secondary: var(--color-gold);
   
   /* Borders */

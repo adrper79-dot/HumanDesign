@@ -8,3 +8,10 @@ dist/
 .vitest/
 *.log
 .vscode/mcp.json
+test-results.txt
+nul
+
+# Large video source files (keep frontend/ assets for PWA)
+videos/
+HD_LOGOVID2.mp4
+HumanDesign_LogoMovie.mp4
