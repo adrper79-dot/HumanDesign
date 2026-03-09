@@ -84,8 +84,9 @@ Rules:
 - Never generic — every statement must reference actual chart positions`;
 
   const events = forecastData.events || [];
-  const ingresses = events.filter(e => e.type === 'gate_ingress');
-  const aspects = events.filter(e => e.type === 'exact_aspect');
+  // BL-FIX: transits.js events have 'gate' (for ingress) and '_aspectKey' (for aspects), not 'type'
+  const ingresses = events.filter(e => e.gate !== undefined && !e._aspectKey);
+  const aspects = events.filter(e => e._aspectKey !== undefined);
 
   const userMessage = `Write this week's transit forecast for:
 
@@ -134,9 +135,10 @@ function extractNotableTransits(transitData, chartData) {
   }
 
   // Gate activations matching natal
+  // BL-FIX: transits.js uses 'transitPlanet' not 'planet' or 'body'
   if (transitData?.gateActivations?.length) {
     for (const match of transitData.gateActivations.slice(0, 3)) {
-      notes.push(`Transit ${match.planet || match.body} activates your natal Gate ${match.gate}`);
+      notes.push(`Transit ${match.transitPlanet || match.planet || match.body} activates your natal Gate ${match.gate}`);
     }
   }
 
@@ -144,9 +146,11 @@ function extractNotableTransits(transitData, chartData) {
 }
 
 function formatTransitAspects(transitData) {
-  if (!transitData?.aspects?.length) return '(none today)';
+  // BL-FIX: transits.js returns 'transitToNatalAspects', not 'aspects'
+  const aspects = transitData?.transitToNatalAspects || transitData?.aspects || [];
+  if (!aspects.length) return '(none today)';
 
-  return transitData.aspects
+  return aspects
     .slice(0, 5)
     .map(a => `${a.planet1 || a.transitPlanet} ${a.type} ${a.planet2 || a.natalPlanet} (orb ${a.orb?.toFixed(1)}°)`)
     .join('\n');
@@ -155,25 +159,31 @@ function formatTransitAspects(transitData) {
 function formatNatalMatches(transitData) {
   if (!transitData?.gateActivations?.length) return '(none today)';
 
+  // BL-FIX: transits.js uses 'transitPlanet' not 'planet' or 'body'
   return transitData.gateActivations
     .slice(0, 5)
-    .map(m => `Gate ${m.gate} (${m.planet || m.body})`)
+    .map(m => `Gate ${m.gate} (${m.transitPlanet || m.planet || m.body})`)
     .join(', ');
 }
 
 function formatForecastEvents(events) {
   if (!events.length) return '(no events this week)';
 
+  // BL-FIX: transits.js forecast events have 'event' (description) and 'planet'/'gate' fields,
+  // not 'type'. Gate ingress events have 'gate' field, aspect events have '_aspectKey'.
   return events
     .slice(0, 10)
     .map(e => {
-      if (e.type === 'gate_ingress') {
-        return `${e.date}: ${e.planet} enters Gate ${e.toGate}`;
+      // Gate ingress: has gate and planet, no _aspectKey
+      if (e.gate !== undefined && !e._aspectKey) {
+        return `${e.date}: ${e.event || `${e.planet} enters Gate ${e.gate}`}`;
       }
-      if (e.type === 'exact_aspect') {
-        return `${e.date}: ${e.planet1} ${e.aspectType} ${e.planet2}`;
+      // Aspect event: has _aspectKey
+      if (e._aspectKey) {
+        return `${e.date}: ${e.event}`;
       }
-      return `${e.date}: ${e.description || e.type}`;
+      // Fallback to event description
+      return `${e.date}: ${e.event || e.description || 'Transit event'}`;
     })
     .join('\n');
 }
