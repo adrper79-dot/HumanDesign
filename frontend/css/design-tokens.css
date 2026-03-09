@@ -279,6 +279,28 @@
   /* Cards */
   --card-padding: var(--space-6);
   --card-radius: var(--radius-lg);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SHORTHAND ALIASES — Single Source of Truth
+     Used throughout index.html inline styles. All map to tokens above.
+     ══════════════════════════════════════════════════════════ */
+
+  --bg:        var(--color-neutral-950);   /* #0a0a0f */
+  --bg2:       var(--color-neutral-900);   /* #111118 */
+  --bg3:       var(--color-neutral-850);   /* #1a1a24 */
+  --border:    #32324a;                    /* visible against bg3 */
+  --gold:      var(--color-gold-500);      /* #c9a84c — THE gold */
+  --gold-dim:  var(--color-gold-600);      /* #a88840 */
+  --text:      #eceaf4;                    /* primary text */
+  --text-dim:  #c4c0d8;                    /* WCAG AA 5.5:1 on #1a1a24 (was #b0acc8 @ 4.2:1) */
+  --text-muted:#918db0;                    /* WCAG AA 4.5:1 on #0a0a0f (was #7a76a0 @ 3.1:1) */
+  --accent:    #7a5fd8;                    /* purple accent */
+  --accent2:   var(--color-teal-400);      /* #4fc8a0 */
+  --red:       var(--color-error-500);     /* #e05050 */
+  --green:     var(--color-success-500);   /* #50c878 */
+  --radius:    var(--radius-xl);           /* 12px → was 10px */
+  --shadow:    0 4px 24px rgba(0,0,0,0.5);
 }
 
 /* ═══════════════════════════════════════════════════════════

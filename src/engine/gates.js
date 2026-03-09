@@ -23,6 +23,9 @@ export const WHEEL_OFFSET = 3.875;
 // ─── GATE SEQUENCE ──────────────────────────────────────────────
 // 64 gates arranged around the 360° ecliptic, starting from 0° Aries
 // (after offset adjustment). Index 0 = first gate after the offset point.
+// NOTE: This sequence is also defined in src/data/gate_wheel.json.
+// This inline copy is the authoritative source for the calculation engine
+// (avoids async import in hot path). Keep both in sync if ever modified.
 export const GATE_WHEEL = [
   17, 21, 51, 42,  3, 27, 24,  2, 23,  8, 20, 16, 35, 45, 12, 15,
   52, 39, 53, 62, 56, 31, 33,  7,  4, 29, 59, 40, 64, 47,  6, 46,

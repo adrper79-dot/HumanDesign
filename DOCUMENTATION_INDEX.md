@@ -14,6 +14,7 @@ New to the project? Start with these:
 | [README.md](README.md) | Project overview, quick start, demo | Everyone |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, tech stack, 8-layer engine | Developers |
 | [DEPLOY.md](DEPLOY.md) | Deployment procedures, verification, troubleshooting | DevOps |
+| [GETTING_STARTED_BACKGROUND_VIDEO.md](GETTING_STARTED_BACKGROUND_VIDEO.md) | **NEW:** Background video setup in 3 simple paths | Designers/Frontend |
 
 ---
 
@@ -45,6 +46,9 @@ New to the project? Start with these:
 | [frontend/DESIGN_SYSTEM.md](frontend/DESIGN_SYSTEM.md) | UI patterns, components, design tokens |
 | [frontend/ACCESSIBILITY_AUDIT.md](frontend/ACCESSIBILITY_AUDIT.md) | WCAG compliance issues, remediation plan |
 | [docs/UX_IMPROVEMENTS.md](docs/UX_IMPROVEMENTS.md) | UX enhancement recommendations |
+| [BACKGROUND_VIDEO_SETUP.md](BACKGROUND_VIDEO_SETUP.md) | Seamless looping cosmic background video implementation |
+| [BG_VIDEO_QUICK_REF.md](BG_VIDEO_QUICK_REF.md) | Quick reference, troubleshooting, deployment checklist |
+| [videos/BACKGROUND_VIDEO_PROMPT.md](videos/BACKGROUND_VIDEO_PROMPT.md) | AI generation prompt for cosmic background videos |
 
 ### Operations
 

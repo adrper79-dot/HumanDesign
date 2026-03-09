@@ -151,8 +151,8 @@ import {
   handlePortal,
   handleGetSubscription,
   handleCancelSubscription,
-  handleUpgradeSubscription,
-  handleWebhook
+  handleUpgradeSubscription
+  // handleWebhook removed — BL-R-C4: consolidated to handleStripeWebhook in webhook.js
 } from './handlers/billing.js';
 import {
   handleGenerateCode,

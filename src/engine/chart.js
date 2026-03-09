@@ -33,8 +33,9 @@ try {
     const __dirname_resolved = dirname(__filename);
     crossesData = JSON.parse(readFileSync(join(__dirname_resolved, '..', 'data', 'crosses.json'), 'utf8'));
   }
-} catch {
-  // Falls back gracefully if crosses.json is unavailable
+} catch (e) {
+  // Falls back gracefully if crosses.json is unavailable — cross names will use type prefix only
+  console.warn('[chart.js] crosses.json not loaded — cross names will be generic:', e?.message || 'unknown error');
 }
 
 // ─── CHANNEL DEFINITIONS ────────────────────────────────────────

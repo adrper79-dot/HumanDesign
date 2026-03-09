@@ -1294,8 +1294,9 @@ export const QUERIES = {
       AND created_at >= NOW() - INTERVAL '7 days'
   `,
 
+  // BL-FIX: profiles table has no status column — count all profiles
   getTotalProfiles: `
-    SELECT COUNT(*) as count FROM profiles WHERE status = 'completed'
+    SELECT COUNT(*) as count FROM profiles
   `,
 
   getTotalCharts: `
@@ -1520,24 +1521,30 @@ export const QUERIES = {
     WHERE ta.active = true AND u.birth_date IS NOT NULL
   `,
 
+  // BL-FIX: charts table has no chart_type column — extract from hd_json JSONB
   cronGetWelcome2Users: `
-    SELECT u.id, u.email, u.created_at, c.chart_type
+    SELECT u.id, u.email, u.created_at,
+           c.hd_json::jsonb->'chart'->>'type' AS chart_type
     FROM users u
-    LEFT JOIN charts c ON u.id = c.user_id
+    LEFT JOIN LATERAL (
+      SELECT hd_json FROM charts WHERE user_id = u.id ORDER BY calculated_at DESC LIMIT 1
+    ) c ON true
     WHERE u.created_at >= NOW() - INTERVAL '25 hours'
       AND u.created_at <= NOW() - INTERVAL '23 hours'
       AND u.email_verified != false
-    GROUP BY u.id, u.email, u.created_at, c.chart_type
   `,
 
+  // BL-FIX: charts table has no authority column — extract from hd_json JSONB
   cronGetWelcome3Users: `
-    SELECT u.id, u.email, u.created_at, c.authority
+    SELECT u.id, u.email, u.created_at,
+           c.hd_json::jsonb->'chart'->>'authority' AS authority
     FROM users u
-    LEFT JOIN charts c ON u.id = c.user_id
+    LEFT JOIN LATERAL (
+      SELECT hd_json FROM charts WHERE user_id = u.id ORDER BY calculated_at DESC LIMIT 1
+    ) c ON true
     WHERE u.created_at >= NOW() - INTERVAL '73 hours'
       AND u.created_at <= NOW() - INTERVAL '71 hours'
       AND u.email_verified != false
-    GROUP BY u.id, u.email, u.created_at, c.authority
   `,
 
   cronGetWelcome4Users: `
