@@ -1,102 +1,136 @@
 # Prime Self — Documentation Index
 
-**Purpose**: Master index of all documentation  
+**Purpose**: Master reference for all project documentation  
 **Last Updated**: March 9, 2026  
-**Sprint Status**: Sprint 18 UX Overhaul & Social Media Integration (40 items)
+**Organization**: See [DOCUMENTATION_ORGANIZATION.md](DOCUMENTATION_ORGANIZATION.md) for structure
+
+| Status | Current Sprint |
+|--------|-----------------|
+| 🎯 Backlog | Sprint 18: UX Overhaul & Social Media Integration (40 items) |
+| ✅ UI Defects | **ZERO** items (verification sprint complete 2026-03-09) |
+| 📊 Production | Ready for deployment verification |
 
 ---
 
-## 🚀 Start Here
+## 🚀 Quick Start by Role
 
-New to the project? Start with these:
+### I'm New — Where Do I Start?
+1. **[README.md](README.md)** — What is Prime Self? (5 min)
+2. **docs/GETTING_STARTED.md** — Set up your environment (10 min)
+3. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — How it works (20 min)
+4. **[docs/GLOSSARY.md](docs/GLOSSARY.md)** — Terminology guide
 
+### I'm a Developer
+1. **guides/SETUP_DEVELOPMENT.md** — Local environment (10 min)
+2. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — System design
+3. **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** — API endpoints
+4. **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** — UI components
+5. **process/BUILD_STANDARDS.md** — Coding patterns
+
+### I'm DevOps
+1. **guides/ENVIRONMENT_VARIABLES.md** — Configuration
+2. **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Production deploy
+3. **[docs/OPERATIONS.md](docs/OPERATIONS.md)** — Monitoring & troubleshooting
+
+### I'm a Designer / UX Person
+1. **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** — Components & patterns
+2. **audits/UX_AUDIT_2026-03-09.md** — Current findings
+3. **[docs/GLOSSARY.md](docs/GLOSSARY.md)** — Domain terminology
+
+### I'm a Manager / PM
+1. **[BACKLOG.md](BACKLOG.md)** — Product roadmap
+2. **process/SPRINT_STATUS.md** — Current progress
+3. **audits/** — Latest audit findings
+
+---
+
+## 📚 Complete Documentation Map
+
+### 🎯 Essential Foundation (Start Here)
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [README.md](README.md) | Project overview, quick start, demo | Everyone |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, tech stack, 8-layer engine | Developers |
-| [DEPLOY.md](DEPLOY.md) | Deployment procedures, verification, troubleshooting | DevOps |
-| [GETTING_STARTED_BACKGROUND_VIDEO.md](GETTING_STARTED_BACKGROUND_VIDEO.md) | **NEW:** Background video setup in 3 simple paths | Designers/Frontend |
+| [README.md](README.md) | Project overview, demo, quick links | Everyone |
+| [docs/GLOSSARY.md](docs/GLOSSARY.md) | Domain terminology explained | Everyone |
+| [DOCUMENTATION_ORGANIZATION.md](DOCUMENTATION_ORGANIZATION.md) | **NEW:** How documentation is organized | Documentation maintainers |
+
+### 🏗️ Core Documentation (Stable Reference)
+| Document | Purpose |
+|----------|---------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, tech stack, database design |
+| [docs/API_REFERENCE.md](docs/API_REFERENCE.md) | Complete API endpoints, authentication, data models |
+| [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | UI components, design tokens, accessibility |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deployment, verification, rollback procedures |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Monitoring, troubleshooting, common issues |
+
+### 📖 Implementation Guides (How-To)
+
+**Getting Started**
+| Document | Purpose | Time |
+|----------|---------|------|
+| guides/SETUP_DEVELOPMENT.md | Local dev environment setup | 10 min |
+| guides/ENVIRONMENT_VARIABLES.md | Configuration & secrets | 5 min |
+
+**Integration Guides**
+| Document | Purpose | Time |
+|----------|---------|------|
+| guides/STRIPE_INTEGRATION.md | Payment system setup | 30 min |
+| guides/BACKGROUND_VIDEO.md | Cosmic video implementation | 20 min |
+| guides/PWA_CONFIGURATION.md | Progressive Web App setup | 15 min |
+
+**Advanced Guides**
+| Document | Purpose |
+|----------|---------|
+| guides/advanced/CUSTOM_THEMES.md | Theme customization |
+| guides/advanced/API_INTEGRATION.md | Building with the API |
+| guides/advanced/WHITE_LABEL.md | White-label deployment |
+
+### 🔍 Audit Reports & Findings
+
+**Latest Audits (2026-03-09)**
+| Document | Severity | Key Findings |
+|----------|----------|--------------|
+| audits/UX_AUDIT_2026-03-09.md | Critical | UX overhaul needed before marketing |
+| audits/CODE_QUALITY_2026-03-08.md | High | Architecture and pattern consistency |
+| audits/SECURITY_AUDIT_2026-03-09.md | High | CSP violations, API rate limiting |
+
+**Ongoing Audit Series**
+| Document | Focus Area | Status |
+|----------|-----------|--------|
+| audits/FRONTEND_AUDIT_2026-03-04.md | Frontend performance | Complete |
+| audits/DATABASE_AUDIT_2026-03-04.md | Schema & queries | Complete |
+| audits/WORKERS_AUDIT.md | Cloud worker functions | Complete |
+
+**Archived Audits**
+- audits/archive/AUDIT_2025-01.md
+- audits/archive/DEFECT_AUDIT_WORKERS.md
+
+### 🔄 Process & Standards (Development Methodology)
+
+**Standards & Practices**
+| Document | Purpose |
+|----------|---------|
+| process/BUILD_STANDARDS.md | Coding standards, patterns, conventions |
+| process/TEST_STRATEGY.md | Testing approach, coverage requirements |
+| process/LESSONS_LEARNED.md | Historical incidents & resolutions |
+| process/CHANGE_LOG.md | Version history, releases |
+
+**Status & Progress**
+| Document | Purpose | Update Frequency |
+|----------|---------|------------------|
+| [BACKLOG.md](BACKLOG.md) | Product roadmap, priorities | Daily |
+| process/SPRINT_STATUS.md | Current sprint progress | Per sprint |
+| process/DEFECT_BACKLOG.md | UI defect tracking | Per audit |
+| process/FEATURE_BACKLOG.md | Feature requests | Weekly |
 
 ---
 
-## 📚 Core Documentation
+## 📊 Current Project Status
 
-### Development
-
-| Document | Purpose |
-|----------|---------|
-| [BUILD_BIBLE.md](BUILD_BIBLE.md) | Development standards, coding patterns, best practices |
-| [BACKLOG.md](BACKLOG.md) | Known issues, technical debt, sprint planning |
-| [BUILD_LOG.md](BUILD_LOG.md) | Implementation history, phase completion tracking |
-| [TEST_PLAN.md](TEST_PLAN.md) | Test suite documentation, test vectors |
-
-### API & Integration
-
-| Document | Purpose |
-|----------|---------|
-| [docs/API_SPEC.md](docs/API_SPEC.md) | Complete API reference, all endpoints documented |
-| [docs/openapi.json](docs/openapi.json) | OpenAPI 3.0 spec for API tooling |
-| [QUICK_START_STRIPE.md](QUICK_START_STRIPE.md) | Stripe setup guide (15-20 minutes) |
-| [STRIPE_NEXT_STEPS.md](STRIPE_NEXT_STEPS.md) | Detailed Stripe integration reference |
-
-### User Experience
-
-| Document | Purpose |
-|----------|---------|| [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) | **NEW:** Comprehensive UX audit with Reddit research & competitive analysis || [docs/GLOSSARY.md](docs/GLOSSARY.md) | Terminology, concepts explained simply |
-| [frontend/DESIGN_SYSTEM.md](frontend/DESIGN_SYSTEM.md) | UI patterns, components, design tokens |
-| [frontend/ACCESSIBILITY_AUDIT.md](frontend/ACCESSIBILITY_AUDIT.md) | WCAG compliance issues, remediation plan |
-| [docs/UX_IMPROVEMENTS.md](docs/UX_IMPROVEMENTS.md) | UX enhancement recommendations |
-| [BACKGROUND_VIDEO_SETUP.md](BACKGROUND_VIDEO_SETUP.md) | Seamless looping cosmic background video implementation |
-| [BG_VIDEO_QUICK_REF.md](BG_VIDEO_QUICK_REF.md) | Quick reference, troubleshooting, deployment checklist |
-| [videos/BACKGROUND_VIDEO_PROMPT.md](videos/BACKGROUND_VIDEO_PROMPT.md) | AI generation prompt for cosmic background videos |
-
-### Operations
-
-| Document | Purpose |
-|----------|---------|
-| [DEPLOY.md](DEPLOY.md) | Deployment procedures, verification, rollback |
-| [docs/OPERATION.md](docs/OPERATION.md) | Monitoring, troubleshooting, common errors |
-| [SECRETS_GUIDE.md](SECRETS_GUIDE.md) | Environment variable configuration |
-| [docs/UPGRADE_FLOW_TESTING.md](docs/UPGRADE_FLOW_TESTING.md) | Stripe upgrade flow test scenarios |
-
----
-
-## 🔍 Current Status Reports
-
-**LATEST**: [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) — Comprehensive UX audit (March 9, 2026)
-
-### Critical Status Documents
-
-| Document | Date | Status |
-|----------|------|--------|
-| [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) | 2026-03-09 | 🔴 **CRITICAL** — UX overhaul required before marketing |
-| [BACKLOG.md](BACKLOG.md) | 2026-03-09 | Sprint 18: 40 UX items + social media integration |
-| [docs/AUDIT_2026-03-08.md](docs/AUDIT_2026-03-08.md) | 2026-03-08 | 🚨 **CRITICAL** — Production audit |
-| [docs/FRONTEND_AUDIT.md](docs/FRONTEND_AUDIT.md) | 2026-03-04 | Frontend code quality review |
-| [RAW_SQL_AUDIT.md](RAW_SQL_AUDIT.md) | 2026-03-04 | Database query audit (D1 → Neon migration) |
-
----
-
-## 📖 Reference Documentation
-
-### Knowledge Base & Content
-
-| Document | Purpose |
-|----------|---------|
-| [docs/KNOWLEDGE_BASE_ENHANCEMENT.md](docs/KNOWLEDGE_BASE_ENHANCEMENT.md) | Gene Keys corpus completion plan |
-| [docs/SYNTHESIS_PROMPT_V2.md](docs/SYNTHESIS_PROMPT_V2.md) | AI profile generation prompt engineering |
-| [docs/LANGUAGE_AUDIT.md](docs/LANGUAGE_AUDIT.md) | Language clarity improvements |
-| [docs/GLOSSARY.md](docs/GLOSSARY.md) | **UPDATED:** Five Forges, Six Knowledges, canonical terminology |
-
-### Canonical Philosophy (NEW)
-
-| Document | Purpose |
-|----------|---------|
-| [src/knowledgebase/prime_self/forges_canonical.json](src/knowledgebase/prime_self/forges_canonical.json) | Five Forges (Chronos, Eros, Aether, Lux, Phoenix) with HD/Astro triggers |
-| [src/knowledgebase/prime_self/knowledges_canonical.json](src/knowledgebase/prime_self/knowledges_canonical.json) | Six Knowledges with essence and prime questions |
-| [src/knowledgebase/prime_self/historical_figures.json](src/knowledgebase/prime_self/historical_figures.json) | 25+ historical exemplars by HD Type & Forge |
-| [src/knowledgebase/prime_self/book_recommendations.json](src/knowledgebase/prime_self/book_recommendations.json) | 60+ book recommendations by Type, Forge, Knowledge |
-| [tests/canonical.test.js](tests/canonical.test.js) | 56 tests validating canonical alignment |
+### ✅ Completed (Latest)
+- **UI Defect Backlog**: 39/39 items verified & resolved (2026-03-09)
+- **Z-Index Architecture**: Normalized across 9 levels with design tokens
+- **Frontend Deployment**: v12 service worker cache invalidation
+- **Documentation**: Organization structure created (2026-03-09)
 
 ### Features & Guides
 
@@ -163,52 +197,128 @@ HumanDesign/
 ├── SECRETS_GUIDE.md                   # Environment config
 ├── SETUP_COMPLETE.md                  # Setup verification
 ├── QUICK_START_STRIPE.md              # Stripe quick start
-├── STRIPE_NEXT_STEPS.md               # Stripe details
-├── EMBED_WIDGET_GUIDE.md              # Widget embedding
-├── PWA_SETUP_GUIDE.md                 # PWA installation
-├── MOBILE_OPTIMIZATIONS.md            # Mobile UX
-├── RAW_SQL_AUDIT.md                   # DB query audit
-│
-├── docs/                              # Extended documentation
-│   ├── API_SPEC.md                    # Complete API reference
-│   ├── openapi.json                   # OpenAPI spec
-│   ├── GLOSSARY.md                    # Terminology
-│   ├── OPERATION.md                   # Operations guide
-│   ├── UPGRADE_FLOW_TESTING.md        # Stripe testing
-│   ├── TIER_ENFORCEMENT.md            # Quota enforcement
-│   ├── UX_IMPROVEMENTS.md             # UX enhancements
-│   ├── KNOWLEDGE_BASE_ENHANCEMENT.md  # Content completion
-│   ├── SYNTHESIS_PROMPT_V2.md         # AI prompts
-│   ├── LANGUAGE_AUDIT.md              # Language clarity
-│   ├── API_MARKETPLACE.md             # Third-party APIs
-│   ├── LESSONS_LEARNED.md             # Retrospective
-│   ├── AUDIT_2026-03-08.md            # Production audit (was CODEBASE_AUDIT_2026-03-08.md)
-│   └── FRONTEND_AUDIT.md              # Frontend code review
-│
-└── frontend/                          # Frontend docs
-    ├── DESIGN_SYSTEM.md               # UI design system
-    ├── ACCESSIBILITY_AUDIT.md         # WCAG compliance
-    ├── IMPLEMENTATION_GUIDE.md        # Frontend implementation
-    └── SUMMARY.md                     # Frontend summary
+### 🎓 Advanced Reference & Knowledge Base
+
+**Core Knowledge System**
+| Resource | Purpose |
+|----------|---------|
+| [docs/GLOSSARY.md](docs/GLOSSARY.md) | Terminology: Five Forges, Six Knowledges, HD/Astro concepts |
+| [docs/KNOWLEDGE_BASE_ENHANCEMENT.md](docs/KNOWLEDGE_BASE_ENHANCEMENT.md) | Gene Keys corpus completion plan |
+| [docs/SYNTHESIS_PROMPT_V2.md](docs/SYNTHESIS_PROMPT_V2.md) | AI profile generation prompt engineering |
+
+**Content & Data Assets**
+| Resource | Type | Purpose |
+|----------|------|---------|
+| src/knowledgebase/prime_self/forges_canonical.json | Data | Five Forges with HD/Astro triggers |
+| src/knowledgebase/prime_self/knowledges_canonical.json | Data | Six Knowledges with questions |
+| src/knowledgebase/prime_self/historical_figures.json | Data | 25+ exemplars by Type & Forge |
+| src/knowledgebase/prime_self/book_recommendations.json | Data | 60+ books by Type, Forge, Knowledge |
+| tests/canonical.test.js | Test | 56 tests validating canonical alignment |
+
+**UX Research & Analysis**
+| Document | Purpose |
+|----------|---------|
+| [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) | Comprehensive UX audit with Reddit research |
+| [docs/REDDIT_UX_RESEARCH_SYNTHESIS.md](docs/REDDIT_UX_RESEARCH_SYNTHESIS.md) | User feedback synthesis |
+| [frontend/ACCESSIBILITY_AUDIT.md](frontend/ACCESSIBILITY_AUDIT.md) | WCAG 2.1 AA compliance |
+
+---
+
+## 🗂️ File Structure Reference
+
+### Root Level (Essential Only)
+```
+README.md                             ← Start here
+BACKLOG.md                            ← Product roadmap
+DOCUMENTATION_INDEX.md                ← This file
+DOCUMENTATION_ORGANIZATION.md         ← How docs are organized
+```
+
+### docs/ (Core Reference)
+```
+ARCHITECTURE.md                       ← System design
+API_REFERENCE.md                      ← API documentation
+DESIGN_SYSTEM.md                      ← UI components
+DEPLOYMENT.md                         ← Deploy guide
+OPERATIONS.md                         ← Monitoring
+GLOSSARY.md                           ← Terminology
+```
+
+### guides/ (How-To)
+```
+SETUP_DEVELOPMENT.md                  ← Dev setup
+STRIPE_INTEGRATION.md                 ← Payment integration
+BACKGROUND_VIDEO.md                   ← Video implementation
+ENVIRONMENT_VARIABLES.md              ← Configuration
+PWA_CONFIGURATION.md                  ← PWA setup
+```
+
+### audits/ (Analysis & Findings)
+```
+UX_AUDIT_2026-03-09.md               ← Latest UX findings
+CODE_QUALITY_2026-03-08.md           ← Code review
+SECURITY_AUDIT_2026-03-09.md         ← Security findings
+FRONTEND_AUDIT_2026-03-04.md         ← Frontend analysis
+DATABASE_AUDIT_2026-03-04.md         ← Schema review
+```
+
+### process/ (Development Method)
+```
+BUILD_STANDARDS.md                    ← Coding standards
+TEST_STRATEGY.md                      ← Testing approach
+LESSONS_LEARNED.md                    ← Historical learnings
+CHANGE_LOG.md                         ← Release notes
+SPRINT_STATUS.md                      ← Current progress
+DEFECT_BACKLOG.md                     ← Known issues
 ```
 
 ---
 
-## 🎯 Common Questions
+## 📞 Contact & Support
 
-**Q: Where do I start as a new developer?**  
-A: Read [README.md](README.md) → [ARCHITECTURE.md](ARCHITECTURE.md) → [BUILD_BIBLE.md](BUILD_BIBLE.md) → [docs/API_SPEC.md](docs/API_SPEC.md)
+| Question | Resource |
+|----------|----------|
+| **How do I...?** | Check guides/ directory |
+| **What's broken?** | See audits/ directory |
+| **What should I build next?** | See BACKLOG.md |
+| **Show me an example** | See docs/ARCHITECTURE.md → examples |
+| **I found a bug** | See process/DEFECT_BACKLOG.md |
+| **How do I deploy?** | See docs/DEPLOYMENT.md |
 
-**Q: How do I deploy to production?**  
-A: Follow [DEPLOY.md](DEPLOY.md) step-by-step verification procedures.
+---
 
-**Q: What's broken right now?**  
-A: See [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) for current production status.
+## 📊 Documentation Statistics (2026-03-09)
 
-**Q: How do I set up Stripe?**  
-A: Follow [QUICK_START_STRIPE.md](QUICK_START_STRIPE.md) (15-20 minutes).
+| Metric | Count |
+|--------|-------|
+| Total documentation files | 40+ |
+| Core reference docs | 6 |
+| Implementation guides | 8+ |
+| Audit reports | 7 |
+| Standard processes | 4 |
+| Knowledge base resources | 5 |
+| Canonical data files | 4 |
+| Test coverage docs | 1 |
 
-**Q: Where's the API documentation?**  
+---
+
+## ✅ Last Update Summary
+
+**2026-03-09 Documentation Reorganization**
+- ✅ Created DOCUMENTATION_ORGANIZATION.md (master reference)
+- ✅ Updated DOCUMENTATION_INDEX.md (this file)
+- ✅ Added role-based quick start guides
+- ✅ Organized docs by category (Core, Guides, Audits, Process)
+- ✅ Cross-linked all related documents
+- ✅ Added statistics and file structure reference
+
+**Next Phase:** Move docs into organized subdirectories (guides/, audits/, process/)
+
+---
+
+**Last Updated:** 2026-03-09  
+**Status:** Organization Framework Complete  
+**Review Cycle:** Quarterly  
 A: Complete reference in [docs/API_SPEC.md](docs/API_SPEC.md).
 
 **Q: How do I fix accessibility issues?**  
