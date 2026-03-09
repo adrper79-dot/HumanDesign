@@ -152,14 +152,20 @@ FORMAT:
   • Gene Key [X]: [specific insight]
   • Astrology: [planet] in [sign/house] [specific insight]
   • Numerology: [Life Path/Personal Year] [specific insight]
+  • Vedic: Nakshatra [name] / [current dasha lord] dasha [specific insight] — include ONLY when present in Reference Facts
+  • Ogham: Birth Tree [name] [specific insight] — include ONLY when present in Reference Facts
   
 This convergence suggests [synthesis]."
+
+NOTE: Vedic and Ogham data will only appear in Reference Facts when available. When present, integrate them as additional convergence points. When absent, omit.
 
 EXAMPLE:
 "Leadership through innovation shows up across multiple systems:
   • Gene Key 3 (Innovation, Line 5 Heretic): You're designed to revolutionize stuck systems through radical new approaches
   • Astrology: Uranus (breakthroughs) conjunct your Sun in Aquarius (reformer) in the 10th house (public career)
   • Numerology: Life Path 1 (pioneer) + Personal Year 5 (dramatic change)
+  • Vedic: Ardra nakshatra (intensity and storm that precedes breakthrough, Rahu lord) in a Rahu dasha — a period of amplified disruptive innovation
+  • Ogham: Birch birth tree (the pioneer who colonizes new ground before others dare arrive)
   
 This convergence suggests 2024 is your year to launch something unconventional in your career that challenges industry norms."
 
@@ -200,6 +206,19 @@ OUTPUT SCHEMA (strict JSON)
       "lifePath": { "number": "number", "name": "string", "essence": "string", "currentGuidance": "string" },
       "personalYear": { "number": "number", "theme": "string", "guidance": "string" },
       "tarotCard": { "card": "string", "message": "string" }
+    },
+    "vedicOverlay": {
+      "moonNakshatra": "string (name + pada + lord — e.g., 'Hasta Pada 3, Moon-ruled')",
+      "nakshatraGift": "string (specific gift pattern from this nakshatra)",
+      "currentDasha": "string (dasha lord + years remaining + what this period activates)",
+      "siderealSun": "string (sidereal Sun sign if notably different from tropical)"
+    },
+    "celticOghamTree": {
+      "tree": "string (name)",
+      "period": "string",
+      "gift": "string (1 sentence specific to this person's chart context)",
+      "shadow": "string (1 sentence)",
+      "convergence": "string (how the birth tree resonates with other chart elements)"
     },
     "astrologicalSignatures": [
       { "placement": "string", "interpretation": "string", "practicalImplication": "string" }
@@ -513,6 +532,61 @@ function buildReferenceFacts(data) {
     if (n.tarotCard) {
       sections.push(`Tarot Birth Card: ${n.tarotCard.card} (${n.tarotCard.archetype || ''})`);
     }
+  }
+
+  // ── Gene Keys Profile Reference Facts ──
+  if (data.geneKeys) {
+    const gk = data.geneKeys;
+    sections.push('\n=== GENE KEYS PROFILE REFERENCE FACTS ===');
+    sections.push('(Shadow → Gift → Siddhi triad for each active gate position)');
+    const gkPositions = [
+      { key: 'lifesWork',  label: "Life's Work (Personality Sun)" },
+      { key: 'evolution',  label: 'Evolution (Personality Earth)' },
+      { key: 'radiance',   label: 'Radiance (Design Earth — unconscious essence)' },
+      { key: 'purpose',    label: 'Purpose (Design Sun — unconscious mission)' },
+      { key: 'attraction', label: 'Attraction (Personality Moon — what you draw)' },
+      { key: 'iq',         label: 'IQ / Pearl (Design Moon — unconscious intelligence)' },
+    ];
+    for (const { key, label } of gkPositions) {
+      const pos = gk[key];
+      if (pos) sections.push(`  ${label}: Gate ${pos.gate}${pos.line ? `.${pos.line}` : ''}`);
+    }
+  }
+
+  // ── Vedic Astrology Reference Facts ──
+  if (data.vedic && !data.vedic.error) {
+    const v = data.vedic;
+    sections.push('\n=== VEDIC ASTROLOGY (JYOTISH) REFERENCE FACTS ===');
+    sections.push(`Ayanamsha (Lahiri): ${v.ayanamsha}°`);
+
+    if (v.moonNakshatra) {
+      const nak = v.moonNakshatra;
+      sections.push(`Moon Nakshatra: ${nak.name} (Pada ${nak.pada}, lord: ${nak.lord})`);
+    }
+
+    if (v.siderealPlacements) {
+      const key3 = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'northNode'];
+      sections.push('Sidereal Planetary Positions (Rashi):');
+      for (const planet of key3) {
+        const p = v.siderealPlacements[planet];
+        if (p) sections.push(`  ${planet}: ${p.sign} ${p.degreesInSign}°`);
+      }
+    }
+
+    if (v.dasha) {
+      const d = v.dasha;
+      sections.push(`Birth Dasha: ${d.birthDashaLord} (${d.birthDashaBalance} yrs remaining at birth)`);
+      if (d.current) {
+        sections.push(`Current Dasha: ${d.current.lord} — ${d.current.yearsRemaining} yrs remaining`);
+      }
+    }
+  }
+
+  // ── Ogham Birth Tree Reference Facts ──
+  if (data.ogham && !data.ogham.error) {
+    const og = data.ogham;
+    sections.push('\n=== CELTIC OGHAM BIRTH TREE REFERENCE FACTS ===');
+    sections.push(`Birth Tree: ${og.treeKey ? og.treeKey.charAt(0).toUpperCase() + og.treeKey.slice(1) : 'Unknown'}`);
   }
 
   // ── Forge Mapping Reference ──

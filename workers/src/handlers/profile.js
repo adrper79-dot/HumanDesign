@@ -115,6 +115,10 @@ export async function handleProfile(request, env) {
     transits: chart.transits,
     personalityGates: chart.personalityGates,
     designGates: chart.designGates,
+    numerology: chart.numerology || null,
+    geneKeys: chart.geneKeys || null,
+    vedic: chart.vedic || null,
+    ogham: chart.ogham || null,
     validationData,
     psychometricData,
     diaryEntries
@@ -218,7 +222,10 @@ export async function handleProfile(request, env) {
       profile: chart.chart.profile,
       definition: chart.chart.definition,
       cross: chart.chart.cross,
-      numerology: chart.numerology || null
+      numerology: chart.numerology || null,
+      geneKeys: chart.geneKeys || null,
+      vedic: chart.vedic || null,
+      ogham: chart.ogham || null,
     },
     meta: {
       groundingAudit: validation.parsed?.groundingAudit || null,

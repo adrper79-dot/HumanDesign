@@ -15,6 +15,9 @@ import { calculateChart } from './chart.js';
 import { calculateAstrology } from './astro.js';
 import { getCurrentTransits } from './transits.js';
 import { calculateNumerologyFromBirthData } from './numerology.js';
+import { calculateGeneKeys } from './genekeys.js';
+import { calculateVedic } from './vedic.js';
+import { calculateOgham } from './ogham.js';
 
 /**
  * Calculate the full Prime Self chart for a given birth.
@@ -96,6 +99,15 @@ export function calculateFullChart(params) {
   // Layer 8: Numerology (Life Path, Personal Year, Tarot)
   const numerology = calculateNumerologyFromBirthData(year, month, day);
 
+  // Layer 9: Gene Keys Profile (derived from existing gate data, no extra intake)
+  const geneKeys = calculateGeneKeys(personalityGates, designGates);
+
+  // Layer 10: Vedic Astrology Overlay (Lahiri sidereal, Moon nakshatra, Vimshottari Dasha)
+  const vedic = calculateVedic(birthPositions, jdn, year, month, day);
+
+  // Layer 11: Celtic Ogham Birth Tree (birth month + day, no year required)
+  const ogham = calculateOgham(month, day);
+
   return {
     birth: { year, month, day, hour, minute, second, lat, lng, jdn },
     design: {
@@ -107,6 +119,9 @@ export function calculateFullChart(params) {
     chart,
     astrology,
     transits,
-    numerology
+    numerology,
+    geneKeys,
+    vedic,
+    ogham
   };
 }
