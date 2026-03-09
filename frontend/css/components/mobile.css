@@ -389,6 +389,45 @@
   .mobile-only {
     display: block !important;
   }
+
+  /* ── Sticky Chart CTA (Sprint 19.3) ────────────────────── */
+  /* Fixed CTA when chart form scrolls out of viewport */
+  .sticky-chart-cta {
+    position: fixed;
+    bottom: calc(var(--mobile-nav-height) + 20px); /* Above mobile nav */
+    left: var(--mobile-padding);
+    right: var(--mobile-padding);
+    z-index: var(--z-dropdown);
+    display: none; /* Hidden by default, shown via JS */
+    padding: var(--space-3);
+    background: linear-gradient(135deg, rgba(13,13,26,0.97) 0%, rgba(18,18,30,0.98) 100%);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-emphasis, #7a6030);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.4), 0 0 20px rgba(201, 168, 76, 0.15);
+  }
+
+  .sticky-chart-cta.visible {
+    display: block;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .sticky-chart-cta .btn-primary {
+    width: 100%;
+    font-size: var(--text-base);
+    padding: 14px 20px;
+  }
 }
 
 /* ── Tablet Optimizations (768px - 1024px) ─────────────────── */

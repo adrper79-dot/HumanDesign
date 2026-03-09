@@ -52,6 +52,15 @@ import forgesData from '../../src/knowledgebase/prime_self/forges.json';
 import knowledgesData from '../../src/knowledgebase/prime_self/knowledges.json';
 import forgeMappingData from '../../src/knowledgebase/prime_self/forge_mapping.json';
 
+// Prime Self canonical data (Sprint 19.1 — RAG context expansion)
+import historicalFiguresData from '../../src/knowledgebase/prime_self/historical_figures.json';
+import bookRecommendationsData from '../../src/knowledgebase/prime_self/book_recommendations.json';
+import forgesCanonicalData from '../../src/knowledgebase/prime_self/forges_canonical.json';
+import knowledgesCanonicalData from '../../src/knowledgebase/prime_self/knowledges_canonical.json';
+import artsCanonicalData from '../../src/knowledgebase/prime_self/arts_canonical.json';
+import sciencesCanonicalData from '../../src/knowledgebase/prime_self/sciences_canonical.json';
+import defensesCanonicalData from '../../src/knowledgebase/prime_self/defenses_canonical.json';
+
 globalThis.__PRIME_DATA = {
   crosses: crossesData,
   kb: {
@@ -89,6 +98,15 @@ globalThis.__PRIME_DATA = {
     // Prime Self
     'prime_self/forges.json': forgesData,
     'prime_self/knowledges.json': knowledgesData,
-    'prime_self/forge_mapping.json': forgeMappingData
+    'prime_self/forge_mapping.json': forgeMappingData,
+    
+    // Prime Self canonical data (Sprint 19.1 — enables RAG for priming recommendations, forge weapons/defenses)
+    'prime_self/historical_figures.json': historicalFiguresData,
+    'prime_self/book_recommendations.json': bookRecommendationsData,
+    'prime_self/forges_canonical.json': forgesCanonicalData,
+    'prime_self/knowledges_canonical.json': knowledgesCanonicalData,
+    'prime_self/arts_canonical.json': artsCanonicalData,
+    'prime_self/sciences_canonical.json': sciencesCanonicalData,
+    'prime_self/defenses_canonical.json': defensesCanonicalData
   }
 };

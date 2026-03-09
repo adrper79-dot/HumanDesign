@@ -8,8 +8,7 @@
 |--------|-----------------|
 | 🎯 Backlog | Sprint 18: UX Overhaul & Social Media Integration (40 items) |
 | ✅ UI Defects | **ZERO** items (verification sprint complete 2026-03-09) |
-| 📊 Production | Ready for deployment verification |
-
+| 📊 Production | Ready for deployment verification || 📋 Future State | [FUTURE_STATE_KANBAN.md](FUTURE_STATE_KANBAN.md) — Canonical features awaiting integration |
 ---
 
 ## 🚀 Quick Start by Role

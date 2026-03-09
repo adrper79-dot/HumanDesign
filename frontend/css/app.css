@@ -17,7 +17,7 @@ header {
   border-bottom: 1px solid var(--gold-dim);
   padding: 0 24px;
   display: flex; align-items: center; justify-content: space-between;
-  height: 60px; position: sticky; top: 0; z-index: var(--z-header);
+  height: 60px; position: sticky; top: 0; z-index: 100;
   gap: 12px;
 }
 .logo { font-size: 1.3rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
@@ -57,7 +57,7 @@ button, .btn {
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Tabs [DUP] tabs.css — sticky below header ── */
-.tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; justify-content: center; padding: 0 16px; gap: 2px; overflow-x: auto; position: sticky; top: var(--header-height, 60px); z-index: var(--z-sticky); }
+.tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; justify-content: center; padding: 0 16px; gap: 2px; overflow-x: auto; position: sticky; top: var(--header-height, 60px); z-index: 90; }
 .tab-btn {
   background: none; border: none; color: var(--text-dim);
   padding: 14px 16px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
@@ -68,38 +68,19 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
 .tab-btn.primary-tab { color: var(--text); } /* [UNIQUE] */
 .tab-btn.primary-tab:hover { color: var(--gold); } /* [UNIQUE] */
-
-/* Tabs mobile adjustments */
-@media (max-width: 768px) {
-  .tabs {
-    padding: 0 8px;
-    gap: 4px;
-  }
-  .tab-btn {
-    padding: 12px 10px;
-    font-size: 0.75rem;
-  }
-}
 .tab-divider { width: 1px; background: var(--border); align-self: stretch; margin: 8px 4px; flex-shrink: 0; } /* [UNIQUE] */
 
 /* More dropdown [UNIQUE] */
 .more-menu-btn { position: relative; }
 .more-dropdown {
-  display: none; position: absolute; top: calc(100% + 8px); right: -8px; z-index: var(--z-dropdown);
+  display: none; position: absolute; top: calc(100% + 1px); right: 0; z-index: 200;
   background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-  padding: 6px; min-width: 180px; box-shadow: var(--shadow); max-height: 400px; overflow-y: auto;
+  padding: 6px; min-width: 180px; box-shadow: var(--shadow);
 }
 .more-dropdown.open { display: block; }
 .more-dropdown .tab-btn { display: flex; width: 100%; text-align: left; border-radius: 6px; padding: 9px 12px; border-bottom: none !important; font-size: 0.83rem; }
 .more-dropdown .tab-btn:hover { background: rgba(201,168,76,0.08); color: var(--gold); }
 .more-dropdown .tab-btn.active { background: rgba(201,168,76,0.12); color: var(--gold); border-bottom: none !important; }
-
-/* More dropdown mobile adjustments */
-@media (max-width: 768px) {
-  .more-dropdown {
-    right: auto; left: -12px; min-width: 160px; top: calc(100% + 4px);
-  }
-}
 
 /* Step indicator banner [UNIQUE] */
 .step-guide {
@@ -149,7 +130,7 @@ select option { background: var(--bg3); }
 
 /* ── Auth Modal [UNIQUE] ── */
 .auth-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: var(--z-modal-backdrop);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200;
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(4px);
 }
@@ -245,6 +226,44 @@ select option { background: var(--bg3); }
 .confidence-pill.medium { background: rgba(201,168,76,0.2); color: var(--gold); }
 .confidence-pill.low { background: rgba(224,80,80,0.2); color: var(--red); }
 
+/* ═══ Forge Weapon/Defense/Shadow (Sprint 19.2) ═══ */
+.forge-weapon,
+.forge-defense,
+.forge-shadow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  margin-top: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+.forge-weapon {
+  background: linear-gradient(135deg, rgba(255,107,107,0.08) 0%, rgba(255,107,107,0.04) 100%);
+  border-left: 3px solid #ff6b6b;
+  color: var(--text);
+}
+.forge-defense {
+  background: linear-gradient(135deg, rgba(78,205,196,0.08) 0%, rgba(78,205,196,0.04) 100%);
+  border-left: 3px solid #4ecdc4;
+  color: var(--text);
+}
+.forge-shadow {
+  background: linear-gradient(135deg, rgba(224,80,80,0.1) 0%, rgba(106,79,200,0.08) 100%);
+  border-left: 3px solid var(--red);
+  color: var(--text-dim);
+}
+.forge-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.forge-weapon strong,
+.forge-defense strong,
+.forge-shadow strong {
+  color: var(--gold);
+}
+
 /* ── Section headers [DUP] layout.css ── */
 .section-header {
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em;
@@ -253,6 +272,89 @@ select option { background: var(--bg3); }
 }
 .profile-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
 .profile-section h4 { font-size: 0.85rem; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
+
+/* ═══ Priming Recommendations (Sprint 19.2) ═══ */
+.exemplar-card {
+  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(106,79,200,0.06) 100%);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-top: var(--space-2);
+}
+.exemplar-name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: var(--space-2);
+}
+.exemplar-card p {
+  font-size: var(--font-size-base);
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: var(--space-3);
+}
+.exemplar-lesson,
+.exemplar-invoke {
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-top: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--gold-dim);
+}
+.exemplar-lesson strong,
+.exemplar-invoke strong {
+  color: var(--gold);
+}
+
+/* Book Recommendations */
+.book-recs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.book-rec {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+.book-type {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+.book-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--space-1);
+}
+.book-author {
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  font-style: italic;
+}
+.book-relevance {
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  margin-top: var(--space-2);
+  line-height: 1.5;
+}
+
+/* Knowledge Focus Badge */
+.knowledge-focus-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--gold) 0%, rgba(201,168,76,0.7) 100%);
+  color: var(--bg1);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+}
 
 /* ── Tags / Pills [UNIQUE] ── */
 .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
@@ -359,7 +461,11 @@ select option { background: var(--bg3); }
 .composition-bar { background: var(--bg); height: 32px; border-radius: 6px; overflow: hidden; display: flex; margin: 12px 0; }
 .composition-segment { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: white; transition: all 0.3s; }
 .composition-segment:hover { filter: brightness(1.2); }
-/* Note: Composition segments styled dynamically via JS based on forge roles (Power/Craft/Vision/Mirrors) */
+.composition-segment.manifestor { background: #e05050; }
+.composition-segment.generator { background: #50c878; }
+.composition-segment.mg { background: #60d888; } /* [UNIQUE] */
+.composition-segment.projector { background: #6a4fc8; }
+.composition-segment.reflector { background: #4fc8c8; }
 
 /* ── Action Grid [UNIQUE] ── */
 .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 16px; }
@@ -367,7 +473,7 @@ select option { background: var(--bg3); }
 
 /* ── Pricing Modal [UNIQUE] ── */
 .pricing-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: var(--z-modal-backdrop);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 250;
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(6px);
 }
@@ -548,7 +654,7 @@ img[data-src].loaded, img:not([data-src]) {
   border-radius: 8px;
   padding: 4px;
   min-width: 140px;
-  z-index: var(--z-dropdown);
+  z-index: 200;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 .lang-switcher-option {
@@ -699,7 +805,7 @@ img[data-src].loaded, img:not([data-src]) {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.88);
-  z-index: var(--z-onboarding);
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
