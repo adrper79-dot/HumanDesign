@@ -176,13 +176,14 @@ src/knowledgebase/
     aspects.json        Major aspects and orb definitions
     houses.json         12 houses
   prime_self/
-    forges.json         5 Forges — full descriptions from Canonical Framework
-    knowledges.json     6 Knowledges
-    sciences.json       6 Sciences
-    arts.json           6 Arts
-    defenses.json       6 Defenses
-    heresies.json       6 Heresies
-    forge_mapping.json  Forge ↔ HD/Astro correlations (from Integration doc)
+    forges_canonical.json       5 Forges (Chronos, Eros, Aether, Lux, Phoenix)
+    knowledges_canonical.json   6 Knowledges (Self, Ancestors, The One, Constructive, Destructive, Healing)
+    sciences_canonical.json     6 Sciences (Mindfulness, Alchemy, Divination, Astrology, Reiki, Behavioral)
+    arts_canonical.json         6 Arts (Aromatherapy, Semiotics, Quantum Mind, Crystallography, etc.)
+    defenses_canonical.json     6 Defenses (Reflexology, Acupressure, Chromotherapy, etc.)
+    heresies_canonical.json     6 Heresies (shadow powers with warnings)
+    historical_figures.json     25+ figures organized by HD Type & Forge
+    book_recommendations.json   60+ books by Type, Forge, Knowledge, Need
   combined/
     (nearly empty at launch — add only VERIFIED cross-system correlations)
 ```

@@ -118,8 +118,50 @@ The 12 archetypal energies: Aries (pioneer), Taurus (builder), Gemini (communica
 
 ## Prime Self System Terms
 
-**Forge**  
-Your Prime Self archetype from the Savannah narrative system. Four forges exist: **Artisan** (hands-on creators), **Scientist** (systematic researchers), **Councilor** (community weavers), **Oracle** (pattern seers). Determined by combining your energy pattern, primary gene keys, and decision style.
+### The Five Forges
+
+Your Forge is your Prime Self archetype — the domain of power you're called to master. Determined by your Energy Blueprint structure + Astrological signatures.
+
+**Chronos (The Forge of Time)**  
+Domain: Mastering past/present/future. HD Triggers: Root center definition, Saturn-related gates (38, 54, 58). Astro Triggers: Saturn aspects, Capricorn placements. Historical Exemplars: Marcus Aurelius, Nelson Mandela, Maya Angelou. Weapon: The Hourglass. Defense: Strategic Patience.
+
+**Eros (The Forge of Passion)**  
+Domain: Mastering desire and creative fire. HD Triggers: Defined Sacral Center, Channel 59-6 (Intimacy). Astro Triggers: Venus aspects, Mars strength, Scorpio/Taurus placements. Historical Exemplars: Frida Kahlo, Pablo Neruda, Josephine Baker. Weapon: The Flame. Defense: Sustained Devotion.
+
+**Aether (The Forge of Connection)**  
+Domain: Interconnectedness and unity consciousness. HD Triggers: G Center definition, Channel 25-51 (Initiation). Astro Triggers: Neptune aspects, 12th house emphasis, Pisces placements. Historical Exemplars: Rumi, Thich Nhat Hanh, Mother Teresa. Weapon: The Thread. Defense: Compassionate Boundaries.
+
+**Lux (The Forge of Illumination)**  
+Domain: Truth, clarity, and knowledge. HD Triggers: Ajna center definition, Head Center activation. Astro Triggers: Mercury strength, Uranus aspects, Aquarius/Gemini placements. Historical Exemplars: Leonardo da Vinci, Marie Curie, Nikola Tesla. Weapon: The Prism. Defense: Radical Honesty.
+
+**Phoenix (The Forge of Rebirth)**  
+Domain: Transformation, renewal, and resurrection. HD Triggers: Solar Plexus definition, Channel 36-35 (Transitoriness). Astro Triggers: Pluto aspects, 8th house emphasis, Scorpio placements. Historical Exemplars: Nelson Mandela, Malcolm X, Frida Kahlo. Weapon: Ashes of the Past. Defense: Surrender to Cycles.
+
+---
+
+### The Six Knowledges
+
+The domains of wisdom every Prime Self practitioner explores:
+
+**Knowledge of Self** (#1)  
+Prime Question: "Who am I when no one is watching?" Foundation of all other knowledge. HD Mapping: Personality (conscious) chart — your chosen expression.
+
+**Knowledge of Ancestors** (#2)  
+Prime Question: "What gifts am I carrying forward?" Genetic wisdom and inherited patterns. HD Mapping: Design (unconscious) chart — your ancestral inheritance.
+
+**Knowledge of The One** (#3)  
+Prime Question: "How does my individual expression serve the collective?" Universal connection and service. HD Mapping: Cross, Nodal gates — your contribution to humanity.
+
+**Knowledge of Constructive Behaviors** (#4)  
+Prime Question: "What builds rather than depletes?" Practices that generate sustainable energy. Relates to Signature themes (Satisfaction, Success, Peace, Surprise).
+
+**Knowledge of Destructive Behaviors** (#5)  
+Prime Question: "What patterns must I release to evolve?" Shadow work and transformation. Relates to Not-Self themes (Frustration, Bitterness, Anger, Disappointment).
+
+**Knowledge of Healing & Reparation** (#6)  
+Prime Question: "How do I restore what has been broken?" Integration and wholeness. Combines all other Knowledges into practical repair.
+
+---
 
 **8-Layer Synthesis**  
 The full Prime Self Profile integration combining: (1) Energy Blueprint core, (2) Western Astrology, (3) Gene Keys wisdom, (4) Numerology life path, (5) Forge archetype, (6) Current transits, (7) Practice recommendations, (8) Personalized narrative.
@@ -319,6 +361,6 @@ For visual learners, generate your chart first and explore terms as they appear 
 
 ---
 
-**Last Updated:** 2026-03-04  
+**Last Updated:** 2026-03-08  
 **Maintained by:** Prime Self Core Team  
 **Feedback:** Submit term clarification requests via GitHub Issues

@@ -85,6 +85,17 @@ New to the project? Start with these:
 | [docs/KNOWLEDGE_BASE_ENHANCEMENT.md](docs/KNOWLEDGE_BASE_ENHANCEMENT.md) | Gene Keys corpus completion plan |
 | [docs/SYNTHESIS_PROMPT_V2.md](docs/SYNTHESIS_PROMPT_V2.md) | AI profile generation prompt engineering |
 | [docs/LANGUAGE_AUDIT.md](docs/LANGUAGE_AUDIT.md) | Language clarity improvements |
+| [docs/GLOSSARY.md](docs/GLOSSARY.md) | **UPDATED:** Five Forges, Six Knowledges, canonical terminology |
+
+### Canonical Philosophy (NEW)
+
+| Document | Purpose |
+|----------|---------|
+| [src/knowledgebase/prime_self/forges_canonical.json](src/knowledgebase/prime_self/forges_canonical.json) | Five Forges (Chronos, Eros, Aether, Lux, Phoenix) with HD/Astro triggers |
+| [src/knowledgebase/prime_self/knowledges_canonical.json](src/knowledgebase/prime_self/knowledges_canonical.json) | Six Knowledges with essence and prime questions |
+| [src/knowledgebase/prime_self/historical_figures.json](src/knowledgebase/prime_self/historical_figures.json) | 25+ historical exemplars by HD Type & Forge |
+| [src/knowledgebase/prime_self/book_recommendations.json](src/knowledgebase/prime_self/book_recommendations.json) | 60+ book recommendations by Type, Forge, Knowledge |
+| [tests/canonical.test.js](tests/canonical.test.js) | 56 tests validating canonical alignment |
 
 ### Features & Guides
 
