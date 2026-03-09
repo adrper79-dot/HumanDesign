@@ -3285,7 +3285,7 @@ async function exportPDF(profileId) {
   if (!profileId) { alert('No profile ID provided'); return; }
   
   try {
-    const url = `${API}/api/pdf/${profileId}`;
+    const url = `${API}/api/profile/${profileId}/pdf`;
     // Open in new window to trigger download
     window.open(url, '_blank');
   } catch (e) {
