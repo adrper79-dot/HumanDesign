@@ -519,7 +519,22 @@ Migrations 003–018 define: `subscriptions`, `payment_events`, `usage_records`,
 - `README.md` — Project overview and quick start
 - `BACKLOG.md` — Known issues, technical debt, sprint planning
 - `DOCUMENTATION_INDEX.md` — Master documentation index
-- `TEST_PLAN.md` — Comprehensive test plan
+- **See [process/](process/) for process documentation** (10 docs: BUILD_BIBLE, BUILD_LOG, TEST_PLAN, LESSONS_LEARNED, etc.)
 - `PWA_SETUP_GUIDE.md` — Progressive Web App setup
 - `docs/STRIPE_SETUP.md` — Stripe integration setup guide
-- `docs/UPGRADE_FLOW_TESTING.md` — Subscription upgrade test scenarios (10 test cases)
+- **See [guides/](guides/) for implementation how-to guides** (7 docs)
+
+### Process Documentation (10 docs)
+
+Processes, standards, testing plans, and historical logs:
+
+- `process/BUILD_BIBLE.md` — Layer-by-layer implementation reference
+- `process/BUILD_LOG.md` — Complete implementation history (7,424+ lines)
+- `process/TEST_PLAN.md` — Comprehensive test strategy
+- `process/LESSONS_LEARNED.md` — Debugging patterns and verification techniques
+- `process/CHANGELOG_UX.md` — UX improvements and change tracking
+- `process/UI_CHANGELOG_2026-03-08.md` — UI audit and changelog
+- `process/UPGRADE_FLOW_TESTING.md` — Subscription upgrade test scenarios
+- `process/BACKLOG_VERIFICATION_SPRINT_2026-03-09.md` — Sprint verification process
+- `process/UI_DEFECT_BACKLOG.md` — UI/UX defects by severity
+- `process/README.md` — Process documentation navigation
