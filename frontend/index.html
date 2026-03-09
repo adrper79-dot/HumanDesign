@@ -353,17 +353,17 @@
 
     <!-- 3-step journey guide — collapses once user has generated a profile -->
     <div class="step-guide" id="step-guide-banner">
-      <div class="step-item active-step" id="sg-chart" onclick="switchTab('chart', document.getElementById('btn-chart'))" title="Enter your birth details">
+      <div class="step-item active-step" id="sg-chart" onclick="switchTab('chart', document.getElementById('btn-blueprint'))" title="Enter your birth details">
         <div class="step-num">1</div>
         <div class="step-label"><strong>Your Chart</strong><span>Enter birth date, time &amp; place</span></div>
       </div>
       <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-profile" onclick="switchTab('profile', document.getElementById('btn-profile'))" title="Get your AI synthesis">
+      <div class="step-item" id="sg-profile" onclick="switchTab('profile', document.getElementById('btn-blueprint'))" title="Get your AI synthesis">
         <div class="step-num">2</div>
         <div class="step-label"><strong>Your Profile</strong><span>AI synthesis of your gates</span></div>
       </div>
       <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-transits" onclick="switchTab('transits', document.getElementById('btn-transits'))" title="See today's planetary influence">
+      <div class="step-item" id="sg-transits" onclick="switchTab('transits', document.getElementById('btn-today'))" title="See today's planetary influence">
         <div class="step-num">3</div>
         <div class="step-label"><strong>Today's Energy</strong><span>How planets affect you now</span></div>
       </div>
@@ -387,7 +387,7 @@
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
           <div style="display:flex;gap:8px">
-            <input type="text" id="c-location" placeholder="City, State, Country" data-i18n-placeholder="chart.birthLocationPlaceholder" — e.g. Tampa, FL, USA" style="flex:1"
+            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('c')" id="c-geoBtn"
               style="white-space:nowrap;padding:0 16px;font-size:0.85rem" data-i18n="chart.lookupLocation">Look Up</button>
@@ -428,7 +428,7 @@
       </div>
     </div>
 
-    <div id="chartResult"></div>
+    <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Human Design &amp; astrology data.</p></div>
   </div>
 
   <!-- ═══ PROFILE TAB ═══ -->
@@ -461,7 +461,7 @@
         <div class="form-group full">
           <label data-i18n="chart.birthLocation">Birth Location</label>
           <div style="display:flex;gap:8px">
-            <input type="text" id="p-location" placeholder="City, State, Country" data-i18n-placeholder="chart.birthLocationPlaceholder" — e.g. Tampa, FL, USA" style="flex:1"
+            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('p')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('p')" id="p-geoBtn"
               style="white-space:nowrap;padding:0 16px;font-size:0.85rem" data-i18n="chart.lookupLocation">Look Up</button>
@@ -849,7 +849,7 @@
         <span class="icon-transit"></span> See Today's Energy
       </button>
     </div>
-    <div id="transitResult"></div>
+    <div id="transitResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Tap <strong>See Today's Energy</strong> to load current planetary transits and how they interact with your chart.</p></div>
   </div>
 
   <!-- ═══ HISTORY TAB ═══ -->
@@ -862,11 +862,11 @@
         View Saved Charts
       </button>
     </div>
-    <div id="historyResult"></div>
+    <div id="historyResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Your previously saved profiles will appear here once you sign in and load them.</p></div>
   </div>
 
   <!-- ═══ COMPOSITE TAB ═══ -->
-  <div class="tab-content" id="tab-composite" role="tabpanel" aria-labelledby="btn-composite">
+  <div class="tab-content" id="tab-composite" role="tabpanel" aria-labelledby="btn-relationships">
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(106,79,200,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--info)">
       <strong style="color:var(--info)">Relationship Electromagnetic Field Analysis</strong><br>
       Calculate the combined energy blueprint when two charts overlap. This shows: <strong>(1)</strong> New channels activated when you're together (electromagnetic bridges), <strong>(2)</strong> Definition changes (e.g., individual becomes emotional authority), <strong>(3)</strong> Dominant gates/themes in the relationship field, <strong>(4)</strong> Potential blind spots (missing energies). Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.
@@ -922,7 +922,7 @@
         <span data-i18n="composite.generate">Check Our Compatibility</span>
       </button>
     </div>
-    <div id="compResult"></div>
+    <div id="compResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Enter both birth details above and tap <strong>Check Our Compatibility</strong> to see a relationship analysis.</p></div>
   </div>
 
   <!-- ═══ RECTIFY TAB ═══ -->
@@ -1179,6 +1179,7 @@ async function submitAuth() {
 }
 
 function logout() {
+  if (!confirm('Are you sure you want to log out?')) return;
   token = null; userEmail = null;
   localStorage.removeItem('ps_token');
   localStorage.removeItem('ps_email');
@@ -2366,8 +2367,8 @@ function renderHistory(data) {
     return `<div class="empty-state">
       <span class="icon-profile icon-xl"></span>
       <h3 style="margin:16px 0 8px;font-size:1.1rem;color:var(--text)">No Saved Profiles Yet</h3>
-      <p style="max-width:500px;margin:0 auto 24px">Generate yourfirst Prime Self Profile to unlock AI-powered synthesis combining your gates, Gene Keys, astrology, and numerology into personalized lifecycle guidance.</p>
-      <button class="btn-primary" onclick="switchTab('profile', document.querySelectorAll('.tab-btn')[1])" style="margin:0 auto;display:inline-block">
+      <p style="max-width:500px;margin:0 auto 24px">Generate your first Prime Self Profile to unlock AI-powered synthesis combining your gates, Gene Keys, astrology, and numerology into personalized lifecycle guidance.</p>
+      <button class="btn-primary" onclick="switchTab('profile', document.getElementById('btn-blueprint'))" style="margin:0 auto;display:inline-block">
         <span class="icon-sparkle"></span> Generate Your Profile
       </button>
     </div>`;
@@ -3001,6 +3002,7 @@ async function unsubscribeSMS() {
 
   const phone = document.getElementById('sms-phone').value.trim();
   if (!phone || !phone.startsWith('+')) { alert('Phone must be in E.164 format'); return; }
+  if (!confirm('Unsubscribe this number from all SMS notifications?')) return;
 
   const btn = document.getElementById('smsUnsubBtn');
   const spinner = document.getElementById('smsUnsubSpinner');
@@ -3652,16 +3654,27 @@ function loadEnhanceQuestions() {
   renderVIAQuestions();
 }
 
-window.onTabActivated = function(tabId) {
-  if (tabId === 'enhance') loadEnhanceQuestions();
-};
+if (typeof window.registerTabInit === 'function') {
+  window.registerTabInit('enhance', loadEnhanceQuestions);
+}
+
+function autoDetectTimezone() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      ['c-tz', 'p-tz'].forEach(id => setTimezone(id, tz));
+    }
+  } catch (e) { /* browser may not support Intl */ }
+}
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     updateTierUI();
+    autoDetectTimezone();
   });
 } else {
   updateTierUI();
+  autoDetectTimezone();
 }
 
 // ── Update Tier-Specific UI ──────────────────────────────────
@@ -4108,7 +4121,7 @@ function updateMobileNav(clickedItem) {
 
 // Group-aware mobile nav: highlights the correct parent tab for sub-tabs
 const MOBILE_TAB_GROUPS = {
-  chart: 'blueprint', profile: 'blueprint',
+  overview: 'blueprint', chart: 'blueprint', profile: 'blueprint',
   transits: 'today', checkin: 'today',
   composite: 'relationships',
   enhance: 'grow', diary: 'grow'
@@ -4123,6 +4136,7 @@ function updateMobileNavForTab(tabName) {
   // Try to find by group first, then by tab
   let navItem = group ? document.querySelector(`.mobile-nav-item[data-group="${group}"]`) : null;
   if (!navItem) navItem = document.querySelector(`.mobile-nav-item[data-tab="${tabName}"]`);
+  if (!navItem) navItem = document.getElementById('mobileMoreBtn');
   if (navItem) {
     navItem.classList.add('active');
     navItem.setAttribute('aria-current', 'page');
@@ -4192,7 +4206,7 @@ if ('ontouchstart' in window && window.innerWidth <= 768) {
       refreshIndicator.style.animation = 'spin 1s linear infinite';
       
       // Reload transit data or current tab
-      const activeTab = document.querySelector('.tab-content:not(.hidden)')?.id;
+      const activeTab = document.querySelector('.tab-content.active')?.id;
       if (activeTab === 'transitsTab') {
         // Reload transits (would call API in production)
         console.log('🔄 Refreshing transit data...');
@@ -4502,7 +4516,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   const installBanner = document.createElement('div');
   installBanner.id = 'install-banner';
   installBanner.style.cssText = `
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%);
     background: linear-gradient(135deg, #6a4fc8 0%, #c9a84c 100%);
     color: white; padding: 12px 24px; border-radius: 8px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.5); z-index: 1000;

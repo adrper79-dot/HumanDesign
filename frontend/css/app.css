@@ -239,6 +239,15 @@ select option { background: var(--bg3); }
 }
 .transit-row:hover { border-color: rgba(201,168,76,0.3); }
 .transit-row-hit { border-color: rgba(201,168,76,0.25) !important; background: rgba(201,168,76,0.04) !important; } /* [UNIQUE] */
+
+/* Mobile: stack transit rows vertically */
+@media (max-width: 600px) {
+  .transit-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
 .planet-name { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
 .planet-pos { font-size: 0.8rem; color: var(--text); }
 .gate-badge {
@@ -571,4 +580,15 @@ img[data-src].loaded, img:not([data-src]) {
   );
   background-size: 800px 100%;
   animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+/* ── Accessibility: Touch Targets ── */
+@media (pointer: coarse) {
+  .btn-social,
+  .sub-tab,
+  .tab-btn,
+  .mobile-nav-item {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
