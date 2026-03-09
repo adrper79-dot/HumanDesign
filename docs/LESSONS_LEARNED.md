@@ -784,3 +784,40 @@ Every new feature shipped requires:
 | 2026-03-03 | Audit  | Added full codebase audit findings (26 issues); linked to BACKLOG.md; updated preventive measures with tracking notes; added infrastructure hardening section to Future Improvements |
 | 2026-03-06 | System | Strategic analysis: identified monetization gaps, mobile opportunity, GTM strategy, 3 new ADRs |
 | 2026-03-08 | Phase 3 | TODO resolution: 11/11 implemented; Web Crypto adoption; ephemeris integration; RFC 8291 Web Push; fire-and-forget pattern; 2 new ADRs |
+
+---
+
+## Nav Restructure: Dashboard UX Overhaul (2026-03-09)
+
+### What We Did
+Collapsed 14 navigable destinations (across 2 levels) down to 5 primary tabs + ⚙ overflow drawer. Redesigned the app around a Home dashboard as the default landing destination.
+
+### Key Decisions
+
+**1. Hick's Law in navigation is non-negotiable**
+Having 14 destinations means users read every option before deciding. 5–7 items is the usable ceiling for a primary nav. Everything else belongs in a settings/more drawer.
+
+**2. The "Home" tab must be the landing for returning users**
+Previously, the Overview/Home was buried as an L2 sub-tab inside Blueprint. This meant the richest, most compelling screen — the one that rewarded the user's effort — was hidden. Smart landing logic now routes returning users directly to Home.
+
+**3. First-run onboarding flow prevents dead-end blank states**
+New users hitting a blank form feel nothing. A 3-step modal that explains what's needed and what they'll unlock sets expectations and reduces abandonment.
+
+**4. Identity strip creates persistent context**
+Once a chart is generated, the user should always know whose chart they're looking at. A persistent top strip showing type / authority / profile provides that ambient context across all tabs.
+
+**5. Tab intro cards orient users to each section**
+A single sentence at the top of Today, Connect, and Grow answering "what is this for?" reduces cognitive overhead on tab switches.
+
+**6. File-swap replacement precision matters in large single-file SPAs**
+`replace_string_in_file` on a 4,800-line file fails if there are any whitespace encoding differences between what was grep'd and what's actually in the file. Always re-read the target section immediately before replacing.
+
+**7. Injecting missing `<div class="alert">` openers is easy to miss**
+When inserting sub-tabs into a section, a prior `</div>` can swallow the opening tag of the next sibling element, leaving visible raw `style="..."` attribute text in the DOM. Always read 20+ lines after injection point to verify.
+
+### Anti-Patterns Avoided
+- Don't give every feature equal nav weight — hierarchy exists for a reason
+- Don't bury the dashboard (the reward) behind the entry form (the friction)
+- Don't skip onboarding for new users — they will never figure it out themselves
+- Don't add nav items over time without pruning old ones
+

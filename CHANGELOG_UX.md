@@ -146,3 +146,69 @@
 | **Phase 5** | Load data files, center/gate/channel descriptions | 3-5 days | Content depth |
 | **Phase 6** | Skeleton loading, lazy loading, artwork reduction | 2-3 days | Performance | ✅ |
 | **Phase 7** | Interactive bodygraph, share cards, overview tab | 5-10 days | Differentiation | ✅ |
+
+---
+
+## [2026-03-09] Dashboard Navigation Overhaul
+
+### Summary
+Collapsed 14 navigable destinations to 5 primary tabs + ⚙ overflow. Added persistent identity strip, first-run onboarding modal, smart landing logic, and tab intro cards.
+
+### Changes
+
+**Navigation — Desktop**
+- Added **Home** (✦) as primary tab 1 → routes to Overview/dashboard
+- Renamed Blueprint → **My Chart** (btn-blueprint)
+- Renamed Relationships → **Connect** (btn-connect)
+- Moved Clusters tab from Tools drawer → Connect group (sub-tab "⬢ Groups")
+- Tools drawer renamed to ⚙, reduced from 6 → 5 items (Clusters removed, Onboarding renamed Restart Onboarding)
+
+**Navigation — Mobile**
+- Added **Home** (✦) as first mobile nav item
+- Renamed Blueprint → My Chart
+- Renamed Relate → Connect (data-group="connect")
+- Renamed ☰ More → ⚙ More
+
+**Tab Groups**
+- TAB_GROUPS updated: overview→btn-home, composite/clusters→btn-connect
+- MOBILE_TAB_GROUPS updated: overview→'home', composite/clusters→'connect', removed relationships
+
+**Overview Tab**
+- Elevated to top-level Home dashboard landing
+- Removed L2 sub-tabs (was nested under Blueprint)
+- Improved empty-state text for new users
+
+**Chart / Profile Sub-Tabs**
+- Removed redundant "✦ Overview" sub-tab (now top-level Home)
+- Simplified to: ⊙ Chart | ⬡ AI Profile
+
+**Identity Strip** (new)
+- Persistent bar above nav showing: human design type · authority · profile
+- Populates after calculateChart() success or on page reload (from window._lastChart)
+- Edit (✎) button navigates back to My Chart tab
+
+**First-Run Onboarding Modal** (new)
+- 3-step modal for new users: Welcome → What You'll Unlock → You're Ready
+- Triggered on DOMContentLoaded when no birth data and no `ps_hasSeenOnboarding` flag
+- Progress dots, frmNext/frmBack/frmClose controller
+
+**Smart Landing Logic** (new)
+- New user (no birth data, no onboarding seen): show first-run modal
+- Returning user (has birth data): auto-navigate to Home dashboard
+- Default (seen onboarding, no birth data): stay on My Chart entry form
+
+**Tab Intro Cards** (new)
+- Today tab: "☽ Today's Energy" — 1-sentence orientation card
+- Connect tab: "⊕ Connect" — 1-sentence orientation card
+- Grow tab: "★ Grow & Deepen" — 1-sentence orientation card
+
+**After Chart Generation**
+- App now auto-navigates to Home dashboard after first calculateChart() success
+
+### CSS Added (app.css)
+- `#identity-strip`, `.identity-strip-inner`, `.identity-strip-avatar`, `.identity-strip-info`, `.identity-edit-btn`
+- `.first-run-overlay`, `.first-run-panel`, `.frm-step`, `.frm-step-icon`, `.frm-step-title`, `.frm-step-body`
+- `.frm-btn-next`, `.frm-back-btn`, `.frm-skip-btn`, `.frm-what-you-need`, `.frm-need-item`, `.frm-check`
+- `.frm-unlock-grid`, `.frm-unlock-item`, `.frm-unlock-icon`, `.frm-progress`, `.frm-dot`
+- `.tab-intro-card`, `.tab-intro-icon`, `.tab-intro-body`
+
