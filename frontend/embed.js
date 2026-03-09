@@ -33,6 +33,7 @@
         theme: options.theme || 'dark',
         accentColor: options.accentColor || '#c9a84c',
         hideAttribution: options.hideAttribution || false,
+        apiKey: options.apiKey || null,  // Required for hideAttribution; must be a white_label-tier API key
         width: options.width || '100%',
         height: options.height || '600px',
         apiEndpoint: options.apiEndpoint || 'https://primeself.app/api',
@@ -51,9 +52,15 @@
       const params = new URLSearchParams({
         theme: config.theme,
         accent: config.accentColor,
-        hideAttribution: config.hideAttribution.toString(),
         apiEndpoint: config.apiEndpoint,
       });
+
+      // hideAttribution requires an apiKey — pass both so embed.html can server-validate.
+      // The iframe ignores hideAttribution if it can't verify with the server.
+      if (config.hideAttribution && config.apiKey) {
+        params.set('hideAttribution', 'true');
+        params.set('apiKey', config.apiKey);
+      }
 
       const iframeUrl = `https://primeself.app/embed.html?${params.toString()}`;
 

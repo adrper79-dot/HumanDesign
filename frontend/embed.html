@@ -346,23 +346,49 @@
     const urlParams = new URLSearchParams(window.location.search);
     const theme = urlParams.get('theme');
     const accent = urlParams.get('accent');
-    const hideAttribution = urlParams.get('hideAttribution') === 'true';
-    const apiEndpoint = urlParams.get('apiEndpoint') || 'https://primeself.app/api';
+    const hideAttributionRequested = urlParams.get('hideAttribution') === 'true';
+    const apiKey = urlParams.get('apiKey') || '';
+    const apiEndpoint = urlParams.get('apiEndpoint') || 'https://prime-self-api.adrper79.workers.dev';
 
     // Apply theme
     if (theme === 'light') {
       document.body.classList.add('theme-light');
     }
 
-    // Apply custom accent color
+    // Apply custom accent color (sanitize: hex only)
     if (accent && /^#[0-9A-F]{6}$/i.test(accent)) {
       document.documentElement.style.setProperty('--accent', accent);
       document.documentElement.style.setProperty('--accent-hover', accent + 'dd');
     }
 
-    // Hide attribution (only for premium tiers)
-    if (hideAttribution) {
-      document.getElementById('attribution').classList.add('hidden');
+    // ── Attribution enforcement (security: server-validated) ──────────
+    // hideAttribution=true is ONLY honored when:
+    //   1. An apiKey is provided in the URL
+    //   2. The server confirms the key belongs to a white_label tier subscriber
+    // Failing either check: attribution remains visible (fail-safe default).
+    async function validateAttributionPermission(key) {
+      if (!key) return false;
+      try {
+        const res = await fetch(`${apiEndpoint}/api/embed/validate?apiKey=${encodeURIComponent(key)}`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        return data.valid === true && data.features?.hideAttribution === true;
+      } catch {
+        return false; // network error → show attribution
+      }
+    }
+
+    if (hideAttributionRequested && apiKey) {
+      // Async validation — attribution shows until permission confirmed
+      validateAttributionPermission(apiKey).then(allowed => {
+        if (allowed) {
+          document.getElementById('attribution').classList.add('hidden');
+        }
+        // If not allowed: attribution stays visible — no client-side override possible
+      });
     }
 
     // Form submission

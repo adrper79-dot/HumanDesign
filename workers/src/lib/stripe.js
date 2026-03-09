@@ -34,10 +34,10 @@ export function getTierConfig(env) {
         whiteLabel: false
       }
     },
-    seeker: {
-      name: 'Seeker',
-      price: 1500,  // $15.00 in cents
-      priceId: env.STRIPE_PRICE_SEEKER || 'price_1234_seeker',
+    regular: {
+      name: 'Explorer',
+      price: 1200,  // $12.00 in cents
+      priceId: env.STRIPE_PRICE_REGULAR || 'price_placeholder_regular',
       features: {
         chartCalculations: Infinity,
         profileGenerations: 10,
@@ -48,10 +48,10 @@ export function getTierConfig(env) {
         whiteLabel: false
       }
     },
-    guide: {
+    practitioner: {
       name: 'Guide',
-      price: 9700,  // $97.00 in cents
-      priceId: env.STRIPE_PRICE_GUIDE || 'price_1234_guide',
+      price: 6000,  // $60.00 in cents
+      priceId: env.STRIPE_PRICE_PRACTITIONER || 'price_placeholder_practitioner',
       features: {
         chartCalculations: Infinity,
         profileGenerations: Infinity,
@@ -62,10 +62,10 @@ export function getTierConfig(env) {
         whiteLabel: false
       }
     },
-    practitioner: {
-      name: 'Practitioner',
+    white_label: {
+      name: 'Studio',
       price: 50000,  // $500.00 in cents
-      priceId: env.STRIPE_PRICE_PRACTITIONER || 'price_1234_practitioner',
+      priceId: env.STRIPE_PRICE_WHITE_LABEL || 'price_placeholder_white_label',
       features: {
         chartCalculations: Infinity,
         profileGenerations: Infinity,
@@ -248,13 +248,17 @@ export function verifyWebhook(payload, signature, webhookSecret, stripe) {
 
 /**
  * Get tier configuration by name
- * @param {string} tierName - Tier name (free, seeker, guide, practitioner)
+ * @param {string} tierName - Tier name (free, regular, practitioner, white_label)
  * @param {Object} env - Cloudflare Worker environment (optional)
  * @returns {Object} Tier configuration
  */
 export function getTier(tierName, env = {}) {
   const tiers = getTierConfig(env);
-  const tier = tiers[tierName.toLowerCase()];
+  const normalized = tierName ? tierName.toLowerCase() : 'free';
+  // Support legacy tier names for backwards compatibility with existing DB rows
+  const LEGACY_MAP = { seeker: 'regular', guide: 'practitioner' };
+  const resolvedName = LEGACY_MAP[normalized] || normalized;
+  const tier = tiers[resolvedName];
   if (!tier) {
     throw new Error(`Invalid tier: ${tierName}`);
   }

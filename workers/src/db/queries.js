@@ -1595,5 +1595,47 @@ export const QUERIES = {
       AND u.created_at >= NOW() - INTERVAL '31 days'
       AND u.created_at <= NOW() - INTERVAL '29 days'
       AND u.email_verified != false
+  `,
+
+  // ─── Promo Codes ──────────────────────────────────────────
+
+  getPromoCode: `
+    SELECT id, code, discount_type, discount_value, max_redemptions, redemption_count,
+           valid_until, applicable_tiers, active
+    FROM promo_codes
+    WHERE code = $1 AND active = TRUE
+  `,
+
+  validatePromoCode: `
+    SELECT id, code, discount_type, discount_value, max_redemptions, redemption_count,
+           valid_until, applicable_tiers
+    FROM promo_codes
+    WHERE code = $1
+      AND active = TRUE
+      AND (valid_until IS NULL OR valid_until > NOW())
+      AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+  `,
+
+  redeemPromoCode: `
+    UPDATE promo_codes
+    SET redemption_count = redemption_count + 1
+    WHERE code = $1
+      AND active = TRUE
+      AND (valid_until IS NULL OR valid_until > NOW())
+      AND (max_redemptions IS NULL OR redemption_count < max_redemptions)
+    RETURNING id, code, discount_type, discount_value
+  `,
+
+  createPromoCode: `
+    INSERT INTO promo_codes (code, discount_type, discount_value, max_redemptions, valid_until, applicable_tiers, active)
+    VALUES ($1, $2, $3, $4, $5, $6, TRUE)
+    RETURNING id, code, discount_type, discount_value, max_redemptions, valid_until, applicable_tiers, active
+  `,
+
+  listPromoCodes: `
+    SELECT id, code, discount_type, discount_value, max_redemptions, redemption_count,
+           valid_until, applicable_tiers, active, created_at
+    FROM promo_codes
+    ORDER BY created_at DESC
   `
 };

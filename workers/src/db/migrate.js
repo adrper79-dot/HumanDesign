@@ -125,7 +125,6 @@ export async function migrate(connectionString) {
 
 // CLI runner
 const connStr = process.env.NEON_CONNECTION_STRING
-  || process.env.NEON_CONNECT_STRING
   || process.argv[2];
 
 if (connStr) {

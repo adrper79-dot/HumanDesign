@@ -1,0 +1,188 @@
+/**
+ * Promo Code Handler
+ *
+ * Routes:
+ *   GET  /api/billing/redeem/:code   — Validate a promo code (user-facing)
+ *   POST /api/billing/redeem         — Apply promo to checkout (records redemption)
+ *   POST /api/admin/promo            — Create a promo code (admin only)
+ *   GET  /api/admin/promo            — List all promo codes (admin only)
+ *
+ * Admin routes require the X-Admin-Token header to match ADMIN_TOKEN env var.
+ * User routes require a valid JWT.
+ */
+
+import { createQueryFn, QUERIES } from '../db/queries.js';
+import { getUserFromRequest } from '../middleware/auth.js';
+
+// ─── Admin Guard ─────────────────────────────────────────────
+
+function isAdmin(request, env) {
+  const adminToken = env.ADMIN_TOKEN;
+  if (!adminToken) return false; // Admin token not configured — block all admin ops
+  const provided = request.headers.get('X-Admin-Token');
+  return provided === adminToken;
+}
+
+// ─── User-Facing: Validate Promo Code ────────────────────────
+
+/**
+ * GET /api/billing/redeem/:code
+ * Validates a promo code without consuming a redemption.
+ * Returns discount info so the frontend can show the user what they'll save.
+ */
+export async function handleValidatePromo(request, env, code) {
+  if (!code || typeof code !== 'string' || code.length > 64) {
+    return Response.json({ valid: false, error: 'Invalid code format' }, { status: 400 });
+  }
+
+  // Sanitize: only alphanumeric and hyphens
+  if (!/^[A-Z0-9_-]+$/i.test(code)) {
+    return Response.json({ valid: false, error: 'Invalid code format' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const rows = await query(QUERIES.validatePromoCode, [code.toUpperCase()]);
+
+  if (!rows || rows.length === 0) {
+    return Response.json({ valid: false, error: 'Code not found or expired' }, { status: 200 });
+  }
+
+  const promo = rows[0];
+  const savings = promo.discount_type === 'percent'
+    ? `${promo.discount_value}% off`
+    : `$${(promo.discount_value / 100).toFixed(2)} off`;
+
+  return Response.json({
+    valid: true,
+    code: promo.code,
+    discount_type: promo.discount_type,
+    discount_value: promo.discount_value,
+    savings,
+    applicable_tiers: promo.applicable_tiers,
+    redemptions_remaining: promo.max_redemptions
+      ? promo.max_redemptions - promo.redemption_count
+      : null
+  });
+}
+
+// ─── User-Facing: Apply Promo at Checkout ────────────────────
+
+/**
+ * POST /api/billing/redeem
+ * Body: { code: "PROMO20", tier: "regular" }
+ * Records a redemption and returns a Stripe coupon ID (if applicable_tiers match).
+ * Called from billing.js before creating the Stripe checkout session.
+ */
+export async function handleApplyPromo(request, env) {
+  const user = await getUserFromRequest(request, env);
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const { code, tier } = body;
+  if (!code || typeof code !== 'string') {
+    return Response.json({ error: 'code is required' }, { status: 400 });
+  }
+  if (!/^[A-Z0-9_-]+$/i.test(code) || code.length > 64) {
+    return Response.json({ error: 'Invalid code format' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const rows = await query(QUERIES.redeemPromoCode, [code.toUpperCase()]);
+
+  if (!rows || rows.length === 0) {
+    return Response.json({ error: 'Code not found or already exhausted' }, { status: 200, ok: false });
+  }
+
+  const promo = rows[0];
+
+  // Check tier restriction
+  if (promo.applicable_tiers && promo.applicable_tiers.length > 0 && tier) {
+    if (!promo.applicable_tiers.includes(tier)) {
+      return Response.json({
+        error: `Code "${promo.code}" is not valid for the ${tier} plan`
+      }, { status: 200 });
+    }
+  }
+
+  return Response.json({
+    success: true,
+    code: promo.code,
+    discount_type: promo.discount_type,
+    discount_value: promo.discount_value
+  });
+}
+
+// ─── Admin: Create Promo Code ─────────────────────────────────
+
+/**
+ * POST /api/admin/promo
+ * Body: { code, discount_type, discount_value, max_redemptions?, valid_until?, applicable_tiers? }
+ */
+export async function handleCreatePromo(request, env) {
+  if (!isAdmin(request, env)) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const { code, discount_type, discount_value, max_redemptions, valid_until, applicable_tiers } = body;
+
+  if (!code || !discount_type || discount_value == null) {
+    return Response.json({ error: 'code, discount_type, discount_value are required' }, { status: 400 });
+  }
+  if (!['percent', 'fixed'].includes(discount_type)) {
+    return Response.json({ error: 'discount_type must be percent or fixed' }, { status: 400 });
+  }
+  if (typeof discount_value !== 'number' || discount_value <= 0) {
+    return Response.json({ error: 'discount_value must be a positive number' }, { status: 400 });
+  }
+  if (!/^[A-Z0-9_-]+$/i.test(code) || code.length > 64) {
+    return Response.json({ error: 'Invalid code format (alphanumeric, hyphens, underscores, max 64 chars)' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  try {
+    const rows = await query(QUERIES.createPromoCode, [
+      code.toUpperCase(),
+      discount_type,
+      discount_value,
+      max_redemptions || null,
+      valid_until || null,
+      applicable_tiers || null
+    ]);
+    return Response.json({ success: true, promo: rows[0] }, { status: 201 });
+  } catch (err) {
+    if (err.message?.includes('unique')) {
+      return Response.json({ error: `Code "${code.toUpperCase()}" already exists` }, { status: 409 });
+    }
+    throw err;
+  }
+}
+
+// ─── Admin: List Promo Codes ──────────────────────────────────
+
+/**
+ * GET /api/admin/promo
+ */
+export async function handleListPromos(request, env) {
+  if (!isAdmin(request, env)) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const rows = await query(QUERIES.listPromoCodes, []);
+  return Response.json({ promos: rows || [] });
+}

@@ -40,14 +40,15 @@ function mapStripeStatus(stripeStatus) {
  */
 function getTierFromPriceId(priceId, env) {
   const priceIdMap = {
-    [env.STRIPE_PRICE_SEEKER]: 'seeker',
-    [env.STRIPE_PRICE_GUIDE]: 'guide',
+    // Current live price IDs (set in wrangler.toml)
+    [env.STRIPE_PRICE_REGULAR]:      'regular',
     [env.STRIPE_PRICE_PRACTITIONER]: 'practitioner',
-    'price_seeker': 'seeker',
-    'price_guide': 'guide',
-    'price_practitioner': 'practitioner'
+    [env.STRIPE_PRICE_WHITE_LABEL]:  'white_label',
+    // Legacy fallbacks (old env var names, kept for safety during transition)
+    [env.STRIPE_PRICE_SEEKER]:       'regular',
+    [env.STRIPE_PRICE_GUIDE]:        'practitioner',
   };
-  
+
   return priceIdMap[priceId] || 'free';
 }
 
