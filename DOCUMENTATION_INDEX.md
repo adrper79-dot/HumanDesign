@@ -63,15 +63,14 @@ New to the project? Start with these:
 
 ## 🔍 Current Status Reports
 
-**LATEST**: [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) — Production deployment audit
+**LATEST**: [docs/AUDIT_2026-03-08.md](docs/AUDIT_2026-03-08.md) — Production deployment audit
 
 ### Critical Status Documents
 
 | Document | Date | Status |
 |----------|------|--------|
-| [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) | 2026-03-08 | 🚨 **CRITICAL** — Production broken |
-| [DEEP_DIVE_AUDIT_REPORT.md](DEEP_DIVE_AUDIT_REPORT.md) | 2026-03-07 | Deep code audit findings |
-| [FRONTEND_AUDIT.md](FRONTEND_AUDIT.md) | 2026-03-04 | Frontend code quality review |
+| [docs/AUDIT_2026-03-08.md](docs/AUDIT_2026-03-08.md) | 2026-03-08 | 🚨 **CRITICAL** — Production audit |
+| [docs/FRONTEND_AUDIT.md](docs/FRONTEND_AUDIT.md) | 2026-03-04 | Frontend code quality review |
 | [RAW_SQL_AUDIT.md](RAW_SQL_AUDIT.md) | 2026-03-04 | Database query audit (D1 → Neon migration) |
 
 ---
@@ -123,7 +122,7 @@ New to the project? Start with these:
 - [ARCHITECTURE.md](ARCHITECTURE.md) — How does it work?
 - [docs/GLOSSARY.md](docs/GLOSSARY.md) — System terminology
 - [BUILD_LOG.md](BUILD_LOG.md) — Development progress
-- [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) — Current status
+- [docs/AUDIT_2026-03-08.md](docs/AUDIT_2026-03-08.md) — Current status
 
 ### For Developers
 
@@ -158,7 +157,6 @@ HumanDesign/
 ├── BUILD_BIBLE.md                     # Development standards
 ├── BUILD_LOG.md                       # Implementation history
 ├── DEPLOY.md                          # Deployment guide
-├── CODEBASE_AUDIT_2026-03-08.md      # Latest audit (CRITICAL)
 ├── TEST_PLAN.md                       # Test documentation
 ├── SECRETS_GUIDE.md                   # Environment config
 ├── SETUP_COMPLETE.md                  # Setup verification
@@ -167,8 +165,6 @@ HumanDesign/
 ├── EMBED_WIDGET_GUIDE.md              # Widget embedding
 ├── PWA_SETUP_GUIDE.md                 # PWA installation
 ├── MOBILE_OPTIMIZATIONS.md            # Mobile UX
-├── DEEP_DIVE_AUDIT_REPORT.md          # Code audit
-├── FRONTEND_AUDIT.md                  # Frontend review
 ├── RAW_SQL_AUDIT.md                   # DB query audit
 │
 ├── docs/                              # Extended documentation
@@ -183,7 +179,9 @@ HumanDesign/
 │   ├── SYNTHESIS_PROMPT_V2.md         # AI prompts
 │   ├── LANGUAGE_AUDIT.md              # Language clarity
 │   ├── API_MARKETPLACE.md             # Third-party APIs
-│   └── LESSONS_LEARNED.md             # Retrospective
+│   ├── LESSONS_LEARNED.md             # Retrospective
+│   ├── AUDIT_2026-03-08.md            # Production audit (was CODEBASE_AUDIT_2026-03-08.md)
+│   └── FRONTEND_AUDIT.md              # Frontend code review
 │
 └── frontend/                          # Frontend docs
     ├── DESIGN_SYSTEM.md               # UI design system

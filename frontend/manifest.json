@@ -70,22 +70,7 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/home.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Prime Self app dashboard"
-    },
-    {
-      "src": "/screenshots/chart.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Full Human Design chart view"
-    }
-  ],
+  "screenshots": [],
   "shortcuts": [
     {
       "name": "My Chart",
