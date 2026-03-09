@@ -19,11 +19,13 @@
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 
+// BL-FIX-H1: Aligned with billing tier names (seeker/guide/practitioner).
+// Previously used standard/professional/enterprise which never matched a user's actual tier.
 const TIER_LIMITS = {
   free: 0,
-  standard: 10,
-  professional: 50,
-  enterprise: Infinity
+  seeker: 5,
+  guide: 50,
+  practitioner: Infinity
 };
 
 export async function handlePractitioner(request, env, subpath) {

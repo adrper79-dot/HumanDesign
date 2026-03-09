@@ -203,6 +203,11 @@ export async function handleProfile(request, env) {
     }
   }
 
+  // BL-FIX-C2: Record usage after successful generation to enforce quota.
+  // Without this, the non-streaming endpoint bypasses the usage counter
+  // and users get unlimited profile generations.
+  await recordUsage(request, env, 'profile_generation').catch(() => {});
+
   return Response.json({
     ok: true,
     quickStartGuide: validation.parsed?.quickStartGuide || null,

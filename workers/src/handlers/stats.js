@@ -57,16 +57,16 @@ export async function handleGetActivityStats(request, env, ctx) {
   } catch (error) {
     console.error('Get activity stats error:', error);
     
-    // BL-R-C2: Return zeros on failure, never fabricated numbers (FTC compliance)
+    // BL-FIX: Return success: false so monitoring can detect DB outages
     return Response.json({
-      success: true,
+      success: false,
       stats: {
         weeklyUsers: 0,
         totalProfiles: 0,
         totalCharts: 0
       },
       note: 'Stats temporarily unavailable'
-    });
+    }, { status: 503 });
   }
 }
 

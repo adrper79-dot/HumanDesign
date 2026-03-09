@@ -98,8 +98,10 @@ async function generateKey(request, env, user) {
 
     // Determine tier based on user's subscription
     // Free users get free tier, paid users can create higher tier keys
+    // BL-FIX: Normalize null/undefined tier to 'free' to prevent null bypass
+    const effectiveTier = user.tier || 'free';
     let keyTier = tier || 'free';
-    if (user.tier === 'free' && keyTier !== 'free') {
+    if (effectiveTier === 'free' && keyTier !== 'free') {
       return new Response(JSON.stringify({
         error: 'Upgrade required',
         message: 'Upgrade to Seeker tier or higher to create Basic/Pro API keys',
@@ -111,7 +113,7 @@ async function generateKey(request, env, user) {
     }
 
     // Check key limit (free users: 2 keys, paid users: 10 keys)
-    const keyLimit = user.tier === 'free' ? 2 : 10;
+    const keyLimit = effectiveTier === 'free' ? 2 : 10;
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const { rows: countRows } = await query(QUERIES.countActiveApiKeys, [user.id]);
     const existingKeysResult = countRows[0];

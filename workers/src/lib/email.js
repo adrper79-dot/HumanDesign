@@ -31,6 +31,10 @@ export async function sendEmail({ to, subject, html, text = '', replyTo = '' }, 
     return { success: false, error: 'Email service not configured' };
   }
 
+  // BL-FIX: Replace {{unsubscribe_url}} placeholder with a real URL
+  const unsubscribeUrl = `https://primeself.app/?action=email-unsubscribe&email=${encodeURIComponent(to)}`;
+  const finalHtml = html.replace(/\{\{unsubscribe_url\}\}/g, unsubscribeUrl);
+
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -42,8 +46,8 @@ export async function sendEmail({ to, subject, html, text = '', replyTo = '' }, 
         from: fromEmail || 'Prime Self <hello@primeself.app>',
         to: [to],
         subject,
-        html,
-        text: text || stripHtml(html),
+        html: finalHtml,
+        text: text || stripHtml(finalHtml),
         reply_to: replyTo || undefined
       })
     });

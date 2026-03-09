@@ -17,6 +17,7 @@ const RATE_LIMITS = {
   '/api/geocode':           { max: 30,  windowSec: 60  },  // 30/min
   '/api/transits/today':    { max: 60,  windowSec: 60  },  // 60/min
   '/api/transits/forecast': { max: 60,  windowSec: 60  },  // 60/min
+  '/api/rectify':           { max: 5,   windowSec: 60  },  // 5/min (CPU-expensive: up to 241 chart calcs)
   default:                  { max: 60,  windowSec: 60  }
 };
 

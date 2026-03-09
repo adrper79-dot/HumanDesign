@@ -29,9 +29,12 @@ export async function handlePdfExport(request, env, profileId) {
     return Response.json({ error: 'Profile not found' }, { status: 404 });
   }
 
-  // Verify ownership
+  // Verify ownership — BL-FIX: fail-closed when userId is missing
   const userId = request._user?.sub;
-  if (userId && profile.user_id !== userId) {
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  if (profile.user_id !== userId) {
     // Check if user is a practitioner with access to this client
     const practCheck = await query(QUERIES.checkPractitionerAccess, [userId, profile.user_id]);
     if (!practCheck.rows?.length) {

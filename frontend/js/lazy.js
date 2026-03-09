@@ -111,7 +111,10 @@
 
     // Fallback for browsers that don't support preload
     var noscript = document.createElement('noscript');
-    noscript.innerHTML = '<link rel="stylesheet" href="' + href + '">';
+    var fallbackLink = document.createElement('link');
+    fallbackLink.rel = 'stylesheet';
+    fallbackLink.href = href;
+    noscript.appendChild(fallbackLink);
     document.head.appendChild(noscript);
   };
 

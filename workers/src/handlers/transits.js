@@ -45,14 +45,22 @@ export async function handleTransits(request, env) {
     natalAstro = chart.astrology;
   }
 
-  // Cache today's transit positions (same for all users on a given day)
+  // Cache today's transit positions
+  // BL-FIX-C1: Transit cache must include natal data hash to prevent cross-user contamination.
+  // Without natal data the result is the same for everyone (raw transit positions only),
+  // so we use the date-only key.  When natal data is present the natal-to-transit aspects
+  // are user-specific, so we append a hash of the birth params to the key.
   const today = new Date().toISOString().slice(0, 10);
-  const transitCacheKey = keys.transit(today);
+  const natalSuffix = (birthDate && birthTime)
+    ? `:${birthDate}:${birthTime}:${lat}:${lng}`
+    : '';
+  const transitCacheKey = keys.transit(today) + natalSuffix;
 
   const { data: transits, cached: transitCacheHit } = await kvCache.getOrSet(
     env, transitCacheKey, TTL.TRANSIT_DAY,
     () => getCurrentTransits(natalChart, natalAstro),
-    { memCache: true, memTtlMs: 60_000 } // Also cache in-memory for 1 minute
+    // Only use in-memory cache for the universal (no-natal) key
+    natalSuffix ? {} : { memCache: true, memTtlMs: 60_000 }
   );
 
   recordCacheAccess(transitCacheHit);
