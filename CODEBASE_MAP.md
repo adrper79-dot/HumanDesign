@@ -311,7 +311,7 @@ All files are pure JS with zero external dependencies — designed for both Node
 | `astro/` | planets.json, signs.json, houses.json, aspects.json | Astrological meanings for 12 planets, 12 signs, 12 houses, 6 aspect types |
 | `genekeys/` | keys.json, generate-missing.js | Gene Keys interpretations for 64 keys (shadow → gift → siddhi) |
 | `numerology/` | lifePaths.json, personalYears.json, tarotCards.json | Numerology life path meanings (1-9, 11, 22, 33), personal year themes, Tarot birth cards |
-| `prime_self/` | forges.json, knowledges.json, sciences.json, arts.json, defenses.json, heresies.json, forge_mapping.json, savannah_narrative.json | Original Prime Self proprietary content — Savannah narrative framework, forge archetypes, knowledge domains |
+| `prime_self/` | forges_canonical.json, knowledges_canonical.json, sciences_canonical.json, arts_canonical.json, defenses_canonical.json, heresies_canonical.json, historical_figures.json, book_recommendations.json | Canonical Prime Self philosophy — Five Forges (Chronos, Eros, Aether, Lux, Phoenix), Six Knowledges (Self, Ancestors, The One, Constructive, Destructive, Healing), plus historical figure & book recommendation libraries |
 | `assessments/` | bigfive.json, via_strengths.json | Big Five personality assessment + VIA character strengths rubrics |
 | `combined/` | verified_correlations.json | Cross-system verified correlations (HD×Astro×Numerology) |
 
@@ -334,6 +334,7 @@ All files are pure JS with zero external dependencies — designed for both Node
 | `engine.test.js` | ~500 | **Comprehensive engine test** — Layers 1-7+synthesis. AP test vector (Aug 5, 1979). Tests: JDN calculation, Sun longitude, all planetary positions, design calculation, gate/line mapping, chart determination (Type, Authority, Profile, Definition, Cross), astrology (signs, houses, aspects), transits, numerology, synthesis prompt building |
 | `handlers.test.js` | ~300 | **Handler integration tests** — Tests compute-only handlers (calculate, composite, rectify) with mock Request/env, validates request parsing, error paths, missing fields |
 | `numerology.test.js` | ~200 | **Numerology test suite** — Tests reduceToDigit, lifePathNumber (with master numbers 11/22/33), birthdayNumber, personalYear/Month/Day, tarotBirthCard. Test vectors: AP, Steve Jobs, master number cases |
+| `canonical.test.js` | ~550 | **Canonical philosophy test suite** — 56 tests validating alignment with Sacred Texts. Tests: Five Forges (Chronos, Eros, Aether, Lux, Phoenix), Six Knowledges, Six Sciences, Six Arts, Six Defenses, Six Heresies, Historical Figures library, Book Recommendations library, Synthesis prompt integration, Cross-reference validation |
 | `api-smoke.js` | ~200 | **Production smoke test** — Node.js script (not Vitest) that calls live API endpoints sequentially. Tests auth, chart, profile, transits, geocode endpoints against production URL |
 
 ---
