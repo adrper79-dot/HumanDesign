@@ -68,19 +68,38 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
 .tab-btn.primary-tab { color: var(--text); } /* [UNIQUE] */
 .tab-btn.primary-tab:hover { color: var(--gold); } /* [UNIQUE] */
+
+/* Tabs mobile adjustments */
+@media (max-width: 768px) {
+  .tabs {
+    padding: 0 8px;
+    gap: 4px;
+  }
+  .tab-btn {
+    padding: 12px 10px;
+    font-size: 0.75rem;
+  }
+}
 .tab-divider { width: 1px; background: var(--border); align-self: stretch; margin: 8px 4px; flex-shrink: 0; } /* [UNIQUE] */
 
 /* More dropdown [UNIQUE] */
 .more-menu-btn { position: relative; }
 .more-dropdown {
-  display: none; position: absolute; top: calc(100% + 1px); right: 0; z-index: var(--z-dropdown);
+  display: none; position: absolute; top: calc(100% + 8px); right: -8px; z-index: var(--z-dropdown);
   background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-  padding: 6px; min-width: 180px; box-shadow: var(--shadow);
+  padding: 6px; min-width: 180px; box-shadow: var(--shadow); max-height: 400px; overflow-y: auto;
 }
 .more-dropdown.open { display: block; }
 .more-dropdown .tab-btn { display: flex; width: 100%; text-align: left; border-radius: 6px; padding: 9px 12px; border-bottom: none !important; font-size: 0.83rem; }
 .more-dropdown .tab-btn:hover { background: rgba(201,168,76,0.08); color: var(--gold); }
 .more-dropdown .tab-btn.active { background: rgba(201,168,76,0.12); color: var(--gold); border-bottom: none !important; }
+
+/* More dropdown mobile adjustments */
+@media (max-width: 768px) {
+  .more-dropdown {
+    right: auto; left: -12px; min-width: 160px; top: calc(100% + 4px);
+  }
+}
 
 /* Step indicator banner [UNIQUE] */
 .step-guide {
