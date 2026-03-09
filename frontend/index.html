@@ -1951,7 +1951,7 @@ function renderChart(data) {
   html += `<div class="section-header">Your Bodygraph <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
   <div class="card" style="padding:var(--space-4);text-align:center">
     <div id="${_bgId}" style="min-height:200px"></div>
-    <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap a center or channel to explore</div>
+    <div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-top:var(--space-2)">Tap a center or channel to explore</div>
   </div>`;
   // Deferred render after DOM insertion
   setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_bgId, chart); }, 50);
@@ -3370,19 +3370,19 @@ function updateOverview(chartResponse) {
   html += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:var(--space-3);margin-bottom:var(--space-5)">
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${chart.type || '—'}</div>
-      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Energy Pattern</div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Energy Pattern</div>
     </div>
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--text)">${chart.profile || '—'}</div>
-      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Life Role</div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Life Role</div>
     </div>
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--accent)">${definedCount}/${openCount}</div>
-      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Defined/Open</div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Defined/Open</div>
     </div>
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${channelCount}</div>
-      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Active Channels</div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Active Channels</div>
     </div>
   </div>`;
 
@@ -3414,9 +3414,9 @@ function updateOverview(chartResponse) {
   // Mini bodygraph
   const _ovBgId = 'overview-bodygraph-' + Date.now();
   html += `<div class="card" style="margin-bottom:var(--space-4);text-align:center">
-    <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Bodygraph</div>
+    <div style="font-size:var(--font-size-sm);font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Bodygraph</div>
     <div id="${_ovBgId}"></div>
-    <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap centers and channels to explore</div>
+    <div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-top:var(--space-2)">Tap centers and channels to explore</div>
   </div>`;
 
   // Not-Self alert
