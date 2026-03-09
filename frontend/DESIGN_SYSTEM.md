@@ -479,6 +479,88 @@ const tabs = new TabComponent('#tab-container', {
 </div>
 ```
 
+### Priming Recommendations (Sprint 19)
+
+Components for displaying historical exemplars, book recommendations, and knowledge focus.
+
+```html
+<!-- Exemplar Card -->
+<div class="exemplar-card">
+  <div class="exemplar-name">Marie Curie (1867-1934)</div>
+  <p class="exemplar-relevance">Generator persistence in the face of obstacles...</p>
+  <p><strong>Key Lesson:</strong> Trust your sustained response even when the world doesn't recognize your work yet.</p>
+  <p class="exemplar-invoke"><em>When to invoke:</em> When facing long-term projects requiring patience.</p>
+</div>
+
+<!-- Book Recommendations -->
+<div class="book-recs">
+  <div class="book-rec">
+    <span class="book-type">📖 Fiction</span>
+    <span class="book-title">"Siddhartha" by Hermann Hesse</span>
+    <span class="book-relevance">The path of patient response and surrender</span>
+  </div>
+</div>
+
+<!-- Knowledge Focus Badge -->
+<div class="knowledge-focus-badge">Knowledge of Self</div>
+```
+
+Classes:
+- `.exemplar-card` — Container with gold gradient border
+- `.exemplar-name` — Figure name with gold color
+- `.exemplar-relevance` — Italic relevance quote
+- `.exemplar-invoke` — When to invoke context
+- `.book-recs` — Book recommendations container  
+- `.book-rec` — Individual book entry
+- `.book-type` — Fiction/Non-fiction indicator
+- `.book-title` — Book title styling
+- `.book-relevance` — Why this book is relevant
+- `.knowledge-focus-badge` — Highlighted knowledge area
+
+### Forge Details (Sprint 19)
+
+Components for displaying forge weapon, defense, and shadow warning.
+
+```html
+<!-- Forge Weapon -->
+<div class="forge-weapon">
+  <span class="forge-icon">⚔️</span>
+  <span><strong>Your Weapon:</strong> Patience — the ability to outlast any obstacle</span>
+</div>
+
+<!-- Forge Defense -->
+<div class="forge-defense">
+  <span class="forge-icon">🛡️</span>
+  <span><strong>Your Defense:</strong> Historical Memory — learning from the collective past</span>
+</div>
+
+<!-- Shadow Warning -->
+<div class="forge-shadow">
+  <span class="forge-icon">⚠️</span>
+  <span><strong>Shadow Warning:</strong> The Anachronist — being paralyzed by reverence for the past</span>
+</div>
+```
+
+Classes:
+- `.forge-weapon` — Red-tinted gradient with left border accent
+- `.forge-defense` — Teal-tinted gradient with left border accent
+- `.forge-shadow` — Warning style with red border accent
+- `.forge-icon` — Icon container with flex alignment
+
+### Mobile Sticky CTA (Sprint 19)
+
+Sticky call-to-action that appears when form scrolls out of viewport on mobile.
+
+```html
+<div class="sticky-chart-cta visible">
+  <button class="btn-primary">Generate My Chart</button>
+</div>
+```
+
+Classes (in `mobile.css` within `@media (max-width: 768px)`):
+- `.sticky-chart-cta` — Fixed position container above mobile nav
+- `.sticky-chart-cta.visible` — Triggers display with slide-up animation
+
 ---
 
 ## Accessibility

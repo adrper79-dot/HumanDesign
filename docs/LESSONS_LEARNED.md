@@ -189,54 +189,6 @@ Comprehensive audit of the full codebase and live Neon database using 3 parallel
 
 ---
 
-### 2026-03-09 | Sprint 19: RAG Context Gap — AI Missing Canonical Prime Self Data
-
-**Trigger**
-AI synthesis responses lacked depth when referencing Prime Self framework elements (Forge weapons, historical exemplars, knowledge focus areas). Claude had access to calculated data but not the canonical reference files that give those terms meaning.
-
-**Root Cause**
-The `engine-compat.js` file (which injects JSON data into the Workers runtime via `globalThis.__PRIME_DATA.kb`) was missing 7 Prime Self canonical data files:
-- `historical_figures.json` — 48 exemplars with life lessons per forge/line combo
-- `book_recommendations.json` — curated reading by forge/knowledge type
-- `forges_canonical.json` — forge definitions, weapons, defenses
-- `knowledges_canonical.json` — 12 knowledge focus areas
-- `arts_canonical.json` — creative modality mappings
-- `sciences_canonical.json` — analytical domain mappings
-- `defenses_canonical.json` — shadow defense mechanisms
-
-These files existed in `src/knowledgebase/prime_self/` and were used in unit tests (Node.js), but never made it into the production Workers bundle because Cloudflare Workers can't access filesystem at runtime — data must be statically imported.
-
-**Resolution**
-Added 7 static imports to `workers/src/engine-compat.js`:
-```javascript
-import historicalFiguresData from '../../src/knowledgebase/prime_self/historical_figures.json';
-import bookRecommendationsData from '../../src/knowledgebase/prime_self/book_recommendations.json';
-import forgesCanonicalData from '../../src/knowledgebase/prime_self/forges_canonical.json';
-import knowledgesCanonicalData from '../../src/knowledgebase/prime_self/knowledges_canonical.json';
-import artsCanonicalData from '../../src/knowledgebase/prime_self/arts_canonical.json';
-import sciencesCanonicalData from '../../src/knowledgebase/prime_self/sciences_canonical.json';
-import defensesCanonicalData from '../../src/knowledgebase/prime_self/defenses_canonical.json';
-```
-
-And corresponding entries in the `kb` object with `'prime_self/...'` keys.
-
-**Key Learnings**
-
-1. **Serverless data injection is explicit, not implicit.** Unlike Node.js where you can `require()` or `fetch()` at runtime, Cloudflare Workers require all data to be bundled at build time. Every JSON file used in production must have a corresponding import in `engine-compat.js`.
-
-2. **Test environment ≠ Production environment.** Unit tests ran against Node.js which had filesystem access. Production Workers had no filesystem. This gap meant 7 files were "available" in tests but absent in production.
-
-3. **AI synthesis quality depends on upstream data injection.** When Claude referenced "Forge of Power" but had no definition, it could only generate generic text. With canonical data injected, Claude can now provide specific weapons, defenses, and exemplars.
-
-4. **Add validation for expected kb keys.** A startup check listing all expected `globalThis.__PRIME_DATA.kb` keys would have caught this earlier. Consider: `const REQUIRED_KB_KEYS = ['prime_self/historical_figures', ...]` with assertion on app init.
-
-**Preventive Measures**
-- ✅ Added 7 missing imports to engine-compat.js
-- [ ] Add pre-deploy script that verifies all `src/knowledgebase/**/*.json` files have corresponding imports in engine-compat.js
-- [ ] Document all kb keys in ARCHITECTURE.md § Data Flow
-
----
-
 ## Development Best Practices
 
 ### Verification Anchors

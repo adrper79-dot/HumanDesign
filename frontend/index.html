@@ -428,7 +428,7 @@
       <strong style="color:var(--gold)" data-i18n="chart.welcomeTitle">Welcome to Prime Self</strong><br>
       Enter your exact birth date, time, and location below. We'll calculate your personalized Energy Blueprint by mapping 64 gate activations, planetary positions, and numerological patterns. Your chart reveals which energies are consistently available to you (defined centers) vs. which you experience through others (open centers). This precision calculation forms the foundation for AI-powered synthesis.
     </div>
-    <div class="card">
+    <div class="card" id="chartFormCard">
       <div class="card-title"><span class="icon-chart"></span> <span data-i18n="chart.birthData">Birth Data</span></div>
       <div class="form-grid">
         <div class="form-group">
@@ -485,6 +485,14 @@
     </div>
 
     <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Human Design &amp; astrology data.</p></div>
+
+    <!-- Mobile Sticky CTA (Sprint 19.3) - Shows when form scrolls out of viewport -->
+    <div id="stickyChartCta" class="sticky-chart-cta" aria-hidden="true">
+      <button class="btn-primary" onclick="calculateChart()">
+        <span class="spinner" id="stickyCaSpinner" style="display:none"></span>
+        <span data-i18n="chart.generateMyChart">Generate My Chart</span>
+      </button>
+    </div>
   </div>
 
   <!-- ═══ PROFILE TAB ═══ -->
@@ -1383,7 +1391,7 @@ async function startCheckout(tier, event) {
     });
 
     if (result.error) {
-      alert('Checkout failed: ' + result.error);
+      showNotification('Checkout failed: ' + result.error, 'error');
       if (checkoutBtn) {
         checkoutBtn.disabled = false;
         checkoutBtn.innerHTML = originalText;
@@ -1399,14 +1407,14 @@ async function startCheckout(tier, event) {
           window.location.href = result.url;
         } else {
           console.error('Invalid checkout URL:', redirectUrl.hostname);
-          alert('Invalid checkout redirect. Please try again.');
+          showNotification('Invalid checkout redirect. Please try again.', 'error');
         }
       } catch {
-        alert('Invalid checkout URL received.');
+        showNotification('Invalid checkout URL received.', 'error');
       }
     }
   } catch (e) {
-    alert('Failed to start checkout: ' + e.message);
+    showNotification('Failed to start checkout: ' + e.message, 'error');
   }
 }
 
@@ -1422,7 +1430,7 @@ async function openBillingPortal() {
     });
 
     if (result.error) {
-      alert('Failed to open billing portal: ' + result.error);
+      showNotification('Failed to open billing portal: ' + result.error, 'error');
       return;
     }
 
@@ -1430,7 +1438,7 @@ async function openBillingPortal() {
       window.open(result.url, '_blank');
     }
   } catch (e) {
-    alert('Failed to open billing portal: ' + e.message);
+    showNotification('Failed to open billing portal: ' + e.message, 'error');
   }
 }
 
@@ -1571,7 +1579,7 @@ document.addEventListener('DOMContentLoaded', () => updateStepGuide('chart'));
 
 // ── Astrological Chart Wheel ─────────────────────────────────
 function renderAstroChart(astro) {
-  console.log('[Chart] renderAstroChart called', astro);
+  if (window.DEBUG) console.log('[Chart] renderAstroChart called', astro);
   if (!astro || !astro.placements) {
     console.warn('[Chart] No astrology data or placements:', { astro, hasPlacements: astro?.placements });
     return '';
@@ -1800,7 +1808,7 @@ function saveBirthData() {
     };
     if (data.date && data.time) {
       localStorage.setItem(BIRTH_DATA_KEY, JSON.stringify(data));
-      console.log('[BirthData] Saved to localStorage');
+      if (window.DEBUG) console.log('[BirthData] Saved to localStorage');
     }
   } catch (e) { console.warn('[BirthData] Save failed:', e); }
 }
@@ -1844,7 +1852,7 @@ function restoreBirthData() {
       });
     }
 
-    console.log('[BirthData] Restored from localStorage');
+    if (window.DEBUG) console.log('[BirthData] Restored from localStorage');
     return true;
   } catch (e) { console.warn('[BirthData] Restore failed:', e); return false; }
 }
@@ -1868,12 +1876,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderChart(data) {
-  console.log('[Chart] renderChart called with data:', data);
+  if (window.DEBUG) console.log('[Chart] renderChart called with data:', data);
   if (data.error) return `<div class="alert alert-error">API Error: ${escapeHtml(data.error)}</div>`;
   const d = data.data || data;
   const chart = d.chart || d;
   const astro = d.westernAstrology || d.astrology || {};
-  console.log('[Chart] Extracted astro:', astro);
+  if (window.DEBUG) console.log('[Chart] Extracted astro:', astro);
   const meta = data.meta || {};
 
   let html = '';
@@ -1951,7 +1959,7 @@ function renderChart(data) {
   html += `<div class="section-header">Your Bodygraph <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
   <div class="card" style="padding:var(--space-4);text-align:center">
     <div id="${_bgId}" style="min-height:200px"></div>
-    <div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-top:var(--space-2)">Tap a center or channel to explore</div>
+    <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap a center or channel to explore</div>
   </div>`;
   // Deferred render after DOM insertion
   setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_bgId, chart); }, 50);
@@ -2149,8 +2157,8 @@ async function generateProfile() {
 }
 
 function renderProfile(data) {
-  console.log('[Profile] renderProfile called - Version 2.1');
-  console.log('Raw data:', data);
+  if (window.DEBUG) console.log('[Profile] renderProfile called - Version 2.1');
+  if (window.DEBUG) console.log('Raw data:', data);
   
   if (data.error) return `<div class="alert alert-error">API Error: ${escapeHtml(data.error)}<br><small>${escapeHtml(data.message || '')}</small></div>`;
 
@@ -2162,7 +2170,7 @@ function renderProfile(data) {
   const meta = payload.meta || {};
 
   // Debug logging
-  console.log('Profile data:', { hasQSG: !!qsg, hasTI: !!ti, qsg, ti, payload });
+  if (window.DEBUG) console.log('Profile data:', { hasQSG: !!qsg, hasTI: !!ti, qsg, ti, payload });
 
   // Check if data exists (null/undefined, not just empty objects)
   if ((qsg === null || qsg === undefined) && (ti === null || ti === undefined)) {
@@ -2170,7 +2178,7 @@ function renderProfile(data) {
     return `<div class="alert alert-warn">Profile generation returned no data. Raw response below.</div>` + rawToggle(data);
   }
   
-  console.log('✅ Profile data valid - rendering...');
+  if (window.DEBUG) console.log('✅ Profile data valid - rendering...');
 
   let html = '';
 
@@ -2228,6 +2236,70 @@ function renderProfile(data) {
     }
     
     html += `</div>`; // close Quick Start Guide card
+  }
+
+  // ═══ PRIMING RECOMMENDATIONS (Sprint 19.2) ═══
+  if (ti?.primingRecommendations) {
+    const pr = ti.primingRecommendations;
+    html += `<div class="card">
+      <div class="card-title"><span class="icon-book"></span> Your Priming Guide</div>`;
+    
+    // Historical Exemplar
+    if (pr.historicalExemplar) {
+      const ex = pr.historicalExemplar;
+      html += `<div class="profile-section">
+        <h4>Historical Exemplar</h4>
+        <div class="exemplar-card">
+          <div class="exemplar-name">${escapeHtml(ex.name || '—')}</div>
+          ${ex.relevance ? `<p>${escapeHtml(ex.relevance)}</p>` : ''}
+          ${ex.keyLesson ? `<div class="exemplar-lesson"><strong>Key Lesson:</strong> ${escapeHtml(ex.keyLesson)}</div>` : ''}
+          ${ex.invocationContext ? `<div class="exemplar-invoke"><strong>When to invoke:</strong> ${escapeHtml(ex.invocationContext)}</div>` : ''}
+        </div>
+      </div>`;
+    }
+    
+    // Alternate Exemplars
+    if (pr.alternateExemplars?.length) {
+      html += `<div class="profile-section">
+        <h4>Other Exemplars to Study</h4>
+        <div class="pill-list">${pr.alternateExemplars.map(e => `<span class="pill">${escapeHtml(e)}</span>`).join('')}</div>
+      </div>`;
+    }
+    
+    // Book Recommendations
+    if (pr.bookRecommendations) {
+      const br = pr.bookRecommendations;
+      html += `<div class="profile-section">
+        <h4>Recommended Reading</h4>
+        <div class="book-recs">`;
+      if (br.fiction) {
+        html += `<div class="book-rec">
+          <div class="book-type">Fiction</div>
+          <div class="book-title">${escapeHtml(br.fiction.title || '—')}</div>
+          <div class="book-author">by ${escapeHtml(br.fiction.author || 'Unknown')}</div>
+          ${br.fiction.relevance ? `<div class="book-relevance">${escapeHtml(br.fiction.relevance)}</div>` : ''}
+        </div>`;
+      }
+      if (br.nonFiction) {
+        html += `<div class="book-rec">
+          <div class="book-type">Non-Fiction</div>
+          <div class="book-title">${escapeHtml(br.nonFiction.title || '—')}</div>
+          <div class="book-author">by ${escapeHtml(br.nonFiction.author || 'Unknown')}</div>
+          ${br.nonFiction.relevance ? `<div class="book-relevance">${escapeHtml(br.nonFiction.relevance)}</div>` : ''}
+        </div>`;
+      }
+      html += `</div></div>`;
+    }
+    
+    // Current Knowledge Focus
+    if (pr.currentKnowledgeFocus) {
+      html += `<div class="profile-section">
+        <h4>Your Current Focus</h4>
+        <div class="knowledge-focus-badge">${escapeHtml(pr.currentKnowledgeFocus)}</div>
+      </div>`;
+    }
+    
+    html += `</div>`; // close Priming Recommendations card
   }
 
   // ═══ TECHNICAL DETAILS TOGGLE ═══
@@ -2356,9 +2428,34 @@ function renderProfile(data) {
       html += `<div class="card">
         <div class="card-title"><span class="icon-fire"></span> Forge Identification</div>
         <div class="forge-badge">
-          ✦ ${forge.primaryForge || '—'} Forge
-          <span class="confidence-pill ${forge.confidence==='high'?'':'medium'}">${forge.confidence || ''}</span>
+          ✦ ${escapeHtml(forge.primaryForge || '—')} Forge
+          <span class="confidence-pill ${forge.confidence==='high'?'':'medium'}">${escapeHtml(forge.confidence || '')}</span>
         </div>`;
+      
+      // Forge Weapon (Sprint 19.2)
+      if (forge.forgeWeapon) {
+        html += `<div class="forge-weapon">
+          <span class="forge-icon">⚔</span>
+          <div><strong>Your Weapon:</strong> ${escapeHtml(forge.forgeWeapon)}</div>
+        </div>`;
+      }
+      
+      // Forge Defense (Sprint 19.2)
+      if (forge.forgeDefense) {
+        html += `<div class="forge-defense">
+          <span class="forge-icon">🛡</span>
+          <div><strong>Your Defense:</strong> ${escapeHtml(forge.forgeDefense)}</div>
+        </div>`;
+      }
+      
+      // Shadow Warning (Sprint 19.2)
+      if (forge.shadowWarning) {
+        html += `<div class="forge-shadow">
+          <span class="forge-icon">⚠</span>
+          <div><strong>Shadow Warning:</strong> ${escapeHtml(forge.shadowWarning)}</div>
+        </div>`;
+      }
+      
       if (forge.indicators?.length) {
         html += `<div class="section-header" style="margin-top:var(--space-4)">Indicators</div><ul class="indicator-list">`;
         forge.indicators.forEach(i => {
@@ -2775,7 +2872,7 @@ async function addClient() {
   const name = document.getElementById('prac-name').value.trim();
   const profileId = document.getElementById('prac-profileId').value.trim() || undefined;
 
-  if (!name) { alert('Client name required'); return; }
+  if (!name) { showNotification('Client name required', 'warning'); return; }
 
   const btn = document.getElementById('pracAddBtn');
   const spinner = document.getElementById('pracAddSpinner');
@@ -2785,11 +2882,11 @@ async function addClient() {
 
   try {
     const data = await apiFetch('/api/practitioner/clients/add', { method: 'POST', body: JSON.stringify({ clientName: name, profileId }) });
-    alert(data.message || 'Client added');
+    showNotification(data.message || 'Client added', 'success');
     document.getElementById('prac-name').value = '';
     document.getElementById('prac-profileId').value = '';
   } catch (e) {
-    alert('Error: ' + e.message);
+    showNotification('Error: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -3174,7 +3271,7 @@ async function subscribeSMS() {
   if (!token) { openAuthOverlay(); return; }
 
   const phone = document.getElementById('sms-phone').value.trim();
-  if (!phone || !phone.startsWith('+')) { alert('Phone must be in E.164 format (+17757172255)'); return; }
+  if (!phone || !phone.startsWith('+')) { showNotification('Phone must be in E.164 format (+17757172255)', 'warning'); return; }
 
   const btn = document.getElementById('smsSubBtn');
   const spinner = document.getElementById('smsSubSpinner');
@@ -3198,7 +3295,7 @@ async function unsubscribeSMS() {
   if (!token) { openAuthOverlay(); return; }
 
   const phone = document.getElementById('sms-phone').value.trim();
-  if (!phone || !phone.startsWith('+')) { alert('Phone must be in E.164 format'); return; }
+  if (!phone || !phone.startsWith('+')) { showNotification('Phone must be in E.164 format', 'warning'); return; }
   if (!confirm('Unsubscribe this number from all SMS notifications?')) return;
 
   const btn = document.getElementById('smsUnsubBtn');
@@ -3282,14 +3379,14 @@ function renderOnboardingStep(data, step) {
 
 // ── Utilities ─────────────────────────────────────────────────
 async function exportPDF(profileId) {
-  if (!profileId) { alert('No profile ID provided'); return; }
+  if (!profileId) { showNotification('No profile ID provided', 'warning'); return; }
   
   try {
     const url = `${API}/api/profile/${profileId}/pdf`;
     // Open in new window to trigger download
     window.open(url, '_blank');
   } catch (e) {
-    alert('Error: ' + e.message);
+    showNotification('Error: ' + e.message, 'error');
   }
 }
 
@@ -3370,19 +3467,19 @@ function updateOverview(chartResponse) {
   html += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:var(--space-3);margin-bottom:var(--space-5)">
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${chart.type || '—'}</div>
-      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Energy Pattern</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Energy Pattern</div>
     </div>
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--text)">${chart.profile || '—'}</div>
-      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Life Role</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Life Role</div>
     </div>
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--accent)">${definedCount}/${openCount}</div>
-      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Defined/Open</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Defined/Open</div>
     </div>
     <div class="card" style="padding:var(--space-4);text-align:center">
       <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${channelCount}</div>
-      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Active Channels</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Active Channels</div>
     </div>
   </div>`;
 
@@ -3414,9 +3511,9 @@ function updateOverview(chartResponse) {
   // Mini bodygraph
   const _ovBgId = 'overview-bodygraph-' + Date.now();
   html += `<div class="card" style="margin-bottom:var(--space-4);text-align:center">
-    <div style="font-size:var(--font-size-sm);font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Bodygraph</div>
+    <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Bodygraph</div>
     <div id="${_ovBgId}"></div>
-    <div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-top:var(--space-2)">Tap centers and channels to explore</div>
+    <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap centers and channels to explore</div>
   </div>`;
 
   // Not-Self alert
@@ -3945,7 +4042,7 @@ async function shareProfile(title, text, url) {
         text: shareText,
         url: shareUrl
       });
-      console.log('✅ Share successful');
+      if (window.DEBUG) console.log('✅ Share successful');
       
       // Track share event (optional analytics)
       trackEvent('share', 'profile', 'web_share_api');
@@ -4016,49 +4113,6 @@ async function copyToClipboard(text) {
 }
 
 /**
- * Share current chart as image (future: generate chart canvas)
- */
-async function shareChartImage() {
-  try {
-    // TODO: Implement when bodygraph chart rendering is complete
-    // For now, show coming soon message
-    showNotification('Chart image sharing coming soon!', 'info');
-    
-    /* Future implementation:
-    const canvas = document.querySelector('#bodygraphCanvas');
-    const blob = await canvasToBlob(canvas);
-    const file = new File([blob], 'my-bodygraph.png', { type: 'image/png' });
-    
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: 'My Human Design Bodygraph',
-        text: 'Check out my energy blueprint!'
-      });
-    }
-    */
-  } catch (error) {
-    console.error('Chart share failed:', error);
-    showNotification('Failed to share chart. Please try again.', 'error');
-  }
-}
-
-/**
- * Download chart as PNG (future)
- */
-function downloadChart() {
-  showNotification('Chart download coming soon!', 'info');
-  
-  /* Future implementation:
-  const canvas = document.querySelector('#bodygraphCanvas');
-  const link = document.createElement('a');
-  link.download = 'prime-self-bodygraph.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-  */
-}
-
-/**
  * Share to specific social platform
  * @param {string} platform - 'facebook', 'twitter', 'linkedin', 'whatsapp'
  */
@@ -4081,7 +4135,7 @@ function shareToSocial(platform) {
 }
 
 /**
- * Show notification message
+ * Show notification message (Sprint 19.3 - consolidated error handling)
  * @param {string} message - Notification text
  * @param {string} type - 'success', 'error', 'info', 'warning'
  */
@@ -4091,24 +4145,38 @@ function showNotification(message, type = 'info') {
   if (!container) {
     container = document.createElement('div');
     container.id = 'notificationContainer';
+    container.setAttribute('role', 'region');
+    container.setAttribute('aria-label', 'Notifications');
     container.style.cssText = `
       position: fixed;
       top: 80px;
       right: 20px;
-      z-index: 400;
+      z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
       gap: 10px;
       pointer-events: none;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
     `;
     document.body.appendChild(container);
   }
   
-  // Create notification element
+  // Color mapping for notification types
+  const colors = {
+    success: 'rgba(80,200,120,0.95)',
+    error: 'rgba(224,80,80,0.95)',
+    warning: 'rgba(230,170,50,0.95)',
+    info: 'rgba(106,79,200,0.95)'
+  };
+  
+  // Create notification element with aria-live for screen readers
   const notification = document.createElement('div');
   notification.className = `notification notification-${type}`;
+  notification.setAttribute('role', 'alert');
+  notification.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
   notification.style.cssText = `
-    background: ${type === 'success' ? 'rgba(80,200,120,0.95)' : type === 'error' ? 'rgba(224,80,80,0.95)' : 'rgba(106,79,200,0.95)'};
+    background: ${colors[type] || colors.info};
     color: white;
     padding: 12px 20px;
     border-radius: 8px;
@@ -4123,20 +4191,21 @@ function showNotification(message, type = 'info') {
   
   container.appendChild(notification);
   
-  // Auto-remove after 3 seconds
+  // Auto-remove after delay (errors last longer)
+  const delay = type === 'error' ? 5000 : 3000;
   setTimeout(() => {
     notification.style.animation = 'slideOutRight 0.3s ease-out';
     setTimeout(() => {
       notification.remove();
     }, 300);
-  }, 3000);
+  }, delay);
 }
 
 /**
  * Track analytics event (stub for future analytics integration)
  */
 function trackEvent(category, action, label) {
-  console.log(`📊 Event: ${category} / ${action} / ${label}`);
+  if (window.DEBUG) console.log(`📊 Event: ${category} / ${action} / ${label}`);
   // Future: Send to Google Analytics, Mixpanel, etc.
   // if (window.gtag) {
   //   gtag('event', action, { event_category: category, event_label: label });
@@ -4414,7 +4483,7 @@ if ('ontouchstart' in window && window.innerWidth <= 768) {
       const activeTab = document.querySelector('.tab-content.active')?.id;
       if (activeTab === 'transitsTab') {
         // Reload transits (would call API in production)
-        console.log('🔄 Refreshing transit data...');
+        if (window.DEBUG) console.log('🔄 Refreshing transit data...');
       }
       
       // Hide indicator after 1 second
@@ -4707,6 +4776,32 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
   // else: seen onboarding but no birth data → stays on chart entry form (default)
+
+  // ── Mobile Sticky CTA IntersectionObserver (Sprint 19.3) ─────────────────
+  // Show sticky CTA when chart form card scrolls out of viewport on mobile
+  const chartFormCard = document.getElementById('chartFormCard');
+  const stickyChartCta = document.getElementById('stickyChartCta');
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+  if (chartFormCard && stickyChartCta && isMobile) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        // Show sticky CTA when form is NOT visible (out of viewport)
+        if (!entry.isIntersecting) {
+          stickyChartCta.classList.add('visible');
+          stickyChartCta.setAttribute('aria-hidden', 'false');
+        } else {
+          stickyChartCta.classList.remove('visible');
+          stickyChartCta.setAttribute('aria-hidden', 'true');
+        }
+      });
+    }, {
+      threshold: 0.1, // Trigger when 10% of form is visible/hidden
+      rootMargin: '-20px 0px' // Small buffer to avoid flicker
+    });
+
+    observer.observe(chartFormCard);
+  }
 });
 </script>
 
@@ -4717,7 +4812,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then((registration) => {
-        console.log('✅ Service Worker registered:', registration.scope);
+        if (window.DEBUG) console.log('✅ Service Worker registered:', registration.scope);
         
         // Check for updates periodically
         setInterval(() => {
@@ -4739,7 +4834,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredPrompt = e;
   
   // Show install button (if you add one in the future)
-  console.log('💡 PWA install prompt available');
+  if (window.DEBUG) console.log('💡 PWA install prompt available');
   
   // Optional: Show a custom install banner
   const installBanner = document.createElement('div');
@@ -4774,7 +4869,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt.prompt();
     // Wait for the user to respond
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`PWA install outcome: ${outcome}`);
+    if (window.DEBUG) console.log(`PWA install outcome: ${outcome}`);
     deferredPrompt = null;
   });
   
@@ -4785,7 +4880,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // Log when app is installed
 window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA installed successfully');
+  if (window.DEBUG) console.log('✅ PWA installed successfully');
   deferredPrompt = null;
 });
 

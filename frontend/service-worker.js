@@ -6,9 +6,10 @@
  * 2026-03-09: v10 - Tier 0 z-index normalization fixes
  * 2026-03-09: v11 - UI-008 transit row mobile grid stacking fix
  * 2026-03-09: v12 - Phase 6 dead CSS cleanup (removed IP-risky type classes)
+ * 2026-03-09: v13 - Sprint 19: Prime Self data integration, Priming/Forge UI, mobile CTA, error consolidation
  */
 
-const CACHE_VERSION = 'v12';
+const CACHE_VERSION = 'v13';
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;

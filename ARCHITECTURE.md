@@ -161,29 +161,31 @@ Known Outputs:
 
 ### 5.2 Knowledgebase (RAG Corpus) — Separated by System
 
+> **Sprint 19 Update**: All files marked with ✅ are injected into Cloudflare Workers via `workers/src/engine-compat.js` and available at runtime in `globalThis.__PRIME_DATA.kb[key]`.
+
 ```
 src/knowledgebase/
   hd/
-    gates.json          64 gates — original content derived from I Ching (Legge)
-    channels.json       36 channels — synthesized from gate pair descriptions
-    centers.json        9 centers — biological/energetic function
-    crosses.json        192 purpose vectors — synthesized from component gene keys
-    types.json          5 types — structural descriptions
-    profiles.json       12 profiles — line combination descriptions
+    ✅ gates.json          64 gates — original content derived from I Ching (Legge)
+    ✅ channels.json       36 channels — synthesized from gate pair descriptions
+    ✅ centers.json        9 centers — biological/energetic function
+    ✅ crosses.json        192 purpose vectors — synthesized from component gene keys
+    ✅ types.json          5 types — structural descriptions
+    ✅ profiles.json       12 profiles — line combination descriptions
   astro/
-    signs.json          12 zodiac signs
-    planets.json        10 planets + nodes
-    aspects.json        Major aspects and orb definitions
-    houses.json         12 houses
+    ✅ signs.json          12 zodiac signs
+    ✅ planets.json        10 planets + nodes
+    ✅ aspects.json        Major aspects and orb definitions
+    ✅ houses.json         12 houses
   prime_self/
-    forges_canonical.json       5 Forges (Chronos, Eros, Aether, Lux, Phoenix)
-    knowledges_canonical.json   6 Knowledges (Self, Ancestors, The One, Constructive, Destructive, Healing)
-    sciences_canonical.json     6 Sciences (Mindfulness, Alchemy, Divination, Astrology, Reiki, Behavioral)
-    arts_canonical.json         6 Arts (Aromatherapy, Semiotics, Quantum Mind, Crystallography, etc.)
-    defenses_canonical.json     6 Defenses (Reflexology, Acupressure, Chromotherapy, etc.)
-    heresies_canonical.json     6 Heresies (shadow powers with warnings)
-    historical_figures.json     25+ figures organized by HD Type & Forge
-    book_recommendations.json   60+ books by Type, Forge, Knowledge, Need
+    ✅ forges_canonical.json       5 Forges (Chronos, Eros, Aether, Lux, Phoenix)
+    ✅ knowledges_canonical.json   6 Knowledges (Self, Ancestors, The One, Constructive, Destructive, Healing)
+    ✅ sciences_canonical.json     6 Sciences (Mindfulness, Alchemy, Divination, Astrology, Reiki, Behavioral)
+    ✅ arts_canonical.json         6 Arts (Aromatherapy, Semiotics, Quantum Mind, Crystallography, etc.)
+    ✅ defenses_canonical.json     6 Defenses (Reflexology, Acupressure, Chromotherapy, etc.)
+       heresies_canonical.json     6 Heresies (shadow powers with warnings)
+    ✅ historical_figures.json     48 figures organized by Forge/Line with life lessons
+    ✅ book_recommendations.json   60+ books by Type, Forge, Knowledge, Need
   combined/
     (nearly empty at launch — add only VERIFIED cross-system correlations)
 ```
@@ -492,7 +494,7 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [ ] Fix `rag.js` array/object mismatch (BL-M7)
 - [ ] Consolidate duplicate RAG and JWT code (BL-M8, BL-M9)
 - [ ] Add missing channel 42-53 in composite.js (BL-M11)
-- [ ] Complete `engine-compat.js` data injection (BL-M12)
+- [x] Complete `engine-compat.js` data injection (BL-M12) — Sprint 19: Added 7 Prime Self canonical files
 - [ ] Frontend for composite, practitioner, onboarding, PDF features (BL-M14)
 - [ ] Add integration tests for middleware, DB, LLM failover
 ---

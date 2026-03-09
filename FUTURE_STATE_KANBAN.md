@@ -281,23 +281,21 @@ During session planning, discussion of "contextual recommendations" for next ste
 ### KANBAN-001 | Priming Recommendations UI Rendering
 **Priority:** HIGH  
 **Type:** Feature Gap  
-**Status:** Schema exists, data exists, UI missing  
+**Status:** ✅ COMPLETE (Sprint 19)
 
 **What was done:**
 - ✅ Schema added to `synthesis.js` → `primingRecommendations` object
-- ✅ Historical figures data in `src/knowledgebase/prime_self/historical_figures.json` (25+ figures)
+- ✅ Historical figures data in `src/knowledgebase/prime_self/historical_figures.json` (48 figures)
 - ✅ Book recommendations data in `src/knowledgebase/prime_self/book_recommendations.json` (60+ books)
+- ✅ Frontend rendering of `primingRecommendations` section in profile output (Sprint 19)
+- ✅ UI card for "Historical Exemplar" with name, relevance, keyLesson, invocationContext
+- ✅ UI for "Alternate Exemplars" (2-3 backup figures)
+- ✅ UI for "Book Recommendations" with fiction + non-fiction  
+- ✅ UI for "Current Knowledge Focus" (which of Six Knowledges to prioritize)
+- ✅ CSS styling in `app.css` (.exemplar-card, .exemplar-name, .book-recs, .knowledge-focus-badge)
 
-**What's missing:**
-- ❌ Frontend rendering of `primingRecommendations` section in profile output
-- ❌ UI card for "Historical Exemplar" with:
-  - `name`, `relevance`, `keyLesson`, `invocationContext`
-- ❌ UI for "Alternate Exemplars" (2-3 backup figures)
-- ❌ UI for "Book Recommendations" with fiction + non-fiction
-- ❌ UI for "Current Knowledge Focus" (which of Six Knowledges to prioritize)
-
-**Files to modify:**
-- `frontend/index.html` — Add rendering in `renderProfile()` function around line 2370
+**Files modified:**
+- `frontend/index.html` — Added rendering in Priming Recommendations section (~line 2232)
 
 **Mockup:**
 ```
@@ -333,21 +331,20 @@ During session planning, discussion of "contextual recommendations" for next ste
 ### KANBAN-002 | Forge Weapon/Defense/Shadow UI Rendering
 **Priority:** HIGH  
 **Type:** Feature Gap  
-**Status:** Schema exists, data exists, UI incomplete  
+**Status:** ✅ COMPLETE (Sprint 19)
 
 **What was done:**
 - ✅ Schema added to `synthesis.js` → `forgeIdentification.forgeWeapon`, `forgeDefense`, `shadowWarning`
 - ✅ Forge data with weapons/defenses in `src/prompts/synthesis.js` FORGE_MAPPING
 - ✅ Forge canonical data in `src/knowledgebase/prime_self/forges_canonical.json`
+- ✅ UI rendering of `forgeWeapon` field (Sprint 19)
+- ✅ UI rendering of `forgeDefense` field (Sprint 19)
+- ✅ UI rendering of `shadowWarning` field (Sprint 19)
+- ✅ CSS styling in `app.css` (.forge-weapon, .forge-defense, .forge-shadow, .forge-icon)
 
-**What's missing:**
-- ❌ UI rendering of `forgeWeapon` field
-- ❌ UI rendering of `forgeDefense` field  
-- ❌ UI rendering of `shadowWarning` field
-- Current UI only shows: primaryForge, confidence, indicators
-
-**Files to modify:**
-- `frontend/index.html` — Extend Forge Identification card (line ~2357)
+**Files modified:**
+- `frontend/index.html` — Extended Forge Identification card rendering
+- `frontend/css/app.css` — Added forge weapon/defense/shadow styling
 
 **Expected output enhancement:**
 ```
@@ -447,31 +444,22 @@ During session planning, discussion of "contextual recommendations" for next ste
 ### KANBAN-006 | RAG Context Missing Canonical Data (VERIFIED)
 **Priority:** HIGH ⬆️ (upgraded from MEDIUM)  
 **Type:** Backend Bug  
-**Status:** CONFIRMED missing — verified 2026-03-09
+**Status:** ✅ COMPLETE (Sprint 19) — verified fix deployed
 
-**Verified Missing:**
-- ❌ `historical_figures.json` NOT loaded into RAG context
-- ❌ `book_recommendations.json` NOT loaded into RAG context
-- ❌ `forges_canonical.json` NOT loaded (uses old `forge_mapping.json`)
-- ❌ `knowledges_canonical.json` NOT loaded
-- ❌ Other canonical files NOT loaded
+**Verified Fixed (Sprint 19):**
+- ✅ `historical_figures.json` loaded into RAG context
+- ✅ `book_recommendations.json` loaded into RAG context
+- ✅ `forges_canonical.json` loaded (canonical, not old forge_mapping)
+- ✅ `knowledges_canonical.json` loaded
+- ✅ `arts_canonical.json` loaded
+- ✅ `sciences_canonical.json` loaded
+- ✅ `defenses_canonical.json` loaded
 
-**Impact:** The AI is told to output `primingRecommendations` (historical figures, books) but doesn't have access to the data! It must currently hallucinate or skip these fields.
+**Resolution:**
+Added 7 static imports to `workers/src/engine-compat.js` with corresponding entries in `globalThis.__PRIME_DATA.kb` object. AI synthesis now has full access to canonical Prime Self data.
 
-**Files to modify:**
-- `src/prompts/rag.js` — Add imports and context building
-- `workers/src/engine-compat.js` — Add to `__PRIME_DATA` injection (critical for Workers)
-
-**Fix approach:**
-```javascript
-// In engine-compat.js, add:
-import historicalFigures from '../../src/knowledgebase/prime_self/historical_figures.json';
-import bookRecommendations from '../../src/knowledgebase/prime_self/book_recommendations.json';
-import forgesCanonical from '../../src/knowledgebase/prime_self/forges_canonical.json';
-import knowledgesCanonical from '../../src/knowledgebase/prime_self/knowledges_canonical.json';
-
-// Then add to __PRIME_DATA object
-```
+**Files modified:**
+- `workers/src/engine-compat.js` — Added 7 imports and kb entries
 
 ---
 
@@ -1625,4 +1613,179 @@ Background video exists but doesn't consider device capabilities or bandwidth.
 
 ---
 
-*This document tracks the gap between "data exists" and "feature is live," and now includes user-facing ideas from both the 2026-03-09 dashboard UX session and the comprehensive 2026-03-08 UX deep review. The canonical alignment work established the philosophical foundation — these items complete the user-facing experience.*
+## 🆕 NEW GAPS IDENTIFIED (2026-03-09 Audit)
+
+### KANBAN-036 | Console.log Cleanup for Production
+**Priority:** MEDIUM  
+**Type:** Code Quality  
+**Status:** NOT STARTED — 20+ instances found  
+
+**Problem:**
+Production code contains debug console.log statements that should be removed:
+- Line 1574: `console.log('[Chart] renderAstroChart called'...)`
+- Line 1803: `console.log('[BirthData] Saved to localStorage')`
+- Line 1847: `console.log('[BirthData] Restored from localStorage')`
+- Line 1871: `console.log('[Chart] renderChart called with data:'...)`
+- Lines 2152-2173: Multiple `console.log` in `renderProfile()`
+- Line 3948: `console.log('✅ Share successful')`
+- Line 4139: `console.log('📊 Event:...')` in trackEvent (analytics stub)
+- Line 4417: `console.log('🔄 Refreshing transit data...')`
+
+**Fix:**
+- Remove all debug logging or wrap in `if (window.DEBUG)` conditional
+- Keep error logging for production diagnostics
+
+**Effort:** 1 hour
+
+---
+
+### KANBAN-037 | "Coming Soon" Stub Removal
+**Priority:** HIGH  
+**Type:** UX Trust  
+**Status:** NOT STARTED  
+
+**Problem:**
+Production has visible "Coming soon!" messages that hurt credibility:
+- Line 4023: `shareChartImage()` → "Chart image sharing coming soon!"
+- Line 4050: `downloadChart()` → "Chart download coming soon!"
+- Line 3125: Cluster synthesis → "Coming soon!"
+
+**Fix Options:**
+1. Remove feature buttons until implemented (recommended)
+2. Implement features (shareChartImage requires Canvas rendering ~ 12 hours)
+3. Update messaging with expected dates
+
+**Effort:** 1 hour (removal) or 12 hours (implementation)
+
+---
+
+### KANBAN-038 | Error Handling Consolidation
+**Priority:** LOW  
+**Type:** Code Quality  
+**Status:** NOT STARTED  
+
+**Problem:**
+Four different error display patterns exist:
+- `alert()` in addClient(), exportPDF() — jarring native dialog
+- `showAlert()` in cluster functions
+- `showEnhanceStatus()` in diary functions
+- `innerHTML` with alert classes elsewhere
+
+**Fix:**
+Consolidate to single `showNotification(message, type)` pattern across all handlers.
+
+**Effort:** 4 hours
+
+---
+
+### KANBAN-039 | Form Validation Gaps
+**Priority:** LOW  
+**Type:** Data Quality  
+**Status:** NOT STARTED  
+
+**Missing validation:**
+- SMS phone input (line 1142): No international format pattern
+- Cluster name (line 1109): No min/max length validation
+- Diary title (line 741): No max length validation
+
+**Fix:**
+Add HTML5 validation patterns and JavaScript validation with user-friendly messages.
+
+**Effort:** 2 hours
+
+---
+
+### KANBAN-040 | Accessibility Fixes (New Findings)
+**Priority:** MEDIUM  
+**Type:** Accessibility  
+**Status:** NOT STARTED  
+
+**Issues identified:**
+- Video without text alternative: Background video lacks screen reader fallback
+- Missing focus indicators: Dynamic pill badges and dropdown items lack :focus-visible styles
+- Color-only natal hit indicator: Transit gates use gold color only — no icon for colorblind users
+- Hidden content focusable: Tab panels with display:none may still receive focus
+
+**Fix:**
+- Add aria-hidden="true" to video, provide fallback text
+- Add :focus-visible styles to .pill, dropdown-item classes
+- Add ★ icon alongside gold color for natal hit gates
+- Add tabindex="-1" to hidden tab panels
+
+**Effort:** 4 hours
+
+---
+
+### KANBAN-041 | Analytics Stub Implementation
+**Priority:** LOW  
+**Type:** Feature Gap  
+**Status:** NOT STARTED  
+
+**Problem:**
+`trackEvent()` function (line 4138) only logs to console — no analytics integration:
+```javascript
+// Future: Send to Google Analytics, Mixpanel, etc.
+// if (window.gtag) { ... }
+```
+
+**Fix:**
+Integrate with GA4 or Mixpanel for production analytics.
+
+**Effort:** 4 hours
+
+---
+
+### KANBAN-042 | Memory Leak Prevention
+**Priority:** LOW  
+**Type:** Performance  
+**Status:** NOT STARTED  
+
+**Potential leaks:**
+- Line 4723: `setInterval()` for transit refresh runs forever
+- Line 4675: `setInterval()` for number animation could accumulate
+
+**Fix:**
+- Add cleanup on page unload/tab switch
+- Use `requestAnimationFrame` instead of setInterval where appropriate
+
+**Effort:** 2 hours
+
+---
+
+## Updated Priority Matrix (2026-03-09)
+
+| ID | Item | Priority | Effort | Impact |
+|----|------|----------|--------|--------|
+| 006 | RAG Context Fix | HIGH→CRITICAL | Low | High — blocks AI priming recommendations |
+| 037 | Coming Soon Stub Removal | HIGH | Low | High — trust/credibility issue |
+| 001 | Priming Recommendations UI | HIGH | Medium | High — surfaces AI data |
+| 002 | Forge Weapon/Defense UI | HIGH | Low | High — completes Forge |
+| 036 | Console.log Cleanup | MEDIUM | Low | Medium — production hygiene |
+| 040 | Accessibility Fixes | MEDIUM | Low | Medium — compliance |
+| 038 | Error Handling Consolidation | LOW | Medium | Low — code quality |
+| 039 | Form Validation Gaps | LOW | Low | Low — data quality |
+| 041 | Analytics Integration | LOW | Low | Low — insights |
+| 042 | Memory Leak Prevention | LOW | Low | Low — performance |
+
+---
+
+## Verification Notes (2026-03-09)
+
+### ✅ CONFIRMED FIXED (from UX_DEEP_REVIEW.md)
+- Testimonials replaced with value proposition banner
+- Social proof shows real data or hides (no fake fallbacks)
+- TYPE_EXPLANATIONS, AUTHORITY_EXPLANATIONS, STRATEGY_EXPLANATIONS implemented
+- CENTER_EXPLANATIONS, CHANNEL_DESCRIPTIONS, PROFILE_EXPLANATIONS implemented
+- GATE_NAMES implemented in explanations.js
+- NOT_SELF_EXPLANATIONS, DEFINITION_EXPLANATIONS implemented
+
+### ⚠️ STILL OUTSTANDING (from UX_DEEP_REVIEW.md)
+- Interactive bodygraph click-to-learn not implemented
+- Transit personal context (gate-specific meaning) not implemented
+- Priming recommendations UI not rendered
+- Forge weapon/defense/shadow UI not rendered
+- RAG context missing canonical files
+
+---
+
+*Updated 2026-03-09: Added KANBAN-036 through KANBAN-042 from codebase audit. See IMPLEMENTATION_PLAN_2026-03-09.md for sprint planning.*
