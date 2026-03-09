@@ -442,7 +442,7 @@ export default {
       const route = resolveRoute(request.method, path);
 
       if (route) {
-        response = await route.handler(request, env, ctx, ...route.args);
+        response = await route.handler(request, env, ...route.args);
       } else if (path === '/api/health') {
         // Basic health — allow `?full=1` to include presence flags for required secrets (no values)
         const url = new URL(request.url);
