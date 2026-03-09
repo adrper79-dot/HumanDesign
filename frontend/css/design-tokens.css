@@ -1,10 +1,17 @@
 /**
  * Prime Self Design System - Design Tokens
+ * ==================================================
+ * CANONICAL SOURCE OF TRUTH for all CSS variables.
  * 
- * A modern, accessible color system with semantic naming
- * Based on WCAG AA standards for color contrast
+ * Token Hierarchy:
+ * 1. design-tokens.css (THIS FILE) - Core tokens used everywhere
+ * 2. design-tokens-premium.css - Optional premium theme overlay
  * 
- * Usage: Import this file first before component styles
+ * All components (app.css, buttons.css, etc.) MUST reference 
+ * tokens from this file. Do NOT define inline :root variables.
+ * 
+ * Based on WCAG AA standards for color contrast (4.5:1 minimum)
+ * ==================================================
  */
 
 :root {
@@ -188,11 +195,14 @@
   /* Container Widths */
   --container-lg: 1024px;
   
-  /* Z-Index Stack */
+  /* Z-Index Stack (normalized scale) */
   --z-sticky: 20;
-  --z-modal-backdrop: 40;
-  --z-modal: 50;
-  --z-tooltip: 70;
+  --z-dropdown: 100;
+  --z-mobile-nav: 150;
+  --z-modal-backdrop: 200;
+  --z-modal: 210;
+  --z-tooltip: 300;
+  --z-notification: 400;
   
   
   /* ═══════════════════════════════════════════════════════════

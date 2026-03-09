@@ -3934,7 +3934,7 @@ function showNotification(message, type = 'info') {
       position: fixed;
       top: 80px;
       right: 20px;
-      z-index: 10000;
+      z-index: 400;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -4285,6 +4285,7 @@ function saveCheckin() { return saveCheckIn(); }
 function loadCheckinStats() { return loadCheckInStats(); }
 
 async function saveCheckIn() {
+  const btn = document.getElementById('checkinBtn');
   const alignmentScore = parseInt(document.getElementById('checkin-alignment-score').value);
   const followedStrategy = document.getElementById('checkin-followed-strategy').checked;
   const followedAuthority = document.getElementById('checkin-followed-authority').checked;
@@ -4300,6 +4301,8 @@ async function saveCheckIn() {
     return;
   }
 
+  // Disable button to prevent double-submit
+  btn.disabled = true;
   statusDiv.innerHTML = '<div class="alert alert-info">' + window.t('checkin.saving') + '</div>';
 
   try {
@@ -4354,6 +4357,9 @@ async function saveCheckIn() {
         <strong>Error:</strong> Network error. Please try again.
       </div>
     `;
+  } finally {
+    // Re-enable button
+    btn.disabled = false;
   }
 }
 

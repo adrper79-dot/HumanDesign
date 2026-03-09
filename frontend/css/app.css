@@ -167,12 +167,12 @@ select option { background: var(--bg3); }
   transform: translateX(-50%); background: var(--bg2); color: var(--text);
   padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
   font-size: 0.8rem; font-weight: 400; white-space: normal; width: 260px;
-  box-shadow: var(--shadow); z-index: 10000; pointer-events: none; line-height: 1.4;
+  box-shadow: var(--shadow); z-index: var(--z-tooltip); pointer-events: none; line-height: 1.4;
 }
 .help-icon[title]:hover::before {
   content: ''; position: absolute; left: 50%; bottom: calc(100% + 2px);
   transform: translateX(-50%); border: 6px solid transparent;
-  border-top-color: var(--border); z-index: 10001;
+  border-top-color: var(--border); z-index: var(--z-tooltip);
 }
 
 /* ── Loading spinner [DUP] base.css (keyframes) ── */
@@ -196,7 +196,7 @@ select option { background: var(--bg3); }
 .data-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .data-row:last-child { border-bottom: none; }
 .data-label { font-size: 0.8rem; color: var(--text-dim); }
-.data-value { font-size: 0.88rem; color: var(--text); font-weight: 500; text-align: right; max-width: 55%; }
+.data-value { font-size: 0.88rem; color: var(--text); font-weight: 500; text-align: right; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Forge badge [DUP] prime-self.css ── */
 .forge-badge {
@@ -233,8 +233,8 @@ select option { background: var(--bg3); }
 .center-explain { font-size: 0.78rem; color: var(--text-dim); line-height: 1.5; margin-top: 3px; }
 .center-explain .center-governs { font-weight: 600; color: var(--gold-dim); }
 .channel-detail { font-size: 0.78rem; color: var(--text-dim); line-height: 1.4; margin-top: 2px; }
-.channel-name { font-weight: 600; color: var(--gold); }
-.gate-name-tag { font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-left: 4px; }
+.channel-name { font-weight: 600; color: var(--gold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.gate-name-tag { font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-left: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Sub-tab pills (Phase 3) [UNIQUE] ── */
 .sub-tabs { display: flex; gap: 4px; margin-bottom: 16px; padding: 4px; background: var(--bg2); border-radius: 8px; border: 1px solid var(--border); }
@@ -387,13 +387,13 @@ select option { background: var(--bg3); }
 
 /* ── Daily Check-In Alignment Buttons [UNIQUE] ── */
 .alignment-btn {
-  width: 40px; height: 40px; border: 1px solid var(--border); background: var(--bg3);
+  min-width: 44px; min-height: 44px; border: 1px solid var(--border); background: var(--bg3);
   color: var(--text-dim); border-radius: 6px; font-size: 0.9rem; font-weight: 600;
   cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center;
   justify-content: center;
 }
 .alignment-btn:hover { border-color: var(--gold-dim); color: var(--text); }
-.alignment-btn.selected {
+.alignment-btn.active {
   background: var(--gold); border-color: var(--gold); color: #0a0a0f; font-weight: 700;
 }
 

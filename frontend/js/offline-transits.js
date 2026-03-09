@@ -377,7 +377,7 @@
       <span class="offline-text">${window.t ? window.t('offline.offlineMode') : 'Offline Mode — Using cached data'}</span>
     `;
     offlineBanner.style.cssText = `
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
       background: linear-gradient(135deg, #1a1a24 0%, #2a2a3a 100%);
       color: #c9a84c; text-align: center; padding: 8px 16px;
       font-size: 0.82rem; font-weight: 500; display: none;
