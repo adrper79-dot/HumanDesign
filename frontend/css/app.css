@@ -634,3 +634,182 @@ img[data-src].loaded, img:not([data-src]) {
     min-width: 44px;
   }
 }
+
+/* ── Identity Strip ──────────────────────────────────────────────────────── */
+#identity-strip {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-2) var(--space-4);
+}
+.identity-strip-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 900px;
+  margin: 0 auto;
+}
+.identity-strip-avatar {
+  color: var(--gold);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.identity-strip-info {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+#identity-type { color: var(--gold); font-weight: 600; }
+#identity-auth { color: var(--text); }
+#identity-profile { color: var(--text-dim); }
+.identity-edit-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  padding: var(--space-1);
+  border-radius: var(--space-1);
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.identity-edit-btn:hover { color: var(--gold); }
+
+/* ── First-Run Onboarding Modal ──────────────────────────────────────────── */
+.first-run-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+.first-run-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 480px;
+  width: 100%;
+  padding: var(--space-8) var(--space-6);
+  position: relative;
+}
+.frm-step { display: none; text-align: center; }
+.frm-step.active { display: block; }
+.frm-step-icon { font-size: 3rem; margin-bottom: var(--space-4); line-height: 1; }
+.frm-step-title {
+  font-size: var(--font-size-xl);
+  color: var(--gold);
+  margin: 0 0 var(--space-3);
+  font-weight: 700;
+}
+.frm-step-body {
+  color: var(--text-dim);
+  line-height: 1.65;
+  margin-bottom: var(--space-5);
+}
+.frm-btn-next {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+}
+.frm-back-btn,
+.frm-skip-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: var(--space-1) var(--space-2);
+  margin-top: var(--space-2);
+}
+.frm-back-btn:hover, .frm-skip-btn:hover { color: var(--text); }
+.frm-what-you-need {
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  text-align: left;
+}
+.frm-need-item {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-1) 0;
+  color: var(--text);
+  font-size: var(--font-size-sm);
+}
+.frm-check { color: var(--gold); font-weight: 700; flex-shrink: 0; }
+.frm-unlock-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  text-align: left;
+}
+.frm-unlock-item {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+}
+.frm-unlock-icon {
+  color: var(--gold);
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+.frm-progress {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-5);
+}
+.frm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s;
+}
+.frm-dot.active { background: var(--gold); }
+
+/* ── Tab Intro Cards ─────────────────────────────────────────────────────── */
+.tab-intro-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 8%, transparent) 0%, transparent 100%);
+  border: 1px solid color-mix(in srgb, var(--gold) 25%, transparent);
+  border-radius: 10px;
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+.tab-intro-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  color: var(--gold);
+}
+.tab-intro-body { flex: 1; }
+.tab-intro-body h3 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-base);
+  color: var(--gold);
+  font-weight: 700;
+}
+.tab-intro-body p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  line-height: 1.55;
+}

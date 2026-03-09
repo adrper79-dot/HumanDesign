@@ -289,24 +289,87 @@
   </div>
 </div>
 
+<!-- ── Identity Strip (shown after chart is generated) ── -->
+<div id="identity-strip" style="display:none" role="banner" aria-label="Your energy identity">
+  <div class="identity-strip-inner">
+    <div class="identity-strip-avatar" aria-hidden="true">✦</div>
+    <div class="identity-strip-info">
+      <span id="identity-type" class="identity-type-label"></span>
+      <span class="identity-sep" aria-hidden="true">·</span>
+      <span id="identity-auth" class="identity-auth-label"></span>
+      <span class="identity-sep" aria-hidden="true">·</span>
+      <span id="identity-profile" class="identity-profile-label"></span>
+    </div>
+    <button class="identity-edit-btn" onclick="switchTab('chart')" aria-label="Edit birth data" title="Edit birth data">✎</button>
+  </div>
+</div>
+
+<!-- ── First-Run Onboarding Modal ── -->
+<div id="first-run-modal" class="first-run-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="frm-title">
+  <div class="first-run-panel">
+    <div class="first-run-steps" id="frm-steps">
+      <!-- Step 1 -->
+      <div class="frm-step active" id="frm-step-1">
+        <div class="frm-step-icon" aria-hidden="true">⊙</div>
+        <h2 id="frm-title" class="frm-step-title">Welcome to Prime Self</h2>
+        <p class="frm-step-body">Your personalized energy blueprint combines Human Design, Gene Keys, Western Astrology, and Numerology — all calculated from your birth data and synthesized by AI into plain-English guidance.</p>
+        <div class="frm-what-you-need">
+          <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>exact birth date</strong></span></div>
+          <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>birth time</strong> (as precise as possible)</span></div>
+          <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>birth city &amp; country</strong></span></div>
+        </div>
+        <button class="btn-primary frm-btn-next" onclick="frmNext()">I have that info →</button>
+        <button class="frm-skip-btn" onclick="frmClose()">Skip for now</button>
+      </div>
+      <!-- Step 2 -->
+      <div class="frm-step" id="frm-step-2">
+        <div class="frm-step-icon" aria-hidden="true">⬡</div>
+        <h2 class="frm-step-title">What You'll Unlock</h2>
+        <div class="frm-unlock-grid">
+          <div class="frm-unlock-item"><div class="frm-unlock-icon">◉</div><div><strong>Home Dashboard</strong><br><span>Your archetype, strategy &amp; today's energy at a glance</span></div></div>
+          <div class="frm-unlock-item"><div class="frm-unlock-icon">☽</div><div><strong>Daily Transits</strong><br><span>Planetary influences on your gates — updated every day</span></div></div>
+          <div class="frm-unlock-item"><div class="frm-unlock-icon">⊕</div><div><strong>Relationship Insights</strong><br><span>Compare energy fields with partners, family &amp; colleagues</span></div></div>
+          <div class="frm-unlock-item"><div class="frm-unlock-icon">★</div><div><strong>AI Profile</strong><br><span>Synthesized report with real-life guidance for decisions &amp; energy management</span></div></div>
+        </div>
+        <button class="btn-primary frm-btn-next" onclick="frmNext()">Let's generate my chart →</button>
+        <button class="frm-back-btn" onclick="frmBack()">← Back</button>
+      </div>
+      <!-- Step 3 -->
+      <div class="frm-step" id="frm-step-3">
+        <div class="frm-step-icon" aria-hidden="true">✦</div>
+        <h2 class="frm-step-title">You're Ready</h2>
+        <p class="frm-step-body">Start with your birth data on the <strong>My Chart</strong> tab. Once generated, your Home dashboard will update automatically with your personalized insights.</p>
+        <p class="frm-step-body" style="color:var(--text-muted);font-size:var(--font-size-sm)">Tip: Save your profile to revisit it anytime and unlock AI synthesis.</p>
+        <button class="btn-primary frm-btn-next" onclick="frmClose(); switchTab('chart')">Open My Chart →</button>
+        <button class="frm-back-btn" onclick="frmBack()">← Back</button>
+      </div>
+    </div>
+    <div class="frm-progress" aria-hidden="true">
+      <div class="frm-dot active" id="frm-dot-1"></div>
+      <div class="frm-dot" id="frm-dot-2"></div>
+      <div class="frm-dot" id="frm-dot-3"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Navigation Tabs -->
 <div class="tabs" role="tablist" aria-label="Main navigation tabs">
-  <!-- PRIMARY: 4 main groups -->
-  <button class="tab-btn primary-tab active" id="btn-blueprint" role="tab" aria-selected="true" onclick="switchTab('chart', this)"><span class="icon-chart"></span> Blueprint</button>
+  <!-- PRIMARY: 5 clear destinations -->
+  <button class="tab-btn primary-tab" id="btn-home" role="tab" aria-selected="false" onclick="switchTab('overview', this)"><span class="icon-chart"></span> Home</button>
+  <button class="tab-btn primary-tab active" id="btn-blueprint" role="tab" aria-selected="true" onclick="switchTab('chart', this)"><span class="icon-chart"></span> My Chart</button>
   <button class="tab-btn primary-tab" id="btn-today" role="tab" aria-selected="false" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Today</button>
-  <button class="tab-btn primary-tab" id="btn-relationships" role="tab" aria-selected="false" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Relationships</button>
+  <button class="tab-btn primary-tab" id="btn-connect" role="tab" aria-selected="false" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Connect</button>
   <button class="tab-btn primary-tab" id="btn-grow" role="tab" aria-selected="false" onclick="switchTab('enhance', this)"><span class="icon-star"></span> Grow</button>
   <div class="tab-divider" aria-hidden="true"></div>
-  <!-- TOOLS: inside More dropdown -->
+  <!-- SETTINGS: utility items -->
   <div class="more-menu-btn" style="display:flex;align-items:center">
-    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:var(--space-1)">Tools <span id="more-arrow" style="font-size:var(--font-size-xs);transition:transform 0.15s">▾</span></button>
+    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:var(--space-1)" title="Account, settings and tools">⚙ <span id="more-arrow" style="font-size:var(--font-size-xs);transition:transform 0.15s">▾</span></button>
     <div class="more-dropdown" id="more-dropdown" role="menu">
       <button class="tab-btn" id="btn-history" role="menuitem" tabindex="0" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved Charts</button>
-      <button class="tab-btn" id="btn-rectify" role="menuitem" tabindex="0" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Birth Time Rectify</button>
-      <button class="tab-btn" id="btn-onboarding" role="menuitem" tabindex="0" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Onboarding</button>
       <button class="tab-btn" id="btn-practitioner" role="menuitem" tabindex="0" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this); closeMoreMenu()"><span class="icon-star"></span> Practitioner</button>
-      <button class="tab-btn" id="btn-clusters" role="menuitem" tabindex="0" aria-controls="tab-clusters" onclick="switchTab('clusters', this); closeMoreMenu()"><span class="icon-cluster"></span> Clusters</button>
       <button class="tab-btn" id="btn-sms" role="menuitem" tabindex="0" aria-controls="tab-sms" onclick="switchTab('sms', this); closeMoreMenu()"><span class="icon-sms"></span> SMS Alerts</button>
+      <button class="tab-btn" id="btn-rectify" role="menuitem" tabindex="0" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Birth Time Rectify</button>
+      <button class="tab-btn" id="btn-onboarding" role="menuitem" tabindex="0" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Restart Onboarding</button>
     </div>
   </div>
 </div>
@@ -314,18 +377,13 @@
 <!-- Main Content -->
 <div class="container">
 
-  <!-- ═══ OVERVIEW TAB (Phase 7) ═══ -->
-  <div class="tab-content" id="tab-overview" role="tabpanel" aria-labelledby="btn-blueprint">
-    <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchTab('overview')">✦ Overview</button>
-      <button class="sub-tab" onclick="switchTab('chart')">⊙ Chart</button>
-      <button class="sub-tab" onclick="switchTab('profile')">⬡ AI Profile</button>
-    </div>
+  <!-- ═══ OVERVIEW / HOME TAB ═══ -->
+  <div class="tab-content" id="tab-overview" role="tabpanel" aria-labelledby="btn-home">
     <div id="overviewContent">
       <div class="card" style="text-align:center;padding:var(--space-8)">
         <div style="font-size:var(--font-size-2xl);margin-bottom:var(--space-3)">✦</div>
-        <h3 style="color:var(--gold);margin:0 0 8px;font-size:var(--font-size-md)">Your Prime Self Overview</h3>
-        <p style="color:var(--text-dim);font-size:var(--font-size-base);max-width:450px;margin:0 auto var(--space-5);line-height:1.6">Generate a chart to see your personalized overview — key insights from your energy blueprint, planetary positions, and active transits in one place.</p>
+        <h3 style="color:var(--gold);margin:0 0 8px;font-size:var(--font-size-md)">Welcome to Prime Self</h3>
+        <p style="color:var(--text-dim);font-size:var(--font-size-base);max-width:450px;margin:0 auto var(--space-5);line-height:1.6">Generate your chart to unlock your personalized dashboard — energy type, decision strategy, active transits, and daily insights in one place.</p>
         <button class="btn-primary" onclick="switchTab('chart')">Generate Your Chart →</button>
       </div>
     </div>
@@ -334,7 +392,6 @@
   <!-- ═══ CHART TAB ═══ -->
   <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-blueprint">
     <div class="sub-tabs">
-      <button class="sub-tab" onclick="switchTab('overview')">✦ Overview</button>
       <button class="sub-tab active" onclick="switchTab('chart')">⊙ Chart</button>
       <button class="sub-tab" onclick="switchTab('profile')">⬡ AI Profile</button>
     </div>
@@ -433,7 +490,6 @@
   <!-- ═══ PROFILE TAB ═══ -->
   <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-blueprint">
     <div class="sub-tabs">
-      <button class="sub-tab" onclick="switchTab('overview')">✦ Overview</button>
       <button class="sub-tab" onclick="switchTab('chart')">⊙ Chart</button>
       <button class="sub-tab active" onclick="switchTab('profile')">⬡ AI Profile</button>
     </div>
@@ -556,6 +612,13 @@
     <div class="sub-tabs">
       <button class="sub-tab active" onclick="switchTab('enhance')">★ Enhance</button>
       <button class="sub-tab" onclick="switchTab('diary')">📖 Diary</button>
+    </div>
+    <div class="tab-intro-card">
+      <div class="tab-intro-icon">★</div>
+      <div class="tab-intro-body">
+        <h3>Grow &amp; Deepen</h3>
+        <p>Validate your chart through real behavioral patterns, track your energy in the Diary, and build the foundation for the most accurate AI readings. Takes about 10 minutes total.</p>
+      </div>
     </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(106,79,200,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
       <strong style="color:var(--gold)">Dramatically Improve Reading Accuracy</strong><br>
@@ -824,6 +887,13 @@
       <button class="sub-tab active" onclick="switchTab('transits')">☽ Transits</button>
       <button class="sub-tab" onclick="switchTab('checkin')">♥ Check-In</button>
     </div>
+    <div class="tab-intro-card">
+      <div class="tab-intro-icon">☽</div>
+      <div class="tab-intro-body">
+        <h3>Today's Energy</h3>
+        <p>See which planetary gates are active right now and where they hit your birth chart — natal hits are highlighted in gold. Use the Check-In tab to log how today's energy feels in practice.</p>
+      </div>
+    </div>
     <div class="card">
       <div class="card-title"><span class="icon-transit"></span> Today's Planetary Energy</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)">
@@ -865,7 +935,18 @@
   </div>
 
   <!-- ═══ COMPOSITE TAB ═══ -->
-  <div class="tab-content" id="tab-composite" role="tabpanel" aria-labelledby="btn-relationships">
+  <div class="tab-content" id="tab-composite" role="tabpanel" aria-labelledby="btn-connect">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchTab('composite')">⊕ Relationships</button>
+      <button class="sub-tab" onclick="switchTab('clusters')">⬢ Groups</button>
+    </div>
+    <div class="tab-intro-card">
+      <div class="tab-intro-icon">⊕</div>
+      <div class="tab-intro-body">
+        <h3>Connect</h3>
+        <p>Understand relationship dynamics through composite charts (two people) and group field analysis (Clusters). See which new channels activate when your energy fields overlap.</p>
+      </div>
+    </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(106,79,200,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:var(--space-1) solid var(--info)">
       <strong style="color:var(--info)">Relationship Electromagnetic Field Analysis</strong><br>
       Calculate the combined energy blueprint when two charts overlap. This shows: <strong>(1)</strong> New channels activated when you're together (electromagnetic bridges), <strong>(2)</strong> Definition changes (e.g., individual becomes emotional authority), <strong>(3)</strong> Dominant gates/themes in the relationship field, <strong>(4)</strong> Potential blind spots (missing energies). Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.
@@ -1001,7 +1082,11 @@
   </div>
 
   <!-- ═══ CLUSTERS TAB ═══ -->
-  <div class="tab-content" id="tab-clusters" role="tabpanel" aria-labelledby="btn-clusters">
+  <div class="tab-content" id="tab-clusters" role="tabpanel" aria-labelledby="btn-connect">
+    <div class="sub-tabs">
+      <button class="sub-tab" onclick="switchTab('composite')">⊕ Relationships</button>
+      <button class="sub-tab active" onclick="switchTab('clusters')">⬢ Groups</button>
+    </div>
     <div class="card">
       <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Human Design and Prime Self Forge philosophy"></span></div>
       <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-5)">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
@@ -1399,10 +1484,13 @@ async function apiFetch(path, options = {}) {
 // ── Tabs ──────────────────────────────────────────────────────
 // Tab group mapping: which primary button stays active for each sub-tab
 const TAB_GROUPS = {
-  overview: 'btn-blueprint', chart: 'btn-blueprint', profile: 'btn-blueprint',
+  overview: 'btn-home',
+  chart: 'btn-blueprint', profile: 'btn-blueprint',
   transits: 'btn-today', checkin: 'btn-today',
-  composite: 'btn-relationships',
-  enhance: 'btn-grow', diary: 'btn-grow'
+  composite: 'btn-connect', clusters: 'btn-connect',
+  enhance: 'btn-grow', diary: 'btn-grow',
+  // Settings drawer items — no primary tab highlights
+  history: null, practitioner: null, sms: null, rectify: null, onboarding: null
 };
 
 function switchTab(id, btn) {
@@ -1683,6 +1771,11 @@ async function calculateChart() {
     saveBirthData();
     // Update overview tab with fresh data
     if (typeof updateOverview === 'function') updateOverview(data);
+    // Show identity strip with type/authority/profile
+    if (typeof showIdentityStrip === 'function') showIdentityStrip(data);
+    // Auto-navigate to Home dashboard after first calculation
+    const homeBtn = document.getElementById('btn-home');
+    if (homeBtn && typeof switchTab === 'function') switchTab('overview', homeBtn);
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
@@ -1762,6 +1855,17 @@ if (document.readyState === 'loading') {
 } else {
   restoreBirthData();
 }
+
+// Show identity strip from cached chart (if page reloaded after a chart was generated)
+document.addEventListener('DOMContentLoaded', () => {
+  // Give renderChart() time to re-render from DOM if chartGenerated flag is set,
+  // then populate the identity strip from window._lastChart if available
+  setTimeout(() => {
+    if (window._lastChart && typeof showIdentityStrip === 'function') {
+      showIdentityStrip(window._lastChart);
+    }
+  }, 200);
+});
 
 function renderChart(data) {
   console.log('[Chart] renderChart called with data:', data);
@@ -4133,24 +4237,28 @@ updateAuthUI();
 
 <!-- Mobile Bottom Navigation -->
 <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Main navigation">
-  <a href="#" class="mobile-nav-item active" data-tab="chart" data-group="blueprint" onclick="switchTab('chart'); return false;" aria-label="Energy Blueprint">
+  <a href="#" class="mobile-nav-item" data-tab="overview" data-group="home" onclick="switchTab('overview'); return false;" aria-label="Home Dashboard">
+    <span class="mobile-nav-icon">✦</span>
+    <span class="mobile-nav-label">Home</span>
+  </a>
+  <a href="#" class="mobile-nav-item active" data-tab="chart" data-group="blueprint" onclick="switchTab('chart'); return false;" aria-label="My Chart">
     <span class="mobile-nav-icon">◉</span>
-    <span class="mobile-nav-label" data-i18n="nav.chart">Blueprint</span>
+    <span class="mobile-nav-label" data-i18n="nav.chart">My Chart</span>
   </a>
   <a href="#" class="mobile-nav-item" data-tab="transits" data-group="today" onclick="switchTab('transits'); return false;" aria-label="Today's Energy">
     <span class="mobile-nav-icon">☽</span>
     <span class="mobile-nav-label" data-i18n="nav.transits">Today</span>
   </a>
-  <a href="#" class="mobile-nav-item" data-tab="composite" data-group="relationships" onclick="switchTab('composite'); return false;" aria-label="Relationships">
+  <a href="#" class="mobile-nav-item" data-tab="composite" data-group="connect" onclick="switchTab('composite'); return false;" aria-label="Connect">
     <span class="mobile-nav-icon">⊕</span>
-    <span class="mobile-nav-label" data-i18n="nav.composite">Relate</span>
+    <span class="mobile-nav-label">Connect</span>
   </a>
   <a href="#" class="mobile-nav-item" data-tab="enhance" data-group="grow" onclick="switchTab('enhance'); return false;" aria-label="Grow & Deepen">
     <span class="mobile-nav-icon">★</span>
     <span class="mobile-nav-label" data-i18n="nav.enhance">Grow</span>
   </a>
   <a href="#" class="mobile-nav-item" id="mobileMoreBtn" onclick="toggleMobileMore(); return false;" aria-label="More tools" aria-expanded="false">
-    <span class="mobile-nav-icon">☰</span>
+    <span class="mobile-nav-icon">⚙</span>
     <span class="mobile-nav-label">More</span>
   </a>
 </nav>
@@ -4217,9 +4325,10 @@ function updateMobileNav(clickedItem) {
 
 // Group-aware mobile nav: highlights the correct parent tab for sub-tabs
 const MOBILE_TAB_GROUPS = {
-  overview: 'blueprint', chart: 'blueprint', profile: 'blueprint',
+  overview: 'home',
+  chart: 'blueprint', profile: 'blueprint',
   transits: 'today', checkin: 'today',
-  composite: 'relationships',
+  composite: 'connect', clusters: 'connect',
   enhance: 'grow', diary: 'grow'
 };
 
@@ -4580,6 +4689,24 @@ function formatNumber(num) {
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
   loadSocialProofStats();
+
+  // ── Smart Landing Logic ──────────────────────────────────────────────────
+  // Route user to the right starting tab based on their session state
+  const hasBirthData = !!localStorage.getItem('primeSelf_birthData');
+  const hasSeenOnboarding = !!localStorage.getItem('ps_hasSeenOnboarding');
+
+  if (!hasSeenOnboarding && !hasBirthData) {
+    // Brand-new user — show first-run modal over the home tab
+    const modal = document.getElementById('first-run-modal');
+    if (modal) modal.style.display = 'flex';
+  } else if (hasBirthData) {
+    // Returning user with birth data — land on Home dashboard
+    const homeBtn = document.getElementById('btn-home');
+    if (typeof switchTab === 'function' && homeBtn) {
+      switchTab('overview', homeBtn);
+    }
+  }
+  // else: seen onboarding but no birth data → stays on chart entry form (default)
 });
 </script>
 
@@ -4671,6 +4798,47 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+</script>
+
+<!-- First-Run Modal Controller -->
+<script>
+// ── First-Run Onboarding Modal ──────────────────────────────────────────────
+let frmCurrentStep = 1;
+
+function frmNext() { frmGoto(frmCurrentStep + 1); }
+function frmBack() { frmGoto(frmCurrentStep - 1); }
+
+function frmClose() {
+  document.getElementById('first-run-modal').style.display = 'none';
+  try { localStorage.setItem('ps_hasSeenOnboarding', '1'); } catch(e) {}
+}
+
+function frmGoto(n) {
+  document.querySelectorAll('.frm-step').forEach((el, i) => {
+    el.classList.toggle('active', i + 1 === n);
+  });
+  document.querySelectorAll('.frm-dot').forEach((el, i) => {
+    el.classList.toggle('active', i + 1 === n);
+  });
+  frmCurrentStep = n;
+}
+
+// ── Identity Strip ──────────────────────────────────────────────────────────
+function showIdentityStrip(chartData) {
+  try {
+    const d = chartData?.data || chartData;
+    const chart = d?.chart || d;
+    if (!chart?.type) return;
+    const typeEl = document.getElementById('identity-type');
+    const authEl = document.getElementById('identity-auth');
+    const profEl = document.getElementById('identity-profile');
+    if (typeEl) typeEl.textContent = chart.type || '';
+    if (authEl) authEl.textContent = chart.authority || '';
+    if (profEl) profEl.textContent = chart.profile ? 'Profile ' + chart.profile : '';
+    const strip = document.getElementById('identity-strip');
+    if (strip) strip.style.display = 'block';
+  } catch(e) { console.warn('[IdentityStrip]', e); }
+}
 </script>
 
 <!-- Tooltip Viewport Collision Detection -->
