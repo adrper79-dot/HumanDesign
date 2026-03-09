@@ -143,17 +143,17 @@ export const QUERIES = {
   `,
 
   getUserById: `
-    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, created_at, updated_at
+    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, created_at, updated_at
     FROM users WHERE id = $1
   `,
 
   getUserByEmail: `
-    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, created_at, updated_at
+    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, created_at, updated_at
     FROM users WHERE email = $1
   `,
 
   getUserByPhone: `
-    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, created_at, updated_at
+    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, created_at, updated_at
     FROM users WHERE phone = $1
   `,
 

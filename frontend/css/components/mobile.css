@@ -30,6 +30,24 @@
     display: none; /* Hide tagline on mobile */
   }
   
+  /* Logo lockup mobile adjustments */
+  .logo-lockup {
+    gap: 8px;
+  }
+  
+  .logo-lockup-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .logo-lockup-primary {
+    font-size: 1rem;
+  }
+  
+  .logo-lockup-secondary {
+    display: none; /* Hide subtitle on mobile */
+  }
+  
   /* ── Buttons: Touch-Friendly ───────────────────────────── */
   button, .btn {
     min-height: var(--touch-target-min);
@@ -123,8 +141,30 @@
     display: none; /* Hide desktop tabs on mobile (use bottom nav instead) */
   }
   
+  /* Hide sub-tabs on mobile — bottom nav handles navigation */
+  .sub-tabs {
+    display: none;
+  }
+  
   .tab-content {
     padding: var(--mobile-padding);
+  }
+  
+  /* Step guide: stack vertically on mobile */
+  .step-guide {
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+  }
+  
+  .step-item {
+    min-width: unset;
+    width: 100%;
+    padding: 10px 12px;
+  }
+  
+  .step-arrow {
+    display: none; /* Hide arrows when stacked */
   }
   
   /* ── Cards: Mobile Stacking ────────────────────────────── */
@@ -364,6 +404,16 @@
   .tabs {
     display: flex; /* Show desktop tabs on tablet */
   }
+  
+  /* Step guide: smaller on tablet */
+  .step-item {
+    min-width: 140px;
+    padding: 8px 10px;
+  }
+  
+  .step-label strong {
+    font-size: 0.82rem;
+  }
 }
 
 /* ── Desktop Optimizations (Hide Mobile Nav) ───────────────── */
@@ -373,7 +423,7 @@
   }
   
   .tabs {
-    display: block; /* Show desktop tabs on desktop */
+    display: flex; /* Show desktop tabs as flex row */
   }
   
   .tab-list {

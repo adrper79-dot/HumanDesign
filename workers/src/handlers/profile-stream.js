@@ -148,7 +148,8 @@ export async function handleProfileStream(request, env, ctx) {
         const [valRes, psychRes, diaryRes] = await Promise.all([
           query(QUERIES.getValidationData, [userId]).catch(() => ({ rows: [] })),
           query(QUERIES.getPsychometricData, [userId]).catch(() => ({ rows: [] })),
-          query(QUERIES.getDiaryEntries, [userId]).catch(() => ({ rows: [] })),
+          // BL-FIX: getDiaryEntries requires 3 params: user_id, limit, offset
+          query(QUERIES.getDiaryEntries, [userId, 50, 0]).catch(() => ({ rows: [] })),
         ]);
         validationData = valRes.rows[0] || null;
         psychometricData = psychRes.rows[0] || null;
@@ -243,7 +244,10 @@ export async function handleProfileStream(request, env, ctx) {
       }
 
       // Record usage after successful generation
-      await recordUsage(request, env, 'profile_generation').catch(() => {});
+      // BL-FIX-C3: Correct signature is (env, userId, action, endpoint)
+      if (userId) {
+        await recordUsage(env, userId, 'profile_generation', '/api/profile/generate/stream').catch(() => {});
+      }
 
       // Track analytics
       await trackEvent(env, EVENTS.PROFILE_GENERATE, {

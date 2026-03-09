@@ -268,13 +268,21 @@ export function buildRAGContext(chartData) {
       }
       
       // Helper to find house for a planet
+      // BL-FIX: placements is an Object keyed by body name, not an Array - use direct access
       const getHouseForPlanet = (planetName) => {
         if (!chartData.astrology?.placements) return null;
-        const placement = chartData.astrology.placements.find(
-          p => (p.planet === planetName || p.body === planetName) || 
-               (p.planet?.toLowerCase() === planetName.toLowerCase() || p.body?.toLowerCase() === planetName.toLowerCase())
-        );
-        return placement?.house || null;
+        // placements is { sun: {...}, moon: {...}, ... } not an array
+        const placements = chartData.astrology.placements;
+        // Try direct key lookup first (most efficient)
+        const directMatch = placements[planetName] || placements[planetName.toLowerCase()];
+        if (directMatch) return directMatch.house || null;
+        // Fallback: search Object.entries for case-insensitive match
+        for (const [key, p] of Object.entries(placements)) {
+          if (key.toLowerCase() === planetName.toLowerCase()) {
+            return p?.house || null;
+          }
+        }
+        return null;
       };
       
       // Process personality gates (conscious)
@@ -438,11 +446,10 @@ export function buildRAGContext(chartData) {
       const majorPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'];
       
       for (const planetName of majorPlanets) {
-        const placement = chartData.astrology.placements.find(
-          pl => pl.planet === planetName || pl.body === planetName
-        );
+        // BL-FIX: placements is an Object keyed by body name (lowercase), not an Array
+        const planetKey = planetName.toLowerCase();
+        const placement = chartData.astrology.placements[planetKey];
         if (placement) {
-          const planetKey = planetName.toLowerCase();
           const signKey = placement.sign?.toLowerCase();
           const planetInfo = planets[planetKey];
           const signInfo = signs[signKey];
