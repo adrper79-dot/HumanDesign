@@ -17,19 +17,19 @@
 ### I'm New — Where Do I Start?
 1. **[README.md](README.md)** — What is Prime Self? (5 min)
 2. **docs/GETTING_STARTED.md** — Set up your environment (10 min)
-3. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — How it works (20 min)
+3. **[ARCHITECTURE.md](ARCHITECTURE.md)** — How it works (20 min)
 4. **[docs/GLOSSARY.md](docs/GLOSSARY.md)** — Terminology guide
 
 ### I'm a Developer
 1. **guides/SETUP_DEVELOPMENT.md** — Local environment (10 min)
-2. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — System design
+2. **[ARCHITECTURE.md](ARCHITECTURE.md)** — System design
 3. **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** — API endpoints
 4. **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** — UI components
 5. **process/BUILD_STANDARDS.md** — Coding patterns
 
 ### I'm DevOps
 1. **guides/ENVIRONMENT_VARIABLES.md** — Configuration
-2. **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Production deploy
+2. **[DEPLOY.md](DEPLOY.md)** — Production deploy
 3. **[docs/OPERATIONS.md](docs/OPERATIONS.md)** — Monitoring & troubleshooting
 
 ### I'm a Designer / UX Person
@@ -56,10 +56,10 @@
 ### 🏗️ Core Documentation (Stable Reference)
 | Document | Purpose |
 |----------|---------|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, tech stack, database design |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, tech stack, database design |
 | [docs/API_REFERENCE.md](docs/API_REFERENCE.md) | Complete API endpoints, authentication, data models |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | UI components, design tokens, accessibility |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deployment, verification, rollback procedures |
+| [DEPLOY.md](DEPLOY.md) | Production deployment, verification, rollback procedures |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Monitoring, troubleshooting, common issues |
 
 ### 📖 Implementation Guides (How-To)
@@ -281,9 +281,9 @@ DEFECT_BACKLOG.md                     ← Known issues
 | **How do I...?** | Check guides/ directory |
 | **What's broken?** | See audits/ directory |
 | **What should I build next?** | See BACKLOG.md |
-| **Show me an example** | See docs/ARCHITECTURE.md → examples |
+| **Show me an example** | See ARCHITECTURE.md → examples |
 | **I found a bug** | See process/DEFECT_BACKLOG.md |
-| **How do I deploy?** | See docs/DEPLOYMENT.md |
+| **How do I deploy?** | See DEPLOY.md |
 
 ---
 

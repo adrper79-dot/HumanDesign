@@ -81,12 +81,12 @@ Prime Self Project
 
 **👨‍💻 Developers**
 1. Setup: [guides/SETUP_DEVELOPMENT.md](guides/SETUP_DEVELOPMENT.md)
-2. Learn: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+2. Learn: [ARCHITECTURE.md](ARCHITECTURE.md)
 3. Build: [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)
 4. Reference: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
 
 **🔧 DevOps / Operations**
-1. Deploy: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+1. Deploy: [DEPLOY.md](DEPLOY.md)
 2. Monitor: [docs/OPERATIONS.md](docs/OPERATIONS.md)
 3. Configure: [guides/ENVIRONMENT_VARIABLES.md](guides/ENVIRONMENT_VARIABLES.md)
 
