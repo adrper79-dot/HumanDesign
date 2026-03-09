@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "version": "2.0-canonical",
+    "source": "Prime Self Sacred Texts & Canonical Philosophy",
+    "description": "The Five Forges — primary dimensions of human experience through which the Prime Self is accessed",
+    "note": "Each Forge must be fueled with knowledge. Each confers specific abilities, perceptions, and modes of action."
+  },
+  "chronos": {
+    "forge": "Chronos",
+    "name": "The Forge of Time",
+    "number": 1,
+    "essence": "Before power, there must be understanding. Before the future, the past.",
+    "domain": ["Introspection", "Ancestral connection", "Temporal awareness", "Premonition"],
+    "mysticalForm": "An ancient hourglass; time slows to crystalline clarity when engaged",
+    "description": "The Chronos Forge is the entry point to Prime Self practice. It governs the relationship with time itself — past, present, and future. Through Chronos, the practitioner accesses ancestral wisdom, recognizes patterns across generations, and develops the temporal perception that allows insight into trajectories before they manifest. This is where Priming begins: synthesizing enough factual and emotional knowledge of a person to emulate their inner processes, forming a spiritual bridge across time.",
+    "disciplines": {
+      "pastLifeRegression": "Access prior-life skills and wound-maps",
+      "astrology": "Decode the celestial blueprint of innate traits and purpose",
+      "lunarMagic": "Synchronize with moon cycles to amplify timing and rhythm",
+      "dreamInterpretation": "Receive strategic guidance from the subconscious",
+      "ancestralWisdom": "Synthesize factual and emotional knowledge to emulate the inner processes of those who came before"
+    },
+    "weapons": ["Temporal perception", "Ancestor summoning", "Anticipatory foresight"],
+    "defenses": ["Dream-warning", "Premonition shields", "Ancestral protection"],
+    "hdTriggers": ["Gate 64 (Before Completion)", "Gate 63 (After Completion)", "Gate 61 (Inner Truth)", "Gate 24 (Return)", "Gate 33 (Retreat/Privacy)", "Moon-dominant design", "Head center definition"],
+    "astroTriggers": ["Saturn aspects", "4th House emphasis", "Cancer/Capricorn placements", "Moon strength", "12th House activity", "North/South Node axis"],
+    "shadowForm": "Obsession with the past, ancestor worship without integration, using foreknowledge to manipulate rather than guide",
+    "masterForm": "Sitting at the head of a long table, calm and clear, able to summon any mind from any point in history into purposeful Accord",
+    "primeQuestion": "What wisdom from the past do I need to navigate the present?",
+    "historicalExemplars": ["Marcus Aurelius", "Carl Jung", "Maya Angelou", "Joseph Campbell", "Mary Oliver"],
+    "recommendedReading": {
+      "fiction": ["Slaughterhouse-Five by Kurt Vonnegut", "The Time Traveler's Wife by Audrey Niffenegger", "Kindred by Octavia Butler"],
+      "nonFiction": ["Meditations by Marcus Aurelius", "Man and His Symbols by Carl Jung", "The Hero with a Thousand Faces by Joseph Campbell"]
+    }
+  },
+  "eros": {
+    "forge": "Eros",
+    "name": "The Forge of Passion",
+    "number": 2,
+    "essence": "Without passion, the other Forges burn cold.",
+    "domain": ["Creative force", "Life energy", "Sacred bonds", "Artistic expression"],
+    "mysticalForm": "Warm, flickering light — its color and intensity mirror emotional state",
+    "description": "The Eros Forge is the engine of Prime Self. It governs the vital life force that animates all action, creativity, and connection. Without Eros, the other Forges are merely intellectual exercises. With Eros engaged, practice becomes embodied, passionate, and alive. This is where creative fire originates — the force that transforms vision into reality through sustained energy and devotion.",
+    "disciplines": {
+      "tantricPractice": "Unlock and redirect latent life-force energy",
+      "sacralChakraActivation": "Manifest creative visions into reality",
+      "artisticExpression": "Channel passion through music, movement, and form",
+      "mysticalDance": "Merge soul and body; passion made kinetic and visible"
+    },
+    "weapons": ["Redirected life-force energy", "Sacral activation", "Passionate drive that moves others"],
+    "defenses": ["Soulmate and twin flame bonds as spiritual anchors", "Creative flow states as protection"],
+    "hdTriggers": ["Defined Sacral Center", "Generator/MG type", "Gate 59 (Sexuality/Dispersing)", "Gate 6 (Friction/Intimacy)", "Gate 14 (Power Skills)", "Gate 34 (Power)", "Solar Plexus definition"],
+    "astroTriggers": ["Venus aspects", "Mars aspects", "5th House emphasis", "Leo placements", "Scorpio placements", "Taurus placements"],
+    "shadowForm": "Addiction to intensity, using passion to manipulate, burning out rather than sustaining",
+    "masterForm": "The Sacral hum of doing exactly what you were built to do — passion so aligned it feels effortless and infinite",
+    "primeQuestion": "What would I do with total devotion even if no one paid me or praised me?",
+    "historicalExemplars": ["Frida Kahlo", "Prince", "Rumi", "Martha Graham", "Pablo Neruda"],
+    "recommendedReading": {
+      "fiction": ["Like Water for Chocolate by Laura Esquivel", "The Unbearable Lightness of Being by Milan Kundera", "Beloved by Toni Morrison"],
+      "nonFiction": ["The Artist's Way by Julia Cameron", "Big Magic by Elizabeth Gilbert", "The War of Art by Steven Pressfield"]
+    }
+  },
+  "aether": {
+    "forge": "Aether",
+    "name": "The Forge of Universal Connection",
+    "number": 3,
+    "essence": "What appears separate is revealed as one.",
+    "domain": ["Interconnectedness", "Spirit communication", "Psychic perception", "Universal wisdom"],
+    "mysticalForm": "A shimmering mist that carries whispered voices from across ages",
+    "description": "The Aether Forge is the bridge between individual consciousness and universal intelligence. It governs the recognition that all beings are interconnected — that separation is illusion and compassion is the highest form of intelligence. Through Aether, the practitioner develops psychic sensitivity, spirit communication, and the ability to channel wisdom from sources beyond the individual mind.",
+    "disciplines": {
+      "shamanicJourneying": "Travel beyond the temporal plane for guidance and alliance",
+      "meditation": "Ground the mind while expanding perception across dimensions",
+      "angelology": "Communicate with and draw support from celestial intelligences",
+      "psychicDevelopment": "Cultivate the ability to perceive beyond the visible",
+      "channeling": "Become a conduit for timeless wisdom and ancestral intelligence"
+    },
+    "weapons": ["Spirit summoning", "Psychic projection", "Channeling of ancient forces"],
+    "defenses": ["Meditation shields", "Angelic intercession", "Etheric barriers"],
+    "hdTriggers": ["Open/undefined centers (receptivity)", "Reflector type", "Gate 57 (Intuitive Clarity)", "Gate 20 (The Now/Contemplation)", "Gate 48 (Depth/The Well)", "Crown/Head pressure gates"],
+    "astroTriggers": ["Neptune aspects", "12th House emphasis", "Pisces placements", "Water sign dominance", "Moon-Neptune aspects", "Midheaven conjunctions"],
+    "shadowForm": "Losing self in others' energies, spiritual bypassing, using connection to avoid individual responsibility",
+    "masterForm": "Clear channel for universal wisdom while maintaining individual grounding — the shaman who travels and returns",
+    "primeQuestion": "What wisdom is available to me beyond my individual knowing?",
+    "historicalExemplars": ["Thich Nhat Hanh", "Ram Dass", "Edgar Cayce", "Hildegard of Bingen", "Black Elk"],
+    "recommendedReading": {
+      "fiction": ["Siddhartha by Hermann Hesse", "The Alchemist by Paulo Coelho", "Jonathan Livingston Seagull by Richard Bach"],
+      "nonFiction": ["Be Here Now by Ram Dass", "The Power of Now by Eckhart Tolle", "Many Lives, Many Masters by Brian Weiss"]
+    }
+  },
+  "lux": {
+    "forge": "Lux",
+    "name": "The Forge of Light and Illumination",
+    "number": 4,
+    "essence": "Truth hidden from all others becomes visible.",
+    "domain": ["Enlightenment", "Hidden truths", "The third eye", "Energetic reading"],
+    "mysticalForm": "Radiant beams from the palms; intensity scales with depth of understanding",
+    "description": "The Lux Forge governs the capacity to perceive hidden truths — to see through deception, illusion, and the obscuring veils that hide reality from ordinary perception. Through Lux, the practitioner develops discernment, energetic reading, and the ability to illuminate what others cannot see. This is the domain of the third eye, the Akashic records, and the higher self.",
+    "disciplines": {
+      "thirdEyeActivation": "Expand perception into the hidden dimensions of reality",
+      "akashicRecords": "Access the soul's eternal archive for guidance and strategy",
+      "higherSelfCommunication": "Consult the timeless, uncorrupted aspect of oneself",
+      "auraReading": "Decode the energetic fields of allies and adversaries",
+      "crystalHealing": "Utilize Earth's crystalline matrices for energetic protection and restoration"
+    },
+    "weapons": ["Truth disclosure", "Deception-burning light", "Aura disruption of enemies"],
+    "defenses": ["Crystal barriers", "Aura-reading of incoming threats", "Higher self consultation"],
+    "hdTriggers": ["Ajna center definition", "Gate 43 (Breakthrough/Insight)", "Gate 23 (Assimilation)", "Gate 17 (Opinions/Following)", "Gate 4 (Formulization)", "Projector type (penetrating aura)"],
+    "astroTriggers": ["Sun aspects", "Uranus aspects", "3rd House emphasis", "Gemini/Aquarius placements", "Mercury-Uranus aspects", "Midheaven aspects"],
+    "shadowForm": "Using insight to judge rather than illuminate, spiritual pride, revealing truth without compassion",
+    "masterForm": "Light so clear that illusions dissolve spontaneously — truth that heals rather than wounds",
+    "primeQuestion": "What truth am I being called to see and share?",
+    "historicalExemplars": ["Nikola Tesla", "Leonardo da Vinci", "Marie Curie", "Albert Einstein", "Hypatia of Alexandria"],
+    "recommendedReading": {
+      "fiction": ["Dune by Frank Herbert", "A Wizard of Earthsea by Ursula K. Le Guin", "The Giver by Lois Lowry"],
+      "nonFiction": ["Thinking, Fast and Slow by Daniel Kahneman", "The Structure of Scientific Revolutions by Thomas Kuhn", "Autobiography of a Yogi by Paramahansa Yogananda"]
+    }
+  },
+  "phoenix": {
+    "forge": "Phoenix",
+    "name": "The Forge of Renewal and Rebirth",
+    "number": 5,
+    "essence": "What cannot be renewed cannot survive. The Phoenix burns and rises — this is not loss, it is evolution.",
+    "domain": ["Renewal", "Shadow integration", "Karmic liberation", "Ascension"],
+    "mysticalForm": "A sacred pool or ancient grove; immersion results in symbolic rebirth",
+    "description": "The Phoenix Forge governs the capacity for fundamental transformation — the willingness to let old identities, structures, and beliefs die so that something more authentic can emerge. This is not improvement; it is metamorphosis. The caterpillar does not become a better caterpillar — it becomes something entirely different. Through Phoenix, the practitioner learns to die consciously and rise renewed.",
+    "disciplines": {
+      "rebirthRituals": "Consciously move from one phase of self into the next",
+      "energyClearing": "Remove stagnant or corrupted energies before they root",
+      "shadowWork": "Confront dark aspects of the psyche — integrate rather than suppress",
+      "karmicRelease": "Liberate oneself from inherited burdens and past timelines",
+      "ascensionPractices": "Elevate spiritual frequency, moving persistently toward the Prime Self"
+    },
+    "weapons": ["Karmic reversal", "Shadow weaponization", "Energetic deconstruction of cursed states"],
+    "defenses": ["Energy clearing", "Shadow work fortification", "Ascension as evasion"],
+    "hdTriggers": ["Gate 28 (The Game Player)", "Gate 32 (Continuity)", "Gate 50 (Values)", "Gate 18 (Correction)", "Pluto gate activations", "Chiron placements", "Saturn Return indicators"],
+    "astroTriggers": ["Pluto aspects", "8th House emphasis", "Scorpio placements", "Pluto transits", "Chiron Return", "North Node progressions"],
+    "shadowForm": "Compulsive destruction, change addiction, destroying what works to avoid discomfort of stability",
+    "masterForm": "Conscious metamorphosis — graceful surrender of outdated forms combined with courage to step into unknown territory",
+    "primeQuestion": "What must I let die so that what I am becoming can live?",
+    "historicalExemplars": ["Nelson Mandela", "Viktor Frankl", "Malala Yousafzai", "Frederick Douglass", "Harriet Tubman"],
+    "recommendedReading": {
+      "fiction": ["The Count of Monte Cristo by Alexandre Dumas", "Shantaram by Gregory David Roberts", "Circe by Madeline Miller"],
+      "nonFiction": ["Man's Search for Meaning by Viktor Frankl", "When Things Fall Apart by Pema Chödrön", "The Body Keeps the Score by Bessel van der Kolk"]
+    }
+  }
+}

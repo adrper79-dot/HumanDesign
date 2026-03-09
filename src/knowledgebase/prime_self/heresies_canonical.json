@@ -1,0 +1,267 @@
+{
+  "_meta": {
+    "version": "2.0-canonical",
+    "source": "Prime Self Sacred Texts & Canonical Philosophy",
+    "description": "The Six Heresies — shadow disciplines and antagonist powers that represent the corruption of legitimate practice",
+    "warning": "THESE ARE NOT PRACTICES TO BE CULTIVATED. They are documented here so practitioners can RECOGNIZE and DEFEND against them. Knowledge of darkness serves the light.",
+    "note": "Every Heresy is a corruption of a legitimate Science, Art, or Defense. Understanding these shadows helps the Prime practitioner recognize manipulation and protect themselves and their clients."
+  },
+  "mesmerism": {
+    "heresy": "Mesmerism",
+    "number": 1,
+    "shadowOf": "Hypnosis (Defense)",
+    "essence": "The thief of will who steals consent through false rapport.",
+    "description": "Dark hypnosis — the use of trance states and suggestion to manipulate, control, and exploit others without their informed consent. While legitimate hypnosis heals, Mesmerism enslaves. The mesmerist seeks power over, not power with.",
+    "characteristics": [
+      "Inducing trance without consent",
+      "Planting suggestions that serve the mesmerist's agenda",
+      "Creating artificial dependency",
+      "Exploiting vulnerable states",
+      "Using rapport as a weapon",
+      "Gaslighting and reality distortion",
+      "Memory manipulation"
+    ],
+    "warningSignsInOthers": [
+      "Excessive eye contact with strange intensity",
+      "Hypnotic language patterns used to confuse",
+      "Creating artificial urgency to bypass thinking",
+      "Love-bombing followed by withdrawal",
+      "Making you doubt your own perceptions",
+      "Insisting on 'complete trust' before you've earned it"
+    ],
+    "warningSignsInSelf": [
+      "Enjoying the feeling of power over others",
+      "Using influence skills to get what you want without regard for others",
+      "Rationalizing manipulation as 'for their own good'",
+      "Seeking vulnerable targets",
+      "Using spiritual authority to bypass consent"
+    ],
+    "defenseAgainst": [
+      "Maintain awareness of your own mental state",
+      "Trust your gut when something feels 'off'",
+      "Insist on time to think before major decisions",
+      "Avoid anyone who discourages you from consulting others",
+      "Learn to recognize hypnotic language patterns"
+    ],
+    "hdMapping": {
+      "vulnerability": "Open Head and Ajna centers are more suggestible",
+      "protection": "Strategy and Authority provide reality-check"
+    },
+    "historicalExamples": ["Cult leaders", "Predatory salespeople", "Abusive spiritual teachers", "Coercive controllers"],
+    "redemption": "Return to ethical hypnosis through commitment to informed consent, client autonomy, and healing intent"
+  },
+  "parabiosis": {
+    "heresy": "Parabiosis",
+    "number": 2,
+    "shadowOf": "Reiki / Energy Work (Science)",
+    "essence": "The vampire who feeds on life force rather than sharing it.",
+    "description": "Vampiric energy draining — taking vital force from others rather than channeling universal energy. The parabiotic practitioner feeds on others' energy because they cannot or will not generate their own. This is energetic predation.",
+    "characteristics": [
+      "Draining others' energy in interactions",
+      "Seeking out high-energy people to feed from",
+      "Creating drama to generate emotional energy to consume",
+      "Using intimacy to access and drain",
+      "Leaving others exhausted while feeling energized",
+      "Unconscious or conscious energy vampirism",
+      "Avoiding reciprocal energy exchange"
+    ],
+    "warningSignsInOthers": [
+      "You feel exhausted after spending time with them",
+      "They always have crises requiring your attention",
+      "They brighten as you dim",
+      "They resist boundaries on your time and energy",
+      "Interactions feel one-directional",
+      "They become hostile when you protect your energy"
+    ],
+    "warningSignsInSelf": [
+      "Seeking out certain people when you're depleted",
+      "Feeling better by making others feel worse",
+      "Needing constant attention and emotional energy from others",
+      "Sabotaging others' happiness unconsciously",
+      "Avoiding solitude because you need external energy sources"
+    ],
+    "defenseAgainst": [
+      "Learn to generate your own energy through self-care",
+      "Set firm boundaries on energy-draining interactions",
+      "Visualize protective shields",
+      "Limit exposure to known draining individuals",
+      "Practice energy cultivation (Qigong, breathwork)"
+    ],
+    "hdMapping": {
+      "vulnerability": "Open Sacral (non-Generators) can attract vampiric attachments; defined Sacral can become targets",
+      "protection": "Understanding your energy type and Source of energy"
+    },
+    "historicalExamples": ["Emotional vampires", "Narcissistic abusers", "Codependent dynamics", "Toxic spiritual teachers"],
+    "redemption": "Learn to source energy from universal chi, nature, and self-cultivation rather than extraction from others"
+  },
+  "necromancy": {
+    "heresy": "Necromancy",
+    "number": 3,
+    "shadowOf": "Ancestral Work / Iwas-Orisha (Defense)",
+    "essence": "The one who disturbs the dead for power rather than honoring them for wisdom.",
+    "description": "Manipulation of the dead — using deceased spirits for personal gain rather than respectful communion. While legitimate ancestral work honors, heals, and receives wisdom from those who have passed, Necromancy binds, exploits, and disturbs.",
+    "characteristics": [
+      "Summoning without permission or respect",
+      "Binding spirits against their will",
+      "Using the dead for divination without reciprocity",
+      "Disturbing the peace of the deceased",
+      "Faking communication with the dead for manipulation",
+      "Exploiting grief for profit",
+      "Creating spiritual debts you cannot repay"
+    ],
+    "warningSignsInOthers": [
+      "Claiming special access to your deceased loved ones",
+      "Creating dependency through 'messages from the dead'",
+      "Making threats based on spiritual consequences",
+      "Charging excessive fees for spiritual contact",
+      "Encouraging unhealthy attachment to the deceased",
+      "Using fear of the dead to control"
+    ],
+    "warningSignsInSelf": [
+      "Using spirit contact for ego or profit rather than service",
+      "Forcing communication rather than inviting",
+      "Neglecting your own gifts to seek power from the dead",
+      "Unhealthy fascination with death and decay",
+      "Using spiritual threats to control others"
+    ],
+    "defenseAgainst": [
+      "Trust your own discernment about mediums and channels",
+      "Maintain direct relationship with your ancestors",
+      "Be wary of anyone who creates spiritual dependency",
+      "Process grief through legitimate therapy",
+      "Protect your energetic boundaries around death and dying"
+    ],
+    "hdMapping": {
+      "vulnerability": "Open centers receive spiritual information but must discern source",
+      "protection": "Splenic awareness helps distinguish authentic contact from fraud"
+    },
+    "historicalExamples": ["Fraudulent mediums", "Grave robbers", "Exploitative grief counselors", "Dark occultists"],
+    "redemption": "Return to respectful ancestral communion — honoring, giving thanks, and receiving only what is freely offered"
+  },
+  "hemalurgy": {
+    "heresy": "Hemalurgy",
+    "number": 4,
+    "shadowOf": "Alchemy (Science)",
+    "essence": "The one who steals power through blood and violation.",
+    "description": "Blood magic in its darkest form — using blood as a medium to steal, transfer, or corrupt spiritual power. While legitimate alchemy transforms the self, Hemalurgy violates others to steal what cannot be earned. This includes both literal blood rituals and metaphorical life-force extraction.",
+    "characteristics": [
+      "Using blood rituals to bind or curse",
+      "Stealing power through violation",
+      "Creating unwilling energetic bonds",
+      "Extracting essence without consent",
+      "Corrupting others' spiritual gifts",
+      "Using physical harm for spiritual gain",
+      "Creating soul-level damage"
+    ],
+    "warningSignsInOthers": [
+      "Anyone requiring blood or bodily substances for 'spiritual work'",
+      "Rituals that involve physical harm",
+      "Claims to transfer power or abilities through violation",
+      "Using physical or sexual violation in spiritual contexts",
+      "Requiring escalating physical commitments"
+    ],
+    "warningSignsInSelf": [
+      "Fascination with acquiring others' power rather than developing your own",
+      "Willingness to harm others for spiritual advancement",
+      "Believing you deserve others' gifts",
+      "Rationalizing violation as spiritual necessity"
+    ],
+    "defenseAgainst": [
+      "Never participate in rituals requiring blood or bodily harm",
+      "Flee anyone suggesting such practices",
+      "Report illegal activity to authorities",
+      "Develop your own gifts through legitimate practice",
+      "Cleanse and protect your energetic boundaries"
+    ],
+    "hdMapping": {
+      "vulnerability": "Those seeking shortcuts to power bypass the deconditioning process",
+      "protection": "Following your Strategy and Authority keeps you in alignment"
+    },
+    "historicalExamples": ["Blood cults", "Abusive occult groups", "Sacrificial practices"],
+    "redemption": "Return to legitimate alchemy — transforming only the self, through discipline and grace rather than theft"
+  },
+  "hemomancy": {
+    "heresy": "Hemomancy",
+    "number": 5,
+    "shadowOf": "Divination (Science)",
+    "essence": "The one who reads and controls through the currency of life itself.",
+    "description": "Divination and control through blood — using blood as a medium for reading or influencing others. Where legitimate divination reads patterns and possibilities with consent, Hemomancy accesses the deepest layers through blood-level intrusion.",
+    "characteristics": [
+      "Using blood for scrying or divination without ethical containers",
+      "Creating blood-level bonds without consent",
+      "Reading genetic or ancestral information for manipulation",
+      "Using biological material to control others",
+      "Accessing information through violation",
+      "Creating curses through blood connection"
+    ],
+    "warningSignsInOthers": [
+      "Requesting biological samples for 'readings'",
+      "Claims to reveal deep secrets through blood",
+      "Offering DNA-based spiritual services with suspicious intent",
+      "Using intimate biological access for influence",
+      "Threats involving blood or lineage"
+    ],
+    "warningSignsInSelf": [
+      "Seeking information through violation rather than legitimate means",
+      "Fascination with accessing others' secrets",
+      "Using intimate access for surveillance",
+      "Reading people to manipulate rather than serve"
+    ],
+    "defenseAgainst": [
+      "Never provide biological material for spiritual work",
+      "Use legitimate divination systems (HD, astrology, tarot)",
+      "Protect your privacy around health and genetic information",
+      "Trust practitioners who use ethical, transparent methods"
+    ],
+    "hdMapping": {
+      "vulnerability": "Open centers naturally read energy — this is legitimate; Hemomancy corrupts this gift",
+      "protection": "Developing your own divination skills removes need for dark sources"
+    },
+    "historicalExamples": ["Blood oath cults", "Blackmail through biological information", "Coercive paternity/genetic manipulation"],
+    "redemption": "Return to ethical divination — read only what is offered, for healing rather than control"
+  },
+  "psychomancy": {
+    "heresy": "Psychomancy",
+    "number": 6,
+    "shadowOf": "Mindfulness / Quantum Mind (Science/Art)",
+    "essence": "The mind that invades rather than observes.",
+    "description": "Mental domination and psychic manipulation — using mental and psychic abilities to control, invade, or damage others' minds. While Mindfulness develops awareness and Quantum Mind explores possibility, Psychomancy weaponizes the mind against others.",
+    "characteristics": [
+      "Psychic intrusion and surveillance",
+      "Mental domination and control",
+      "Implanting thoughts, fears, or beliefs",
+      "Psychic attack and harm",
+      "Using intuitive gifts to manipulate",
+      "Creating false spiritual experiences",
+      "Destroying others' mental stability"
+    ],
+    "warningSignsInOthers": [
+      "Claims to read your mind uninvited",
+      "Making you question your own thoughts and perceptions",
+      "Creating fear of what they might 'see'",
+      "Using claimed psychic abilities to control",
+      "Punishing you psychically for disagreement",
+      "Installing phobias or compulsions"
+    ],
+    "warningSignsInSelf": [
+      "Using intuitive gifts to spy on others",
+      "Delighting in others' mental confusion",
+      "Manipulating through claimed psychic knowledge",
+      "Believing your mental impressions give you rights over others",
+      "Using psychic development to dominate rather than serve"
+    ],
+    "defenseAgainst": [
+      "Develop your own mental discipline and boundaries",
+      "Trust your own inner authority over others' claims",
+      "Protect your mental space through shielding practices",
+      "Avoid practitioners who use fear or intrusion",
+      "Cultivate discernment between intuition and invasion"
+    ],
+    "hdMapping": {
+      "vulnerability": "Open Head and Ajna can be targeted; undefined knowing creates susceptibility to false psychic claims",
+      "protection": "Strong connection to your own Authority provides reality-testing"
+    },
+    "historicalExamples": ["Psychic predators", "Cult mind control", "Gaslighting abusers", "Fraudulent psychics"],
+    "redemption": "Return to ethical psychic development — observe without intrusion, serve without manipulation, empower rather than control"
+  }
+}

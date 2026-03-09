@@ -16,6 +16,7 @@
  */
 
 import { normalizeDegrees, degToRad, radToDeg } from './julian.js';
+import { ASPECT_TYPES, LUMINARIES } from './constants.js';  // BL-S18-H1: shared constants
 
 // ─── ZODIAC SIGNS ───────────────────────────────────────────────
 
@@ -284,17 +285,7 @@ function normalizeDiffSigned(a, b) {
 }
 
 // ─── ASPECTS ────────────────────────────────────────────────────
-
-const ASPECT_TYPES = [
-  { name: 'Conjunction',  angle: 0,   orbLum: 8, orbPlan: 6 },
-  { name: 'Opposition',   angle: 180, orbLum: 8, orbPlan: 6 },
-  { name: 'Trine',        angle: 120, orbLum: 8, orbPlan: 6 },
-  { name: 'Square',       angle: 90,  orbLum: 7, orbPlan: 5 },
-  { name: 'Sextile',      angle: 60,  orbLum: 5, orbPlan: 4 },
-  { name: 'Quincunx',     angle: 150, orbLum: 2, orbPlan: 2 },
-];
-
-const LUMINARIES = new Set(['sun', 'moon']);
+// ASPECT_TYPES and LUMINARIES imported from constants.js (BL-S18-H1)
 
 /**
  * Calculate all aspects between planets.

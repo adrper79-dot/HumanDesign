@@ -167,14 +167,14 @@
     <p id="authSubtitle" data-i18n="auth.accessProfile">Access your Prime Self profile and saved charts.</p>
     <form onsubmit="submitAuth(); return false;">
     <div class="form-group" style="margin-bottom:12px">
-      <label data-i18n="auth.email">Email</label>
-      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
+      <label for="authEmail" data-i18n="auth.email">Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required aria-required="true" aria-describedby="authError">
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label data-i18n="auth.password">Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
+      <label for="authPassword" data-i18n="auth.password">Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required aria-required="true" minlength="8" aria-describedby="authError">
     </div>
-    <div class="auth-error" id="authError"></div>
+    <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>
     <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:11px" data-i18n="auth.signIn">Sign In</button>
     </form>
     <div class="auth-toggle">
@@ -377,17 +377,18 @@
       <div class="card-title"><span class="icon-chart"></span> <span data-i18n="chart.birthData">Birth Data</span></div>
       <div class="form-grid">
         <div class="form-group">
-          <label data-i18n="chart.birthDate">Birth Date</label>
-          <input type="date" id="c-date" value="1990-06-15">
+          <label for="c-date" data-i18n="chart.birthDate">Birth Date</label>
+          <input type="date" id="c-date" value="1990-06-15" required aria-required="true">
         </div>
         <div class="form-group">
-          <label><span data-i18n="chart.birthTime">Birth Time</span><span class="icon-info help-icon" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE bodygraph shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
-          <input type="time" id="c-time" value="14:30">
+          <label for="c-time"><span data-i18n="chart.birthTime">Birth Time</span><span class="icon-info help-icon" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE bodygraph shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
+          <input type="time" id="c-time" value="14:30" required aria-required="true">
+        </div>
         </div>
         <div class="form-group full">
-          <label><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
+          <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
           <div style="display:flex;gap:8px">
-            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1"
+            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1" required aria-required="true"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('c')" id="c-geoBtn"
               style="white-space:nowrap;padding:0 16px;font-size:0.85rem" data-i18n="chart.lookupLocation">Look Up</button>
@@ -1098,7 +1099,7 @@
 </div><!-- /container -->
 
 <script>
-const API = 'https://prime-self-api.adrper79.workers.dev';
+const API = 'https://prime-self-api.primeself.workers.dev';
 let token = localStorage.getItem('ps_token');
 let userEmail = localStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
@@ -1143,12 +1144,44 @@ function toggleAuthMode() {
 }
 
 async function submitAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
+  const emailEl = document.getElementById('authEmail');
+  const passwordEl = document.getElementById('authPassword');
+  const email = emailEl.value.trim();
+  const password = passwordEl.value;
   const errorEl = document.getElementById('authError');
   const btn = document.getElementById('authSubmit');
 
-  if (!email || !password) { errorEl.textContent = window.t('auth.emailRequired'); return; }
+  // Clear previous validation states
+  emailEl.removeAttribute('aria-invalid');
+  passwordEl.removeAttribute('aria-invalid');
+  errorEl.textContent = '';
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) {
+    emailEl.setAttribute('aria-invalid', 'true');
+    errorEl.textContent = window.t('auth.emailRequired');
+    emailEl.focus();
+    return;
+  }
+  if (!emailRegex.test(email)) {
+    emailEl.setAttribute('aria-invalid', 'true');
+    errorEl.textContent = 'Please enter a valid email address';
+    emailEl.focus();
+    return;
+  }
+  if (!password) {
+    passwordEl.setAttribute('aria-invalid', 'true');
+    errorEl.textContent = window.t('auth.emailRequired');
+    passwordEl.focus();
+    return;
+  }
+  if (password.length < 8) {
+    passwordEl.setAttribute('aria-invalid', 'true');
+    errorEl.textContent = 'Password must be at least 8 characters';
+    passwordEl.focus();
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = window.t('auth.pleaseWait');
@@ -1163,7 +1196,13 @@ async function submitAuth() {
       body: JSON.stringify({ email, password })
     });
     const res = await rawRes.json();
-    if (!rawRes.ok || res.error) { errorEl.textContent = res.error || 'Login failed'; return; }
+    if (!rawRes.ok || res.error) {
+      // Mark fields invalid on server error
+      emailEl.setAttribute('aria-invalid', 'true');
+      passwordEl.setAttribute('aria-invalid', 'true');
+      errorEl.textContent = res.error || 'Login failed';
+      return;
+    }
     token = res.accessToken;
     userEmail = email;
     localStorage.setItem('ps_token', token);

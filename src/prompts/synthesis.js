@@ -213,11 +213,28 @@ OUTPUT SCHEMA (strict JSON)
     "forgeIdentification": {
       "primaryForge": "string",
       "confidence": "high|medium|low",
-      "indicators": [{ "system": "string", "dataPoint": "string" }]
+      "indicators": [{ "system": "string", "dataPoint": "string" }],
+      "forgeWeapon": "string (the weapon this person wields from their Forge)",
+      "forgeDefense": "string (their natural defensive gift)",
+      "shadowWarning": "string (what happens when this Forge goes dark)"
     },
     "distinctivenessAnalysis": {
       "rareFactors": [{ "factor": "string", "prevalence": "string (e.g., '<8%')", "significance": "string" }],
       "commonFactors": [{ "factor": "string", "prevalence": "string (e.g., '>45%')", "personalSpin": "string (how THIS person expresses this common trait uniquely)" }]
+    },
+    "primingRecommendations": {
+      "historicalExemplar": {
+        "name": "string",
+        "relevance": "string (why this figure resonates with the user's design)",
+        "keyLesson": "string (what the user can learn from this figure)",
+        "invocationContext": "string (when to invoke this figure's wisdom)"
+      },
+      "alternateExemplars": ["string (2-3 other relevant historical figures)"],
+      "bookRecommendations": {
+        "fiction": { "title": "string", "author": "string", "why": "string (how this book serves the user now)" },
+        "nonFiction": { "title": "string", "author": "string", "why": "string (how this book supports their development)" }
+      },
+      "currentKnowledgeFocus": "string (which of the Six Knowledges to prioritize right now)"
     }
   },
   "groundingAudit": {
@@ -230,48 +247,114 @@ OUTPUT SCHEMA (strict JSON)
 Respond ONLY with valid JSON matching this schema. No markdown, no code fences.`;
 
 
-// ─── FORGE MAPPING REFERENCE ────────────────────────────────────
+// ─── FORGE MAPPING REFERENCE (CANONICAL) ────────────────────────
 
 const FORGE_MAPPING = [
   {
     forge: 'Chronos',
     domain: 'Time',
+    essence: 'The one who conquers time conquers all.',
     hdTriggers: ['defined Ajna', 'gates 61,63,64', 'Abstract/Logical circuitry', 'profile lines 1,2', 'strong Design-side definition'],
-    astroTriggers: ['Saturn dominant', 'South Node emphasis', '12th house stellium', 'strong Capricorn/Cancer']
+    astroTriggers: ['Saturn dominant', 'South Node emphasis', '12th house stellium', 'strong Capricorn/Cancer'],
+    weapon: 'Patience — the ability to outlast any obstacle',
+    defense: 'Historical Memory — learning from collective past to avoid repetition',
+    masterForm: 'The Eternal — one whose work transcends their lifespan',
+    shadowForm: 'The Anachronist — paralyzed by reverence for past or fear of future',
+    exemplars: ['Marcus Aurelius', 'Marie Curie', 'Warren Buffett', 'H.G. Wells']
   },
   {
     forge: 'Eros',
     domain: 'Passion',
+    essence: 'Passion is the engine of creation.',
     hdTriggers: ['defined Sacral', 'Generator/MG type', 'Gate 34 active', 'Integration circuit channels', 'emotional authority'],
-    astroTriggers: ['Mars/Venus dominant', 'strong 5th house', 'Scorpio/Aries emphasis', 'Pluto aspects to personal planets']
+    astroTriggers: ['Mars/Venus dominant', 'strong 5th house', 'Scorpio/Aries emphasis', 'Pluto aspects to personal planets'],
+    weapon: 'Creative Fire — transforming raw desire into beautiful form',
+    defense: 'Heart Coherence — emotional intelligence as protective force',
+    masterForm: 'The Lover — whose passion becomes devotional art',
+    shadowForm: 'The Addict — consumed by passion rather than channeling it',
+    exemplars: ['Frida Kahlo', 'Rumi', 'Freddie Mercury', 'Beethoven']
   },
   {
     forge: 'Aether',
     domain: 'Universal Connection',
+    essence: 'The bridge between souls cannot be broken by distance.',
     hdTriggers: ['open/undefined Head,Ajna,Spleen', 'Gate 57 active', 'Projector/Reflector type', 'individual circuitry'],
-    astroTriggers: ['Neptune dominant', 'strong Pisces/12th house', 'prominent North Node', 'Jupiter-Neptune aspects']
+    astroTriggers: ['Neptune dominant', 'strong Pisces/12th house', 'prominent North Node', 'Jupiter-Neptune aspects'],
+    weapon: 'Empathy — feeling the truth of others\' experience',
+    defense: 'Sacred Boundaries — protecting openness without closing',
+    masterForm: 'The Connector — who facilitates genuine communion',
+    shadowForm: 'The Martyr — dissolving self completely in service of others',
+    exemplars: ['Thich Nhat Hanh', 'The Dalai Lama', 'Carl Rogers', 'Mother Teresa']
   },
   {
     forge: 'Lux',
     domain: 'Illumination',
+    essence: 'Truth, once seen, cannot be unseen.',
     hdTriggers: ['defined Head + Ajna', 'gates 43,23 (Channel of Structuring)', 'Projector type', 'Collective circuitry'],
-    astroTriggers: ['Sun/Mercury dominant', 'strong 9th house', 'Sagittarius/Aquarius emphasis', 'Jupiter aspects']
+    astroTriggers: ['Sun/Mercury dominant', 'strong 9th house', 'Sagittarius/Aquarius emphasis', 'Jupiter aspects'],
+    weapon: 'Clarity — cutting through confusion to essential truth',
+    defense: 'Discernment — knowing what is true from what merely appears true',
+    masterForm: 'The Illuminator — whose clarity serves collective awakening',
+    shadowForm: 'The Blinder — using light to dazzle rather than enlighten',
+    exemplars: ['Nikola Tesla', 'Albert Einstein', 'Ra Uru Hu', 'Steven Spielberg']
   },
   {
     forge: 'Phoenix',
     domain: 'Rebirth',
+    essence: 'What rises from ashes carries the wisdom of the fire.',
     hdTriggers: ['profile lines 3,5,6', 'Gate 25 (Spirit of Self)', 'Cross of Planning/Sleeping Phoenix incarnation cross'],
-    astroTriggers: ['Pluto dominant', 'strong 8th house', 'Scorpio emphasis', 'major Pluto transits']
+    astroTriggers: ['Pluto dominant', 'strong 8th house', 'Scorpio emphasis', 'major Pluto transits'],
+    weapon: 'Transmutation — turning any experience into wisdom',
+    defense: 'Resilience — the deep knowing that you have survived before',
+    masterForm: 'The Transformer — who guides others through death/rebirth',
+    shadowForm: 'The Destroyer — addicted to burning without rebuilding',
+    exemplars: ['Nelson Mandela', 'Carl Jung', 'Maya Angelou', 'Malcolm X']
   }
 ];
 
 const SIX_KNOWLEDGES = [
-  { name: 'Knowledge of Self', hdMapping: 'HD Type + Authority' },
-  { name: 'Knowledge of Ancestors', hdMapping: 'Unconscious/Design-side gates' },
-  { name: 'Knowledge of the One', hdMapping: 'Channel connections, electromagnetic potential' },
-  { name: 'Knowledge of Constructive Behaviors', hdMapping: 'Defined centers — reliable access' },
-  { name: 'Knowledge of Destructive Behaviors', hdMapping: 'Undefined centers — amplification vulnerability' },
-  { name: 'Knowledge of Healing and Reparation', hdMapping: 'Profile line wound/gift dynamic' }
+  { 
+    name: 'Knowledge of Self',
+    number: 1,
+    essence: 'The practitioner who knows themselves cannot be surprised by themselves in battle.',
+    hdMapping: 'HD Type + Authority + Profile',
+    primeQuestion: 'Who am I when no one is watching and nothing is at stake?'
+  },
+  { 
+    name: 'Knowledge of Ancestors',
+    number: 2,
+    essence: 'To know your ancestors is to multiply your intelligence across generations.',
+    hdMapping: 'Unconscious/Design-side gates + Incarnation Cross',
+    primeQuestion: 'What wisdom did my ancestors earn that I can inherit through deliberate practice?'
+  },
+  { 
+    name: 'Knowledge of The One',
+    number: 3,
+    essence: 'Compassion is the highest form of intelligence, because it sees reality as it is.',
+    hdMapping: 'Channel connections, electromagnetic potential, open centers',
+    primeQuestion: 'How is what I see in others a reflection of what exists in me?'
+  },
+  { 
+    name: 'Knowledge of Constructive Behaviors',
+    number: 4,
+    essence: 'These are not rigidly good traits — they are contextually appropriate behaviors chosen with consciousness.',
+    hdMapping: 'Defined centers — reliable access, consistent gifts',
+    primeQuestion: 'What constructive action is mine to take in this moment?'
+  },
+  { 
+    name: 'Knowledge of Destructive Behaviors',
+    number: 5,
+    essence: 'Destruction is not inherently negative — sometimes things must be torn down for growth.',
+    hdMapping: 'Undefined centers — amplification, vulnerability, wisdom through experience',
+    primeQuestion: 'What must I end or destroy so that something better can emerge?'
+  },
+  { 
+    name: 'Knowledge of Healing and Reparation',
+    number: 6,
+    essence: 'No Prime can be fully reached while carrying unprocessed wounds.',
+    hdMapping: 'Profile line wound/gift dynamic, Chiron placement',
+    primeQuestion: 'What wound am I carrying that, if healed, would liberate my full power?'
+  }
 ];
 
 
@@ -433,18 +516,34 @@ function buildReferenceFacts(data) {
   }
 
   // ── Forge Mapping Reference ──
-  sections.push('\n=== FORGE MAPPING REFERENCE ===');
+  sections.push('\n=== FORGE MAPPING REFERENCE (CANONICAL) ===');
   for (const f of FORGE_MAPPING) {
-    sections.push(`\n${f.forge} (${f.domain}):`);
+    sections.push(`\n${f.forge} (${f.domain}): "${f.essence}"`);
     sections.push(`  HD indicators: ${f.hdTriggers.join(', ')}`);
     sections.push(`  Astro indicators: ${f.astroTriggers.join(', ')}`);
+    sections.push(`  Weapon: ${f.weapon}`);
+    sections.push(`  Defense: ${f.defense}`);
+    sections.push(`  Master Form: ${f.masterForm}`);
+    sections.push(`  Shadow Form: ${f.shadowForm}`);
+    sections.push(`  Historical Exemplars: ${f.exemplars.join(', ')}`);
   }
 
   // ── Knowledge Mapping Reference ──
-  sections.push('\n=== KNOWLEDGE MAPPING REFERENCE ===');
+  sections.push('\n=== SIX KNOWLEDGES REFERENCE (CANONICAL) ===');
   for (const k of SIX_KNOWLEDGES) {
-    sections.push(`${k.name}: ${k.hdMapping}`);
+    sections.push(`\n${k.number}. ${k.name}: "${k.essence}"`);
+    sections.push(`  HD Mapping: ${k.hdMapping}`);
+    sections.push(`  Prime Question: ${k.primeQuestion}`);
   }
+
+  // ── Priming Guidance ──
+  sections.push('\n=== PRIMING RECOMMENDATIONS GUIDANCE ===');
+  sections.push('For each reading, recommend:');
+  sections.push('1. A historical exemplar whose design resonates with the user\'s Forge and Type');
+  sections.push('2. One fiction and one non-fiction book matched to their current life focus');
+  sections.push('3. Which of the Six Knowledges they should prioritize developing now');
+  sections.push('Match historical figures by: HD Type, Forge, and current challenges');
+  sections.push('Match books by: Forge, Knowledge area, and stated current focus');
 
   // ── Behavioral Validation Data ──
   if (data.validationData) {

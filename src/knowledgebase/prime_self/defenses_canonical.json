@@ -1,0 +1,340 @@
+{
+  "_meta": {
+    "version": "2.0-canonical",
+    "source": "Prime Self Sacred Texts & Canonical Philosophy",
+    "description": "The Six Defenses — protective and restorative disciplines that shield, heal, and maintain the practitioner's integrity",
+    "note": "Defenses are not paranoia — they are wisdom. The practitioner who cannot protect their energy cannot serve others. These disciplines maintain the vessel through which Prime work flows."
+  },
+  "reflexology": {
+    "defense": "Reflexology",
+    "number": 1,
+    "essence": "The body contains a map of itself. Press the map, heal the territory.",
+    "description": "Working with reflex points in the feet, hands, and ears that correspond to organs and systems throughout the body. This is both healing art and diagnostic tool. The reflexologist reads the body's story through its extremities.",
+    "domains": [
+      "Foot reflex mapping",
+      "Hand reflex points",
+      "Ear reflexology (auricular)",
+      "Organ system correspondence",
+      "Energy flow restoration",
+      "Stress and tension release",
+      "Self-diagnostic reading"
+    ],
+    "principles": {
+      "zoneTheory": "Body divided into 10 longitudinal zones",
+      "reflexMapping": "Points on extremities correspond to distant organs",
+      "energyFlow": "Blockages in reflex points indicate blockages in corresponding areas",
+      "relaxationResponse": "Stimulation promotes parasympathetic activation"
+    },
+    "applications": {
+      "selfCare": "Daily foot massage for general maintenance",
+      "diagnostic": "Tender points reveal areas needing attention",
+      "stressRelief": "Solar plexus point for calming",
+      "energyBoost": "Adrenal points for vitality",
+      "headRelief": "Big toe points for head and brain"
+    },
+    "hdMapping": {
+      "support": ["Root center (physical vitality)", "Spleen (health and timing)", "Sacral (life force)"],
+      "enhancement": "Reflexology supports the physical vessel carrying your design"
+    },
+    "astroMapping": {
+      "support": ["Virgo (health and service)", "6th House (body and wellness)"],
+      "houses": ["6th House (health)", "1st House (vital body)"]
+    },
+    "primeApplication": "Self-care practice to maintain physical vessel, grounding before readings, releasing tension after intense sessions",
+    "historicalExemplars": ["Eunice Ingham", "William Fitzgerald", "Laura Norman", "Mildred Carter", "Kevin Kunz"],
+    "recommendedReading": {
+      "fiction": ["The Glass Bead Game by Hermann Hesse", "Hands by Sherwood Anderson", "The Bone People by Keri Hulme"],
+      "nonFiction": ["Stories the Feet Can Tell by Eunice Ingham", "The Complete Guide to Foot Reflexology by Kevin and Barbara Kunz", "Reflexology: Art, Science & History by Christine Issel"]
+    }
+  },
+  "acupressure": {
+    "defense": "Acupressure",
+    "number": 2,
+    "essence": "Energy seeks to flow. Remove the block, and healing happens naturally.",
+    "description": "Working with energy meridians and pressure points derived from Traditional Chinese Medicine. Acupressure applies physical pressure to specific points to influence the flow of chi (life energy) through the body's energy pathways.",
+    "domains": [
+      "Meridian theory and pathways",
+      "Acupoint location and function",
+      "Chi flow assessment",
+      "Five element correspondences",
+      "Yin-yang balancing",
+      "Emotional release points",
+      "Emergency and first-aid points"
+    ],
+    "keyPoints": {
+      "LI4_HeGu": "Headaches, immunity, general pain (contraindicated in pregnancy)",
+      "PC6_NeiGuan": "Nausea, anxiety, emotional balance",
+      "ST36_ZuSanLi": "Energy, digestion, immunity — 'leg three miles'",
+      "LV3_TaiChong": "Stress, anger, liver function",
+      "GB20_FengChi": "Headaches, neck tension, mental clarity",
+      "SP6_SanYinJiao": "Hormonal balance, sleep, digestive issues"
+    },
+    "meridians": {
+      "lung": "Breath, grief, letting go",
+      "largeIntestine": "Release, elimination",
+      "stomach": "Nourishment, worry",
+      "spleen": "Digestion, overthinking",
+      "heart": "Joy, communication, consciousness",
+      "smallIntestine": "Assimilation, discernment",
+      "bladder": "Fear, will, flexibility",
+      "kidney": "Vitality, fear, foundation",
+      "pericardium": "Heart protection, relationships",
+      "tripleWarmer": "Metabolism, fight-flight-freeze",
+      "gallbladder": "Decision, judgment, courage",
+      "liver": "Planning, anger, vision"
+    },
+    "hdMapping": {
+      "support": ["Nine centers as energy hubs", "Defined centers (consistent energy patterns)", "Open centers (variable patterns)"],
+      "enhancement": "Acupressure can support consistent energy flow regardless of transit influences"
+    },
+    "astroMapping": {
+      "support": ["Mars (vital force)", "Moon (emotional patterns)", "Saturn (structure)"],
+      "houses": ["6th House (health routines)", "8th House (transformation and healing)"]
+    },
+    "primeApplication": "Quick self-regulation during readings, supporting clients with acute distress, maintaining energy flow during intensive work",
+    "historicalExemplars": ["Huang Di (Yellow Emperor)", "Michael Reed Gach", "Donna Eden", "Ted Kaptchuk", "Kiiko Matsumoto"],
+    "recommendedReading": {
+      "fiction": ["The Woman Warrior by Maxine Hong Kingston", "Snow Flower and the Secret Fan by Lisa See", "Memoirs of a Geisha by Arthur Golden"],
+      "nonFiction": ["Acupressure's Potent Points by Michael Reed Gach", "The Web That Has No Weaver by Ted Kaptchuk", "Between Heaven and Earth by Harriet Beinfield"]
+    }
+  },
+  "chromotherapy": {
+    "defense": "Chromotherapy",
+    "number": 3,
+    "essence": "Light is nutrition for the eyes and soul. The colors you surround yourself with feed or starve your spirit.",
+    "description": "Using color and light for healing and transformation. Different color frequencies affect the body, emotions, and consciousness in measurable ways. The chromotherapist works with the visible spectrum as a healing tool.",
+    "domains": [
+      "Color frequency effects",
+      "Light therapy applications",
+      "Environmental color design",
+      "Chakra color correspondences",
+      "Seasonal affective treatment",
+      "Color breathing and visualization",
+      "Wardrobe as color medicine"
+    ],
+    "colorProperties": {
+      "red": "Vitality, grounding, stimulation, root chakra",
+      "orange": "Creativity, enthusiasm, social connection, sacral chakra",
+      "yellow": "Mental clarity, confidence, digestion, solar plexus",
+      "green": "Balance, healing, heart opening, heart chakra",
+      "blue": "Calm, communication, cooling, throat chakra",
+      "indigo": "Intuition, insight, third eye, brow chakra",
+      "violet": "Spirituality, transformation, crown connection"
+    },
+    "forgeCorrespondences": {
+      "chronos": "Browns, blacks, deep earth tones (grounding in time)",
+      "eros": "Reds, pinks, warm oranges (passion and heart)",
+      "aether": "Violets, lavenders, soft whites (spiritual connection)",
+      "lux": "Golds, yellows, bright whites (clarity and revelation)",
+      "phoenix": "Deep reds, blacks, transformation orange (death and rebirth)"
+    },
+    "applications": {
+      "lightBoxes": "Full-spectrum light for seasonal depression",
+      "colorFilters": "Specific frequencies for targeted effects",
+      "visualization": "Mental color imagery for healing",
+      "environment": "Room colors affecting daily mood",
+      "clothing": "Wearing colors for specific intentions"
+    },
+    "hdMapping": {
+      "support": ["Head centers (Ajna, Head) respond to light", "G center (direction and identity)"],
+      "enhancement": "Color can support or buffer energy type needs"
+    },
+    "astroMapping": {
+      "support": ["Sun (light itself)", "Venus (color and beauty)", "Neptune (subtle perception)"],
+      "houses": ["1st House (self-image)", "5th House (creative expression)"]
+    },
+    "primeApplication": "Creating appropriate ambiance for readings, using color in visualization guidance, wearing colors that support your energy type",
+    "historicalExemplars": ["Edwin Babbitt", "Dinshah Ghadiali", "Theo Gimbel", "Jacob Liberman", "Anadi Martel"],
+    "recommendedReading": {
+      "fiction": ["Girl with a Pearl Earring by Tracy Chevalier", "The Color Purple by Alice Walker", "Chroma by Derek Jarman"],
+      "nonFiction": ["Light: Medicine of the Future by Jacob Liberman", "Healing with Color by Theo Gimbel", "Color Medicine by Charles Klotsche"]
+    }
+  },
+  "hypnosis": {
+    "defense": "Hypnosis",
+    "number": 4,
+    "essence": "The subconscious mind is not your enemy — it is your ally awaiting instructions.",
+    "description": "Working with the subconscious mind through trance states. Hypnosis accesses the programming layer of consciousness where beliefs, habits, and automatic responses are stored. The hypnotist works with this level to install beneficial patterns and release limiting ones.",
+    "domains": [
+      "Trance induction techniques",
+      "Subconscious communication",
+      "Belief change and installation",
+      "Habit and pattern modification",
+      "Pain management",
+      "Regression and memory work",
+      "Self-hypnosis practices"
+    ],
+    "principles": {
+      "suggestibility": "Trance state increases receptivity to suggestion",
+      "unconsciousProcessing": "Subconscious mind processes suggestions without critical filter",
+      "automaticity": "Hypnotic changes become automatic behaviors",
+      "imagination": "Subconscious responds to imagination as if real"
+    },
+    "applications": {
+      "habitChange": "Smoking cessation, weight management",
+      "anxietyRelief": "Reducing anticipatory stress",
+      "painManagement": "Reducing perception of chronic pain",
+      "performanceEnhancement": "Athletic and professional peak state access",
+      "pastExploration": "Accessing memories for healing (with caution)"
+    },
+    "techniques": {
+      "progressive": "Systematic body relaxation",
+      "ericksonian": "Indirect suggestion, metaphor, story",
+      "rapid": "Quick induction for experienced subjects",
+      "selfHypnosis": "Self-administered trance for personal use"
+    },
+    "hdMapping": {
+      "support": ["Open centers as suggestible entry points", "Ajna (mental processing)", "Head center (inspiration)"],
+      "enhancement": "Understanding your design helps identify which suggestions serve your authentic nature vs. conditioning"
+    },
+    "astroMapping": {
+      "support": ["Neptune (trance and altered states)", "Pluto (deep transformation)", "Moon (subconscious patterns)"],
+      "houses": ["8th House (deep psychology)", "12th House (unconscious realm)"]
+    },
+    "primeApplication": "Self-hypnosis for maintaining reading clarity, guiding clients through visualization, accessing intuitive states for synthesis",
+    "historicalExemplars": ["Franz Mesmer", "Milton Erickson", "Dave Elman", "Gil Boyne", "Michael Yapko"],
+    "recommendedReading": {
+      "fiction": ["The Manchurian Candidate by Richard Condon", "Hypnotist by Lars Kepler", "The Magus by John Fowles"],
+      "nonFiction": ["My Voice Will Go with You by Milton Erickson", "Hypnotherapy by Dave Elman", "Trancework by Michael Yapko"]
+    }
+  },
+  "chakraWork": {
+    "defense": "Chakra Work",
+    "number": 5,
+    "essence": "The chakras are not mystical fantasy — they are experiential energy centers that can be felt, developed, and balanced.",
+    "description": "Balancing and clearing the body's primary energy centers. The chakra system provides a map of human development, from survival (root) to transcendence (crown). Each chakra governs specific physical, emotional, and spiritual functions.",
+    "domains": [
+      "Chakra assessment and reading",
+      "Balancing and clearing techniques",
+      "Chakra meditation",
+      "Sound and color for chakra healing",
+      "Physical exercises for each chakra",
+      "Psychological development through chakras",
+      "Kundalini awareness"
+    ],
+    "chakras": {
+      "root": {
+        "sanskrit": "Muladhara",
+        "location": "Base of spine",
+        "governs": "Survival, grounding, security, physical needs",
+        "element": "Earth",
+        "color": "Red",
+        "hdCorrespondence": "Root Center"
+      },
+      "sacral": {
+        "sanskrit": "Svadhisthana",
+        "location": "Below navel",
+        "governs": "Emotions, sexuality, creativity, pleasure",
+        "element": "Water",
+        "color": "Orange",
+        "hdCorrespondence": "Sacral Center"
+      },
+      "solarPlexus": {
+        "sanskrit": "Manipura",
+        "location": "Upper abdomen",
+        "governs": "Will, power, identity, self-esteem",
+        "element": "Fire",
+        "color": "Yellow",
+        "hdCorrespondence": "Solar Plexus + Heart/Will Center"
+      },
+      "heart": {
+        "sanskrit": "Anahata",
+        "location": "Center of chest",
+        "governs": "Love, compassion, connection, healing",
+        "element": "Air",
+        "color": "Green",
+        "hdCorrespondence": "G Center (identity/love)"
+      },
+      "throat": {
+        "sanskrit": "Vishuddha",
+        "location": "Throat",
+        "governs": "Communication, expression, truth, creativity",
+        "element": "Ether/Sound",
+        "color": "Blue",
+        "hdCorrespondence": "Throat Center"
+      },
+      "thirdEye": {
+        "sanskrit": "Ajna",
+        "location": "Between eyebrows",
+        "governs": "Intuition, insight, imagination, clarity",
+        "element": "Light",
+        "color": "Indigo",
+        "hdCorrespondence": "Ajna Center"
+      },
+      "crown": {
+        "sanskrit": "Sahasrara",
+        "location": "Top of head",
+        "governs": "Consciousness, spirituality, unity, transcendence",
+        "element": "Thought/Cosmic Energy",
+        "color": "Violet/White",
+        "hdCorrespondence": "Head Center"
+      }
+    },
+    "hdMapping": {
+      "support": ["Nine HD centers loosely map to seven chakras plus additional centers", "Center definition affects chakra experience"],
+      "enhancement": "Chakra work can support open centers and balance defined centers"
+    },
+    "astroMapping": {
+      "support": ["Each planet corresponds to chakra functions", "Neptune (crown)", "Jupiter (third eye)", "Mercury (throat)", "Venus (heart)", "Mars (solar plexus)", "Moon (sacral)", "Saturn (root)"],
+      "houses": ["All houses have chakra correspondences"]
+    },
+    "primeApplication": "Assessing client energy before readings, clearing and balancing after intensive sessions, maintaining personal energy hygiene",
+    "historicalExemplars": ["Patanjali", "Sir John Woodroffe", "Anodea Judith", "Caroline Myss", "Cyndi Dale"],
+    "recommendedReading": {
+      "fiction": ["Autobiography of a Yogi by Paramahansa Yogananda", "The Serpent Power by Sir John Woodroffe", "Eastern Body Western Mind by Anodea Judith"],
+      "nonFiction": ["Wheels of Life by Anodea Judith", "Anatomy of the Spirit by Caroline Myss", "The Subtle Body by Cyndi Dale"]
+    }
+  },
+  "iwasOrisha": {
+    "defense": "Iwas and Orisha",
+    "number": 6,
+    "essence": "You are not alone. The ancestors walk with you, and the divine forces respond to those who call correctly.",
+    "description": "Working with ancestral spirit guides and divine forces from African diaspora traditions. The Orisha (Yoruba) and Lwa/Iwa (Vodou) are powerful archetypal forces that can be invoked for protection, guidance, and empowerment. This is the knowledge of working with spiritual allies.",
+    "domains": [
+      "Ancestral veneration practices",
+      "Orisha identification and relationship",
+      "Altar creation and maintenance",
+      "Offerings and reciprocity",
+      "Divination systems (Ifá, bones)",
+      "Spiritual protection protocols",
+      "Community and lineage connection"
+    ],
+    "principles": {
+      "ashe": "The vital force that makes things happen — similar to chi or prana",
+      "ori": "Personal divinity, the head, individual destiny",
+      "reciprocity": "Give to receive; relationship is exchange",
+      "community": "Spirituality is practiced in community, not isolation",
+      "lineage": "Wisdom flows through initiated lineage"
+    },
+    "orisha": {
+      "elegba": "Crossroads, communication, opens and closes doors",
+      "ogun": "Iron, war, technology, clearing obstacles",
+      "ochosi": "Hunter, justice, focus, finding what is lost",
+      "obatala": "Peace, clarity, wisdom, the elder",
+      "yemoja": "Ocean, motherhood, protection, fertility",
+      "oshun": "Sweet water, love, prosperity, creativity",
+      "shango": "Thunder, justice, passion, leadership",
+      "oya": "Wind, change, transformation, ancestors"
+    },
+    "respectfulPractice": {
+      "initiation": "Full practice requires initiation through legitimate lineage",
+      "study": "Academic understanding is accessible; practice requires relationship",
+      "appropriation": "Respect the tradition; do not claim what you have not earned",
+      "universalPrinciples": "Ancestral veneration is universal; specific practices are cultural"
+    },
+    "hdMapping": {
+      "support": ["Incarnation Cross relates to life purpose (ori)", "Design side as ancestral/genetic inheritance"],
+      "enhancement": "Understanding ancestral forces in your chart"
+    },
+    "astroMapping": {
+      "support": ["Saturn (ancestors and structure)", "4th House (roots)", "12th House (spiritual realm)"],
+      "houses": ["4th House (ancestry)", "8th House (inheritance)", "12th House (spiritual allies)"]
+    },
+    "primeApplication": "Understanding ancestral patterns in readings, invoking appropriate spiritual support, creating protected space for deep work",
+    "historicalExemplars": ["Luisah Teish", "Malidoma Somé", "Mama Zogbé", "Chief Fama", "Baba Ifa Karade"],
+    "recommendedReading": {
+      "fiction": ["Mama Day by Gloria Naylor", "The Famished Road by Ben Okri", "Brown Girl in the Ring by Nalo Hopkinson"],
+      "nonFiction": ["Jambalaya by Luisah Teish", "The Handbook of Yoruba Religious Concepts by Baba Ifa Karade", "Of Water and the Spirit by Malidoma Somé"]
+    }
+  }
+}

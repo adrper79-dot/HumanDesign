@@ -16,31 +16,13 @@ import { getAllPositions } from './planets.js';
 import { mapAllToGates } from './gates.js';
 import { jdnToCalendar } from './design.js';                  // BL-R-M17: import shared utility
 import { getSignFromLongitude } from './astro.js';             // BL-R-M17: import shared utility
+import { ASPECT_TYPES, OUTER_PLANETS, PLANET_SPEEDS } from './constants.js';  // BL-S18-H1: shared constants
 
 // ─── CONSTANTS ──────────────────────────────────────────────────
+// ASPECT_TYPES, OUTER_PLANETS, PLANET_SPEEDS imported from constants.js
 
-// TODO: ASPECT_TYPES is duplicated from astro.js (which uses orbLum/orbPlan).
-// Refactor to import from a shared module to keep orb values in sync.
-const ASPECT_TYPES = [
-  { name: 'Conjunction',  angle: 0,   orb: 6 },
-  { name: 'Opposition',   angle: 180, orb: 6 },
-  { name: 'Trine',        angle: 120, orb: 5 },
-  { name: 'Square',       angle: 90,  orb: 5 },
-  { name: 'Sextile',      angle: 60,  orb: 4 },
-  { name: 'Quincunx',     angle: 150, orb: 2 }
-];
-
-/** Slow-moving planets — these make longer-lasting transits */
-const OUTER_PLANETS = new Set([
-  'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron'
-]);
-
-/** Transit speed classification (approximate degrees/day) */
-const SPEEDS = {
-  sun: 0.9856, moon: 13.176, mercury: 1.38, venus: 1.20,
-  mars: 0.524, jupiter: 0.083, saturn: 0.034, uranus: 0.012,
-  neptune: 0.006, pluto: 0.004, chiron: 0.02, northNode: -0.053, southNode: -0.053
-};
+// Alias for backward compatibility
+const SPEEDS = PLANET_SPEEDS;
 
 // ─── HELPERS ────────────────────────────────────────────────────
 

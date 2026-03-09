@@ -1,0 +1,317 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "source": "Prime Self Historical Figures Library",
+    "description": "Library of historical figures organized by Human Design type, Forge affinity, and primary domain for personalized recommendations",
+    "usage": "Match user's HD type, dominant Forge, and interests to suggest resonant historical exemplars for Priming practice",
+    "note": "HD types are based on available biographical data and chart calculations. Some attributions may be speculative for figures with unclear birth times."
+  },
+  "byType": {
+    "generator": {
+      "description": "Builders and sustainers — pure life force with consistent energy when responding to life",
+      "figures": [
+        {
+          "name": "Albert Einstein",
+          "years": "1879-1955",
+          "domain": "Science, Physics",
+          "forge": "lux",
+          "primeGift": "Transformed physics through patient, responding exploration rather than forced breakthrough",
+          "keyLesson": "Trust the response — his greatest insights came from following curiosity, not pushing",
+          "recommendFor": ["Scientific minds", "Those learning to wait for response", "Pattern recognizers"]
+        },
+        {
+          "name": "The Dalai Lama",
+          "years": "1935-present",
+          "domain": "Spirituality, Leadership",
+          "forge": "aether",
+          "primeGift": "Consistent, sustained spiritual presence and teaching through decades of exile",
+          "keyLesson": "Generator energy in service of connection and compassion",
+          "recommendFor": ["Spiritual seekers", "Those in service roles", "Peace workers"]
+        },
+        {
+          "name": "Oprah Winfrey",
+          "years": "1954-present",
+          "domain": "Media, Communication",
+          "forge": "eros",
+          "primeGift": "Built media empire by responding to what lit her up — authentic connection",
+          "keyLesson": "Follow your response to find your calling; build through sustained engagement",
+          "recommendFor": ["Communicators", "Those building platforms", "Heart-centered entrepreneurs"]
+        },
+        {
+          "name": "Mozart",
+          "years": "1756-1791",
+          "domain": "Music, Arts",
+          "forge": "eros",
+          "primeGift": "Prodigious creative output through sustained response to musical inspiration",
+          "keyLesson": "Generator energy can produce extraordinary volume when fully engaged",
+          "recommendFor": ["Artists", "Musicians", "Prolific creators"]
+        },
+        {
+          "name": "Carl Jung",
+          "years": "1875-1961",
+          "domain": "Psychology, Philosophy",
+          "forge": "phoenix",
+          "primeGift": "Built entire new framework through patient response to the unconscious",
+          "keyLesson": "Generators transform fields through sustained engagement, not sudden breakthrough",
+          "recommendFor": ["Psychologists", "Shadow workers", "Those exploring the unconscious"]
+        },
+        {
+          "name": "Marie Curie",
+          "years": "1867-1934",
+          "domain": "Science, Chemistry",
+          "forge": "chronos",
+          "primeGift": "Sustained scientific inquiry for years, responding to the mystery of radioactivity",
+          "keyLesson": "Generator persistence in the face of obstacles and discrimination",
+          "recommendFor": ["Scientists", "Women in male-dominated fields", "Persistent researchers"]
+        }
+      ]
+    },
+    "manifestingGenerator": {
+      "description": "Multi-passionate builders — Generator energy with Manifestor speed, mastering through doing",
+      "figures": [
+        {
+          "name": "Elon Musk",
+          "years": "1971-present",
+          "domain": "Technology, Entrepreneurship",
+          "forge": "lux",
+          "primeGift": "Multi-passionate building across industries while maintaining intense productive energy",
+          "keyLesson": "MG energy can pursue multiple passions if each is a true response",
+          "recommendFor": ["Entrepreneurs", "Multi-passionate types", "Visionary builders"]
+        },
+        {
+          "name": "Freddie Mercury",
+          "years": "1946-1991",
+          "domain": "Music, Performance",
+          "forge": "eros",
+          "primeGift": "Combined MG energy with extraordinary performance presence and passion",
+          "keyLesson": "MGs can master performance through their response-plus-initiation nature",
+          "recommendFor": ["Performers", "Those expressing multiple art forms", "Passionate creatives"]
+        },
+        {
+          "name": "Vincent van Gogh",
+          "years": "1853-1890",
+          "domain": "Art, Visual Arts",
+          "forge": "phoenix",
+          "primeGift": "Transformed personal suffering into transcendent art through relentless response to vision",
+          "keyLesson": "MG energy can fuel massive creative output even in difficult conditions",
+          "recommendFor": ["Visual artists", "Those transforming pain into art", "Misunderstood geniuses"]
+        },
+        {
+          "name": "Beyoncé",
+          "years": "1981-present",
+          "domain": "Music, Performance, Entrepreneurship",
+          "forge": "eros",
+          "primeGift": "Multi-domain excellence through responding to what lights her up",
+          "keyLesson": "MGs can master multiple fields without diluting power",
+          "recommendFor": ["Performers", "Multi-hyphenate creatives", "Those building personal brands"]
+        }
+      ]
+    },
+    "manifestor": {
+      "description": "Initiators and catalysts — here to start things and impact others through their aura",
+      "figures": [
+        {
+          "name": "Maya Angelou",
+          "years": "1928-2014",
+          "domain": "Literature, Activism",
+          "forge": "phoenix",
+          "primeGift": "Initiated cultural conversation through powerful voice and presence",
+          "keyLesson": "Manifestors impact through their words and presence even when not physically initiating",
+          "recommendFor": ["Writers", "Activists", "Those finding their voice after trauma"]
+        },
+        {
+          "name": "Ra Uru Hu",
+          "years": "1948-2011",
+          "domain": "Human Design, Spirituality",
+          "forge": "lux",
+          "primeGift": "Initiated the Human Design System — pure Manifestor role of bringing new forms",
+          "keyLesson": "Manifestors download and initiate new systems for others to build",
+          "recommendFor": ["System creators", "Those receiving new frameworks", "HD practitioners"]
+        },
+        {
+          "name": "Susan B. Anthony",
+          "years": "1820-1906",
+          "domain": "Activism, Social Change",
+          "forge": "chronos",
+          "primeGift": "Initiated women's suffrage movement through decades of persistent action",
+          "keyLesson": "Manifestors initiate but may not live to see full impact",
+          "recommendFor": ["Activists", "Social changemakers", "Those planting seeds"]
+        },
+        {
+          "name": "Adolf Hitler",
+          "years": "1889-1945",
+          "domain": "Politics (shadow example)",
+          "forge": "phoenix (corrupted)",
+          "primeGift": "SHADOW EXAMPLE — demonstrates how Manifestor energy without ethics creates destruction",
+          "keyLesson": "Manifestor power without morality creates horror; warns of shadow potential",
+          "recommendFor": ["Understanding shadow", "Political awareness", "Ethical development"],
+          "isShadowExample": true
+        },
+        {
+          "name": "Frida Kahlo",
+          "years": "1907-1954",
+          "domain": "Art, Visual Arts",
+          "forge": "eros",
+          "primeGift": "Initiated new visual language for pain, identity, and femininity",
+          "keyLesson": "Manifestors create impact through unique expression no one else can replicate",
+          "recommendFor": ["Visual artists", "Those expressing personal pain", "Identity explorers"]
+        }
+      ]
+    },
+    "projector": {
+      "description": "Guides and directors — here to see and guide others, waiting for recognition and invitation",
+      "figures": [
+        {
+          "name": "Barack Obama",
+          "years": "1961-present",
+          "domain": "Politics, Leadership",
+          "forge": "aether",
+          "primeGift": "Waited for recognition and invitation to extraordinary leadership position",
+          "keyLesson": "Projectors can reach highest levels when they wait for correct recognition",
+          "recommendFor": ["Leaders", "Those awaiting recognition", "Bridge-builders"]
+        },
+        {
+          "name": "Nelson Mandela",
+          "years": "1918-2013",
+          "domain": "Politics, Activism",
+          "forge": "phoenix",
+          "primeGift": "Guided nation through transformation, waited 27 years for correct timing",
+          "keyLesson": "Projector patience and waiting can have extraordinary payoff",
+          "recommendFor": ["Change leaders", "Those in long waits", "Reconciliation workers"]
+        },
+        {
+          "name": "Princess Diana",
+          "years": "1961-1997",
+          "domain": "Humanitarian, Public Figure",
+          "forge": "eros",
+          "primeGift": "Natural guide and connector who transformed royal role through genuine connection",
+          "keyLesson": "Projectors impact through presence and recognition of others' worth",
+          "recommendFor": ["Humanitarians", "Public figures", "Heart-centered leaders"]
+        },
+        {
+          "name": "Marilyn Monroe",
+          "years": "1926-1962",
+          "domain": "Entertainment, Acting",
+          "forge": "eros",
+          "primeGift": "Extraordinary screen presence through Projector aura — others couldn't look away",
+          "keyLesson": "Projector visibility can be intense; self-care and boundaries essential",
+          "recommendFor": ["Performers", "Those managing public attention", "Learning boundaries"]
+        },
+        {
+          "name": "Steven Spielberg",
+          "years": "1946-present",
+          "domain": "Film, Directing",
+          "forge": "lux",
+          "primeGift": "Director's role is pure Projector — seeing and guiding the vision of others",
+          "keyLesson": "Projectors excel when they guide without doing the Generator work",
+          "recommendFor": ["Directors", "Creative leaders", "Vision holders"]
+        },
+        {
+          "name": "John Lennon",
+          "years": "1940-1980",
+          "domain": "Music, Activism",
+          "forge": "aether",
+          "primeGift": "Guided cultural consciousness through music and message",
+          "keyLesson": "Projectors can impact millions through vision and invitation to new possibility",
+          "recommendFor": ["Musicians with message", "Cultural guides", "Peace visionaries"]
+        }
+      ]
+    },
+    "reflector": {
+      "description": "Evaluators and mirrors — here to sample and reflect the health of community",
+      "figures": [
+        {
+          "name": "H.G. Wells",
+          "years": "1866-1946",
+          "domain": "Literature, Futurism",
+          "forge": "chronos",
+          "primeGift": "Reflected society's trajectory through science fiction — pure Reflector mirroring",
+          "keyLesson": "Reflectors see where we're headed by sampling where we are",
+          "recommendFor": ["Writers", "Futurists", "Social observers"]
+        },
+        {
+          "name": "Sandra Bullock",
+          "years": "1964-present",
+          "domain": "Acting, Entertainment",
+          "forge": "aether",
+          "primeGift": "Excellent actress because Reflectors naturally sample and mirror others",
+          "keyLesson": "Reflector openness makes for extraordinary empathic performance",
+          "recommendFor": ["Actors", "Those learning to use openness", "Empaths"]
+        },
+        {
+          "name": "Michael Jackson",
+          "years": "1958-2009",
+          "domain": "Music, Performance",
+          "forge": "phoenix",
+          "primeGift": "Reflected and amplified cultural energy through transformative performances",
+          "keyLesson": "Reflectors can become cultural phenomena by amplifying collective energy",
+          "recommendFor": ["Performers", "Cultural mirrors", "Transformation artists"]
+        }
+      ]
+    }
+  },
+  "byForge": {
+    "chronos": {
+      "description": "Masters of time, patience, and enduring wisdom",
+      "exemplars": [
+        "Marcus Aurelius — Stoic wisdom across time",
+        "Marie Curie — Patient scientific persistence",
+        "Warren Buffett — Long-term strategic thinking",
+        "Susan B. Anthony — Generational change patience",
+        "H.G. Wells — Temporal imagination"
+      ]
+    },
+    "eros": {
+      "description": "Masters of passion, heart, and creative fire",
+      "exemplars": [
+        "Frida Kahlo — Passionate self-expression through pain",
+        "Mozart — Heart-centered prolific creativity",
+        "Freddie Mercury — Passionate performance presence",
+        "Princess Diana — Heart-led humanitarian connection",
+        "Rumi — Devotional passion poetry"
+      ]
+    },
+    "aether": {
+      "description": "Masters of connection, unity, and spiritual bridge-building",
+      "exemplars": [
+        "Thich Nhat Hanh — Interconnected awareness",
+        "The Dalai Lama — Universal compassion",
+        "Barack Obama — Building bridges across divides",
+        "John Lennon — Imagining unity",
+        "Carl Rogers — Empathic connection"
+      ]
+    },
+    "lux": {
+      "description": "Masters of clarity, revelation, and illumination",
+      "exemplars": [
+        "Nikola Tesla — Visionary revelation",
+        "Albert Einstein — Clarity breakthrough",
+        "Ra Uru Hu — Receiving illuminated transmission",
+        "Steven Spielberg — Illuminating storytelling",
+        "Elon Musk — Visionary technological clarity"
+      ]
+    },
+    "phoenix": {
+      "description": "Masters of transformation, death, and rebirth",
+      "exemplars": [
+        "Nelson Mandela — Personal and national transformation",
+        "Carl Jung — Shadow transformation",
+        "Maya Angelou — Rising from trauma",
+        "Vincent van Gogh — Suffering into art",
+        "Malcolm X — Complete personal reinvention"
+      ]
+    }
+  },
+  "byDomain": {
+    "science": ["Albert Einstein", "Marie Curie", "Nikola Tesla", "Charles Darwin", "Stephen Hawking"],
+    "arts": ["Frida Kahlo", "Vincent van Gogh", "Mozart", "Beethoven", "Georgia O'Keeffe"],
+    "music": ["Freddie Mercury", "Mozart", "Beethoven", "John Lennon", "Michael Jackson", "Beyoncé"],
+    "leadership": ["Nelson Mandela", "Barack Obama", "Winston Churchill", "Abraham Lincoln", "Marcus Aurelius"],
+    "spirituality": ["The Dalai Lama", "Thich Nhat Hanh", "Rumi", "Ram Dass", "Thomas Merton"],
+    "psychology": ["Carl Jung", "Sigmund Freud", "Abraham Maslow", "Carl Rogers", "Brené Brown"],
+    "activism": ["Nelson Mandela", "Martin Luther King Jr.", "Malcolm X", "Susan B. Anthony", "Maya Angelou"],
+    "literature": ["Maya Angelou", "Virginia Woolf", "Hermann Hesse", "Franz Kafka", "James Baldwin"],
+    "philosophy": ["Marcus Aurelius", "Søren Kierkegaard", "Friedrich Nietzsche", "Alan Watts", "Simone de Beauvoir"],
+    "entrepreneurship": ["Elon Musk", "Oprah Winfrey", "Steve Jobs", "Warren Buffett", "Coco Chanel"]
+  }
+}
