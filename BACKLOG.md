@@ -1,10 +1,10 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-09 (Deep Dive Audit — DB Sync + Engine + Workers)
+**Last audited:** 2026-03-09 (Deep Dive Audit — DB Sync + Engine + Workers + UX Review)
 **Test suite:** 207/207 passing (vitest 3.2.4)
-**Code status:** Sprints 1–16 COMPLETE ✅ | Sprint 17: 12 items (3 Critical, 4 High, 3 Medium, 2 Low) — ALL RESOLVED ✅
+**Code status:** Sprints 1–17 COMPLETE ✅ | Sprint 18: UX & Marketing Enhancements — 40 items (9 Critical, 14 High, 10 Medium, 7 Low)
 **Deployment status:** 🚨 **PRODUCTION BROKEN** — Stale code deployed, multiple 404/500 errors
-**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit**
+**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration**
 
 ---
 
@@ -1342,6 +1342,421 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - [x] **BL-R-C4** (duplicate Stripe webhooks): Verified — both routes now point to `handleStripeWebhook` from webhook.js ✅
 - [x] **BL-R-C5** (mobile nav broken tab IDs): Verified — all mobile nav items use correct `data-tab="chart"` etc. ✅
 - [x] **BL-R-C6** (check-in DOM mismatches): Verified — all DOM IDs match between HTML and JS (`checkin-alignment-score`, `checkin-mood`, etc.) ✅
+
+---
+
+## Sprint 18 — UX Overhaul & Social Media Integration (2026-03-09)
+
+**Scope:** Complete UX redesign based on deep review, color system consolidation, social media sharing, explanatory tooltips, navigation restructure, and marketing readiness improvements.
+
+**Reference:** See [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) for full analysis and Reddit/competitive research.
+
+### CRITICAL — Must Fix Before Marketing (🔴 This Week)
+
+- [ ] **BL-UX-C1**: Color token conflicts — three competing systems
+  - **Severity:** Critical (UX)
+  - **Files:** `frontend/index.html` (inline :root variables), `frontend/css/design-tokens.css`, `frontend/css/design-tokens-premium.css`
+  - **Problem:** Three overlapping color systems fighting each other. Inline styles define `--bg`, `--text`, `--gold`. design-tokens.css defines `--bg-primary`, `--text-primary`, `--color-gold-500`. Premium defines different values for same tokens. Buttons show gold but design system says red is primary.
+  - **Impact:** Visual inconsistency, maintenance nightmare, impossible to theme
+  - **Fix:** (1) Remove ALL `:root` variable declarations from index.html inline styles, (2) Consolidate to single token system (use design-tokens.css as canonical source), (3) Update all inline styles to reference semantic tokens instead of custom variables, (4) Delete conflicting premium token overrides
+  - **Files to edit:** Remove lines ~62-77 from index.html, update ~600 inline style references to use semantic tokens
+  - **Verify:** grep `:root` in index.html returns zero matches, all components reference design tokens consistently
+
+- [ ] **BL-UX-C2**: WCAG contrast failures on dim text
+  - **Severity:** Critical (Accessibility)
+  - **Files:** `frontend/css/design-tokens.css`
+  - **Problem:** `--text-dim: #b0acc8` on `--bg2: #1a1a24` = 4.2:1 contrast (fails WCAG AA 4.5:1 minimum). Affects data labels, section headers, meta text throughout the app.
+  - **Impact:** Poor readability, accessibility failure, eye strain
+  - **Fix:** Bump `--color-neutral-400` from `#a8a2c0` to `#c4c0d8` (achieves 5.5:1 contrast). Update `--text-muted` from `#7a76a0` to `#918db0` (achieves 4.5:1).
+  - **Verify:** Use WebAIM contrast checker on all text types against backgrounds
+
+- [ ] **BL-UX-C3**: Missing "why it matters" explanations for HD terms
+  - **Severity:** Critical (UX)
+  - **Files:** `frontend/index.html` (renderChart function ~line 2120), `frontend/js/explanations.js` (if exists, else create)
+  - **Problem:** Chart shows "Pattern: Generator", "Authority: Emotional", "Strategy: To Respond" with ZERO explanation of what these mean for the user's life. Reddit #1 complaint: "told me I'm a Generator 3/5 but didn't say what that means."
+  - **Impact:** Users leave confused, zero conversion, product appears incomplete
+  - **Fix:** Add 1-2 sentence plain-English explanations for every HD term: Type (what this pattern means), Authority (how to make decisions), Strategy (how to engage with life), Profile (life role meaning). Display in expandable tooltips or inline text.
+  - **Content needed:**
+    - Generator: "You have consistent renewable energy. Designed to find work you love and master it. When lit up, unstoppable."
+    - Emotional Authority: "Never decide in the moment. Ride your emotional wave—sleep on it, feel through highs AND lows before choosing."
+    - To Respond: "Don't initiate from your mind. Wait for life to present options, then check: does this light me up?"
+    - 3/5 Profile: "Learn by trial and error. Others project expectations onto you. Embrace 'failing forward.'"
+  - **Verify:** Non-HD user can read chart and understand what it means for their life
+
+- [ ] **BL-UX-C4**: Remove fake testimonials section
+  - **Severity:** Critical (Trust)
+  - **Files:** `frontend/index.html` (lines ~869-1014)
+  - **Problem:** 6 clearly fabricated testimonials ("Sarah Mitchell, HD Practitioner · 450+ Client Readings"). Reddit users specifically call this the #1 trust killer. Social proof stats fall back to hardcoded numbers.
+  - **Impact:** Undermines all credibility, appears scammy, users leave immediately
+  - **Fix:** (1) Remove testimonials carousel entirely, or (2) Replace with real testimonials with permission and disclaimer "Early access beta testers", or (3) Replace with aggregate anonymous stats if available from API
+  - **Verify:** No fabricated names or credentials visible on page
+
+- [ ] **BL-UX-C5**: Consolidate birth data entry (ask once, remember forever)
+  - **Severity:** Critical (UX)
+  - **Files:** `frontend/index.html` (Chart tab form, Profile tab form, Composite tab forms)
+  - **Problem:** Users must enter birth data 3 separate times across tabs. Chart uses `c-date/c-time/c-location`, Profile uses `p-date/p-time/p-location`, Composite uses `comp-dateA/comp-timeA/comp-A-location`. Massive friction.
+  - **Impact:** User abandonment, perception of broken product
+  - **Fix:** (1) Store birth data in localStorage after first entry (`ps-birth-data`), (2) Auto-populate all forms on page load, (3) Show banner "Using your birth data: June 15, 1990 14:30 Tampa, FL [Change]", (4) Consolidate to single birth data manager module
+  - **Verify:** Enter data in Chart tab → switch to Profile → fields are pre-filled
+
+- [ ] **BL-UX-C6**: Tab overload — 13 tabs confuse users
+  - **Severity:** Critical (UX)
+  - **Files:** `frontend/index.html` (navigation tabs ~line 105-140)
+  - **Problem:** 13 total tabs (Chart, Profile, Transits, Check-In, More▾, Enhance, Diary, Composite, Rectify, Saved, Onboarding, Practitioner, Clusters, SMS). Steve Jobs: "People can't prioritize 13 things."
+  - **Impact:** Analysis paralysis, users don't know where to start, high bounce rate
+  - **Fix:** Restructure to 4 primary tabs visible:
+    - **My Blueprint** (merge Chart + Profile)
+    - **Today's Energy** (merge Transits + Check-In)
+    - **Relationships** (Composite)
+    - **Deepen** (Enhance)
+    - **More▾** dropdown: Diary, Rectify, Saved, Practitioner, Clusters, SMS, Onboarding
+  - **Verify:** Desktop shows 5 items max (4 primary + More), mobile shows clean bottom nav
+
+- [ ] **BL-UX-C7**: Mobile nav labels don't match content
+  - **Severity:** Critical (UX)
+  - **Files:** `frontend/index.html` (mobile bottom nav ~line 4850)
+  - **Problem:** Mobile label "Keys" points to Profile tab (AI synthesis), not Gene Keys. "Astro" points to Enhance (behavioral tests), not astrology. User clicks expecting one thing, gets another.
+  - **Impact:** Confusion, trust loss, perceived as broken
+  - **Fix:** Either (1) rename mobile labels to match actual content (Keys→Profile, Astro→Deepen), or (2) restructure tabs so labels make sense
+  - **Verify:** Tap each mobile nav item → label describes what you see
+
+- [ ] **BL-UX-C8**: Center pills show no explanation
+  - **Severity:** Critical (UX)
+  - **Files:** `frontend/index.html` (renderChart ~line 2140)
+  - **Problem:** Centers render as `<span class="pill green">Sacral</span>` with zero context. Users don't know what "Sacral" is or what defined vs open means.
+  - **Impact:** Data without meaning, users can't apply insights
+  - **Fix:** Add tooltips or expandable sections explaining each center:
+    - Sacral (defined): "Consistent life force energy for work you love"
+    - Sacral (open): "Must manage energy carefully, no sustainable push"
+    - Repeat for all 9 centers with "governs", "when defined", "when open"
+  - **Verify:** Hover/click any center → see plain English explanation
+
+- [ ] **BL-UX-C9**: Inline CSS overrides design system (600+ lines)
+  - **Severity:** Critical (Maintenance)
+  - **Files:** `frontend/index.html` (inline <style> blocks ~600 lines total)
+  - **Problem:** All styles defined inline in <style> tags, duplicating and overriding external CSS files. Impossible to maintain, causes specificity wars, doubles CSS payload.
+  - **Impact:** Design system unusable, changes require editing 3 places, bundle bloat
+  - **Fix:** Extract ALL inline CSS to proper component files (app.css, buttons.css, cards.css, etc.). Reference design tokens throughout. Delete inline <style> blocks.
+  - **Verify:** index.html has ZERO <style> blocks except maybe small critical-path above-the-fold CSS
+
+### HIGH — Fix This Month (🟡 Important)
+
+- [ ] **BL-UX-H1**: Load gate names/descriptions from src/data
+  - **Severity:** High (UX)
+  - **Files:** `frontend/index.html`, `frontend/js/gate-data.js` (create), `src/data/gate_wheel.json`
+  - **Problem:** Gate data exists in `src/data/gate_wheel.json` but isn't loaded into frontend. Gates show as numbers only (Gate 44.2) with no name or meaning.
+  - **Impact:** Users don't know what their gates represent
+  - **Fix:** (1) Create frontend data loader for gate_wheel.json, centers.json, channels.json, (2) Add gate names to all gate badges ("Gate 44: The Coming to Meet"), (3) Add tooltips with gate keywords
+  - **Verify:** Hover any gate → see name and theme
+
+- [ ] **BL-UX-H2**: Add channel descriptions
+  - **Severity:** High (UX)
+  - **Files:** `frontend/index.html` (renderChart channels section), `src/data/channels.json`
+  - **Problem:** Active channels show as codes "20-34 (Throat↔Sacral)" with no description of what the channel means.
+  - **Impact:** Users can't understand their channel activations
+  - **Fix:** Load channel data from `src/data/channels.json`, show channel name ("Channel of Charisma") and 1-sentence meaning ("Busy-ness that looks effortless")
+  - **Verify:** Each channel shows name + description
+
+- [ ] **BL-UX-H3**: Add skeleton loading screens
+  - **Severity:** High (UX)
+  - **Files:** `frontend/index.html`, `frontend/css/components/skeleton.css` (create)
+  - **Problem:** API calls show generic spinner. Modern UX uses skeleton screens (gray animated placeholders) which reduce perceived wait time by ~35%.
+  - **Impact:** Users perceive the app as slower than it is
+  - **Fix:** Create skeleton components for: chart data rows, profile text blocks, transit list items. Show during loading instead of spinner.
+  - **Verify:** Generate chart → see animated skeleton matching final layout shape
+
+- [ ] **BL-UX-H4**: Gene Keys journey explanation missing
+  - **Severity:** High (UX)
+  - **Files:** `frontend/index.html` (gene keys section rendering)
+  - **Problem:** Shows "Shadow: Interference, Gift: Teamwork, Siddhi: Synarchy" with no explanation of the Shadow→Gift→Siddhi transformation journey.
+  - **Impact:** Users don't understand the developmental path
+  - **Fix:** Add intro text: "You evolve from Shadow (unconscious pattern) to Gift (conscious mastery) to Siddhi (transcendent state). This is your growth path."
+  - **Verify:** Gene Keys section explains the journey concept
+
+- [ ] **BL-UX-H5**: Transit natal hits lack personal context
+  - **Severity:** High (UX)
+  - **Files:** `frontend/index.html` (renderTransits function ~line 2645)
+  - **Problem:** Transits show generic planet themes ("What the collective is focused on") but don't explain what it means when that planet hits YOUR specific gate.
+  - **Impact:** Users can't personalize transit information
+  - **Fix:** When transit planet hits a natal gate, show: "☉ Sun activating YOUR Gate 44 (The Coming to Meet) — Your Gate 44 connects Spleen (instinct) to Heart (willpower). Unusual ability to spot patterns this week."
+  - **Verify:** Natal hit shows personal gate context, not just collective theme
+
+- [ ] **BL-UX-H6**: Inconsistent spacing (hardcoded pixels everywhere)
+  - **Severity:** High (Consistency)
+  - **Files:** `frontend/index.html` (all inline styles)
+  - **Problem:** At least 50+ instances of hardcoded spacing: `margin-bottom: 20px`, `padding: 24px`, `gap: 14px`. Design tokens define spacing scale but are ignored.
+  - **Impact:** Visual inconsistency, maintenance nightmare
+  - **Fix:** Replace all hardcoded spacing with design tokens: `var(--space-4)`, `var(--space-6)`, etc.
+  - **Verify:** grep `margin.*px|padding.*px` in index.html returns minimal results (only special cases)
+
+- [ ] **BL-UX-H7**: Font size chaos (15+ different sizes)
+  - **Severity:** High (Consistency)
+  - **Files:** `frontend/index.html` (inline styles)
+  - **Problem:** `0.65rem, 0.68rem, 0.7rem, 0.72rem, 0.75rem, 0.78rem, 0.8rem, 0.82rem, 0.83rem, 0.85rem, 0.88rem, 0.9rem, 0.95rem, 1rem, 1.1rem` — creates visual noise.
+  - **Impact:** Lack of clear visual hierarchy
+  - **Fix:** Consolidate to design token scale: `--text-xs`, `--text-sm`, `--text-base`, `--text-lg`, `--text-xl`, `--text-2xl`. Use only these sizes.
+  - **Verify:** No custom font sizes in index.html, all use design tokens
+
+- [ ] **BL-UX-H8**: Lava lamp background distracts and drains GPU
+  - **Severity:** High (Performance)
+  - **Files:** `frontend/css/artwork.css`
+  - **Problem:** Floating blobs, orbs, 30 particles animate continuously. Consumes GPU on mobile, distracts from content, makes text harder to read.
+  - **Impact:** Mobile battery drain, performance issues, readability problems
+  - **Fix:** Keep stars (subtle), keep crescent moon (single decorative element). Remove lava blobs and floating orbs. Reduce particle count from 30 to 10.
+  - **Verify:** Mobile GPU usage drops, content remains readable
+
+- [ ] **BL-UX-H9**: Step guide disappears after use
+  - **Severity:** High (UX)
+  - **Files:** `frontend/index.html` (step guide ~line 1042)
+  - **Problem:** 3-step guide hides after profile generation. Users lose navigation breadcrumb.
+  - **Impact:** Users don't know what to do next
+  - **Fix:** (1) Keep step guide visible as persistent breadcrumb, (2) Add step 4: "Explore your transits", (3) Add step 5: "Track your alignment"
+  - **Verify:** Step guide remains visible, updates as user progresses
+
+- [ ] **BL-UX-H10**: No card hierarchy (all cards identical)
+  - **Severity:** High (UX)
+  - **Files:** `frontend/css/components/cards.css`, `frontend/index.html`
+  - **Problem:** Primary action cards, results cards, info cards, alerts all look identical — same bg, border, radius. No visual priority.
+  - **Impact:** Users can't distinguish important actions from secondary content
+  - **Fix:** Primary action cards get subtle gold border-top or gradient. Results cards use elevated shadow. Info cards stay flat.
+  - **Verify:** Visual hierarchy clear between card types
+
+- [ ] **BL-UX-H11**: All JS in one file (~3000 lines)
+  - **Severity:** High (Performance)
+  - **Files:** `frontend/index.html` (inline scripts)
+  - **Problem:** All app logic inline. No code splitting, no lazy loading. Big Five questions (20 items) and VIA questions (24 items) render on load though 95% never visit Enhance tab.
+  - **Impact:** Massive initial bundle, slow page load
+  - **Fix:** Extract to modules: `app.js`, `chart.js`, `profile.js`, `transits.js`, `enhance.js` (lazy load). Only load tab code when tab is activated.
+  - **Verify:** Initial bundle < 50KB, tab-specific code lazy loads
+
+- [ ] **BL-UX-H12**: Keyboard navigation broken
+  - **Severity:** High (Accessibility)
+  - **Files:** `frontend/index.html` (tab order, modal focus trap)
+  - **Problem:** Tab order passes through hidden `.tab-content`, auth overlay doesn't trap focus (can tab behind modal), more-dropdown items missing tabindex.
+  - **Impact:** Keyboard users can't navigate effectively
+  - **Fix:** (1) Add `display: none` to inactive tab content, (2) Implement focus trap in modals, (3) Add proper tabindex to all interactive elements
+  - **Verify:** Keyboard-only navigation works throughout app
+
+- [ ] **BL-UX-H13**: Screen reader gaps
+  - **Severity:** High (Accessibility)
+  - **Files:** `frontend/index.html` (chart results rendering)
+  - **Problem:** Chart results use `<div>` soup with no heading hierarchy. Data rows lack semantic markup. Gate badges have no aria-label. SVG chart wheel has no role="img" or description.
+  - **Impact:** Screen reader users can't parse content
+  - **Fix:** (1) Add proper heading hierarchy (h2, h3, h4), (2) Convert data rows to `<dl>` or `<table>` with proper semantics, (3) Add aria-label to all badges, (4) Add role="img" and aria-label to SVG
+  - **Verify:** Test with NVDA/JAWS screen readers
+
+- [ ] **BL-UX-H14**: Touch targets too small on mobile
+  - **Severity:** High (Accessibility)
+  - **Files:** `frontend/css/components/mobile.css`, `frontend/index.html`
+  - **Problem:** Alignment buttons are 40px×40px (WCAG minimum: 44px). Tab buttons have 14px padding (too small for touch).
+  - **Impact:** Mobile users can't reliably tap controls
+  - **Fix:** Bump all interactive elements to 44px minimum. Increase tab button padding to 16px.
+  - **Verify:** All touch targets ≥ 44px per iOS/Android HIG
+
+### MEDIUM — Fix This Quarter (🟢 Differentiators)
+
+- [ ] **BL-UX-M1**: Interactive bodygraph visualization
+  - **Severity:** Medium (Feature)
+  - **Files:** `frontend/js/bodygraph.js` (enhance), `frontend/index.html`
+  - **Problem:** Bodygraph is static image. Users can't interact with it to learn.
+  - **Impact:** Missed opportunity for discovery learning
+  - **Fix:** Make bodygraph clickable — click any center/gate/channel to see its explanation in a tooltip or sidebar panel. Highlight connections between related elements.
+  - **Verify:** Click Throat center → see explanation, connected gates highlighted
+
+- [ ] **BL-UX-M2**: Share-ready profile image generator
+  - **Severity:** Medium (Feature)
+  - **Files:** `frontend/js/share-card.js` (enhance), new Instagram/social card generator
+  - **Problem:** Users can't easily share their charts on social media. No visual export.
+  - **Impact:** Zero word-of-mouth growth, no viral sharing
+  - **Fix:** Generate Instagram-ready image: bodygraph + name + type + profile + tagline. PNG download or direct share to social.
+  - **Verify:** Generate chart → Share button → beautiful 1080x1080 image ready to post
+
+- [ ] **BL-UX-M3**: Real social proof (actual usage stats)
+  - **Severity:** Medium (Trust)
+  - **Files:** `frontend/index.html` (social proof section), new API endpoint for stats
+  - **Problem:** Social proof falls back to hardcoded numbers. No real data.
+  - **Impact:** Appears fake, undermines trust
+  - **Fix:** Create API endpoint that returns real counts: users who generated charts this week, total profiles, charts calculated today. Update frontend to show live data with fallback messaging.
+  - **Verify:** Stats reflect actual database counts
+
+- [ ] **BL-UX-M4**: Simplify pricing tiers
+  - **Severity:** Medium (Conversion)
+  - **Files:** `frontend/index.html` (pricing modal)
+  - **Problem:** $0 → $15 → $97 → $500/month jumps feel exploitative. Missing middle tier. $97 and $500 list features that don't exist yet.
+  - **Impact:** Pricing shock, users perceive as scam
+  - **Fix:** (1) Remove $500 tier, (2) Add $7-9/month tier between free and $15 for casual users, (3) Rename $97 to "Pro" clearly for practitioners, (4) Remove fake features from descriptions
+  - **Verify:** Pricing feels fair, each tier has clear value
+
+- [ ] **BL-UX-M5**: Transit timeline view
+  - **Severity:** Medium (Feature)
+  - **Files:** `frontend/index.html` (new transit timeline section), `frontend/js/transit-timeline.js` (create)
+  - **Problem:** Transits show current state only. No view of when energy peaks or fades.
+  - **Impact:** Users can't plan around cosmic weather
+  - **Fix:** Add timeline visualization: "This energy peaks March 15 and fades by March 22." Show 30-day forward view with intensity curves.
+  - **Verify:** Transit detail shows peak dates and duration
+
+- [ ] **BL-UX-M6**: Progressive onboarding as default
+  - **Severity:** Medium (UX)
+  - **Files:** `frontend/index.html` (new user experience flow)
+  - **Problem:** New users land on complex dashboard with no guidance. Onboarding is a hidden tab.
+  - **Impact:** Confusion, high bounce rate for new users
+  - **Fix:** Make onboarding the default first-time experience. Guide users through: (1) Enter birth data, (2) See your chart, (3) Read your type explanation, (4) Explore transits. After completion, show full dashboard.
+  - **Verify:** First-time user sees guided tour, returning users see dashboard
+
+- [ ] **BL-UX-M7**: Remove "coming soon" features behind paywall
+  - **Severity:** Medium (Trust)
+  - **Files:** `frontend/index.html` (pricing modal, feature descriptions)
+  - **Problem:** $97 and $500 tiers list "Full practitioner dashboard", "Client management tools", "1,000 API calls/month", "White-label API" — none implemented.
+  - **Impact:** Appears as scam, false advertising
+  - **Fix:** Remove all unimplemented features from pricing tiers OR add clear "(Coming Soon)" labels with roadmap dates
+  - **Verify:** All listed features are either implemented or clearly marked as future
+
+- [ ] **BL-UX-M8**: Beautiful chart wheel rendering
+  - **Severity:** Medium (Visual)
+  - **Files:** `frontend/js/bodygraph.js` (Western astrology wheel rendering)
+  - **Problem:** If Western astrology chart wheel exists, needs to match competitor quality (Co-Star, Chani). Current state unknown.
+  - **Impact:** Visual competition, perceived quality
+  - **Fix:** Ensure astrology wheel is beautiful: smooth gradients, clear aspect lines, readable labels, responsive sizing
+  - **Verify:** Chart wheel looks professional, competitive with top apps
+
+- [ ] **BL-UX-M9**: Aspect explanations in astrology
+  - **Severity:** Medium (UX)
+  - **Files:** `frontend/index.html` (astrology aspects rendering)
+  - **Problem:** Aspects show as symbols only ("Sun □ Saturn") with no meaning.
+  - **Impact:** Astrology section is data dump, not insight
+  - **Fix:** Add plain English explanations: "Your Sun square Saturn means you face obstacles that build resilience. Success comes through discipline."
+  - **Verify:** Each aspect shows meaning + implications
+
+- [ ] **BL-UX-M10**: Daily forecast implementation
+  - **Severity:** Medium (Feature)
+  - **Files:** `frontend/index.html` (Today's Energy tab), new daily forecast generator
+  - **Problem:** Transits show planetary positions but no "what does today hold for me?" forecast.
+  - **Impact:** Users want actionable daily guidance
+  - **Fix:** Generate short daily forecast: "Today's Moon in your Gate 5 brings patience for timing. Don't force. Venus in Gate 37 supports family connections."
+  - **Verify:** User sees personalized daily forecast, not just planetary positions
+
+### LOW — Polish & Enhancements (🔵 Nice to Have)
+
+- [ ] **BL-UX-L1**: Typography consolidation (Steve Jobs principle)
+  - **Severity:** Low (Polish)
+  - **Files:** All frontend files
+  - **Problem:** Too many font weights and letter spacings create visual noise.
+  - **Impact:** Lacks premium feel
+  - **Fix:** Consolidate to 3 weights (regular, medium, bold) and 2 letter spacings (normal, wide). Use whitespace for hierarchy.
+  - **Verify:** Visual hierarchy clear with minimal typography variation
+
+- [ ] **BL-UX-L2**: Micro-interactions and animations
+  - **Severity:** Low (Delight)
+  - **Files:** `frontend/css/animations.css` (create), component files
+  - **Problem:** No subtle animations. Interactions feel flat.
+  - **Impact:** Lacks premium feel
+  - **Fix:** Add: gate reveal with subtle glow, defined centers pulse on hover, transit connections draw as animated lines
+  - **Verify:** Interactions feel smooth and delightful
+
+- [ ] **BL-UX-L3**: One-thing-at-a-time landing (Steve Jobs)
+  - **Severity:** Low (UX)
+  - **Files:** `frontend/index.html` (new user landing experience)
+  - **Problem:** Landing page shows 5+ elements simultaneously: tabs, banners, testimonials, step guide, form, examples.
+  - **Impact:** Overwhelming first impression
+  - **Fix:** Show ONLY birth data form with single question: "When and where were you born?" Everything else reveals progressively.
+  - **Verify:** New user sees minimal focused interface
+
+- [ ] **BL-UX-L4**: Email header branding
+  - **Severity:** Low (Branding)
+  - **Files:** Email templates (if exist), `frontend/icons/email-header-600x200.png`
+  - **Problem:** Generated email header exists but may not be used in actual emails.
+  - **Impact:** Missed branding opportunity
+  - **Fix:** Ensure all email templates use branded header image
+  - **Verify:** Test emails show Prime Self branding
+
+- [ ] **BL-UX-L5**: Pinterest pin image optimization
+  - **Severity:** Low (Social)
+  - **Files:** `frontend/icons/pinterest-pin-1000x1500.png`, meta tags
+  - **Problem:** Pinterest pin image exists but may not be properly meta-tagged.
+  - **Impact:** Missed Pinterest sharing optimization
+  - **Fix:** Add Pinterest-specific meta tags: `<meta property="og:image" content="pinterest-pin.png">`
+  - **Verify:** Pinterest preview shows optimized tall image
+
+- [ ] **BL-UX-L6**: Reduce motion accessibility
+  - **Severity:** Low (Accessibility)
+  - **Files:** `frontend/css/artwork.css`, animation files
+  - **Problem:** May not respect `prefers-reduced-motion` system setting.
+  - **Impact:** Motion-sensitive users experience discomfort
+  - **Fix:** Wrap all animations in `@media (prefers-reduced-motion: no-preference) { }`, provide static alternatives
+  - **Verify:** Toggle OS reduced motion → animations stop
+
+- [ ] **BL-UX-L7**: Language switcher i18n expansion
+  - **Severity:** Low (i18n)
+  - **Files:** `frontend/locales/` (add more languages)
+  - **Problem:** Only English available currently. Limited global reach.
+  - **Impact:** Excludes non-English speakers
+  - **Fix:** Add Spanish, Portuguese, French, German, Chinese translations starting with key UI elements
+  - **Verify:** Language switcher shows multiple functional languages
+
+### SOCIAL MEDIA INTEGRATION — New Features
+
+- [ ] **BL-SOCIAL-H1**: Twitter/X sharing integration
+  - **Severity:** High (Marketing)
+  - **Files:** `frontend/index.html` (share modal), `frontend/js/social-share.js` (create)
+  - **Problem:** No Twitter/X sharing functionality. Share modal has placeholder buttons.
+  - **Impact:** Missing primary social sharing channel
+  - **Fix:** Implement Twitter share: (1) Generate tweet text with chart insights, (2) Open Twitter intent URL with pre-filled text, (3) Option to attach chart image, (4) Track share clicks
+  - **Tweet template:** "Just discovered I'm a {Type} {Profile} ✨ My decision style: {Authority}. Check out your energy blueprint at {referral_link}"
+  - **Verify:** Twitter button opens pre-filled tweet with referral link
+
+- [ ] **BL-SOCIAL-H2**: Instagram sharing with image export
+  - **Severity:** High (Marketing)
+  - **Files:** `frontend/js/social-share.js`, `frontend/js/chart-image-generator.js` (create)
+  - **Problem:** No Instagram sharing. Need visual content for IG.
+  - **Impact:** Missing highest-engagement social platform for astrology/spirituality
+  - **Fix:** (1) Generate 1080x1080 PNG with bodygraph + user info + Prime Self branding, (2) Download or copy to clipboard, (3) Show "Share to Instagram" instructions (mobile web limitation), (4) Track downloads
+  - **Image format:** Bodygraph visual, "Type: Generator 3/5", "Authority: Emotional", "primeself.net" watermark
+  - **Verify:** Download button gives beautiful Instagram-ready image
+
+- [ ] **BL-SOCIAL-H3**: Facebook sharing with Open Graph tags
+  - **Severity:** High (Marketing)
+  - **Files:** `frontend/index.html` (meta tags), `frontend/js/social-share.js`
+  - **Problem:** No Facebook sharing, missing OG tags for rich previews.
+  - **Impact:** Poor Facebook sharing experience, low engagement
+  - **Fix:** (1) Add comprehensive OG meta tags (og:title, og:description, og:image, og:url, fb:app_id if needed), (2) Implement Facebook share dialog with pre-filled content, (3) Use og-image-1200x630.png for preview, (4) Track shares
+  - **Share text:** "I just uncovered my unique energy blueprint! Type: {Type}, Profile: {Profile}. Discover yours →"
+  - **Verify:** Facebook share shows rich preview with image and description
+
+- [ ] **BL-SOCIAL-M1**: TikTok sharing (mobile-first)
+  - **Severity:** Medium (Marketing)
+  - **Files:** `frontend/js/social-share.js`, mobile-specific share handlers
+  - **Problem:** No TikTok integration. Huge opportunity for viral growth in spiritual/astrology community.
+  - **Impact:** Missing Gen Z primary platform
+  - **Fix:** (1) Generate vertical video-ready format (9:16) chart image, (2) Mobile share sheet includes TikTok option, (3) Copy-friendly caption with hashtags, (4) Track TikTok shares
+  - **Caption template:** "POV: You just discovered you're a {Type} {Profile} ✨ #HumanDesign #Astrology #EnergyBlueprint #SelfDiscovery #Spirituality"
+  - **Verify:** Mobile users can share to TikTok with caption ready to paste
+
+- [ ] **BL-SOCIAL-M2**: Threads integration
+  - **Severity:** Medium (Marketing)
+  - **Files:** `frontend/js/social-share.js`
+  - **Problem:** Threads (Meta's Twitter alternative) not supported. Growing platform for text-based sharing.
+  - **Impact:** Missing emerging platform with astrology-interested audience
+  - **Fix:** (1) Implement Threads share intent (similar to Twitter), (2) Pre-fill text optimized for Threads format (500 char limit), (3) Include referral link, (4) Track shares
+  - **Post template:** "Energy update: I'm a {Type} with {Authority} 🌙 My strategy is to {Strategy}. Wild how accurate this is… {link}"
+  - **Verify:** Threads button opens app/web with pre-filled post
+
+- [ ] **BL-SOCIAL-M3**: Bluesky integration
+  - **Severity:** Medium (Marketing)
+  - **Files:** `frontend/js/social-share.js`
+  - **Problem:** Bluesky (decentralized Twitter alternative) not supported. Tech-forward audience overlap with astrology/spirituality.
+  - **Impact:** Missing growing open-source social network
+  - **Fix:** (1) Implement Bluesky share intent using their API/URL scheme, (2) Pre-fill post with chart highlights, (3) Include referral link, (4) Track shares
+  - **Post template:** "Just found out I'm a {Type} {Profile} ✨ Makes so much sense now. What's your energy blueprint? {link}"
+  - **Verify:** Bluesky share opens with pre-filled post
+
+- [ ] **BL-SOCIAL-M4**: Social share analytics dashboard
+  - **Severity:** Medium (Analytics)
+  - **Files:** `workers/src/handlers/analytics.js` (enhance), new share tracking table
+  - **Problem:** No tracking of which social platforms drive the most shares and signups.
+  - **Impact:** Can't optimize marketing efforts
+  - **Fix:** (1) Track share button clicks by platform, (2) Track referral conversions from each platform using UTM parameters, (3) Create admin dashboard showing share counts and conversion rates per platform, (4) Store in analytics or new social_shares table
+  - **Schema:** `social_shares (id, user_id, platform, shared_at, referral_code, utm_source, converted BOOLEAN)`
+  - **Verify:** Admin can see "Instagram: 245 shares, 12 conversions (4.9%)" type metrics
 
 ---
 

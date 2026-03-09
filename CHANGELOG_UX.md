@@ -1,7 +1,9 @@
 # CHANGELOG — UX Improvements
 
-**Generated from:** UX Deep Review (March 8, 2026)  
+**Generated from:** UX Deep Review (March 8-9, 2026)  
 **Status Legend:** 🔴 Critical | 🟡 Important | 🟢 Enhancement  
+**Sprint 18:** 40 items total (9 Critical, 14 High, 10 Medium, 7 Low)  
+**Reference:** [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) | [BACKLOG.md](BACKLOG.md) Sprint 18  
 
 ---
 
@@ -211,4 +213,83 @@ Collapsed 14 navigable destinations to 5 primary tabs + ⚙ overflow. Added pers
 - `.frm-btn-next`, `.frm-back-btn`, `.frm-skip-btn`, `.frm-what-you-need`, `.frm-need-item`, `.frm-check`
 - `.frm-unlock-grid`, `.frm-unlock-item`, `.frm-unlock-icon`, `.frm-progress`, `.frm-dot`
 - `.tab-intro-card`, `.tab-intro-icon`, `.tab-intro-body`
+
+---
+
+## [Sprint 18] — UX Overhaul & Social Media Integration (March 9, 2026)
+
+### 🔴 CRITICAL — Planned for This Week
+
+- [ ] **BL-UX-C1: Color token consolidation** — Remove ALL inline :root variables from index.html (lines ~62-77), consolidate to design-tokens.css as single source of truth, delete conflicting premium overrides
+- [ ] **BL-UX-C2: WCAG contrast fixes** — Bump `--color-neutral-400` from `#a8a2c0` → `#c4c0d8` (5.5:1 contrast), `--text-muted` from `#7a76a0` → `#918db0` (4.5:1)
+- [ ] **BL-UX-C3: "Why it matters" explanations** — Add 1-2 sentence context for Type ("Generator: consistent renewable energy..."), Authority ("Emotional: never decide in the moment..."), Strategy, Profile
+- [ ] **BL-UX-C4: Remove fake testimonials** — Delete lines ~869-1014 OR replace with real testimonials + disclaimer
+- [ ] **BL-UX-C5: Consolidate birth data entry** — Store in localStorage (`ps-birth-data`), auto-populate all forms, show "Using your birth data: [details] [Change]" banner
+- [ ] **BL-UX-C6: Navigation restructure** — Reduce 13 tabs → 4 primary: My Blueprint (Chart+Profile), Today's Energy (Transits+Check-In), Relationships (Composite), Deepen (Enhance) + More dropdown
+- [ ] **BL-UX-C7: Mobile nav label fixes** — Rename "Keys" → "Profile", "Astro" → "Deepen" OR restructure tabs to match labels
+- [ ] **BL-UX-C8: Center pill explanations** — Add tooltips: "Sacral (defined): Consistent life force energy", "Sacral (open): Must manage energy carefully"
+- [ ] **BL-UX-C9: Extract inline CSS** — Move ~600 lines from index.html <style> blocks to component files (app.css, buttons.css, cards.css)
+
+### 🟡 HIGH — Planned for This Month
+
+- [ ] **BL-UX-H1: Load gate data** — Wire `src/data/gate_wheel.json` into frontend, show gate names ("Gate 44: The Coming to Meet"), add tooltips with keywords
+- [ ] **BL-UX-H2: Channel descriptions** — Load `src/data/channels.json`, show channel names ("Channel of Charisma: Busy-ness that looks effortless")
+- [ ] **BL-UX-H3: Skeleton loading** — Replace spinner with animated skeleton placeholders (chart data rows, profile blocks, transit list)
+- [ ] **BL-UX-H4: Gene Keys journey** — Add intro: "You evolve from Shadow (unconscious) → Gift (mastery) → Siddhi (transcendent). This is your growth path."
+- [ ] **BL-UX-H5: Transit natal hits personalization** — When transit hits natal gate, show: "Sun activating YOUR Gate 44 (Coming to Meet) — connects Spleen to Heart, spotting patterns this week"
+- [ ] **BL-UX-H6: Fix spacing inconsistencies** — Replace hardcoded pixels with design tokens (`margin-bottom: 20px` → `var(--space-5)`)
+- [ ] **BL-UX-H7: Font size consolidation** — Reduce 15+ sizes to 6-token scale (xs, sm, base, lg, xl, 2xl)
+- [ ] **BL-UX-H8: Optimize lava lamp** — Keep stars + moon, remove blobs/orbs, reduce particles 30→10
+- [ ] **BL-UX-H9: Persistent step guide** — Keep visible as breadcrumb, add step 4 "Explore transits", step 5 "Track alignment"
+- [ ] **BL-UX-H10: Card visual hierarchy** — Primary action cards get gold border-top, results get elevated shadow, info stays flat
+- [ ] **BL-UX-H11: Code splitting** — Extract ~3000 lines inline JS to modules: app.js, chart.js, profile.js, transits.js, enhance.js (lazy load per tab)
+- [ ] **BL-UX-H12: Keyboard navigation** — `display: none` on inactive tabs, focus trap in modals, tabindex on all interactive elements
+- [ ] **BL-UX-H13: Screen reader accessibility** — Proper heading hierarchy (h2/h3/h4), semantic markup (dl/table), aria-label on badges, role="img" on SVG
+- [ ] **BL-UX-H14: Touch target sizing** — Bump all interactive elements to 44px minimum (WCAG), increase tab padding to 16px
+
+### 🟢 MEDIUM — Planned for This Quarter
+
+- [ ] **BL-UX-M1: Interactive bodygraph** — Click centers/gates/channels to see explanations, highlight connections
+- [ ] **BL-UX-M2: Share-ready images** — Generate 1080x1080 PNG: bodygraph + name + type + profile + tagline
+- [ ] **BL-UX-M3: Real social proof** — API endpoint for live stats (users who generated charts this week, total profiles)
+- [ ] **BL-UX-M4: Simplify pricing** — Remove $500 tier, add $7-9/mo tier, rename $97 to "Pro" (practitioners only)
+- [ ] **BL-UX-M5: Transit timeline** — 30-day forward view with intensity curves, "Peaks March 15, fades March 22"
+- [ ] **BL-UX-M6: Progressive onboarding** — Make onboarding default for new users, guided tour: birth data → chart → type explanation → transits
+- [ ] **BL-UX-M7: Remove fake features** — Delete "coming soon" features from pricing OR add "(Coming Soon)" with roadmap dates
+- [ ] **BL-UX-M8: Beautiful chart wheel** — Ensure astrology wheel is competitive quality (smooth gradients, clear aspects, responsive)
+- [ ] **BL-UX-M9: Aspect explanations** — "Sun square Saturn: Obstacles that build resilience. Success through discipline."
+- [ ] **BL-UX-M10: Daily forecast** — "Today's Moon in Gate 5 brings patience for timing. Venus in Gate 37 supports family connections."
+
+### 📱 SOCIAL MEDIA INTEGRATION
+
+#### High Priority
+- [ ] **BL-SOCIAL-H1: Twitter/X sharing** — Pre-filled tweets with chart insights + referral link
+  - Template: "Just discovered I'm a {Type} {Profile} ✨ My decision style: {Authority}. Check out your energy blueprint at {link}"
+  - Implementation: `frontend/js/social-share.js` (create), Twitter share intent URL, track clicks
+- [ ] **BL-SOCIAL-H2: Instagram image export** — 1080x1080 PNG with bodygraph + user info + Prime Self branding
+  - Format: Bodygraph visual, "Type: Generator 3/5", "Authority: Emotional", primeself.net watermark
+  - Implementation: Canvas/SVG export, download button, clipboard copy for mobile
+- [ ] **BL-SOCIAL-H3: Facebook sharing** — Open Graph meta tags + share dialog with rich preview
+  - Add: og:title, og:description, og:image (1200x630), og:url, fb:app_id
+  - Implementation: Share dialog API, pre-filled text, uses og-image-1200x630.png
+
+#### Medium Priority
+- [ ] **BL-SOCIAL-M1: TikTok sharing** — Vertical 9:16 format chart images, mobile share sheet, caption with hashtags
+  - Caption: "POV: You're a {Type} {Profile} ✨ #HumanDesign #Astrology #EnergyBlueprint #SelfDiscovery"
+- [ ] **BL-SOCIAL-M2: Threads integration** — Meta's Twitter alternative, 500-char optimized posts
+  - Template: "Energy update: I'm a {Type} with {Authority} 🌙 My strategy: {Strategy}. Wild how accurate… {link}"
+- [ ] **BL-SOCIAL-M3: Bluesky integration** — Decentralized network, share intent using their API
+  - Template: "Just found out I'm a {Type} {Profile} ✨ Makes so much sense. What's yours? {link}"
+- [ ] **BL-SOCIAL-M4: Share analytics dashboard** — Track shares and conversions by platform
+  - Schema: `social_shares (id, user_id, platform, shared_at, referral_code, utm_source, converted)`
+  - Admin view: "Instagram: 245 shares, 12 conversions (4.9%)"
+
+### Competitive Position Analysis
+
+**Unique Strength**: Only tool combining HD + Gene Keys + Western Astrology + Numerology  
+**Critical Weaknesses**: 
+1. Plain language (Co-Star/Chani excellent, Prime Self needs work)
+2. Visual polish (competitors have native apps, Prime Self PWA needs refinement)
+
+**Fix these two and we own the market.**
 

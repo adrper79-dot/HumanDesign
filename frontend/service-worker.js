@@ -3,9 +3,12 @@
  * Provides offline support and performance optimization
  *
  * BL-OPT-001: Updated with cache versioning and complete asset list
+ * 2026-03-09: v10 - Tier 0 z-index normalization fixes
+ * 2026-03-09: v11 - UI-008 transit row mobile grid stacking fix
+ * 2026-03-09: v12 - Phase 6 dead CSS cleanup (removed IP-risky type classes)
  */
 
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v12';
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;

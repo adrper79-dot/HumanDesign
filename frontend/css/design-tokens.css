@@ -207,12 +207,14 @@
   
   /* Z-Index Stack (normalized scale) */
   --z-sticky: 20;
+  --z-header: 90;           /* Sticky header above content, below dropdowns */
   --z-dropdown: 100;
   --z-mobile-nav: 150;
   --z-modal-backdrop: 200;
   --z-modal: 210;
   --z-tooltip: 300;
   --z-notification: 400;
+  --z-onboarding: 500;      /* First-run modal above all other UI */
   
   
   /* ═══════════════════════════════════════════════════════════

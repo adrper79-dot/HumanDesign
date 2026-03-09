@@ -17,7 +17,7 @@ header {
   border-bottom: 1px solid var(--gold-dim);
   padding: 0 24px;
   display: flex; align-items: center; justify-content: space-between;
-  height: 60px; position: sticky; top: 0; z-index: 100;
+  height: 60px; position: sticky; top: 0; z-index: var(--z-header);
   gap: 12px;
 }
 .logo { font-size: 1.3rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
@@ -57,7 +57,7 @@ button, .btn {
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Tabs [DUP] tabs.css — sticky below header ── */
-.tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; justify-content: center; padding: 0 16px; gap: 2px; overflow-x: auto; position: sticky; top: var(--header-height, 60px); z-index: 90; }
+.tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; justify-content: center; padding: 0 16px; gap: 2px; overflow-x: auto; position: sticky; top: var(--header-height, 60px); z-index: var(--z-sticky); }
 .tab-btn {
   background: none; border: none; color: var(--text-dim);
   padding: 14px 16px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
@@ -73,7 +73,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 /* More dropdown [UNIQUE] */
 .more-menu-btn { position: relative; }
 .more-dropdown {
-  display: none; position: absolute; top: calc(100% + 1px); right: 0; z-index: 200;
+  display: none; position: absolute; top: calc(100% + 1px); right: 0; z-index: var(--z-dropdown);
   background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
   padding: 6px; min-width: 180px; box-shadow: var(--shadow);
 }
@@ -130,7 +130,7 @@ select option { background: var(--bg3); }
 
 /* ── Auth Modal [UNIQUE] ── */
 .auth-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: var(--z-modal-backdrop);
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(4px);
 }
@@ -340,11 +340,7 @@ select option { background: var(--bg3); }
 .composition-bar { background: var(--bg); height: 32px; border-radius: 6px; overflow: hidden; display: flex; margin: 12px 0; }
 .composition-segment { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: white; transition: all 0.3s; }
 .composition-segment:hover { filter: brightness(1.2); }
-.composition-segment.manifestor { background: #e05050; }
-.composition-segment.generator { background: #50c878; }
-.composition-segment.mg { background: #60d888; } /* [UNIQUE] */
-.composition-segment.projector { background: #6a4fc8; }
-.composition-segment.reflector { background: #4fc8c8; }
+/* Note: Composition segments styled dynamically via JS based on forge roles (Power/Craft/Vision/Mirrors) */
 
 /* ── Action Grid [UNIQUE] ── */
 .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 16px; }
@@ -352,7 +348,7 @@ select option { background: var(--bg3); }
 
 /* ── Pricing Modal [UNIQUE] ── */
 .pricing-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 250;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: var(--z-modal-backdrop);
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(6px);
 }
@@ -533,7 +529,7 @@ img[data-src].loaded, img:not([data-src]) {
   border-radius: 8px;
   padding: 4px;
   min-width: 140px;
-  z-index: 200;
+  z-index: var(--z-dropdown);
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 .lang-switcher-option {
@@ -684,7 +680,7 @@ img[data-src].loaded, img:not([data-src]) {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.88);
-  z-index: 9999;
+  z-index: var(--z-onboarding);
   display: flex;
   align-items: center;
   justify-content: center;

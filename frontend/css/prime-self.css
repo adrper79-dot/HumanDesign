@@ -221,22 +221,6 @@
   transform: scaleY(1.1);
 }
 
-.composition-segment.manifestor {
-  background: var(--status-error);
-}
-
-.composition-segment.generator {
-  background: var(--status-success);
-}
-
-.composition-segment.projector {
-  background: var(--color-purple-500);
-}
-
-.composition-segment.reflector {
-  background: var(--status-info);
-}
-
 
 /* Profile sections */
 

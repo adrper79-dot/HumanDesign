@@ -6,6 +6,73 @@ This document catalogs key learnings from development, debugging, and production
 
 ## Incident Log
 
+### 2026-03-09 | Backlog Verification Pass: False Positives & CSS Architecture
+
+**Context**
+Executed comprehensive backlog verification following the 8-phase Backlog Processing Protocol. All 39 UI defect items marked ✅ FIXED were systematically re-verified in source code before browser testing.
+
+**Key Findings**
+1. **False positive:** UI-008 (transit-row mobile grid stacking) was marked ✅ FIXED but the breakpoint code was missing
+   - Backlog claimed: "Added @media (max-width: 600px) breakpoint to collapse grid to single column"
+   - Reality: Only `max-width: 100%` was present; grid-template-columns was never changed
+   - Fix applied: Added proper media query to mobile.css
+   
+2. **Dead CSS:** Found 5 unused classes with trademarked Human Design terms (.manifestor, .projector, .reflector, .generator)
+   - These were never applied to DOM (JS uses forge roles instead: Power/Craft/Vision/Mirrors)
+   - IP risk: Could expose codebase to trademark claims if found in code review
+   - Removed from prime-self.css and app.css
+   
+3. **Z-index chaos:** Found 9 hardcoded integer values creating stacking context conflicts
+   - Modal nav (z-index: 100) conflicted with dropdown (z-index: 100)
+   - Onboarding overlay used arbitrary z-index: 9999
+   - Tooltip collision possible with modal backdrop
+   
+**Resolution**
+- Added 2 new design tokens: --z-header (90), --z-onboarding (500)
+- Replaced all 9 hardcoded values with token references across app.css (7) and mobile.css (2)
+- Bumped service worker v9 → v12 for cache invalidation
+- Updated 9-level normalized z-index stack in design-tokens.css
+
+**Z-Index Stack Architecture (Canonical)**
+```css
+/* Design Tokens — Z-Index Stack (Normalized 2026-03-09) */
+--z-sticky: 20;         /* Sticky headers, scrollable sections */
+--z-header: 90;         /* Main header bar */
+--z-dropdown: 100;      /* Dropdowns, popovers, date pickers */
+--z-mobile-nav: 150;    /* Bottom navigation (mobile only) */
+--z-modal-backdrop: 200; /* Modal backdrop overlay */
+--z-modal: 210;         /* Modal content windows */
+--z-tooltip: 300;       /* Tooltips and hints */
+--z-notification: 400;  /* Toast notifications */
+--z-onboarding: 500;    /* Onboarding overlays and tutorials */
+```
+
+**Key Learnings**
+1. **"Marked fixed ≠ Confirmed fixed"** — Always code-verify before browser testing. 2.6% false positive rate (1/39 items).
+   
+2. **Search for what should exist, not just what does** — Grep for expected patterns (e.g., `@media.*600.*transit-row`) catches missing fixes faster than reading full files.
+   
+3. **Dead CSS is a liability** — Unused code creates:
+   - IP risk (trademarked term exposure)
+   - Confusion (devs assume it's used)
+   - Maintenance burden (must update when refactoring)
+   
+4. **Z-index needs governance** — Without a centralized design token stack:
+   - Conflicts emerge as features add layers
+   - Debugging requires global search for all z-index values
+   - No single source of truth
+   
+5. **Service worker versioning is critical** — CSS changes without cache invalidation = returning users see stale styles for days/weeks.
+
+**Preventive Measures**
+- ✅ Establish z-index token-only policy (enforced via code review)
+- ✅ Service worker version bumps mandatory for any CSS/JS file changes
+- [ ] Add pre-commit hook to grep for hardcoded z-index integers
+- [ ] Add CSS linter rule to flag IP-risky terms (manifestor, projector, reflector, generator, sacral, spleen, etc.)
+- [ ] Establish [DUP] selector cleanup sprint (52 duplicates between app.css and component files)
+
+---
+
 ### 2026-03-03 | False Bug Report: Profile Calculation "Incorrect"
 
 **Reported Issue**
