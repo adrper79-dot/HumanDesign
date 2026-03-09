@@ -459,6 +459,15 @@ Migrations 003–018 define: `subscriptions`, `payment_events`, `usage_records`,
 
 ## 9. DOCUMENT INVENTORY BY TOPIC
 
+### Implementation Guides (7 docs, new `/guides` directory)
+- `guides/README.md` — Guides index and quick navigation
+- `guides/SETUP_DEVELOPMENT.md` — Local development environment setup (10 min)
+- `guides/ENVIRONMENT_VARIABLES.md` — Configuration, secrets, and environment reference (5 min)
+- `guides/STRIPE_INTEGRATION.md` — Payment system setup and testing (30 min)
+- `guides/BACKGROUND_VIDEO.md` — Cosmic background video implementation (20 min)
+- `guides/PWA_CONFIGURATION.md` — Progressive Web App offline support (15 min)
+- `guides/EMBED_WIDGET.md` — Embeddable chart widget for external sites (15 min)
+
 ### Architecture (5 docs)
 - `ARCHITECTURE.md` — Master architecture reference (comprehensive canonical authority)
 - `BUILD_BIBLE.md` — Layer-by-layer implementation reference
