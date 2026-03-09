@@ -53,8 +53,8 @@ export async function handleCheckout(request, env, ctx) {
     const { tier, successUrl, cancelUrl } = body;
     
     // Validate tier
-    if (!tier || !['seeker', 'guide', 'practitioner'].includes(tier)) {
-      return new Response(JSON.stringify({ error: 'Invalid tier' }), {
+    if (!tier || !['regular', 'practitioner', 'white_label'].includes(tier)) {
+      return new Response(JSON.stringify({ error: 'Invalid tier. Must be regular, practitioner, or white_label' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });

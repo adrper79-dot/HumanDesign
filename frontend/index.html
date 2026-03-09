@@ -187,63 +187,149 @@
   </div>
 </div>
 
-<!-- Pricing Modal -->
+<!-- ══ Consumer Pricing Modal ══════════════════════════════════════════
+     Shown to Free / Explorer tier users.
+     Practitioners are routed to #practitionerPricingOverlay instead.
+     NEVER mix consumer and professional tiers in the same modal.
+     See IMPLEMENTATION_PLAN.md — Audience Separation Best Practice.
+═════════════════════════════════════════════════════════════════════ -->
 <div class="pricing-overlay hidden" id="pricingOverlay" role="dialog" aria-modal="true" aria-labelledby="pricingTitle">
   <div class="pricing-modal">
-    <h2 id="pricingTitle" data-i18n="pricing.unlockTitle">Unlock Your Full Potential</h2>
-    <p class="subtitle" data-i18n="pricing.choosePlan">Choose the plan that matches your journey</p>
-    <div class="pricing-grid">
-      <!-- Free Tier -->
-      <div class="pricing-card">
+    <h2 id="pricingTitle">Deepen Your Journey</h2>
+    <p class="subtitle">Choose the plan that matches where you are right now.</p>
+    <div class="pricing-grid pricing-grid--2col">
+
+      <!-- Free Tier — always shown, CTA disabled if already on free -->
+      <div class="pricing-card" id="priceCard-free">
         <div class="tier-name">Free</div>
         <div class="tier-price"><span class="currency">$</span>0</div>
         <div class="tier-billing">forever</div>
         <ul class="tier-features">
-          <li>1 chart calculation/month</li>
-          <li>1 profile generation/month</li>
+          <li>1 chart calculation / month</li>
+          <li>1 AI profile generation / month</li>
           <li>Basic transit snapshots</li>
-          <li class="disabled">SMS digests</li>
-          <li class="disabled">Practitioner tools</li>
-          <li class="disabled">API access</li>
+          <li class="disabled">Unlimited transits &amp; composites</li>
+          <li class="disabled">SMS energy digests</li>
+          <li class="disabled">Save &amp; revisit profiles</li>
         </ul>
-        <button class="btn-secondary tier-cta" disabled data-i18n="pricing.currentPlan">Current Plan</button>
+        <button class="btn-secondary tier-cta" id="priceBtn-free" disabled>Current Plan</button>
       </div>
-      <!-- Seeker Tier -->
-      <div class="pricing-card">
-        <div class="tier-name" data-i18n="pricing.seeker">Seeker</div>
-        <div class="tier-price"><span class="currency">$</span>15</div>
-        <div class="tier-billing" data-i18n="pricing.perMonth">per month</div>
+
+      <!-- Explorer Tier ($12/mo) — featured -->
+      <div class="pricing-card featured" id="priceCard-regular">
+        <div class="tier-badge-label">Most Popular</div>
+        <div class="tier-name">Explorer ✦</div>
+        <div class="tier-price"><span class="currency">$</span>12</div>
+        <div class="tier-billing">per month</div>
         <ul class="tier-features">
           <li>Unlimited chart calculations</li>
-          <li>10 profile generations/month</li>
-          <li>Unlimited transits & composites</li>
-          <li>SMS digest subscriptions</li>
-          <li class="disabled">Practitioner tools</li>
-          <li class="disabled">API access</li>
+          <li>10 AI profile generations / month</li>
+          <li>Unlimited transits &amp; composites</li>
+          <li>SMS energy digest subscriptions</li>
+          <li>Save &amp; revisit up to 20 profiles</li>
+          <li>Priority chart processing</li>
         </ul>
-        <button class="btn-primary tier-cta" onclick="startCheckout('seeker', event)">Upgrade to Seeker</button>
+        <button class="btn-primary tier-cta" id="priceBtn-regular"
+                onclick="startCheckout('regular', event)">Upgrade to Explorer</button>
       </div>
-      <!-- Guide Tier -->
-      <div class="pricing-card featured">
-        <div class="tier-name" data-i18n="pricing.guide">Guide ⭐</div>
-        <div class="tier-price"><span class="currency">$</span>97</div>
-        <div class="tier-billing" data-i18n="pricing.perMonth">per month</div>
-        <ul class="tier-features">
-          <li>Unlimited everything</li>
-          <li>Unlimited profile generations</li>
-          <li>Full practitioner dashboard</li>
-          <li>Client management tools</li>
-          <li>1,000 API calls/month</li>
-          <li>Priority support</li>
-        </ul>
-        <button class="btn-primary tier-cta" onclick="startCheckout('guide', event)">Upgrade to Guide</button>
-      </div>
-      <!-- Practitioner Tier -->
-      <!-- Practitioner tier removed until white-label API and custom integration features are built. -->
-      <!-- See CHANGELOG_UX.md: [ ] Remove $500/mo tier until practitioner features are actually built -->
+
     </div>
+
+    <!-- Promo code field -->
+    <div class="promo-code-section" id="promoSection" style="margin-top:var(--space-4);text-align:center">
+      <a class="promo-toggle-link" onclick="togglePromoInput()" style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)">Have a promo code?</a>
+      <div id="promoInputArea" style="display:none;margin-top:var(--space-2)">
+        <div style="display:flex;gap:var(--space-2);max-width:280px;margin:0 auto">
+          <input type="text" id="promoCodeInput" placeholder="PROMO-CODE" autocomplete="off"
+                 style="text-transform:uppercase;letter-spacing:0.05em;flex:1"
+                 oninput="this.value=this.value.toUpperCase()">
+          <button class="btn-secondary btn-sm" onclick="applyPromoCode()">Apply</button>
+        </div>
+        <div id="promoCodeResult" style="font-size:var(--font-size-sm);margin-top:var(--space-1)"></div>
+      </div>
+    </div>
+
+    <!-- Practitioner CTA -->
+    <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border);text-align:center">
+      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-2)">
+        Are you a guide, coach, or Human Design practitioner?
+      </p>
+      <a onclick="openPractitionerPricingModal();closePricingModal();"
+         style="font-size:var(--font-size-sm);cursor:pointer;color:var(--gold);text-decoration:underline">
+        See professional plans →
+      </a>
+    </div>
+
     <div class="pricing-close">
       <a onclick="closePricingModal()" data-i18n="pricing.maybeLater">Maybe later</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Practitioner Pricing Modal ════════════════════════════════════
+     Shown ONLY to users exploring professional / white-label tiers.
+     Consumer users are NOT shown this modal unless they opt into it.
+     Uses professional language — no personal-growth framing.
+     See IMPLEMENTATION_PLAN.md — Audience Separation Best Practice.
+═════════════════════════════════════════════════════════════════════ -->
+<div class="pricing-overlay hidden" id="practitionerPricingOverlay" role="dialog" aria-modal="true" aria-labelledby="practitionerPricingTitle">
+  <div class="pricing-modal pricing-modal--pro">
+    <div style="text-align:center;margin-bottom:var(--space-1)">
+      <span style="font-size:var(--font-size-sm);text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);opacity:0.8">
+        Professional Plans
+      </span>
+    </div>
+    <h2 id="practitionerPricingTitle">Serve Your Clients with Precision</h2>
+    <p class="subtitle">Built for Human Design practitioners, coaches, and platforms.</p>
+
+    <div class="pricing-grid pricing-grid--2col">
+
+      <!-- Guide Tier ($60/mo) -->
+      <div class="pricing-card featured" id="priceCard-practitioner">
+        <div class="tier-badge-label">Most Popular</div>
+        <div class="tier-name">Guide ⭐</div>
+        <div class="tier-price"><span class="currency">$</span>60</div>
+        <div class="tier-billing">per month</div>
+        <ul class="tier-features">
+          <li>Everything in Explorer</li>
+          <li>Unlimited AI profile generations</li>
+          <li>Client management dashboard</li>
+          <li>Up to 50 client profiles</li>
+          <li>1,000 API calls / month</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="btn-primary tier-cta" id="priceBtn-practitioner"
+                onclick="startCheckout('practitioner', event)">Upgrade to Guide</button>
+      </div>
+
+      <!-- Studio Tier ($500/mo — White Label) -->
+      <div class="pricing-card" id="priceCard-white_label">
+        <div class="tier-name">Studio 🌐</div>
+        <div class="tier-price"><span class="currency">$</span>500</div>
+        <div class="tier-billing">per month</div>
+        <ul class="tier-features">
+          <li>Everything in Guide</li>
+          <li>Unlimited client profiles</li>
+          <li>White-label embed widget</li>
+          <li>Remove "Powered by Prime Self"</li>
+          <li>10,000 API calls / month</li>
+          <li>Custom theme &amp; accent colors</li>
+          <li>Dedicated account manager</li>
+        </ul>
+        <button class="btn-primary tier-cta" id="priceBtn-white_label"
+                onclick="startCheckout('white_label', event)">Upgrade to Studio</button>
+      </div>
+
+    </div>
+
+    <div style="margin-top:var(--space-4);text-align:center">
+      <a onclick="closePractitionerPricingModal();openPricingModal();"
+         style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)">
+        ← Back to personal plans
+      </a>
+    </div>
+    <div class="pricing-close">
+      <a onclick="closePractitionerPricingModal()">Close</a>
     </div>
   </div>
 </div>
@@ -1194,37 +1280,111 @@ const API = 'https://prime-self-api.adrper79.workers.dev';
 let token = localStorage.getItem('ps_token');
 let userEmail = localStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
+window.currentUser = null; // populated by fetchUserProfile()
+
+// Tier display configuration
+const TIER_DISPLAY = {
+  free:         { label: 'FREE',        badge: 'tier-free',         canUpgrade: true,  isPro: false },
+  regular:      { label: 'EXPLORER',    badge: 'tier-seeker',       canUpgrade: true,  isPro: false },
+  practitioner: { label: 'GUIDE',       badge: 'tier-guide',        canUpgrade: true,  isPro: true  },
+  white_label:  { label: 'STUDIO',      badge: 'tier-practitioner', canUpgrade: false, isPro: true  },
+  // legacy aliases
+  seeker:       { label: 'EXPLORER',    badge: 'tier-seeker',       canUpgrade: true,  isPro: false },
+  guide:        { label: 'GUIDE PRO',   badge: 'tier-guide',        canUpgrade: true,  isPro: true  },
+};
 
 // ── Auth Helpers ──────────────────────────────────────────────
 function updateAuthUI() {
   const statusEl = document.getElementById('authStatusText');
-  const btnEl = document.getElementById('authBtn');
+  const btnEl    = document.getElementById('authBtn');
   const logoutEl = document.getElementById('logoutBtn');
+  const badgeEl  = document.getElementById('tierBadge');
+  const upgradeEl  = document.getElementById('upgradeBtn');
+  const billingEl  = document.getElementById('billingBtn');
+
   if (token && userEmail) {
     statusEl.textContent = userEmail;
-    statusEl.className = 'auth-status logged-in';
-    btnEl.style.display = 'none';
+    statusEl.className   = 'auth-status logged-in';
+    btnEl.style.display    = 'none';
     logoutEl.style.display = '';
+
+    // Update tier badge and billing/upgrade buttons from cached profile
+    const user = window.currentUser;
+    if (user) {
+      const tier    = user.tier || 'free';
+      const cfg     = TIER_DISPLAY[tier] || TIER_DISPLAY.free;
+      badgeEl.textContent = cfg.label;
+      badgeEl.className   = 'tier-badge ' + cfg.badge;
+      badgeEl.style.display = '';
+
+      // Upgrade button: visible for tiers that can still upgrade
+      upgradeEl.style.display  = cfg.canUpgrade ? '' : 'none';
+      // Billing button: visible when user has any subscription
+      billingEl.style.display  = (tier !== 'free') ? '' : 'none';
+    } else {
+      // Profile not loaded yet — hide badge until fetched
+      badgeEl.style.display    = 'none';
+      upgradeEl.style.display  = 'none';
+      billingEl.style.display  = 'none';
+    }
   } else {
     statusEl.textContent = typeof window.t === 'function' ? window.t('auth.notSignedIn') : 'Not signed in';
-    statusEl.className = 'auth-status';
-    btnEl.style.display = '';
+    statusEl.className   = 'auth-status';
+    btnEl.style.display    = '';
     logoutEl.style.display = 'none';
+    badgeEl.style.display  = 'none';
+    upgradeEl.style.display  = 'none';
+    billingEl.style.display  = 'none';
+  }
+}
+
+// Fetch /api/auth/me and populate window.currentUser, then refresh UI
+async function fetchUserProfile() {
+  if (!token) return;
+  try {
+    const res = await fetch(API + '/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return; // silently ignore — expired tokens handled by apiFetch elsewhere
+    const data = await res.json();
+    if (data && data.id) {
+      window.currentUser = data;
+      updateAuthUI();
+    }
+  } catch (e) {
+    // network error — non-fatal
   }
 }
 
 let authModalKeydownHandler = null;
+let authBackdropClickHandler = null;
 
 function openAuthOverlay() {
+  // Always reset to login mode when opening
+  if (authMode !== 'login') {
+    authMode = 'login';
+    document.getElementById('authTitle').textContent    = typeof window.t === 'function' ? window.t('auth.signIn') : 'Sign In';
+    document.getElementById('authSubtitle').textContent = typeof window.t === 'function' ? window.t('auth.accessProfile') : 'Access your Prime Self profile and saved charts.';
+    document.getElementById('authSubmit').textContent   = typeof window.t === 'function' ? window.t('auth.signIn') : 'Sign In';
+    document.getElementById('authToggleText').textContent = typeof window.t === 'function' ? window.t('auth.noAccount') : "Don't have an account?";
+    document.getElementById('authToggleLink').textContent  = typeof window.t === 'function' ? window.t('auth.createOne') : 'Create one';
+    document.getElementById('authError').textContent = '';
+  }
+
   document.getElementById('authOverlay').classList.remove('hidden');
   document.getElementById('authEmail').focus();
-  // Focus trap implementation
+
   const modal = document.getElementById('authOverlay');
   const focusableElements = modal.querySelectorAll('input, button, a[href], [tabindex]:not([tabindex="-1"])');
   const firstElement = focusableElements[0];
-  const lastElement = focusableElements[focusableElements.length - 1];
+  const lastElement  = focusableElements[focusableElements.length - 1];
 
+  // Focus trap + ESC to close
   authModalKeydownHandler = function(e) {
+    if (e.key === 'Escape') {
+      closeAuthOverlay();
+      return;
+    }
     if (e.key === 'Tab') {
       if (e.shiftKey) {
         if (document.activeElement === firstElement) {
@@ -1239,17 +1399,26 @@ function openAuthOverlay() {
       }
     }
   };
-
   modal.addEventListener('keydown', authModalKeydownHandler);
+
+  // Backdrop click to close
+  authBackdropClickHandler = function(e) {
+    if (e.target === modal) closeAuthOverlay();
+  };
+  modal.addEventListener('click', authBackdropClickHandler);
 }
 
 function closeAuthOverlay() {
-  document.getElementById('authOverlay').classList.add('hidden');
+  const modal = document.getElementById('authOverlay');
+  modal.classList.add('hidden');
   document.getElementById('authError').textContent = '';
-  // Remove focus trap event listener
   if (authModalKeydownHandler) {
-    document.getElementById('authOverlay').removeEventListener('keydown', authModalKeydownHandler);
+    modal.removeEventListener('keydown', authModalKeydownHandler);
     authModalKeydownHandler = null;
+  }
+  if (authBackdropClickHandler) {
+    modal.removeEventListener('click', authBackdropClickHandler);
+    authBackdropClickHandler = null;
   }
 }
 
@@ -1330,6 +1499,8 @@ async function submitAuth() {
     localStorage.setItem('ps_email', email);
     updateAuthUI();
     closeAuthOverlay();
+    // Fetch subscription/tier info now that we have a valid token
+    fetchUserProfile();
   } catch (e) {
     errorEl.textContent = window.t('auth.connectionError', { message: e.message });
   } finally {
@@ -1341,6 +1512,7 @@ async function submitAuth() {
 function logout() {
   if (!confirm('Are you sure you want to log out?')) return;
   token = null; userEmail = null;
+  window.currentUser = null;
   localStorage.removeItem('ps_token');
   localStorage.removeItem('ps_email');
   localStorage.removeItem('primeSelf_birthData');
@@ -1356,19 +1528,145 @@ function logout() {
   updateAuthUI();
 }
 
-// ── Pricing Modal ──────────────────────────────────────────
+// ── Pricing Modals ─────────────────────────────────────────
+// Consumer modal (Free + Explorer) — for free/regular tier users
+// Professional modal (Guide + Studio) — for practitioner/white_label users
+// These two audiences never see each other's pricing. See IMPLEMENTATION_PLAN.md.
+
 function openPricingModal(suggestedTier = null) {
   if (!token) {
     openAuthOverlay();
-    document.getElementById('authError').textContent = window.t('auth.signInUpgrade');
+    document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.signInUpgrade') : 'Sign in to upgrade your plan.';
     return;
   }
+  // Route professional tiers to the practitioner modal
+  const tier = window.currentUser?.tier || 'free';
+  if (tier === 'practitioner' || tier === 'white_label' || tier === 'guide') {
+    openPractitionerPricingModal();
+    return;
+  }
+  // Update card states based on current tier
+  _syncConsumerPricingCards(tier);
   document.getElementById('pricingOverlay').classList.remove('hidden');
 }
 
 function closePricingModal() {
   document.getElementById('pricingOverlay').classList.add('hidden');
 }
+
+// Sync consumer pricing card button states to match current user tier
+function _syncConsumerPricingCards(tier) {
+  const freeBtn    = document.getElementById('priceBtn-free');
+  const regularBtn = document.getElementById('priceBtn-regular');
+  if (!freeBtn || !regularBtn) return;
+
+  if (tier === 'regular' || tier === 'seeker') {
+    // Already on Explorer
+    freeBtn.disabled    = false;
+    freeBtn.textContent = 'Downgrade';
+    freeBtn.className   = 'btn-secondary tier-cta';
+    regularBtn.disabled    = true;
+    regularBtn.textContent = 'Current Plan';
+    regularBtn.className   = 'btn-secondary tier-cta';
+  } else {
+    // On free tier
+    freeBtn.disabled    = true;
+    freeBtn.textContent = 'Current Plan';
+    freeBtn.className   = 'btn-secondary tier-cta';
+    regularBtn.disabled    = false;
+    regularBtn.textContent = 'Upgrade to Explorer';
+    regularBtn.className   = 'btn-primary tier-cta';
+  }
+}
+
+// Professional pricing modal (Guide + Studio)
+function openPractitionerPricingModal() {
+  if (!token) {
+    openAuthOverlay();
+    document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.signInUpgrade') : 'Sign in to view professional plans.';
+    return;
+  }
+  const tier = window.currentUser?.tier || 'free';
+  _syncPractitionerPricingCards(tier);
+  document.getElementById('practitionerPricingOverlay').classList.remove('hidden');
+}
+
+function closePractitionerPricingModal() {
+  document.getElementById('practitionerPricingOverlay').classList.add('hidden');
+}
+
+// Sync practitioner pricing card button states
+function _syncPractitionerPricingCards(tier) {
+  const practBtn    = document.getElementById('priceBtn-practitioner');
+  const studioBtn   = document.getElementById('priceBtn-white_label');
+  if (!practBtn || !studioBtn) return;
+
+  if (tier === 'white_label') {
+    practBtn.disabled    = false;
+    practBtn.textContent = 'Downgrade to Guide';
+    practBtn.className   = 'btn-secondary tier-cta';
+    studioBtn.disabled   = true;
+    studioBtn.textContent = 'Current Plan';
+    studioBtn.className  = 'btn-secondary tier-cta';
+  } else if (tier === 'practitioner' || tier === 'guide') {
+    practBtn.disabled    = true;
+    practBtn.textContent = 'Current Plan';
+    practBtn.className   = 'btn-secondary tier-cta';
+    studioBtn.disabled   = false;
+    studioBtn.textContent = 'Upgrade to Studio';
+    studioBtn.className  = 'btn-primary tier-cta';
+  } else {
+    // Free or regular user arrived here via "For Practitioners" CTA
+    practBtn.disabled    = false;
+    practBtn.textContent = 'Upgrade to Guide';
+    practBtn.className   = 'btn-primary tier-cta';
+    studioBtn.disabled   = false;
+    studioBtn.textContent = 'Upgrade to Studio';
+    studioBtn.className  = 'btn-primary tier-cta';
+  }
+}
+
+// Promo code toggle
+function togglePromoInput() {
+  const area = document.getElementById('promoInputArea');
+  if (!area) return;
+  area.style.display = area.style.display === 'none' ? '' : 'none';
+  if (area.style.display !== 'none') {
+    document.getElementById('promoCodeInput')?.focus();
+  }
+}
+
+// Applied promo code (stored for checkout)
+let activePromoCode = null;
+
+async function applyPromoCode() {
+  const input   = document.getElementById('promoCodeInput');
+  const result  = document.getElementById('promoCodeResult');
+  const code    = input?.value?.trim();
+  if (!code) return;
+  result.textContent = 'Checking…';
+  result.style.color = 'var(--text-dim)';
+
+  try {
+    const data = await apiFetch(`/api/billing/redeem/${encodeURIComponent(code)}`);
+    if (data.valid) {
+      const savings = data.discount_type === 'percent'
+        ? `${data.discount_value}% off`
+        : `$${(data.discount_value / 100).toFixed(2)} off`;
+      result.textContent = `✓ Code applied — ${savings}`;
+      result.style.color = 'var(--accent2)';
+      activePromoCode = code;
+    } else {
+      result.textContent = data.error || 'Invalid or expired code.';
+      result.style.color = 'var(--red)';
+      activePromoCode = null;
+    }
+  } catch (e) {
+    result.textContent = 'Could not validate code.';
+    result.style.color = 'var(--red)';
+  }
+}
+
 
 async function startCheckout(tier, event) {
   if (!token) {
@@ -1385,9 +1683,12 @@ async function startCheckout(tier, event) {
       checkoutBtn.innerHTML = '<span class="spinner" style="border-top-color:#0a0a0f"></span> ' + window.t('auth.creatingSession');
     }
 
+    const checkoutBody = { tier };
+    if (activePromoCode) checkoutBody.promoCode = activePromoCode;
+
     const result = await apiFetch('/api/billing/checkout', {
       method: 'POST',
-      body: JSON.stringify({ tier })
+      body: JSON.stringify(checkoutBody)
     });
 
     if (result.error) {
@@ -4302,6 +4603,8 @@ if (!document.getElementById('notificationStyles')) {
 
 // ── Init ──────────────────────────────────────────────────────
 updateAuthUI();
+// If already signed in, fetch profile/tier for badge and billing buttons
+if (token) fetchUserProfile();
 </script>
 
 <!-- Mobile Bottom Navigation -->

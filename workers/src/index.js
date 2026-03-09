@@ -208,6 +208,8 @@ import { handlePush } from './handlers/push.js';
 import { handleAlerts } from './handlers/alerts.js';
 import { handleApiKeys } from './handlers/keys.js';
 import { handleTiming, listIntentionTemplates } from './handlers/timing.js';
+import { handleEmbedValidate } from './handlers/embed.js';
+import { handleValidatePromo, handleApplyPromo, handleCreatePromo, handleListPromos } from './handlers/promo.js';
 import { handleAnalytics } from './handlers/analytics.js';
 import { handleExperiments } from './handlers/experiments.js';
 import { trackEvent, trackError, trackFunnel, aggregateDaily, EVENTS } from './lib/analytics.js';
@@ -229,7 +231,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation/', '/api/psychometric/', '/api/diary/', '/api/checkout/', '/api/billing/', '/api/referrals/', '/api/achievements/', '/api/webhooks/', '/api/push/', '/api/alerts/', '/api/keys/', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin/', '/api/analytics/', '/api/experiments/', '/api/cache/'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation/', '/api/psychometric/', '/api/diary/', '/api/checkout/', '/api/billing/', '/api/referrals/', '/api/achievements/', '/api/webhooks/', '/api/push/', '/api/alerts/', '/api/keys/', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin/', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply', '/api/admin/'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -253,7 +255,9 @@ const PUBLIC_ROUTES = new Set([
   '/api/referrals/validate',  // Public for signup flow
   '/api/compare/list',  // Browse celebrities (public)
   '/api/compare/search',  // Search celebrities (public)
-  '/api/notion/callback'  // OAuth callback (public)
+  '/api/notion/callback',  // OAuth callback (public)
+  '/api/embed/validate',   // Embed widget feature-flag check (cross-origin, no PII)
+  '/api/promo/validate',   // Promo code validation (public, no redemption)
 ]);
 
 function requiresAuth(path) {
@@ -343,6 +347,15 @@ const EXACT_ROUTES = new Map([
   ['GET /api/stats/leaderboard',      handleGetStatsLeaderboard],
   // Geocode
   ['GET /api/geocode',                handleGeocode],
+  // Embed validation (public, cross-origin)
+  ['GET /api/embed/validate',         handleEmbedValidate],
+  ['OPTIONS /api/embed/validate',     handleEmbedValidate],
+  // Promo codes (public validation; apply requires auth via auth-prefix)
+  ['GET /api/promo/validate',         (req, env) => { const url = new URL(req.url); return handleValidatePromo(req, env, url.searchParams.get('code')); }],
+  ['POST /api/promo/apply',           handleApplyPromo],
+  // Promo admin (guarded internally by X-Admin-Token)
+  ['POST /api/admin/promo',           handleCreatePromo],
+  ['GET /api/admin/promo',            handleListPromos],
 ]);
 
 /**
@@ -528,6 +541,11 @@ export default {
 
 function addCorsHeaders(response, request, environment) {
   const headers = new Headers(response.headers);
+  // /api/embed/validate is a public, no-PII endpoint called from any origin (third-party embeds).
+  // If the handler already set Access-Control-Allow-Origin: *, do not overwrite it.
+  if (headers.get('Access-Control-Allow-Origin') === '*') {
+    return new Response(response.body, { status: response.status, headers });
+  }
   const dynamicCorsHeaders = getCorsHeaders(request, environment);
   for (const [key, value] of Object.entries(dynamicCorsHeaders)) {
     headers.set(key, value);
