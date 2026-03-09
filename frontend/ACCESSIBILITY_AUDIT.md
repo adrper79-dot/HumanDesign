@@ -1,10 +1,39 @@
 # Accessibility Audit Report - Prime Self UI
 
-**Date**: March 4, 2026
-**Scope**: frontend/index.html
+**Date**: March 4, 2026 (Updated March 9, 2026)  
+**Scope**: frontend/index.html  
 **Standards**: WCAG 2.1 Level AA
 
 ---
+
+## ✅ 2026-03-09 Re-Audit Updates
+
+The following issues from the original March 4 audit have been confirmed fixed or updated:
+
+| Issue | Status | Notes |
+|-------|--------|-------|
+| Modal focus trap | ✅ CONFIRMED FIXED | `authModalKeydownHandler` at index.html lines 1132, 1152 |
+| `--text-dim` contrast | ✅ CONFIRMED FIXED | Changed to `#c4c0d8` on `#1a1a24` = 5.5:1 (was 3.8:1) |
+| `--text-muted` contrast | ✅ CONFIRMED FIXED | Changed to `#918db0` on `#0a0a0f` = 4.5:1 (was 3.1:1) |
+| Alignment button aria-labels | ✅ FIXED 2026-03-09 | Added `aria-label="Alignment level X out of 10"` to all 10 buttons |
+| Gate badge aria-label | ✅ FIXED 2026-03-09 | Added `role="img"` and `aria-label` to gate-badge div |
+| Focus ring (all users) | ✅ FIXED 2026-03-09 | `design-tokens-premium.css` `--border-focus` was overriding to Porsche Red (`#d5001c`); removed. Focus now uses canonical gold. |
+| Tab `tabindex` for keyboard access | ✅ CONFIRMED | Main chart tab has `tabindex="0"` (line 319) |
+
+### Still Open from Original Audit
+
+| Issue | Priority | Linked Item |
+|-------|----------|-------------|
+| Tab `role="tab"` / `aria-selected` / `aria-controls` | Critical | DEF-10 |
+| Modal `role="dialog"` / `aria-modal` | Critical | — |
+| Form inputs missing `aria-label` | Critical | — |
+| `aria-live` for chart results insertion | High | — |
+| Arrow key navigation for tabs | High | — |
+| Help icons using `title` instead of `aria-describedby` | Medium | — |
+| Touch targets < 44px (help icons 16×16) | Medium | — |
+| Astro chart wheel SVG missing `role="img"` + `aria-label` | Medium | — |
+| Skip link to main content | Medium | — |
+| Heading hierarchy in renderChart() | Medium | DEF-15 |
 
 ## Critical Issues (Must Fix)
 

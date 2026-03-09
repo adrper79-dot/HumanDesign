@@ -27,7 +27,7 @@
 ### 🔴 CRITICAL — Color & Contrast ✅
 
 - [x] **REMOVE inline `:root` variables** from `index.html` lines 62-77 (consolidate into `design-tokens.css`)
-- [x] **Resolve gold conflict:** `--gold: #c9a84c` (inline) vs `--color-gold: #d4af37` (premium) — pick ONE
+- [x] **Resolve gold conflict:** `--gold: #c9a84c` (inline) vs `--color-gold: #d4af37` (premium) — pick ONE. NOTE: `design-tokens-premium.css` still defined `--color-gold: #d4af37` (overriding canonical) until 2026-03-09 audit removed it. Also removed `--border-focus: Porsche Red` from premium.css (was making ALL focus rings red `#d5001c`)
 - [x] **Resolve font base:** `base.css:32 html { font-size: 15px }` vs `index.html:76 html { font-size: 16px }` — set to `16px` in tokens only
 - [x] **Fix `--text-dim`:** change `#b0acc8` → `#c4c0d8` (ratio: 4.2:1 → 5.5:1 on `#1a1a24`)
 - [x] **Fix `--text-muted`:** change `#7a76a0` → `#918db0` (ratio: 3.1:1 → 4.5:1 on `#0a0a0f`)
@@ -50,7 +50,7 @@
 - [x] **Remove or replace testimonials section** — replaced with honest value proposition banner
 - [x] **Fix fallback social proof stats** — `loadSocialProofStats()` now hides on API failure instead of showing fake numbers
 - [x] **Fix mobile nav labels:** "Chart"→"Blueprint", "Keys"→"Profile", "Astro"→"Deepen"
-- [ ] **Remove un-implemented features from pricing tiers:** If "practitioner dashboard" and "white-label API" aren't built, don't sell them
+- [x] **Remove un-implemented features from pricing tiers:** $500/mo Practitioner card removed 2026-03-09. $97 Guide tier retains "practitioner dashboard" language — feature IS implemented (`practitionerTools:true` in JS tier limits)
 
 ### 🟡 IMPORTANT — Structure & Navigation ✅
 
@@ -75,10 +75,10 @@
 
 ### 🟡 IMPORTANT — Accessibility
 
-- [ ] **Fix focus trap** in `auth-overlay` modal: keyboard users can currently tab behind it
-- [ ] **Add `aria-label`** to alignment buttons (1-10 scale): `aria-label="Rate your alignment ${n} out of 10"`
-- [ ] **Add heading hierarchy** to chart results: use `<h2>` for section titles, `<h3>` for subsections
-- [ ] **Add `role="img"` and `aria-label`** to astro chart wheel SVG
+- [x] **Fix focus trap** in `auth-overlay` modal: confirmed at index.html lines 1132, 1152 via `authModalKeydownHandler`
+- [x] **Add `aria-label`** to alignment buttons (1-10 scale): added `aria-label="Alignment level X out of 10"` to all 10 buttons 2026-03-09
+- [ ] **Add heading hierarchy** to chart results: use `<h2>` for section titles, `<h3>` for subsections (open — DEF-15)
+- [ ] **Add `role="img"` and `aria-label`** to astro chart wheel SVG (open — only gate badge done so far)
 - [ ] **Increase mobile touch targets** to minimum 44×44px (currently 40×40px on alignment buttons)
 - [ ] **Fix tab order:** ensure hidden `.tab-content[style="display:none"]` elements don't receive focus
 
@@ -100,9 +100,38 @@
 ### 🟢 ENHANCEMENT — Pricing
 
 - [ ] **Add $7/mo tier** ("Explorer") between Free and $15: 3 charts/month, basic transit alerts, no AI profile
-- [ ] **Remove $500/mo tier** until practitioner features are actually built
+- [x] **Remove $500/mo tier** — removed 2026-03-09 (Practitioner pricing card removed from pricing modal)
 - [ ] **Rename $97 tier** to "Practitioner Pro" and list only features that currently work
 - [ ] **Move pricing to its own page/tab** — not a modal overlay on landing
+
+---
+
+## [2026-03-09] — Re-Audit Fixes (Automated Repair Pass)
+
+### ✅ Fixes Applied
+
+- [x] **Removed `--border-focus: Porsche Red`** override from `design-tokens-premium.css` — all users were receiving red (`#d5001c`) focus rings despite this being loaded globally
+- [x] **Aligned gold token** in `design-tokens-premium.css` — removed conflicting `--color-gold: #d4af37`; `--interactive-primary` now uses canonical `var(--color-gold-500)` (#c9a84c)
+- [x] **Removed $500/mo Practitioner tier** from pricing modal — was advertising unbuilt white-label API and custom integrations
+- [x] **Fixed IP-unsafe HD terminology in tooltips** — "Projector/Reflector" → "Guide Pattern/Mirror" in check-in tooltip (line 751); "Reflector" → "Mirror" in energy blueprint tooltip (line 1783)
+- [x] **Fixed social proof `...` placeholder** — initial value cleared to empty string; only shows when API returns confirmed data
+- [x] **Fixed asset-randomizer.js crash** in Safari private browsing — sessionStorage calls now wrapped in try/catch with `v1` fallback
+- [x] **Fixed manifest.json screenshots** — removed non-existent `/screenshots/home.png` and `/screenshots/chart.png` entries
+- [x] **Fixed DOCUMENTATION_INDEX.md broken paths** — corrected 3 missing-file references
+- [x] **Added gate badge `role="img"` + `aria-label`** to gate-badge div in JS template string
+- [x] **Added `padding-bottom: var(--space-8)`** to `.tab-content.active` (desktop bottom clip)
+
+### ⚠️ Items Marked ✅ in Backlog But Not Verified (Found During Re-Audit)
+
+- `UI-028` Alignment button aria-labels — claimed ✅ FIXED but buttons had NO aria-labels in code; added 2026-03-09
+- `UI-029` Gate badge aria-labels — claimed ✅ FIXED but element had only `title` attribute, no `aria-label`; fixed 2026-03-09
+- `UI-030` 5-step guide — claimed ✅ FIXED "expanded to 5-step breadcrumb"; code shows 3-step guide (`display:none` after complete). Status: UNVERIFIED.
+- Gold conflict — CHANGELOG marked `[x]` but `design-tokens-premium.css` still had conflicting `--color-gold: #d4af37` and Porsche Red focus ring override
+
+### 🔴 Remaining Open (Terminology)
+
+- `explanations.js` uses original HD type names as keys (Generator, Projector, Manifestor, Reflector) in the TYPE_EXPLANATIONS object and display text ("As a Reflector..."). These are user-visible in chart explanations. Needs product decision: fully rename to PS terms or keep as-is. Adding to DEF-16.
+- `hd-data.js` and `share-card.js` use "Incarnation Cross" — check if this is a licensed term or generic astrology
 
 ---
 
