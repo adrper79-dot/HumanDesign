@@ -19,15 +19,16 @@ import { sendEmail } from '../lib/email.js';
 
 /**
  * Map Stripe subscription status to our internal status
+ * BL-FIX: Use 'canceled' (American spelling) to match DB enum/constraints
  */
 function mapStripeStatus(stripeStatus) {
   const statusMap = {
     'active': 'active',
-    'canceled': 'cancelled',
+    'canceled': 'canceled',
     'past_due': 'past_due',
     'unpaid': 'unpaid',
     'incomplete': 'unpaid',
-    'incomplete_expired': 'cancelled',
+    'incomplete_expired': 'canceled',
     'trialing': 'trialing'
   };
   
@@ -129,6 +130,7 @@ export async function handleStripeWebhook(request, env) {
 
 /**
  * Handle checkout.session.completed
+ * BL-FIX: Use UPSERT to handle case where subscription row doesn't exist yet
  */
 async function handleCheckoutCompleted(event, query, stripe, env) {
   const session = event.data.object;
@@ -146,16 +148,19 @@ async function handleCheckoutCompleted(event, query, stripe, env) {
   const priceId = subscription.items.data[0]?.price.id;
   const tier = getTierFromPriceId(priceId, env);
 
-  // Atomic: update subscription + user tier together
+  // Atomic: upsert subscription + update user tier together
   await query.transaction(async (q) => {
-    await q(QUERIES.updateSubscription, [
+    // BL-FIX: Use upsertSubscription instead of updateSubscription
+    // This handles the case when this is a new subscription (no row exists)
+    await q(QUERIES.upsertSubscription, [
       userId,
+      customerId,
       subscriptionId,
       tier,
       mapStripeStatus(subscription.status),
       new Date(subscription.current_period_start * 1000).toISOString(),
       new Date(subscription.current_period_end * 1000).toISOString(),
-      subscription.cancel_at_period_end
+      subscription.cancel_at_period_end || false
     ]);
 
     // BL-R-C4: Also update users.tier and stripe_customer_id (was only in billing.js)

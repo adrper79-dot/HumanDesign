@@ -302,6 +302,29 @@ async function handleSendDigest(request, env) {
   }
 
   if (body.userId || body.phone) {
+    // BL-FIX: Single-user digest sending requires auth
+    // Without this check, anyone could trigger SMS sends to arbitrary users
+    if (!request._user?.sub) {
+      return Response.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    // Users can only send digest to themselves unless they're practitioner/admin
+    const userTier = request._user?.tier || 'free';
+    const targetId = body.userId || null;
+    
+    // If specifying userId, and it's not the authenticated user, require elevated permissions
+    if (targetId && targetId !== request._user.sub) {
+      if (!['practitioner', 'admin'].includes(userTier)) {
+        return Response.json(
+          { error: 'Cannot send digest to other users without practitioner tier' },
+          { status: 403 }
+        );
+      }
+    }
+    
     // Single user
     const sql = body.userId ? QUERIES.getUserById : QUERIES.getUserByPhone;
     const param = body.userId || body.phone;

@@ -268,6 +268,11 @@ async function handleLogin(request, env) {
   const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
   await query(QUERIES.insertRefreshToken, [user.id, tokenHash, familyId, expiresAtEpoch]);
 
+  // BL-FIX: Update last_login_at for re-engagement tracking and cron accuracy
+  await query(QUERIES.updateLastLogin, [user.id]).catch(err => {
+    console.error('[auth] Failed to update last_login_at:', err.message);
+  });
+
   return Response.json({
     ok: true,
     user: { id: user.id, email: user.email },

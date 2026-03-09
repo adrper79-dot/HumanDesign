@@ -30,7 +30,11 @@ const RATE_LIMITS = {
  */
 export async function rateLimit(request, env) {
   const kv = env.CACHE;
-  if (!kv) return null; // KV not bound — skip rate limiting
+  if (!kv) {
+    // BL-S-MW1: Log warning so operators notice missing KV binding in production
+    console.warn('[rateLimit] CACHE KV not bound — rate limiting disabled. Bind CACHE in wrangler.toml for production.');
+    return null; // KV not bound — skip rate limiting
+  }
 
   const url = new URL(request.url);
   const path = url.pathname;

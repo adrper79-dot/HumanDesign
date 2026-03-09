@@ -52,9 +52,9 @@ export async function enforceFeatureAccess(request, env, feature) {
 
   } catch (error) {
     console.error('Tier enforcement error:', error);
+    // BL-S-MW4: Don't leak internal error details to client
     return Response.json({
-      error: 'Failed to verify subscription',
-      details: error.message
+      error: 'Failed to verify subscription'
     }, { status: 500 });
   }
 }
@@ -129,9 +129,9 @@ export async function enforceUsageQuota(request, env, action, feature) {
 
   } catch (error) {
     console.error('Usage quota enforcement error:', error);
+    // BL-S-MW4: Don't leak internal error details to client
     return Response.json({
-      error: 'Failed to verify usage quota',
-      details: error.message
+      error: 'Failed to verify usage quota'
     }, { status: 500 });
   }
 }

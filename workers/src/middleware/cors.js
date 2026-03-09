@@ -61,6 +61,8 @@ export function getCorsHeaders(request, environment) {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    // BL-S-MW3: Expose rate limit headers to client JS
+    'Access-Control-Expose-Headers': 'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin' // Important: tells caches that response varies by Origin
   };

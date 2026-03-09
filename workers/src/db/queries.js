@@ -157,6 +157,12 @@ export const QUERIES = {
     FROM users WHERE phone = $1
   `,
 
+  // BL-FIX: Add query to update last_login_at on successful login
+  updateLastLogin: `
+    UPDATE users SET last_login_at = NOW(), updated_at = NOW()
+    WHERE id = $1
+  `,
+
   // ─── Refresh Tokens ─────────────────────────────────────────
   insertRefreshToken: `
     INSERT INTO refresh_tokens (user_id, token_hash, family_id, expires_at)
@@ -443,6 +449,22 @@ export const QUERIES = {
     INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, tier, status, current_period_start, current_period_end)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING id, created_at
+  `,
+
+  // BL-FIX: UPSERT subscription to handle checkout.session.completed when no row exists
+  upsertSubscription: `
+    INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, tier, status, current_period_start, current_period_end, cancel_at_period_end)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ON CONFLICT (user_id) DO UPDATE SET
+      stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, subscriptions.stripe_customer_id),
+      stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+      tier = EXCLUDED.tier,
+      status = EXCLUDED.status,
+      current_period_start = EXCLUDED.current_period_start,
+      current_period_end = EXCLUDED.current_period_end,
+      cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+      updated_at = NOW()
+    RETURNING id, created_at, updated_at
   `,
 
   getSubscriptionByUserId: `

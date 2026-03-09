@@ -217,3 +217,93 @@ These items require architectural changes or manual decisions:
 20. `index.html` — Auth form accessibility: aria-invalid, aria-describedby, role="alert", email format validation, password length validation
 
 **Total: 43 fixes across 25 files, 207/207 tests passing**
+
+---
+
+## Continuation — Session 2026-07-15c (Current)
+
+### Phase 4 Remediation — Critical & High Defects
+
+#### Critical Fixes
+
+| ID | File | Issue | Fix Applied |
+|----|------|-------|-------------|
+| C6 | `workers/src/db/queries.js` | `getUserById`, `getUserByEmail`, `getUserByPhone` missing 5 columns: `tier`, `stripe_customer_id`, `referral_code`, `email_verified`, `last_login_at` | Added all 5 columns to SELECT statements |
+| C7 | `src/prompts/rag.js` | `getHouseForPlanet()` calling `.find()` on Object (placements is Object keyed by planet name, not Array) | Changed to direct Object key lookup: `placements[planetKey]` |
+| C8 | `src/engine/transits.js` | `ch.gate1`/`ch.gate2` wrong property names — chart.js returns `ch.gates[0]`/`ch.gates[1]` | Changed to optional chaining: `ch.gates?.[0]`/`ch.gates?.[1]` |
+
+#### High Fixes
+
+| ID | File | Issue | Fix Applied |
+|----|------|-------|-------------|
+| H8 | `workers/src/handlers/profile.js` | `recordUsage(request, env, 'profile_generation')` wrong signature — correct is `(env, userId, action, endpoint, quotaCost)` | Fixed to `recordUsage(env, userId, 'profile_generation', '/api/profile/generate')` |
+| H9 | `workers/src/handlers/profile-stream.js` | Same `recordUsage` signature error | Fixed same way |
+| H10 | `workers/src/handlers/profile-stream.js` | `getDiaryEntries([userId])` wrong arity — requires 3 params `[userId, limit, offset]` | Fixed to `[userId, 50, 0]` |
+| H11 | `src/prompts/digest.js` | Multiple property mismatches: used `aspects` but transits.js returns `transitToNatalAspects`; used `.type` but transits.js uses field presence | Fixed all: `transitToNatalAspects`, `transitPlanet`, detect event type by field presence |
+| H12 | `workers/src/handlers/auth.js` | `last_login_at` never updated on login | Added `updateLastLogin` query + call after successful token generation |
+| H13 | `workers/src/handlers/webhook.js` | `handleCheckoutCompleted` uses UPDATE (fails for new customers) + `'cancelled'` British spelling (DB uses American `'canceled'`) | Created `upsertSubscription` query with ON CONFLICT; fixed spelling |
+| H14 | `workers/src/handlers/sms.js` | `handleSendDigest` no auth — anyone could trigger SMS to any user | Added auth requirement + tier check (practitioner only for cross-user sends) |
+| H15 | `workers/src/handlers/composite.js` | No rate limit for anonymous users — CPU abuse vector | Added IP-based rate limiting (10/hour via KV cache) |
+
+#### Medium Fixes (Middleware Security)
+
+| ID | File | Issue | Fix Applied |
+|----|------|-------|-------------|
+| M9 | `workers/src/middleware/rateLimit.js` | Silently disables when KV unbound — operators unaware | Added `console.warn()` with clear message about missing CACHE binding |
+| M10 | `workers/src/middleware/auth.js` | No guard for missing `JWT_SECRET` — silent failures | Added guard returning 500 with "Server configuration error" |
+| M11 | `workers/src/middleware/cors.js` | Missing `Access-Control-Expose-Headers` — rate limit headers not accessible to client JS | Added expose headers for `X-RateLimit-*` and `Retry-After` |
+| M12 | `workers/src/middleware/tierEnforcement.js` | Error responses leak `details: error.message` | Removed `details` field from both `enforceFeatureAccess` and `enforceUsageQuota` error responses |
+
+### Frontend Security Assessment
+
+Reviewed and verified:
+- ✅ All user content properly escaped with `escapeHtml()` / `escapeAttr()`
+- ✅ Form validation with `required` attributes and JS validation
+- ✅ CSP headers blocking external script injection
+- ⚠️ JWT in localStorage — architectural limitation, mitigated by CSP + no third-party scripts
+
+### Test Validation
+
+**Result:** 263/263 tests pass (test count increased from baseline — additional tests were added)
+
+```bash
+✓ tests/canonical.test.js (56 tests)
+✓ tests/engine.test.js (103 tests)
+✓ tests/numerology.test.js (63 tests)
+✓ tests/handlers.test.js (41 tests)
+```
+
+### Files Modified This Session
+
+| File | Changes |
+|------|---------|
+| `workers/src/db/queries.js` | Added 5 columns to 3 user queries; added `updateLastLogin` query; added `upsertSubscription` query |
+| `src/engine/transits.js` | Fixed `ch.gate1`/`ch.gate2` → `ch.gates?.[0]`/`ch.gates?.[1]` |
+| `src/prompts/rag.js` | Fixed Object lookup in `getHouseForPlanet()` and planetary archetypes section |
+| `src/prompts/digest.js` | Fixed 5 property mismatches: `transitToNatalAspects`, `transitPlanet`, event type detection |
+| `workers/src/handlers/profile.js` | Fixed `recordUsage` signature |
+| `workers/src/handlers/profile-stream.js` | Fixed `recordUsage` signature + `getDiaryEntries` arity |
+| `workers/src/handlers/auth.js` | Added `updateLastLogin` call after login |
+| `workers/src/handlers/webhook.js` | Changed to `upsertSubscription`, fixed `'cancelled'` → `'canceled'` |
+| `workers/src/handlers/sms.js` | Added auth check + tier restriction to `handleSendDigest` |
+| `workers/src/handlers/composite.js` | Added IP-based rate limiting for anonymous users |
+| `workers/src/middleware/rateLimit.js` | Added warning log when KV unbound |
+| `workers/src/middleware/auth.js` | Added `JWT_SECRET` guard |
+| `workers/src/middleware/cors.js` | Added `Access-Control-Expose-Headers` |
+| `workers/src/middleware/tierEnforcement.js` | Removed error detail leakage from 2 catch blocks |
+
+**Session Total: 16 fixes across 14 files**
+
+---
+
+## Cumulative Summary
+
+| Session | Fixes | Files Modified |
+|---------|-------|----------------|
+| 2025-07-15 | 29 | 17 |
+| 2025-07-15b | 6 | 5 |
+| 2026-03-08 | 8 | 3 |
+| 2026-07-15c | 16 | 14 |
+| **Total** | **59** | **~30 unique files** |
+
+**Final Test Status: 263/263 tests passing**

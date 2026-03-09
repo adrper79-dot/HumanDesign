@@ -13,6 +13,15 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
  * Returns null if valid, or a Response if unauthorized.
  */
 export async function authenticate(request, env) {
+  // BL-S-MW2: Guard against missing JWT_SECRET to prevent silent failures
+  if (!env.JWT_SECRET) {
+    console.error('[auth] CRITICAL: JWT_SECRET not set in environment');
+    return Response.json(
+      { error: 'Server configuration error' },
+      { status: 500 }
+    );
+  }
+
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return Response.json(
