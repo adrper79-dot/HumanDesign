@@ -16,6 +16,6 @@ fi
 # Deploy the frontend directory
 echo "📤 Uploading frontend files..."
 cd frontend
-npx wrangler pages deploy . --project-name=selfprime
+npx wrangler pages deploy . --project-name=prime-self-ui
 
 echo "✅ Deployment complete! Check https://selfprime.net in 30 seconds."
