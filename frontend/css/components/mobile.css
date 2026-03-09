@@ -88,7 +88,7 @@
     justify-content: space-around;
     align-items: center;
     padding: 8px 0;
-    z-index: 100;
+    z-index: var(--z-mobile-nav);
     box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
   }
   
