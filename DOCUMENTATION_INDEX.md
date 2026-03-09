@@ -21,14 +21,14 @@
 4. **[docs/GLOSSARY.md](docs/GLOSSARY.md)** — Terminology guide
 
 ### I'm a Developer
-1. **guides/SETUP_DEVELOPMENT.md** — Local environment (10 min)
+1. **[guides/SETUP_DEVELOPMENT.md](guides/SETUP_DEVELOPMENT.md)** — Local environment (10 min)
 2. **[ARCHITECTURE.md](ARCHITECTURE.md)** — System design
 3. **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** — API endpoints
 4. **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** — UI components
 5. **process/BUILD_STANDARDS.md** — Coding patterns
 
 ### I'm DevOps
-1. **guides/ENVIRONMENT_VARIABLES.md** — Configuration
+1. **[guides/ENVIRONMENT_VARIABLES.md](guides/ENVIRONMENT_VARIABLES.md)** — Configuration
 2. **[DEPLOY.md](DEPLOY.md)** — Production deploy
 3. **[docs/OPERATIONS.md](docs/OPERATIONS.md)** — Monitoring & troubleshooting
 
@@ -64,20 +64,23 @@
 
 ### 📖 Implementation Guides (How-To)
 
+**Quick Navigation**: See [guides/README.md](guides/README.md) for complete guides index
+
 **Getting Started**
 | Document | Purpose | Time |
 |----------|---------|------|
-| guides/SETUP_DEVELOPMENT.md | Local dev environment setup | 10 min |
-| guides/ENVIRONMENT_VARIABLES.md | Configuration & secrets | 5 min |
+| [guides/SETUP_DEVELOPMENT.md](guides/SETUP_DEVELOPMENT.md) | Local dev environment setup | 10 min |
+| [guides/ENVIRONMENT_VARIABLES.md](guides/ENVIRONMENT_VARIABLES.md) | Configuration & secrets | 5 min |
 
 **Integration Guides**
 | Document | Purpose | Time |
 |----------|---------|------|
-| guides/STRIPE_INTEGRATION.md | Payment system setup | 30 min |
-| guides/BACKGROUND_VIDEO.md | Cosmic video implementation | 20 min |
-| guides/PWA_CONFIGURATION.md | Progressive Web App setup | 15 min |
+| [guides/STRIPE_INTEGRATION.md](guides/STRIPE_INTEGRATION.md) | Payment system setup | 30 min |
+| [guides/BACKGROUND_VIDEO.md](guides/BACKGROUND_VIDEO.md) | Cosmic video implementation | 20 min |
+| [guides/PWA_CONFIGURATION.md](guides/PWA_CONFIGURATION.md) | Progressive Web App setup | 15 min |
+| [guides/EMBED_WIDGET.md](guides/EMBED_WIDGET.md) | Embed widget on external sites | 15 min |
 
-**Advanced Guides**
+**Advanced Guides** (Coming soon)
 | Document | Purpose |
 |----------|---------|
 | guides/advanced/CUSTOM_THEMES.md | Theme customization |
