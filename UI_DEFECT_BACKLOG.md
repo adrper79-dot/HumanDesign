@@ -213,7 +213,7 @@
 | **Source** | Layout Agent |
 | **Issue** | Long unbroken strings can overflow `.raw-json` container |
 | **Fix** | Add `word-break: break-all` |
-| **Status** | ✅ FIXED - Added word-break: break-all to .raw-json CSS rule
+| **Status** | ✅ CONFIRMED IN CODE 2026-03-09 — `word-break: break-all` present in app.css line 299 |
 
 ### UI-028: Alignment Button No ARIA Labels
 | Property | Details |
@@ -221,7 +221,7 @@
 | **Source** | UX_DEEP_REVIEW.md |
 | **Issue** | 1-10 buttons have no `aria-label` for screen readers |
 | **Fix** | Add `aria-label="Alignment level X"` |
-| **Status** | ✅ FIXED - All 10 alignment buttons already have proper aria-label attributes
+| **Status** | ✅ FIXED 2026-03-09 — Added `aria-label="Alignment level X out of 10"` to all 10 buttons in index.html (prior ✅ was unverified — buttons did NOT have labels in code) |
 
 ### UI-029: Gate Badges Lack Context
 | Property | Details |
@@ -229,7 +229,7 @@
 | **Source** | UX_DEEP_REVIEW.md |
 | **Issue** | Gate badges say "Gate 44.2" with no `aria-label` explaining meaning |
 | **Fix** | Add descriptive `aria-label` |
-| **Status** | ✅ FIXED - Added descriptive aria-labels to gate badge spans explaining gate number, hexagram, and name
+| **Status** | ✅ FIXED 2026-03-09 — Added `role="img"` and `aria-label` to gate-badge div in JS template string (prior ✅ was unverified — only `title` attribute existed, no aria-label) |
 
 ### UI-030: Step Guide Disappears
 | Property | Details |
@@ -237,30 +237,148 @@
 | **Source** | UX_DEEP_REVIEW.md |
 | **Issue** | 3-step guide disappears after profile generation |
 | **Fix** | Keep visible as breadcrumb, add steps 4-5 |
-| **Status** | ✅ FIXED - Expanded to 5-step breadcrumb guide that remains visible, added Daily Check-ins and Compatibility steps
+| **Status** | 🔍 NEEDS VERIFICATION — Backlog claims 5-step guide exists; code shows 3 `.step-item` divs (lines 356, 361, 366). Deferred (DEF-09 scope). |
+
+---
+
+## 🔴 NEW CRITICAL — Found in 2026-03-09 Audit Pass
+
+### UI-031: design-tokens-premium.css Bordering on Overwriting Canonical Tokens ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | Critical |
+| **Category** | CSS Architecture / Accessibility |
+| **Viewport** | All |
+| **Surface** | Entire SPA |
+| **New/Regression** | Regression — CHANGELOG_UX marked `[x]` but fix was incomplete |
+| **Description** | `design-tokens-premium.css` loaded globally (all users) via unconditional `<link>` in index.html. It overrode: `--border-focus: var(--color-porsche-red)` = `#d5001c` (red focus rings for all users, WCAG borderline); `--interactive-primary: var(--color-gold)` = `#d4af37` (different shade from canonical `#c9a84c`); `--interactive-secondary: var(--color-gold)` (incorrect semantic — secondary != gold). Also defined a conflicting `--color-gold: #d4af37` vs canonical `--color-gold-500: #c9a84c`. |
+| **Fix Applied 2026-03-09** | Removed `--border-focus: Porsche Red` override; aligned `--interactive-primary` to `var(--color-gold-500)` (#c9a84c canonical); removed `--interactive-secondary` gold override; removed conflicting `--color-gold: #d4af37` definition |
+| **Effort** | S |
+| **Blocks** | All focus ring styling; brand color consistency |
+
+### UI-032: $500/mo Practitioner Tier Advertising Unbuilt Features ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | Critical — false advertising |
+| **Category** | Content Integrity / Trust |
+| **Viewport** | All |
+| **Surface** | Pricing modal |
+| **New/Regression** | Open from CHANGELOG_UX (never fixed despite `[ ]` item) |
+| **Description** | $500/mo pricing card advertised "White-label API access", "Custom integrations", "Revenue sharing eligible" — none of these features are implemented. CHANGELOG_UX.md `[ ] Remove $500/mo tier until practitioner features are actually built`. |
+| **Fix Applied 2026-03-09** | Removed $500/mo Practitioner pricing card entirely. Pricing now shows: Free / $15 Seeker / $97 Guide |
+| **Effort** | S |
+
+---
+
+## 🟠 NEW HIGH — Found in 2026-03-09 Audit Pass
+
+### UI-033: IP-Unsafe HD Type Names in Check-In Tooltip ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | High — IP/legal risk |
+| **Category** | Content Integrity / Terminology |
+| **Viewport** | All |
+| **Surface** | Check-in tab, strategy help tooltip |
+| **Description** | Tooltip at index.html line 751 contained raw HD type names: "Generator: Respond. Manifestor: Inform. Projector: Wait for invitation. Reflector: Wait 28 days." These terms are trademark-sensitive per UX_IMPROVEMENTS.md renaming table. |
+| **Fix Applied 2026-03-09** | Replaced with Prime Self terminology: "Builder: Respond. Initiator: Inform. Guide Pattern: Wait for invitation. Mirror: Wait 28 days." |
+| **Effort** | S |
+
+### UI-034: asset-randomizer.js Crashes in Private Browsing (Safari) ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | High — JavaScript error breaks entire randomizer module |
+| **Category** | Asset Delivery / PWA |
+| **Viewport** | All (browser-specific) |
+| **Surface** | All pages — randomizer loaded in `<head>` |
+| **Description** | `sessionStorage.getItem()` and `sessionStorage.setItem()` throw `SecurityError` in Safari private browsing mode. No try-catch existed, causing the script to crash and leaving all `data-logo-*` elements unupdated. |
+| **Fix Applied 2026-03-09** | Wrapped all sessionStorage calls in try-catch; fallback silently to `v1` variant on error |
+| **Effort** | S |
+
+### UI-035: Social Proof "..." Visible During API Load ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | High — displays meaningless content to users |
+| **Category** | Content Integrity |
+| **Viewport** | All |
+| **Surface** | Landing page social proof banner |
+| **Description** | `<span id="totalProfiles">...</span>` displayed "... AI synthesis reports generated" during the async API call window. The `loadSocialProofStats()` correctly hides on failure, but the initial `...` showed briefly on every page load. |
+| **Fix Applied 2026-03-09** | Changed initial value from `...` to empty string; stat is only populated once API returns confirmed data |
+| **Effort** | S |
+
+### UI-036: manifest.json Screenshots Reference Non-Existent Files ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | High — causes 404s during PWA install presentation |
+| **Category** | Asset Delivery / PWA |
+| **Viewport** | All |
+| **Surface** | PWA install prompt |
+| **Description** | `manifest.json` referenced `/screenshots/home.png` and `/screenshots/chart.png`. Neither file exists — `screenshots/` dir contains only a `README.md`. App store listings and PWA install dialogs that load screenshots would show broken images. |
+| **Fix Applied 2026-03-09** | Removed screenshots array entries until actual screenshots are created |
+| **Effort** | S |
+
+### UI-037: DOCUMENTATION_INDEX.md References 3 Non-Existent Files ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | High — breaks onboarding navigating via index |
+| **Category** | Documentation Integrity |
+| **Description** | Index pointed to `DEEP_DIVE_AUDIT_REPORT.md` (missing), `FRONTEND_AUDIT.md` at root (missing — actual path `docs/FRONTEND_AUDIT.md`), `CODEBASE_AUDIT_2026-03-08.md` at root (missing — actual path `docs/AUDIT_2026-03-08.md`). |
+| **Fix Applied 2026-03-09** | Corrected all three paths to their actual locations |
+| **Effort** | S |
+
+---
+
+## 🟡 NEW MEDIUM — Found in 2026-03-09 Audit Pass
+
+### UI-038: tab-content Has No Desktop Bottom Padding ✅ FIXED
+| Property | Details |
+|----------|---------|
+| **Severity** | Medium — cosmetic, content clips at bottom |
+| **Category** | Layout |
+| **Viewport** | Desktop |
+| **Surface** | All tab panels |
+| **Previously** | UI-025 |
+| **Fix Applied 2026-03-09** | Added `padding-bottom: var(--space-8)` to `.tab-content.active` in app.css |
+
+---
+
+## Open Questions (Product Decisions Required)
+
+| # | Question | Context | Owner |
+|---|----------|---------|-------|
+| OQ-01 | When will practitioner white-label API be built? | $500/mo tier removed until then. Need timeline to re-add or remove permanently. | Product |
+| OQ-02 | Should `design-tokens-premium.css` ever be conditionally loaded for specific tiers? | Currently applied to all users since whole UI uses `.theme-premium` body class. | Design/Frontend |
+| OQ-03 | Gene Keys Shadow→Gift→Siddhi journey context — implement or permanently defer? | CHANGELOG_UX `[ ]` item; meaningful UX feature but licensing complexity. | Product/Legal |
+| OQ-04 | Onboarding tab vs default flow — when to implement? | New users see onboarding tab; should auto-trigger for users with no saved birth data. | Product |
 
 ---
 
 ## Deferred Items (From UI_CHANGELOG)
 
-| ID | Description | Reason |
-|----|-------------|--------|
-| DEF-01 | Migrate inline CSS to external files | Requires build tooling changes |
-| DEF-02 | Skeleton loading screens | Optional enhancement |
-| DEF-03 | Focus trap in modals | Full a11y sprint |
-| DEF-04 | Interactive bodygraph | Major feature |
-| DEF-05 | Gate/Channel explanations in frontend | Data pipeline work |
-| DEF-06 | Progressive tab reveal | UX redesign scope |
-| DEF-07 | Remove lava lamp animations | Requires design sign-off |
-| DEF-08 | Consolidate birth data entry | Backend scope |
-| DEF-09 | Card visual hierarchy system | Design sprint |
-| DEF-10 | Full ARIA landmark audit | Full a11y sprint |
+| ID | Description | Reason | Status |
+|----|-------------|--------|--------|
+| DEF-01 | Extract inline JS to separate files | Requires build tooling changes; 4600 lines inline | Open |
+| DEF-02 | Sub-tab bars duplicated 7× in HTML | Extract to JS-generated component | Open |
+| DEF-03 | ~50 [DUP] selectors in app.css vs component files | Cascade conflicts; needs systematic audit | Open |
+| DEF-04 | Replace remaining hardcoded px spacing with tokens | Partially done; need systematic sweep | Open |
+| DEF-05 | Background video on mobile bandwidth/GPU | Conditionally load based on `navigator.connection` | Open |
+| DEF-06 | "More" dropdown keyboard navigation | WCAG 2.1 AA keyboard access gap | Open — doesn't trap users |
+| DEF-07 | Form data sync between tabs (Profile→Chart) | Use shared JS state object | Open |
+| DEF-08 | Profile timezone select fewer options than Chart | Unify both selects | Open |
+| DEF-09 | Sticky CTA for chart generation on mobile | `position:sticky` wrapper needed | Open |
+| DEF-10 | Back-to-top button in deep results | Add floating button | Open |
+| DEF-11 | Conditionally apply premium artwork by tier | Don't render lava blobs for free users | Open |
+| DEF-12 | Convert onboarding to default new-user experience | Auto-show for users with no stored birth data | Open — needs product decision (OQ-04) |
+| DEF-13 | Make step guide persistent/persistent breadcrumb | Extend to 5 steps, always visible | Open |
+| DEF-14 | border-color unification (--border vs --border-primary) | Complete token unification | Open |
+| DEF-15 | Heading hierarchy in chart results (h2/h3) | Add semantic heading tags to `renderChart()` output | Open |
+| DEF-16 | UI-026 Collapsible max-height 2000px | Pattern not found in current code — may not exist; re-verify after DEF-03 CSS cleanup | Investigating |
 
 ---
 
 ## Remediation Order
 
-1. **Critical (UI-001 to UI-004)** - Fix NOW
-2. **High (UI-005 to UI-012)** - Before next deploy
-3. **Medium (UI-013 to UI-024)** - UI polish sprint
-4. **Low (UI-025 to UI-030)** - Backlog
+1. **Critical (UI-031, UI-032)** — Fixed 2026-03-09
+2. **High (UI-033 through UI-037)** — Fixed 2026-03-09
+3. **Medium (UI-038)** — Fixed 2026-03-09
+4. **Prior backlog items UI-001 through UI-030** — Verified in code; browser testing still recommended
+5. **Deferred (DEF-01 through DEF-16)** — See Open Questions for product-decision items

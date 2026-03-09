@@ -1,8 +1,25 @@
 # Prime Self Design System Documentation
 
 **Version**: 3.0  
-**Date**: March 4, 2026  
+**Date**: March 4, 2026 (Updated March 9, 2026)  
 **Status**: Active
+
+> ⚠️ **2026-03-09 Correction — Actual vs Aspirational File Structure**  
+> The file structure documented in this file under "Architecture" describes the **target** component architecture. The **actual current** CSS structure is:
+> ```
+> frontend/css/
+>   design-tokens.css          # Canonical source of truth: colors, spacing, z-index, typography  
+>   design-tokens-premium.css  # Premium theme overrides (loaded globally, not conditionally)  
+>   base.css                   # Reset + global typography  
+>   app.css                    # Extracted inline styles; ~50 [DUP] selectors remain (DEF-03)
+> ```
+> There is no `css/components/` directory. All components are defined in `app.css` or inline in `index.html`.
+>
+> **Token canonical resolution confirmed 2026-03-09:**  
+> - Gold: `--color-gold-500: #c9a84c` is the single source of truth (design-tokens.css)  
+> - `design-tokens-premium.css` now correctly uses `var(--color-gold-500)` not `#d4af37`  
+> - Focus rings: `--border-focus` inherits from design-tokens.css gold (premium.css override removed)  
+> - Z-index stack correct: dropdown(100) → mobile-nav(150) → backdrop(200) → modal(210) → tooltip(300) → notification(400)
 
 ## 📋 Table of Contents
 
