@@ -313,7 +313,7 @@
     max-width: 100vw;
   }
   
-  * {
+  img, video, canvas, svg, table, pre, .card, .transit-row {
     max-width: 100%;
   }
   
