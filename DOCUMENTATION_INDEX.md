@@ -92,20 +92,40 @@
 **Latest Audits (2026-03-09)**
 | Document | Severity | Key Findings |
 |----------|----------|--------------|
-| audits/UX_AUDIT_2026-03-09.md | Critical | UX overhaul needed before marketing |
-| audits/CODE_QUALITY_2026-03-08.md | High | Architecture and pattern consistency |
-| audits/SECURITY_AUDIT_2026-03-09.md | High | CSP violations, API rate limiting |
+## 🔍 Audits & Analysis 
 
-**Ongoing Audit Series**
+**[See audits/README.md](audits/README.md) for complete audit directory**
+
+### Latest Comprehensive Audits (2026-03-08)
 | Document | Focus Area | Status |
 |----------|-----------|--------|
-| audits/FRONTEND_AUDIT_2026-03-04.md | Frontend performance | Complete |
-| audits/DATABASE_AUDIT_2026-03-04.md | Schema & queries | Complete |
-| audits/WORKERS_AUDIT.md | Cloud worker functions | Complete |
+| [audits/AUDIT_2026-03-08.md](audits/AUDIT_2026-03-08.md) | Full codebase (engine, workers, DB, frontend) | Complete |
+| [audits/CODE_QUALITY_AUDIT_2026-03-08.md](audits/CODE_QUALITY_AUDIT_2026-03-08.md) | Architecture and pattern consistency | Complete |
+
+### Frontend & UX Audits  
+| Document | Focus Area | Status |
+|----------|-----------|--------|
+| [audits/FRONTEND_AUDIT.md](audits/FRONTEND_AUDIT.md) | Frontend performance, CSS, JS, security | Complete |
+| [audits/FRONTEND_COMPREHENSIVE_AUDIT.md](audits/FRONTEND_COMPREHENSIVE_AUDIT.md) | UI validation, form flow, state | Complete |
+| [audits/FRONTEND_DEFECT_AUDIT.md](audits/FRONTEND_DEFECT_AUDIT.md) | Defects and severity levels | Complete |
+| [audits/ACCESSIBILITY_AUDIT.md](audits/ACCESSIBILITY_AUDIT.md) | WCAG compliance and a11y issues | Complete |
+
+### Backend & Database Audits
+| Document | Focus Area | Status |
+|----------|-----------|--------|
+| [audits/WORKERS_AUDIT_REPORT.md](audits/WORKERS_AUDIT_REPORT.md) | Cloudflare Workers, handlers, routes | Complete |
+| [audits/DB_CROSS_REFERENCE_AUDIT.md](audits/DB_CROSS_REFERENCE_AUDIT.md) | Database schema and cross-references | Complete |
+| [audits/RAW_SQL_AUDIT.md](audits/RAW_SQL_AUDIT.md) | SQL query analysis | Complete |
+
+### Additional Analysis  
+| Document | Focus Area | Status |
+|----------|-----------|--------|
+| [audits/LANGUAGE_AUDIT.md](audits/LANGUAGE_AUDIT.md) | User-facing language and i18n | Complete |
+| [audits/AUDIT_REMEDIATION_LOG.md](audits/AUDIT_REMEDIATION_LOG.md) | Fix tracking and remediation history | Ongoing |
+| [audits/DEFECT_AUDIT_WORKERS_SRC.md](audits/DEFECT_AUDIT_WORKERS_SRC.md) | Workers-specific defect analysis | Complete |
 
 **Archived Audits**
-- audits/archive/AUDIT_2025-01.md
-- audits/archive/DEFECT_AUDIT_WORKERS.md
+- [audits/archive/AUDIT_2025-01.md](audits/archive/AUDIT_2025-01.md) — Deep-dive re-audit (historical reference)
 
 ### 🔄 Process & Standards (Development Methodology)
 

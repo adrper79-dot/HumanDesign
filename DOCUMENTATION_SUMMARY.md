@@ -473,7 +473,7 @@ Migrations 003–018 define: `subscriptions`, `payment_events`, `usage_records`,
 - `BUILD_BIBLE.md` — Layer-by-layer implementation reference
 - `BUILD_LOG.md` — Complete implementation history (7,424 lines)
 - `docs/LESSONS_LEARNED.md` — Debugging patterns, verification methodology, common gotchas
-- `WORKERS_AUDIT_REPORT.md` — Comprehensive worker/handler audit with file-by-file status
+- **See [audits/](audits/) for complete audit reports** — Worker audits, code quality analysis, defect reports
 
 ### API Design (4 docs)
 - `docs/API_SPEC.md` — Formal API specification (with known drift)
@@ -482,8 +482,8 @@ Migrations 003–018 define: `subscriptions`, `payment_events`, `usage_records`,
 - `docs/API_MARKETPLACE.md` — API marketplace listing guide (aspirational)
 
 ### Database (2 docs)
-- `RAW_SQL_AUDIT.md` — Audit of centralized vs inline SQL (52 QUERIES keys, ~150 raw SQL statements)
-- `docs/AUDIT_2025-01.md` — Deep-dive re-audit including DB schema phase (SQLite→PostgreSQL rewrites)
+- **See [audits/DB_CROSS_REFERENCE_AUDIT.md](audits/DB_CROSS_REFERENCE_AUDIT.md)** — Schema cross-reference audit
+- **See [audits/RAW_SQL_AUDIT.md](audits/RAW_SQL_AUDIT.md)** — SQL query analysis and optimization
 
 ### Frontend (7 docs)
 - `frontend/DESIGN_SYSTEM.md` — Component library documentation (tokens, components, accessibility)
