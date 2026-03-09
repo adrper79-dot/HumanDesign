@@ -567,4 +567,1062 @@ import knowledgesCanonical from '../../src/knowledgebase/prime_self/knowledges_c
 
 ---
 
-*This document tracks the gap between "data exists" and "feature is live," and now includes user-facing ideas from the 2026-03-09 dash board UX session. The canonical alignment work established the philosophical foundation — these items complete the user-facing experience.*
+## 🎨 UX DEEP REVIEW IDEAS (Not in Sprint 18)
+
+### KANBAN-016 | Hero Bodygraph — Make Chart the Product
+**Priority:** MEDIUM  
+**Type:** UX Philosophy Shift  
+**Status:** Design concept only  
+**Source:** UX_DEEP_REVIEW.md Steve Jobs Principle #3
+
+**What was recommended:**
+> "Make bodygraph visualization the HERO of the page — giant, interactive, beautiful. The data serves the visual, not the other way around. Think Apple product pages: product image dominates, specs are secondary."
+
+**Current state:**
+- Chart renders as data table with small bodygraph SVG on side
+- Desktop: ~400px bodygraph, Mobile: ~300px
+- Data dump emphasized over visual
+
+**Proposed redesign:**
+- Increase bodygraph to 800px on desktop, 100% width mobile
+- Show giant bodygraph FIRST, data details below fold
+- "Your Pattern: Generator" appears as overlay on chart, not separate section
+
+**Files to modify:**
+- `frontend/js/bodygraph.js` — Increase render size
+- `frontend/index.html` — Restructure chart results layout (~line 2100)
+- `frontend/css/app.css` — New `.bodygraph-hero` class
+
+**Related:** BL-UX-M1 (Interactive bodygraph) should implement this philosophy
+
+---
+
+### KANBAN-017 | Click-to-Learn Interactive Bodygraph
+**Priority:** HIGH  
+**Type:** Feature Enhancement  
+**Status:** Aligns with BL-UX-M1 but more specific  
+**Source:** UX_DEEP_REVIEW.md Part 3.2, Part 7, r/humandesign sentiment
+
+**What users want:**
+> "r/humandesign says: 'My chart but interactive — Click on a center/gate to learn about it'"
+
+**Proposed interaction:**
+1. **Hover:** Center or gate glows subtly
+2. **Click center:** Modal shows what the center governs + defined vs open meaning
+3. **Click gate:** Shows gate name, I Ching hexagram, meaning, your line
+4. **Click channel:** Shows both gates + circuitry type + flow
+
+**Example modal:**
+```
+┌────────────────────────────────────┐
+│ 🟢 Sacral Center (DEFINED)         │
+├────────────────────────────────────┤
+│ The Life Force Engine              │
+│                                    │
+│ WHAT IT IS: Sustainable energy for │
+│ work you love. Your gut response.  │
+│                                    │
+│ WHEN DEFINED: You have consistent  │
+│ energy. Wait for things to respond │
+│ to. Your "uh-huh/uh-uh" is truth. │
+│                                    │
+│ YOUR GATES: 5, 14, 29, 59          │
+│ [Click to see each gate]           │
+└────────────────────────────────────┘
+```
+
+**Data source:**
+- `src/data/centers.json`
+- `src/data/gate_wheel.json`
+- `src/data/channels.json`
+
+**Files to create:**
+- `frontend/js/bodygraph-interactions.js`
+
+**Files to modify:**
+- `frontend/js/bodygraph.js` — Add event listeners to SVG elements
+- `frontend/index.html` — Add modal template
+- `frontend/css/components/modals.css` — Style info modals
+
+**Impact:** Transforms chart from "confusing diagram" to "interactive learning tool"
+
+---
+
+### KANBAN-018 | Animated Transit Connections (Visual Lines)
+**Priority:** MEDIUM  
+**Type:** Visual Enhancement  
+**Status:** Concept only  
+**Source:** UX_DEEP_REVIEW.md Part 8, Principle 5
+
+**What was recommended:**
+> "Steve Jobs would: Transit connections drawn as visible lines between your chart and the sky."
+
+**Current state:**
+- Transits show as badge list: "☉ Sun → Gate 44"
+- No visualization of HOW transits touch natal chart
+
+**Proposed visualization:**
+```
+  YOUR NATAL CHART       CURRENT TRANSITS
+ ┌──────────────┐       ┌──────────────┐
+ │              │       │              │
+ │   Gate 44 ●──┼──────→☉ Sun         │
+ │   (natal)    │ gold  │ (today)      │
+ │              │       │              │
+ │   Gate 48 ●──┼──────→♃ Jupiter     │
+ │              │purple │              │
+ └──────────────┘       └──────────────┘
+
+Animation: Lines draw when transit hits natal gate
+```
+
+**Technical approach:**
+1. Render two mini bodygraphs side-by-side (natal + transit)
+2. When transit activates natal gate, draw SVG `<line>` connecting them
+3. Animate with `stroke-dasharray` (draw effect)
+4. Color code by planet (Sun=gold, Moon=silver, Mars=red)
+
+**Files to create:**
+- `frontend/js/transit-connections.js`
+- `frontend/css/transit-lines.css`
+
+**Files to modify:**
+- `frontend/index.html` — Transits tab (~line 2600) add dual chart view
+
+**Impact:** Makes transits FEEL real — you see sky touching YOUR chart
+
+---
+
+### KANBAN-019 | Real Social Proof (Database-Driven Stats)
+**Priority:** HIGH  
+**Type:** Trust & Authenticity  
+**Status:** Currently using fake hardcoded numbers  
+**Source:** UX_DEEP_REVIEW.md Part 2.2, Reddit sentiment
+
+**Current implementation (index.html ~line 862):**
+```javascript
+// ALWAYS shows fake numbers:
+document.getElementById('weeklyUsers').textContent = '2,847';
+document.getElementById('totalProfiles').textContent = '18,392';
+```
+
+**Reddit says:**
+> "Fake testimonials are the #1 trust-killer"
+
+**Fix approach:**
+```javascript
+// Fetch real stats from database
+const stats = await fetch('/api/stats/public').then(r => r.json());
+document.getElementById('weeklyUsers').textContent = stats.activeUsersLast7Days;
+document.getElementById('totalProfiles').textContent = stats.profilesGenerated;
+```
+
+**Backend work needed:**
+- Add `/api/stats/public` endpoint
+- Query Neon: `SELECT COUNT(DISTINCT user_id) WHERE created_at > NOW() - 7 days`
+
+**Alternative if numbers are small:**
+- Remove social proof banner entirely (Steve Jobs: "Remove until it breaks")
+- OR use qualitative: "Join others exploring their blueprint" (no number)
+
+**Impact:** Builds trust, shows real product traction
+
+**Related:** BL-UX-M3 (Real social proof) in Sprint 18
+
+---
+
+### KANBAN-020 | $7-9/mo Casual Tier Pricing
+**Priority:** MEDIUM  
+**Type:** Monetization Strategy  
+**Status:** Missing pricing tier  
+**Source:** UX_DEEP_REVIEW.md Part 2.3, Reddit pricing research
+
+**Current pricing:**
+- Free → $15 (Seeker) → $97 (Guide) → $500 (Oracle)
+
+**Reddit consensus:**
+> "The jump from free to $97 feels like a scam. Every r/astrology thread says: '$5-15/mo is the sweet spot.'"
+
+**Competitor pricing:**
+- Co-Star: Free + $3/mo
+- Chani: Free + $12/mo
+- The Pattern: Free + $5/mo
+- TimePassages: $60/year (~$5/mo)
+
+**Proposed new structure:**
+```
+Free:     2 charts/month, transits, basic synthesis
+Curious:  $7/mo — Unlimited charts, full synthesis, alerts
+Seeker:   $15/mo — Above + check-ins, diary, composite
+Guide:    $49/mo — Practitioner roster (when impl.)
+Oracle:   $97/mo — API access 500 calls/mo (when impl.)
+```
+
+**Files to modify:**
+- `frontend/index.html` — Pricing modal (~line 210)
+- `workers/src/handlers/billing.js` — Add Stripe price ID
+- `workers/src/middleware/tier.js` — Add tier logic
+
+**Also required:** Remove "White-label API" and other unimplemented features from $500 tier (false advertising)
+
+**Related:** BL-UX-M4 (Simplify pricing) in Sprint 18
+
+---
+
+### KANBAN-021 | SMS Digest Opt-In UI (Frontend Missing)
+**Priority:** MEDIUM  
+**Type:** Feature Gap (Backend exists, no UI)  
+**Status:** Backend implemented in `cron.js`, no frontend  
+
+**Backend verified (workers/src/cron.js ~line 45):**
+```javascript
+async function sendSMSDigests(env) {
+  const users = await db.query(`
+    SELECT phone FROM users WHERE sms_enabled = true
+  `);
+  // Sends daily transit digest via Telnyx
+}
+```
+
+**What's missing:**
+- ❌ No UI toggle for `sms_enabled`
+- ❌ No form to enter phone number
+- ❌ No SMS verification flow
+- ❌ No visibility in Settings or any tab
+
+**Where it should appear:**
+Settings/Profile section:
+```
+┌───────────────────────────────────┐
+│ 📱 Daily SMS Digest               │
+├───────────────────────────────────┤
+│ Get morning transit alerts        │
+│                                   │
+│ Phone: +1 [___] [___]-[____]      │
+│        [Send verification code]   │
+│                                   │
+│ Sample message:                   │
+│ "Good morning! Today's transits:  │
+│  ☉ Sun in your Gate 44 (Alert)   │
+│  → Watch for pattern flashes"     │
+│                                   │
+│ [ ] Enable daily SMS              │
+└───────────────────────────────────┘
+```
+
+**Files to modify:**
+- `frontend/index.html` — Add SMS settings section
+- `workers/src/handlers/sms.js` — Add subscribe/verify endpoints (may exist)
+
+**Impact:** Surface existing feature, enable viral potential
+
+---
+
+### KANBAN-022 | Aspect Orbs Display in Astrology
+**Priority:** LOW  
+**Type:** Feature Detail  
+**Status:** Missing detail  
+**Source:** UX_DEEP_REVIEW.md Part 7 (r/astrology wants)
+
+**Current display:**
+```
+Sun □ Saturn
+```
+
+**What astrology users expect:**
+```
+Sun □ Saturn (4°23' orb — applying)
+"Your Sun square Saturn means obstacles build resilience.
+This aspect is EXACT on March 15 (peak intensity)."
+```
+
+**Missing data to show:**
+- Orb degree (how far from exact)
+- Applying vs separating (getting tighter or weaker)
+- Date of exactness
+- Aspect strength indicator (tight orbs = stronger)
+
+**Files to modify:**
+- `frontend/index.html` — Astrology aspects section
+- May need backend to calculate orbs if not already done
+
+**Related:** BL-UX-M9 (Aspect explanations) in Sprint 18 — this adds ORBS to that
+
+---
+
+### KANBAN-023 | Data Table Semantic HTML
+**Priority:** LOW  
+**Type:** Accessibility Fix  
+**Status:** Structural improvement  
+**Source:** UX_DEEP_REVIEW.md Part 5.2
+
+**Problem:**
+Chart data rows use `<div>` soup:
+```html
+<div class="data-row">
+  <div class="data-label">Pattern:</div>
+  <div class="data-value">Generator</div>
+</div>
+```
+
+Screen readers can't navigate this as a table.
+
+**Fix:**
+```html
+<table class="data-table" role="table">
+  <tbody>
+    <tr>
+      <th scope="row">Pattern:</th>
+      <td>Generator</td>
+    </tr>
+    <tr>
+      <th scope="row">Strategy:</th>
+      <td>To Respond</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+**Files to modify:**
+- `frontend/index.html` — All data row rendering functions
+- `frontend/css/app.css` — Style tables to look like current design
+
+**Impact:** Screen reader users can navigate chart data properly
+
+**Related:** BL-UX-H13 (Screen reader gaps) in Sprint 18
+
+---
+
+### KANBAN-024 | Focus Trap in Auth Modal
+**Priority:** MEDIUM  
+**Type:** Accessibility Fix  
+**Status:** Keyboard navigation broken  
+**Source:** UX_DEEP_REVIEW.md Part 5.1
+
+**Problem:**
+When auth modal is open, keyboard users can tab behind it to hidden elements.
+
+**Fix:**
+1. Capture first and last focusable elements in modal
+2. On Tab from last element → focus first element
+3. On Shift+Tab from first → focus last element
+4. Trap focus until modal closes
+
+**Standard implementation:**
+```javascript
+function trapFocus(modal) {
+  const focusable = modal.querySelectorAll('button, input, a[href]');
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+}
+```
+
+**Files to modify:**
+- `frontend/index.html` — Auth overlay functions (~line 4200)
+
+**Related:** BL-UX-H12 (Keyboard navigation) in Sprint 18
+
+---
+
+### KANBAN-025 | Composite Connection Type Labels
+**Priority:** LOW  
+**Type:** UX Enhancement  
+**Status:** Missing labels  
+**Source:** UX_DEEP_REVIEW.md Part 3.1
+
+**Current composite output:**
+Shows channel activations but doesn't label the TYPE of connection:
+- Electromagnetic (one person has gate 1, other has gate 8 → creates channel)
+- Companionship (both have same gates)
+- Compromise (both have same channel but different lines)
+- Dominance (one person's definition overrides/blocks other)
+
+**Proposed enhancement:**
+```
+Channel 1-8 (Throat ↔ G Center)
+⚡ ELECTROMAGNETIC CONNECTION
+You bring Gate 1 (Creative self-expression)
+They bring Gate 8 (Contribution through example)
+Together you form: Channel of Inspiration
+
+Chemistry: You complete each other's circuit.
+This creates magnetic attraction — you feel
+"finished" in each other's presence.
+```
+
+**Files to modify:**
+- `frontend/index.html` — Composite rendering (~line 2800)
+- May need backend logic to classify connection types
+
+**Impact:** Helps users understand WHY they're attracted to certain people
+
+---
+
+### KANBAN-026 | Embed Widget Deployment & Promotion
+**Priority:** MEDIUM  
+**Type:** Distribution Strategy  
+**Status:** Built but not promoted  
+
+**What exists:**
+- `frontend/embed.html` — Standalone calculator widget
+- `frontend/embed.js` — Widget JavaScript
+- Documentation: `EMBED_WIDGET_GUIDE.md`
+
+**What's missing:**
+- ❌ Not mentioned in docs or marketing
+- ❌ No embed code generator in app
+- ❌ No "Add to your website" CTA
+- ❌ Not tracked in analytics
+
+**Opportunity:**
+Practitioners, bloggers, and HD educators can embed calculator on their sites → drives traffic back to Prime Self.
+
+**Proposed promotion:**
+1. Add "Embed on your site" button in Share menu
+2. Generate iframe code: `<iframe src="https://primeself.app/embed" width="400" height="600"></iframe>`
+3. Track embed installations (referer analytics)
+4. Add "Powered by Prime Self" footer to embeds (backlink)
+
+**Files to modify:**
+- `frontend/index.html` — Add embed code generator
+- `DOCUMENTATION_INDEX.md` — Promote embed widget
+- Website/marketing materials
+
+**Impact:** Viral distribution channel, practitioner partnerships
+
+---
+
+## Priority Matrix (Updated)
+
+| ID | Item | Priority | Effort | Impact |
+|----|------|----------|--------|--------|
+| 017 | Click-to-Learn Bodygraph | HIGH | Medium | High — transforms chart into learning tool |
+| 019 | Real Social Proof | HIGH | Low | High — builds trust |
+| 021 | SMS Opt-In UI | MEDIUM | Low | Medium — surfaces existing feature |
+| 016 | Hero Bodygraph | MEDIUM | Medium | High — visual positioning |
+| 018 | Transit Connections | MEDIUM | Medium | Medium | — makes transits visual |
+| 020 | $7-9 Casual Tier | MEDIUM | Low | High — monetization gap |
+| 024 | Focus Trap Modal | MEDIUM | Low | Medium — accessibility |
+| 026 | Embed Widget Promo | MEDIUM | Low | Medium — distribution |
+| 022 | Aspect Orbs | LOW | Low | Low — nice detail |
+| 023 | Table Semantics | LOW | Medium | Low — accessibility polish |
+| 025 | Composite Labels | LOW | Low | Low — education enhancement |
+
+**Added 2026-03-09:** Items 016-026 from UX_DEEP_REVIEW.md audit — ideas not captured in Sprint 18
+
+---
+
+### KANBAN-027 | Interactive Bodygraph Visualization
+**Priority:** HIGH  
+**Type:** Feature Enhancement  
+**Status:** NOT STARTED — Requires SVG integration  
+
+**What was planned:**
+During UX deep review, the bodygraph was identified as the "product hero" but currently shows as static data. Users want to click centers and gates to learn about them.
+
+**What's missing:**
+- ❌ **Clickable centers:** Hover/focus states with tooltips showing what each center governs
+- ❌ **Gate interactions:** Click any gate badge to see its meaning and how it connects to user's life
+- ❌ **Channel explanations:** Click channel labels to understand the energy flow between centers
+- ❌ **Visual feedback:** Defined centers pulse/glow, open centers show different state
+- ❌ **Progressive disclosure:** Start with overview, drill down to specific gates/channels
+
+**Why it matters:**
+- Users don't understand HD terminology without context
+- Interactive learning increases engagement by 40% (per UX research)
+- Makes the complex system accessible to beginners
+- Differentiates from static chart competitors
+
+**Implementation approach:**
+```javascript
+// Add to renderChart() function
+function makeBodygraphInteractive(svgElement) {
+  // Center click handlers
+  centers.forEach(center => {
+    const element = svgElement.querySelector(`#${center.id}`);
+    element.addEventListener('click', () => showCenterModal(center));
+  });
+  
+  // Gate click handlers  
+  gates.forEach(gate => {
+    const element = svgElement.querySelector(`#gate-${gate.number}`);
+    element.addEventListener('click', () => showGateExplanation(gate));
+  });
+}
+```
+
+---
+
+### KANBAN-028 | Enhanced Transit Personalization
+**Priority:** MEDIUM  
+**Type:** UX Enhancement  
+**Status:** NOT STARTED — Data exists but not contextualized  
+
+**What was planned:**
+Transits show generic planet themes but don't explain what the transit means for the specific user's activated gates.
+
+**What's missing:**
+- ❌ **Gate-specific context:** When Sun hits Gate 44, explain what Gate 44 means to the user
+- ❌ **Personal impact:** "This transit is activating YOUR Gate 44 (Coming to Meet) — you may notice increased alertness to opportunities"
+- ❌ **Duration clarity:** Show when transit peaks and fades, not just "changes weekly"
+- ❌ **Actionable guidance:** "During this transit, focus on pattern recognition in your work/life"
+
+**Why it matters:**
+- Generic transit info doesn't help users understand personal relevance
+- Users want to know "what should I DO during this transit?"
+- Personalization increases retention (per Reddit UX research)
+- Makes complex astrological data actionable
+
+**Mockup:**
+```
+☉ Sun → your Gate 44 (The Coming to Meet)
+"The collective spotlight activates YOUR pattern recognition gate. 
+You may notice unusual ability to spot opportunities this week.
+
+⏱ Peaks: March 15-18, fades by March 22
+💡 Focus: Trust those 'aha' moments about timing and opportunities"
+```
+
+---
+
+### KANBAN-029 | Center & Channel Meaning Explanations
+**Priority:** MEDIUM  
+**Type:** Educational Enhancement  
+**Status:** NOT STARTED — Core data exists in src/data/  
+
+**What was planned:**
+Centers and channels show as pills/codes but users don't understand what they govern or mean.
+
+**What's missing:**
+- ❌ **Center explanations:** Each center needs 1-sentence description of what energy it governs
+- ❌ **Defined vs Open:** Explain the difference (defined = consistent energy, open = amplifies others)
+- ❌ **Channel meanings:** What does Channel 20-34 (Charisma) actually mean in daily life?
+- ❌ **Gate connections:** How do the two gates in a channel interact?
+
+**Why it matters:**
+- Users see "Head Center" but don't know it governs inspiration and mental pressure
+- Without context, the chart feels like meaningless jargon
+- Educational content prevents user drop-off at the "what does this mean?" stage
+
+**Example explanations:**
+- **Head Center (Defined):** You have consistent mental inspiration and pressure — ideas come reliably
+- **Head Center (Open):** You amplify others' mental energy — can feel overwhelmed by group thinking
+- **Channel 20-34 (Charisma):** Makes busy-ness look effortless — you get energy from starting projects
+
+---
+
+### KANBAN-030 | Gene Keys Shadow→Gift→Siddhi Journey
+**Priority:** MEDIUM  
+**Type:** Educational Enhancement  
+**Status:** NOT STARTED — Shows static labels only  
+
+**What was planned:**
+Gene Keys show Shadow/Gift/Siddhi but don't explain the transformative journey between them.
+
+**What's missing:**
+- ❌ **Journey context:** Explain that Shadow→Gift→Siddhi is a developmental path
+- ❌ **Current phase:** Show where user is on their journey for each Key
+- ❌ **Practical guidance:** How to move from Shadow to Gift in daily life
+- ❌ **Integration with transits:** How planetary movements support this evolution
+
+**Why it matters:**
+- Users see "Shadow: Interference" but don't understand it's the starting point of growth
+- Without journey context, Gene Keys feel like judgment rather than roadmap
+- Transformational tools should show the path forward
+
+**Enhanced display:**
+```
+Gene Key 44: Coming to Meet
+
+🎭 Shadow Phase (Current): Interference
+"You begin by blocking flow — micromanaging, controlling outcomes"
+
+✨ Gift Phase (Next): Teamwork  
+"Through awareness, you develop collaborative synergy"
+
+👑 Siddhi Phase (Highest): Synarchy
+"Leadership through surrender, unity consciousness"
+```
+
+---
+
+### KANBAN-031 | Daily Practice Recommendations Engine
+**Priority:** MEDIUM  
+**Type:** Feature Enhancement  
+**Status:** NOT STARTED — Requires Forge + transit integration  
+
+**What was planned:**
+Six Arts, Six Sciences, Six Defenses exist as data but no personalized daily suggestions.
+
+**What's missing:**
+- ❌ **Forge-based practices:** Chronos Forge gets movement + science recommendations
+- ❌ **Transit-aligned:** Moon in Pisces suggests aromatherapy or visualization
+- ❌ **Personalized feed:** "Today's practices for your [Forge] during [transit]"
+- ❌ **Progress tracking:** Streak counter for consistent practice
+
+**Why it matters:**
+- Users want actionable guidance beyond just data
+- Daily practices create habit formation and retention
+- Personalization makes recommendations feel valuable
+- Differentiates from apps that just show charts
+
+**Mockup:**
+```
+Daily Practices for Chronos Forge
+During Moon in Pisces transit
+
+⭐ Movement: 15min walking meditation (grounding)
+🔬 Science: Read about historical cycles (Saturn reference)
+🛡️ Defense: Aromatherapy with frankincense (Pisces oil)
+
+Your 23-day consistency streak 🔥
+```
+
+---
+
+### KANBAN-032 | Skeleton Loading States
+**Priority:** LOW  
+**Type:** Performance / UX Enhancement  
+**Status:** NOT STARTED — Reduces perceived wait time  
+
+**What was planned:**
+API calls show generic spinner but modern UX uses skeleton screens that match content shape.
+
+**What's missing:**
+- ❌ **Chart skeleton:** Animated placeholders showing bodygraph outline + data cards
+- ❌ **Profile skeleton:** Text blocks and card shapes matching synthesis layout
+- ❌ **Transit skeleton:** Timeline structure with placeholder transit rows
+- ❌ **Composite skeleton:** Two chart placeholders with relationship insights shape
+
+**Why it matters:**
+- Reduces perceived wait time by 35% (per UX research)
+- Prevents layout shift (CLS) issues
+- Makes loading feel faster and more polished
+- Professional UX expectation in 2026
+
+**Implementation:**
+```css
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-chart { /* Matches bodygraph dimensions */ }
+.skeleton-card { /* Matches data card layout */ }
+```
+
+---
+
+### KANBAN-033 | Progressive Onboarding Experience
+**Priority:** HIGH  
+**Type:** UX Enhancement  
+**Status:** NOT STARTED — Currently linear 3-step modal  
+
+**What was planned:**
+Onboarding should adapt to user type and context rather than showing everyone the same 3 steps.
+
+**What's missing:**
+- ❌ **User type detection:** Different flows for returning users, mobile users, experienced users
+- ❌ **Context awareness:** Skip steps based on what user has already done
+- ❌ **Progressive disclosure:** Start simple, unlock complexity as user engages
+- ❌ **Branching logic:** "Have you heard of Human Design?" → different paths
+
+**Why it matters:**
+- Experienced users abandon linear onboarding (per UX research)
+- Mobile users need simpler flows (60% less content)
+- Personalization increases conversion by 15-20%
+- One-size-fits-all onboarding fails modern UX standards
+
+**Proposed flow:**
+```
+New user → 3-step welcome
+Returning user → Skip welcome, go to profile step  
+Mobile user → Compress to 2 steps
+Experienced user → Skip explanation, jump to advanced options
+```
+
+---
+
+### KANBAN-034 | Share-Ready Chart Images
+**Priority:** MEDIUM  
+**Type:** Social Feature  
+**Status:** NOT STARTED — Canvas generation stub exists  
+
+**What was planned:**
+Users want to share their charts on social media but current share is text-only.
+
+**What's missing:**
+- ❌ **Canvas generation:** Render bodygraph to PNG/JPG for sharing
+- ❌ **Social templates:** Instagram-ready layouts with user's key info
+- ❌ **Branding:** Include Prime Self logo and clean typography
+- ❌ **Privacy controls:** Option to anonymize or share specific elements
+
+**Why it matters:**
+- Social sharing drives viral growth
+- Visual charts are more engaging than text
+- Users want to show their "personality type" to friends
+- Missing feature compared to astrology apps
+
+**Implementation approach:**
+```javascript
+// Build on existing shareImage.js
+async function generateChartImage(chartData, style = 'instagram') {
+  const canvas = document.createElement('canvas');
+  // Render bodygraph SVG to canvas
+  // Add user info overlay
+  // Apply social media template
+  return canvas.toDataURL('image/png');
+}
+```
+
+---
+
+### KANBAN-035 | Transit Timeline Visualization
+**Priority:** MEDIUM  
+**Type:** Feature Enhancement  
+**Status:** NOT STARTED — Shows duration but not intensity curve  
+
+**What was planned:**
+Transits show "changes gate weekly" but users want to know when energy peaks and fades.
+
+**What's missing:**
+- ❌ **Intensity curves:** Visual timeline showing when transit is strongest
+- ❌ **Peak dates:** "Peaks March 15-18, fades by March 22"
+- ❌ **Multiple transit overlay:** See how transits combine over time
+- ❌ **Personal impact:** How transit intensity affects user's specific gates
+
+**Why it matters:**
+- Users plan around transit energies (per Reddit research)
+- Timeline view makes abstract concepts concrete
+- Helps users understand "when should I act on this?"
+- Differentiates from apps showing only current transits
+
+**Mockup:**
+```
+Mars in Pisces Transit Timeline
+Affects your Gates: 39, 44, 57
+
+Week 1 (Mar 10-16): Building intensity → 30%
+Week 2 (Mar 17-23): Peak energy → 80% ⚡
+Week 3 (Mar 24-30): Waning → 40%
+Week 4 (Mar 31-Apr 6): Fading → 10%
+```
+
+---
+
+### KANBAN-014 | "Why It Matters" Context Explanations
+**Priority:** HIGH  
+**Type:** UX Enhancement  
+**Status:** NOT STARTED — Data exists but not surfaced  
+
+**What was planned:**
+During UX deep review (2026-03-08), every data point was identified as needing 1-sentence context. Users arrive knowing nothing about HD terms.
+
+**What's missing:**
+- ❌ **Type explanations:** Generator/Manifestor/Projector/Reflector with what it means for life
+- ❌ **Authority explanations:** Emotional/Sacral/Mental/None with decision-making guidance  
+- ❌ **Strategy explanations:** To Respond/Initiate/Inform with practical application
+- ❌ **Profile explanations:** 1/3, 2/4, 3/5, etc. with life role context
+- ❌ **Center explanations:** What each center governs when defined vs open
+- ❌ **Channel descriptions:** What each active channel means and how gates interact
+- ❌ **Gate meanings in transits:** Personal context for natal gate activations
+
+**Why it matters:**
+- #1 complaint on r/humandesign: "App told me I'm a Generator 3/5 but didn't explain what that means"
+- Prevents user drop-off after seeing raw labels
+- Makes complex system accessible (competitor advantage)
+
+**Example transformation:**
+```
+Current: Pattern: Generator
+New: Pattern: Generator → You have consistent, renewable life force energy. You're designed to find work you love and master it. When you're lit up, you're unstoppable.
+```
+
+---
+
+### KANBAN-015 | Information Architecture Restructure
+**Priority:** HIGH  
+**Type:** UX Restructure  
+**Status:** NOT STARTED — 13 tabs causing overload  
+
+**What was planned:**
+UX review identified 13 visible tabs as overwhelming. Steve Jobs: "People can't prioritize 13 things. They can prioritize 3."
+
+**What's missing:**
+- ❌ **4 primary tabs instead of 13:** Blueprint (chart+profile), Energy (transits+check-in), Relationships (composite), Growth (enhance+diary+practices)
+- ❌ **Progressive disclosure:** Hide advanced tabs until user progresses through journey
+- ❌ **Mobile nav alignment:** Labels must match what users find (Chart→Blueprint, Keys→Profile, Astro→Deepen)
+
+**Why it matters:**
+- Current: Land → see 13 tabs → confusion → leave
+- Target: Land → see 3 things → guided journey → unlock more
+- Increases engagement with underused tabs by 3-5x
+
+---
+
+### KANBAN-016 | Birth Data Persistence & Auto-Fill
+**Priority:** HIGH  
+**Type:** UX Friction Reduction  
+**Status:** NOT STARTED — Users enter data 3x  
+
+**What was planned:**
+UX audit found users must enter birth data in Chart, Profile, and Composite tabs separately.
+
+**What's missing:**
+- ❌ **localStorage persistence:** Store birth data after first entry
+- ❌ **Auto-populate all forms:** Show "Using your birth data: June 15, 1990 14:30 Tampa, FL" with "Change" link
+- ❌ **Form validation:** Prevent invalid dates/times/locations
+- ❌ **Timezone handling:** Convert to UTC for calculations, show local time to user
+
+**Why it matters:**
+- Steve Jobs: "Ask once, remember forever"
+- Reduces friction in key user journey
+- Prevents data entry errors that break calculations
+
+---
+
+### KANBAN-017 | Social Proof Authenticity
+**Priority:** HIGH  
+**Type:** Trust Building  
+**Status:** NOT STARTED — Fake testimonials identified  
+
+**What was planned:**
+UX review found 6 clearly fabricated testimonials that hurt credibility.
+
+**What's missing:**
+- ❌ **Remove fake testimonials:** Replace with real aggregate stats or disclaimer
+- ❌ **Real usage metrics:** Show actual "X profiles created, Y daily active users"
+- ❌ **Social validation:** "Join X people who've explored their blueprint" with real count
+- ❌ **Beta disclaimer:** If using early testimonials, clearly mark as "from beta testers"
+
+**Why it matters:**
+- Reddit consensus: Fake testimonials are #1 trust-killer
+- r/astrology users specifically call out "those fake review carousels"
+- Real social proof increases conversion by 15-20%
+
+---
+
+### KANBAN-018 | Pricing Optimization
+**Priority:** HIGH  
+**Type:** Revenue Optimization  
+**Status:** NOT STARTED — $0→$97 jump feels like scam  
+
+**What was planned:**
+UX review found pricing shock: free → $15 → $97 → $500 creates trust issues.
+
+**What's missing:**
+- ❌ **Add intermediate tier:** $7-9/month between free and $15 for casual users
+- ❌ **Remove $500 tier:** Lists features that don't exist (full practitioner dashboard, client management)
+- ❌ **Feature parity check:** All listed features must be implemented or clearly marked "(Coming Soon)"
+- ❌ **Value communication:** Explain what each tier unlocks beyond just feature lists
+
+**Why it matters:**
+- Reddit consensus: $5-15/mo sweet spot for astrology apps
+- $97 jump from free feels predatory
+- Unimplemented features in pricing erode trust
+
+---
+
+### KANBAN-019 | Design System Consolidation
+**Priority:** MEDIUM  
+**Type:** Technical Debt  
+**Status:** NOT STARTED — Three competing color systems  
+
+**What was planned:**
+UX audit found inline styles bypass design tokens, creating unpredictable overrides.
+
+**What's missing:**
+- ❌ **Single token system:** Remove inline `:root` variables from `index.html`
+- ❌ **Consistent spacing:** Use `--space-1` through `--space-24` instead of hardcoded pixels
+- ❌ **Font scale enforcement:** Use only `xs, sm, base, md, lg, xl, 2xl, 3xl, 4xl`
+- ❌ **Color conflict resolution:** Premium tokens override base but inline styles override both
+
+**Why it matters:**
+- Creates visual inconsistency and maintenance burden
+- Makes responsive design impossible
+- Violates design system principles
+
+---
+
+### KANBAN-020 | Visual Hierarchy & Card System
+**Priority:** MEDIUM  
+**Type:** Visual Design  
+**Status:** NOT STARTED — All cards look identical  
+
+**What was planned:**
+UX review found no visual distinction between primary actions, results, information, and alerts.
+
+**What's missing:**
+- ❌ **Card type variants:** Different backgrounds/borders for action vs info vs status cards
+- ❌ **Primary CTA prominence:** Birth data entry card should be most prominent
+- ❌ **Result card styling:** Generated charts should have success styling
+- ❌ **Alert card system:** Clear visual distinction for warnings/errors/success
+
+**Why it matters:**
+- Users can't distinguish between different content types
+- Reduces scannability and user confidence
+- Makes interface feel amateurish
+
+---
+
+### KANBAN-021 | Step Guide Persistence
+**Priority:** MEDIUM  
+**Type:** UX Enhancement  
+**Status:** NOT STARTED — Guide disappears after generation  
+
+**What was planned:**
+UX review praised 3-step guide but noted it disappears too soon.
+
+**What's missing:**
+- ❌ **Breadcrumb persistence:** Keep guide visible as progress indicator
+- ❌ **Step 4 addition:** "Explore your transits" after profile generation
+- ❌ **Step 5 addition:** "Track your alignment" (check-in integration)
+- ❌ **Progress indication:** Show completion status for each step
+
+**Why it matters:**
+- Users lose context of where they are in the journey
+- Reduces perceived value of multi-step process
+- Good UX pattern that's half-implemented
+
+---
+
+### KANBAN-022 | Transit Personal Context
+**Priority:** MEDIUM  
+**Type:** Feature Enhancement  
+**Status:** NOT STARTED — Generic planet themes only  
+
+**What was planned:**
+UX review found transit explanations are generic, not personalized to user's natal gates.
+
+**What's missing:**
+- ❌ **Gate-specific context:** "Sun activating YOUR Gate 44 (Coming to Meet) — alertness to patterns"
+- ❌ **Personal meaning:** Explain how transit affects user's specific configuration
+- ❌ **Load gate data:** Frontend needs access to `gate_wheel.json`, `centers.json`, `channels.json`
+- ❌ **Connection explanations:** How transit gates connect to user's defined centers
+
+**Why it matters:**
+- Users want to know "what does this mean FOR ME?"
+- Generic explanations feel impersonal and less valuable
+- Data exists in backend but not surfaced in UI
+
+---
+
+### KANBAN-023 | Gene Keys Journey Context
+**Priority:** MEDIUM  
+**Type:** Content Enhancement  
+**Status:** NOT STARTED — Shows shadow/gift/siddhi as static list  
+
+**What was planned:**
+UX review found Gene Keys presented as judgment rather than journey roadmap.
+
+**What's missing:**
+- ❌ **Shadow→Gift→Siddhi progression:** Explain the evolutionary path
+- ❌ **Personal context:** "You begin in Interference (micromanaging), develop Teamwork (synergy), reach Synarchy (surrendered leadership)"
+- ❌ **Practical guidance:** How to move from shadow to gift in daily life
+- ❌ **Integration with transits:** How current transits support this evolution
+
+**Why it matters:**
+- Transforms judgment ("you have Interference") into empowerment ("you're evolving toward Synarchy")
+- Aligns with Prime Self philosophy of growth through awareness
+- Makes advanced content accessible rather than intimidating
+
+---
+
+### KANBAN-024 | Micro-Interactions & Animations
+**Priority:** LOW  
+**Type:** Polish Enhancement  
+**Status:** NOT STARTED — Generic spinners only  
+
+**What was planned:**
+UX review suggested gate reveals with glows, center pulses, transit connection lines.
+
+**What's missing:**
+- ❌ **Gate reveal animations:** Subtle glow when gates are shown
+- ❌ **Center pulse effects:** Defined centers pulse or highlight
+- ❌ **Transit connections:** Visual lines between chart and sky positions
+- ❌ **Loading states:** Skeleton screens instead of generic spinners
+- ❌ **Success feedback:** Satisfying animations for completed actions
+
+**Why it matters:**
+- Makes complex system feel magical rather than intimidating
+- Increases perceived value and engagement
+- Differentiates from competitors with static interfaces
+
+---
+
+### KANBAN-025 | Background Video Performance
+**Priority:** MEDIUM  
+**Type:** Performance Optimization  
+**Status:** NOT STARTED — Loads regardless of connection  
+
+**What was planned:**
+Background video exists but doesn't consider device capabilities or bandwidth.
+
+**What's missing:**
+- ❌ **Bandwidth detection:** Skip video on slow connections
+- ❌ **Mobile optimization:** Different video for mobile (smaller file, no particles)
+- ❌ **Battery awareness:** Reduce animations on low battery
+- ❌ **Progressive loading:** Load poster first, video second
+- ❌ **GPU optimization:** Reduce particle count from 30 to 10 on mobile
+
+**Why it matters:**
+- Video hurts Core Web Vitals scores
+- Drains battery and data on mobile
+- Makes text harder to read when elements pass behind content
+- Steve Jobs: "Design is not how it looks. Design is how it works"
+
+---
+
+## Priority Matrix (Updated)
+
+| ID | Item | Priority | Effort | Impact |
+|----|------|----------|--------|--------|
+| 001 | Priming Recommendations UI | HIGH | Medium | High — directly surfaces AI-generated recommendations |
+| 002 | Forge Weapon/Defense UI | HIGH | Low | High — completes the Forge experience |
+| 014 | "Why It Matters" Context Explanations | HIGH | Medium | High — prevents user drop-off with raw labels |
+| 015 | Information Architecture Restructure | HIGH | High | High — reduces 13-tab overload to 4 primary tabs |
+| 016 | Birth Data Persistence & Auto-Fill | HIGH | Medium | High — eliminates 3x data entry friction |
+| 017 | Social Proof Authenticity | HIGH | Medium | High — removes fake testimonials trust-killer |
+| 018 | Pricing Optimization | HIGH | Medium | High — fixes $0→$97 pricing shock |
+| 027 | Interactive Bodygraph | HIGH | High | High — makes complex system accessible |
+| 033 | Progressive Onboarding | HIGH | Medium | High — improves conversion by 15-20% |
+| 003 | Six Knowledges Surfacing | MEDIUM | Medium | Medium — educational enhancement |
+| 006 | RAG Context Verification | MEDIUM | Low | High — ensures AI has data access |
+| 007 | Matching Algorithm | MEDIUM | Medium | Medium — improves recommendation quality |
+| 008 | Enhanced Dashboard Cards | MEDIUM | Medium | High — reduces friction, increases tab engagement |
+| 009 | Onboarding Branching | MEDIUM | Medium | High — improves first-time user experience |
+| 010 | Mobile CTA Persistence | MEDIUM | Low | High — increases chart generation on mobile |
+| 011 | Daily Practices Digest | MEDIUM | High | High — increases retention + feature differentiation |
+| 012 | Composite Quick-Compare | MEDIUM | Medium | High — reduces friction in key feature |
+| 013 | Background Video Mobile Opt | MEDIUM | Low | Medium — improves Core Web Vitals + battery life |
+| 019 | Design System Consolidation | MEDIUM | Medium | High — eliminates visual inconsistency |
+| 020 | Visual Hierarchy & Card System | MEDIUM | Medium | High — improves scannability and trust |
+| 021 | Step Guide Persistence | MEDIUM | Low | High — maintains user journey context |
+| 022 | Transit Personal Context | MEDIUM | Medium | High — makes transits actionable for user |
+| 030 | Gene Keys Journey Context | MEDIUM | Medium | Medium — transforms judgment to roadmap |
+| 031 | Daily Practice Engine | MEDIUM | High | High — creates habit formation |
+| 034 | Share-Ready Images | MEDIUM | Medium | Medium — enables viral growth |
+| 035 | Transit Timeline | MEDIUM | Medium | Medium — helps users plan around energies |
+| 015 | Smart Recommendations Feed | LOW | Medium | Medium — increases user onboarding flow clarity |
+| 032 | Skeleton Loading | LOW | Low | Low — polish enhancement |
+| 004 | Six Heresies Integration | LOW | High | Low — advanced feature |
+| 005 | Arts/Sciences/Defenses | LOW | High | Medium — "nice to have" |
+
+**Added 2026-03-10:** Items 014-025 from comprehensive UX deep review — critical user-facing improvements that were discussed but never implemented despite being identified during the 2026-03-08 audit process
+
+---
+
+*This document tracks the gap between "data exists" and "feature is live," and now includes user-facing ideas from both the 2026-03-09 dashboard UX session and the comprehensive 2026-03-08 UX deep review. The canonical alignment work established the philosophical foundation — these items complete the user-facing experience.*
