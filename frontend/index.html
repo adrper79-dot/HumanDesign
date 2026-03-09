@@ -8,7 +8,7 @@
   default-src 'self';
   script-src 'self' 'unsafe-inline' https://js.stripe.com https://static.cloudflareinsights.com;
   style-src 'self' 'unsafe-inline';
-  connect-src 'self' https://prime-self-api.adrper79.workers.dev https://prime-self-api.primeself.workers.dev https://api.stripe.com https://cloudflareinsights.com;
+  connect-src 'self' https://prime-self-api.adrper79.workers.dev https://api.stripe.com https://cloudflareinsights.com;
   img-src 'self' data: blob:;
   media-src 'self';
   font-src 'self' data:;
@@ -24,8 +24,8 @@
 <!-- ─── Asset Randomizer (v1/v2 brand variants per session) ─── -->
 <script src="js/asset-randomizer.js"></script>
 <!-- ─── Resource Hints (BL-OPT-001) ─── -->
-<link rel="preconnect" href="https://prime-self-api.primeself.workers.dev" crossorigin>
-<link rel="dns-prefetch" href="https://prime-self-api.primeself.workers.dev">
+<link rel="preconnect" href="https://prime-self-api.adrper79.workers.dev" crossorigin>
+<link rel="dns-prefetch" href="https://prime-self-api.adrper79.workers.dev">
 <link rel="dns-prefetch" href="https://js.stripe.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <!-- Preload critical CSS -->
@@ -1099,7 +1099,7 @@
 </div><!-- /container -->
 
 <script>
-const API = 'https://prime-self-api.primeself.workers.dev';
+const API = 'https://prime-self-api.adrper79.workers.dev';
 let token = localStorage.getItem('ps_token');
 let userEmail = localStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
@@ -1115,7 +1115,7 @@ function updateAuthUI() {
     btnEl.style.display = 'none';
     logoutEl.style.display = '';
   } else {
-    statusEl.textContent = window.t('auth.notSignedIn');
+    statusEl.textContent = typeof window.t === 'function' ? window.t('auth.notSignedIn') : 'Not signed in';
     statusEl.className = 'auth-status';
     btnEl.style.display = '';
     logoutEl.style.display = 'none';
