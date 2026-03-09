@@ -1,0 +1,270 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "source": "Prime Self Book Recommendations Library",
+    "description": "Comprehensive library of book recommendations organized by HD type, Forge, Knowledge area, and theme",
+    "usage": "Match user's design, Forge, and current life focus to suggest resonant reading",
+    "note": "Both fiction and non-fiction are included — fiction develops empathy and imagination; non-fiction develops knowledge"
+  },
+  "byType": {
+    "generator": {
+      "description": "Books for those who build through sustained response",
+      "fiction": [
+        {"title": "Siddhartha", "author": "Hermann Hesse", "why": "The path of patient response and surrender to life's flow"},
+        {"title": "The Alchemist", "author": "Paulo Coelho", "why": "Following your response to find your Personal Legend"},
+        {"title": "East of Eden", "author": "John Steinbeck", "why": "Epic of building through generations, sustained creative energy"}
+      ],
+      "nonFiction": [
+        {"title": "Atomic Habits", "author": "James Clear", "why": "Building sustainable practices through small responses"},
+        {"title": "Deep Work", "author": "Cal Newport", "why": "Sustained focus and Generator energy management"},
+        {"title": "The Human Design System", "author": "Ra Uru Hu", "why": "Understanding your Generator design"}
+      ]
+    },
+    "manifestingGenerator": {
+      "description": "Books for the multi-passionate fast learners",
+      "fiction": [
+        {"title": "Ready Player One", "author": "Ernest Cline", "why": "Multiple skills, quick mastery, following excitement"},
+        {"title": "The Count of Monte Cristo", "author": "Alexandre Dumas", "why": "Multi-domain mastery and transformation"},
+        {"title": "American Gods", "author": "Neil Gaiman", "why": "Journey through multiple realms and identities"}
+      ],
+      "nonFiction": [
+        {"title": "Range", "author": "David Epstein", "why": "Scientific validation of the generalist MG path"},
+        {"title": "Refuse to Choose", "author": "Barbara Sher", "why": "Honoring multi-passionate nature"},
+        {"title": "The 4-Hour Workweek", "author": "Tim Ferriss", "why": "MG-style efficiency and lifestyle design"}
+      ]
+    },
+    "projector": {
+      "description": "Books for the guides who wait for recognition",
+      "fiction": [
+        {"title": "The Remains of the Day", "author": "Kazuo Ishiguro", "why": "Service, recognition, and the Projector dilemma"},
+        {"title": "The Master and Margarita", "author": "Mikhail Bulgakov", "why": "The guide who sees what others cannot"},
+        {"title": "Stoner", "author": "John Williams", "why": "The quiet life of deep seeing and waiting"}
+      ],
+      "nonFiction": [
+        {"title": "Quiet", "author": "Susan Cain", "why": "Honoring the power of the non-Generator"},
+        {"title": "The Art of Asking", "author": "Amanda Palmer", "why": "Receiving through invitation rather than pushing"},
+        {"title": "Essentialism", "author": "Greg McKeown", "why": "Focused energy management for non-Generators"}
+      ]
+    },
+    "manifestor": {
+      "description": "Books for initiators and catalysts",
+      "fiction": [
+        {"title": "Dune", "author": "Frank Herbert", "why": "Initiating massive change, the burden of impact"},
+        {"title": "The Fountainhead", "author": "Ayn Rand", "why": "Uncompromising creative initiation (read critically)"},
+        {"title": "1984", "author": "George Orwell", "why": "The power and shadow of control"}
+      ],
+      "nonFiction": [
+        {"title": "Start with Why", "author": "Simon Sinek", "why": "Initiating with purpose and impact"},
+        {"title": "The War of Art", "author": "Steven Pressfield", "why": "Breaking through resistance to create"},
+        {"title": "Good to Great", "author": "Jim Collins", "why": "Leadership impact and transformation"}
+      ]
+    },
+    "reflector": {
+      "description": "Books for the lunar beings who sample everything",
+      "fiction": [
+        {"title": "Cloud Atlas", "author": "David Mitchell", "why": "Sampling multiple lives and perspectives"},
+        {"title": "If on a winter's night a traveler", "author": "Italo Calvino", "why": "Multiple perspectives and openness"},
+        {"title": "The Unbearable Lightness of Being", "author": "Milan Kundera", "why": "Existential sampling of lives"}
+      ],
+      "nonFiction": [
+        {"title": "Braiding Sweetgrass", "author": "Robin Wall Kimmerer", "why": "Reading the health of systems and ecosystems"},
+        {"title": "The Art of Possibility", "author": "Rosamund Zander", "why": "Opening to all possibilities"},
+        {"title": "Being Ram Dass", "author": "Ram Dass", "why": "The lunar cycle of spiritual awakening"}
+      ]
+    }
+  },
+  "byForge": {
+    "chronos": {
+      "description": "Books for those resonating with time, patience, and endurance",
+      "fiction": [
+        {"title": "Meditations", "author": "Marcus Aurelius", "why": "Stoic wisdom transcending time (philosophical fiction)"},
+        {"title": "The Old Man and the Sea", "author": "Ernest Hemingway", "why": "Patience, endurance, time's passage"},
+        {"title": "A Gentleman in Moscow", "author": "Amor Towles", "why": "Finding meaning across decades of enforced waiting"}
+      ],
+      "nonFiction": [
+        {"title": "The Obstacle Is the Way", "author": "Ryan Holiday", "why": "Stoic patience and long-term thinking"},
+        {"title": "Antifragile", "author": "Nassim Nicholas Taleb", "why": "Gaining from time's chaos"},
+        {"title": "The Long Game", "author": "Dorie Clark", "why": "Strategic patience in career building"}
+      ]
+    },
+    "eros": {
+      "description": "Books for those resonating with passion, heart, and creative fire",
+      "fiction": [
+        {"title": "The Unbearable Lightness of Being", "author": "Milan Kundera", "why": "Love, passion, and choice"},
+        {"title": "Like Water for Chocolate", "author": "Laura Esquivel", "why": "Passion expressed through creation"},
+        {"title": "Wuthering Heights", "author": "Emily Brontë", "why": "The consuming nature of passion"}
+      ],
+      "nonFiction": [
+        {"title": "The Untethered Soul", "author": "Michael Singer", "why": "Opening the heart beyond fear"},
+        {"title": "Daring Greatly", "author": "Brené Brown", "why": "Vulnerability as passion's doorway"},
+        {"title": "Big Magic", "author": "Elizabeth Gilbert", "why": "Living a creative, passionate life"}
+      ]
+    },
+    "aether": {
+      "description": "Books for those resonating with connection, unity, and spiritual depth",
+      "fiction": [
+        {"title": "The Overstory", "author": "Richard Powers", "why": "Interconnection of all life"},
+        {"title": "Ishmael", "author": "Daniel Quinn", "why": "Recognizing our place in the web"},
+        {"title": "Siddhartha", "author": "Hermann Hesse", "why": "Unity consciousness journey"}
+      ],
+      "nonFiction": [
+        {"title": "A New Earth", "author": "Eckhart Tolle", "why": "Collective consciousness shift"},
+        {"title": "The Web of Life", "author": "Fritjof Capra", "why": "Systems thinking and connection"},
+        {"title": "Nonviolent Communication", "author": "Marshall Rosenberg", "why": "Connection through communication"}
+      ]
+    },
+    "lux": {
+      "description": "Books for those resonating with clarity, revelation, and illumination",
+      "fiction": [
+        {"title": "Flatland", "author": "Edwin Abbott", "why": "Seeing beyond dimensional limits"},
+        {"title": "The Glass Bead Game", "author": "Hermann Hesse", "why": "Integration of all knowledge"},
+        {"title": "Contact", "author": "Carl Sagan", "why": "Scientific revelation and wonder"}
+      ],
+      "nonFiction": [
+        {"title": "Thinking, Fast and Slow", "author": "Daniel Kahneman", "why": "Understanding how clarity emerges"},
+        {"title": "The Structure of Scientific Revolutions", "author": "Thomas Kuhn", "why": "How paradigm shifts occur"},
+        {"title": "Man's Search for Meaning", "author": "Viktor Frankl", "why": "Finding clarity in darkness"}
+      ]
+    },
+    "phoenix": {
+      "description": "Books for those resonating with transformation, death, and rebirth",
+      "fiction": [
+        {"title": "The Road", "author": "Cormac McCarthy", "why": "Survival and transformation through apocalypse"},
+        {"title": "A Little Life", "author": "Hanya Yanagihara", "why": "Living with and transforming trauma"},
+        {"title": "The Kite Runner", "author": "Khaled Hosseini", "why": "Redemption through facing the past"}
+      ],
+      "nonFiction": [
+        {"title": "The Body Keeps the Score", "author": "Bessel van der Kolk", "why": "Transforming stored trauma"},
+        {"title": "When Things Fall Apart", "author": "Pema Chödrön", "why": "Embracing groundlessness"},
+        {"title": "It Didn't Start with You", "author": "Mark Wolynn", "why": "Breaking generational patterns"}
+      ]
+    }
+  },
+  "byKnowledge": {
+    "self": {
+      "description": "Books for developing self-knowledge",
+      "recommendations": [
+        {"title": "The Untethered Soul", "author": "Michael Singer", "type": "nonFiction"},
+        {"title": "Awareness", "author": "Anthony de Mello", "type": "nonFiction"},
+        {"title": "The Bell Jar", "author": "Sylvia Plath", "type": "fiction"},
+        {"title": "Steppenwolf", "author": "Hermann Hesse", "type": "fiction"}
+      ]
+    },
+    "ancestors": {
+      "description": "Books for understanding ancestral patterns",
+      "recommendations": [
+        {"title": "It Didn't Start with You", "author": "Mark Wolynn", "type": "nonFiction"},
+        {"title": "Women Who Run with the Wolves", "author": "Clarissa Pinkola Estés", "type": "nonFiction"},
+        {"title": "Roots", "author": "Alex Haley", "type": "fiction"},
+        {"title": "Homegoing", "author": "Yaa Gyasi", "type": "fiction"}
+      ]
+    },
+    "theOne": {
+      "description": "Books for understanding interconnection",
+      "recommendations": [
+        {"title": "A New Earth", "author": "Eckhart Tolle", "type": "nonFiction"},
+        {"title": "Braiding Sweetgrass", "author": "Robin Wall Kimmerer", "type": "nonFiction"},
+        {"title": "The Overstory", "author": "Richard Powers", "type": "fiction"},
+        {"title": "Cloud Atlas", "author": "David Mitchell", "type": "fiction"}
+      ]
+    },
+    "constructive": {
+      "description": "Books for cultivating constructive behaviors",
+      "recommendations": [
+        {"title": "Atomic Habits", "author": "James Clear", "type": "nonFiction"},
+        {"title": "How to Win Friends and Influence People", "author": "Dale Carnegie", "type": "nonFiction"},
+        {"title": "A Man Called Ove", "author": "Fredrik Backman", "type": "fiction"},
+        {"title": "East of Eden", "author": "John Steinbeck", "type": "fiction"}
+      ]
+    },
+    "destructive": {
+      "description": "Books for understanding necessary destruction",
+      "recommendations": [
+        {"title": "The 48 Laws of Power", "author": "Robert Greene", "type": "nonFiction"},
+        {"title": "Antifragile", "author": "Nassim Nicholas Taleb", "type": "nonFiction"},
+        {"title": "Blood Meridian", "author": "Cormac McCarthy", "type": "fiction"},
+        {"title": "The Prince", "author": "Niccolò Machiavelli", "type": "nonFiction"}
+      ]
+    },
+    "healing": {
+      "description": "Books for healing and reparation",
+      "recommendations": [
+        {"title": "The Body Keeps the Score", "author": "Bessel van der Kolk", "type": "nonFiction"},
+        {"title": "When Things Fall Apart", "author": "Pema Chödrön", "type": "nonFiction"},
+        {"title": "A Little Life", "author": "Hanya Yanagihara", "type": "fiction"},
+        {"title": "The Color Purple", "author": "Alice Walker", "type": "fiction"}
+      ]
+    }
+  },
+  "byCurrentNeed": {
+    "beginningJourney": {
+      "description": "For those just starting their Prime Self exploration",
+      "recommendations": [
+        {"title": "The Human Design System", "author": "Ra Uru Hu", "type": "nonFiction"},
+        {"title": "The Gene Keys", "author": "Richard Rudd", "type": "nonFiction"},
+        {"title": "The Alchemist", "author": "Paulo Coelho", "type": "fiction"},
+        {"title": "Siddhartha", "author": "Hermann Hesse", "type": "fiction"}
+      ]
+    },
+    "inTransition": {
+      "description": "For those navigating major life changes",
+      "recommendations": [
+        {"title": "When Things Fall Apart", "author": "Pema Chödrön", "type": "nonFiction"},
+        {"title": "Transitions", "author": "William Bridges", "type": "nonFiction"},
+        {"title": "The Midnight Library", "author": "Matt Haig", "type": "fiction"},
+        {"title": "Circe", "author": "Madeline Miller", "type": "fiction"}
+      ]
+    },
+    "seekingPurpose": {
+      "description": "For those clarifying life direction",
+      "recommendations": [
+        {"title": "Man's Search for Meaning", "author": "Viktor Frankl", "type": "nonFiction"},
+        {"title": "The Pathfinder", "author": "Nicholas Lore", "type": "nonFiction"},
+        {"title": "The Alchemist", "author": "Paulo Coelho", "type": "fiction"},
+        {"title": "Jonathan Livingston Seagull", "author": "Richard Bach", "type": "fiction"}
+      ]
+    },
+    "healingTrauma": {
+      "description": "For those working with past wounds",
+      "recommendations": [
+        {"title": "The Body Keeps the Score", "author": "Bessel van der Kolk", "type": "nonFiction"},
+        {"title": "Complex PTSD: From Surviving to Thriving", "author": "Pete Walker", "type": "nonFiction"},
+        {"title": "A Little Life", "author": "Hanya Yanagihara", "type": "fiction"},
+        {"title": "The Perks of Being a Wallflower", "author": "Stephen Chbosky", "type": "fiction"}
+      ]
+    },
+    "buildingRelationships": {
+      "description": "For those improving connections with others",
+      "recommendations": [
+        {"title": "Nonviolent Communication", "author": "Marshall Rosenberg", "type": "nonFiction"},
+        {"title": "Attached", "author": "Amir Levine", "type": "nonFiction"},
+        {"title": "Normal People", "author": "Sally Rooney", "type": "fiction"},
+        {"title": "The Brothers Karamazov", "author": "Fyodor Dostoevsky", "type": "fiction"}
+      ]
+    },
+    "developingIntuition": {
+      "description": "For those strengthening intuitive capacity",
+      "recommendations": [
+        {"title": "The Gift of Fear", "author": "Gavin de Becker", "type": "nonFiction"},
+        {"title": "Blink", "author": "Malcolm Gladwell", "type": "nonFiction"},
+        {"title": "The Celestine Prophecy", "author": "James Redfield", "type": "fiction"},
+        {"title": "The Magus", "author": "John Fowles", "type": "fiction"}
+      ]
+    }
+  },
+  "essentialLibrary": {
+    "description": "Core texts every Prime Self practitioner should eventually explore",
+    "texts": [
+      {"title": "The Human Design System", "author": "Ra Uru Hu", "category": "Foundation"},
+      {"title": "The Gene Keys", "author": "Richard Rudd", "category": "Foundation"},
+      {"title": "The Body Keeps the Score", "author": "Bessel van der Kolk", "category": "Healing"},
+      {"title": "A New Earth", "author": "Eckhart Tolle", "category": "Consciousness"},
+      {"title": "Man and His Symbols", "author": "Carl Jung", "category": "Psychology"},
+      {"title": "The Hero with a Thousand Faces", "author": "Joseph Campbell", "category": "Mythology"},
+      {"title": "Meditations", "author": "Marcus Aurelius", "category": "Philosophy"},
+      {"title": "Atomic Habits", "author": "James Clear", "category": "Practical"},
+      {"title": "Siddhartha", "author": "Hermann Hesse", "category": "Fiction"},
+      {"title": "The Alchemist", "author": "Paulo Coelho", "category": "Fiction"}
+    ]
+  }
+}

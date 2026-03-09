@@ -1,0 +1,261 @@
+{
+  "_meta": {
+    "version": "2.0-canonical",
+    "source": "Prime Self Sacred Texts & Canonical Philosophy",
+    "description": "The Six Knowledges — intellectual and spiritual foundations upon which all Prime practice rests",
+    "note": "These are not subjects to be studied once — they are ongoing disciplines to be lived. Together they form a complete map of self, relationship, and world."
+  },
+  "self": {
+    "knowledge": "Self",
+    "number": 1,
+    "essence": "The practitioner who knows themselves cannot be surprised by themselves in battle.",
+    "description": "The study of one's own identity — strengths, limitations, values, motivations, desires. Without this knowledge, all other power is directionless. This is the foundation upon which all Prime Self practice rests. Before you can invoke the wisdom of others, you must first understand your own design.",
+    "domains": [
+      "Personal strengths and natural talents",
+      "Shadow patterns and blind spots",
+      "Core values and non-negotiables",
+      "Motivational drivers and fears",
+      "Authentic desires vs. conditioned wants",
+      "Decision-making patterns",
+      "Energy management requirements"
+    ],
+    "hdMapping": {
+      "primaryIndicators": ["Type and Strategy", "Authority", "Profile", "Definition type"],
+      "relevantGates": ["Gate 1 (Self-Expression)", "Gate 2 (Direction of the Self)", "Gate 7 (Role of the Self)", "Gate 10 (Behavior of the Self)", "Gate 25 (Spirit of the Self)", "Gate 46 (Love of the Body)"],
+      "centers": ["G Center (identity and direction)", "All defined centers (established patterns)", "All open centers (conditioning vulnerabilities)"]
+    },
+    "astroMapping": {
+      "primaryIndicators": ["Sun sign (core identity)", "Ascendant (approach to world)", "Moon sign (emotional nature)"],
+      "houses": ["1st House (self-presentation)", "4th House (roots and foundation)", "10th House (public role)"]
+    },
+    "practicalApplication": [
+      "Maintain a self-observation journal without judgment",
+      "Track when you feel most alive and most drained",
+      "Notice patterns in conflicts — what triggers you consistently",
+      "Distinguish between authentic desires and inherited expectations",
+      "Honor your Human Design Strategy and Authority in daily decisions"
+    ],
+    "primeQuestion": "Who am I when no one is watching and nothing is at stake?",
+    "historicalExemplars": ["Socrates", "Michel de Montaigne", "Virginia Woolf", "Bruce Lee", "Brené Brown"],
+    "recommendedReading": {
+      "fiction": ["The Stranger by Albert Camus", "The Bell Jar by Sylvia Plath", "Steppenwolf by Hermann Hesse"],
+      "nonFiction": ["The Untethered Soul by Michael Singer", "Awareness by Anthony de Mello", "The Gifts of Imperfection by Brené Brown"]
+    }
+  },
+  "ancestors": {
+    "knowledge": "Ancestors",
+    "number": 2,
+    "essence": "To know your ancestors is to multiply your intelligence across generations.",
+    "description": "Understanding one's cultural heritage, lineage, and family history. The wisdom of those who came before is not lost — it is encoded and waiting to be accessed. This knowledge forms the foundation of Priming: the ability to invoke ancestral wisdom for present challenges.",
+    "domains": [
+      "Family history and generational patterns",
+      "Cultural heritage and traditions",
+      "Inherited strengths and gifts",
+      "Generational trauma and wounds",
+      "Lineage-specific wisdom",
+      "Ancestral vocations and callings",
+      "Geographic and ethnic roots"
+    ],
+    "hdMapping": {
+      "primaryIndicators": ["Design (unconscious/genetic) chart", "Gates from design side", "Incarnation Cross"],
+      "relevantGates": ["Gate 33 (Retreat/Privacy — ancestral memory)", "Gate 13 (The Listener — collecting stories)", "Gate 37 (Friendship/Family)", "Gate 40 (Aloneness/Delivery)", "Gate 44 (Alertness — pattern recognition)", "Gate 50 (Values/The Cauldron)"],
+      "centers": ["Spleen (ancestral survival wisdom)", "Solar Plexus (emotional inheritance)"]
+    },
+    "astroMapping": {
+      "primaryIndicators": ["4th House (roots, family)", "South Node (past life/ancestral patterns)", "Moon (emotional inheritance)"],
+      "houses": ["4th House (ancestry)", "8th House (inherited resources and karma)", "12th House (collective unconscious)"]
+    },
+    "practicalApplication": [
+      "Research family history — interview living elders",
+      "Map generational patterns (careers, relationships, health)",
+      "Identify inherited gifts you carry forward",
+      "Recognize inherited wounds requiring healing",
+      "Create ancestral altars or practices of remembrance",
+      "Study the historical figures who share your Forge and invoke their wisdom"
+    ],
+    "primeQuestion": "What wisdom did my ancestors earn that I can inherit through deliberate practice?",
+    "historicalExemplars": ["Alex Haley", "Maya Angelou", "Clarissa Pinkola Estés", "Martin Luther King Jr.", "Malidoma Somé"],
+    "recommendedReading": {
+      "fiction": ["Roots by Alex Haley", "Homegoing by Yaa Gyasi", "The Joy Luck Club by Amy Tan"],
+      "nonFiction": ["It Didn't Start with You by Mark Wolynn", "Women Who Run with the Wolves by Clarissa Pinkola Estés", "Of Water and the Spirit by Malidoma Somé"]
+    }
+  },
+  "theOne": {
+    "knowledge": "The One",
+    "number": 3,
+    "essence": "Compassion is not weakness — it is the highest form of intelligence, because it sees reality as it is.",
+    "description": "The recognition that all living beings and the universe itself are deeply interconnected. Every action ripples. Every relationship is a mirror. This knowledge transcends the illusion of separation and reveals the unified field in which all consciousness participates.",
+    "domains": [
+      "Interconnectedness of all life",
+      "Systems thinking and ripple effects",
+      "Empathy and perspective-taking",
+      "Ecological awareness",
+      "Collective consciousness",
+      "Non-dual awareness",
+      "Universal love and compassion"
+    ],
+    "hdMapping": {
+      "primaryIndicators": ["Reflector type (sampling collective)", "Open centers (receiving others)", "Collective circuits"],
+      "relevantGates": ["Gate 19 (Wanting/Approach)", "Gate 49 (Revolution/Rejection)", "Gate 55 (Spirit/Abundance)", "Gate 22 (Openness/Grace)", "Gate 36 (Crisis/Darkening of the Light)", "Gate 6 (Friction/Intimacy)"],
+      "centers": ["Solar Plexus (emotional wave)", "G Center (love)", "Open centers (empathic receptivity)"]
+    },
+    "astroMapping": {
+      "primaryIndicators": ["Neptune (dissolution of boundaries)", "12th House (collective unconscious)", "Pisces (universal compassion)"],
+      "houses": ["7th House (relationships as mirrors)", "11th House (collective humanity)", "12th House (unity consciousness)"]
+    },
+    "practicalApplication": [
+      "Practice seeing others as reflections of yourself",
+      "Notice ripple effects of your actions through systems",
+      "Cultivate compassion meditation practices",
+      "Recognize projection — what you judge in others exists in you",
+      "Develop ecological thinking in all decisions",
+      "Practice Clustering with aligned individuals"
+    ],
+    "primeQuestion": "How is what I see in others a reflection of what exists in me?",
+    "historicalExemplars": ["Thich Nhat Hanh", "Mother Teresa", "Albert Schweitzer", "Jane Goodall", "Desmond Tutu"],
+    "recommendedReading": {
+      "fiction": ["The Overstory by Richard Powers", "Ishmael by Daniel Quinn", "Cloud Atlas by David Mitchell"],
+      "nonFiction": ["A New Earth by Eckhart Tolle", "The Web of Life by Fritjof Capra", "Braiding Sweetgrass by Robin Wall Kimmerer"]
+    }
+  },
+  "constructive": {
+    "knowledge": "Constructive Behaviors",
+    "number": 4,
+    "essence": "These are not rigidly 'good' traits — they are contextually appropriate behaviors chosen with consciousness.",
+    "description": "The identification and cultivation of behaviors that build, improve, and create positive change. The Prime practitioner knows when to build. This knowledge encompasses virtues, but frames them as strategic choices rather than moral absolutes.",
+    "domains": [
+      "Building and creating",
+      "Nurturing and supporting",
+      "Teaching and mentoring",
+      "Collaborating and cooperating",
+      "Patience and persistence",
+      "Generosity and service",
+      "Courage and initiative"
+    ],
+    "constructiveTraits": {
+      "courage": "Acting despite fear when values demand it",
+      "patience": "Allowing processes to unfold in their natural timing",
+      "generosity": "Sharing resources, knowledge, and energy freely",
+      "integrity": "Alignment between values, words, and actions",
+      "curiosity": "Approaching the unknown with openness rather than fear",
+      "discipline": "Consistent action toward meaningful goals",
+      "compassion": "Responding to suffering with presence and care",
+      "humility": "Accurate self-assessment without inflation or deflation"
+    },
+    "hdMapping": {
+      "primaryIndicators": ["Generator response (building energy)", "Projector recognition (guiding growth)", "Manifestor informing (initiating value)"],
+      "relevantGates": ["Gate 14 (Power Skills)", "Gate 34 (Power)", "Gate 9 (Focus)", "Gate 5 (Waiting)", "Gate 16 (Skills/Enthusiasm)", "Gate 48 (Depth/The Well)"],
+      "centers": ["Sacral (sustainable building energy)", "Heart (willpower for construction)", "Throat (manifestation)"]
+    },
+    "astroMapping": {
+      "primaryIndicators": ["Jupiter (expansion and growth)", "Sun (vitality and creation)", "Taurus (building value)"],
+      "houses": ["2nd House (building resources)", "6th House (service and improvement)", "10th House (constructive legacy)"]
+    },
+    "practicalApplication": [
+      "Audit which constructive behaviors come naturally vs. require cultivation",
+      "Practice one constructive trait deliberately each month",
+      "Notice when constructive behavior becomes rigid or performative",
+      "Balance construction with necessary destruction",
+      "Build what only you can build"
+    ],
+    "primeQuestion": "What constructive action is mine to take in this moment?",
+    "historicalExemplars": ["Mr. Rogers", "Warren Buffett", "Oprah Winfrey", "Andrew Carnegie", "Florence Nightingale"],
+    "recommendedReading": {
+      "fiction": ["A Man Called Ove by Fredrik Backman", "The Secret Garden by Frances Hodgson Burnett", "East of Eden by John Steinbeck"],
+      "nonFiction": ["How to Win Friends and Influence People by Dale Carnegie", "Give and Take by Adam Grant", "Atomic Habits by James Clear"]
+    }
+  },
+  "destructive": {
+    "knowledge": "Destructive Behaviors",
+    "number": 5,
+    "essence": "Destruction is not inherently negative — sometimes things must be torn down for growth to occur.",
+    "description": "Equally essential to Constructive knowledge. The Prime practitioner understands when deconstruction serves the greater good, and applies it with precision, not impulse. Traits carry no permanent moral charge — context determines appropriateness.",
+    "domains": [
+      "Ending what no longer serves",
+      "Cutting away dysfunction",
+      "Speaking uncomfortable truths",
+      "Setting hard boundaries",
+      "Walking away from toxic situations",
+      "Destroying false narratives",
+      "Dismantling corrupt systems"
+    ],
+    "destructiveTraits": {
+      "ruthlessness": "Cutting away what must go without sentiment",
+      "aggression": "Directed force when boundaries are violated",
+      "coldness": "Emotional detachment when warmth would enable dysfunction",
+      "rejection": "Refusing what does not belong in your life",
+      "judgment": "Discerning what is false, harmful, or misaligned",
+      "stubbornness": "Holding position when others pressure compromise",
+      "selfishness": "Prioritizing self-preservation when necessary",
+      "wrath": "Righteous anger that fuels protective action"
+    },
+    "contextualWisdom": "Every destructive behavior has a constructive shadow. Ruthlessness without compassion becomes cruelty. Aggression without restraint becomes violence. The master knows WHEN destruction serves life and WHEN it merely serves ego.",
+    "hdMapping": {
+      "primaryIndicators": ["Manifestor initiating force", "Individual circuit mutation", "Splenic survival instincts"],
+      "relevantGates": ["Gate 51 (Shock)", "Gate 21 (Control)", "Gate 18 (Correction)", "Gate 28 (The Game Player)", "Gate 38 (The Fighter)", "Gate 54 (Ambition)"],
+      "centers": ["Spleen (survival-driven destruction)", "Heart (willful elimination)", "Root (pressure to act)"]
+    },
+    "astroMapping": {
+      "primaryIndicators": ["Mars (directed force)", "Pluto (death and transformation)", "Scorpio (elimination)"],
+      "houses": ["8th House (death, transformation)", "12th House (dissolution)", "1st House (self-protective aggression)"]
+    },
+    "practicalApplication": [
+      "Audit what in your life needs to end",
+      "Practice the clean cut — ending without drama or negotiation",
+      "Distinguish destructive impulse from destructive wisdom",
+      "Accept that creation requires destruction",
+      "Release guilt about necessary endings"
+    ],
+    "primeQuestion": "What must I end or destroy so that something better can emerge?",
+    "historicalExemplars": ["Shiva (archetype)", "Kali (archetype)", "Malcolm X", "Joan of Arc", "Genghis Khan"],
+    "recommendedReading": {
+      "fiction": ["Blood Meridian by Cormac McCarthy", "The Road by Cormac McCarthy", "Lord of the Flies by William Golding"],
+      "nonFiction": ["The Prince by Niccolò Machiavelli", "The 48 Laws of Power by Robert Greene", "Antifragile by Nassim Nicholas Taleb"]
+    }
+  },
+  "healing": {
+    "knowledge": "Healing and Reparation",
+    "number": 6,
+    "essence": "No Prime can be fully reached while carrying unprocessed wounds.",
+    "description": "The practice of mending — internal wounds, broken relationships, inherited damage. This knowledge includes the disciplines of forgiveness, reconciliation, self-acceptance, and making amends. Healing is not weakness; it is the foundation of sustainable power.",
+    "domains": [
+      "Self-healing and self-acceptance",
+      "Relationship repair",
+      "Forgiveness (self and others)",
+      "Making amends",
+      "Trauma integration",
+      "Breaking generational cycles",
+      "Reconciliation"
+    ],
+    "hdMapping": {
+      "primaryIndicators": ["Undefined/open centers (sensitivity to heal)", "Chiron placements", "Nodal axis (karmic healing)"],
+      "relevantGates": ["Gate 55 (Spirit/Abundance)", "Gate 22 (Openness/Grace)", "Gate 36 (Crisis/Darkening)", "Gate 6 (Friction/Intimacy)", "Gate 30 (Clinging Fire/Recognition of Feelings)", "Gate 41 (Decrease/Contraction)"],
+      "centers": ["Solar Plexus (emotional healing)", "Heart (healing willpower wounds)", "Spleen (healing survival trauma)"]
+    },
+    "astroMapping": {
+      "primaryIndicators": ["Chiron (the wounded healer)", "Neptune (spiritual healing)", "12th House (release and surrender)"],
+      "houses": ["4th House (healing family wounds)", "8th House (healing through transformation)", "12th House (healing unconscious patterns)"]
+    },
+    "healingDisciplines": {
+      "forgiveness": "Releasing the demand that the past be different",
+      "selfAcceptance": "Embracing all parts of yourself without condition",
+      "griefWork": "Allowing loss to move through you completely",
+      "makingAmends": "Taking responsibility for harm you have caused",
+      "boundaryRepair": "Rebuilding trust through consistent action",
+      "integrationPractice": "Reclaiming disowned parts of yourself"
+    },
+    "practicalApplication": [
+      "Identify your core wound — the recurring pain pattern",
+      "Practice self-compassion before extending to others",
+      "Make amends where possible without re-traumatizing",
+      "Distinguish forgiveness from reconciliation",
+      "Seek healing modalities that match your design"
+    ],
+    "primeQuestion": "What wound am I carrying that, if healed, would liberate my full power?",
+    "historicalExemplars": ["Desmond Tutu", "Thich Nhat Hanh", "Elisabeth Kübler-Ross", "Bessel van der Kolk", "Gabor Maté"],
+    "recommendedReading": {
+      "fiction": ["A Little Life by Hanya Yanagihara", "The Kite Runner by Khaled Hosseini", "The Color Purple by Alice Walker"],
+      "nonFiction": ["The Body Keeps the Score by Bessel van der Kolk", "When Things Fall Apart by Pema Chödrön", "Radical Acceptance by Tara Brach"]
+    }
+  }
+}

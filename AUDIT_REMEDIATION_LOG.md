@@ -107,6 +107,66 @@ Defects prioritized by severity → impact → fix complexity.
 
 ---
 
+## Continuation — Session 2025-07-15b
+
+### New Defects Discovered
+
+| ID | Severity | Layer | File | Issue | User Impact |
+|----|----------|-------|------|-------|-------------|
+| C5 | Critical | Backend | `workers/src/handlers/notion.js:291` | `QUERIES.getPractitionerById` called but query doesn't exist — correct name is `getPractitionerByUserId` | Notion client sync 100% broken for practitioners |
+| H5 | High | Frontend | `frontend/index.html:1101` | API URL hardcoded to dev domain `adrper79.workers.dev` instead of production `primeself.workers.dev` | All API calls failing in production |
+| H6 | High | Security | `frontend/embed.html:324-326` | postMessage uses `'*'` wildcard fallback when referrer unavailable — allows any origin to receive sensitive chart data | Data leakage to malicious parents |
+| A1 | High | A11y | `frontend/index.html` | Auth form inputs missing `required`, `aria-required="true"`, `minlength` attributes | Screen readers don't announce required fields; no browser validation |
+| A2 | High | A11y | `frontend/index.html` | Chart form (date/time/location) missing `required` and `aria-required` attributes | Same as A1 |
+
+### Session 2 Fixes Applied
+
+| ID | Severity | File | Fix Applied |
+|----|----------|------|-------------|
+| C5 | Critical | `workers/src/handlers/notion.js` | Changed `QUERIES.getPractitionerById` → `QUERIES.getPractitionerByUserId` |
+| H5 | High | `frontend/index.html` | Changed API constant from `adrper79.workers.dev` → `primeself.workers.dev` |
+| H6 | High | `frontend/embed.html` | Replaced wildcard fallback with `null` + added `safePostMessage()` wrapper that skips send when origin unknown |
+| A1 | High | `frontend/index.html` | Added `required`, `aria-required="true"`, `minlength="8"` to auth email/password inputs; added `for` attributes to labels |
+| A2 | High | `frontend/index.html` | Added `required`, `aria-required="true"` to chart date/time/location inputs; added `for` attributes to labels |
+| H7 | High | `src/engine/` | Created `constants.js` with shared `ASPECT_TYPES`, `LUMINARIES`, `OUTER_PLANETS`, `PLANET_SPEEDS`; updated `astro.js` and `transits.js` to import from shared module |
+
+**Test validation:** 207/207 tests pass after all fixes.
+
+---
+
+## Continuation — Session 2026-03-08
+
+### New Defects Discovered (Accessibility & Validation)
+
+| ID | Severity | Layer | File | Issue | User Impact |
+|----|----------|-------|------|-------|-------------|
+| A3 | Critical | A11y | `frontend/index.html` | `aria-invalid` never set programmatically when form validation fails | Screen readers don't announce field errors |
+| A4 | High | A11y | `frontend/index.html` | Error container missing `role="alert"` and `aria-live="polite"` | Screen readers don't announce dynamic errors |
+| A5 | High | A11y | `frontend/index.html` | Auth inputs missing `aria-describedby` linking to error container | Screen readers don't associate errors with fields |
+| V1 | High | Frontend | `frontend/index.html` | No email format validation in auth form | Invalid emails sent to server, confusing errors |
+| V2 | High | Frontend | `frontend/index.html` | No password length validation in auth form | Server errors instead of helpful client feedback |
+
+### Session 3 Fixes Applied
+
+| ID | Severity | File | Fix Applied |
+|----|----------|------|-------------|
+| A3 | Critical | `frontend/index.html` | Added `el.setAttribute('aria-invalid', 'true')` on validation error, `el.removeAttribute('aria-invalid')` on success |
+| A4 | High | `frontend/index.html` | Added `role="alert" aria-live="polite"` to `#authError` container |
+| A5 | High | `frontend/index.html` | Added `aria-describedby="authError"` to email and password inputs |
+| V1 | High | `frontend/index.html` | Added email regex validation (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) before submit |
+| V2 | High | `frontend/index.html` | Added password.length < 8 check before submit with helpful error message |
+
+### Verified Non-Issues
+
+| ID | Claim | Reality |
+|----|-------|---------|
+| NI1 | Delete confirmations missing | `leaveCluster()` and `deleteDiaryEntry()` both already have `confirm()` dialogs |
+| NI2 | Magic pricing numbers | Prices in stripe.js are properly documented with comments and match frontend display |
+
+**Test validation:** 207/207 tests pass after all fixes.
+
+---
+
 ## Phase 6 — Open Items (Deferred)
 
 These items require architectural changes or manual decisions:
@@ -139,9 +199,21 @@ These items require architectural changes or manual decisions:
 15. `cron.js` — named query for SMS users
 
 ### Frontend
-1. `index.html` — 14 fixes (XSS, event handling, redirect validation, logout cleanup, referral tracking)
+1. `index.html` — 14 fixes (XSS, event handling, redirect validation, logout cleanup, referral tracking) + Session 2: API URL fix, accessibility attrs
 2. `js/bodygraph.js` — XSS escaping in info panel
 3. `js/lazy.js` — innerHTML → DOM API in loadCSS noscript fallback
 4. `service-worker.js` — API cache age enforcement
+5. `embed.html` — Session 2: postMessage security hardening (safePostMessage wrapper, removed wildcard fallback)
 
-**Total: 30 fixes across 19 files, 207/207 tests passing**
+### Backend (Session 2)
+16. `handlers/notion.js` — Fixed undefined query reference (`getPractitionerById` → `getPractitionerByUserId`)
+
+### Engine (Session 2)
+17. `src/engine/constants.js` — NEW: Shared constants module for ASPECT_TYPES, LUMINARIES, OUTER_PLANETS, PLANET_SPEEDS
+18. `src/engine/astro.js` — Import shared constants, removed local ASPECT_TYPES/LUMINARIES definitions
+19. `src/engine/transits.js` — Import shared constants, removed local ASPECT_TYPES/OUTER_PLANETS/SPEEDS definitions
+
+### Frontend (Session 3)
+20. `index.html` — Auth form accessibility: aria-invalid, aria-describedby, role="alert", email format validation, password length validation
+
+**Total: 43 fixes across 25 files, 207/207 tests passing**

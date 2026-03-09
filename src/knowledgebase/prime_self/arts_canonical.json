@@ -1,0 +1,266 @@
+{
+  "_meta": {
+    "version": "2.0-canonical",
+    "source": "Prime Self Sacred Texts & Canonical Philosophy",
+    "description": "The Six Arts — creative and expressive disciplines that allow the practitioner to shape reality and communicate across dimensions",
+    "note": "The Arts are not passive study — they are active creation. Each Art is a language through which the Prime practitioner speaks to reality itself."
+  },
+  "aromatherapy": {
+    "art": "Aromatherapy",
+    "number": 1,
+    "essence": "Scent bypasses the rational mind and speaks directly to memory, emotion, and instinct.",
+    "description": "The use of aromatic plant essences to alter states of consciousness, support healing, and enhance ritual. The olfactory system connects directly to the limbic brain — the seat of emotion and memory. The aromatherapist works with this ancient pathway.",
+    "domains": [
+      "Essential oil properties and applications",
+      "Scent blending for specific intentions",
+      "Ritual enhancement through fragrance",
+      "Emotional state shifting",
+      "Memory anchoring",
+      "Space consecration",
+      "Physical wellness support"
+    ],
+    "applications": {
+      "meditation": "Frankincense, sandalwood, cedarwood for grounding and clarity",
+      "energizing": "Peppermint, rosemary, citrus for alertness and motivation",
+      "calming": "Lavender, chamomile, ylang-ylang for relaxation",
+      "protection": "Sage, juniper, black pepper for clearing and boundaries",
+      "loveAndConnection": "Rose, jasmine, neroli for opening the heart"
+    },
+    "forgeCorrespondences": {
+      "chronos": "Vetiver, myrrh (grounding in time)",
+      "eros": "Rose, jasmine, ylang-ylang (passion and heart)",
+      "aether": "Frankincense, sandalwood (spiritual connection)",
+      "lux": "Citrus, peppermint, eucalyptus (clarity and revelation)",
+      "phoenix": "Dragon's blood, cinnamon, black pepper (transformation)"
+    },
+    "hdMapping": {
+      "support": ["Splenic awareness (scent sensitivity)", "Solar Plexus (emotional responses to scent)"],
+      "enhancement": "Different scents can support different energy types and states"
+    },
+    "astroMapping": {
+      "support": ["Venus (beauty and pleasure)", "Moon (emotional resonance)", "Neptune (subtle perception)"],
+      "houses": ["2nd House (sensory pleasure)", "12th House (transcendence)"]
+    },
+    "primeApplication": "Creating ritual spaces, anchoring positive states to specific scents, supporting meditation and contemplation practices",
+    "historicalExemplars": ["Cleopatra", "René-Maurice Gattefossé", "Marguerite Maury", "Robert Tisserand", "Valerie Ann Worwood"],
+    "recommendedReading": {
+      "fiction": ["Perfume by Patrick Süskind", "The Scent of Desire by Rachel Herz", "Jitterbug Perfume by Tom Robbins"],
+      "nonFiction": ["The Complete Book of Essential Oils and Aromatherapy by Valerie Ann Worwood", "The Art of Aromatherapy by Robert Tisserand", "Aromatherapy for Healing the Spirit by Gabriel Mojay"]
+    }
+  },
+  "semiotics": {
+    "art": "Semiotics",
+    "number": 2,
+    "essence": "Reality is a text. The semiotician learns to read — and write — in its language.",
+    "description": "The study of signs, symbols, and meaning-making. Everything communicates: words, images, gestures, objects, spaces. The semiotician reads these communications and understands how meaning is constructed, transmitted, and transformed.",
+    "domains": [
+      "Symbol interpretation",
+      "Archetypal patterns",
+      "Cultural codes and mythology",
+      "Body language and gesture",
+      "Visual rhetoric",
+      "Narrative structures",
+      "Metaphor and metonymy"
+    ],
+    "applications": {
+      "chartReading": "HD chart as a semiotic system — each gate, channel, and center is a sign",
+      "dreamWork": "Dreams as semiotic communications from the unconscious",
+      "synchronicity": "Meaningful coincidences as semiotic messages from reality",
+      "communication": "Understanding and optimizing how you communicate meaning",
+      "ritualDesign": "Creating ceremonies with intentional semiotic elements"
+    },
+    "keyConcepts": {
+      "signifier": "The form the sign takes (word, image, symbol)",
+      "signified": "The concept the sign represents",
+      "code": "The system of conventions that allows meaning",
+      "denotation": "Literal meaning",
+      "connotation": "Associated meanings and implications"
+    },
+    "hdMapping": {
+      "support": ["Ajna (conceptual processing)", "Throat (communication)", "Gates of the logical circuit"],
+      "enhancement": "Understanding the symbolic language of your chart design"
+    },
+    "astroMapping": {
+      "support": ["Mercury (communication and interpretation)", "Neptune (symbol and mysticism)"],
+      "houses": ["3rd House (communication)", "9th House (meaning and philosophy)"]
+    },
+    "primeApplication": "Reading Human Design and Gene Keys symbols, understanding the archetypal meaning of transits, interpreting synchronicities",
+    "historicalExemplars": ["Ferdinand de Saussure", "Charles Sanders Peirce", "Roland Barthes", "Umberto Eco", "Joseph Campbell"],
+    "recommendedReading": {
+      "fiction": ["The Name of the Rose by Umberto Eco", "Foucault's Pendulum by Umberto Eco", "If on a winter's night a traveler by Italo Calvino"],
+      "nonFiction": ["Mythologies by Roland Barthes", "The Hero with a Thousand Faces by Joseph Campbell", "Man and His Symbols by Carl Jung"]
+    }
+  },
+  "quantumMind": {
+    "art": "Quantum Mind",
+    "number": 3,
+    "essence": "Until you observe, all possibilities exist. Consciousness collapses potential into actuality.",
+    "description": "Working with consciousness at the level of possibility and potential. Drawing from quantum physics metaphors, this art explores how awareness interacts with reality, how observation affects outcomes, and how to work with the field of infinite potential.",
+    "domains": [
+      "Observer effect and consciousness",
+      "Possibility space navigation",
+      "Intention and manifestation",
+      "Parallel timeline awareness",
+      "Superposition of states",
+      "Entanglement and non-local connection",
+      "Collapse of wave function through choice"
+    ],
+    "principles": {
+      "observation": "What you focus on, you strengthen",
+      "superposition": "Multiple possibilities exist until a choice is made",
+      "entanglement": "Connections transcend space and time",
+      "uncertainty": "Some things cannot be known simultaneously",
+      "wave_particle": "Reality shifts based on how you observe it"
+    },
+    "practices": {
+      "possibilityScanning": "Sensing multiple potential futures",
+      "intentionSetting": "Collapsing possibility into chosen direction",
+      "timelineShifting": "Aligning with preferred parallel reality",
+      "fieldResonance": "Tuning to the quantum field for guidance"
+    },
+    "hdMapping": {
+      "support": ["Variables (perspective and orientation)", "Design crystal (pre-birth programming)", "Gates of transformation"],
+      "enhancement": "Understanding how your design interacts with possibility space"
+    },
+    "astroMapping": {
+      "support": ["Uranus (quantum leaps)", "Neptune (the unified field)", "Pluto (probability transformation)"],
+      "houses": ["11th House (future visions)", "12th House (the quantum field)"]
+    },
+    "primeApplication": "Working with possibility in readings, helping clients see multiple potential futures based on different choices",
+    "historicalExemplars": ["Erwin Schrödinger", "Werner Heisenberg", "David Bohm", "Fred Alan Wolf", "Amit Goswami"],
+    "recommendedReading": {
+      "fiction": ["Dark Matter by Blake Crouch", "The Quantum Rose by Catherine Asaro", "Timeline by Michael Crichton"],
+      "nonFiction": ["The Quantum Self by Danah Zohar", "The Field by Lynne McTaggart", "Breaking the Habit of Being Yourself by Joe Dispenza"]
+    }
+  },
+  "crystallography": {
+    "art": "Crystallography",
+    "number": 4,
+    "essence": "Crystals are frozen light — geometric containers of specific vibrational frequencies.",
+    "description": "Working with crystal energies and structures. Crystals are highly ordered molecular structures that hold and transmit specific vibrational frequencies. The crystallographer learns to work with these natural tools for healing, meditation, and energy work.",
+    "domains": [
+      "Crystal properties and correspondences",
+      "Crystal grids and layouts",
+      "Energy clearing with crystals",
+      "Meditation enhancement",
+      "Space programming",
+      "Personal energy support",
+      "Crystal charging and cleansing"
+    ],
+    "forgeCorrespondences": {
+      "chronos": "Smoky quartz, black tourmaline (grounding and protection)",
+      "eros": "Rose quartz, rhodonite, garnet (love and passion)",
+      "aether": "Clear quartz, selenite, amethyst (spiritual connection)",
+      "lux": "Citrine, sunstone, tiger's eye (clarity and will)",
+      "phoenix": "Obsidian, malachite, labradorite (transformation and change)"
+    },
+    "chakraCorrespondences": {
+      "root": "Red jasper, hematite, black tourmaline",
+      "sacral": "Carnelian, orange calcite",
+      "solarPlexus": "Citrine, tiger's eye, yellow jasper",
+      "heart": "Rose quartz, green aventurine, malachite",
+      "throat": "Blue lace agate, sodalite, amazonite",
+      "thirdEye": "Amethyst, lapis lazuli, fluorite",
+      "crown": "Clear quartz, selenite, amethyst"
+    },
+    "hdMapping": {
+      "support": ["Nine centers as energy points for crystal placement", "Defined vs. open center support"],
+      "enhancement": "Placing crystals on open centers to support or buffer energy"
+    },
+    "astroMapping": {
+      "support": ["Venus (beauty and harmony)", "Earth (material form)", "Saturn (structure)"],
+      "houses": ["2nd House (material resources)", "6th House (health support)"]
+    },
+    "primeApplication": "Enhancing meditation and reading sessions, creating grids for specific intentions, supporting energy type needs",
+    "historicalExemplars": ["Marcel Vogel", "Katrina Raphaell", "Judy Hall", "Melody (author)", "Nicholas Pearson"],
+    "recommendedReading": {
+      "fiction": ["The Crystal Cave by Mary Stewart", "Dune by Frank Herbert (spice as crystal)", "The Dark Crystal novelization"],
+      "nonFiction": ["The Crystal Bible by Judy Hall", "Crystal Healing by Katrina Raphaell", "Love Is in the Earth by Melody"]
+    }
+  },
+  "musicology": {
+    "art": "Musicology",
+    "number": 5,
+    "essence": "Sound is the original creative force — the universe literally sang itself into existence.",
+    "description": "Understanding how sound frequencies affect consciousness, emotion, and even physical matter. Music is mathematics made audible, vibration made conscious. The musicologist works with rhythm, harmony, and frequency as tools for transformation.",
+    "domains": [
+      "Frequency and brainwave states",
+      "Rhythmic entrainment",
+      "Harmonic resonance",
+      "Sound healing",
+      "Mantras and toning",
+      "Music for altered states",
+      "Cymatics (visible sound)"
+    ],
+    "frequencies": {
+      "delta": "0.5-4 Hz — deep sleep, healing",
+      "theta": "4-8 Hz — meditation, creativity, insight",
+      "alpha": "8-12 Hz — relaxation, calm alertness",
+      "beta": "12-30 Hz — active thinking, focus",
+      "gamma": "30-100 Hz — peak performance, insight"
+    },
+    "applications": {
+      "meditation": "Binaural beats, singing bowls, drone sounds",
+      "energizing": "Upbeat rhythms, major keys, faster tempos",
+      "healing": "432 Hz tuning, solfeggio frequencies",
+      "trance": "Repetitive rhythms, gradual tempo changes",
+      "focus": "Baroque classical, lo-fi beats, ambient soundscapes"
+    },
+    "hdMapping": {
+      "support": ["Throat center (voice and expression)", "Solar Plexus (emotional resonance)", "Sacral (rhythm response)"],
+      "enhancement": "Different music supports different strategy executions"
+    },
+    "astroMapping": {
+      "support": ["Venus (harmony and beauty)", "Neptune (transcendence through sound)", "Mercury (rhythm and pattern)"],
+      "houses": ["5th House (creative expression)", "12th House (transcendence)"]
+    },
+    "primeApplication": "Creating soundtracks for readings, using music to shift client states, enhancing meditation with appropriate frequencies",
+    "historicalExemplars": ["Pythagoras", "Hans Jenny", "Jonathan Goldman", "Alfred Tomatis", "Hazrat Inayat Khan"],
+    "recommendedReading": {
+      "fiction": ["The Music of the Spheres by Elizabeth Redfern", "The Hearing Trumpet by Leonora Carrington", "The Sound and the Fury by William Faulkner"],
+      "nonFiction": ["Healing Sounds by Jonathan Goldman", "The Mysticism of Sound and Music by Hazrat Inayat Khan", "This Is Your Brain on Music by Daniel Levitin"]
+    }
+  },
+  "bioelectricConsciousness": {
+    "art": "Bioelectric Consciousness",
+    "number": 6,
+    "essence": "You are not a body with a bioelectric field — you are a bioelectric field that has learned to perceive itself as a body.",
+    "description": "Understanding the electrical nature of the body and mind. Every thought is an electrical impulse. The heart generates a measurable electromagnetic field. The nervous system is an electrical network. This art explores the intersection of electricity, biology, and consciousness.",
+    "domains": [
+      "Nervous system as electrical network",
+      "Heart coherence and HRV",
+      "Brainwave optimization",
+      "Biofield sensing and healing",
+      "Grounding and earthing",
+      "EMF awareness",
+      "Polyvagal theory and regulation"
+    ],
+    "systems": {
+      "heart": "Heart generates strongest EMF in body — heart coherence affects brain function",
+      "brain": "EEG patterns reflect and affect consciousness states",
+      "nervousSystem": "Autonomic regulation through vagal tone",
+      "meridians": "Energy pathways as bioelectric channels",
+      "chakras": "Vortices of bioelectric activity"
+    },
+    "practices": {
+      "heartCoherence": "HeartMath techniques for emotional regulation",
+      "neurofeedback": "Training brainwave patterns",
+      "grounding": "Direct earth contact to discharge and rebalance",
+      "vagalToning": "Cold exposure, breathwork, humming for vagal stimulation"
+    },
+    "hdMapping": {
+      "support": ["Sacral center (life force generator)", "Heart center (willpower)", "All motor centers as energy transmitters"],
+      "enhancement": "Understanding your electrical nature supports energy type awareness"
+    },
+    "astroMapping": {
+      "support": ["Uranus (electricity and sudden change)", "Mars (vital force)", "Sun (life energy)"],
+      "houses": ["1st House (vital force)", "6th House (health and nervous system)"]
+    },
+    "primeApplication": "Understanding client energy states, optimizing your own bioelectric field for readings, recognizing when electrical interference affects intuition",
+    "historicalExemplars": ["Nikola Tesla", "Harold Saxon Burr", "Robert Becker", "HeartMath Institute founders", "Stephen Porges"],
+    "recommendedReading": {
+      "fiction": ["Frankenstein by Mary Shelley", "The Electric Kool-Aid Acid Test by Tom Wolfe", "Neuromancer by William Gibson"],
+      "nonFiction": ["The Body Electric by Robert Becker", "The HeartMath Solution by Doc Childre", "The Polyvagal Theory by Stephen Porges"]
+    }
+  }
+}

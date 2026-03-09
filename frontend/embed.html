@@ -321,10 +321,26 @@
 
   <script>
     // BL-R-M19: Derive parent origin for secure postMessage targeting
+    // SECURITY: Never use '*' — if origin cannot be determined, skip postMessage entirely
     const parentOrigin = (function() {
-      try { return document.referrer ? new URL(document.referrer).origin : '*'; }
-      catch { return '*'; }
+      try {
+        if (document.referrer) {
+          return new URL(document.referrer).origin;
+        }
+        console.warn('[Prime Self Embed] No referrer — postMessage to parent disabled for security');
+        return null;
+      } catch (e) {
+        console.warn('[Prime Self Embed] Invalid referrer URL — postMessage to parent disabled');
+        return null;
+      }
     })();
+
+    // Safe postMessage wrapper — only sends if parentOrigin is valid
+    function safePostMessage(message) {
+      if (parentOrigin && window.parent !== window) {
+        window.parent.postMessage(message, parentOrigin);
+      }
+    }
 
     // Parse URL parameters for customization
     const urlParams = new URLSearchParams(window.location.search);
@@ -395,12 +411,10 @@
         displayResults(data);
 
         // Notify parent window about chart calculation
-        if (window.parent !== window) {
-          window.parent.postMessage({
-            type: 'primeself-chart-calculated',
-            data: data,
-          }, parentOrigin);
-        }
+        safePostMessage({
+          type: 'primeself-chart-calculated',
+          data: data,
+        });
 
         // Notify parent window about resize (for iframe auto-sizing)
         notifyResize();
@@ -409,12 +423,10 @@
         console.error('Chart calculation error:', error);
         
         // Notify parent window about error
-        if (window.parent !== window) {
-          window.parent.postMessage({
-            type: 'primeself-error',
-            error: error.message,
-          }, parentOrigin);
-        }
+        safePostMessage({
+          type: 'primeself-error',
+          error: error.message,
+        });
         
         showError('Unable to calculate chart. Please try again or check your internet connection.');
       }
@@ -473,12 +485,12 @@
       const fullChartUrl = `https://primeself.app/?${params.toString()}`;
       
       // Open in new tab or notify parent window
-      if (window.parent !== window) {
-        // Inside iframe - notify parent
-        window.parent.postMessage({
+      if (window.parent !== window && parentOrigin) {
+        // Inside iframe with valid origin - notify parent
+        safePostMessage({
           type: 'primeself-open-chart',
           url: fullChartUrl,
-        }, parentOrigin);
+        });
       } else {
         // Standalone - open directly
         window.open(fullChartUrl, '_blank');
@@ -487,13 +499,11 @@
 
     function notifyResize() {
       // Send height to parent for iframe auto-sizing
-      if (window.parent !== window) {
-        const height = document.body.scrollHeight;
-        window.parent.postMessage({
-          type: 'primeself-resize',
-          height: height,
-        }, parentOrigin);
-      }
+      const height = document.body.scrollHeight;
+      safePostMessage({
+        type: 'primeself-resize',
+        height: height,
+      });
     }
 
     // Notify initial size

@@ -288,7 +288,7 @@ export async function handleSyncClients(request, env, ctx) {
     }
     
     // Get practitioner ID
-    const { rows: practitioners } = await query(QUERIES.getPractitionerById, [user.id]);
+    const { rows: practitioners } = await query(QUERIES.getPractitionerByUserId, [user.id]);
     
     if (!practitioners || practitioners.length === 0) {
       return Response.json({

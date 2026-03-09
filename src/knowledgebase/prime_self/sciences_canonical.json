@@ -1,0 +1,216 @@
+{
+  "_meta": {
+    "version": "2.0-canonical",
+    "source": "Prime Self Sacred Texts & Canonical Philosophy",
+    "description": "The Six Sciences — disciplines of perception and transformation that form the practitioner's toolkit",
+    "note": "Each Science is both a practice to develop and a lens through which to perceive reality. They are not separate from daily life but woven into it."
+  },
+  "mindfulness": {
+    "science": "Mindfulness",
+    "number": 1,
+    "essence": "The mind that watches itself cannot be entirely captured by its own patterns.",
+    "description": "Heightened present-moment awareness. The foundational science upon which all others rest. Without the ability to observe, all other disciplines become mechanical repetition. Mindfulness allows the practitioner to witness thoughts, emotions, and sensations without identification.",
+    "domains": [
+      "Present-moment awareness",
+      "Non-judgmental observation",
+      "Thought pattern recognition",
+      "Emotional awareness",
+      "Body sensation tracking",
+      "Attention training",
+      "Metacognition"
+    ],
+    "practices": {
+      "formal": ["Sitting meditation", "Body scan", "Breath awareness", "Walking meditation"],
+      "informal": ["Mindful eating", "Mindful listening", "Transition moments", "STOP practice"],
+      "advanced": ["Choiceless awareness", "Self-inquiry", "Noting practice", "Open awareness"]
+    },
+    "hdMapping": {
+      "support": ["Splenic awareness (moment-to-moment)", "Ajna processing", "Open centers as sensors"],
+      "enhancement": "Supports Strategy and Authority recognition"
+    },
+    "astroMapping": {
+      "support": ["Mercury (mental clarity)", "Moon (emotional awareness)"],
+      "houses": ["12th House (spiritual awareness)", "6th House (daily practice)"]
+    },
+    "primeApplication": "Enables reading your own design and recognizing when you are operating from conditioning vs. authentic nature",
+    "historicalExemplars": ["Buddha", "Thich Nhat Hanh", "Jon Kabat-Zinn", "Jiddu Krishnamurti", "Eckhart Tolle"],
+    "recommendedReading": {
+      "fiction": ["Siddhartha by Hermann Hesse", "The Miracle of Mindfulness by Thich Nhat Hanh (practical guide)", "Be Here Now by Ram Dass"],
+      "nonFiction": ["Wherever You Go There You Are by Jon Kabat-Zinn", "The Power of Now by Eckhart Tolle", "10% Happier by Dan Harris"]
+    }
+  },
+  "alchemy": {
+    "science": "Alchemy",
+    "number": 2,
+    "essence": "The lead you carry is not waste — it is the raw material of your golden future.",
+    "description": "The transformation of base elements into higher forms. This is not mystical nonsense — it is the practical science of transmutation. Pain into wisdom. Trauma into power. Shadow into gift. The alchemist understands that nothing is wasted; everything can be transformed.",
+    "domains": [
+      "Shadow alchemy (transmuting shadow into gift)",
+      "Emotional alchemy (transforming difficult emotions)",
+      "Material alchemy (transforming circumstances)",
+      "Relational alchemy (transforming conflict into connection)",
+      "Narrative alchemy (reframing stories)",
+      "Energetic alchemy (transmuting energy states)"
+    ],
+    "stages": {
+      "nigredo": "Blackening — confronting the shadow, the dark night",
+      "albedo": "Whitening — purification, separating essence from dross",
+      "citrinitas": "Yellowing — awakening, dawn of new consciousness",
+      "rubedo": "Reddening — integration, the philosopher's stone achieved"
+    },
+    "hdMapping": {
+      "support": ["Individual circuitry (mutation)", "Channel of Transformation (3-60)", "Gate 18 (Correction)"],
+      "enhancement": "Enables transmutation of not-self themes into wisdom"
+    },
+    "astroMapping": {
+      "support": ["Pluto (transformation)", "Scorpio (death and rebirth)", "8th House (alchemical death)"],
+      "houses": ["8th House (transmutation)", "12th House (spiritual transformation)"]
+    },
+    "primeApplication": "Used extensively in working with Gene Keys shadow-gift-siddhi pathway",
+    "historicalExemplars": ["Carl Jung", "Paracelsus", "Nicolas Flamel (legendary)", "Marie-Louise von Franz", "Michael Meade"],
+    "recommendedReading": {
+      "fiction": ["The Alchemist by Paulo Coelho", "The Marriage of Cadmus and Harmony by Roberto Calasso", "Faust by Goethe"],
+      "nonFiction": ["Alchemy by Marie-Louise von Franz", "The Gene Keys by Richard Rudd", "Owning Your Own Shadow by Robert Johnson"]
+    }
+  },
+  "divination": {
+    "science": "Divination",
+    "number": 3,
+    "essence": "The universe is constantly communicating — divination is learning to read.",
+    "description": "The art and science of reading patterns and signs. Not fortune-telling but pattern recognition across seen and unseen domains. The diviner learns to read the language of symbolism, synchronicity, and subtle perception.",
+    "domains": [
+      "Synchronicity recognition",
+      "Symbol interpretation",
+      "Oracle consultation",
+      "Dream interpretation",
+      "Omen reading",
+      "Pattern recognition across systems",
+      "Intuitive perception"
+    ],
+    "systems": {
+      "structured": ["I Ching", "Tarot", "Runes", "Human Design (as divination)", "Gene Keys"],
+      "unstructured": ["Dream work", "Synchronicity tracking", "Nature reading", "Body signals"],
+      "temporal": ["Transits", "Progressions", "Cycles", "Returns"]
+    },
+    "hdMapping": {
+      "support": ["Splenic intuition", "Solar Plexus emotional wave reading", "Ajna pattern recognition"],
+      "enhancement": "Recognizing when transits activate gates in your chart"
+    },
+    "astroMapping": {
+      "support": ["Neptune (intuition)", "Moon (receptivity)", "Uranus (sudden insight)"],
+      "houses": ["8th House (hidden knowledge)", "9th House (seeking meaning)", "12th House (unseen realms)"]
+    },
+    "primeApplication": "Reading transits, recognizing when particular gates are activated, understanding the meaning of synchronicities in daily life",
+    "historicalExemplars": ["The Delphic Oracle", "Nostradamus", "Carl Jung", "Marie Lenormand", "Rachel Pollack"],
+    "recommendedReading": {
+      "fiction": ["The Book of the New Sun by Gene Wolfe", "Jonathan Strange & Mr Norrell by Susanna Clarke", "The Bone Clocks by David Mitchell"],
+      "nonFiction": ["Synchronicity by Carl Jung", "The I Ching (Wilhelm translation)", "Seventy-Eight Degrees of Wisdom by Rachel Pollack"]
+    }
+  },
+  "astrology": {
+    "science": "Astrology",
+    "number": 4,
+    "essence": "The stars do not compel — they incline. The chart is the score; you play the music.",
+    "description": "The mapping of celestial influences on earthly existence. Not determinism but a language of archetypal energies and timing. The astrologer understands cosmic patterns and their correspondence with human experience.",
+    "domains": [
+      "Natal chart interpretation",
+      "Transit analysis",
+      "Progressions and returns",
+      "Synastry and relationship astrology",
+      "Electional astrology (timing)",
+      "Mundane astrology (collective events)",
+      "Evolutionary astrology (soul purpose)"
+    ],
+    "integration": {
+      "withHD": "Human Design uses planetary placements at birth and 88 days before — astrology provides the archetypal context",
+      "withGeneKeys": "Gene Keys derive from I Ching hexagrams mapped to zodiacal degrees",
+      "withForges": "Forge activation is partially determined by natal and transit placements"
+    },
+    "hdMapping": {
+      "support": ["All planetary activations in HD chart", "Nodes (life direction)", "Design/Personality split"],
+      "enhancement": "Understanding WHY certain gates are activated through planetary archetype"
+    },
+    "astroMapping": {
+      "self-referential": true,
+      "primaryFocus": "All planetary bodies and their aspects, transits, and progressions"
+    },
+    "primeApplication": "Reading today's transits to understand daily energies, timing important decisions with favorable alignments, understanding relationship dynamics through synastry",
+    "historicalExemplars": ["Claudius Ptolemy", "William Lilly", "Dane Rudhyar", "Liz Greene", "Steven Forrest"],
+    "recommendedReading": {
+      "fiction": ["A Wrinkle in Time by Madeleine L'Engle", "The Once and Future King by T.H. White", "The Night Circus by Erin Morgenstern"],
+      "nonFiction": ["The Inner Sky by Steven Forrest", "Astrology Psychology and the Four Elements by Stephen Arroyo", "Saturn: A New Look at an Old Devil by Liz Greene"]
+    }
+  },
+  "reiki": {
+    "science": "Reiki",
+    "number": 5,
+    "essence": "You do not generate the energy — you become a channel through which it flows.",
+    "description": "Energy channeling and healing. The science of working directly with subtle energy (chi, prana, life force). The practitioner learns to sense, channel, and direct energy for healing and transformation.",
+    "domains": [
+      "Energy sensing and reading",
+      "Channeling life force",
+      "Hands-on healing",
+      "Distance healing",
+      "Energy protection",
+      "Space clearing",
+      "Chakra balancing"
+    ],
+    "levels": {
+      "level1": "Self-healing, sensing energy, basic hand positions",
+      "level2": "Distance healing, symbols, emotional/mental healing",
+      "level3": "Master level, teaching capability, advanced techniques"
+    },
+    "relatedSystems": ["Qigong", "Pranic healing", "Therapeutic Touch", "Polarity therapy", "Brennan healing"],
+    "hdMapping": {
+      "support": ["Defined Sacral (generating energy)", "Open centers (receiving energy)", "Format channels"],
+      "enhancement": "Understanding your energy type determines how you best work with energy healing"
+    },
+    "astroMapping": {
+      "support": ["Neptune (subtle energy)", "Pluto (transformative healing)", "Chiron (wounded healer)"],
+      "houses": ["6th House (health and healing)", "12th House (spiritual healing)"]
+    },
+    "primeApplication": "Self-healing practices, clearing energy before readings, supporting physical and emotional wellbeing",
+    "historicalExemplars": ["Mikao Usui", "Hawayo Takata", "Barbara Brennan", "Dolores Krieger", "Donna Eden"],
+    "recommendedReading": {
+      "fiction": ["The Celestine Prophecy by James Redfield", "Mutant Message Down Under by Marlo Morgan", "Way of the Peaceful Warrior by Dan Millman"],
+      "nonFiction": ["Essential Reiki by Diane Stein", "Hands of Light by Barbara Brennan", "Energy Medicine by Donna Eden"]
+    }
+  },
+  "behavioralAlchemy": {
+    "science": "Alchemy of Behaviors",
+    "number": 6,
+    "essence": "Habits are not static — they are processes that can be transformed at their roots.",
+    "description": "The specialized application of alchemical principles to behavioral patterns. This science focuses on transforming habits, patterns, and automatic behaviors. The behavioral alchemist understands the structure of habits and how to transmute them.",
+    "domains": [
+      "Habit loop recognition (cue-routine-reward)",
+      "Trigger identification",
+      "Behavior substitution",
+      "Environmental design",
+      "Identity-based change",
+      "Keystone habit identification",
+      "Habit stacking"
+    ],
+    "framework": {
+      "awareness": "Recognize the pattern without judgment",
+      "analysis": "Understand the underlying need the behavior serves",
+      "alternatives": "Generate new behaviors that meet the same need",
+      "architecture": "Design environment to support new pattern",
+      "action": "Practice with compassion for setbacks",
+      "anchoring": "Reinforce until new pattern is automatic"
+    },
+    "hdMapping": {
+      "support": ["Not-self themes as habit indicators", "Open centers as conditioning vectors", "Strategy as behavioral guidance"],
+      "enhancement": "Identifying which habits arise from conditioning vs. authentic design"
+    },
+    "astroMapping": {
+      "support": ["Saturn (discipline and structure)", "Mars (action and will)", "Moon (habitual patterns)"],
+      "houses": ["6th House (daily routines)", "1st House (self-initiated action)", "10th House (disciplined achievement)"]
+    },
+    "primeApplication": "Transforming not-self behaviors into aligned action, building habits that support your Human Design strategy and authority",
+    "historicalExemplars": ["B.F. Skinner", "Charles Duhigg", "James Clear", "BJ Fogg", "Gretchen Rubin"],
+    "recommendedReading": {
+      "fiction": ["Flowers for Algernon by Daniel Keyes", "The Phantom Tollbooth by Norton Juster", "Life of Pi by Yann Martel"],
+      "nonFiction": ["Atomic Habits by James Clear", "The Power of Habit by Charles Duhigg", "Tiny Habits by BJ Fogg"]
+    }
+  }
+}
