@@ -20,10 +20,17 @@
   'use strict';
 
   // ── Pick variant (sticky per session) ──────────────────────
-  let variant = sessionStorage.getItem('ps-brand-variant');
-  if (!variant) {
-    variant = Math.random() < 0.5 ? 'v1' : 'v2';
-    sessionStorage.setItem('ps-brand-variant', variant);
+  let variant;
+  try {
+    variant = sessionStorage.getItem('ps-brand-variant');
+    if (!variant) {
+      variant = Math.random() < 0.5 ? 'v1' : 'v2';
+      sessionStorage.setItem('ps-brand-variant', variant);
+    }
+  } catch (e) {
+    // sessionStorage unavailable (private browsing in some browsers)
+    // Fall back to consistent v1 for the session without storage
+    variant = variant || 'v1';
   }
 
   // Expose globally for other scripts to reference

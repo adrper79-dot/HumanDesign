@@ -132,8 +132,8 @@
   }
   
   /* ── Main Content: Bottom Padding for Nav ──────────────── */
-  main {
-    padding-bottom: calc(var(--mobile-nav-height) + 20px);
+  .container {
+    padding-bottom: calc(var(--mobile-nav-height) + var(--space-4));
   }
   
   /* ── Tabs: Touch-Friendly ──────────────────────────────── */

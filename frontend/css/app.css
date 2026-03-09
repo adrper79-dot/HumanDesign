@@ -60,8 +60,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; justify-content: center; padding: 0 16px; gap: 2px; overflow-x: auto; position: relative; }
 .tab-btn {
   background: none; border: none; color: var(--text-dim);
-  padding: 14px 14px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
+  padding: 14px 16px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
   border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap;
+  min-height: var(--touch-target-min);
 }
 .tab-btn:hover { color: var(--text); border-bottom-color: rgba(201,168,76,0.3); }
 .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
@@ -88,7 +89,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   margin-bottom: 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
 .step-item {
-  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px;
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: clamp(140px, 25vw, 180px);
   padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: background 0.15s;
 }
 .step-item:hover { background: rgba(201,168,76,0.08); }
@@ -103,7 +104,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 /* ── Layout [DUP] base.css ── */
 .container { max-width: 1000px; margin: 0 auto; padding: 28px 24px; }
 .tab-content { display: none; }
-.tab-content.active { display: block; }
+.tab-content.active { display: block; padding-bottom: var(--space-8); } /* UI-025: ensure bottom breathing room on desktop */
 
 /* ── Cards [DUP] cards.css ── */
 .card {
@@ -163,16 +164,28 @@ select option { background: var(--bg3); }
 }
 .help-icon:hover { background: rgba(106,79,200,0.4); }
 .help-icon[title]:hover::after {
-  content: attr(title); position: absolute; left: 50%; bottom: calc(100% + 8px);
-  transform: translateX(-50%); background: var(--bg2); color: var(--text);
+  content: attr(title); position: fixed;
+  left: var(--tooltip-left, calc(50% + 8px)); top: var(--tooltip-top, calc(100% + 8px));
+  background: var(--bg2); color: var(--text);
   padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
   font-size: 0.8rem; font-weight: 400; white-space: normal; width: 260px;
   box-shadow: var(--shadow); z-index: var(--z-tooltip); pointer-events: none; line-height: 1.4;
+  transform: none; /* Remove the translateX(-50%) since we calculate exact position */
+}
+.help-icon[title].tooltip-below:hover::after {
+  top: var(--tooltip-top, calc(100% + 8px));
 }
 .help-icon[title]:hover::before {
-  content: ''; position: absolute; left: 50%; bottom: calc(100% + 2px);
-  transform: translateX(-50%); border: 6px solid transparent;
+  content: ''; position: fixed;
+  left: var(--tooltip-left, calc(50% + 8px)); top: var(--tooltip-top, calc(100% + 2px));
+  border: 6px solid transparent;
   border-top-color: var(--border); z-index: var(--z-tooltip);
+  transform: none; /* Remove translateX(-50%) */
+}
+.help-icon[title].tooltip-below:hover::before {
+  border-top-color: transparent;
+  border-bottom-color: var(--border);
+  top: var(--tooltip-top, calc(100% + 2px));
 }
 
 /* ── Loading spinner [DUP] base.css (keyframes) ── */
@@ -283,7 +296,7 @@ select option { background: var(--bg3); }
 
 /* ── Raw JSON toggler [DUP] prime-self.css ── */
 .raw-toggle { font-size: 0.75rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
-.raw-json { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.72rem; overflow-x: auto; margin-top: 8px; white-space: pre-wrap; color: #90c890; max-height: 400px; overflow-y: auto; }
+.raw-json { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.72rem; overflow-x: auto; margin-top: 8px; white-space: pre-wrap; color: #90c890; max-height: 400px; overflow-y: auto; word-break: break-all; }
 .raw-json.open { display: block; }
 
 /* ── Empty state [UNIQUE] ── */
@@ -357,6 +370,7 @@ select option { background: var(--bg3); }
 .pricing-card {
   background: var(--bg3); border: 2px solid var(--border); border-radius: 8px;
   padding: 24px; display: flex; flex-direction: column; transition: all 0.2s;
+  min-width: min(280px, 100%);
 }
 .pricing-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
 .pricing-card.featured { border-color: var(--gold); background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, var(--bg3) 100%); }

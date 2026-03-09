@@ -80,6 +80,10 @@
 .auth-status {
   font-size: var(--text-sm);
   color: var(--text-secondary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .auth-status.logged-in {

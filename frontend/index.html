@@ -154,10 +154,10 @@
 <div class="auth-overlay hidden" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="auth-box">
     <!-- Logo Animation (randomized v1/v2) -->
-    <div style="text-align:center;margin-bottom:16px">
+    <div style="text-align:center;margin-bottom:var(--space-4)">
       <video data-logo-video autoplay muted playsinline loop
              poster="logo-poster.jpg"
-             style="max-width:180px;height:auto;border-radius:12px">
+             style="max-width:180px;height:auto;border-radius:var(--space-3)">
         <source src="logo-animation.webm" type="video/webm">
         <source src="logo-animation.mp4" type="video/mp4">
         <img data-logo-poster src="logo-poster.jpg" alt="Prime Self" style="max-width:180px">
@@ -166,23 +166,23 @@
     <h2 id="authTitle" data-i18n="auth.signIn">Sign In</h2>
     <p id="authSubtitle" data-i18n="auth.accessProfile">Access your Prime Self profile and saved charts.</p>
     <form onsubmit="submitAuth(); return false;">
-    <div class="form-group" style="margin-bottom:12px">
+    <div class="form-group" style="margin-bottom:var(--space-3)">
       <label for="authEmail" data-i18n="auth.email">Email</label>
       <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required aria-required="true" aria-describedby="authError">
     </div>
-    <div class="form-group" style="margin-bottom:16px">
+    <div class="form-group" style="margin-bottom:var(--space-4)">
       <label for="authPassword" data-i18n="auth.password">Password</label>
       <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required aria-required="true" minlength="8" aria-describedby="authError">
     </div>
     <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>
-    <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:11px" data-i18n="auth.signIn">Sign In</button>
+    <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:var(--space-3)" data-i18n="auth.signIn">Sign In</button>
     </form>
     <div class="auth-toggle">
       <span id="authToggleText" data-i18n="auth.noAccount">Don't have an account?</span>
       <a onclick="toggleAuthMode()" id="authToggleLink" data-i18n="auth.createOne">Create one</a>
     </div>
-    <div style="text-align:center;margin-top:10px">
-      <a style="font-size:0.78rem;cursor:pointer;color:var(--text-dim)" onclick="closeAuthOverlay()" data-i18n="auth.continueWithout">Continue without signing in</a>
+    <div style="text-align:center;margin-top:var(--space-3)">
+      <a style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)" onclick="closeAuthOverlay()" data-i18n="auth.continueWithout">Continue without signing in</a>
     </div>
   </div>
 </div>
@@ -239,20 +239,8 @@
         <button class="btn-primary tier-cta" onclick="startCheckout('guide', event)">Upgrade to Guide</button>
       </div>
       <!-- Practitioner Tier -->
-      <div class="pricing-card">
-        <div class="tier-name" data-i18n="pricing.practitioner">Practitioner</div>
-        <div class="tier-price"><span class="currency">$</span>500</div>
-        <div class="tier-billing" data-i18n="pricing.perMonth">per month</div>
-        <ul class="tier-features">
-          <li>Everything in Guide +</li>
-          <li>10,000 API calls/month</li>
-          <li>White-label API access</li>
-          <li>Custom integrations</li>
-          <li>Dedicated support</li>
-          <li>Revenue sharing eligible</li>
-        </ul>
-        <button class="btn-primary tier-cta" onclick="startCheckout('practitioner', event)">Upgrade to Practitioner</button>
-      </div>
+      <!-- Practitioner tier removed until white-label API and custom integration features are built. -->
+      <!-- See CHANGELOG_UX.md: [ ] Remove $500/mo tier until practitioner features are actually built -->
     </div>
     <div class="pricing-close">
       <a onclick="closePricingModal()" data-i18n="pricing.maybeLater">Maybe later</a>
@@ -267,7 +255,7 @@
   <div class="logo-lockup">
     <div class="logo-lockup-icon">
       <img data-logo-poster src="/icons/icon-72.png" alt="Prime Self"
-           width="28" height="28" style="border-radius:6px">
+           width="28" height="28" style="border-radius:var(--space-2)">
     </div>
     <div class="logo-lockup-text">
       <div class="logo-lockup-primary">Prime Self</div>
@@ -296,7 +284,7 @@
     <span class="social-proof-label">gates calculated per chart — conscious &amp; unconscious</span>
   </div>
   <div class="social-proof-stat">
-    <span class="social-proof-number" id="totalProfiles">...</span>
+    <span class="social-proof-number" id="totalProfiles"></span>
     <span class="social-proof-label" data-i18n="social.reportsGenerated">AI synthesis reports generated</span>
   </div>
 </div>
@@ -311,14 +299,14 @@
   <div class="tab-divider" aria-hidden="true"></div>
   <!-- TOOLS: inside More dropdown -->
   <div class="more-menu-btn" style="display:flex;align-items:center">
-    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:4px">Tools <span id="more-arrow" style="font-size:0.65rem;transition:transform 0.15s">▾</span></button>
+    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:var(--space-1)">Tools <span id="more-arrow" style="font-size:var(--font-size-xs);transition:transform 0.15s">▾</span></button>
     <div class="more-dropdown" id="more-dropdown" role="menu">
-      <button class="tab-btn" id="btn-history" role="menuitem" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved Charts</button>
-      <button class="tab-btn" id="btn-rectify" role="menuitem" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Birth Time Rectify</button>
-      <button class="tab-btn" id="btn-onboarding" role="menuitem" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Onboarding</button>
-      <button class="tab-btn" id="btn-practitioner" role="menuitem" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this); closeMoreMenu()"><span class="icon-star"></span> Practitioner</button>
-      <button class="tab-btn" id="btn-clusters" role="menuitem" aria-controls="tab-clusters" onclick="switchTab('clusters', this); closeMoreMenu()"><span class="icon-cluster"></span> Clusters</button>
-      <button class="tab-btn" id="btn-sms" role="menuitem" aria-controls="tab-sms" onclick="switchTab('sms', this); closeMoreMenu()"><span class="icon-sms"></span> SMS Alerts</button>
+      <button class="tab-btn" id="btn-history" role="menuitem" tabindex="0" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved Charts</button>
+      <button class="tab-btn" id="btn-rectify" role="menuitem" tabindex="0" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Birth Time Rectify</button>
+      <button class="tab-btn" id="btn-onboarding" role="menuitem" tabindex="0" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Onboarding</button>
+      <button class="tab-btn" id="btn-practitioner" role="menuitem" tabindex="0" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this); closeMoreMenu()"><span class="icon-star"></span> Practitioner</button>
+      <button class="tab-btn" id="btn-clusters" role="menuitem" tabindex="0" aria-controls="tab-clusters" onclick="switchTab('clusters', this); closeMoreMenu()"><span class="icon-cluster"></span> Clusters</button>
+      <button class="tab-btn" id="btn-sms" role="menuitem" tabindex="0" aria-controls="tab-sms" onclick="switchTab('sms', this); closeMoreMenu()"><span class="icon-sms"></span> SMS Alerts</button>
     </div>
   </div>
 </div>
@@ -334,10 +322,10 @@
       <button class="sub-tab" onclick="switchTab('profile')">⬡ AI Profile</button>
     </div>
     <div id="overviewContent">
-      <div class="card" style="text-align:center;padding:30px">
-        <div style="font-size:2rem;margin-bottom:12px">✦</div>
-        <h3 style="color:var(--gold);margin:0 0 8px;font-size:1.1rem">Your Prime Self Overview</h3>
-        <p style="color:var(--text-dim);font-size:0.88rem;max-width:450px;margin:0 auto 20px;line-height:1.6">Generate a chart to see your personalized overview — key insights from your energy blueprint, planetary positions, and active transits in one place.</p>
+      <div class="card" style="text-align:center;padding:var(--space-8)">
+        <div style="font-size:var(--font-size-2xl);margin-bottom:var(--space-3)">✦</div>
+        <h3 style="color:var(--gold);margin:0 0 8px;font-size:var(--font-size-md)">Your Prime Self Overview</h3>
+        <p style="color:var(--text-dim);font-size:var(--font-size-base);max-width:450px;margin:0 auto var(--space-5);line-height:1.6">Generate a chart to see your personalized overview — key insights from your energy blueprint, planetary positions, and active transits in one place.</p>
         <button class="btn-primary" onclick="switchTab('chart')">Generate Your Chart →</button>
       </div>
     </div>
@@ -351,7 +339,7 @@
       <button class="sub-tab" onclick="switchTab('profile')">⬡ AI Profile</button>
     </div>
 
-    <!-- 3-step journey guide — collapses once user has generated a profile -->
+    <!-- 5-step journey guide — stays visible as breadcrumb -->
     <div class="step-guide" id="step-guide-banner">
       <div class="step-item active-step" id="sg-chart" onclick="switchTab('chart', document.getElementById('btn-blueprint'))" title="Enter your birth details">
         <div class="step-num">1</div>
@@ -367,9 +355,19 @@
         <div class="step-num">3</div>
         <div class="step-label"><strong>Today's Energy</strong><span>How planets affect you now</span></div>
       </div>
+      <div class="step-arrow">›</div>
+      <div class="step-item" id="sg-checkins" onclick="switchTab('checkins', document.getElementById('btn-today'))" title="Track your daily alignment">
+        <div class="step-num">4</div>
+        <div class="step-label"><strong>Daily Check-ins</strong><span>Track alignment & patterns</span></div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step-item" id="sg-compatibility" onclick="switchTab('compatibility', document.getElementById('btn-compatibility'))" title="Check relationship compatibility">
+        <div class="step-num">5</div>
+        <div class="step-label"><strong>Compatibility</strong><span>Relationship energy analysis</span></div>
+      </div>
     </div>
 
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
       <strong style="color:var(--gold)" data-i18n="chart.welcomeTitle">Welcome to Prime Self</strong><br>
       Enter your exact birth date, time, and location below. We'll calculate your personalized Energy Blueprint by mapping 64 gate activations, planetary positions, and numerological patterns. Your chart reveals which energies are consistently available to you (defined centers) vs. which you experience through others (open centers). This precision calculation forms the foundation for AI-powered synthesis.
     </div>
@@ -387,18 +385,18 @@
         </div>
         <div class="form-group full">
           <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:var(--space-2)">
             <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1" required aria-required="true"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('c')" id="c-geoBtn"
-              style="white-space:nowrap;padding:0 16px;font-size:0.85rem" data-i18n="chart.lookupLocation">Look Up</button>
+              style="white-space:nowrap;padding:0 16px;font-size:var(--font-size-base)" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="c-geo-status" style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)"></div>
+          <div id="c-geo-status" style="margin-top:var(--space-2);font-size:var(--font-size-sm);color:var(--text-dim)"></div>
           <input type="hidden" id="c-lat">
           <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
-          <label><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
+          <label><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span style="font-weight:400;color:var(--text-dim);font-size:var(--font-size-sm)">(auto-filled by Look Up)</span></label>
           <select id="c-tz">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -420,7 +418,7 @@
           </select>
         </div>
       </div>
-      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <div style="margin-top:var(--space-5);display:flex;gap:var(--space-3);flex-wrap:wrap">
         <button class="btn-primary" onclick="calculateChart()" id="calcBtn">
           <span class="spinner" id="calcSpinner" style="display:none"></span>
           <span data-i18n="chart.generateMyChart">Generate My Chart</span>
@@ -429,7 +427,7 @@
       </div>
     </div>
 
-    <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Human Design &amp; astrology data.</p></div>
+    <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Human Design &amp; astrology data.</p></div>
   </div>
 
   <!-- ═══ PROFILE TAB ═══ -->
@@ -439,14 +437,14 @@
       <button class="sub-tab" onclick="switchTab('chart')">⊙ Chart</button>
       <button class="sub-tab active" onclick="switchTab('profile')">⬡ AI Profile</button>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--gold)">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
       <strong style="color:var(--gold)" data-i18n="profile.aiSynthesis">AI-Powered Multi-System Synthesis</strong><br>
       This isn't a generic report. We calculate YOUR exact 64 gate activations (both conscious + unconscious), overlay Gene Keys shadows/gifts/siddhis, map astrological aspects with orbs, and integrate numerology — then Claude AI synthesizes convergences across ALL systems. You get specific scenarios ("When X happens, you notice Y because [datapoint]") instead of vague statements. <strong>Takes 15-30 seconds to generate.</strong> Requires sign-in to save your profile.
     </div>
     <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
       <strong>⚡ Usage Limit</strong><br>
       <span id="profileQuotaText"></span>
-      <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:8px">Upgrade to unlock more</a>
+      <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:var(--space-2)">Upgrade to unlock more</a>
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-profile"></span> <span data-i18n="profile.generateTitle">Generate Prime Self Profile</span></div>
@@ -461,18 +459,18 @@
         </div>
         <div class="form-group full">
           <label data-i18n="chart.birthLocation">Birth Location</label>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:var(--space-2)">
             <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('p')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('p')" id="p-geoBtn"
-              style="white-space:nowrap;padding:0 16px;font-size:0.85rem" data-i18n="chart.lookupLocation">Look Up</button>
+              style="white-space:nowrap;padding:0 16px;font-size:var(--font-size-base)" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="p-geo-status" style="margin-top:6px;font-size:0.8rem;color:var(--text-dim)"></div>
+          <div id="p-geo-status" style="margin-top:var(--space-2);font-size:var(--font-size-sm);color:var(--text-dim)"></div>
           <input type="hidden" id="p-lat">
           <input type="hidden" id="p-lng">
         </div>
         <div class="form-group full">
-          <label><span data-i18n="chart.timezone">Timezone</span> <span style="font-weight:400;color:var(--text-dim);font-size:0.8rem">(auto-filled by Look Up)</span></label>
+          <label><span data-i18n="chart.timezone">Timezone</span> <span style="font-weight:400;color:var(--text-dim);font-size:var(--font-size-sm)">(auto-filled by Look Up)</span></label>
           <select id="p-tz">
             <option value="America/New_York">America/New_York</option>
             <option value="America/Los_Angeles">America/Los_Angeles</option>
@@ -488,12 +486,12 @@
           <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder">
         </div>
       </div>
-      <div style="margin-top:18px">
-        <button class="btn-primary" onclick="generateProfile()" id="profileBtn" style="padding:11px 24px">
+      <div style="margin-top:var(--space-5)">
+        <button class="btn-primary" onclick="generateProfile()" id="profileBtn" style="padding:var(--space-3) 24px">
           <span class="spinner" id="profileSpinner" style="display:none"></span>
           <span data-i18n="profile.generate">Create My Full Profile</span>
         </button>
-        <button class="btn-secondary" onclick="shareProfile()" id="shareProfileBtn" style="padding:11px 24px;display:none">
+        <button class="btn-secondary" onclick="shareProfile()" id="shareProfileBtn" style="padding:var(--space-3) 24px;display:none">
           📤 Share My Profile
         </button>
       </div>
@@ -503,40 +501,40 @@
     <!-- Share Modal Overlay -->
     <div class="share-modal-overlay hidden" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
       <div class="share-modal">
-        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)">
-          <h3 id="shareModalTitle" style="margin:0;font-size:1.2rem;color:var(--gold)" data-i18n="share.shareProfile">Share Your Profile</h3>
-          <button class="modal-close" onclick="closeShareModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.8rem;cursor:pointer">&times;</button>
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-4);border-bottom:var(--border-width-thin) solid var(--border)">
+          <h3 id="shareModalTitle" style="margin:0;font-size:var(--font-size-lg);color:var(--gold)" data-i18n="share.shareProfile">Share Your Profile</h3>
+          <button class="modal-close" onclick="closeShareModal()" style="background:none;border:none;color:var(--text-dim);font-size:var(--font-size-xl);cursor:pointer">&times;</button>
         </div>
-        <div style="padding:24px">
+        <div style="padding:var(--space-6)">
           <!-- Share Link -->
-          <div style="margin-bottom:24px">
-            <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text)" data-i18n="share.referralLink">Your Referral Link</label>
-            <div style="display:flex;gap:8px">
-              <input type="text" id="shareLinkInput" readonly style="flex:1;background:var(--bg3);border:1px solid var(--border);padding:10px;border-radius:6px;color:var(--text);font-size:0.9rem">
+          <div style="margin-bottom:var(--space-6)">
+            <label style="display:block;margin-bottom:var(--space-2);font-weight:600;color:var(--text)" data-i18n="share.referralLink">Your Referral Link</label>
+            <div style="display:flex;gap:var(--space-2)">
+              <input type="text" id="shareLinkInput" readonly style="flex:1;background:var(--bg3);border:var(--border-width-thin) solid var(--border);padding:var(--space-3);border-radius:var(--space-2);color:var(--text);font-size:var(--font-size-base)">
               <button class="btn-secondary" onclick="copyShareLink()" style="white-space:nowrap">
                 📋 Copy
               </button>
             </div>
-            <p style="font-size:0.8rem;color:var(--text-dim);margin-top:6px" data-i18n="share.earnRewards">Share this link and earn rewards when friends sign up!</p>
+            <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-2)" data-i18n="share.earnRewards">Share this link and earn rewards when friends sign up!</p>
           </div>
           
           <!-- Social Share Buttons -->
-          <div style="margin-bottom:20px">
-            <label style="display:block;margin-bottom:12px;font-weight:600;color:var(--text)" data-i18n="share.shareOn">Share On</label>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
-              <button class="btn-social" onclick="shareToSocial('facebook')" style="background:#1877f2;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+          <div style="margin-bottom:var(--space-5)">
+            <label style="display:block;margin-bottom:var(--space-3);font-weight:600;color:var(--text)" data-i18n="share.shareOn">Share On</label>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--space-3)">
+              <button class="btn-social" onclick="shareToSocial('facebook')" style="background:#1877f2;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
                 Facebook
               </button>
-              <button class="btn-social" onclick="shareToSocial('twitter')" style="background:#1da1f2;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+              <button class="btn-social" onclick="shareToSocial('twitter')" style="background:#1da1f2;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
                 Twitter
               </button>
-              <button class="btn-social" onclick="shareToSocial('linkedin')" style="background:#0077b5;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+              <button class="btn-social" onclick="shareToSocial('linkedin')" style="background:#0077b5;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
                 LinkedIn
               </button>
-              <button class="btn-social" onclick="shareToSocial('whatsapp')" style="background:#25d366;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+              <button class="btn-social" onclick="shareToSocial('whatsapp')" style="background:#25d366;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
                 WhatsApp
               </button>
-              <button class="btn-social" onclick="shareToSocial('email')" style="background:var(--accent);color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem">
+              <button class="btn-social" onclick="shareToSocial('email')" style="background:var(--accent);color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
                 Email
               </button>
             </div>
@@ -559,7 +557,7 @@
       <button class="sub-tab active" onclick="switchTab('enhance')">★ Enhance</button>
       <button class="sub-tab" onclick="switchTab('diary')">📖 Diary</button>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(106,79,200,0.06) 100%);border-left:4px solid var(--gold)">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(106,79,200,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
       <strong style="color:var(--gold)">Dramatically Improve Reading Accuracy</strong><br>
       Complete these quick assessments to validate your chart through behavioral patterns and cross-correlate with established psychology frameworks. Takes 10 minutes total: decision patterns (validates Authority), energy patterns (validates Type), Big Five personality (cross-validates chart), and Character Strengths (maps to Gene Keys). Your next profile synthesis will reference THIS data to prove chart accuracy through lived experience.
     </div>
@@ -567,11 +565,11 @@
     <!-- Behavioral Validation -->
     <div class="card">
       <div class="card-title"><span class="icon-check"></span> <span data-i18n="enhance.behavioral">Behavioral Validation</span> (2 min)</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Answer these questions to validate your chart through actual behavior patterns.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Answer these questions to validate your chart through actual behavior patterns.</p>
       
-      <div class="form-group" style="margin-bottom:16px">
+      <div class="form-group" style="margin-bottom:var(--space-4)">
         <label>How do you make your best decisions?</label>
-        <select id="enhance-decision" style="margin-top:4px">
+        <select id="enhance-decision" style="margin-top:var(--space-1)">
           <option value="">-- Select pattern --</option>
           <option value="gut_impulse">Immediate gut impulse (yes/no, can't explain why)</option>
           <option value="sleep_on_it">Sleep on it and reassess in the morning</option>
@@ -582,9 +580,9 @@
         </select>
       </div>
 
-      <div class="form-group" style="margin-bottom:16px">
+      <div class="form-group" style="margin-bottom:var(--space-4)">
         <label>Which energy pattern feels most like you?</label>
-        <select id="enhance-energy" style="margin-top:4px">
+        <select id="enhance-energy" style="margin-top:var(--space-1)">
           <option value="">-- Select pattern --</option>
           <option value="steady_renewing">Steady & self-renewing throughout the day</option>
           <option value="bursts_rest">Bursts of power, then need to rest</option>
@@ -595,44 +593,44 @@
         </select>
       </div>
 
-      <div class="form-group full" style="margin-bottom:16px">
+      <div class="form-group full" style="margin-bottom:var(--space-4)">
         <label>What's your current focus or challenge? (Optional but helpful for personalization)</label>
-        <textarea id="enhance-focus" rows="3" placeholder="e.g., Deciding whether to leave stable job to start consulting practice..." style="margin-top:4px"></textarea>
+        <textarea id="enhance-focus" rows="3" placeholder="e.g., Deciding whether to leave stable job to start consulting practice..." style="margin-top:var(--space-1)"></textarea>
       </div>
 
       <button class="btn-primary" onclick="saveValidation()" id="enhanceBtn1">
         <span class="spinner" id="enhanceSpinner1" style="display:none"></span>
         Save Behavioral Data
       </button>
-      <div id="enhanceStatus1" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+      <div id="enhanceStatus1" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
     </div>
 
     <!-- Big Five Assessment -->
     <div class="card">
       <div class="card-title"><span class="icon-brain"></span> <span data-i18n="enhance.bigFive">Big Five Personality</span> (3 min)</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">20 questions. Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">20 questions. Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
       
       <div id="bigfive-questions"></div>
 
-      <button class="btn-primary" onclick="saveBigFive()" id="bigfiveBtn" style="margin-top:16px">
+      <button class="btn-primary" onclick="saveBigFive()" id="bigfiveBtn" style="margin-top:var(--space-4)">
         <span class="spinner" id="bigfiveSpinner" style="display:none"></span>
         Save Big Five Assessment
       </button>
-      <div id="bigfiveStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+      <div id="bigfiveStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
     </div>
 
     <!-- VIA Character Strengths -->
     <div class="card">
       <div class="card-title"><span class="icon-star"></span> <span data-i18n="enhance.via">Character Strengths</span> (4 min)</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">24 questions. Rate how much each strength describes you from 1 (Not like me) to 5 (Very much like me).</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">24 questions. Rate how much each strength describes you from 1 (Not like me) to 5 (Very much like me).</p>
       
       <div id="via-questions"></div>
 
-      <button class="btn-primary" onclick="saveVIA()" id="viaBtn" style="margin-top:16px">
+      <button class="btn-primary" onclick="saveVIA()" id="viaBtn" style="margin-top:var(--space-4)">
         <span class="spinner" id="viaSpinner" style="display:none"></span>
         <span data-i18n="enhance.save">Save Character Strengths</span>
       </button>
-      <div id="viaStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+      <div id="viaStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
     </div>
   </div>
 
@@ -642,7 +640,7 @@
       <button class="sub-tab" onclick="switchTab('enhance')">★ Enhance</button>
       <button class="sub-tab active" onclick="switchTab('diary')">📖 Diary</button>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid #d5001c">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid #d5001c">
       <strong style="color:#d5001c">Life Events Timeline</strong><br>
       Log major life events with dates to validate your chart retroactively. When you record an event like "Got promoted - June 2019", the system auto-calculates which transits were active and correlates them with YOUR natal gates. This proves chart accuracy through lived experience. Also essential for birth time rectification: if major events consistently correlate with transits at a specific birth time, you've found the right time.
     </div>
@@ -653,11 +651,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label data-i18n="diary.eventDate">Event Date</label>
-          <input type="date" id="diary-date" style="margin-top:4px">
+          <input type="date" id="diary-date" style="margin-top:var(--space-1)">
         </div>
         <div class="form-group">
           <label data-i18n="diary.eventType">Event Type</label>
-          <select id="diary-type" style="margin-top:4px">
+          <select id="diary-type" style="margin-top:var(--space-1)">
             <option value="career">Career</option>
             <option value="relationship">Relationship</option>
             <option value="health">Health</option>
@@ -669,7 +667,7 @@
         </div>
         <div class="form-group">
           <label data-i18n="diary.significance">Significance</label>
-          <select id="diary-significance" style="margin-top:4px">
+          <select id="diary-significance" style="margin-top:var(--space-1)">
             <option value="major">Major (life-changing)</option>
             <option value="moderate" selected>Moderate (notable)</option>
             <option value="minor">Minor (worth noting)</option>
@@ -677,27 +675,27 @@
         </div>
         <div class="form-group full">
           <label data-i18n="diary.eventTitle">Event Title</label>
-          <input type="text" id="diary-title" placeholder="e.g., Got promoted to Director" style="margin-top:4px">
+          <input type="text" id="diary-title" placeholder="e.g., Got promoted to Director" style="margin-top:var(--space-1)">
         </div>
         <div class="form-group full">
           <label data-i18n="diary.eventDescription">Description (Optional)</label>
-          <textarea id="diary-description" rows="3" placeholder="Add context, what happened, how you felt..." style="margin-top:4px"></textarea>
+          <textarea id="diary-description" rows="3" placeholder="Add context, what happened, how you felt..." style="margin-top:var(--space-1)"></textarea>
         </div>
       </div>
 
-      <div style="margin-top:16px;display:flex;gap:10px">
+      <div style="margin-top:var(--space-4);display:flex;gap:var(--space-3)">
         <button class="btn-primary" onclick="saveDiaryEntry()" id="diaryBtn">
           <span class="spinner" id="diarySpinner" style="display:none"></span>
           <span class="icon-plus"></span> Add Event
         </button>
         <button class="btn-secondary" onclick="cancelDiaryEdit()" id="diaryCancelBtn" style="display:none" data-i18n="common.cancel">Cancel</button>
       </div>
-      <div id="diaryStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+      <div id="diaryStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="icon-archive"></span> <span data-i18n="diary.yourEvents">Your Life Events</span></div>
-      <button class="btn-secondary" onclick="loadDiaryEntries()" id="diaryLoadBtn" style="margin-bottom:16px">
+      <button class="btn-secondary" onclick="loadDiaryEntries()" id="diaryLoadBtn" style="margin-bottom:var(--space-4)">
         <span class="spinner" id="diaryLoadSpinner" style="display:none"></span>
         Load Events
       </button>
@@ -711,7 +709,7 @@
       <button class="sub-tab" onclick="switchTab('transits')">☽ Transits</button>
       <button class="sub-tab active" onclick="switchTab('checkin')">♥ Check-In</button>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:4px solid var(--gold)">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
       <strong style="color:var(--gold)" data-i18n="checkin.title">Daily Alignment Tracker</strong><br>
       Check in daily to track how well you're following your strategy and authority. Rate your alignment (1-10), note your mood and energy, and watch patterns emerge over time. Build streaks to maintain consistency. The system correlates your alignment scores with current transits to help you understand which energies support or challenge your design.
     </div>
@@ -720,48 +718,48 @@
     <div class="card">
       <div class="card-title">
         <span class="icon-heart"></span> Today's Check-In
-        <span id="checkinStreakBadge" style="margin-left:auto;font-size:0.85rem;color:var(--accent2);font-weight:600;display:none">🔥 <span id="streakDays">0</span> day streak!</span>
+        <span id="checkinStreakBadge" style="margin-left:auto;font-size:var(--font-size-base);color:var(--accent2);font-weight:600;display:none">🔥 <span id="streakDays">0</span> day streak!</span>
       </div>
       
-      <div id="checkinCompletedMsg" style="display:none;padding:16px;background:rgba(80,200,120,0.12);border:1px solid rgba(80,200,120,0.3);border-radius:6px;color:var(--accent2);margin-bottom:16px">
+      <div id="checkinCompletedMsg" style="display:none;padding:var(--space-4);background:rgba(80,200,120,0.12);border:var(--border-width-thin) solid rgba(80,200,120,0.3);border-radius:var(--space-2);color:var(--accent2);margin-bottom:var(--space-4)">
         ✓ Check-in completed for today! You can update it anytime today.
       </div>
 
       <div class="form-grid">
         <div class="form-group full">
           <label><span data-i18n="checkin.howAligned">How aligned did you feel today?</span> (1-10)<span class="icon-info help-icon" title="1 = Completely off track, not following your design at all. 10 = Perfectly aligned, honoring your strategy and authority all day. Be honest - patterns only emerge with genuine data."></span></label>
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <button class="alignment-btn" data-score="1" onclick="selectAlignment(1)">1</button>
-            <button class="alignment-btn" data-score="2" onclick="selectAlignment(2)">2</button>
-            <button class="alignment-btn" data-score="3" onclick="selectAlignment(3)">3</button>
-            <button class="alignment-btn" data-score="4" onclick="selectAlignment(4)">4</button>
-            <button class="alignment-btn" data-score="5" onclick="selectAlignment(5)">5</button>
-            <button class="alignment-btn" data-score="6" onclick="selectAlignment(6)">6</button>
-            <button class="alignment-btn" data-score="7" onclick="selectAlignment(7)">7</button>
-            <button class="alignment-btn" data-score="8" onclick="selectAlignment(8)">8</button>
-            <button class="alignment-btn" data-score="9" onclick="selectAlignment(9)">9</button>
-            <button class="alignment-btn" data-score="10" onclick="selectAlignment(10)">10</button>
+          <div style="display:flex;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">
+            <button class="alignment-btn" data-score="1" onclick="selectAlignment(1)" aria-label="Alignment level 1 out of 10">1</button>
+            <button class="alignment-btn" data-score="2" onclick="selectAlignment(2)" aria-label="Alignment level 2 out of 10">2</button>
+            <button class="alignment-btn" data-score="3" onclick="selectAlignment(3)" aria-label="Alignment level 3 out of 10">3</button>
+            <button class="alignment-btn" data-score="4" onclick="selectAlignment(4)" aria-label="Alignment level 4 out of 10">4</button>
+            <button class="alignment-btn" data-score="5" onclick="selectAlignment(5)" aria-label="Alignment level 5 out of 10">5</button>
+            <button class="alignment-btn" data-score="6" onclick="selectAlignment(6)" aria-label="Alignment level 6 out of 10">6</button>
+            <button class="alignment-btn" data-score="7" onclick="selectAlignment(7)" aria-label="Alignment level 7 out of 10">7</button>
+            <button class="alignment-btn" data-score="8" onclick="selectAlignment(8)" aria-label="Alignment level 8 out of 10">8</button>
+            <button class="alignment-btn" data-score="9" onclick="selectAlignment(9)" aria-label="Alignment level 9 out of 10">9</button>
+            <button class="alignment-btn" data-score="10" onclick="selectAlignment(10)" aria-label="Alignment level 10 out of 10">10</button>
           </div>
           <input type="hidden" id="checkin-alignment-score" value="">
         </div>
 
         <div class="form-group">
-          <label style="margin-bottom:8px">
-            <input type="checkbox" id="checkin-followed-strategy" style="width:auto;margin-right:6px">
-            Followed my strategy today<span class="icon-info help-icon" title="Did you honor your type's strategy? Generator: Respond. Manifestor: Inform. Projector: Wait for invitation. Reflector: Wait 28 days for clarity."></span>
+          <label style="margin-bottom:var(--space-2)">
+            <input type="checkbox" id="checkin-followed-strategy" style="width:auto;margin-right:var(--space-2)">
+            Followed my strategy today<span class="icon-info help-icon" title="Did you honor your type&apos;s strategy? Builder: Respond. Initiator: Inform. Guide Pattern: Wait for invitation. Mirror: Wait 28 days for clarity."></span>
           </label>
         </div>
 
         <div class="form-group">
-          <label style="margin-bottom:8px">
-            <input type="checkbox" id="checkin-followed-authority" style="width:auto;margin-right:6px">
+          <label style="margin-bottom:var(--space-2)">
+            <input type="checkbox" id="checkin-followed-authority" style="width:auto;margin-right:var(--space-2)">
             Followed my authority today<span class="icon-info help-icon" title="Did you use your decision-making authority? Emotional: Wait through the wave. Sacral: Follow gut response. Splenic: Trust immediate knowing. Ego: Commit from willpower. Self-Projected: Talk it out."></span>
           </label>
         </div>
 
         <div class="form-group">
           <label>How was your mood today?</label>
-          <select id="checkin-mood" style="margin-top:4px">
+          <select id="checkin-mood" style="margin-top:var(--space-1)">
             <option value="">— Select —</option>
             <option value="great">😊 Great (energized, joyful)</option>
             <option value="good">🙂 Good (positive, content)</option>
@@ -773,47 +771,47 @@
 
         <div class="form-group">
           <label>Energy Level (1-10)<span class="icon-info help-icon" title="Optional. 1 = Completely exhausted. 10 = Fully energized and vital. Helps track energy patterns relative to alignment."></span></label>
-          <input type="number" id="checkin-energy-level" min="1" max="10" placeholder="Optional" style="margin-top:4px">
+          <input type="number" id="checkin-energy-level" min="1" max="10" placeholder="Optional" style="margin-top:var(--space-1)">
         </div>
 
         <div class="form-group full">
           <label>Notes (Optional)</label>
-          <textarea id="checkin-notes" rows="3" placeholder="What happened today? Any insights, challenges, or wins?" style="margin-top:4px"></textarea>
+          <textarea id="checkin-notes" rows="3" placeholder="What happened today? Any insights, challenges, or wins?" style="margin-top:var(--space-1)"></textarea>
         </div>
       </div>
 
-      <div style="margin-top:16px;display:flex;gap:10px">
+      <div style="margin-top:var(--space-4);display:flex;gap:var(--space-3)">
         <button class="btn-primary" onclick="saveCheckin()" id="checkinBtn">
           <span class="spinner" id="checkinSpinner" style="display:none"></span>
           <span class="icon-heart"></span> <span id="checkinBtnText" data-i18n="checkin.saveCheckin">Save Check-In</span>
         </button>
       </div>
-      <div id="checkinStatus" style="margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+      <div id="checkinStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
     </div>
 
     <!-- Alignment Stats Card -->
     <div class="card">
       <div class="card-title"><span class="icon-chart"></span> <span data-i18n="checkin.trends">Alignment Trends</span></div>
-      <button class="btn-secondary" onclick="loadCheckinStats()" id="checkinStatsBtn" style="margin-bottom:16px">
+      <button class="btn-secondary" onclick="loadCheckinStats()" id="checkinStatsBtn" style="margin-bottom:var(--space-4)">
         <span class="spinner" id="checkinStatsSpinner" style="display:none"></span>
         Load Stats
       </button>
       
       <div id="checkinStatsContainer" style="display:none">
         <!-- Stats Summary -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px" id="checkinStatsSummary">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-3);margin-bottom:var(--space-5)" id="checkinStatsSummary">
           <!-- Populated by loadCheckinStats() -->
         </div>
 
         <!-- Alignment Chart -->
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:16px">
-          <h3 style="font-size:0.9rem;color:var(--gold);margin-bottom:12px">30-Day Alignment Score</h3>
+        <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-4);margin-bottom:var(--space-4)">
+          <h3 style="font-size:var(--font-size-base);color:var(--gold);margin-bottom:var(--space-3)">30-Day Alignment Score</h3>
           <canvas id="alignmentChart" width="400" height="200"></canvas>
         </div>
 
         <!-- Check-In History -->
-        <div style="margin-top:20px">
-          <h3 style="font-size:0.9rem;color:var(--gold);margin-bottom:12px">Recent Check-Ins</h3>
+        <div style="margin-top:var(--space-5)">
+          <h3 style="font-size:var(--font-size-base);color:var(--gold);margin-bottom:var(--space-3)">Recent Check-Ins</h3>
           <div id="checkinHistoryList"></div>
         </div>
       </div>
@@ -828,21 +826,21 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-transit"></span> Today's Planetary Energy</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:8px;padding:12px">
-          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:4px">Fast Planets</div>
-          <div style="font-size:0.83rem;color:var(--text);line-height:1.5">Moon, Sun, Mercury — shift <strong>daily</strong>. Short-term mood and communication themes.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)">
+        <div style="background:rgba(201,168,76,0.06);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3)">
+          <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:var(--space-1)">Fast Planets</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.5">Moon, Sun, Mercury — shift <strong>daily</strong>. Short-term mood and communication themes.</div>
         </div>
-        <div style="background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:8px;padding:12px">
-          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:4px">Medium Planets</div>
-          <div style="font-size:0.83rem;color:var(--text);line-height:1.5">Mars, Jupiter — shift <strong>weeks to months</strong>. Drive, ambition, and opportunity cycles.</div>
+        <div style="background:rgba(201,168,76,0.06);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3)">
+          <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:var(--space-1)">Medium Planets</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.5">Mars, Jupiter — shift <strong>weeks to months</strong>. Drive, ambition, and opportunity cycles.</div>
         </div>
-        <div style="background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:8px;padding:12px">
-          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:4px">Slow Planets</div>
-          <div style="font-size:0.83rem;color:var(--text);line-height:1.5">Saturn, Neptune, Pluto — shift <strong>years</strong>. Major life chapters and deep transformation.</div>
+        <div style="background:rgba(201,168,76,0.06);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3)">
+          <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:var(--space-1)">Slow Planets</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.5">Saturn, Neptune, Pluto — shift <strong>years</strong>. Major life chapters and deep transformation.</div>
         </div>
       </div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px;line-height:1.6">
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4);line-height:1.6">
         <strong style="color:var(--gold)">✦ Natal hits</strong> — when a transiting planet lands on one of YOUR birth gates, that theme is amplified in your life right now. These are highlighted in gold below.
       </p>
       <button class="btn-primary" onclick="loadTransits()" id="transitBtn">
@@ -850,33 +848,33 @@
         <span class="icon-transit"></span> See Today's Energy
       </button>
     </div>
-    <div id="transitResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Tap <strong>See Today's Energy</strong> to load current planetary transits and how they interact with your chart.</p></div>
+    <div id="transitResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Tap <strong>See Today's Energy</strong> to load current planetary transits and how they interact with your chart.</p></div>
   </div>
 
   <!-- ═══ HISTORY TAB ═══ -->
   <div class="tab-content" id="tab-history" role="tabpanel" aria-labelledby="btn-history">
     <div class="card">
       <div class="card-title"><span class="icon-archive"></span> <span data-i18n="profile.savedProfiles">Saved Profiles</span></div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px" data-i18n="profile.signInToView">Sign in to view your saved Prime Self Profiles.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)" data-i18n="profile.signInToView">Sign in to view your saved Prime Self Profiles.</p>
       <button class="btn-primary" onclick="loadHistory()" id="historyBtn">
         <span class="spinner" id="historySpinner" style="display:none"></span>
         View Saved Charts
       </button>
     </div>
-    <div id="historyResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Your previously saved profiles will appear here once you sign in and load them.</p></div>
+    <div id="historyResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Your previously saved profiles will appear here once you sign in and load them.</p></div>
   </div>
 
   <!-- ═══ COMPOSITE TAB ═══ -->
   <div class="tab-content" id="tab-composite" role="tabpanel" aria-labelledby="btn-relationships">
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(106,79,200,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:4px solid var(--info)">
+    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(106,79,200,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:var(--space-1) solid var(--info)">
       <strong style="color:var(--info)">Relationship Electromagnetic Field Analysis</strong><br>
       Calculate the combined energy blueprint when two charts overlap. This shows: <strong>(1)</strong> New channels activated when you're together (electromagnetic bridges), <strong>(2)</strong> Definition changes (e.g., individual becomes emotional authority), <strong>(3)</strong> Dominant gates/themes in the relationship field, <strong>(4)</strong> Potential blind spots (missing energies). Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-partnership"></span> <span data-i18n="composite.title">Composite Chart</span></div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze relationship dynamics between two people.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Analyze relationship dynamics between two people.</p>
       
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px" data-i18n="composite.personA">Person A</h4>
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-4) 0 8px" data-i18n="composite.personA">Person A</h4>
       <div class="form-grid">
         <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" value="1990-06-15"></div>
         <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" value="14:30"></div>
@@ -884,20 +882,20 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="display:flex;gap:var(--space-2);align-items:flex-start">
             <input type="text" id="comp-A-location" placeholder="New York, NY"
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-A')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-A')" id="comp-A-geoBtn"
-              style="height:40px;padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
+              style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="comp-A-geo-status" style="font-size:0.75rem;margin-top:4px;min-height:1rem"></div>
+          <div id="comp-A-geo-status" style="font-size:var(--font-size-sm);margin-top:var(--space-1);min-height:1rem"></div>
         </div>
         <input type="hidden" id="comp-A-lat" value="40.7128">
         <input type="hidden" id="comp-A-lng" value="-74.0060">
       </div>
 
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:20px 0 8px" data-i18n="composite.personB">Person B</h4>
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-5) 0 8px" data-i18n="composite.personB">Person B</h4>
       <div class="form-grid">
         <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" value="1988-03-22"></div>
         <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" value="09:15"></div>
@@ -905,32 +903,32 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="display:flex;gap:var(--space-2);align-items:flex-start">
             <input type="text" id="comp-B-location" placeholder="Los Angeles, CA"
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-B')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-B')" id="comp-B-geoBtn"
-              style="height:40px;padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
+              style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="comp-B-geo-status" style="font-size:0.75rem;margin-top:4px;min-height:1rem"></div>
+          <div id="comp-B-geo-status" style="font-size:var(--font-size-sm);margin-top:var(--space-1);min-height:1rem"></div>
         </div>
         <input type="hidden" id="comp-B-lat" value="40.7128">
         <input type="hidden" id="comp-B-lng" value="-74.0060">
       </div>
 
-      <button class="btn-primary" onclick="generateComposite()" id="compBtn" style="margin-top:16px">
+      <button class="btn-primary" onclick="generateComposite()" id="compBtn" style="margin-top:var(--space-4)">
         <span class="spinner" id="compSpinner" style="display:none"></span>
         <span data-i18n="composite.generate">Check Our Compatibility</span>
       </button>
     </div>
-    <div id="compResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:24px 0;font-size:0.9rem">Enter both birth details above and tap <strong>Check Our Compatibility</strong> to see a relationship analysis.</p></div>
+    <div id="compResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter both birth details above and tap <strong>Check Our Compatibility</strong> to see a relationship analysis.</p></div>
   </div>
 
   <!-- ═══ RECTIFY TAB ═══ -->
   <div class="tab-content" id="tab-rectify" role="tabpanel" aria-labelledby="btn-rectify">
     <div class="card">
       <div class="card-title"><span class="icon-time"></span> <span data-i18n="rectify.title">Birth Time Rectification</span></div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Analyze how chart changes within a time window to find the most accurate birth time.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Analyze how chart changes within a time window to find the most accurate birth time.</p>
       
       <div class="form-grid">
         <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="rect-date" value="1990-06-15"></div>
@@ -939,14 +937,14 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="display:flex;gap:var(--space-2);align-items:flex-start">
             <input type="text" id="rect-location" placeholder="New York, NY"
               style="flex:1"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('rect')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('rect')" id="rect-geoBtn"
-              style="height:40px;padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
+              style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="rect-geo-status" style="font-size:0.75rem;margin-top:4px;min-height:1rem"></div>
+          <div id="rect-geo-status" style="font-size:var(--font-size-sm);margin-top:var(--space-1);min-height:1rem"></div>
         </div>
         <input type="hidden" id="rect-lat" value="40.7128">
         <input type="hidden" id="rect-lng" value="-74.0060">
@@ -964,7 +962,7 @@
         </div>
       </div>
 
-      <button class="btn-primary" onclick="runRectification()" id="rectBtn" style="margin-top:16px">
+      <button class="btn-primary" onclick="runRectification()" id="rectBtn" style="margin-top:var(--space-4)">
         <span class="spinner" id="rectSpinner" style="display:none"></span>
         <span data-i18n="rectify.analyze">Find My Birth Time</span>
       </button>
@@ -977,23 +975,23 @@
     <div id="practitionerUpgradeNotice" class="alert alert-warn" style="display:none">
       <strong>🔒 Practitioner Tools Locked</strong><br>
       The Practitioner Portal requires a Guide or Practitioner tier subscription for client management, batch processing, and advanced features.
-      <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:8px">Upgrade to unlock</a>
+      <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:var(--space-2)">Upgrade to unlock</a>
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-star"></span> <span data-i18n="practitioner.title">Practitioner Portal</span></div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Manage client roster and session notes (requires practitioner account).</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Manage client roster and session notes (requires practitioner account).</p>
       
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 8px" data-i18n="practitioner.addClient">Add Client</h4>
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-4) 0 8px" data-i18n="practitioner.addClient">Add Client</h4>
       <div class="form-grid">
         <div class="form-group"><label>Client Name</label><input type="text" id="prac-name" placeholder="Jane Smith"></div>
         <div class="form-group"><label>Profile ID</label><input type="text" id="prac-profileId" placeholder="Optional"></div>
       </div>
-      <button class="btn-primary" onclick="addClient()" id="pracAddBtn" style="margin-top:8px">
+      <button class="btn-primary" onclick="addClient()" id="pracAddBtn" style="margin-top:var(--space-2)">
         <span class="spinner" id="pracAddSpinner" style="display:none"></span>
         Add to Roster
       </button>
 
-      <h4 style="color:var(--gold);font-size:0.9rem;margin:24px 0 8px" data-i18n="practitioner.roster">My Roster</h4>
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-6) 0 8px" data-i18n="practitioner.roster">My Roster</h4>
       <button class="btn-secondary" onclick="loadRoster()" id="pracLoadBtn">
         <span class="spinner" id="pracLoadSpinner" style="display:none"></span>
         View My Clients
@@ -1006,9 +1004,9 @@
   <div class="tab-content" id="tab-clusters" role="tabpanel" aria-labelledby="btn-clusters">
     <div class="card">
       <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Human Design and Prime Self Forge philosophy"></span></div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:20px">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-5)">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
       
-      <div style="display:flex;gap:10px;margin-bottom:20px">
+      <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-5)">
         <button class="btn-primary" onclick="showCreateClusterForm()" id="showCreateBtn">+ New Cluster</button>
         <button class="btn-secondary" onclick="loadClusters()" id="clusterListRefreshBtn">
           <span class="spinner" id="clusterListSpinner" style="display:none"></span>
@@ -1017,8 +1015,8 @@
       </div>
 
       <!-- Create Cluster Form (initially hidden) -->
-      <div id="createClusterForm" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px">
-        <h4 style="color:var(--gold);font-size:0.95rem;margin-bottom:14px">Create New Cluster</h4>
+      <div id="createClusterForm" style="display:none;background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-5);margin-bottom:var(--space-5)">
+        <h4 style="color:var(--gold);font-size:var(--font-size-md);margin-bottom:var(--space-4)">Create New Cluster</h4>
         <div class="form-grid">
           <div class="form-group">
             <label><span data-i18n="clusters.name">Cluster Name</span><span class="icon-info help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'"></span></label>
@@ -1029,7 +1027,7 @@
             <textarea id="cluster-challenge" placeholder="e.g., Launching our new product by Q2" rows="2"></textarea>
           </div>
         </div>
-        <div style="display:flex;gap:10px;margin-top:14px">
+        <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4)">
           <button class="btn-primary" onclick="createCluster()" id="clusterCreateBtn">
             <span class="spinner" id="clusterCreateSpinner" style="display:none"></span>
             <span data-i18n="clusters.create">Create Cluster</span>
@@ -1050,7 +1048,7 @@
   <div class="tab-content" id="tab-sms" role="tabpanel" aria-labelledby="btn-sms">
     <div class="card">
       <div class="card-title"><span class="icon-sms"></span> SMS Digest</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Subscribe to receive daily transit digests via SMS.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Subscribe to receive daily transit digests via SMS.</p>
       
       <div class="form-grid">
         <div class="form-group">
@@ -1061,7 +1059,7 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:12px;margin-top:16px">
+      <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4)">
         <button class="btn-primary" onclick="subscribeSMS()" id="smsSubBtn">
           <span class="spinner" id="smsSubSpinner" style="display:none"></span>
           <span data-i18n="sms.subscribe">Subscribe</span>
@@ -1072,7 +1070,7 @@
         </button>
       </div>
 
-      <div id="smsResult" style="margin-top:16px"></div>
+      <div id="smsResult" style="margin-top:var(--space-4)"></div>
     </div>
   </div>
 
@@ -1080,15 +1078,15 @@
   <div class="tab-content" id="tab-onboarding" role="tabpanel" aria-labelledby="btn-onboarding">
     <div class="card">
       <div class="card-title"><span class="icon-compass"></span> <span data-i18n="onboarding.title">Onboarding Story</span></div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Interactive guided journey through your Prime Self profile discovery.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Interactive guided journey through your Prime Self profile discovery.</p>
       
       <button class="btn-primary" onclick="startOnboarding()" id="onboardBtn">
         <span class="spinner" id="onboardSpinner" style="display:none"></span>
         <span data-i18n="onboarding.start">Begin Onboarding</span>
       </button>
 
-      <div id="onboardProgress" style="margin-top:20px;display:none">
-        <div style="background:var(--bg3);height:6px;border-radius:3px;overflow:hidden;margin-bottom:12px">
+      <div id="onboardProgress" style="margin-top:var(--space-5);display:none">
+        <div style="background:var(--bg3);height:var(--space-2);border-radius:var(--space-1);overflow:hidden;margin-bottom:var(--space-3)">
           <div id="onboardBar" style="background:var(--gold);height:100%;width:0%;transition:width 0.3s"></div>
         </div>
         <div id="onboardContent"></div>
@@ -1122,14 +1120,44 @@ function updateAuthUI() {
   }
 }
 
+let authModalKeydownHandler = null;
+
 function openAuthOverlay() {
   document.getElementById('authOverlay').classList.remove('hidden');
   document.getElementById('authEmail').focus();
+  // Focus trap implementation
+  const modal = document.getElementById('authOverlay');
+  const focusableElements = modal.querySelectorAll('input, button, a[href], [tabindex]:not([tabindex="-1"])');
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  authModalKeydownHandler = function(e) {
+    if (e.key === 'Tab') {
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    }
+  };
+
+  modal.addEventListener('keydown', authModalKeydownHandler);
 }
 
 function closeAuthOverlay() {
   document.getElementById('authOverlay').classList.add('hidden');
   document.getElementById('authError').textContent = '';
+  // Remove focus trap event listener
+  if (authModalKeydownHandler) {
+    document.getElementById('authOverlay').removeEventListener('keydown', authModalKeydownHandler);
+    authModalKeydownHandler = null;
+  }
 }
 
 function toggleAuthMode() {
@@ -1470,8 +1498,8 @@ function renderAstroChart(astro) {
   
   let html = `<div class="card" style="background:radial-gradient(circle at center, var(--bg2) 0%, var(--bg1) 100%)">
     <div class="card-title">♈ Astrological Chart Wheel</div>
-    <div style="position:relative;width:100%;max-width:500px;margin:0 auto;aspect-ratio:1;padding:20px">
-      <svg viewBox="0 0 400 400" style="width:100%;height:100%">
+    <div style="position:relative;width:100%;max-width:500px;margin:0 auto;aspect-ratio:1;padding:var(--space-5)">
+      <svg viewBox="0 0 400 400" style="width:100%;height:100%" role="img" aria-label="Astrological birth chart">
         <!-- Outer circle -->
         <circle cx="200" cy="200" r="190" fill="none" stroke="var(--gold)" stroke-width="2" opacity="0.3"/>
         
@@ -1540,15 +1568,15 @@ function renderAstroChart(astro) {
   
   html += `</svg>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px;padding:12px;background:var(--bg2);border-radius:6px">`;
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);justify-content:center;margin-top:var(--space-4);padding:var(--space-3);background:var(--bg2);border-radius:var(--space-2)">`;
   
   // Legend
   planets.forEach(([name, data]) => {
     const color = planetColors[name] || 'var(--gold)';
     const symbol = planetSymbols[name] || name[0];
-    html += `<div style="display:flex;align-items:center;gap:6px;font-size:0.85rem">
-              <span style="display:inline-block;width:20px;height:20px;background:${color};border-radius:50%;
-                          text-align:center;line-height:20px;font-weight:bold;color:var(--bg1)">${symbol}</span>
+    html += `<div style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--font-size-base)">
+              <span style="display:inline-block;width:var(--space-5);height:var(--space-5);background:${color};border-radius:50%;
+                          text-align:center;line-height:var(--space-5);font-weight:bold;color:var(--bg1)">${symbol}</span>
               <span style="color:var(--text-dim)">${name} ${data.degrees?.toFixed(1)}° ${data.sign}</span>
             </div>`;
   });
@@ -1783,29 +1811,29 @@ function renderChart(data) {
     const allCenters = ['Head','Ajna','Throat','G','Heart','SolarPlexus','Sacral','Spleen','Root'];
     const openCenters = allCenters.filter(c => !chart.definedCenters.includes(c));
     html += `<div class="section-header">Energy Centers <span class="icon-info help-icon" title="The 9 bio-energy hubs in your chart. Defined (colored) centers are consistent; Open (white) centers amplify and sample others' energy"></span></div>
-    <div class="chart-grid" style="gap:16px">
+    <div class="chart-grid" style="gap:var(--space-4)">
         <div style="flex:1;min-width:200px">
-          <div class="data-label" style="margin-bottom:6px">Defined</div>
+          <div class="data-label" style="margin-bottom:var(--space-2)">Defined</div>
           ${chart.definedCenters.map(c => {
             const ce = window.CENTER_EXPLANATIONS?.[c];
             const ci = window.getCenterInfo ? getCenterInfo(c) : null;
-            const motorTag = ci?.motor ? ' <span style="font-size:0.65rem;background:rgba(224,80,80,0.15);color:var(--red);padding:1px 5px;border-radius:3px;font-weight:600">MOTOR</span>' : '';
+            const motorTag = ci?.motor ? ' <span style="font-size:var(--font-size-xs);background:rgba(224,80,80,0.15);color:var(--red);padding:var(--border-width-thin) 5px;border-radius:var(--space-1);font-weight:600">MOTOR</span>' : '';
             const bioTip = ci?.bio ? ` title="${escapeAttr(ci.bio)}"` : '';
-            return `<div style="margin-bottom:8px">
-              <span class="pill green"${bioTip}>${escapeHtml(c)}</span>${motorTag}${ce ? ` <span style="font-size:0.72rem;color:var(--text-muted)">— ${escapeHtml(ce.governs)}</span>` : ''}
+            return `<div style="margin-bottom:var(--space-2)">
+              <span class="pill green"${bioTip}>${escapeHtml(c)}</span>${motorTag}${ce ? ` <span style="font-size:var(--font-size-xs);color:var(--text-muted)">— ${escapeHtml(ce.governs)}</span>` : ''}
               ${ce ? `<div class="center-explain">${escapeHtml(ce.defined)}</div>` : ''}
             </div>`;
           }).join('')}
         </div>
         <div style="flex:1;min-width:200px">
-          <div class="data-label" style="margin-bottom:6px">Open / Undefined</div>
+          <div class="data-label" style="margin-bottom:var(--space-2)">Open / Undefined</div>
           ${openCenters.map(c => {
             const ce = window.CENTER_EXPLANATIONS?.[c];
             const ci = window.getCenterInfo ? getCenterInfo(c) : null;
-            const motorTag = ci?.motor ? ' <span style="font-size:0.65rem;background:rgba(224,80,80,0.15);color:var(--red);padding:1px 5px;border-radius:3px;font-weight:600">MOTOR</span>' : '';
+            const motorTag = ci?.motor ? ' <span style="font-size:var(--font-size-xs);background:rgba(224,80,80,0.15);color:var(--red);padding:var(--border-width-thin) 5px;border-radius:var(--space-1);font-weight:600">MOTOR</span>' : '';
             const bioTip = ci?.bio ? ` title="${escapeAttr(ci.bio)}"` : '';
-            return `<div style="margin-bottom:8px">
-              <span class="pill"${bioTip}>${escapeHtml(c)}</span>${motorTag}${ce ? ` <span style="font-size:0.72rem;color:var(--text-muted)">— ${escapeHtml(ce.governs)}</span>` : ''}
+            return `<div style="margin-bottom:var(--space-2)">
+              <span class="pill"${bioTip}>${escapeHtml(c)}</span>${motorTag}${ce ? ` <span style="font-size:var(--font-size-xs);color:var(--text-muted)">— ${escapeHtml(ce.governs)}</span>` : ''}
               ${ce ? `<div class="center-explain">${escapeHtml(ce.open)}</div>` : ''}
             </div>`;
           }).join('')}
@@ -1817,26 +1845,26 @@ function renderChart(data) {
   // Interactive Bodygraph (Phase 7)
   const _bgId = 'bodygraph-' + Date.now();
   html += `<div class="section-header">Your Bodygraph <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
-  <div class="card" style="padding:16px;text-align:center">
+  <div class="card" style="padding:var(--space-4);text-align:center">
     <div id="${_bgId}" style="min-height:200px"></div>
-    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:8px">Tap a center or channel to explore</div>
+    <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap a center or channel to explore</div>
   </div>`;
   // Deferred render after DOM insertion
   setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_bgId, chart); }, 50);
 
   if (chart.activeChannels?.length) {
     html += `<div class="section-header">Active Channels <span class="icon-info help-icon" title="Channels link two centers, creating a fixed energy flow. Each channel represents a specific talent or life force"></span></div>
-    <div class="card" style="padding:16px">
+    <div class="card" style="padding:var(--space-4)">
       ${chart.activeChannels.map(ch => {
         const chKey = ch.channel || (ch.gates?.[0] + '-' + ch.gates?.[1]);
         const info = getChannelInfo(chKey);
         const chMeta = window.getChannelMeta ? getChannelMeta(chKey) : null;
         const centers = ch.centers ? '(' + ch.centers.join('↔') + ')' : (chMeta ? '(' + chMeta.centers.join('↔') + ')' : '');
-        const circuitBadge = chMeta ? ` <span style="font-size:0.68rem;background:rgba(106,79,200,0.15);color:var(--accent);padding:1px 6px;border-radius:3px;font-weight:600">${chMeta.circuit}</span>` : '';
-        const hexLabel = ch.gates?.length === 2 ? ch.gates.map(g => { const h = window.getGateHex ? getGateHex(g) : ''; return h ? `<span class="gate-name-tag">G${g} ${h}</span>` : ''; }).join(' ') : '';
-        return `<div style="margin-bottom:10px">
+        const circuitBadge = chMeta ? ` <span style="font-size:var(--font-size-xs);background:rgba(106,79,200,0.15);color:var(--accent);padding:var(--border-width-thin) 6px;border-radius:var(--space-1);font-weight:600">${chMeta.circuit}</span>` : '';
+        const hexLabel = ch.gates?.length === 2 ? ch.gates.map(g => { const h = window.getGateHex ? getGateHex(g) : ''; return h ? `<span class="gate-name-tag" aria-label="Gate ${g} hexagram ${h} - ${window.getGateName ? getGateName(g) : 'Human Design gate'}">G${g} ${h}</span>` : ''; }).join(' ') : '';
+        return `<div style="margin-bottom:var(--space-3)">
           <span class="pill gold">${chKey} ${centers}</span>${circuitBadge}${info ? ` <span class="channel-name">— ${info.name}</span>` : ''}
-          ${hexLabel ? `<div style="margin-top:2px">${hexLabel}</div>` : ''}
+          ${hexLabel ? `<div style="margin-top:var(--space-1)">${hexLabel}</div>` : ''}
           ${info ? `<div class="channel-detail">${info.desc}</div>` : ''}
         </div>`;
       }).join('')}
@@ -1863,7 +1891,7 @@ function renderChart(data) {
     const planets = Object.entries(astro.placements).slice(0, 10);
     html += `<div class="card">
       <div class="card-title">♈ Western Astrology</div>
-      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">Your planetary placements show how different life energies express through you. Hover over each planet's info icon for its meaning.</p>
+      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-3)">Your planetary placements show how different life energies express through you. Hover over each planet's info icon for its meaning.</p>
       <div class="chart-grid">
         <div class="data-block">
           <h4>Key Placements <span class="icon-info help-icon" title="Your planets' zodiac signs, degrees, and houses. These show life themes and energy expressions"></span></h4>
@@ -1906,9 +1934,9 @@ function renderChart(data) {
   })();
   const motorCenters = (chart.definedCenters || []).filter(c => typeof isMotorCenter === 'function' && isMotorCenter(c));
 
-  html += `<div class="card" style="border-left:3px solid var(--gold);margin-top:20px">
+  html += `<div class="card" style="border-left:var(--space-1) solid var(--gold);margin-top:var(--space-5)">
     <div class="card-title"><span class="icon-chart"></span> What This Means For You</div>
-    <div style="font-size:0.88rem;color:var(--text);line-height:1.7">
+    <div style="font-size:var(--font-size-base);color:var(--text);line-height:1.7">
       <p style="margin:0 0 10px">You are a <strong>${chart.type || 'unique'}</strong> with <strong>${chart.authority || 'inner'}</strong> authority.
       Your strategy is to <strong>${(chart.strategy || '').toLowerCase()}</strong>, and your life role is <strong>${chart.profile || '—'}</strong>.</p>
       <p style="margin:0 0 10px">With <strong>${definedCount} defined</strong> and <strong>${openCount} open</strong> center${openCount !== 1 ? 's' : ''},
@@ -1920,9 +1948,9 @@ function renderChart(data) {
       ${motorCenters.length ? ` You have <strong>${motorCenters.length} motor center${motorCenters.length > 1 ? 's' : ''}</strong> defined (${motorCenters.join(', ')}), giving you consistent drive and fuel.` : ''}</p>
       ${channelCount ? `<p style="margin:0 0 10px"><strong>${channelCount} active channel${channelCount > 1 ? 's' : ''}</strong> create${channelCount === 1 ? 's' : ''} fixed energy flows between your centers — these are your reliable gifts and talents.</p>` : ''}
       ${crossDisplay ? `<p style="margin:0 0 10px">Your incarnation cross — <strong>${crossDisplay}</strong> — describes your life purpose and the theme you are here to live out.</p>` : ''}
-      <p style="margin:0;font-size:0.82rem;color:var(--text-muted)">When you feel <em>${(chart.notSelfTheme || 'out of alignment').toLowerCase()}</em>, it\'s a signal to return to your strategy. Experiment with your design — don\'t take it on faith.</p>
+      <p style="margin:0;font-size:var(--font-size-sm);color:var(--text-muted)">When you feel <em>${(chart.notSelfTheme || 'out of alignment').toLowerCase()}</em>, it\'s a signal to return to your strategy. Experiment with your design — don\'t take it on faith.</p>
     </div>
-    <button class="btn-primary" style="margin-top:14px;font-size:0.85rem;padding:8px 20px" onclick="if(typeof showShareCard==='function') showShareCard(window._lastChart)">
+    <button class="btn-primary" style="margin-top:var(--space-4);font-size:var(--font-size-base);padding:var(--space-2) 20px" onclick="if(typeof showShareCard==='function') showShareCard(window._lastChart)">
       📤 Share Your Design
     </button>
   </div>`;
@@ -1955,12 +1983,34 @@ async function generateProfile() {
   spinner.style.display = '';
   resultEl.innerHTML = skeletonProfile();
 
+  // Progress indicator updates during the 15-30s generation
+  const progressMessages = [
+    { delay: 0, message: 'Analyzing your birth chart...' },
+    { delay: 3000, message: 'Calculating gate activations...' },
+    { delay: 6000, message: 'Mapping planetary positions...' },
+    { delay: 9000, message: 'Synthesizing Gene Keys insights...' },
+    { delay: 12000, message: 'Generating personalized profile...' },
+    { delay: 15000, message: 'Finalizing your Prime Self synthesis...' }
+  ];
+
+  // Set up progress message updates
+  const progressTimeouts = progressMessages.map(({ delay, message }) =>
+    setTimeout(() => {
+      const progressEl = resultEl.querySelector('.profile-progress-message');
+      if (progressEl) {
+        progressEl.textContent = message;
+      }
+    }, delay)
+  );
+
   // Auto-geocode if location text is present but coordinates not yet resolved
   if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
     if (document.getElementById('p-location').value.trim()) {
       await geocodeLocation('p');
     }
     if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
+      // Clear progress timeouts
+      progressTimeouts.forEach(clearTimeout);
       document.getElementById('profileResult').innerHTML =
         '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
       document.getElementById('profileBtn').disabled = false;
@@ -1981,8 +2031,12 @@ async function generateProfile() {
     if (q) payload.question = q;
 
     const data = await apiFetch('/api/profile/generate', { method: 'POST', body: JSON.stringify(payload) });
+    // Clear any remaining progress timeouts
+    progressTimeouts.forEach(clearTimeout);
     resultEl.innerHTML = renderProfile(data);
   } catch (e) {
+    // Clear progress timeouts on error
+    progressTimeouts.forEach(clearTimeout);
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
@@ -2019,12 +2073,12 @@ function renderProfile(data) {
   // Chart summary banner
   html += `<div class="card">
     <div class="card-title"><span class="icon-profile"></span> Prime Self Profile</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">`;
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4)">`;
   if (chartSummary.type) html += `<span class="pill gold">${chartSummary.type}</span>`;
   if (chartSummary.authority) html += `<span class="pill">${chartSummary.authority}</span>`;
   if (chartSummary.profile) html += `<span class="pill">${chartSummary.profile} Archetype</span>`;
   if (chartSummary.definition) html += `<span class="pill">${chartSummary.definition}</span>`;
-  if (chartSummary.cross) html += `<span class="pill" style="font-size:0.75rem">${chartSummary.cross}</span>`;
+  if (chartSummary.cross) html += `<span class="pill" style="font-size:var(--font-size-sm)">${chartSummary.cross}</span>`;
   html += `</div>`;
   html += `</div>`; // close card
 
@@ -2032,40 +2086,40 @@ function renderProfile(data) {
   if (qsg) {
     html += `<div class="card">
       <div class="card-title"><span class="icon-star"></span> Your Quick Start Guide</div>
-      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:18px">Beginner-friendly overview — no jargon, just practical insights.</p>`;
+      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-5)">Beginner-friendly overview — no jargon, just practical insights.</p>`;
     
     if (qsg.whoYouAre) {
       html += `<div class="profile-section">
         <h4><span class="icon-profile"></span> Who You Are</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.whoYouAre)}</p>
+        <p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(qsg.whoYouAre)}</p>
       </div>`;
     }
     
     if (qsg.decisionStyle) {
       html += `<div class="profile-section">
         <h4><span class="icon-compass"></span> How To Make Best Decisions</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.decisionStyle)}</p>
+        <p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(qsg.decisionStyle)}</p>
       </div>`;
     }
     
     if (qsg.lifeStrategy) {
       html += `<div class="profile-section">
         <h4><span class="icon-target"></span> Your Life Strategy</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.lifeStrategy)}</p>
+        <p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(qsg.lifeStrategy)}</p>
       </div>`;
     }
     
     if (qsg.thisMonth) {
       html += `<div class="profile-section">
         <h4><span class="icon-calendar"></span> This Month</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.thisMonth)}</p>
+        <p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(qsg.thisMonth)}</p>
       </div>`;
     }
     
     if (qsg.workingWithOthers) {
       html += `<div class="profile-section">
         <h4><span class="icon-partnership"></span> Working With Others</h4>
-        <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">${escapeHtml(qsg.workingWithOthers)}</p>
+        <p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(qsg.workingWithOthers)}</p>
       </div>`;
     }
     
@@ -2075,7 +2129,7 @@ function renderProfile(data) {
   // ═══ TECHNICAL DETAILS TOGGLE ═══
   if (ti) {
     const toggleId = 'tech-details-' + Date.now();
-    html += `<div class="card" style="text-align:center;padding:16px">
+    html += `<div class="card" style="text-align:center;padding:var(--space-4)">
       <button class="btn-secondary" onclick="document.getElementById('${escapeAttr(toggleId)}').style.display = document.getElementById('${escapeAttr(toggleId)}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? '▼ Hide Technical Details' : '▶ Show Technical Details';" 
         style="width:100%;max-width:300px">
         ▶ Show Technical Details
@@ -2095,10 +2149,10 @@ function renderProfile(data) {
         const lw = gk.lifesWork;
         html += `<div class="profile-section">
           <h4>Life's Work — Gene Key ${lw.key}</h4>
-          <p style="font-size:0.82rem;margin-top:6px"><strong style="color:#f56565">Shadow:</strong> ${escapeHtml(lw.shadow)}</p>
-          <p style="font-size:0.82rem"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(lw.gift)}</p>
-          <p style="font-size:0.82rem"><strong style="color:var(--gold)">Siddhi:</strong> ${escapeHtml(lw.siddhi)}</p>
-          ${lw.contemplation ? `<p style="font-size:0.85rem;line-height:1.6;margin-top:8px;font-style:italic;color:var(--text-dim)">${escapeHtml(lw.contemplation)}</p>` : ''}
+          <p style="font-size:var(--font-size-sm);margin-top:var(--space-2)"><strong style="color:#f56565">Shadow:</strong> ${escapeHtml(lw.shadow)}</p>
+          <p style="font-size:var(--font-size-sm)"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(lw.gift)}</p>
+          <p style="font-size:var(--font-size-sm)"><strong style="color:var(--gold)">Siddhi:</strong> ${escapeHtml(lw.siddhi)}</p>
+          ${lw.contemplation ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);font-style:italic;color:var(--text-dim)">${escapeHtml(lw.contemplation)}</p>` : ''}
         </div>`;
       }
       
@@ -2106,10 +2160,10 @@ function renderProfile(data) {
         html += `<div class="profile-section">
           <h4>Other Active Keys</h4>`;
         gk.otherActiveKeys.forEach(k => {
-          html += `<div style="margin-top:10px;padding:10px;background:var(--bg3);border-radius:6px">
+          html += `<div style="margin-top:var(--space-3);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2)">
             <div style="font-weight:600;color:var(--gold)">GK ${escapeHtml(String(k.key))} — ${escapeHtml(k.position)}</div>
-            <p style="font-size:0.82rem;margin-top:4px"><strong>Shadow:</strong> ${escapeHtml(k.shadow)} <strong>→ Gift:</strong> ${escapeHtml(k.gift)}</p>
-            ${k.message ? `<p style="font-size:0.85rem;margin-top:6px;font-style:italic">${escapeHtml(k.message)}</p>` : ''}
+            <p style="font-size:var(--font-size-sm);margin-top:var(--space-1)"><strong>Shadow:</strong> ${escapeHtml(k.shadow)} <strong>→ Gift:</strong> ${escapeHtml(k.gift)}</p>
+            ${k.message ? `<p style="font-size:var(--font-size-base);margin-top:var(--space-2);font-style:italic">${escapeHtml(k.message)}</p>` : ''}
           </div>`;
         });
         html += `</div>`;
@@ -2128,8 +2182,8 @@ function renderProfile(data) {
         const lp = num.lifePath;
         html += `<div class="profile-section">
           <h4>Life Path ${lp.number} — ${escapeHtml(lp.name || '')}</h4>
-          <p style="font-size:0.85rem;line-height:1.6;margin-top:6px">${escapeHtml(lp.essence || '')}</p>
-          ${lp.currentGuidance ? `<p style="font-size:0.85rem;margin-top:8px;padding:10px;background:var(--bg3);border-radius:6px"><strong>Current Guidance:</strong> ${escapeHtml(lp.currentGuidance)}</p>` : ''}
+          <p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)">${escapeHtml(lp.essence || '')}</p>
+          ${lp.currentGuidance ? `<p style="font-size:var(--font-size-base);margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2)"><strong>Current Guidance:</strong> ${escapeHtml(lp.currentGuidance)}</p>` : ''}
         </div>`;
       }
       
@@ -2137,7 +2191,7 @@ function renderProfile(data) {
         const py = num.personalYear;
         html += `<div class="profile-section">
           <h4>Personal Year ${py.number} — ${escapeHtml(py.theme || '')}</h4>
-          <p style="font-size:0.85rem;line-height:1.6">${escapeHtml(py.guidance || '')}</p>
+          <p style="font-size:var(--font-size-base);line-height:1.6">${escapeHtml(py.guidance || '')}</p>
         </div>`;
       }
       
@@ -2145,7 +2199,7 @@ function renderProfile(data) {
         const tc = num.tarotCard;
         html += `<div class="profile-section">
           <h4>Tarot Card — ${escapeHtml(tc.card || '')}</h4>
-          <p style="font-size:0.85rem;line-height:1.6">${escapeHtml(tc.message || '')}</p>
+          <p style="font-size:var(--font-size-base);line-height:1.6">${escapeHtml(tc.message || '')}</p>
         </div>`;
       }
       
@@ -2159,8 +2213,8 @@ function renderProfile(data) {
       ti.astrologicalSignatures.forEach(sig => {
         html += `<div class="profile-section">
           <h4>${escapeHtml(sig.placement || '')}</h4>
-          <p style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">${escapeHtml(sig.interpretation || '')}</p>
-          ${sig.practicalImplication ? `<p style="font-size:0.85rem;margin-top:6px;padding:8px;background:var(--bg3);border-radius:4px"><strong>Practical:</strong> ${escapeHtml(sig.practicalImplication)}</p>` : ''}
+          <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">${escapeHtml(sig.interpretation || '')}</p>
+          ${sig.practicalImplication ? `<p style="font-size:var(--font-size-base);margin-top:var(--space-2);padding:var(--space-2);background:var(--bg3);border-radius:var(--space-1)"><strong>Practical:</strong> ${escapeHtml(sig.practicalImplication)}</p>` : ''}
         </div>`;
       });
       html += `</div>`;
@@ -2188,7 +2242,7 @@ function renderProfile(data) {
             <div class="pill-list">${(eb.openCenters||[]).map(c => `<span class="pill">${escapeHtml(c)}</span>`).join('') || '<span style="color:var(--text-dim)">None</span>'}</div>
           </div>
         </div>
-        ${eb.connectionPattern ? `<div class="profile-section"><h4>Connection Pattern</h4><p style="font-size:0.85rem">${escapeHtml(eb.connectionPattern)}</p></div>` : ''}
+        ${eb.connectionPattern ? `<div class="profile-section"><h4>Connection Pattern</h4><p style="font-size:var(--font-size-base)">${escapeHtml(eb.connectionPattern)}</p></div>` : ''}
       </div>`;
     }
     
@@ -2202,7 +2256,7 @@ function renderProfile(data) {
           <span class="confidence-pill ${forge.confidence==='high'?'':'medium'}">${forge.confidence || ''}</span>
         </div>`;
       if (forge.indicators?.length) {
-        html += `<div class="section-header" style="margin-top:14px">Indicators</div><ul class="indicator-list">`;
+        html += `<div class="section-header" style="margin-top:var(--space-4)">Indicators</div><ul class="indicator-list">`;
         forge.indicators.forEach(i => {
           html += `<li><span class="sys-badge">${escapeHtml(i.system)}</span>${escapeHtml(i.dataPoint)}</li>`;
         });
@@ -2221,16 +2275,16 @@ function renderProfile(data) {
     html += `<div class="card">
       <div class="card-title"><span class="icon-check"></span> Grounding Audit</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:0.88rem">${ga.claimsGrounded} / ${ga.claimsTotal} claims grounded</span>
+        <span style="font-size:var(--font-size-base)">${ga.claimsGrounded} / ${ga.claimsTotal} claims grounded</span>
         <span class="confidence-pill ${pct>=90?'':'medium'}">${pct}%</span>
       </div>
-      <div class="audit-bar-wrap" style="margin-top:10px"><div class="audit-bar" style="width:${pct}%"></div></div>
-      ${ga.ungroundedFields?.length ? `<div style="margin-top:8px;font-size:0.78rem;color:var(--text-dim)">Ungrounded: ${ga.ungroundedFields.join(', ')}</div>` : ''}
-      ${meta.partialGrounding ? `<div class="alert alert-warn" style="margin-top:10px"><span class="icon-info"></span> Partial grounding — some claims could not be fully grounded to reference data.</div>` : ''}
+      <div class="audit-bar-wrap" style="margin-top:var(--space-3)"><div class="audit-bar" style="width:${pct}%"></div></div>
+      ${ga.ungroundedFields?.length ? `<div style="margin-top:var(--space-2);font-size:var(--font-size-sm);color:var(--text-dim)">Ungrounded: ${ga.ungroundedFields.join(', ')}</div>` : ''}
+      ${meta.partialGrounding ? `<div class="alert alert-warn" style="margin-top:var(--space-3)"><span class="icon-info"></span> Partial grounding — some claims could not be fully grounded to reference data.</div>` : ''}
     </div>`;
   }
 
-  if (meta.profileId) html += `<div class="alert alert-success"><span class="icon-check"></span> Profile saved (ID: ${escapeHtml(meta.profileId)}) <button class="btn-secondary btn-sm" onclick="exportPDF('${escapeAttr(meta.profileId)}')" style="margin-left:12px">Download PDF</button></div>`;
+  if (meta.profileId) html += `<div class="alert alert-success"><span class="icon-check"></span> Profile saved (ID: ${escapeHtml(meta.profileId)}) <button class="btn-secondary btn-sm" onclick="exportPDF('${escapeAttr(meta.profileId)}')" style="margin-left:var(--space-3)">Download PDF</button></div>`;
 
   html += rawToggle(data);
   return html;
@@ -2291,30 +2345,30 @@ function renderTransits(data) {
 
   // Summary banner
   let html = `<div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4)">
       <div class="card-title" style="margin-bottom:0"><span class="icon-transit"></span> ${t.date || new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})}</div>
-      ${natalHits.length ? `<div style="background:rgba(201,168,76,0.15);border:1px solid var(--gold-dim);border-radius:20px;padding:5px 14px;font-size:0.82rem;color:var(--gold);font-weight:600">✦ ${natalHits.length} planet${natalHits.length>1?'s':''} touching your natal gates today</div>` : ''}
+      ${natalHits.length ? `<div style="background:rgba(201,168,76,0.15);border:var(--border-width-thin) solid var(--gold-dim);border-radius:var(--space-5);padding:var(--space-2) 14px;font-size:var(--font-size-sm);color:var(--gold);font-weight:600">✦ ${natalHits.length} planet${natalHits.length>1?'s':''} touching your natal gates today</div>` : ''}
     </div>`;
 
   // Natal hits first — most relevant to the user
   if (natalHits.length) {
-    html += `<div style="margin-bottom:20px">
-      <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gold-dim);margin-bottom:10px">✦ Personal — Activating Your Gates</div>`;
+    html += `<div style="margin-bottom:var(--space-5)">
+      <div style="font-size:var(--font-size-sm);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gold-dim);margin-bottom:var(--space-3)">✦ Personal — Activating Your Gates</div>`;
     natalHits.forEach(a => {
       const sym = PLANET_SYMBOLS[a.transitPlanet] || '';
       const pos = positions[a.transitPlanet] || {};
       const speed = PLANET_SPEED[a.transitPlanet] || '';
       const theme = PLANET_THEME[a.transitPlanet] || '';
-      html += `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:8px;padding:14px 16px;margin-bottom:8px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-          <div style="font-size:0.95rem;font-weight:700;color:var(--gold)">${sym} ${a.transitPlanet} → your Gate ${a.gate}${getGateName(a.gate) ? ` <span class="gate-name-tag">— ${getGateName(a.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(a.gate) ? ` <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;font-style:italic">☰ ${getGateHex(a.gate)}</span>` : ''}</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <span style="font-size:0.78rem;color:var(--text-dim)">${pos.sign || ''} ${pos.degrees != null ? (pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees) : ''}°</span>
+      html += `<div style="background:rgba(201,168,76,0.08);border:var(--border-width-thin) solid rgba(201,168,76,0.35);border-radius:var(--space-2);padding:var(--space-4) 16px;margin-bottom:var(--space-2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap">
+          <div style="font-size:var(--font-size-md);font-weight:700;color:var(--gold)">${sym} ${a.transitPlanet} → your Gate ${a.gate}${getGateName(a.gate) ? ` <span class="gate-name-tag">— ${getGateName(a.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(a.gate) ? ` <span style="font-size:var(--font-size-xs);color:var(--text-muted);font-weight:400;font-style:italic">☰ ${getGateHex(a.gate)}</span>` : ''}</div>
+          <div style="display:flex;gap:var(--space-2);align-items:center">
+            <span style="font-size:var(--font-size-sm);color:var(--text-dim)">${pos.sign || ''} ${pos.degrees != null ? (pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees) : ''}°</span>
             <span class="gate-badge">Gate ${pos.gate || a.gate}.${pos.line || '?'}</span>
           </div>
         </div>
-        <div style="font-size:0.83rem;color:var(--text);margin-top:8px;line-height:1.55">${theme}</div>
-        <div style="font-size:0.75rem;color:var(--text-dim);margin-top:5px">⏱ Duration: ${speed}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text);margin-top:var(--space-2);line-height:1.55">${theme}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-2)">⏱ Duration: ${speed}</div>
       </div>`;
     });
     html += `</div>`;
@@ -2322,7 +2376,7 @@ function renderTransits(data) {
 
   // All planets — collective picture
   html += `<div>
-    <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:10px">All Planetary Positions — Collective Field</div>`;
+    <div style="font-size:var(--font-size-sm);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:var(--space-3)">All Planetary Positions — Collective Field</div>`;
 
   for (const [body, pos] of Object.entries(positions)) {
     const sym = PLANET_SYMBOLS[body] || '';
@@ -2332,13 +2386,13 @@ function renderTransits(data) {
     html += `<div class="transit-row${isNatalHit ? ' transit-row-hit' : ''}">
       <div>
         <div class="planet-name">${sym} ${body}</div>
-        <div style="font-size:0.74rem;color:var(--text-muted);margin-top:2px">${speed}</div>
+        <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">${speed}</div>
       </div>
       <div>
         <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
-        <div style="font-size:0.78rem;color:var(--text-dim);margin-top:3px;line-height:1.4">${theme}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1);line-height:1.4">${theme}</div>
       </div>
-      <div class="gate-badge" title="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ' ('+getGateHex(pos.gate)+')' : ''}">Gate ${pos.gate || '?'}.${pos.line || '?'}${getGateName(pos.gate) ? ` <span class="gate-name-tag">${getGateName(pos.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ` <span style="font-size:0.7rem;color:var(--text-muted);font-style:italic">☰ ${getGateHex(pos.gate)}</span>` : ''}</div>
+      <div class="gate-badge" role="img" aria-label="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}" title="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ' ('+getGateHex(pos.gate)+')' : ''}">Gate ${pos.gate || '?'}.${pos.line || '?'}${getGateName(pos.gate) ? ` <span class="gate-name-tag">${getGateName(pos.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ` <span style="font-size:var(--font-size-xs);color:var(--text-muted);font-style:italic">☰ ${getGateHex(pos.gate)}</span>` : ''}</div>
     </div>`;
   }
 
@@ -2347,9 +2401,9 @@ function renderTransits(data) {
   // Transit Timeline — visual duration bars
   const DURATION_DAYS = { Sun:7, Moon:2.5, Mercury:5, Venus:7, Mars:14, Jupiter:30, Saturn:90, Uranus:365, Neptune:730, Pluto:1000, NorthNode:30, TrueNode:30, Chiron:365 };
   const maxDays = Math.max(...Object.values(DURATION_DAYS));
-  html += `<div style="margin-top:20px">
-    <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:14px">⏱ Transit Duration Timeline</div>
-    <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:10px">Approximate time each planet activates its current gate</div>`;
+  html += `<div style="margin-top:var(--space-5)">
+    <div style="font-size:var(--font-size-sm);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:var(--space-4)">⏱ Transit Duration Timeline</div>
+    <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-bottom:var(--space-3)">Approximate time each planet activates its current gate</div>`;
   
   const sortedPlanets = Object.keys(positions).sort((a, b) => (DURATION_DAYS[a] || 7) - (DURATION_DAYS[b] || 7));
   for (const body of sortedPlanets) {
@@ -2360,12 +2414,12 @@ function renderTransits(data) {
     const isNatalHit = natalGateSet.has(String(pos.gate));
     const barColor = isNatalHit ? 'var(--gold)' : 'var(--accent, #6a4fc8)';
     const label = days < 10 ? days + 'd' : days < 60 ? Math.round(days/7) + 'w' : days < 400 ? Math.round(days/30) + 'mo' : Math.round(days/365) + 'yr';
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <div style="width:80px;font-size:0.78rem;color:var(--text-dim);text-align:right;flex-shrink:0">${sym} ${body}</div>
-      <div style="flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden;position:relative">
-        <div style="width:${pct}%;height:100%;background:${barColor};border-radius:8px;opacity:0.7;transition:width 0.5s"></div>
+    html += `<div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+      <div style="width:80px;font-size:var(--font-size-sm);color:var(--text-dim);text-align:right;flex-shrink:0">${sym} ${body}</div>
+      <div style="flex:1;height:var(--space-4);background:rgba(255,255,255,0.04);border-radius:var(--space-2);overflow:hidden;position:relative">
+        <div style="width:${pct}%;height:100%;background:${barColor};border-radius:var(--space-2);opacity:0.7;transition:width 0.5s"></div>
       </div>
-      <div style="width:40px;font-size:0.72rem;color:var(--text-muted);flex-shrink:0">${label}</div>
+      <div style="width:var(--space-10);font-size:var(--font-size-xs);color:var(--text-muted);flex-shrink:0">${label}</div>
     </div>`;
   }
   html += `</div>`;
@@ -2405,7 +2459,7 @@ function renderHistory(data) {
   if (!profiles.length) {
     return `<div class="empty-state">
       <span class="icon-profile icon-xl"></span>
-      <h3 style="margin:16px 0 8px;font-size:1.1rem;color:var(--text)">No Saved Profiles Yet</h3>
+      <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No Saved Profiles Yet</h3>
       <p style="max-width:500px;margin:0 auto 24px">Generate your first Prime Self Profile to unlock AI-powered synthesis combining your gates, Gene Keys, astrology, and numerology into personalized lifecycle guidance.</p>
       <button class="btn-primary" onclick="switchTab('profile', document.getElementById('btn-blueprint'))" style="margin:0 auto;display:inline-block">
         <span class="icon-sparkle"></span> Generate Your Profile
@@ -2420,7 +2474,7 @@ function renderHistory(data) {
     const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Unknown date';
     html += `<div class="history-item" onclick="loadSingleProfile('${escapeAttr(p.id)}')">
       <div>
-        <div style="font-size:0.9rem;font-weight:600">Profile ${p.id?.slice(0,8) || '—'}</div>
+        <div style="font-size:var(--font-size-base);font-weight:600">Profile ${p.id?.slice(0,8) || '—'}</div>
         <div class="history-meta">Created ${date} · Chart ${p.chartId?.slice(0,8) || 'N/A'} · ${p.modelUsed || ''}</div>
       </div>
       <button class="btn-secondary btn-sm">View →</button>
@@ -2514,7 +2568,7 @@ function renderComposite(data) {
   if (c.electromagnetic?.length) {
     html += `<div class="card">
       <div class="card-title"><span class="icon-energy"></span> Electromagnetic Connections (${c.electromagnetic.length})</div>
-      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
+      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-3)">
         Channels where each person provides one gate - creates magnetic attraction and chemistry.
       </p>
       <div class="pill-list">`;
@@ -2528,7 +2582,7 @@ function renderComposite(data) {
   if (c.companionship?.length) {
     html += `<div class="card">
       <div class="card-title"><span class="icon-partnership"></span> Companionship Channels (${c.companionship.length})</div>
-      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
+      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-3)">
         Both people have these channels defined individually - shared strengths.
       </p>
       <div class="pill-list">`;
@@ -2543,9 +2597,9 @@ function renderComposite(data) {
     html += `<div class="card">
       <div class="card-title"><span class="icon-lightbulb"></span> Relationship Insights</div>`;
     c.dynamics.forEach(d => {
-      html += `<div style="padding:10px;margin:8px 0;background:var(--bg2);border-left:3px solid var(--gold);border-radius:4px">
-        <div style="font-weight:600;color:var(--gold);font-size:0.8rem;text-transform:uppercase;margin-bottom:4px">${escapeHtml(d.area)}</div>
-        <div style="color:var(--text);font-size:0.88rem;line-height:1.6">${escapeHtml(d.note)}</div>
+      html += `<div style="padding:var(--space-3);margin:var(--space-2) 0;background:var(--bg2);border-left:var(--space-1) solid var(--gold);border-radius:var(--space-1)">
+        <div style="font-weight:600;color:var(--gold);font-size:var(--font-size-sm);text-transform:uppercase;margin-bottom:var(--space-1)">${escapeHtml(d.area)}</div>
+        <div style="color:var(--text);font-size:var(--font-size-base);line-height:1.6">${escapeHtml(d.note)}</div>
       </div>`;
     });
     html += `</div>`;
@@ -2593,17 +2647,17 @@ function renderRectification(data) {
 
   let html = `<div class="card"><div class="card-title"><span class="icon-time"></span> Rectification Analysis</div>`;
   html += `<div class="section-title">Time Window Variations</div>`;
-  html += `<div style="font-size:0.85rem;color:var(--text-dim);margin:8px 0">Analyzed ${sensitivity.length} time points</div>`;
+  html += `<div style="font-size:var(--font-size-base);color:var(--text-dim);margin:var(--space-2) 0">Analyzed ${sensitivity.length} time points</div>`;
   
   sensitivity.slice(0, 5).forEach(s => {
-    html += `<div style="padding:8px;background:var(--bg3);border-radius:6px;margin:6px 0">`;
+    html += `<div style="padding:var(--space-2);background:var(--bg3);border-radius:var(--space-2);margin:var(--space-2) 0">`;
     html += `<strong>${s.time}</strong> → Type: ${s.type}, Profile: ${s.profile}, Authority: ${s.authority}`;
     html += `</div>`;
   });
 
   if (guidance.length) {
-    html += `<div class="section-title" style="margin-top:20px">Guidance</div>`;
-    guidance.forEach(g => html += `<div style="color:var(--accent2);margin:6px 0">• ${escapeHtml(g)}</div>`);
+    html += `<div class="section-title" style="margin-top:var(--space-5)">Guidance</div>`;
+    guidance.forEach(g => html += `<div style="color:var(--accent2);margin:var(--space-2) 0">• ${escapeHtml(g)}</div>`);
   }
 
   html += `</div>`;
@@ -2666,16 +2720,16 @@ function renderRoster(data) {
 
   if (!clients.length) {
     return `<div class="empty-state"><span class="icon-star icon-xl"></span>
-      <h3 style="margin:16px 0 8px;font-size:1.1rem;color:var(--text)">Practitioner Roster Empty</h3>
+      <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">Practitioner Roster Empty</h3>
       <p style="max-width:500px;margin:0 auto 16px">Add clients to your professional roster for organized reading management. Each client entry stores their profile ID and notes for quick access during sessions.</p>
     </div>`;
   }
 
   let html = `<div class="card"><div class="card-title"><span class="icon-star"></span> ${clients.length} Client${clients.length > 1 ? 's' : ''}</div>`;
   clients.forEach(c => {
-    html += `<div style="padding:10px;background:var(--bg3);border-radius:6px;margin:8px 0">`;
+    html += `<div style="padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);margin:var(--space-2) 0">`;
     html += `<strong>${escapeHtml(c.clientName)}</strong>`;
-    if (c.profileId) html += ` <span style="color:var(--text-dim);font-size:0.8rem">(${c.profileId.slice(0,8)})</span>`;
+    if (c.profileId) html += ` <span style="color:var(--text-dim);font-size:var(--font-size-sm)">(${c.profileId.slice(0,8)})</span>`;
     html += `</div>`;
   });
   html += `</div>`;
@@ -2760,9 +2814,9 @@ function renderClusterList(data) {
   if (!clusters.length) {
     return `<div class="empty-state">
       <span class="icon-cluster icon-xl"></span>
-      <h3 style="margin:16px 0 8px;font-size:1.1rem;color:var(--text)">No Clusters Yet</h3>
+      <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No Clusters Yet</h3>
       <p style="max-width:500px;margin:0 auto 16px">Create a cluster to analyze group dynamics. Overlay multiple birth charts to see which gates dominate your team, which energies are missing, and how members electromagnetically activate each other. Perfect for work teams, families, or partnerships.</p>
-      <p style="color:var(--text-dim);font-size:0.85rem">Enter a name and purpose above, then click Create Cluster.</p>
+      <p style="color:var(--text-dim);font-size:var(--font-size-base)">Enter a name and purpose above, then click Create Cluster.</p>
     </div>`;
   }
 
@@ -2805,13 +2859,13 @@ function renderClusterDetail(data, clusterId) {
   const comp = data.composition || {};
   
   let html = `<div class="card">`;
-  html += `  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">`;
+  html += `  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4)">`;
   html += `    <div class="card-title"><span class="icon-cluster"></span> Cluster Details</div>`;
   html += `    <button class="btn-secondary btn-sm" onclick="backToClusterList()">← Back to List</button>`;
   html += `  </div>`;
 
   // Members Section
-  html += `  <h4 style="color:var(--gold);font-size:0.9rem;margin:16px 0 10px">Members (${members.length})</h4>`;
+  html += `  <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-4) 0 10px">Members (${members.length})</h4>`;
   
   if (members.length === 0) {
     html += `  <div class="alert alert-info">No members yet. Add members below to analyze group dynamics.</div>`;
@@ -2841,13 +2895,13 @@ function renderClusterDetail(data, clusterId) {
                         (m.forgeRole?.forge || '').toLowerCase().includes('vision') ? 'vision' :
                         (m.forgeRole?.forge || '').toLowerCase().includes('mirror') ? 'mirrors' : '';
       
-      html += `  <div class="data-block" style="margin-bottom:8px">`;
+      html += `  <div class="data-block" style="margin-bottom:var(--space-2)">`;
       html += `    <div style="display:flex;justify-content:space-between;align-items:center">`;
       html += `      <strong>${escapeHtml(m.email || 'Member')}</strong>`;
       html += `      <span class="forge-role-badge ${forgeClass}">${m.forgeRole?.role || 'Participant'}</span>`;
       html += `    </div>`;
       if (m.forgeRole?.forge) {
-        html += `    <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">${m.forgeRole.forge}</div>`;
+        html += `    <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">${m.forgeRole.forge}</div>`;
       }
       html += `  </div>`;
     });
@@ -2855,7 +2909,7 @@ function renderClusterDetail(data, clusterId) {
 
   // Composition Insights
   if (comp.insights && comp.insights.length > 0) {
-    html += `  <h4 style="color:var(--gold);font-size:0.9rem;margin:20px 0 10px">Composition Insights</h4>`;
+    html += `  <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-5) 0 10px">Composition Insights</h4>`;
     html += `  <ul class="indicator-list">`;
     comp.insights.forEach(insight => {
       html += `    <li>${escapeHtml(insight)}</li>`;
@@ -2895,7 +2949,7 @@ function showAddMemberForm() {
   container.innerHTML = `
     <div class="card">
       <div class="card-title">Add Member</div>
-      <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px">Enter member birth data to calculate their chart and add them to the cluster.</p>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Enter member birth data to calculate their chart and add them to the cluster.</p>
       
       <div class="form-grid">
         <div class="form-group"><label>User ID or Email</label><input type="text" id="member-userId" placeholder="user@example.com"></div>
@@ -2911,7 +2965,7 @@ function showAddMemberForm() {
         </select></div>
       </div>
       
-      <div style="display:flex;gap:10px;margin-top:16px">
+      <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4)">
         <button class="btn-primary" onclick="addMemberToCluster()" id="addMemberBtn">
           <span class="spinner" id="addMemberSpinner" style="display:none"></span>
           Add Member
@@ -2986,7 +3040,7 @@ async function leaveCluster(clusterId) {
 function showAlert(containerId, message, type = 'info') {
   const container = document.getElementById(containerId);
   if (!container) return;
-  const alertHtml = `<div class="alert alert-${type}" style="margin-top:12px">${escapeHtml(message)}</div>`;
+  const alertHtml = `<div class="alert alert-${type}" style="margin-top:var(--space-3)">${escapeHtml(message)}</div>`;
   container.insertAdjacentHTML('afterbegin', alertHtml);
   setTimeout(() => {
     const alert = container.querySelector('.alert');
@@ -3102,7 +3156,7 @@ async function startOnboarding() {
       });
     }
 
-    contentEl.innerHTML += `<div class="alert alert-success" style="margin-top:16px"><span class="icon-check"></span> Onboarding complete!</div>`;
+    contentEl.innerHTML += `<div class="alert alert-success" style="margin-top:var(--space-4)"><span class="icon-check"></span> Onboarding complete!</div>`;
   } catch (e) {
     contentEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
@@ -3116,9 +3170,9 @@ function renderOnboardingStep(data, step) {
   
   const title = data.title || data.chapterTitle || `Chapter ${step}`;
   const content = data.content || data.narrative || data.prompt || '';
-  return `<div class="card" style="margin-top:12px">
+  return `<div class="card" style="margin-top:var(--space-3)">
     <div class="card-title">${escapeHtml(title)}</div>
-    <div style="color:var(--text);font-size:0.9rem;line-height:1.7">${escapeHtml(content)}</div>
+    <div style="color:var(--text);font-size:var(--font-size-base);line-height:1.7">${escapeHtml(content)}</div>
   </div>`;
 }
 
@@ -3143,10 +3197,10 @@ function skeletonChart() {
       <div><div class="skeleton-line"></div><div class="skeleton-line w-75"></div><div class="skeleton-line w-60"></div><div class="skeleton-line w-50"></div><div class="skeleton-line w-75"></div><div class="skeleton-line w-40"></div></div>
       <div><div class="skeleton-line"></div><div class="skeleton-line w-60"></div><div class="skeleton-line w-75"></div></div>
     </div>
-    <div class="skeleton-line tall w-40" style="margin-top:16px"></div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="skeleton-pill"></span><span class="skeleton-pill" style="width:80px"></span><span class="skeleton-pill" style="width:50px"></span><span class="skeleton-pill" style="width:70px"></span></div>
-    <div class="skeleton-line tall w-40" style="margin-top:16px"></div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="skeleton-pill" style="width:100px"></span><span class="skeleton-pill" style="width:90px"></span></div>
+    <div class="skeleton-line tall w-40" style="margin-top:var(--space-4)"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-1)"><span class="skeleton-pill"></span><span class="skeleton-pill" style="width:80px"></span><span class="skeleton-pill" style="width:50px"></span><span class="skeleton-pill" style="width:var(--space-20)"></span></div>
+    <div class="skeleton-line tall w-40" style="margin-top:var(--space-4)"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-1)"><span class="skeleton-pill" style="width:100px"></span><span class="skeleton-pill" style="width:90px"></span></div>
   </div>`;
 }
 
@@ -3154,17 +3208,20 @@ function skeletonProfile() {
   return `<div class="skeleton-card">
     <div class="skeleton-line tall w-50"></div>
     <div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line w-75"></div>
-    <div class="skeleton-line" style="margin-top:16px"></div><div class="skeleton-line"></div><div class="skeleton-line w-60"></div>
-    <div class="skeleton-line" style="margin-top:16px"></div><div class="skeleton-line"></div><div class="skeleton-line w-50"></div>
+    <div class="skeleton-line" style="margin-top:var(--space-4)"></div><div class="skeleton-line"></div><div class="skeleton-line w-60"></div>
+    <div class="skeleton-line" style="margin-top:var(--space-4)"></div><div class="skeleton-line"></div><div class="skeleton-line w-50"></div>
   </div>
-  <div style="text-align:center;margin-top:12px;font-size:0.82rem;color:var(--text-muted)">Synthesizing your Prime Self Profile — this takes 15-30 seconds…</div>`;
+  <div style="text-align:center;margin-top:var(--space-3);font-size:var(--font-size-sm);color:var(--text-muted)">
+    <div class="profile-progress-message">Analyzing your birth chart...</div>
+    <div style="margin-top:var(--space-1);font-size:var(--font-size-sm)">This takes 15-30 seconds</div>
+  </div>`;
 }
 
 function skeletonTransits() {
   return `<div class="skeleton-card">
     <div class="skeleton-line tall w-50"></div>
     <div class="skeleton-line w-75"></div>
-    ${[1,2,3,4,5].map(() => `<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px"><div class="skeleton-circle"></div><div style="flex:1"><div class="skeleton-line w-60"></div><div class="skeleton-line w-40"></div></div><span class="skeleton-pill" style="width:70px"></span></div>`).join('')}
+    ${[1,2,3,4,5].map(() => `<div style="display:flex;gap:var(--space-3);align-items:center;margin-bottom:var(--space-3)"><div class="skeleton-circle"></div><div style="flex:1"><div class="skeleton-line w-60"></div><div class="skeleton-line w-40"></div></div><span class="skeleton-pill" style="width:var(--space-20)"></span></div>`).join('')}
   </div>`;
 }
 
@@ -3206,36 +3263,36 @@ function updateOverview(chartResponse) {
   let html = '';
 
   // Quick Stats Row
-  html += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;margin-bottom:18px">
-    <div class="card" style="padding:14px;text-align:center">
-      <div style="font-size:1.4rem;font-weight:700;color:var(--gold)">${chart.type || '—'}</div>
-      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Energy Pattern</div>
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:var(--space-3);margin-bottom:var(--space-5)">
+    <div class="card" style="padding:var(--space-4);text-align:center">
+      <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${chart.type || '—'}</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Energy Pattern</div>
     </div>
-    <div class="card" style="padding:14px;text-align:center">
-      <div style="font-size:1.4rem;font-weight:700;color:var(--text)">${chart.profile || '—'}</div>
-      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Life Role</div>
+    <div class="card" style="padding:var(--space-4);text-align:center">
+      <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--text)">${chart.profile || '—'}</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Life Role</div>
     </div>
-    <div class="card" style="padding:14px;text-align:center">
-      <div style="font-size:1.4rem;font-weight:700;color:var(--accent)">${definedCount}/${openCount}</div>
-      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Defined/Open</div>
+    <div class="card" style="padding:var(--space-4);text-align:center">
+      <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--accent)">${definedCount}/${openCount}</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Defined/Open</div>
     </div>
-    <div class="card" style="padding:14px;text-align:center">
-      <div style="font-size:1.4rem;font-weight:700;color:var(--gold)">${channelCount}</div>
-      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">Active Channels</div>
+    <div class="card" style="padding:var(--space-4);text-align:center">
+      <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${channelCount}</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Active Channels</div>
     </div>
   </div>`;
 
   // Strategy + Authority card
-  html += `<div class="card" style="border-left:3px solid var(--gold);margin-bottom:16px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  html += `<div class="card" style="border-left:var(--space-1) solid var(--gold);margin-bottom:var(--space-4)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
       <div>
-        <div style="font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Your Strategy</div>
-        <div style="font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px">${chart.strategy || '—'}</div>
+        <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">Your Strategy</div>
+        <div style="font-size:var(--font-size-md);font-weight:600;color:var(--text);margin-bottom:var(--space-1)">${chart.strategy || '—'}</div>
         ${typeof getExplanation === 'function' ? getExplanation(STRATEGY_EXPLANATIONS, chart.strategy) : ''}
       </div>
       <div>
-        <div style="font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Decision Style</div>
-        <div style="font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px">${chart.authority || '—'}</div>
+        <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">Decision Style</div>
+        <div style="font-size:var(--font-size-md);font-weight:600;color:var(--text);margin-bottom:var(--space-1)">${chart.authority || '—'}</div>
         ${typeof getExplanation === 'function' ? getExplanation(AUTHORITY_EXPLANATIONS, chart.authority) : ''}
       </div>
     </div>
@@ -3243,34 +3300,34 @@ function updateOverview(chartResponse) {
 
   // Purpose / Cross
   if (crossName) {
-    html += `<div class="card" style="margin-bottom:16px">
-      <div style="font-size:0.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Your Life Purpose</div>
-      <div style="font-size:1.1rem;font-weight:700;color:var(--text)">${crossName}</div>
-      <div style="font-size:0.82rem;color:var(--text-dim);margin-top:4px">Your incarnation cross describes the overarching theme of your life journey.</div>
+    html += `<div class="card" style="margin-bottom:var(--space-4)">
+      <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">Your Life Purpose</div>
+      <div style="font-size:var(--font-size-md);font-weight:700;color:var(--text)">${crossName}</div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Your incarnation cross describes the overarching theme of your life journey.</div>
     </div>`;
   }
 
   // Mini bodygraph
   const _ovBgId = 'overview-bodygraph-' + Date.now();
-  html += `<div class="card" style="margin-bottom:16px;text-align:center">
-    <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Your Bodygraph</div>
+  html += `<div class="card" style="margin-bottom:var(--space-4);text-align:center">
+    <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Bodygraph</div>
     <div id="${_ovBgId}"></div>
-    <div style="font-size:0.7rem;color:var(--text-muted);margin-top:6px">Tap centers and channels to explore</div>
+    <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap centers and channels to explore</div>
   </div>`;
 
   // Not-Self alert
   if (chart.notSelfTheme) {
-    html += `<div class="card" style="border-left:3px solid var(--red);margin-bottom:16px">
-      <div style="font-size:0.72rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">⚠ Watch For</div>
-      <div style="font-size:0.9rem;color:var(--text)">When you feel <em>${chart.notSelfTheme.toLowerCase()}</em>, it's a signal you may be out of alignment with your design.</div>
+    html += `<div class="card" style="border-left:var(--space-1) solid var(--red);margin-bottom:var(--space-4)">
+      <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">⚠ Watch For</div>
+      <div style="font-size:var(--font-size-base);color:var(--text)">When you feel <em>${chart.notSelfTheme.toLowerCase()}</em>, it's a signal you may be out of alignment with your design.</div>
     </div>`;
   }
 
   // Quick links
-  html += `<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px">
-    <button class="btn-primary" style="font-size:0.82rem;padding:8px 18px" onclick="switchTab('chart')">View Full Chart</button>
-    <button class="btn-primary" style="font-size:0.82rem;padding:8px 18px;background:var(--accent)" onclick="switchTab('profile')">Generate AI Profile</button>
-    <button class="btn-primary" style="font-size:0.82rem;padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim)" onclick="switchTab('transits')">Today's Transits</button>
+  html += `<div style="display:flex;gap:var(--space-3);flex-wrap:wrap;justify-content:center;margin-top:var(--space-3)">
+    <button class="btn-primary" style="font-size:var(--font-size-sm);padding:var(--space-2) 18px" onclick="switchTab('chart')">View Full Chart</button>
+    <button class="btn-primary" style="font-size:var(--font-size-sm);padding:var(--space-2) 18px;background:var(--accent)" onclick="switchTab('profile')">Generate AI Profile</button>
+    <button class="btn-primary" style="font-size:var(--font-size-sm);padding:var(--space-2) 18px;background:transparent;border:var(--border-width-thin) solid var(--border);color:var(--text-dim)" onclick="switchTab('transits')">Today's Transits</button>
   </div>`;
 
   container.innerHTML = html;
@@ -3384,11 +3441,11 @@ function renderBigFiveQuestions() {
   
   BIG_FIVE_QUESTIONS.forEach(q => {
     html += `
-      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-        <div style="font-size:0.9rem;color:var(--text);margin-bottom:8px">${q.id}. ${q.text}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="margin-bottom:var(--space-4);padding-bottom:var(--space-4);border-bottom:var(--border-width-thin) solid var(--border)">
+        <div style="font-size:var(--font-size-base);color:var(--text);margin-bottom:var(--space-2)">${q.id}. ${q.text}</div>
+        <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap">
           ${[1,2,3,4,5].map(val => `
-            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.82rem;color:var(--text-dim)">
+            <label style="display:flex;align-items:center;gap:var(--space-1);cursor:pointer;font-size:var(--font-size-sm);color:var(--text-dim)">
               <input type="radio" name="bigfive-${q.id}" value="${val}" style="width:auto">
               <span>${['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'][val-1]}</span>
             </label>
@@ -3455,11 +3512,11 @@ function renderVIAQuestions() {
   
   VIA_QUESTIONS.forEach(q => {
     html += `
-      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-        <div style="font-size:0.9rem;color:var(--text);margin-bottom:8px">${q.id}. ${q.strength}</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="margin-bottom:var(--space-4);padding-bottom:var(--space-4);border-bottom:var(--border-width-thin) solid var(--border)">
+        <div style="font-size:var(--font-size-base);color:var(--text);margin-bottom:var(--space-2)">${q.id}. ${q.strength}</div>
+        <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap">
           ${[1,2,3,4,5].map(val => `
-            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.82rem;color:var(--text-dim)">
+            <label style="display:flex;align-items:center;gap:var(--space-1);cursor:pointer;font-size:var(--font-size-sm);color:var(--text-dim)">
               <input type="radio" name="via-${q.id}" value="${val}" style="width:auto">
               <span>${['Not like me', 'A little', 'Somewhat', 'Mostly', 'Very much'][val-1]}</span>
             </label>
@@ -3589,7 +3646,7 @@ async function loadDiaryEntries() {
       return;
     }
 
-    let html = '<div style="display:flex;flex-direction:column;gap:12px">';
+    let html = '<div style="display:flex;flex-direction:column;gap:var(--space-3)">';
     
     entries.forEach(entry => {
       const date = new Date(entry.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -3599,19 +3656,19 @@ async function loadDiaryEntries() {
       }[entry.event_type] || '📌';
 
       html += `
-        <div class="card" style="padding:16px;margin:0">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div class="card" style="padding:var(--space-4);margin:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-2)">
             <div>
-              <div style="font-size:0.95rem;font-weight:600;color:var(--gold)">${typeIcon} ${escapeHtml(entry.event_title)}</div>
-              <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">${date} · ${entry.event_type} · ${entry.significance}</div>
+              <div style="font-size:var(--font-size-md);font-weight:600;color:var(--gold)">${typeIcon} ${escapeHtml(entry.event_title)}</div>
+              <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">${date} · ${entry.event_type} · ${entry.significance}</div>
             </div>
-            <div style="display:flex;gap:6px">
+            <div style="display:flex;gap:var(--space-2)">
               <button class="btn-sm btn-secondary" onclick="editDiaryEntry('${escapeAttr(entry.id)}')">Edit</button>
               <button class="btn-sm btn-danger" onclick="deleteDiaryEntry('${escapeAttr(entry.id)}')">Delete</button>
             </div>
           </div>
-          ${entry.event_description ? `<div style="font-size:0.85rem;color:var(--text);margin-top:8px;line-height:1.5">${escapeHtml(entry.event_description)}</div>` : ''}
-          ${entry.transit_snapshot ? '<div style="margin-top:8px;padding:8px;background:rgba(106,79,200,0.1);border-radius:4px;font-size:0.78rem;color:var(--accent)">🔮 Transit correlation data available</div>' : ''}
+          ${entry.event_description ? `<div style="font-size:var(--font-size-base);color:var(--text);margin-top:var(--space-2);line-height:1.5">${escapeHtml(entry.event_description)}</div>` : ''}
+          ${entry.transit_snapshot ? '<div style="margin-top:var(--space-2);padding:var(--space-2);background:rgba(106,79,200,0.1);border-radius:var(--space-1);font-size:var(--font-size-sm);color:var(--accent)">🔮 Transit correlation data available</div>' : ''}
         </div>
       `;
     });
@@ -3951,7 +4008,7 @@ function showNotification(message, type = 'info') {
     color: white;
     padding: 12px 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    box-shadow: var(--shadow);
     font-size: 0.9rem;
     font-weight: 600;
     max-width: 300px;
@@ -4056,7 +4113,7 @@ if (!document.getElementById('notificationStyles')) {
       border-radius: 12px;
       max-width: 500px;
       width: 100%;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      box-shadow: var(--shadow-xl);
       border: 1px solid var(--gold-dim);
     }
     @media (max-width: 768px) {
@@ -4374,21 +4431,21 @@ async function loadCheckInStats() {
       const summaryEl = document.getElementById('checkinStatsSummary');
       if (summaryEl) {
         summaryEl.innerHTML = `
-          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(String(stats.totalCheckins))}</div>
-            <div style="font-size:0.75rem;color:var(--text-dim)">Total Check-Ins</div>
+          <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${escapeHtml(String(stats.totalCheckins))}</div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-dim)">Total Check-Ins</div>
           </div>
-          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(String(stats.avgAlignmentScore ?? '—'))}</div>
-            <div style="font-size:0.75rem;color:var(--text-dim)">Avg Alignment</div>
+          <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${escapeHtml(String(stats.avgAlignmentScore ?? '—'))}</div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-dim)">Avg Alignment</div>
           </div>
-          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(stats.strategyAdherenceRate != null ? stats.strategyAdherenceRate + '%' : '—')}</div>
-            <div style="font-size:0.75rem;color:var(--text-dim)">Strategy Rate</div>
+          <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${escapeHtml(stats.strategyAdherenceRate != null ? stats.strategyAdherenceRate + '%' : '—')}</div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-dim)">Strategy Rate</div>
           </div>
-          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-            <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${escapeHtml(stats.authorityAdherenceRate != null ? stats.authorityAdherenceRate + '%' : '—')}</div>
-            <div style="font-size:0.75rem;color:var(--text-dim)">Authority Rate</div>
+          <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${escapeHtml(stats.authorityAdherenceRate != null ? stats.authorityAdherenceRate + '%' : '—')}</div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-dim)">Authority Rate</div>
           </div>
         `;
       }
@@ -4416,9 +4473,9 @@ async function loadCheckInStats() {
         const historyEl = document.getElementById('checkinHistoryList');
         if (historyEl) {
           historyEl.innerHTML = stats.dailyScores.slice().reverse().slice(0, 14).map(d => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="font-size:0.85rem;color:var(--text-dim)">${d.date}</span>
-              <span style="display:flex;gap:8px;align-items:center;font-size:0.85rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) 0;border-bottom:var(--border-width-thin) solid var(--border)">
+              <span style="font-size:var(--font-size-base);color:var(--text-dim)">${d.date}</span>
+              <span style="display:flex;gap:var(--space-2);align-items:center;font-size:var(--font-size-base)">
                 <span title="Alignment">${d.alignmentScore}/10</span>
                 ${d.followedStrategy ? '<span style="color:var(--accent2)" title="Followed strategy">✓S</span>' : '<span style="color:var(--text-dim)" title="Did not follow strategy">✗S</span>'}
                 ${d.followedAuthority ? '<span style="color:var(--accent2)" title="Followed authority">✓A</span>' : '<span style="color:var(--text-dim)" title="Did not follow authority">✗A</span>'}
@@ -4564,7 +4621,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%);
     background: linear-gradient(135deg, #6a4fc8 0%, #c9a84c 100%);
     color: white; padding: 12px 24px; border-radius: 8px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5); z-index: 1000;
+    box-shadow: var(--shadow); z-index: 1000;
     font-size: 0.9rem; display: flex; align-items: center; gap: 12px;
     animation: slideUp 0.3s ease-out;
   `;
@@ -4614,6 +4671,69 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+</script>
+
+<!-- Tooltip Viewport Collision Detection -->
+<script>
+// ── Tooltip Viewport Collision Detection ──────────────────────────────────
+function initTooltipCollisionDetection() {
+  // Add mouseenter listener to all help icons with titles
+  document.querySelectorAll('.help-icon[title]').forEach(icon => {
+    icon.addEventListener('mouseenter', function(e) {
+      // Small delay to let CSS tooltip render
+      setTimeout(() => {
+        const rect = this.getBoundingClientRect();
+        const tooltipWidth = 260; // From CSS
+        const tooltipHeight = 80; // Approximate with padding
+        const gap = 8;
+        
+        // Calculate initial position (centered above)
+        let tooltipLeft = rect.left + rect.width/2 - tooltipWidth/2;
+        let tooltipTop = rect.top - gap - tooltipHeight;
+        
+        const viewport = {
+          width: window.innerWidth,
+          height: window.innerHeight
+        };
+        
+        // Check horizontal collision and adjust
+        if (tooltipLeft < 10) {
+          // Too far left, shift right
+          tooltipLeft = 10;
+          this.classList.add('tooltip-left');
+        } else if (tooltipLeft + tooltipWidth > viewport.width - 10) {
+          // Too far right, shift left
+          tooltipLeft = viewport.width - 10 - tooltipWidth;
+          this.classList.add('tooltip-right');
+        } else {
+          this.classList.remove('tooltip-left', 'tooltip-right');
+        }
+        
+        // Check vertical collision (switch to below if needed)
+        if (tooltipTop < 10) {
+          // Switch to below the icon
+          tooltipTop = rect.bottom + gap;
+          this.classList.add('tooltip-below');
+        } else {
+          this.classList.remove('tooltip-below');
+        }
+        
+        // Apply calculated position
+        this.style.setProperty('--tooltip-left', `${tooltipLeft}px`);
+        this.style.setProperty('--tooltip-top', `${tooltipTop}px`);
+      }, 10);
+    });
+    
+    icon.addEventListener('mouseleave', function() {
+      this.classList.remove('tooltip-left', 'tooltip-right', 'tooltip-below');
+      this.style.removeProperty('--tooltip-left');
+      this.style.removeProperty('--tooltip-top');
+    });
+  });
+}
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', initTooltipCollisionDetection);
 </script>
 
 <!-- i18n Multi-Language Support (BL-OPT-006) -->
