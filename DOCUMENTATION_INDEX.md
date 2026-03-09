@@ -25,7 +25,7 @@
 2. **[ARCHITECTURE.md](ARCHITECTURE.md)** — System design
 3. **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** — API endpoints
 4. **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** — UI components
-5. **process/BUILD_STANDARDS.md** — Coding patterns
+5. **[process/BUILD_BIBLE.md](process/BUILD_BIBLE.md)** — Implementation standards and patterns
 
 ### I'm DevOps
 1. **[guides/ENVIRONMENT_VARIABLES.md](guides/ENVIRONMENT_VARIABLES.md)** — Configuration
@@ -127,15 +127,30 @@
 **Archived Audits**
 - [audits/archive/AUDIT_2025-01.md](audits/archive/AUDIT_2025-01.md) — Deep-dive re-audit (historical reference)
 
-### 🔄 Process & Standards (Development Methodology)
+## 🔄 Process & Standards
 
-**Standards & Practices**
-| Document | Purpose |
-|----------|---------|
-| process/BUILD_STANDARDS.md | Coding standards, patterns, conventions |
-| process/TEST_STRATEGY.md | Testing approach, coverage requirements |
-| process/LESSONS_LEARNED.md | Historical incidents & resolutions |
-| process/CHANGE_LOG.md | Version history, releases |
+**[See process/README.md](process/README.md) for complete process documentation directory**
+
+### Development Standards & Build Process
+| Document | Purpose | Type |
+|----------|---------|------|
+| [process/BUILD_BIBLE.md](process/BUILD_BIBLE.md) | Layer-by-layer implementation reference | Reference |
+| [process/BUILD_LOG.md](process/BUILD_LOG.md) | Complete implementation history (97% complete) | Historical Log |
+| [process/LESSONS_LEARNED.md](process/LESSONS_LEARNED.md) | Debugging patterns and verification techniques | Knowledge Base |
+
+### Testing & Quality Assurance
+| Document | Purpose | Type |
+|----------|---------|------|
+| [process/TEST_PLAN.md](process/TEST_PLAN.md) | Comprehensive testing strategy and coverage | Reference |
+| [process/UPGRADE_FLOW_TESTING.md](process/UPGRADE_FLOW_TESTING.md) | Upgrade scenario testing procedures | Reference |
+
+### Change & Sprint Management
+| Document | Purpose | Type |
+|----------|---------|------|
+| [process/CHANGELOG_UX.md](process/CHANGELOG_UX.md) | UX improvements and change tracking | Tracking |
+| [process/UI_CHANGELOG_2026-03-08.md](process/UI_CHANGELOG_2026-03-08.md) | UI audit and changelog | Reference |
+| [process/BACKLOG_VERIFICATION_SPRINT_2026-03-09.md](process/BACKLOG_VERIFICATION_SPRINT_2026-03-09.md) | Sprint verification and completion status | Tracking |
+| [process/UI_DEFECT_BACKLOG.md](process/UI_DEFECT_BACKLOG.md) | UI/UX defects by severity | Tracking |
 
 **Status & Progress**
 | Document | Purpose | Update Frequency |

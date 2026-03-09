@@ -302,13 +302,16 @@ All chart calculations verified against two reference charts:
 ```
 HumanDesign/
 ├── ARCHITECTURE.md              # System architecture — the WHY
-├── BUILD_BIBLE.md               # Prompting documentation — the HOW
+├── process/BUILD_BIBLE.md       # Prompting documentation — the HOW
 ├── PLan-convo                   # Original planning conversation (reference)
 ├── Secrets.txt                  # API keys (⚠️ in .gitignore)
 ├── prime_self_manifesto.docx    # Canonical doc: The Manifesto
 ├── prime_self_canonical_framework.docx  # Canonical doc: Full system
 ├── prime_self_hd_astro_integration.docx # Canonical doc: HD/Astro bridge
 ├── docs/                        # Additional documentation
+├── guides/                      # Implementation how-to guides
+├── audits/                      # Audit reports and analysis
+├── process/                     # Development process & standards
 ├── src/
 │   ├── data/                    # Static reference data
 │   │   ├── gate_wheel.json      # 64-gate mandala wheel lookup (CRITICAL)
@@ -324,7 +327,7 @@ HumanDesign/
 ## Quick Start — Build Sequence
 
 1. Read `ARCHITECTURE.md` for system overview
-2. Read `BUILD_BIBLE.md` for layer-by-layer execution prompts
+2. Read `process/BUILD_BIBLE.md` for layer-by-layer execution prompts
 3. Execute Layer 1 prompt → verify against AP test vector
 4. Continue through Layer 8, verifying each layer before proceeding
 
