@@ -230,7 +230,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation/', '/api/psychometric/', '/api/diary/', '/api/billing/', '/api/referrals/', '/api/achievements/', '/api/webhooks/', '/api/push/', '/api/alerts/', '/api/keys/', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin/', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation/', '/api/psychometric/', '/api/diary', '/api/billing/', '/api/referrals/', '/api/achievements/', '/api/webhooks/', '/api/push/', '/api/alerts/', '/api/keys/', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin/', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);

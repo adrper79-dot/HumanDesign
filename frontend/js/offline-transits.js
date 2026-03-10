@@ -183,6 +183,11 @@
   async function prefetchTransits() {
     if (!isOnline || typeof window.apiFetch !== 'function') return;
 
+    // Skip auth probing for logged-out visitors to avoid noisy 401s.
+    if (!window.currentUser?.id) {
+      return;
+    }
+
     // Check if user is authenticated and has a birth chart
     // Before attempting to fetch personalized forecasts
     let userChart = null;
