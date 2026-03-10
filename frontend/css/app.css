@@ -945,6 +945,24 @@ img[data-src].loaded, img:not([data-src]) {
 }
 .frm-dot.active { background: var(--gold); }
 
+/* Mobile styles for first-run modal */
+@media (max-width: 768px) {
+  .first-run-overlay {
+    padding: var(--mobile-padding);
+  }
+  .first-run-panel {
+    max-width: 100%;
+    padding: var(--space-6) var(--mobile-padding);
+  }
+  .frm-step-title {
+    font-size: var(--text-xl);
+  }
+  .frm-step-body {
+    font-size: var(--text-base);
+    line-height: 1.6;
+  }
+}
+
 /* ── Tab Intro Cards ─────────────────────────────────────────────────────── */
 .tab-intro-card {
   background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 8%, transparent) 0%, transparent 100%);
