@@ -446,13 +446,13 @@
   <button class="tab-btn primary-tab" id="btn-today" role="tab" aria-selected="false" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Today</button>
   <button class="tab-btn primary-tab" id="btn-connect" role="tab" aria-selected="false" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Connect</button>
   <button class="tab-btn primary-tab" id="btn-grow" role="tab" aria-selected="false" onclick="switchTab('enhance', this)"><span class="icon-star"></span> Grow</button>
+  <button class="tab-btn primary-tab" id="btn-practitioner" role="tab" aria-selected="false" onclick="switchTab('practitioner', this)">★ Practitioner</button>
   <div class="tab-divider" aria-hidden="true"></div>
   <!-- SETTINGS: utility items -->
   <div class="more-menu-btn" style="display:flex;align-items:center">
     <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:var(--space-1)" title="Account, settings and tools">⚙ <span id="more-arrow" style="font-size:var(--font-size-xs);transition:transform 0.15s">▾</span></button>
     <div class="more-dropdown" id="more-dropdown" role="menu">
       <button class="tab-btn" id="btn-history" role="menuitem" tabindex="0" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved Charts</button>
-      <button class="tab-btn" id="btn-practitioner" role="menuitem" tabindex="0" aria-controls="tab-practitioner" onclick="switchTab('practitioner', this); closeMoreMenu()"><span class="icon-star"></span> Practitioner</button>
       <button class="tab-btn" id="btn-sms" role="menuitem" tabindex="0" aria-controls="tab-sms" onclick="switchTab('sms', this); closeMoreMenu()"><span class="icon-sms"></span> SMS Alerts</button>
       <button class="tab-btn" id="btn-rectify" role="menuitem" tabindex="0" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Birth Time Rectify</button>
       <button class="tab-btn" id="btn-onboarding" role="menuitem" tabindex="0" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Restart Onboarding</button>
@@ -561,13 +561,19 @@
           </select>
         </div>
       </div>
-      <div style="margin-top:var(--space-5);display:flex;gap:var(--space-3);flex-wrap:wrap">
+      <div id="chartBtnRow" style="margin-top:var(--space-5);display:flex;gap:var(--space-3);flex-wrap:wrap">
         <button class="btn-primary" onclick="calculateChart()" id="calcBtn">
           <span class="spinner" id="calcSpinner" style="display:none"></span>
           <span data-i18n="chart.generateMyChart">Generate My Chart</span>
         </button>
         <button class="btn-secondary" onclick="prefillExample()" data-i18n="chart.tryExample">Try Example</button>
       </div>
+    </div>
+
+    <!-- Compact birth data summary shown after chart is generated -->
+    <div id="chartFormSummary" class="chart-form-summary" style="display:none" role="status">
+      <span id="chartFormSummaryText" class="chart-form-summary-text"></span>
+      <button class="btn-secondary btn-sm" onclick="expandChartForm()">✎ Edit</button>
     </div>
 
     <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Human Design &amp; astrology data.</p></div>
@@ -1798,8 +1804,9 @@ const TAB_GROUPS = {
   transits: 'btn-today', checkin: 'btn-today',
   composite: 'btn-connect', clusters: 'btn-connect',
   enhance: 'btn-grow', diary: 'btn-grow',
+  practitioner: 'btn-practitioner',
   // Settings drawer items — no primary tab highlights
-  history: null, practitioner: null, sms: null, rectify: null, onboarding: null
+  history: null, sms: null, rectify: null, onboarding: null
 };
 
 function switchTab(id, btn) {
@@ -2085,12 +2092,63 @@ async function calculateChart() {
     // Auto-navigate to Home dashboard after first calculation
     const homeBtn = document.getElementById('btn-home');
     if (homeBtn && typeof switchTab === 'function') switchTab('overview', homeBtn);
+    // Collapse the chart form now that a chart has been generated
+    collapseChartForm();
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
   }
+}
+
+// ── Chart Form Collapse (hide form after generation, show compact summary) ──
+function collapseChartForm() {
+  localStorage.setItem('chartGenerated', '1');
+  // Hide the generate button row
+  const btnRow = document.getElementById('chartBtnRow');
+  if (btnRow) btnRow.style.display = 'none';
+  // Build compact birth data summary
+  const summary = document.getElementById('chartFormSummary');
+  const summaryText = document.getElementById('chartFormSummaryText');
+  if (summary && summaryText) {
+    const date = document.getElementById('c-date')?.value || '';
+    const time = document.getElementById('c-time')?.value || '';
+    const loc  = document.getElementById('c-location')?.value || '';
+    const parts = [];
+    if (date) parts.push('📅 ' + date);
+    if (time) parts.push('⏰ ' + time);
+    if (loc)  parts.push('📍 ' + loc);
+    summaryText.textContent = parts.join('  ');
+    summary.style.display = 'flex';
+  }
+  // Update sticky CTA to say Recalculate
+  const stickyBtn = document.querySelector('#stickyChartCta button');
+  if (stickyBtn) {
+    const span = stickyBtn.querySelector('span[data-i18n]');
+    if (span) { span.removeAttribute('data-i18n'); span.textContent = '↻ Recalculate'; }
+    stickyBtn.onclick = function() { expandChartForm(); };
+  }
+}
+
+function expandChartForm() {
+  // Show the button row again
+  const btnRow = document.getElementById('chartBtnRow');
+  if (btnRow) btnRow.style.removeProperty('display');
+  // Hide summary bar
+  const summary = document.getElementById('chartFormSummary');
+  if (summary) summary.style.display = 'none';
+  // Reset sticky CTA
+  const stickyBtn = document.querySelector('#stickyChartCta button');
+  if (stickyBtn) {
+    const span = stickyBtn.querySelector('span:not(.spinner)');
+    if (span) { span.setAttribute('data-i18n', 'chart.generateMyChart'); span.textContent = window.t ? window.t('chart.generateMyChart') : 'Generate My Chart'; }
+    stickyBtn.onclick = calculateChart;
+  }
+  // Navigate back to chart tab
+  if (typeof switchTab === 'function') switchTab('chart', document.getElementById('btn-blueprint'));
+  // Focus the date input
+  setTimeout(() => document.getElementById('c-date')?.focus({ preventScroll: false }), 100);
 }
 
 // ── Birth Data Persistence (localStorage) ─────────────────────
@@ -2174,6 +2232,10 @@ document.addEventListener('DOMContentLoaded', () => {
       showIdentityStrip(window._lastChart);
     }
   }, 200);
+  // Restore collapsed chart form state if chart was previously generated
+  if (localStorage.getItem('chartGenerated')) {
+    collapseChartForm();
+  }
 });
 
 function renderChart(data) {
@@ -4644,23 +4706,23 @@ if (token) fetchUserProfile();
       <button onclick="toggleMobileMore()" aria-label="Close">&times;</button>
     </div>
     <div class="mobile-more-grid">
+      <a href="#" class="mobile-more-item" data-tab="practitioner" onclick="switchTab('practitioner'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">★</span><span data-i18n="nav.practitioner">Practitioner</span>
+      </a>
       <a href="#" class="mobile-more-item" data-tab="history" onclick="switchTab('history'); toggleMobileMore(); return false;">
         <span class="mobile-more-icon">📂</span><span data-i18n="nav.saved">Saved Charts</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="sms" onclick="switchTab('sms'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">✉</span><span data-i18n="nav.sms">SMS Alerts</span>
+      </a>
+      <a href="#" class="mobile-more-item" data-tab="clusters" onclick="switchTab('clusters'); toggleMobileMore(); return false;">
+        <span class="mobile-more-icon">⬢</span><span data-i18n="nav.clusters">Clusters</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="rectify" onclick="switchTab('rectify'); toggleMobileMore(); return false;">
         <span class="mobile-more-icon">⏱</span><span data-i18n="nav.rectify">Rectify</span>
       </a>
       <a href="#" class="mobile-more-item" data-tab="onboarding" onclick="switchTab('onboarding'); toggleMobileMore(); return false;">
         <span class="mobile-more-icon">🧭</span><span data-i18n="nav.onboarding">Onboarding</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="practitioner" onclick="switchTab('practitioner'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">★</span><span data-i18n="nav.practitioner">Practitioner</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="clusters" onclick="switchTab('clusters'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">⬢</span><span data-i18n="nav.clusters">Clusters</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="sms" onclick="switchTab('sms'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">✉</span><span data-i18n="nav.sms">SMS Alerts</span>
       </a>
     </div>
   </div>
