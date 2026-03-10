@@ -286,6 +286,82 @@ window.DEFINITION_EXPLANATIONS = {
   'No Definition': 'As a Reflector, you have no fixed definition. You\'re completely open to sampling and reflecting the energy around you. Your environment IS your design.'
 };
 
+// ── Gate Themes (condensed from gates.json) ────────────────────
+window.GATE_THEMES = {
+  1: 'Original Creative Expression',
+  2: 'Devoted receptivity as the foundation of authentic direction',
+  3: 'Patient Creative Gestation',
+  4: 'Cultivating understanding through methodical inquiry',
+  5: 'Patient readiness and natural timing',
+  6: 'Emotional wisdom in conflict navigation',
+  7: 'Leadership through magnetic presence',
+  8: 'Magnetic contribution through authentic expression',
+  9: 'The Power of Concentrated Focus',
+  10: 'Authentic conduct through mindful presence',
+  11: 'Mental Recognition of Peace',
+  12: 'The voice of transcendent perspective',
+  13: 'The Fellowship of Shared Stories',
+  14: 'Creative Abundance Through Authentic Expression',
+  15: 'Magnetic Humility',
+  16: 'Enthusiastic Expression of Mastery',
+  17: 'Mental Following and Sequential Organization',
+  18: 'Intuitive Recognition of What Needs Correction',
+  19: 'Sensitive approach to what sustains life',
+  20: 'Contemplative Expression',
+  21: 'Biting through obstacles with willful control',
+  22: 'Graceful Expression Through Emotional Refinement',
+  23: 'Expressing essential truth through necessary dissolution',
+  24: 'Cyclical Mental Renewal',
+  25: 'Authentic Innocence',
+  26: 'The Great Accumulator',
+  27: 'Nourishing responsibility through embodied care',
+  28: 'The courage to risk for purpose',
+  29: "Sacred commitment to life's depths",
+  30: 'Illuminating wisdom through emotional fire',
+  31: 'Magnetic Expression of Authentic Influence',
+  32: 'Instinctive recognition of lasting value',
+  33: 'Strategic Withdrawal and Selective Engagement',
+  34: 'Power with purpose',
+  35: 'The drive for experiential advancement',
+  36: 'Emotional alchemy through crisis navigation',
+  37: 'Emotional wisdom for family prosperity',
+  38: 'Sacred Opposition',
+  39: 'Catalytic provocation through strategic pressure',
+  40: 'Willful Liberation Through Release',
+  41: 'The pressure to diminish for renewal',
+  42: 'Sustainable completion through dedicated cultivation',
+  43: 'Breakthrough Insight',
+  44: 'Instinctive tribal discernment',
+  45: 'Gathering the tribe through voice',
+  46: 'Ascending through dedicated effort',
+  47: 'Understanding through constraint',
+  48: 'Intuitive recognition of depth and substance',
+  49: 'Revolutionary Emotional Wisdom',
+  50: 'Sacred stewardship of collective nourishment',
+  51: 'Thunderous awakening through shock',
+  52: 'Purposeful Stillness',
+  53: 'Gradual Development Through Natural Stages',
+  54: 'Strategic Ascension Through Tribal Alliance',
+  55: 'Recognizing inherent abundance through emotional depth',
+  56: 'Stimulating consciousness through experiential storytelling',
+  57: 'Gentle penetration through intuitive persistence',
+  58: 'Vital joy in improvement',
+  59: 'Dissolving barriers to authentic connection',
+  60: 'Mastering creative constraint',
+  61: 'Inner Truth Through Direct Knowing',
+  62: 'Precision in Expression',
+  63: 'Constructive doubt after completion',
+  64: 'Mental synthesis before completion'
+};
+
+// ── Signature (aligned state) Explanations ─────────────────────
+window.SIGNATURE_EXPLANATIONS = {
+  'Satisfaction': 'When you are in your flow — responding to what truly lights you up and mastering it — you feel deep satisfaction. This is your compass that you are living correctly.',
+  'Peace': 'When you inform before acting and let go of resistance, a profound inner peace settles in. This is your signal that you are operating in alignment.',
+  'Success': 'When you wait for genuine recognition and invitation before sharing your wisdom, you experience outer success that feels effortless. Wait for it.',
+  'Surprise': 'When you honor the lunar cycle and stop trying to be consistent, life surprises you with magic. Delight and wonder are your natural state when correctly placed.'
+};
+
 // ── Helper: Get explanation HTML for a value ───────────────────
 window.getExplanation = function(map, key) {
   if (!key || !map) return '';

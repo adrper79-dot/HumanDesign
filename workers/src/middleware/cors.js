@@ -2,16 +2,19 @@
  * CORS Middleware
  *
  * CSRF Protection Model (BL-R-H14):
- *   1. Auth uses Bearer tokens in Authorization header (not cookies).
+ *   1. Access tokens are sent in the Authorization header (Bearer).
  *      Browsers never auto-attach this header, so cross-origin forms/links
- *      cannot forge authenticated requests.
- *   2. Tokens are stored in localStorage, which is same-origin only.
- *   3. Access-Control-Allow-Credentials is intentionally OMITTED, so
- *      even if cookies were added in the future they would not be sent
- *      cross-origin.
- *   4. Notion OAuth uses a server-generated `state` parameter (stored in
+ *      cannot forge authenticated requests even though cookies are present.
+ *   2. Access tokens are stored in memory only (not localStorage).
+ *   3. Refresh tokens are stored in HttpOnly cookies (ps_refresh).
+ *      SameSite=None is required for cross-origin API domains; CSRF is
+ *      mitigated because the refresh endpoint issues an access token that
+ *      must be echoed in the Authorization header for any state change.
+ *   4. Access-Control-Allow-Credentials: true is set so that the browser
+ *      sends the HttpOnly refresh cookie on cross-origin requests.
+ *   5. OAuth uses a server-generated `state` parameter (stored in
  *      DB with 10-minute expiry) to prevent OAuth CSRF.
- *   5. Stripe webhooks are verified via HMAC signature, not cookies.
+ *   6. Stripe webhooks are verified via HMAC signature, not cookies.
  *
  * No additional CSRF token layer is needed given this architecture.
  */
@@ -61,6 +64,7 @@ export function getCorsHeaders(request, environment) {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
     // BL-S-MW3: Expose rate limit headers to client JS
     'Access-Control-Expose-Headers': 'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After',
     'Access-Control-Max-Age': '86400',
@@ -73,6 +77,7 @@ export const corsHeaders = {
   'Access-Control-Allow-Origin': PRODUCTION_ORIGINS[0],
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Max-Age': '86400'
 };
 
