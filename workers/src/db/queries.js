@@ -325,13 +325,20 @@ export const QUERIES = {
   `,
 
   addClusterMember: `
-    INSERT INTO cluster_members (cluster_id, user_id, forge_role)
-    VALUES ($1, $2, $3)
-    ON CONFLICT DO NOTHING
+    INSERT INTO cluster_members (cluster_id, user_id, forge_role, birth_date, birth_time, birth_timezone, birth_lat, birth_lng)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ON CONFLICT (cluster_id, user_id) DO UPDATE SET
+      forge_role      = EXCLUDED.forge_role,
+      birth_date      = EXCLUDED.birth_date,
+      birth_time      = EXCLUDED.birth_time,
+      birth_timezone  = EXCLUDED.birth_timezone,
+      birth_lat       = EXCLUDED.birth_lat,
+      birth_lng       = EXCLUDED.birth_lng
   `,
 
   getClusterMembers: `
-    SELECT u.id, u.email, cm.forge_role
+    SELECT u.id, u.email, cm.forge_role,
+           cm.birth_date, cm.birth_time, cm.birth_timezone, cm.birth_lat, cm.birth_lng
     FROM users u
     JOIN cluster_members cm ON cm.user_id = u.id
     WHERE cm.cluster_id = $1

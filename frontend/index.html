@@ -3805,12 +3805,86 @@ async function synthesizeCluster(clusterId) {
   container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('profile.generatingAi') + '</div></div>';
 
   try {
-    // Note: The API expects members array with birth data. For now, show a placeholder.
-    // In production, you'd fetch member birth data from backend.
-    showAlert('synthesisResult', 'Synthesis feature requires member birth data storage in database. Coming soon!', 'info');
+    const data = await apiFetch(`/api/cluster/${clusterId}/synthesize`, {
+      method: 'POST',
+      body: JSON.stringify({})
+    });
+    if (data.error) {
+      container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> ${escapeHtml(data.error)}</div>`;
+      return;
+    }
+    container.innerHTML = renderClusterSynthesis(data);
   } catch (e) {
     container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Synthesis error: ${escapeHtml(e.message)}</div>`;
   }
+}
+
+function renderClusterSynthesis(data) {
+  const members = data.members || [];
+  const comp = data.composition || {};
+  const s = data.synthesis || {};
+  const meta = data.meta || {};
+
+  let html = `<div class="card">`;
+  html += `<div class="card-title"><span class="icon-energy"></span> Group Intelligence Synthesis</div>`;
+  if (meta.synthesizedAt) {
+    html += `<p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-4)">Generated ${formatDate(meta.synthesizedAt)} \u00b7 ${meta.memberCount} members</p>`;
+  }
+
+  if (members.length) {
+    html += `<h4 style="color:var(--gold);font-size:var(--font-size-base);margin-bottom:var(--space-3)">Forge Roles</h4>`;
+    html += `<div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-5)">`;
+    members.forEach(m => {
+      const fl = (m.forge || '').toLowerCase();
+      const forgeClass = fl.includes('power') ? 'power' : fl.includes('craft') ? 'craft' : fl.includes('vision') ? 'vision' : fl.includes('mirror') ? 'mirrors' : '';
+      html += `<div class="data-block" style="flex:1;min-width:140px;padding:var(--space-3)">`;
+      html += `<strong>${escapeHtml(m.name || 'Member')}</strong>`;
+      html += `<div style="font-size:var(--font-size-sm);color:var(--text-dim)">${escapeHtml(m.type || '')} \u00b7 ${escapeHtml(m.profile || '')}</div>`;
+      html += `<div style="margin-top:var(--space-1)"><span class="forge-role-badge ${forgeClass}">${escapeHtml(m.role || '')}</span></div>`;
+      html += `<div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">${escapeHtml(m.forge || '')}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (comp.insights?.length) {
+    html += `<h4 style="color:var(--gold);font-size:var(--font-size-base);margin-bottom:var(--space-2)">Composition</h4>`;
+    html += `<ul class="indicator-list" style="margin-bottom:var(--space-5)">`;
+    comp.insights.forEach(i => { html += `<li>${escapeHtml(i)}</li>`; });
+    html += `</ul>`;
+  }
+
+  if (s.groupDynamic) {
+    html += `<div class="profile-section"><h4><span class="icon-cluster"></span> Group Dynamic</h4>`;
+    html += `<p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(s.groupDynamic)}</p></div>`;
+  }
+  if (s.forgeInterplay) {
+    html += `<div class="profile-section"><h4><span class="icon-energy"></span> Forge Interplay</h4>`;
+    html += `<p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(s.forgeInterplay)}</p></div>`;
+  }
+  if (s.actionPlan?.length) {
+    html += `<div class="profile-section"><h4><span class="icon-check"></span> Action Plan</h4><ul class="indicator-list">`;
+    s.actionPlan.forEach(step => { html += `<li>${escapeHtml(step)}</li>`; });
+    html += `</ul></div>`;
+  }
+  if (s.communicationStrategy) {
+    html += `<div class="profile-section"><h4><span class="icon-sms"></span> Communication Strategy</h4>`;
+    html += `<p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(s.communicationStrategy)}</p></div>`;
+  }
+  if (s.blindSpots?.length) {
+    html += `<div class="profile-section"><h4><span class="icon-info"></span> Blind Spots</h4><ul class="indicator-list">`;
+    s.blindSpots.forEach(b => { html += `<li>${escapeHtml(b)}</li>`; });
+    html += `</ul></div>`;
+  }
+  if (s.warning) {
+    html += `<div class="alert alert-warn" style="margin-top:var(--space-4)"><strong>\u26a0\ufe0f Watch Out:</strong> ${escapeHtml(s.warning)}</div>`;
+  }
+  if (s.raw) {
+    html += `<div class="profile-section"><p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text);white-space:pre-wrap">${escapeHtml(s.raw)}</p></div>`;
+  }
+
+  html += `</div>`;
+  return html;
 }
 
 async function leaveCluster(clusterId) {
