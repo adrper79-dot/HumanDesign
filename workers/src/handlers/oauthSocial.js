@@ -1,5 +1,5 @@
 /**
- * Social OAuth Handler — Google, Apple, Facebook
+ * Social OAuth Handler — Google, Apple
  *
  * Flow:
  *   1. GET /api/auth/oauth/:provider          → generate state, redirect to provider
@@ -15,10 +15,6 @@
  *   Google:
  *     GOOGLE_CLIENT_ID      — from Google Cloud Console
  *     GOOGLE_CLIENT_SECRET  — from Google Cloud Console
- *
- *   Facebook:
- *     FACEBOOK_APP_ID       — from Meta for Developers
- *     FACEBOOK_APP_SECRET   — from Meta for Developers
  *
  *   Apple:
  *     APPLE_CLIENT_ID       — your Services ID (e.g. net.selfprime.web)
@@ -51,16 +47,14 @@ export async function handleOAuthSocial(request, env, subpath) {
 
   // GET /api/auth/oauth/google
   // GET /api/auth/oauth/apple
-  // GET /api/auth/oauth/facebook
-  const initiateMatch = subpath.match(/^\/(google|apple|facebook)$/);
+  const initiateMatch = subpath.match(/^\/(google|apple)$/);
   if (initiateMatch && method === 'GET') {
     return initiateOAuth(initiateMatch[1], env);
   }
 
   // GET /api/auth/oauth/google/callback
-  // GET /api/auth/oauth/facebook/callback
   // GET|POST /api/auth/oauth/apple/callback  (Apple POSTs)
-  const callbackMatch = subpath.match(/^\/(google|apple|facebook)\/callback$/);
+  const callbackMatch = subpath.match(/^\/(google|apple)\/callback$/);
   if (callbackMatch && (method === 'GET' || method === 'POST')) {
     return handleCallback(callbackMatch[1], request, env);
   }
@@ -103,17 +97,6 @@ function initiateOAuth(provider, env) {
       url.searchParams.set('scope', 'name email');
       url.searchParams.set('response_mode', 'form_post'); // Apple POSTs the callback
       url.searchParams.set('state', state);
-      authUrl = url.toString();
-      break;
-    }
-    case 'facebook': {
-      if (!env.FACEBOOK_APP_ID) return configError('FACEBOOK_APP_ID');
-      const url = new URL('https://www.facebook.com/v19.0/dialog/oauth');
-      url.searchParams.set('client_id', env.FACEBOOK_APP_ID);
-      url.searchParams.set('redirect_uri', redirectUri);
-      url.searchParams.set('scope', 'email,public_profile');
-      url.searchParams.set('state', state);
-      url.searchParams.set('auth_type', 'rerequest');
       authUrl = url.toString();
       break;
     }
@@ -188,14 +171,6 @@ async function handleCallback(provider, request, env) {
         providerEmail  = result.email;
         // Apple only sends name on first auth
         displayName    = [firstName, lastName].filter(Boolean).join(' ') || result.email?.split('@')[0] || 'Apple User';
-        break;
-      }
-      case 'facebook': {
-        const result = await exchangeFacebook(code, redirectUri, env);
-        providerUserId = result.id;
-        providerEmail  = result.email;
-        displayName    = result.name;
-        avatarUrl      = result.picture?.data?.url;
         break;
       }
       default:
@@ -397,32 +372,6 @@ async function buildAppleClientSecret(env) {
     .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
   return `${signingInput}.${sigB64}`;
-}
-
-// ─── Facebook token exchange ──────────────────────────────────
-
-async function exchangeFacebook(code, redirectUri, env) {
-  // Exchange code for access token
-  const tokenUrl = new URL('https://graph.facebook.com/v19.0/oauth/access_token');
-  tokenUrl.searchParams.set('client_id', env.FACEBOOK_APP_ID);
-  tokenUrl.searchParams.set('client_secret', env.FACEBOOK_APP_SECRET);
-  tokenUrl.searchParams.set('redirect_uri', redirectUri);
-  tokenUrl.searchParams.set('code', code);
-
-  const tokenRes = await fetch(tokenUrl.toString());
-  const tokens   = await tokenRes.json();
-  if (tokens.error) throw new Error(`Facebook token error: ${tokens.error.message}`);
-
-  // Fetch user profile
-  const userUrl = new URL('https://graph.facebook.com/me');
-  userUrl.searchParams.set('access_token', tokens.access_token);
-  userUrl.searchParams.set('fields', 'id,name,email,picture.type(large)');
-
-  const userRes  = await fetch(userUrl.toString());
-  const userData = await userRes.json();
-  if (userData.error) throw new Error(`Facebook profile error: ${userData.error.message}`);
-
-  return userData;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
