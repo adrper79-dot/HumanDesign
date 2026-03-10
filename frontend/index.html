@@ -240,7 +240,7 @@
     <div class="promo-code-section" id="promoSection" style="margin-top:var(--space-4);text-align:center">
       <a class="promo-toggle-link" onclick="togglePromoInput()" style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)">Have a promo code?</a>
       <div id="promoInputArea" style="display:none;margin-top:var(--space-2)">
-        <div style="display:flex;gap:var(--space-2);max-width:280px;margin:0 auto">
+        <div style="display:flex;gap:var(--space-2);max-width:min(280px, 90vw);margin:0 auto">
           <input type="text" id="promoCodeInput" placeholder="PROMO-CODE" autocomplete="off"
                  style="text-transform:uppercase;letter-spacing:0.05em;flex:1"
                  oninput="this.value=this.value.toUpperCase()">
@@ -3217,7 +3217,7 @@ function renderHistory(data) {
     return `<div class="empty-state">
       <span class="icon-profile icon-xl"></span>
       <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No Saved Profiles Yet</h3>
-      <p style="max-width:500px;margin:0 auto 24px">Generate your first Prime Self Profile to unlock AI-powered synthesis combining your gates, Gene Keys, astrology, and numerology into personalized lifecycle guidance.</p>
+      <p style="max-width:min(500px, 90vw);margin:0 auto 24px">Generate your first Prime Self Profile to unlock AI-powered synthesis combining your gates, Gene Keys, astrology, and numerology into personalized lifecycle guidance.</p>
       <button class="btn-primary" onclick="switchTab('profile', document.getElementById('btn-blueprint'))" style="margin:0 auto;display:inline-block">
         <span class="icon-sparkle"></span> Generate Your Profile
       </button>
@@ -3478,7 +3478,7 @@ function renderRoster(data) {
   if (!clients.length) {
     return `<div class="empty-state"><span class="icon-star icon-xl"></span>
       <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">Practitioner Roster Empty</h3>
-      <p style="max-width:500px;margin:0 auto 16px">Add clients to your professional roster for organized reading management. Each client entry stores their profile ID and notes for quick access during sessions.</p>
+      <p style="max-width:min(500px, 90vw);margin:0 auto 16px">Add clients to your professional roster for organized reading management. Each client entry stores their profile ID and notes for quick access during sessions.</p>
     </div>`;
   }
 
@@ -3572,7 +3572,7 @@ function renderClusterList(data) {
     return `<div class="empty-state">
       <span class="icon-cluster icon-xl"></span>
       <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No Clusters Yet</h3>
-      <p style="max-width:500px;margin:0 auto 16px">Create a cluster to analyze group dynamics. Overlay multiple birth charts to see which gates dominate your team, which energies are missing, and how members electromagnetically activate each other. Perfect for work teams, families, or partnerships.</p>
+      <p style="max-width:min(500px, 90vw);margin:0 auto 16px">Create a cluster to analyze group dynamics. Overlay multiple birth charts to see which gates dominate your team, which energies are missing, and how members electromagnetically activate each other. Perfect for work teams, families, or partnerships.</p>
       <p style="color:var(--text-dim);font-size:var(--font-size-base)">Enter a name and purpose above, then click Create Cluster.</p>
     </div>`;
   }
