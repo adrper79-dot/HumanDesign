@@ -257,10 +257,8 @@ const PUBLIC_ROUTES = new Set([
   '/api/compare/search',  // Search celebrities (public)
   '/api/auth/oauth/google',            // Redirect to Google (public)
   '/api/auth/oauth/apple',             // Redirect to Apple (public)
-  '/api/auth/oauth/facebook',          // Redirect to Facebook (public)
   '/api/notion/callback',              // Notion OAuth callback (public)
   '/api/auth/oauth/google/callback',   // Google OAuth callback (public)
-  '/api/auth/oauth/facebook/callback', // Facebook OAuth callback (public)
   '/api/auth/oauth/apple/callback',    // Apple Sign In callback (public, POSTs)
   '/api/embed/validate',               // Embed widget feature-flag check (cross-origin, no PII)
   '/api/promo/validate',               // Promo code validation (public, no redemption)
@@ -331,14 +329,12 @@ const EXACT_ROUTES = new Map([
   ['POST /api/share/achievement',     handleShareAchievement],
   ['POST /api/share/referral',        handleShareReferral],
   ['GET /api/share/stats',            handleGetShareStats],
-  // Social OAuth (Google, Apple, Facebook)
+  // Social OAuth (Google, Apple)
   ['GET /api/auth/oauth/google',             (req, env) => handleOAuthSocial(req, env, '/google')],
   ['GET /api/auth/oauth/google/callback',    (req, env) => handleOAuthSocial(req, env, '/google/callback')],
   ['GET /api/auth/oauth/apple',              (req, env) => handleOAuthSocial(req, env, '/apple')],
   ['GET /api/auth/oauth/apple/callback',     (req, env) => handleOAuthSocial(req, env, '/apple/callback')],
   ['POST /api/auth/oauth/apple/callback',    (req, env) => handleOAuthSocial(req, env, '/apple/callback')],
-  ['GET /api/auth/oauth/facebook',           (req, env) => handleOAuthSocial(req, env, '/facebook')],
-  ['GET /api/auth/oauth/facebook/callback',  (req, env) => handleOAuthSocial(req, env, '/facebook/callback')],
   // Notion
   ['GET /api/notion/auth',            handleNotionAuth],
   ['GET /api/notion/callback',        handleNotionCallback],
