@@ -637,6 +637,27 @@ select option { background: var(--bg3); }
   }
 }
 
+/* ── Chart Form Summary Bar (shown after chart generation) [UNIQUE] ── */
+.chart-form-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-secondary, #111119);
+  border: 1px solid var(--border, #2a2a3a);
+  border-radius: var(--radius-lg, 12px);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+}
+.chart-form-summary-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Lazy Image Fade-In (BL-OPT-005) [UNIQUE] ── */
 img[data-src] {
   opacity: 0;
