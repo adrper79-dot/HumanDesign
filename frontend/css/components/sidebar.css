@@ -407,5 +407,10 @@
 @media (max-width: 768px) {
   .hamburger-btn {
     display: flex;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 101;
   }
 }
