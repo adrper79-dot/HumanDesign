@@ -125,7 +125,6 @@ input, select, textarea {
   background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
   color: var(--text); padding: 9px 12px; font-size: 0.9rem; transition: border 0.15s;
   width: 100%;
-  max-width: clamp(280px, 90vw, 500px);
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
 select option { background: var(--bg3); }
