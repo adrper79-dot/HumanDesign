@@ -240,7 +240,7 @@
     <div class="promo-code-section" id="promoSection" style="margin-top:var(--space-4);text-align:center">
       <a class="promo-toggle-link" onclick="togglePromoInput()" style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)">Have a promo code?</a>
       <div id="promoInputArea" style="display:none;margin-top:var(--space-2)">
-        <div style="display:flex;gap:var(--space-2);max-width:min(280px, 90vw);margin:0 auto">
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;max-width:min(280px,90vw);margin:0 auto">
           <input type="text" id="promoCodeInput" placeholder="PROMO-CODE" autocomplete="off"
                  style="text-transform:uppercase;letter-spacing:0.05em;flex:1"
                  oninput="this.value=this.value.toUpperCase()">
@@ -610,8 +610,13 @@
     </div>
 
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)" data-i18n="chart.welcomeTitle">Welcome to Prime Self</strong><br>
-      Enter your exact birth date, time, and location below. We'll calculate your personalized Energy Blueprint by mapping 64 gate activations, planetary positions, and numerological patterns. Your chart reveals which energies are consistently available to you (defined centers) vs. which you experience through others (open centers). This precision calculation forms the foundation for AI-powered synthesis.
+      <strong style="color:var(--gold)" data-i18n="chart.welcomeTitle">Welcome to Prime Self</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
+        <li>Enter your exact birth date, time, and location to calculate your Energy Blueprint</li>
+        <li>Maps 64 gate activations, planetary positions, and numerological patterns</li>
+        <li>Reveals <strong>defined centers</strong> (consistent energy) vs <strong>open centers</strong> (experienced through others)</li>
+        <li>Forms the foundation for AI-powered synthesis</li>
+      </ul>
     </div>
     <div class="card" id="chartFormCard">
       <div class="card-title"><span class="icon-chart"></span> <span data-i18n="chart.birthData">Birth Data</span></div>
@@ -693,8 +698,14 @@
       <button class="sub-tab active" onclick="switchTab('profile')">⬡ AI Profile</button>
     </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)" data-i18n="profile.aiSynthesis">AI-Powered Multi-System Synthesis</strong><br>
-      This isn't a generic report. We calculate YOUR exact 64 gate activations (both conscious + unconscious), overlay Gene Keys shadows/gifts/siddhis, map astrological aspects with orbs, and integrate numerology — then Claude AI synthesizes convergences across ALL systems. You get specific scenarios ("When X happens, you notice Y because [datapoint]") instead of vague statements. <strong>Takes 15-30 seconds to generate.</strong> Requires sign-in to save your profile.
+      <strong style="color:var(--gold)" data-i18n="profile.aiSynthesis">AI-Powered Multi-System Synthesis</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
+        <li>64 gate activations — conscious &amp; unconscious</li>
+        <li>Gene Keys shadows, gifts &amp; siddhis</li>
+        <li>Astrological aspects with orbs</li>
+        <li>Numerology — all systems synthesized by Claude AI</li>
+      </ul>
+      <p style="margin:8px 0 0;font-size:var(--font-size-sm)">You get specific scenarios ("When X happens, you notice Y") instead of vague statements. <strong>Takes 15–30 seconds.</strong> Sign-in required to save.</p>
     </div>
     <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
       <strong>⚡ Usage Limit</strong><br>
@@ -764,8 +775,8 @@
           <!-- Share Link -->
           <div style="margin-bottom:var(--space-6)">
             <label style="display:block;margin-bottom:var(--space-2);font-weight:600;color:var(--text)" data-i18n="share.referralLink">Your Referral Link</label>
-            <div style="display:flex;gap:var(--space-2)">
-              <input type="text" id="shareLinkInput" readonly style="flex:1;background:var(--bg3);border:var(--border-width-thin) solid var(--border);padding:var(--space-3);border-radius:var(--space-2);color:var(--text);font-size:var(--font-size-base)">
+            <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
+              <input type="text" id="shareLinkInput" readonly style="flex:1;min-width:160px;background:var(--bg3);border:var(--border-width-thin) solid var(--border);padding:var(--space-3);border-radius:var(--space-2);color:var(--text);font-size:var(--font-size-base)">
               <button class="btn-secondary" onclick="copyShareLink()" style="white-space:nowrap">
                 📋 Copy
               </button>
@@ -820,8 +831,14 @@
       </div>
     </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(106,79,200,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)">Dramatically Improve Reading Accuracy</strong><br>
-      Complete these quick assessments to validate your chart through behavioral patterns and cross-correlate with established psychology frameworks. Takes 10 minutes total: decision patterns (validates Authority), energy patterns (validates Type), Big Five personality (cross-validates chart), and Character Strengths (maps to Gene Keys). Your next profile synthesis will reference THIS data to prove chart accuracy through lived experience.
+      <strong style="color:var(--gold)">Dramatically Improve Reading Accuracy</strong>
+      <p style="margin:6px 0 4px;font-size:var(--font-size-sm)">10 minutes of quick assessments validates your chart through behavioral patterns:</p>
+      <ul style="margin:4px 0 0;padding-left:18px;line-height:1.7">
+        <li><strong>Decision patterns</strong> — validates Authority</li>
+        <li><strong>Energy patterns</strong> — validates Type</li>
+        <li><strong>Big Five personality</strong> — cross-validates chart</li>
+        <li><strong>Character Strengths</strong> — maps to Gene Keys</li>
+      </ul>
     </div>
 
     <!-- Behavioral Validation -->
@@ -903,8 +920,12 @@
       <button class="sub-tab active" onclick="switchTab('diary')">📖 Diary</button>
     </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid #d5001c">
-      <strong style="color:#d5001c">Life Events Timeline</strong><br>
-      Log major life events with dates to validate your chart retroactively. When you record an event like "Got promoted - June 2019", the system auto-calculates which transits were active and correlates them with YOUR natal gates. This proves chart accuracy through lived experience. Also essential for birth time rectification: if major events consistently correlate with transits at a specific birth time, you've found the right time.
+      <strong style="color:#d5001c">Life Events Timeline</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
+        <li>Log major life events with dates — the system auto-correlates active transits with your natal gates</li>
+        <li>Proves chart accuracy through lived experience (e.g. "Got promoted — June 2019")</li>
+        <li>Essential for <strong>birth time rectification</strong>: consistent transit correlations at a given time confirm the correct birth time</li>
+      </ul>
     </div>
 
     <div class="card">
@@ -972,8 +993,13 @@
       <button class="sub-tab active" onclick="switchTab('checkin')">♥ Check-In</button>
     </div>
     <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)" data-i18n="checkin.title">Daily Alignment Tracker</strong><br>
-      Check in daily to track how well you're following your strategy and authority. Rate your alignment (1-10), note your mood and energy, and watch patterns emerge over time. Build streaks to maintain consistency. The system correlates your alignment scores with current transits to help you understand which energies support or challenge your design.
+      <strong style="color:var(--gold)" data-i18n="checkin.title">Daily Alignment Tracker</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
+        <li>Rate your strategy &amp; authority alignment (1–10) each day</li>
+        <li>Log mood and energy — watch patterns emerge over time</li>
+        <li>Build streaks to maintain consistency</li>
+        <li>Scores are correlated with current transits to show which energies support or challenge your design</li>
+      </ul>
     </div>
 
     <!-- Today's Check-In Card -->
@@ -1095,7 +1121,7 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-transit"></span> Today's Planetary Energy</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">
         <div style="background:rgba(201,168,76,0.06);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3)">
           <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:var(--space-1)">Fast Planets</div>
           <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.5">Moon, Sun, Mercury — shift <strong>daily</strong>. Short-term mood and communication themes.</div>
@@ -2101,7 +2127,7 @@ function renderAstroChart(astro) {
   
   let html = `<div class="card" style="background:radial-gradient(circle at center, var(--bg2) 0%, var(--bg1) 100%)">
     <div class="card-title">♈ Astrological Chart Wheel</div>
-    <div style="position:relative;width:100%;max-width:500px;margin:0 auto;aspect-ratio:1;padding:var(--space-5)">
+    <div style="position:relative;width:100%;max-width:min(500px,100%);margin:0 auto;aspect-ratio:1;padding:var(--space-5)">
       <svg viewBox="0 0 400 400" style="width:100%;height:100%" role="img" aria-label="Astrological birth chart">
         <!-- Outer circle -->
         <circle cx="200" cy="200" r="190" fill="none" stroke="var(--gold)" stroke-width="2" opacity="0.3"/>
@@ -2869,7 +2895,7 @@ function renderProfile(data) {
     const toggleId = 'tech-details-' + Date.now();
     html += `<div class="card" style="text-align:center;padding:var(--space-4)">
       <button class="btn-secondary" onclick="document.getElementById('${escapeAttr(toggleId)}').style.display = document.getElementById('${escapeAttr(toggleId)}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? '▼ Hide Technical Details' : '▶ Show Technical Details';" 
-        style="width:100%;max-width:300px">
+        style="width:min(300px,100%)">
         ▶ Show Technical Details
       </button>
     </div>`;
@@ -3308,7 +3334,7 @@ function renderComposite(data) {
   
   let html = `<div class="card">
     <div class="card-title"><span class="icon-partnership"></span> Relationship Dynamics</div>
-    <div class="chart-grid" style="grid-template-columns: 1fr 1fr">
+    <div class="chart-grid">
       <div class="data-block">
         <h4>Person A</h4>
         ${row('Pattern', c.personA?.type || '—')}
@@ -4047,7 +4073,7 @@ function updateOverview(chartResponse) {
 
   // Strategy + Authority card
   html += `<div class="card" style="border-left:var(--space-1) solid var(--gold);margin-bottom:var(--space-4)">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-4)">
       <div>
         <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">Your Strategy</div>
         <div style="font-size:var(--font-size-md);font-weight:600;color:var(--text);margin-bottom:var(--space-1)">${chart.strategy || '—'}</div>

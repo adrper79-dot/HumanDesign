@@ -1,8 +1,44 @@
 # Prime Self — Mobile Optimizations Summary
 
-**Date**: March 6, 2026  
-**Phase**: 2 - Mobile & Distribution  
-**Status**: ✅ PWA + Mobile UI Complete (2/6 tasks)
+**Date**: March 6, 2026
+**Phase**: 2 - Mobile & Distribution
+**Status**: ✅ PWA + Mobile UI Complete | ✅ Phase 5 Layout Audit Complete (2026-03-09)
+
+---
+
+## 📋 Phase 5 — Mobile Layout Audit (2026-03-09)
+
+Full site audit of `index.html` found and fixed 12 systematic mobile layout issues across 4 categories.
+
+### Pattern Fixes (apply to all future development)
+
+#### 1. Alert text walls → `<ul>` lists
+**Rule:** Any alert with more than 2 sentences or enumerated items must use `<ul><li>` structure.
+**Never do:** `<strong>Title</strong><br>Long wall of text with (1), (2), (3) inline...`
+**Always do:** `<strong>Title</strong><ul><li>Item one</li><li>Item two</li></ul>`
+
+Fixed: Welcome (L614), AI Synthesis (L697), Enhance (L824), Diary (L907), Check-In (L976), Connect (L1149)
+
+#### 2. Flex input+button rows → `flex-wrap`
+**Rule:** Every `display:flex` pairing an `<input>` with a `<button>` must have `flex-wrap:wrap` + `min-width:160px` on the input.
+**Never do:** `<div style="display:flex;gap:8px"><input style="flex:1"><button>Look Up</button></div>`
+**Always do:** `<div style="display:flex;gap:8px;flex-wrap:wrap"><input style="flex:1;min-width:160px"><button>Look Up</button></div>`
+
+Fixed: Chart location (L630), Profile location (L717), Rectify location (L1226), Composite A (L1171), Composite B (L1192), Share link (L767), Promo code (L243)
+
+#### 3. Inline grids → `auto-fit/minmax` or CSS class
+**Rule:** Never write `display:grid;grid-template-columns:1fr 1fr` inline — it overrides all `@media` queries. Use `auto-fit` + `minmax` or a CSS class with a breakpoint.
+**Never do:** `style="display:grid;grid-template-columns:1fr 1fr"` (or on a class element as override)
+**Always do:** `style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"` **or** `class="chart-grid"` (no inline)
+
+Fixed: Planetary info 3-col (L1098), Composite chart-grid override (L3311), Strategy/Authority card (L4050)
+
+#### 4. Hardcoded `max-width` → `min()` function
+**Rule:** Fixed pixel `max-width` values in inline styles must use `min(Npx, 100%)` or `min(Npx, 90vw)`.
+**Exception:** `max-width` on form inputs is wrong entirely — use `width:100%` only (grid constrains it).
+
+Fixed: Astro chart wheel container (L2104), Show Technical Details button (L2872)
+Reverted: Incorrect `max-width:clamp()` on `input,select,textarea` global rule
 
 ---
 
