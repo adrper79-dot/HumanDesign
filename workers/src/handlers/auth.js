@@ -16,7 +16,7 @@
  */
 
 import { signJWT, verifyHS256, sha256 } from '../lib/jwt.js';
-import { sendWelcomeEmail1 } from '../lib/email.js';
+import { sendWelcomeEmail1, sendPasswordResetEmail } from '../lib/email.js';
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 
@@ -28,12 +28,22 @@ const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30; // 30 days
 
 export async function handleAuth(request, env, path) {
   // Known auth paths
-  const knownPaths = ['/api/auth/register', '/api/auth/login', '/api/auth/refresh', '/api/auth/logout', '/api/auth/me'];
+  const knownPaths = ['/api/auth/register', '/api/auth/login', '/api/auth/refresh', '/api/auth/logout', '/api/auth/me', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/auth/account', '/api/auth/export'];
   
   // GET requests
   if (request.method === 'GET') {
     if (path === '/api/auth/me') return handleGetMe(request, env);
+    if (path === '/api/auth/export') return handleExportData(request, env);
     // Known path but wrong method
+    if (knownPaths.includes(path)) {
+      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+    return Response.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  // DELETE requests
+  if (request.method === 'DELETE') {
+    if (path === '/api/auth/account') return handleDeleteAccount(request, env);
     if (knownPaths.includes(path)) {
       return Response.json({ error: 'Method not allowed' }, { status: 405 });
     }
@@ -46,6 +56,8 @@ export async function handleAuth(request, env, path) {
     if (path === '/api/auth/login') return handleLogin(request, env);
     if (path === '/api/auth/refresh') return handleRefresh(request, env);
     if (path === '/api/auth/logout') return handleLogout(request, env);
+    if (path === '/api/auth/forgot-password') return handleForgotPassword(request, env);
+    if (path === '/api/auth/reset-password') return handleResetPassword(request, env);
     return Response.json({ error: 'Not found' }, { status: 404 });
   }
 
@@ -208,6 +220,9 @@ async function handleRegister(request, env) {
 
 // ─── Login ───────────────────────────────────────────────────
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60; // 15 minutes in seconds
+
 async function handleLogin(request, env) {
   let body;
   try {
@@ -228,12 +243,32 @@ async function handleLogin(request, env) {
     );
   }
 
+  // Brute force protection via KV (COND-2)
+  const lockoutKey = `login_attempts:${email.toLowerCase()}`;
+  if (env.CACHE) {
+    const attemptsRaw = await env.CACHE.get(lockoutKey);
+    if (attemptsRaw) {
+      const attempts = parseInt(attemptsRaw, 10);
+      if (attempts >= MAX_LOGIN_ATTEMPTS) {
+        return Response.json(
+          { error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
+          { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
+        );
+      }
+    }
+  }
+
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
   const user = result.rows?.[0];
 
   if (!user) {
+    // Track failed attempt
+    if (env.CACHE) {
+      const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
+      await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
+    }
     return Response.json(
       { error: 'Invalid email or password' },
       { status: 401 }
@@ -243,10 +278,20 @@ async function handleLogin(request, env) {
   // Verify password
   const valid = await verifyPassword(password, user.password_hash);
   if (!valid) {
+    // Track failed attempt
+    if (env.CACHE) {
+      const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
+      await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
+    }
     return Response.json(
       { error: 'Invalid email or password' },
       { status: 401 }
     );
+  }
+
+  // Successful login — clear failed attempts
+  if (env.CACHE) {
+    await env.CACHE.delete(lockoutKey);
   }
 
   // Issue tokens
@@ -472,4 +517,202 @@ async function verifyPassword(password, stored) {
   }
   
   return result === 0;
+}
+
+// ─── Forgot Password ─────────────────────────────────────────
+
+const PASSWORD_RESET_TTL = 60 * 60; // 1 hour
+
+/**
+ * POST /api/auth/forgot-password
+ * Sends a password reset email. Always returns 200 to prevent email enumeration.
+ */
+async function handleForgotPassword(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { email } = body;
+  if (!email) {
+    return Response.json({ error: 'Email is required' }, { status: 400 });
+  }
+
+  // Always respond with success to prevent email enumeration
+  const successResponse = Response.json({
+    ok: true,
+    message: 'If an account with that email exists, a password reset link has been sent.'
+  });
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
+  const user = result.rows?.[0];
+
+  if (!user) return successResponse;
+
+  // Invalidate any existing reset tokens for this user
+  await query(QUERIES.invalidatePasswordResetTokens, [user.id]);
+
+  // Generate a cryptographically random token
+  const rawToken = crypto.randomUUID() + '-' + crypto.randomUUID();
+  const tokenHash = await sha256(rawToken);
+  const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL * 1000).toISOString();
+
+  await query(QUERIES.createPasswordResetToken, [user.id, tokenHash, expiresAt]);
+
+  // Build reset URL
+  const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
+  const resetUrl = `${frontendUrl}/?action=reset-password&token=${encodeURIComponent(rawToken)}&email=${encodeURIComponent(email.toLowerCase())}`;
+
+  // Send email (fire and forget — don't block response)
+  if (env.RESEND_API_KEY) {
+    sendPasswordResetEmail(
+      email.toLowerCase(),
+      resetUrl,
+      env.RESEND_API_KEY,
+      env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+    ).catch(err => {
+      console.error('Failed to send password reset email:', err);
+    });
+  }
+
+  return successResponse;
+}
+
+/**
+ * POST /api/auth/reset-password
+ * Validates token and updates password.
+ */
+async function handleResetPassword(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { token, password } = body;
+
+  if (!token || !password) {
+    return Response.json({ error: 'Token and new password are required' }, { status: 400 });
+  }
+
+  if (password.length < 8) {
+    return Response.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const tokenHash = await sha256(token);
+
+  // Look up the token
+  const result = await query(QUERIES.getPasswordResetToken, [tokenHash]);
+  const resetRow = result.rows?.[0];
+
+  if (!resetRow) {
+    return Response.json(
+      { error: 'Invalid or expired reset token. Please request a new one.' },
+      { status: 400 }
+    );
+  }
+
+  // Hash new password
+  const passwordHash = await hashPassword(password);
+
+  // Update password
+  await query(QUERIES.updatePasswordHash, [resetRow.user_id, passwordHash]);
+
+  // Mark token as used
+  await query(QUERIES.markPasswordResetUsed, [resetRow.id]);
+
+  // Revoke all refresh tokens (force re-login everywhere)
+  await query(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
+
+  return Response.json({
+    ok: true,
+    message: 'Password has been reset successfully. Please sign in with your new password.'
+  });
+}
+
+// ─── Account Deletion ────────────────────────────────────────
+
+async function handleDeleteAccount(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { password } = body;
+  if (!password) {
+    return Response.json({ error: 'Password is required to confirm account deletion' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  // Verify the user exists and password is correct
+  const result = await query(QUERIES.getUserById, [userId]);
+  const user = result.rows?.[0];
+  if (!user) {
+    return Response.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  const valid = await verifyPassword(password, user.password_hash);
+  if (!valid) {
+    return Response.json({ error: 'Incorrect password' }, { status: 403 });
+  }
+
+  // Delete user and all associated data (cascading)
+  await query(QUERIES.deleteUserAccount, [userId]);
+
+  return Response.json({ ok: true, message: 'Your account and all associated data have been permanently deleted.' });
+}
+
+// ─── GDPR Data Export ────────────────────────────────────────
+
+async function handleExportData(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  const [userData, charts, profiles, checkins, diary, subscription, alerts, sms] = await Promise.all([
+    query(QUERIES.exportUserData, [userId]),
+    query(QUERIES.exportUserCharts, [userId]),
+    query(QUERIES.exportUserProfiles, [userId]),
+    query(QUERIES.exportUserCheckins, [userId]),
+    query(QUERIES.exportUserDiary, [userId]),
+    query(QUERIES.exportUserSubscription, [userId]),
+    query(QUERIES.exportUserAlerts, [userId]),
+    query(QUERIES.exportUserSMS, [userId]),
+  ]);
+
+  const exportData = {
+    exported_at: new Date().toISOString(),
+    user: userData.rows?.[0] || null,
+    charts: charts.rows || [],
+    profiles: profiles.rows || [],
+    checkins: checkins.rows || [],
+    diary_entries: diary.rows || [],
+    subscription: subscription.rows?.[0] || null,
+    transit_alerts: alerts.rows || [],
+    sms_messages: sms.rows || [],
+  };
+
+  return new Response(JSON.stringify(exportData, null, 2), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Disposition': 'attachment; filename="prime-self-data-export.json"',
+    },
+  });
 }

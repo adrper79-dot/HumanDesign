@@ -45,7 +45,7 @@
     "billing": "Billing"
   },
   "chart": {
-    "title": "Human Design Chart",
+    "title": "Energy Blueprint Chart",
     "calculate": "Calculate Chart",
     "calculating": "Calculating…",
     "birthDate": "Birth Date",
@@ -63,7 +63,7 @@
     "definition": "Definition",
     "strategy": "Strategy",
     "notSelf": "Not-Self Theme",
-    "incarnationCross": "Incarnation Cross",
+    "incarnationCross": "Soul Cross",
     "definedCenters": "Defined Centers",
     "openCenters": "Open Centers",
     "activeChannels": "Active Channels",
@@ -72,7 +72,7 @@
     "viewRaw": "View Raw Data",
     "hideRaw": "Hide Raw Data",
     "welcomeTitle": "Welcome to Prime Self",
-    "welcomeBody": "Enter your birth data below to discover your unique energetic blueprint across Human Design, Western Astrology, Numerology, and Gene Keys.",
+    "welcomeBody": "Enter your birth data below to discover your unique energetic blueprint across Energy Blueprint, Western Astrology, Numerology, and Gene Keys.",
     "birthData": "Birth Data",
     "enterLocation": "Enter a city first.",
     "lookUpFirst": "Please enter a birth location and click \"Look Up\" first."
@@ -89,7 +89,7 @@
     "questionPlaceholder": "e.g. What is my primary Forge?",
     "noProfiles": "No saved profiles yet.",
     "aiSynthesis": "AI-Powered Multi-System Synthesis",
-    "aiSynthesisBody": "Get a deeply personalized synthesis combining all four systems: Human Design, Western Astro, Numerology, and Gene Keys — powered by AI.",
+    "aiSynthesisBody": "Get a deeply personalized synthesis combining all four systems: Energy Blueprint, Western Astro, Numerology, and Gene Keys — powered by AI.",
     "generateTitle": "Generate Prime Self Profile",
     "generatingAi": "Generating AI synthesis… This may take 10-20 seconds.",
     "signInToView": "Sign in to view your saved profiles.",

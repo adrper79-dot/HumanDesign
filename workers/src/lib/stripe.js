@@ -137,10 +137,18 @@ export async function ensureCustomer(stripe, user, stripeCustomerId = null) {
  * @param {string} params.priceId - Stripe price ID for tier
  * @param {string} params.successUrl - URL to redirect on success
  * @param {string} params.cancelUrl - URL to redirect on cancel
+ * @param {Array<Object>} [params.discounts] - Optional Stripe discounts array
  * @param {Object} params.metadata - Additional metadata
  * @returns {Promise<Object>} Checkout session
  */
-export async function createCheckoutSession(stripe, { customerId, priceId, successUrl, cancelUrl, metadata = {} }) {
+export async function createCheckoutSession(stripe, {
+  customerId,
+  priceId,
+  successUrl,
+  cancelUrl,
+  discounts,
+  metadata = {}
+}) {
   return await stripe.checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
@@ -153,6 +161,7 @@ export async function createCheckoutSession(stripe, { customerId, priceId, succe
     success_url: successUrl,
     cancel_url: cancelUrl,
     metadata,
+    discounts,
     allow_promotion_codes: true,
     billing_address_collection: 'auto',
     subscription_data: {

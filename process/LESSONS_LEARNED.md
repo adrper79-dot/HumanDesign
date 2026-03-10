@@ -8,6 +8,60 @@ This document catalogs key learnings from development, debugging, and production
 
 ## Incident Log
 
+### 2026-03-10 | Launch Remediation Sprint: Route Drift, Contract Drift, and Dead-Code Risk
+
+**Context**
+Executed a multi-item launch-readiness remediation across auth, billing, security, legal pages, and docs. Most blockers were fixed quickly, but follow-up validation uncovered secondary regressions caused by route and response-contract drift.
+
+**Key Findings**
+1. **Frontend/back-end route drift caused silent feature breakage**
+   - Frontend promo validation called `/api/billing/redeem/:code`
+   - Router actually exposes `GET /api/promo/validate?code=...`
+   - Result: promo UI looked wired but could not validate codes in production
+
+2. **Client helper contract drift caused runtime errors**
+   - `apiFetch()` returns parsed JSON, not raw `Response`
+   - New `deleteAccount()` and `exportMyData()` code initially treated return values as `Response` (`res.ok`, `res.json()`, `res.blob()`)
+   - Result: account/data-export actions would fail at runtime despite passing lint/tests
+
+3. **Legacy route removal was incomplete without doc and artifact cleanup**
+   - `/api/checkout/*` routes were removed from runtime router, but legacy references remained in setup docs
+   - Dead handler `workers/src/handlers/checkout.js` remained in repo after routing moved to `billing.js`
+   - Result: onboarding confusion and risk of accidental reintroduction of deprecated paths
+
+**Resolution**
+- Fixed promo UI endpoint to `/api/promo/validate?code=...`
+- Fixed account deletion flow to use parsed JSON contract from `apiFetch()`
+- Reworked export flow to use raw `fetch()` for binary download path
+- Deleted dead `workers/src/handlers/checkout.js`
+- Updated Stripe/setup docs to canonical billing endpoints (`/api/billing/checkout`, `/api/billing/portal`)
+- Standardized touched handlers toward `Response.json(...)` and `ok: true` success semantics
+
+**Key Learnings**
+1. **Every route migration needs a compatibility matrix**
+   - Update four surfaces together: router, frontend callers, tests, docs
+   - Route consolidation is not complete until all four are validated
+
+2. **Treat API helper return shape as a hard contract**
+   - If helper returns parsed JSON, do not mix raw-Response methods
+   - Use a separate explicit path for blob/download endpoints
+
+3. **Dead code is an active risk, not neutral clutter**
+   - Orphaned handlers and stale examples create false truths for future changes
+   - Remove deprecated files in the same PR as route removal
+
+4. **Regression checks must include user-critical flows, not only unit tests**
+   - Unit suite passed while account/export and promo UX had integration issues
+   - Add targeted smoke checks for login, billing, promo validation, and data export
+
+**Preventive Measures**
+- [ ] Add CI route inventory check: compare frontend `/api/...` calls against router map
+- [ ] Add docs drift check for deprecated endpoints (`/api/checkout/*`, `/api/billing/webhook`)
+- [ ] Add a frontend contract test for `apiFetch()` usage patterns
+- [ ] Add post-change smoke script for: promo validate, checkout start, account delete (dry-run), data export
+
+---
+
 ### 2026-03-09 | Backlog Verification Pass: False Positives & CSS Architecture
 
 **Context**

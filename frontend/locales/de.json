@@ -45,7 +45,7 @@
     "billing": "Abrechnung"
   },
   "chart": {
-    "title": "Human Design Karte",
+    "title": "Energy Blueprint Karte",
     "calculate": "Karte berechnen",
     "calculating": "Berechne…",
     "birthDate": "Geburtsdatum",
@@ -72,7 +72,7 @@
     "lookingUp": "Suche läuft…",
     "generateMyChart": "Meine Karte erstellen",
     "welcomeTitle": "Willkommen bei Prime Self",
-    "welcomeBody": "Gib deine Geburtsdaten ein, um deinen einzigartigen energetischen Bauplan in Human Design, Westlicher Astrologie, Numerologie und Gene Keys zu entdecken.",
+    "welcomeBody": "Gib deine Geburtsdaten ein, um deinen einzigartigen energetischen Bauplan in Energy Blueprint, Westlicher Astrologie, Numerologie und Gene Keys zu entdecken.",
     "birthData": "Geburtsdaten",
     "enterLocation": "Gib zuerst eine Stadt ein.",
     "lookUpFirst": "Bitte gib einen Geburtsort ein und klicke auf „Nachschlagen“."
@@ -89,7 +89,7 @@
     "noProfiles": "Noch keine gespeicherten Profile.",
     "questionLabel": "Spezifische Frage (optional — leer lassen für vollständiges Profil)",
     "aiSynthesis": "KI-gestützte Multi-System-Synthese",
-    "aiSynthesisBody": "Erhalte eine personalisierte Synthese aller vier Systeme: Human Design, Westliche Astrologie, Numerologie und Gene Keys — KI-gestützt.",
+    "aiSynthesisBody": "Erhalte eine personalisierte Synthese aller vier Systeme: Energy Blueprint, Westliche Astrologie, Numerologie und Gene Keys — KI-gestützt.",
     "generateTitle": "Prime Self Profil generieren",
     "generatingAi": "KI-Synthese wird generiert… Dies kann 10-20 Sekunden dauern.",
     "signInToView": "Melde dich an, um gespeicherte Profile anzuzeigen.",

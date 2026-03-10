@@ -108,7 +108,7 @@
 
     // ── Log variant for analytics ──
     if (window.console) {
-      console.log(`[Prime Self] Brand variant: ${variant}`);
+      window.DEBUG && console.log(`[Prime Self] Brand variant: ${variant}`);
     }
   });
 })();

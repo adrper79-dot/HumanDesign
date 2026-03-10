@@ -332,6 +332,15 @@ async function handleJoin(request, env, clusterId) {
  */
 async function handleGet(request, env, clusterId) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const userId = request._user?.sub;
+
+  const memberCheck = await query(
+    'SELECT 1 FROM cluster_members WHERE cluster_id = $1 AND user_id = $2 LIMIT 1',
+    [clusterId, userId]
+  );
+  if (!memberCheck.rows?.length) {
+    return Response.json({ error: 'Access denied' }, { status: 403 });
+  }
 
   // Get cluster members
   const membersResult = await query(QUERIES.getClusterMembers, [clusterId]);
@@ -376,6 +385,15 @@ async function handleSynthesize(request, env, clusterId) {
   }
   
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const userId = request._user?.sub;
+
+  const memberCheck = await query(
+    'SELECT 1 FROM cluster_members WHERE cluster_id = $1 AND user_id = $2 LIMIT 1',
+    [clusterId, userId]
+  );
+  if (!memberCheck.rows?.length) {
+    return Response.json({ error: 'Access denied' }, { status: 403 });
+  }
 
   // Get cluster info
   let members;

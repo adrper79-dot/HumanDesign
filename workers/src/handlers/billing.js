@@ -34,7 +34,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
  * 
  * Body:
  * {
- *   "tier": "seeker" | "guide" | "practitioner",
+ *   "tier": "regular" | "practitioner" | "white_label",
  *   "successUrl": "https://primeself.app/success",
  *   "cancelUrl": "https://primeself.app/cancel"
  * }
@@ -43,21 +43,15 @@ export async function handleCheckout(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const body = await request.json();
-    const { tier, successUrl, cancelUrl } = body;
+    const { tier, successUrl, cancelUrl, promoCode } = body;
     
     // Validate tier
     if (!tier || !['regular', 'practitioner', 'white_label'].includes(tier)) {
-      return new Response(JSON.stringify({ error: 'Invalid tier. Must be regular, practitioner, or white_label' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Invalid tier. Must be regular, practitioner, or white_label' }, { status: 400 });
     }
     
     // Get tier configuration
@@ -78,35 +72,44 @@ export async function handleCheckout(request, env, ctx) {
       );
     }
     
+    let discounts;
+    if (promoCode) {
+      const normalizedPromoCode = String(promoCode).trim().toUpperCase();
+      if (!/^[A-Z0-9_-]{1,64}$/.test(normalizedPromoCode)) {
+        return Response.json({ error: 'Invalid promo code format' }, { status: 400 });
+      }
+
+      const promoResult = await stripe.promotionCodes.list({
+        code: normalizedPromoCode,
+        active: true,
+        limit: 1
+      });
+
+      if (!promoResult.data?.length) {
+        return Response.json({ error: 'Invalid or expired promo code' }, { status: 400 });
+      }
+
+      discounts = [{ promotion_code: promoResult.data[0].id }];
+    }
+
     // Create checkout session
     const session = await createCheckoutSession(stripe, {
       customerId,
       priceId: tierConfig.priceId,
       successUrl: successUrl || `${env.FRONTEND_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: cancelUrl || `${env.FRONTEND_URL}/billing/cancel`,
+      discounts,
       metadata: {
         user_id: user.id,
         tier: tier
       }
     });
     
-    return new Response(JSON.stringify({
-      success: true,
-      sessionId: session.id,
-      url: session.url
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ ok: true, sessionId: session.id, url: session.url });
     
   } catch (error) {
     console.error('Checkout error:', error);
-    return new Response(JSON.stringify({
-      error: 'Failed to create checkout session' // BL-R-H2
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }
 
@@ -125,20 +128,11 @@ export async function handlePortal(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     if (!user.stripe_customer_id) {
-      return new Response(JSON.stringify({
-        error: 'No active subscription',
-        message: 'You must have an active subscription to access the portal'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'No active subscription' }, { status: 400 });
     }
     
     const body = await request.json();
@@ -152,22 +146,11 @@ export async function handlePortal(request, env, ctx) {
       returnUrl || `${env.FRONTEND_URL}/settings/billing`
     );
     
-    return new Response(JSON.stringify({
-      success: true,
-      url: session.url
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ ok: true, url: session.url });
     
   } catch (error) {
     console.error('Portal error:', error);
-    return new Response(JSON.stringify({
-      error: 'Failed to create portal session'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ error: 'Failed to create portal session' }, { status: 500 });
   }
 }
 
@@ -181,10 +164,7 @@ export async function handleGetSubscription(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -194,14 +174,7 @@ export async function handleGetSubscription(request, env, ctx) {
     const subscription = subRows[0] || null;
     
     if (!subscription) {
-      return new Response(JSON.stringify({
-        success: true,
-        subscription: null,
-        tier: 'free'
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ ok: true, subscription: null, tier: 'free' });
     }
     
     // Get latest status from Stripe
@@ -214,8 +187,8 @@ export async function handleGetSubscription(request, env, ctx) {
         await query(QUERIES.updateSubscriptionStatus2, [stripeSubscription.status, subscription.id]);
       }
       
-      return new Response(JSON.stringify({
-        success: true,
+      return Response.json({
+        ok: true,
         subscription: {
           id: subscription.id,
           tier: subscription.tier,
@@ -225,14 +198,11 @@ export async function handleGetSubscription(request, env, ctx) {
           cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
           canceledAt: stripeSubscription.canceled_at ? new Date(stripeSubscription.canceled_at * 1000).toISOString() : null
         }
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       subscription: {
         id: subscription.id,
         tier: subscription.tier,
@@ -240,19 +210,11 @@ export async function handleGetSubscription(request, env, ctx) {
         currentPeriodStart: subscription.current_period_start,
         currentPeriodEnd: subscription.current_period_end
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Get subscription error:', error);
-    return new Response(JSON.stringify({
-      error: 'Failed to get subscription'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ error: 'Failed to get subscription' }, { status: 500 });
   }
 }
 
@@ -271,10 +233,7 @@ export async function handleCancelSubscription(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -283,13 +242,7 @@ export async function handleCancelSubscription(request, env, ctx) {
     const subscription = subRows[0] || null;
     
     if (!subscription) {
-      return new Response(JSON.stringify({
-        error: 'No active subscription',
-        message: 'You do not have an active subscription to cancel'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'No active subscription' }, { status: 400 });
     }
     
     const body = await request.json();
@@ -312,24 +265,16 @@ export async function handleCancelSubscription(request, env, ctx) {
       }
     });
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       message: immediately ? 'Subscription canceled immediately' : 'Subscription will cancel at period end',
       cancelAtPeriodEnd: canceledSubscription.cancel_at_period_end,
       periodEnd: new Date(canceledSubscription.current_period_end * 1000).toISOString()
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Cancel subscription error:', error);
-    return new Response(JSON.stringify({
-      error: 'Failed to cancel subscription'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ error: 'Failed to cancel subscription' }, { status: 500 });
   }
 }
 
@@ -341,17 +286,14 @@ export async function handleCancelSubscription(request, env, ctx) {
  * 
  * Body:
  * {
- *   "tier": "seeker" | "guide" | "practitioner"
+ *   "tier": "regular" | "practitioner" | "white_label"
  * }
  */
 export async function handleUpgradeSubscription(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -360,33 +302,18 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     const subscription = subRows[0] || null;
     
     if (!subscription) {
-      return new Response(JSON.stringify({
-        error: 'No active subscription',
-        message: 'You must have an active subscription to upgrade/downgrade'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'No active subscription' }, { status: 400 });
     }
     
     const body = await request.json();
     const { tier } = body;
     
-    if (!tier || !['seeker', 'guide', 'practitioner'].includes(tier)) {
-      return new Response(JSON.stringify({ error: 'Invalid tier' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (!tier || !['regular', 'practitioner', 'white_label'].includes(tier)) {
+      return Response.json({ error: 'Invalid tier. Must be regular, practitioner, or white_label' }, { status: 400 });
     }
     
     if (tier === subscription.tier) {
-      return new Response(JSON.stringify({
-        error: 'Same tier',
-        message: 'You are already on this tier'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'You are already on this tier' }, { status: 400 });
     }
     
     const tierConfig = getTier(tier, env);
@@ -404,27 +331,19 @@ export async function handleUpgradeSubscription(request, env, ctx) {
       await q(QUERIES.updateUserTier, [tier, user.id]);
     });
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       message: `Subscription updated to ${tier}`,
       subscription: {
         tier: tier,
         status: updatedSubscription.status,
         currentPeriodEnd: new Date(updatedSubscription.current_period_end * 1000).toISOString()
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Upgrade subscription error:', error);
-    return new Response(JSON.stringify({
-      error: 'Failed to upgrade subscription'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ error: 'Failed to upgrade subscription' }, { status: 500 });
   }
 }
 

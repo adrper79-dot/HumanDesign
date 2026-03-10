@@ -23,7 +23,7 @@
 
 ### ✅ 3. Code Implementation
 - **Files Created/Modified**:
-  - [workers/src/handlers/checkout.js](workers/src/handlers/checkout.js) - Stripe checkout & portal endpoints
+  - [workers/src/handlers/billing.js](workers/src/handlers/billing.js) - Stripe checkout, portal, and subscription endpoints
   - [workers/src/handlers/webhook.js](workers/src/handlers/webhook.js) - Webhook event processing
   - [workers/src/lib/stripe.js](workers/src/lib/stripe.js) - Stripe client & tier configuration
   - [workers/src/middleware/tierEnforcement.js](workers/src/middleware/tierEnforcement.js) - Feature & quota enforcement

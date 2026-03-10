@@ -25,9 +25,8 @@ import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 async function verifyTelnyxSignature(request, env) {
   const publicKeyBase64 = env.TELNYX_PUBLIC_KEY;
   if (!publicKeyBase64) {
-    // If no public key configured, log warning and skip verification
-    console.warn('TELNYX_PUBLIC_KEY not configured — skipping webhook verification');
-    return true;
+    console.error('TELNYX_PUBLIC_KEY not configured — rejecting webhook');
+    return false;
   }
 
   const signature = request.headers.get('telnyx-signature-ed25519');

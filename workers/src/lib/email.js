@@ -33,7 +33,11 @@ export async function sendEmail({ to, subject, html, text = '', replyTo = '' }, 
 
   // BL-FIX: Replace {{unsubscribe_url}} placeholder with a real URL
   const unsubscribeUrl = `https://primeself.app/?action=email-unsubscribe&email=${encodeURIComponent(to)}`;
-  const finalHtml = html.replace(/\{\{unsubscribe_url\}\}/g, unsubscribeUrl);
+  let finalHtml = html.replace(/\{\{unsubscribe_url\}\}/g, unsubscribeUrl);
+
+  // CAN-SPAM: Inject physical mailing address before closing </body>
+  const canSpamFooter = `<div style="text-align:center;font-size:11px;color:#999;padding:10px 0 20px;">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</div>`;
+  finalHtml = finalHtml.replace('</body>', canSpamFooter + '</body>');
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
@@ -573,4 +577,87 @@ export async function scheduleEmailCampaign(user, campaignType, chartData = {}, 
   // }
   
   return { success: true, message: `${campaignType} campaign scheduled` };
+}
+
+/**
+ * Send Password Reset Email
+ * @param {string} userEmail - Recipient email
+ * @param {string} resetUrl - Full URL with reset token
+ * @param {string} apiKey - Resend API key
+ * @param {string} fromEmail - From email address
+ */
+export async function sendPasswordResetEmail(userEmail, resetUrl, apiKey, fromEmail) {
+  const subject = 'Reset your Prime Self password';
+
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px 24px;text-align:center;border-bottom:1px solid #2a2a3a">
+        <div style="font-size:28px;margin-bottom:8px">✦</div>
+        <h1 style="color:#c9a84c;font-size:22px;margin:0">Password Reset</h1>
+      </div>
+      <div style="padding:24px">
+        <p style="margin:0 0 16px;line-height:1.6">You requested a password reset for your Prime Self account. Click the button below to create a new password:</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${resetUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:16px">Reset Password</a>
+        </div>
+        <p style="margin:0 0 16px;line-height:1.6;color:#8882a0;font-size:14px">This link expires in 1 hour. If you didn't request this reset, you can safely ignore this email — your password will remain unchanged.</p>
+        <p style="margin:0;line-height:1.6;color:#8882a0;font-size:14px">If the button doesn't work, copy and paste this URL into your browser:</p>
+        <p style="margin:8px 0 0;word-break:break-all;font-size:13px;color:#6a6580">${resetUrl}</p>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+        <p style="margin:0">Prime Self — Discover your unique energy blueprint</p>
+        <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Send Subscription Confirmation Email
+ * @param {string} userEmail - Recipient email
+ * @param {string} tierName - Display name of the tier (e.g., "Explorer", "Practitioner")
+ * @param {string} apiKey - Resend API key
+ * @param {string} fromEmail - From email address
+ */
+export async function sendSubscriptionConfirmationEmail(userEmail, tierName, apiKey, fromEmail) {
+  const subject = `Welcome to Prime Self ${tierName}! 🎉`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:560px;margin:0 auto;padding:32px 24px">
+    <div style="text-align:center;padding:24px 0;border-bottom:1px solid #2a2a3a">
+      <div style="font-size:24px;font-weight:700;color:#c9a84c">Prime Self</div>
+    </div>
+    <div style="padding:32px 0">
+      <h2 style="margin:0 0 16px;color:#e8e4f0;font-size:22px">Your upgrade is confirmed! 🌟</h2>
+      <p style="margin:0 0 16px;line-height:1.6;color:#c4c0d8">You're now on the <strong style="color:#c9a84c">${tierName}</strong> plan. Here's what you've unlocked:</p>
+      <div style="background:#1a1a24;border-radius:8px;padding:20px;margin:20px 0;border-left:4px solid #c9a84c">
+        <ul style="margin:0;padding:0 0 0 20px;color:#c4c0d8;line-height:1.8">
+          <li>Unlimited chart generation</li>
+          <li>Full AI Synthesis reports</li>
+          <li>Transit insights &amp; daily digest</li>
+          <li>Priority support</li>
+        </ul>
+      </div>
+      <div style="text-align:center;margin:24px 0">
+        <a href="https://primeself.app" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:16px">Explore Your New Features →</a>
+      </div>
+      <p style="margin:0 0 8px;line-height:1.6;color:#8882a0;font-size:14px">Your subscription will renew automatically. You can manage billing or cancel anytime from the Billing button in the app.</p>
+      <p style="margin:0;line-height:1.6;color:#8882a0;font-size:14px">Questions? Just reply to this email.</p>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+      <p style="margin:0">Prime Self — Discover your unique energy blueprint</p>
+      <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
 }

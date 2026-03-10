@@ -75,6 +75,13 @@ The technology exists to serve the philosophy. Every architectural decision flow
 | **Calculation** | Pure JS (Jean Meeus algorithms) | No WASM, no external deps, runs natively in Workers |
 | **AI Gateway** | Cloudflare AI Gateway | Rate limiting, caching, model routing, observability |
 
+### 3.1 Deployment Constraint (Cloudflare Plan Dependency)
+
+- The production Worker bundle is approximately `2.27 MB` uncompressed (`wrangler deploy --dry-run`), with transport gzip around `533 KB`.
+- Cloudflare Workers **Free** tier has a `1 MB` script-size limit and cannot deploy this bundle.
+- Cloudflare Workers **Paid** plan (Bundled/Unbound) supports this bundle (`10 MB` limit).
+- This is a hard infrastructure dependency: if billing lapses or the account is downgraded, deployments will fail with script-size errors until the plan is restored or the bundle is reduced.
+
 ---
 
 ## 4. Calculation Engine — The 8 Core Layers

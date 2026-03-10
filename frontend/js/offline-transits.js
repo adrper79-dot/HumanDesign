@@ -149,7 +149,7 @@
           return { ...resp, _cached: false };
         }
       } catch (err) {
-        console.warn('[offline] Transit fetch failed:', err.message);
+        window.DEBUG && console.warn('[offline] Transit fetch failed:', err.message);
       }
     }
 
@@ -172,7 +172,7 @@
         fetchedAt: Date.now(),
       });
     } catch (err) {
-      console.warn('[offline] Failed to cache transit:', err.message);
+      window.DEBUG && console.warn('[offline] Failed to cache transit:', err.message);
     }
   }
 
@@ -201,7 +201,7 @@
       }
     } catch (error) {
       // User not authenticated or API error — will use generic transits only
-      console.log('Auth check failed, using generic transits:', error);
+      window.DEBUG && console.log('Auth check failed, using generic transits:', error);
     }
 
     const today = new Date();
@@ -256,7 +256,7 @@
     }
 
     if (fetched > 0) {
-      console.log(`[offline] Pre-fetched ${fetched} days of transit data`);
+      window.DEBUG && console.log(`[offline] Pre-fetched ${fetched} days of transit data`);
     }
   }
 
@@ -283,7 +283,7 @@
         });
       }
     } catch (err) {
-      console.warn('[offline] Failed to cache chart:', err.message);
+      window.DEBUG && console.warn('[offline] Failed to cache chart:', err.message);
     }
   }
 
@@ -311,9 +311,9 @@
         payload,
         createdAt: Date.now(),
       });
-      console.log(`[offline] Queued ${action} for sync`);
+      window.DEBUG && console.log(`[offline] Queued ${action} for sync`);
     } catch (err) {
-      console.warn('[offline] Failed to queue sync:', err.message);
+      window.DEBUG && console.warn('[offline] Failed to queue sync:', err.message);
     }
   }
 
@@ -326,7 +326,7 @@
     const items = await idbGetAll(STORE_SYNC);
     if (items.length === 0) return;
 
-    console.log(`[offline] Processing ${items.length} queued actions`);
+    window.DEBUG && console.log(`[offline] Processing ${items.length} queued actions`);
 
     const endpoints = {
       'save-chart': { method: 'POST', path: '/api/chart/save' },
@@ -351,13 +351,13 @@
         await idbDelete(STORE_SYNC, item.id);
         processed++;
       } catch (err) {
-        console.warn(`[offline] Sync failed for ${item.action}:`, err.message);
+        window.DEBUG && console.warn(`[offline] Sync failed for ${item.action}:`, err.message);
         // Leave in queue for next sync attempt
       }
     }
 
     if (processed > 0) {
-      console.log(`[offline] Synced ${processed}/${items.length} queued actions`);
+      window.DEBUG && console.log(`[offline] Synced ${processed}/${items.length} queued actions`);
       showNotification(`Synced ${processed} offline ${processed === 1 ? 'action' : 'actions'}`);
     }
   }
@@ -457,7 +457,7 @@
           removed++;
         }
       }
-      if (removed > 0) console.log(`[offline] Cleaned ${removed} stale transit entries`);
+      if (removed > 0) window.DEBUG && console.log(`[offline] Cleaned ${removed} stale transit entries`);
     } catch { /* non-critical */ }
   }
 
@@ -570,7 +570,7 @@
     try {
       await openDB();
     } catch (err) {
-      console.warn('[offline] IndexedDB not available:', err.message);
+      window.DEBUG && console.warn('[offline] IndexedDB not available:', err.message);
       return;
     }
 

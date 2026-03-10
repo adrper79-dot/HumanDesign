@@ -1,202 +1,177 @@
 # Environment Variables & Configuration
 
-Reference guide for all required secrets, environment variables, and configuration options.
+Reference guide for all secrets, environment variables, bindings, and configuration options.
 
-**Time to configure**: 5–15 minutes (depending on features)
+**Time to configure**: 10–20 minutes (depending on features enabled)
 
 ---
 
 ## Overview
 
-Prime Self requires secrets for:
-- **Database**: Neon PostgreSQL connection
-- **LLM**: Anthropic Claude API for synthesis
-- **SMS**: Telnyx API for daily digests
-- **Payments**: Stripe (optional, for subscriptions)
-- **Authentication**: JWT signing key
+Prime Self uses three kinds of configuration:
 
-All secrets are stored in **Cloudflare Worker Secrets** (not in code).
+1. **Secrets** — sensitive values stored via `wrangler secret put` (never in code)
+2. **Wrangler `[vars]`** — non-sensitive config set in `workers/wrangler.toml`
+3. **Bindings** — Cloudflare KV / R2 resources defined in `workers/wrangler.toml`
 
 ---
 
 ## How Secrets Work
 
-### For Local Development
-Secrets are set via Wrangler CLI and stored in Cloudflare's secure vault:
+### Setting Secrets
 ```bash
 npx wrangler secret put <NAME>
-# Paste value, press Ctrl+D (or Cmd+D)
+# Paste value, press Ctrl+D (or Cmd+D on Mac)
 ```
 
-### For Production
-Secrets are set the same way and deployed with the Worker.
-
----
-
-## Required Secrets
-
-| Secret | Service | Priority | How to Get |
-|--------|---------|----------|-----------|
-| `NEON_CONNECTION_STRING` | Database | 🔴 Critical | [Neon Console](https://console.neon.tech) |
-| `ANTHROPIC_API_KEY` | LLM (Claude) | 🔴 Critical | [Anthropic Console](https://console.anthropic.com) |
-| `JWT_SECRET` | Auth | 🔴 Critical | Generate: `openssl rand -hex 32` |
-| `STRIPE_SECRET_KEY` | Payments | 🟡 Optional | [Stripe Dashboard](https://dashboard.stripe.com) |
-| `STRIPE_WEBHOOK_SECRET` | Payments | 🟡 Optional | [Stripe Webhooks](https://dashboard.stripe.com/webhooks) |
-| `TELNYX_API_KEY` | SMS | 🟢 Optional | [Telnyx Dashboard](https://portal.telnyx.com) |
-| `TELNYX_PHONE_NUMBER` | SMS | 🟢 Optional | [Telnyx Numbers](https://portal.telnyx.com/phone-numbers) |
-
----
-
-## Detailed Configuration
-
-### Database — Neon PostgreSQL
-
-**Step 1**: Create Neon account
-- Go to https://neon.tech
-- Sign up with GitHub
-- Create a new project
-
-**Step 2**: Get connection string
-1. Open project dashboard
-2. Click **Connection string** (top right)
-3. Select **Pooled** (recommended for Workers)
-4. Copy the full string: `postgresql://user:pass@host/db`
-
-**Step 3**: Set in Worker
-```bash
-npx wrangler secret put NEON_CONNECTION_STRING
-# Paste: postgresql://user:pass@host/db
-```
-
-**Verify**:
+### Listing Secrets
 ```bash
 npx wrangler secret list
-# Should show: NEON_CONNECTION_STRING
 ```
 
 ---
 
-### LLM API — Anthropic Claude
+## Complete Reference
 
-**Step 1**: Create Anthropic account
-- Go to https://console.anthropic.com
-- Sign up with email or Google
+### Core Secrets (Required)
 
-**Step 2**: Create API key
-1. Click **API keys** (left sidebar)
-2. Click **Create key**
-3. Copy the key (starts with `sk-ant-`)
+| Secret | Service | Used In | How to Get |
+|--------|---------|---------|-----------|
+| `NEON_CONNECTION_STRING` | Database | All handlers, cron, middleware | [Neon Console](https://console.neon.tech) — use **pooled** connection string |
+| `ANTHROPIC_API_KEY` | LLM (Claude) | `lib/llm.js` | [Anthropic Console](https://console.anthropic.com) |
+| `JWT_SECRET` | Auth | `handlers/auth.js`, `middleware/auth.js` | Generate: `openssl rand -hex 32` |
+| `RESEND_API_KEY` | Email (Resend) | `handlers/auth.js`, `handlers/webhook.js`, `cron.js` | [Resend Dashboard](https://resend.com) |
+| `FROM_EMAIL` | Email sender address | `handlers/auth.js`, `handlers/webhook.js`, `cron.js` | Your verified Resend domain, e.g. `hello@primeself.app` |
+| `FRONTEND_URL` | App base URL | `handlers/auth.js`, `handlers/billing.js`, `handlers/referrals.js` | e.g. `https://primeself.app` |
 
-**Step 3**: Set in Worker
+### Stripe Secrets (Required for payments)
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `STRIPE_SECRET_KEY` | `handlers/billing.js`, `handlers/webhook.js`, `handlers/referrals.js` | [Stripe Dashboard → API Keys](https://dashboard.stripe.com/apikeys) |
+| `STRIPE_WEBHOOK_SECRET` | `handlers/webhook.js` | [Stripe Dashboard → Webhooks](https://dashboard.stripe.com/webhooks) |
+
+### Stripe Price IDs (wrangler.toml `[vars]`)
+
+Set in `workers/wrangler.toml` under `[vars]`:
+
+| Variable | Used In | Description |
+|----------|---------|-------------|
+| `STRIPE_PRICE_REGULAR` | `lib/stripe.js`, `handlers/webhook.js` | Price ID for Explorer tier ($12/mo) |
+| `STRIPE_PRICE_PRACTITIONER` | `lib/stripe.js`, `handlers/webhook.js` | Price ID for Guide tier ($60/mo) |
+| `STRIPE_PRICE_WHITE_LABEL` | `lib/stripe.js`, `handlers/webhook.js` | Price ID for White Label tier ($500/mo) |
+
+### SMS — Telnyx (Required for SMS digests)
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `TELNYX_API_KEY` | `handlers/sms.js` | [Telnyx → Auth → API Keys](https://portal.telnyx.com) |
+| `TELNYX_PHONE_NUMBER` | `handlers/sms.js` | [Telnyx → Phone Numbers](https://portal.telnyx.com/phone-numbers) |
+| `TELNYX_PUBLIC_KEY` | `handlers/sms.js` | [Telnyx → Auth → Public Key](https://portal.telnyx.com) — Ed25519 key for webhook signature verification. **Required** — webhooks are rejected without it. |
+| `TELNYX_CONNECTION_ID` | `handlers/sms.js` | Your Telnyx Messaging Profile ID |
+
+### LLM Fallback Keys (Optional)
+
+| Secret | Used In | Description |
+|--------|---------|-------------|
+| `GROK_API_KEY` | `lib/llm.js` | xAI Grok API key — LLM fallback provider |
+| `GROQ_API_KEY` | `lib/llm.js` | Groq API key — LLM fallback provider |
+| `AI_GATEWAY_URL` | `lib/llm.js` | Cloudflare AI Gateway URL — optional proxy for LLM calls |
+
+### Push Notifications — VAPID (Required for web push)
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `VAPID_PUBLIC_KEY` | `handlers/push.js` | Generate with `npx web-push generate-vapid-keys` |
+| `VAPID_PRIVATE_KEY` | `handlers/push.js` | Same command as above |
+| `VAPID_SUBJECT` | `handlers/push.js` | e.g. `mailto:admin@primeself.app` |
+
+### Notion Integration (Required for Notion export)
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `NOTION_CLIENT_ID` | `handlers/notion.js` | [Notion Integrations](https://www.notion.so/my-integrations) |
+| `NOTION_CLIENT_SECRET` | `handlers/notion.js` | Same page as above |
+| `NOTION_TOKEN_ENCRYPTION_KEY` | `handlers/notion.js`, `lib/tokenCrypto.js` | Generate: `openssl rand -hex 32` — encrypts stored OAuth tokens |
+
+### Admin & Misc
+
+| Secret/Var | Used In | Description |
+|------------|---------|-------------|
+| `ADMIN_TOKEN` | `handlers/promo.js` | Token for admin-only promo code management endpoints |
+| `BASE_URL` | `handlers/notion.js` | Worker's base URL, e.g. `https://prime-self-api.workers.dev` |
+| `ENVIRONMENT` | `index.js`, `lib/sentry.js`, `middleware/cors.js` | Set in wrangler.toml `[vars]`: `"production"` or `"development"` |
+
+### Cloudflare Bindings (wrangler.toml)
+
+| Binding | Type | Used In | Description |
+|---------|------|---------|-------------|
+| `CACHE` | KV Namespace | `lib/cache.js`, `middleware/rateLimit.js`, `handlers/auth.js` | Rate limiting, brute force tracking, general caching |
+| `R2` | R2 Bucket | `handlers/pdf.js` | PDF export storage |
+
+---
+
+## Quick Setup (All Secrets)
+
 ```bash
+# Core (required)
+npx wrangler secret put NEON_CONNECTION_STRING
 npx wrangler secret put ANTHROPIC_API_KEY
-# Paste: sk-ant-...
-```
-
-**Note**: You'll be charged per token used. Monitor usage in [Anthropic Console](https://console.anthropic.com/account/usage).
-
----
-
-### Authentication — JWT Secret
-
-Generate a random 64-character hex string:
-
-```bash
-# macOS / Linux
-openssl rand -hex 32
-
-# Windows (PowerShell)
-[Convert]::ToHexString([byte[]](1..32 | ForEach-Object { Get-Random -Max 256 }))
-```
-
-Set in Worker:
-```bash
 npx wrangler secret put JWT_SECRET
-# Paste: your-random-hex-string
-```
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put FROM_EMAIL
+npx wrangler secret put FRONTEND_URL
 
-This key signs all JWT tokens. **Keep it secret and don't commit to git**.
+# Stripe (required for payments)
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
 
----
-
-### Payments — Stripe (Optional)
-
-See full guide: **[STRIPE_INTEGRATION.md](STRIPE_INTEGRATION.md)**
-
-If you skip Stripe:
-- App still works (users start on Free tier)
-- Checkout will fail (error message shown to users)
-- You can add Stripe later without re-deploying frontend
-
-**If you want Stripe now**:
-
-1. Create Stripe account: https://stripe.com
-2. Get keys:
-   - Secret key: https://dashboard.stripe.com/apikeys
-   - Webhook secret: https://dashboard.stripe.com/webhooks (after creating endpoint)
-
-3. Set secrets:
-   ```bash
-   npx wrangler secret put STRIPE_SECRET_KEY
-   npx wrangler secret put STRIPE_WEBHOOK_SECRET
-   ```
-
-4. Create products (3 tiers):
-   - **Seeker**: $15/month
-   - **Guide**: $97/month
-   - **Practitioner**: $500/month
-
-5. Copy Price IDs and set in `workers/wrangler.toml`:
-   ```toml
-   STRIPE_PRICE_SEEKER = "price_..."
-   STRIPE_PRICE_GUIDE = "price_..."
-   STRIPE_PRICE_PRACTITIONER = "price_..."
-   ```
-
----
-
-### SMS — Telnyx (Optional)
-
-If you want to send SMS digests of daily transits:
-
-**Step 1**: Create Telnyx account
-- Go to https://telnyx.com
-- Sign up
-- Add payment method
-
-**Step 2**: Get phone number
-- Click **Phone Numbers** (left sidebar)
-- Click **Browse Numbers**
-- Select a number (e.g., `+1-555-0123`)
-- Copy the number
-
-**Step 3**: Get API key
-- Click **Auth** > **API Keys**
-- Copy your API key
-
-**Step 4**: Set in Worker
-```bash
+# Telnyx (required for SMS)
 npx wrangler secret put TELNYX_API_KEY
 npx wrangler secret put TELNYX_PHONE_NUMBER
+npx wrangler secret put TELNYX_PUBLIC_KEY
+npx wrangler secret put TELNYX_CONNECTION_ID
+
+# Push notifications
+npx wrangler secret put VAPID_PUBLIC_KEY
+npx wrangler secret put VAPID_PRIVATE_KEY
+npx wrangler secret put VAPID_SUBJECT
+
+# Notion integration
+npx wrangler secret put NOTION_CLIENT_ID
+npx wrangler secret put NOTION_CLIENT_SECRET
+npx wrangler secret put NOTION_TOKEN_ENCRYPTION_KEY
+
+# LLM fallbacks (optional)
+npx wrangler secret put GROK_API_KEY
+npx wrangler secret put GROQ_API_KEY
+npx wrangler secret put AI_GATEWAY_URL
+
+# Admin
+npx wrangler secret put ADMIN_TOKEN
+npx wrangler secret put BASE_URL
 ```
 
-**Note**: SMS costs ~$0.004 per message. Monitor usage in Telnyx dashboard.
+### wrangler.toml `[vars]` (non-secret config)
 
----
-
-## Check Installed Secrets
-
-```bash
-npx wrangler secret list
+```toml
+[vars]
+ENVIRONMENT = "production"
+STRIPE_PRICE_REGULAR = "price_..."
+STRIPE_PRICE_PRACTITIONER = "price_..."
+STRIPE_PRICE_WHITE_LABEL = "price_..."
 ```
 
-**Output should include**:
-```
-NEON_CONNECTION_STRING
-ANTHROPIC_API_KEY
-JWT_SECRET
-[STRIPE_SECRET_KEY] (if payments enabled)
-[TELNYX_API_KEY] (if SMS enabled)
+### wrangler.toml Bindings
+
+```toml
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-namespace-id"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "your-r2-bucket-name"
 ```
 
 ---
@@ -205,16 +180,38 @@ JWT_SECRET
 
 Before deploying, verify:
 
-- [ ] `NEON_CONNECTION_STRING` is set and database exists
-- [ ] `ANTHROPIC_API_KEY` is set and valid (test with `curl`)
-- [ ] `JWT_SECRET` is set to a strong random value
-- [ ] Stripe keys are set (if using payments)
-  - [ ] `STRIPE_SECRET_KEY`
-  - [ ] `STRIPE_WEBHOOK_SECRET`
-  - [ ] `STRIPE_PRICE_SEEKER`, `GUIDE`, `PRACTITIONER` in `wrangler.toml`
-- [ ] Telnyx keys are set (if using SMS)
-  - [ ] `TELNYX_API_KEY`
-  - [ ] `TELNYX_PHONE_NUMBER`
+**Core (always required):**
+- [ ] `NEON_CONNECTION_STRING` — pooled connection string from Neon Console
+- [ ] `ANTHROPIC_API_KEY` — valid Claude API key
+- [ ] `JWT_SECRET` — random 64-char hex string (`openssl rand -hex 32`)
+- [ ] `RESEND_API_KEY` — Resend email service key
+- [ ] `FROM_EMAIL` — verified sender email
+- [ ] `FRONTEND_URL` — your app URL (e.g. `https://primeself.app`)
+- [ ] `ENVIRONMENT` — set to `production` in wrangler.toml `[vars]`
+- [ ] `CACHE` KV binding — created and bound in wrangler.toml
+
+**Payments (Stripe):**
+- [ ] `STRIPE_SECRET_KEY`
+- [ ] `STRIPE_WEBHOOK_SECRET`
+- [ ] `STRIPE_PRICE_REGULAR`, `STRIPE_PRICE_PRACTITIONER`, `STRIPE_PRICE_WHITE_LABEL` in wrangler.toml
+
+**SMS (Telnyx):**
+- [ ] `TELNYX_API_KEY`
+- [ ] `TELNYX_PHONE_NUMBER`
+- [ ] `TELNYX_PUBLIC_KEY` — Ed25519 public key for webhook verification
+- [ ] `TELNYX_CONNECTION_ID` — messaging profile ID
+
+**Push Notifications:**
+- [ ] `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+
+**Notion Export:**
+- [ ] `NOTION_CLIENT_ID`, `NOTION_CLIENT_SECRET`, `NOTION_TOKEN_ENCRYPTION_KEY`
+
+**Optional:**
+- [ ] `GROK_API_KEY`, `GROQ_API_KEY` — LLM fallback providers
+- [ ] `AI_GATEWAY_URL` — if using Cloudflare AI Gateway
+- [ ] `ADMIN_TOKEN` — for promo code management
+- [ ] `R2` bucket binding — for PDF export storage
 
 ---
 

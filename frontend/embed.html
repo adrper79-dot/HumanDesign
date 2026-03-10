@@ -255,12 +255,12 @@
 <body>
   <div class="widget-container">
     <h2>Discover Your Energy Blueprint</h2>
-    <p class="subtitle">Enter your birth details to reveal your Human Design chart</p>
+    <p class="subtitle">Enter your birth details to reveal your Energy Blueprint chart</p>
 
     <form id="calculatorForm">
       <div class="form-group">
         <label for="birthdate">Birth Date</label>
-        <input type="date" id="birthdate" name="birthdate" required>
+        <input type="date" id="birthdate" name="birthdate" required aria-required="true">
       </div>
 
       <div class="form-group">
@@ -270,7 +270,7 @@
 
       <div class="form-group">
         <label for="location">Birth Location</label>
-        <input type="text" id="location" name="location" placeholder="City, Country" required>
+        <input type="text" id="location" name="location" placeholder="City, Country" required aria-required="true">
       </div>
 
       <button type="submit" id="calculateBtn">Calculate My Chart</button>

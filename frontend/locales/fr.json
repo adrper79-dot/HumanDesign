@@ -72,7 +72,7 @@
     "lookingUp": "Recherche en cours…",
     "generateMyChart": "Générer Ma Carte",
     "welcomeTitle": "Bienvenue sur Prime Self",
-    "welcomeBody": "Entrez vos données de naissance pour découvrir votre empreinte énergétique unique à travers le Human Design, l'Astrologie Occidentale, la Numérologie et les Gene Keys.",
+    "welcomeBody": "Entrez vos données de naissance pour découvrir votre empreinte énergétique unique à travers Energy Blueprint, l’Astrologie Occidentale, la Numérologie et les Gene Keys.",
     "birthData": "Données de Naissance",
     "enterLocation": "Entrez d'abord une ville.",
     "lookUpFirst": "Veuillez entrer un lieu de naissance et cliquer sur \"Rechercher\"."
@@ -89,7 +89,7 @@
     "noProfiles": "Aucun profil enregistré.",
     "questionLabel": "Question spécifique (optionnel — laissez vide pour profil complet)",
     "aiSynthesis": "Synthèse Multi-Système par IA",
-    "aiSynthesisBody": "Obtenez une synthèse personnalisée des quatre systèmes : Human Design, Astrologie, Numérologie et Gene Keys — par IA.",
+    "aiSynthesisBody": "Obtenez une synthèse personnalisée des quatre systèmes : Energy Blueprint, Astrologie, Numérologie et Gene Keys — par IA.",
     "generateTitle": "Générer le Profil Prime Self",
     "generatingAi": "Génération de la synthèse IA… Cela peut prendre 10-20 secondes.",
     "signInToView": "Connectez-vous pour voir vos profils enregistrés.",

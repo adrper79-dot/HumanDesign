@@ -89,7 +89,7 @@ npx wrangler secret delete SECRET_NAME
 | Field | Value |
 |-------|-------|
 | **Service** | [Stripe](https://dashboard.stripe.com) — Payments |
-| **Used by** | `workers/src/handlers/checkout.js`, `billing.js`, `webhook.js` |
+| **Used by** | `workers/src/handlers/billing.js`, `webhook.js`, `referrals.js` |
 | **Format** | `sk_live_...` (live) or `sk_test_...` (test) |
 | **Where to rotate** | Stripe Dashboard → Developers → API Keys → Roll Key |
 | **wrangler command** | `npx wrangler secret put STRIPE_SECRET_KEY` |
@@ -234,6 +234,47 @@ These are infrastructure bindings, not secrets.
 □ DELETE Secrets.txt:              git rm Secrets.txt && git commit -m "chore: remove plaintext secrets"
 □ Revoke old API keys in Anthropic, Stripe, Telnyx, Notion dashboards
 ```
+
+---
+
+### 11. Social OAuth — Google
+
+| Field | Value |
+|-------|-------|
+| **Service** | [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials |
+| **Used by** | `workers/src/handlers/oauthSocial.js` |
+| **Setup** | Create an OAuth 2.0 Client ID (Web Application). Add `https://prime-self-api.adrper79.workers.dev/api/auth/oauth/google/callback` to Authorized Redirect URIs. Enable Google+ API and People API. |
+| **wrangler commands** | `npx wrangler secret put GOOGLE_CLIENT_ID` and `npx wrangler secret put GOOGLE_CLIENT_SECRET` |
+
+---
+
+### 12. Social OAuth — Facebook
+
+| Field | Value |
+|-------|-------|
+| **Service** | [Meta for Developers](https://developers.facebook.com/) → My Apps → Your App |
+| **Used by** | `workers/src/handlers/oauthSocial.js` |
+| **Setup** | Create a new App (Consumer type). Add Facebook Login product. Add `https://prime-self-api.adrper79.workers.dev/api/auth/oauth/facebook/callback` to Valid OAuth Redirect URIs. Enable `email` and `public_profile` permissions. App must pass Review to use with real users. |
+| **wrangler commands** | `npx wrangler secret put FACEBOOK_APP_ID` and `npx wrangler secret put FACEBOOK_APP_SECRET` |
+
+---
+
+### 13. Social OAuth — Apple Sign In
+
+| Field | Value |
+|-------|-------|
+| **Service** | [Apple Developer Portal](https://developer.apple.com/) → Certificates, IDs & Profiles |
+| **Used by** | `workers/src/handlers/oauthSocial.js` |
+| **Setup (multi-step)** | 1. Create a Services ID (Identifiers → +). Set identifier (e.g. `net.selfprime.web`). Enable Sign In with Apple. Configure Web Authentication → add `prime-self-api.adrper79.workers.dev` as domain and `https://prime-self-api.adrper79.workers.dev/api/auth/oauth/apple/callback` as return URL. 2. Create a Key (Keys → +). Enable Sign In with Apple. Download the `.p8` file — **you can only download it once**. Note the Key ID from the filename. 3. Find your Team ID in the top-right corner of the developer portal. |
+| **Secrets required** | `APPLE_CLIENT_ID` = your Services ID (e.g. `net.selfprime.web`) |
+| | `APPLE_TEAM_ID` = 10-char team ID (e.g. `ABC1234XYZ`) |
+| | `APPLE_KEY_ID` = 10-char key ID from .p8 filename |
+| | `APPLE_PRIVATE_KEY` = full contents of .p8 file with real newlines (not `\n` literal) |
+| **wrangler commands** | `npx wrangler secret put APPLE_CLIENT_ID` |
+| | `npx wrangler secret put APPLE_TEAM_ID` |
+| | `npx wrangler secret put APPLE_KEY_ID` |
+| | `npx wrangler secret put APPLE_PRIVATE_KEY` |
+| **Note** | Apple Sign In callback is a `POST` (not GET). The handler supports both. Apple only sends the user's name on first authorization — it's captured and stored immediately. |
 
 ---
 

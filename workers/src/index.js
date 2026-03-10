@@ -53,8 +53,6 @@
  *   GET  /api/diary/:id                   – Get diary entry
  *   PUT  /api/diary/:id                   – Update diary entry
  *   DELETE /api/diary/:id                 – Delete diary entry
- *   POST /api/checkout/create             – Create Stripe checkout session
- *   POST /api/checkout/portal             – Create customer portal session
  *   POST /api/webhook/stripe              – Process Stripe webhook events
  *   POST /api/webhooks                    – Register webhook endpoint
  *   GET  /api/webhooks                    – List user's webhooks
@@ -137,13 +135,13 @@ import { handleRectify } from './handlers/rectify.js';
 import { handleCluster } from './handlers/cluster.js';
 import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
+import { handleOAuthSocial } from './handlers/oauthSocial.js';
 import { handlePdfExport } from './handlers/pdf.js';
 import { handlePractitioner } from './handlers/practitioner.js';
 import { handleOnboarding } from './handlers/onboarding.js';
 import { handleValidation } from './handlers/validation.js';
 import { handlePsychometric } from './handlers/psychometric.js';
 import { handleDiary } from './handlers/diary.js';
-import { handleCreateCheckout, handleCustomerPortal } from './handlers/checkout.js';
 import { handleStripeWebhook } from './handlers/webhook.js';
 import { handleWebhooks } from './handlers/webhooks.js';
 import {
@@ -219,6 +217,7 @@ import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
 import { errorResponse } from './lib/errorMessages.js';
 import { applyCacheForPublicAPI } from './middleware/cache.js';
+import { applySecurityHeaders } from './middleware/security.js';
 import { getCacheMetrics, kvCache } from './lib/cache.js';
 import { runDailyTransitCron } from './cron.js';
 
@@ -231,7 +230,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation/', '/api/psychometric/', '/api/diary/', '/api/checkout/', '/api/billing/', '/api/referrals/', '/api/achievements/', '/api/webhooks/', '/api/push/', '/api/alerts/', '/api/keys/', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin/', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation/', '/api/psychometric/', '/api/diary/', '/api/billing/', '/api/referrals/', '/api/achievements/', '/api/webhooks/', '/api/push/', '/api/alerts/', '/api/keys/', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin/', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -247,17 +246,24 @@ const PUBLIC_ROUTES = new Set([
   '/api/push/vapid-key',
   '/api/sms/webhook',
   '/api/webhook/stripe',
-  '/api/billing/webhook',  // BL-R-C4: Stripe webhook — must be public (Stripe cannot authenticate)
   '/api/auth/register',
   '/api/auth/login',
   '/api/auth/refresh',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
   '/api/health',
   '/api/referrals/validate',  // Public for signup flow
   '/api/compare/list',  // Browse celebrities (public)
   '/api/compare/search',  // Search celebrities (public)
-  '/api/notion/callback',  // OAuth callback (public)
-  '/api/embed/validate',   // Embed widget feature-flag check (cross-origin, no PII)
-  '/api/promo/validate',   // Promo code validation (public, no redemption)
+  '/api/auth/oauth/google',            // Redirect to Google (public)
+  '/api/auth/oauth/apple',             // Redirect to Apple (public)
+  '/api/auth/oauth/facebook',          // Redirect to Facebook (public)
+  '/api/notion/callback',              // Notion OAuth callback (public)
+  '/api/auth/oauth/google/callback',   // Google OAuth callback (public)
+  '/api/auth/oauth/facebook/callback', // Facebook OAuth callback (public)
+  '/api/auth/oauth/apple/callback',    // Apple Sign In callback (public, POSTs)
+  '/api/embed/validate',               // Embed widget feature-flag check (cross-origin, no PII)
+  '/api/promo/validate',               // Promo code validation (public, no redemption)
 ]);
 
 function requiresAuth(path) {
@@ -295,16 +301,13 @@ const EXACT_ROUTES = new Map([
   // Timing
   ['POST /api/timing/find-dates',     handleTiming],
   ['GET /api/timing/templates',       listIntentionTemplates],
-  // Checkout & Billing
-  ['POST /api/checkout/create',       handleCreateCheckout],
-  ['POST /api/checkout/portal',       handleCustomerPortal],
+  // Billing
   ['POST /api/webhook/stripe',        handleStripeWebhook],
   ['POST /api/billing/checkout',      handleCheckout],
   ['POST /api/billing/portal',        handlePortal],
   ['GET /api/billing/subscription',   handleGetSubscription],
   ['POST /api/billing/cancel',        handleCancelSubscription],
   ['POST /api/billing/upgrade',       handleUpgradeSubscription],
-  ['POST /api/billing/webhook',       handleStripeWebhook],  // BL-R-C4 consolidated
   // Referrals
   ['POST /api/referrals/code',        handleGenerateCode],
   ['GET /api/referrals',              handleGetStats],
@@ -328,6 +331,14 @@ const EXACT_ROUTES = new Map([
   ['POST /api/share/achievement',     handleShareAchievement],
   ['POST /api/share/referral',        handleShareReferral],
   ['GET /api/share/stats',            handleGetShareStats],
+  // Social OAuth (Google, Apple, Facebook)
+  ['GET /api/auth/oauth/google',             (req, env) => handleOAuthSocial(req, env, '/google')],
+  ['GET /api/auth/oauth/google/callback',    (req, env) => handleOAuthSocial(req, env, '/google/callback')],
+  ['GET /api/auth/oauth/apple',              (req, env) => handleOAuthSocial(req, env, '/apple')],
+  ['GET /api/auth/oauth/apple/callback',     (req, env) => handleOAuthSocial(req, env, '/apple/callback')],
+  ['POST /api/auth/oauth/apple/callback',    (req, env) => handleOAuthSocial(req, env, '/apple/callback')],
+  ['GET /api/auth/oauth/facebook',           (req, env) => handleOAuthSocial(req, env, '/facebook')],
+  ['GET /api/auth/oauth/facebook/callback',  (req, env) => handleOAuthSocial(req, env, '/facebook/callback')],
   // Notion
   ['GET /api/notion/auth',            handleNotionAuth],
   ['GET /api/notion/callback',        handleNotionCallback],
@@ -495,6 +506,9 @@ export default {
 
       // Apply CDN cache headers for public API routes (BL-OPT-001)
       response = applyCacheForPublicAPI(response, path);
+
+      // Apply security headers (COND-1)
+      response = applySecurityHeaders(response);
 
       // Fire-and-forget: track API call for analytics (non-blocking)
       if (path.startsWith('/api/') && path !== '/api/health') {

@@ -2,8 +2,8 @@
  * Promo Code Handler
  *
  * Routes:
- *   GET  /api/billing/redeem/:code   — Validate a promo code (user-facing)
- *   POST /api/billing/redeem         — Apply promo to checkout (records redemption)
+ *   GET  /api/promo/validate?code=... — Validate a promo code (user-facing)
+ *   POST /api/promo/apply             — Apply promo to checkout (records redemption)
  *   POST /api/admin/promo            — Create a promo code (admin only)
  *   GET  /api/admin/promo            — List all promo codes (admin only)
  *
@@ -26,7 +26,7 @@ function isAdmin(request, env) {
 // ─── User-Facing: Validate Promo Code ────────────────────────
 
 /**
- * GET /api/billing/redeem/:code
+ * GET /api/promo/validate?code=...
  * Validates a promo code without consuming a redemption.
  * Returns discount info so the frontend can show the user what they'll save.
  */
@@ -68,7 +68,7 @@ export async function handleValidatePromo(request, env, code) {
 // ─── User-Facing: Apply Promo at Checkout ────────────────────
 
 /**
- * POST /api/billing/redeem
+ * POST /api/promo/apply
  * Body: { code: "PROMO20", tier: "regular" }
  * Records a redemption and returns a Stripe coupon ID (if applicable_tiers match).
  * Called from billing.js before creating the Stripe checkout session.
@@ -113,7 +113,7 @@ export async function handleApplyPromo(request, env) {
   }
 
   return Response.json({
-    success: true,
+    ok: true,
     code: promo.code,
     discount_type: promo.discount_type,
     discount_value: promo.discount_value
@@ -163,7 +163,7 @@ export async function handleCreatePromo(request, env) {
       valid_until || null,
       applicable_tiers ? JSON.stringify(applicable_tiers) : null
     ]);
-    return Response.json({ success: true, promo: rows[0] }, { status: 201 });
+    return Response.json({ ok: true, promo: rows[0] }, { status: 201 });
   } catch (err) {
     if (err.message?.includes('unique')) {
       return Response.json({ error: `Code "${code.toUpperCase()}" already exists` }, { status: 409 });
