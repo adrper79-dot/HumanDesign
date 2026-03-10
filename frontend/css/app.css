@@ -125,6 +125,7 @@ input, select, textarea {
   background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
   color: var(--text); padding: 9px 12px; font-size: 0.9rem; transition: border 0.15s;
   width: 100%;
+  max-width: clamp(280px, 90vw, 500px);
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
 select option { background: var(--bg3); }
@@ -293,6 +294,7 @@ select option { background: var(--bg3); }
   color: var(--text);
   line-height: 1.6;
   margin-bottom: var(--space-3);
+  max-width: clamp(280px, 90vw, 700px);
 }
 .exemplar-lesson,
 .exemplar-invoke {
@@ -302,6 +304,8 @@ select option { background: var(--bg3); }
   margin-top: var(--space-2);
   padding-left: var(--space-3);
   border-left: 2px solid var(--gold-dim);
+  max-width: clamp(280px, 90vw, 700px);
+}
 }
 .exemplar-lesson strong,
 .exemplar-invoke strong {
@@ -1024,4 +1028,5 @@ img[data-src].loaded, img:not([data-src]) {
   font-size: var(--font-size-sm);
   color: var(--text-dim);
   line-height: 1.55;
+  max-width: clamp(280px, 90vw, 600px);
 }

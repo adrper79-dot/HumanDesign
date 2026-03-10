@@ -257,9 +257,9 @@
     overflow: hidden;
     transition: max-height 0.3s ease-out;
   }
-  
+
   .collapsible-content.expanded {
-    max-height: 2000px; /* Large enough for content */
+    max-height: 100vh; /* Dynamic: full viewport height for any content */
   }
   
   /* ── Pull-to-Refresh ───────────────────────────────────── */
