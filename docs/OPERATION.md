@@ -55,7 +55,7 @@ Wrangler builds `src/index.js` (ESM), bundles dependencies, and uploads to the `
 **Verify deployment:**
 ```bash
 curl https://prime-self-api.adrper79.workers.dev/api/health
-# Expected: {"status":"ok","endpoints":32,"version":"0.5.0"}
+# Expected: {"status":"ok","version":"0.2.0"}
 ```
 
 ---
@@ -108,7 +108,7 @@ Each migration is a SQL file in `workers/src/db/migrations/`. File names follow 
 ```bash
 # From repo root
 npx vitest run
-# Expected: 190 tests passing (86 engine + 41 handler + 63 numerology)
+# Expected: 263 tests passing (56 canonical + 103 engine + 41 handler + 63 numerology)
 ```
 
 Run in watch mode during development:
@@ -406,9 +406,11 @@ curl -X POST https://prime-self-api.adrper79.workers.dev/__scheduled \
 
 ## Version History
 
+> Note: This table is a high-level historical summary and may not reflect exact route counts in the current router.
+
 | Version | Notes |
 |---|---|
-| v0.5.0 | 32 endpoints; geocode lookup replaces lat/lng inputs; cron transit snapshots; PDF exports; practitioner tools |
+| v0.5.0 | Historical phase: geocode lookup replaced manual lat/lng flow; cron transit snapshots; PDF exports; practitioner tools |
 | v0.4.x | Auth, KV caching, R2 PDF, LLM failover chain |
 | v0.3.x | Transit forecast, cluster API |
 | v0.2.x | Profile generation, history endpoints |

@@ -1,5 +1,7 @@
 # Lessons Learned — Prime Self Engine
 
+> Historical Snapshot: Entries in this document are point-in-time incident notes and may include older test baselines.
+
 This document catalogs key learnings from development, debugging, and production incidents. Each entry includes context, root cause, resolution, and preventive measures.
 
 ---

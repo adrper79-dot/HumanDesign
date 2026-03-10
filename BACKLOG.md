@@ -1,16 +1,16 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-09 (Deep Dive Audit — DB Sync + Engine + Workers + UX Review)
-**Test suite:** 207/207 passing (vitest 3.2.4)
-**Code status:** Sprints 1–17 COMPLETE ✅ | Sprint 18: UX & Marketing Enhancements — 40 items (9 Critical, 14 High, 10 Medium, 7 Low)
-**Deployment status:** 🚨 **PRODUCTION BROKEN** — Stale code deployed, multiple 404/500 errors
+**Last audited:** 2026-03-09 (Repo audit + documentation reconciliation)
+**Test suite:** 263/263 passing (vitest 3.2.4)
+**Code status:** Sprints 1–17 COMPLETE ✅ | Sprint 18: 40 items originally identified, 11 now verified shipped in code, 29 remaining
+**Deployment status:** ⚠️ Last external production report showed stale deployment issues; not re-verified in this repo-only audit
 **Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration**
 
 ---
 
-## 🚨 PRODUCTION STATUS (Added 2026-03-08)
+## 🚨 PRODUCTION STATUS (Last external verification: 2026-03-08)
 
-**Critical Issue**: Production deployment at `prime-self-api.adrper79.workers.dev` is running stale code.
+**Last reported issue**: Production deployment at `prime-self-api.adrper79.workers.dev` was running stale code during the March 8 checkout.
 
 **Broken Endpoints** (404/500 errors):
 - ❌ `/api/auth/me` → 404 (route exists in code)
@@ -20,7 +20,7 @@
 - ❌ `/api/transits/forecast` → 400 (frontend missing params)
 - ❌ CSP violations (Cloudflare Insights blocked, fonts blocked)
 
-**Action Required**: See [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) for complete analysis and fix procedures.
+**Action Required**: Re-run deploy verification before treating production status as current.
 
 ---
 
@@ -219,8 +219,8 @@ These items cause outright failures in deployed environments.
 ### BL-m2 | Health endpoint hardcodes stale values
 - [x] **Status:** Done (2026-03-04)
 - **Files:** `workers/src/index.js`
-- **Problem:** Returns `version: '0.5.0'` (actual package.json: `0.2.0`) and `endpoints: 32` (actual: 33).
-- **Fix:** Updated version to '0.2.0', removed stale endpoint count, added timestamp for better health check utility.
+- **Problem:** Health response previously returned stale hardcoded metadata.
+- **Fix:** Updated version metadata, removed hardcoded endpoint count, and added timestamp for better health check utility.
 
 ### BL-m3 | `wrangler.toml` exposes `account_id`
 - [x] **Status:** Done (2026-03-04)
@@ -237,8 +237,8 @@ These items cause outright failures in deployed environments.
 ### BL-m5 | Documentation test count stale
 - [x] **Status:** Done (Previously completed)
 - **Files:** `docs/OPERATION.md`, `README.md`
-- **Problem:** States "121 tests" in multiple places. Actual count: 190.
-- **Fix:** All documentation already shows 190 tests correctly.
+- **Problem:** Test-count references were stale in multiple docs.
+- **Fix:** Canonical docs now reflect current local baseline (`263/263`).
 
 ### BL-m6 | LESSONS_LEARNED.md preventive measures unchecked
 - [x] **Status:** Done (2026-03-04)
@@ -1350,6 +1350,8 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 **Scope:** Complete UX redesign based on deep review, color system consolidation, social media sharing, explanatory tooltips, navigation restructure, and marketing readiness improvements.
 
 **Reference:** See [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) for full analysis and Reddit/competitive research.
+
+**Repo Audit Delta (2026-03-09):** 11 Sprint 18 items were already implemented in the current codebase but had not been reflected here: `BL-UX-C2`, `BL-UX-C3`, `BL-UX-C4`, `BL-UX-C5`, `BL-UX-C6`, `BL-UX-C7`, `BL-UX-C8`, `BL-UX-H3`, `BL-SOCIAL-H1`, `BL-SOCIAL-H2`, and `BL-SOCIAL-H3`.
 
 ### CRITICAL — Must Fix Before Marketing (🔴 This Week)
 

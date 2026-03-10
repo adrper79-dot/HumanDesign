@@ -1,5 +1,7 @@
 # Codebase Audit & Remediation Log
 
+> Historical Snapshot: This log captures remediation state at the time of execution and may not match the current repository baseline.
+
 **Date:** 2025-07-15  
 **Protocol:** 6-Phase Audit (Bootstrap → Discovery → Backlog → Remediation → Cleanup → Docs)  
 **Stack:** Cloudflare Workers + Neon PostgreSQL v17 + Stripe + pure-JS HD engine  

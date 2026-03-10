@@ -4,17 +4,19 @@
 
 All responses are `application/json`. Protected endpoints require `Authorization: Bearer <accessToken>`.
 
-> **Spec Accuracy Notice (2026-03-03 audit):**
-> This spec has drifted from the actual implementation. The following endpoints are **documented below but NOT yet implemented** in the router:
-> - `GET /api/auth/me` — not implemented
-> - `POST /api/chart/save` — not implemented (auto-save in calculate is dead code per BL-C5)
-> - `GET /api/chart/history` — not implemented
-> - `GET /api/cluster/list` — not implemented
-> - `POST /api/cluster/leave` — not implemented
-> - `POST /api/sms/subscribe` — not implemented (opt-in only via inbound "START" SMS)
-> - `POST /api/sms/unsubscribe` — not implemented (opt-out only via inbound "STOP" SMS)
+> **Spec Accuracy Notice (Updated 2026-03-09):**
+> This document is partially historical and does not perfectly match the live router.
 >
-> The following endpoints **exist in the router but are NOT documented below**:
+> The following endpoints were previously flagged as missing, but are now implemented in code:
+> - `GET /api/auth/me`
+> - `POST /api/chart/save`
+> - `GET /api/chart/history`
+> - `GET /api/cluster/list`
+> - `POST /api/cluster/leave`
+> - `POST /api/sms/subscribe`
+> - `POST /api/sms/unsubscribe`
+>
+> The following endpoints exist in the router and may still be under-documented in this file:
 > - `GET /api/profile/:id/pdf` — PDF export with R2 caching
 > - `POST /api/cluster/create` — create a cluster
 > - `POST /api/cluster/:id/synthesize` — cluster LLM synthesis
@@ -27,7 +29,7 @@ All responses are `application/json`. Protected endpoints require `Authorization
 > - `GET /api/practitioner/profile` — get practitioner profile
 > - `DELETE /api/practitioner/clients/:id` — remove client (CORS-blocked per BL-C4)
 >
-> See [BACKLOG.md](../BACKLOG.md) items BL-M1 for details.
+> Treat `workers/src/index.js` as source of truth for routing until this spec is fully reconciled.
 
 ---
 
@@ -134,8 +136,8 @@ User is browsing for 2 hours → Next API call returns 401 Unauthorized
 
 ---
 
-### `GET /api/auth/me` 🔒 — ⚠️ NOT IMPLEMENTED
-Return the authenticated user's profile. *(Planned but no route handler exists.)*
+### `GET /api/auth/me` 🔒
+Return the authenticated user's profile.
 
 **Response 200**
 ```json
@@ -260,7 +262,7 @@ Anonymous user → Enters birth data → POST /api/chart/calculate → Render ch
 
 ---
 
-### `POST /api/chart/save` 🔒 — ⚠️ NOT IMPLEMENTED
+### `POST /api/chart/save` 🔒
 Save a calculated chart to the authenticated user's history. *(Auto-save in `/api/chart/calculate` exists but is dead code — see BL-C5.)*
 
 **Request:** same body as `/api/chart/calculate` plus the calculated `chartData`.
@@ -282,8 +284,8 @@ Save a calculated chart to the authenticated user's history. *(Auto-save in `/ap
 
 ---
 
-### `GET /api/chart/history` 🔒 — ⚠️ NOT IMPLEMENTED
-List the authenticated user's saved charts (newest first). *(No route handler exists.)*
+### `GET /api/chart/history` 🔒
+List the authenticated user's saved charts (newest first).
 
 **Response 200**
 ```json
@@ -747,8 +749,8 @@ Session tomorrow → GET /api/practitioner/client/47/charts
 
 Clusters analyze group dynamics for teams, families, communities, or any collection of people. The system calculates how multiple energy systems interact and where the group has collective strengths/blindspots.
 
-### `GET /api/cluster/list` 🔒 — ⚠️ NOT IMPLEMENTED
-List all clusters. *(No route handler exists.)*
+### `GET /api/cluster/list` 🔒
+List all clusters.
 
 **Use this when:** Building a "My Groups" dashboard for users who belong to multiple clusters.
 
@@ -903,8 +905,8 @@ Team forming stage → All members added → Manager clicks "Analyze Group Dynam
 
 ---
 
-### `POST /api/cluster/leave` 🔒 — ⚠️ NOT IMPLEMENTED
-Leave a cluster. *(No route handler exists.)*
+### `POST /api/cluster/leave` 🔒
+Leave a cluster.
 
 **Use this when:** User wants to exit a cluster they've joined.
 
@@ -923,14 +925,14 @@ Return the personalised Savannah story arc for the authenticated user's Forge ar
 
 ## SMS
 
-### `POST /api/sms/subscribe` 🔒 — ⚠️ NOT IMPLEMENTED
-Subscribe the authenticated user to daily transit SMS digests. *(SMS opt-in currently only works via inbound "START" text.)*
+### `POST /api/sms/subscribe` 🔒
+Subscribe the authenticated user to daily transit SMS digests.
 ```json
 { "phoneNumber": "+18005551234" }
 ```
 
-### `POST /api/sms/unsubscribe` 🔒 — ⚠️ NOT IMPLEMENTED
-Unsubscribe from SMS digests. *(SMS opt-out currently only works via inbound "STOP" text.)*
+### `POST /api/sms/unsubscribe` 🔒
+Unsubscribe from SMS digests.
 
 ### `POST /api/sms/send-digest` (internal / cron)
 Triggered by the daily cron to send SMS digests.
@@ -943,10 +945,10 @@ Triggered by the daily cron to send SMS digests.
 Liveness check. Always returns 200.
 
 ```json
-{ "status": "ok", "endpoints": 32, "version": "0.5.0" }
+{ "status": "ok", "version": "0.2.0" }
 ```
 
-> **Note (BL-m2):** The `version` and `endpoints` values are hardcoded and stale. Actual package version is `0.2.0` and actual route count is 33.
+> **Note:** Avoid relying on hardcoded endpoint counts in documentation; route registration evolves faster than manual spec updates.
 
 ---
 
