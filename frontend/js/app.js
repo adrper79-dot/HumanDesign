@@ -764,7 +764,16 @@ async function apiFetch(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (token) headers['Authorization'] = 'Bearer ' + token;
 
-  const res = await fetch(API + path, { ...options, headers, credentials: 'include' });
+  let res;
+  try {
+    res = await fetch(API + path, { ...options, headers, credentials: 'include' });
+  } catch (err) {
+    const isNetwork = err instanceof TypeError;
+    const msg = isNetwork
+      ? 'Network/CORS error: unable to reach API. Check API deployment and allowed origins.'
+      : (err?.message || 'Request failed');
+    return { ok: false, error: msg };
+  }
 
   // Auto-handle expired / missing token — try silent refresh once, then force sign-in
   if (res.status === 401) {
@@ -795,6 +804,16 @@ async function apiFetch(path, options = {}) {
       showUpgradePrompt(errorData.error, errorData.feature);
     }
     return errorData;
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text().catch(() => '');
+    return {
+      ok: res.ok,
+      error: text || `Unexpected non-JSON response (${res.status})`,
+      status: res.status
+    };
   }
 
   return res.json();

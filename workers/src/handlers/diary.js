@@ -304,31 +304,32 @@ export async function handleDiaryDelete(request, env, entryId) {
  */
 export async function handleDiary(request, env, subpath) {
   const method = request.method;
+  const normalized = (subpath === '/' ? '' : subpath);
 
   // POST /api/diary - create entry
-  if (subpath === '' && method === 'POST') {
+  if (normalized === '' && method === 'POST') {
     return handleDiaryCreate(request, env);
   }
 
   // GET /api/diary - list entries
-  if (subpath === '' && method === 'GET') {
+  if (normalized === '' && method === 'GET') {
     return handleDiaryList(request, env);
   }
 
   // GET /api/diary/:id - get entry
-  const getMatch = subpath.match(/^\/([a-f0-9\-]+)$/);
+  const getMatch = normalized.match(/^\/([a-f0-9\-]+)$/);
   if (getMatch && method === 'GET') {
     return handleDiaryGet(request, env, getMatch[1]);
   }
 
   // PUT /api/diary/:id - update entry
-  const updateMatch = subpath.match(/^\/([a-f0-9\-]+)$/);
+  const updateMatch = normalized.match(/^\/([a-f0-9\-]+)$/);
   if (updateMatch && method === 'PUT') {
     return handleDiaryUpdate(request, env, updateMatch[1]);
   }
 
   // DELETE /api/diary/:id - delete entry
-  const deleteMatch = subpath.match(/^\/([a-f0-9\-]+)$/);
+  const deleteMatch = normalized.match(/^\/([a-f0-9\-]+)$/);
   if (deleteMatch && method === 'DELETE') {
     return handleDiaryDelete(request, env, deleteMatch[1]);
   }

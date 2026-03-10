@@ -22,6 +22,7 @@
 // Production-only origins — always allowed
 const PRODUCTION_ORIGINS = [
   'https://selfprime.net',             // Production custom domain
+  'https://www.selfprime.net',         // Production www alias
   'https://prime-self-ui.pages.dev',  // Production frontend (Cloudflare Pages)
 ];
 
