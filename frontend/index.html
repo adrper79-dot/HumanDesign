@@ -627,8 +627,8 @@
         </div>
         <div class="form-group full">
           <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
-          <div style="display:flex;gap:var(--space-2)">
-            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1" required aria-required="true"
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
+            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1;min-width:160px" required aria-required="true"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('c')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('c')" id="c-geoBtn"
               style="white-space:nowrap;padding:0 16px;font-size:var(--font-size-base)" data-i18n="chart.lookupLocation">Look Up</button>
@@ -714,8 +714,8 @@
         </div>
         <div class="form-group full">
           <label data-i18n="chart.birthLocation">Birth Location</label>
-          <div style="display:flex;gap:var(--space-2)">
-            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1"
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
+            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1;min-width:160px"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('p')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('p')" id="p-geoBtn"
               style="white-space:nowrap;padding:0 16px;font-size:var(--font-size-base)" data-i18n="chart.lookupLocation">Look Up</button>
@@ -1147,8 +1147,14 @@
       </div>
     </div>
     <div class="alert alert-warn">
-      <strong>Relationship Electromagnetic Field Analysis</strong><br>
-      Calculate the combined energy blueprint when two charts overlap. This shows: <strong>(1)</strong> New channels activated when you're together (electromagnetic bridges), <strong>(2)</strong> Definition changes (e.g., individual becomes emotional authority), <strong>(3)</strong> Dominant gates/themes in the relationship field, <strong>(4)</strong> Potential blind spots (missing energies). Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.
+      <strong>Relationship Electromagnetic Field Analysis</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
+        <li>New channels activated when you're together (electromagnetic bridges)</li>
+        <li>Definition changes (e.g., individual becomes emotional authority)</li>
+        <li>Dominant gates &amp; themes in the relationship field</li>
+        <li>Potential blind spots (missing energies)</li>
+      </ul>
+      <p style="margin:8px 0 0;font-size:var(--font-size-sm)">Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.</p>
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-partnership"></span> <span data-i18n="composite.title">Composite Chart</span></div>
@@ -1162,9 +1168,9 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:var(--space-2);align-items:flex-start">
+          <div style="display:flex;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap">
             <input type="text" id="comp-A-location" placeholder="New York, NY"
-              style="flex:1"
+              style="flex:1;min-width:160px"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-A')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-A')" id="comp-A-geoBtn"
               style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
@@ -1183,9 +1189,9 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:var(--space-2);align-items:flex-start">
+          <div style="display:flex;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap">
             <input type="text" id="comp-B-location" placeholder="Los Angeles, CA"
-              style="flex:1"
+              style="flex:1;min-width:160px"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-B')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-B')" id="comp-B-geoBtn"
               style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
@@ -1217,9 +1223,9 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:var(--space-2);align-items:flex-start">
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
             <input type="text" id="rect-location" placeholder="New York, NY"
-              style="flex:1"
+              style="flex:1;min-width:160px"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('rect')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('rect')" id="rect-geoBtn"
               style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
