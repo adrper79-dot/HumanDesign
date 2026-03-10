@@ -302,7 +302,11 @@ async function handleJoin(request, env, clusterId) {
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  await query(QUERIES.addClusterMember, [clusterId, userId, forgeRole.role]);
+  await query(QUERIES.addClusterMember, [
+    clusterId, userId, forgeRole.role,
+    birthDate, birthTime, birthTimezone || null,
+    parseFloat(lat), parseFloat(lng)
+  ]);
 
   // Track achievement event
   if (request._user) {
@@ -397,10 +401,48 @@ async function handleSynthesize(request, env, clusterId) {
       };
     });
   } else {
-    return Response.json(
-      { error: 'Provide members array with birth data for synthesis' },
-      { status: 400 }
-    );
+    // Load stored member birth data from the database.
+    // Birth data is persisted at join time (handleJoin), so synthesis
+    // can run with no additional input from the frontend.
+    const membersResult = await query(QUERIES.getClusterMembers, [clusterId]);
+    const rows = membersResult.rows || [];
+
+    if (rows.length < 2) {
+      return Response.json(
+        { error: 'At least 2 members are required for synthesis.' },
+        { status: 400 }
+      );
+    }
+
+    const missingBirth = rows.filter(r => !r.birth_date || !r.birth_time || r.birth_lat == null);
+    if (missingBirth.length) {
+      return Response.json(
+        { error: `${missingBirth.length} member(s) are missing birth data. Please re-add those members using the Add Member form.` },
+        { status: 422 }
+      );
+    }
+
+    members = rows.map(r => {
+      const birthDate = String(r.birth_date).slice(0, 10);
+      const birthTime = String(r.birth_time).slice(0, 5);
+      const utc = parseToUTC(birthDate, birthTime, r.birth_timezone || undefined);
+      const chart = calculateFullChart({
+        ...utc,
+        lat: parseFloat(r.birth_lat), lng: parseFloat(r.birth_lng),
+        includeTransits: false
+      });
+      const forgeRole = getForgeRole(chart.chart.type);
+      return {
+        name: r.email || 'Member',
+        type: chart.chart.type,
+        authority: chart.chart.authority,
+        profile: chart.chart.profile,
+        definition: chart.chart.definition,
+        cross: chart.chart.cross,
+        definedCenters: chart.chart.definedCenters,
+        forgeRole
+      };
+    });
   }
 
   if (members.length < 2) {

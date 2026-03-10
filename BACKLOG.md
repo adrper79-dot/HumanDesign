@@ -1364,7 +1364,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Files to edit:** Remove lines ~62-77 from index.html, update ~600 inline style references to use semantic tokens
   - **Verify:** grep `:root` in index.html returns zero matches, all components reference design tokens consistently
 
-- [ ] **BL-UX-C2**: WCAG contrast failures on dim text
+- [x] **BL-UX-C2**: WCAG contrast failures on dim text
   - **Severity:** Critical (Accessibility)
   - **Files:** `frontend/css/design-tokens.css`
   - **Problem:** `--text-dim: #b0acc8` on `--bg2: #1a1a24` = 4.2:1 contrast (fails WCAG AA 4.5:1 minimum). Affects data labels, section headers, meta text throughout the app.
@@ -1372,7 +1372,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Fix:** Bump `--color-neutral-400` from `#a8a2c0` to `#c4c0d8` (achieves 5.5:1 contrast). Update `--text-muted` from `#7a76a0` to `#918db0` (achieves 4.5:1).
   - **Verify:** Use WebAIM contrast checker on all text types against backgrounds
 
-- [ ] **BL-UX-C3**: Missing "why it matters" explanations for HD terms
+- [x] **BL-UX-C3**: Missing "why it matters" explanations for HD terms
   - **Severity:** Critical (UX)
   - **Files:** `frontend/index.html` (renderChart function ~line 2120), `frontend/js/explanations.js` (if exists, else create)
   - **Problem:** Chart shows "Pattern: Generator", "Authority: Emotional", "Strategy: To Respond" with ZERO explanation of what these mean for the user's life. Reddit #1 complaint: "told me I'm a Generator 3/5 but didn't say what that means."
@@ -1385,7 +1385,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
     - 3/5 Profile: "Learn by trial and error. Others project expectations onto you. Embrace 'failing forward.'"
   - **Verify:** Non-HD user can read chart and understand what it means for their life
 
-- [ ] **BL-UX-C4**: Remove fake testimonials section
+- [x] **BL-UX-C4**: Remove fake testimonials section
   - **Severity:** Critical (Trust)
   - **Files:** `frontend/index.html` (lines ~869-1014)
   - **Problem:** 6 clearly fabricated testimonials ("Sarah Mitchell, HD Practitioner · 450+ Client Readings"). Reddit users specifically call this the #1 trust killer. Social proof stats fall back to hardcoded numbers.
@@ -1393,7 +1393,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Fix:** (1) Remove testimonials carousel entirely, or (2) Replace with real testimonials with permission and disclaimer "Early access beta testers", or (3) Replace with aggregate anonymous stats if available from API
   - **Verify:** No fabricated names or credentials visible on page
 
-- [ ] **BL-UX-C5**: Consolidate birth data entry (ask once, remember forever)
+- [x] **BL-UX-C5**: Consolidate birth data entry (ask once, remember forever)
   - **Severity:** Critical (UX)
   - **Files:** `frontend/index.html` (Chart tab form, Profile tab form, Composite tab forms)
   - **Problem:** Users must enter birth data 3 separate times across tabs. Chart uses `c-date/c-time/c-location`, Profile uses `p-date/p-time/p-location`, Composite uses `comp-dateA/comp-timeA/comp-A-location`. Massive friction.
@@ -1401,7 +1401,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Fix:** (1) Store birth data in localStorage after first entry (`ps-birth-data`), (2) Auto-populate all forms on page load, (3) Show banner "Using your birth data: June 15, 1990 14:30 Tampa, FL [Change]", (4) Consolidate to single birth data manager module
   - **Verify:** Enter data in Chart tab → switch to Profile → fields are pre-filled
 
-- [ ] **BL-UX-C6**: Tab overload — 13 tabs confuse users
+- [x] **BL-UX-C6**: Tab overload — 13 tabs confuse users
   - **Severity:** Critical (UX)
   - **Files:** `frontend/index.html` (navigation tabs ~line 105-140)
   - **Problem:** 13 total tabs (Chart, Profile, Transits, Check-In, More▾, Enhance, Diary, Composite, Rectify, Saved, Onboarding, Practitioner, Clusters, SMS). Steve Jobs: "People can't prioritize 13 things."
@@ -1414,7 +1414,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
     - **More▾** dropdown: Diary, Rectify, Saved, Practitioner, Clusters, SMS, Onboarding
   - **Verify:** Desktop shows 5 items max (4 primary + More), mobile shows clean bottom nav
 
-- [ ] **BL-UX-C7**: Mobile nav labels don't match content
+- [x] **BL-UX-C7**: Mobile nav labels don't match content
   - **Severity:** Critical (UX)
   - **Files:** `frontend/index.html` (mobile bottom nav ~line 4850)
   - **Problem:** Mobile label "Keys" points to Profile tab (AI synthesis), not Gene Keys. "Astro" points to Enhance (behavioral tests), not astrology. User clicks expecting one thing, gets another.
@@ -1422,7 +1422,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Fix:** Either (1) rename mobile labels to match actual content (Keys→Profile, Astro→Deepen), or (2) restructure tabs so labels make sense
   - **Verify:** Tap each mobile nav item → label describes what you see
 
-- [ ] **BL-UX-C8**: Center pills show no explanation
+- [x] **BL-UX-C8**: Center pills show no explanation
   - **Severity:** Critical (UX)
   - **Files:** `frontend/index.html` (renderChart ~line 2140)
   - **Problem:** Centers render as `<span class="pill green">Sacral</span>` with zero context. Users don't know what "Sacral" is or what defined vs open means.
@@ -1459,7 +1459,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Fix:** Load channel data from `src/data/channels.json`, show channel name ("Channel of Charisma") and 1-sentence meaning ("Busy-ness that looks effortless")
   - **Verify:** Each channel shows name + description
 
-- [ ] **BL-UX-H3**: Add skeleton loading screens
+- [x] **BL-UX-H3**: Add skeleton loading screens
   - **Severity:** High (UX)
   - **Files:** `frontend/index.html`, `frontend/css/components/skeleton.css` (create)
   - **Problem:** API calls show generic spinner. Modern UX uses skeleton screens (gray animated placeholders) which reduce perceived wait time by ~35%.
@@ -1697,7 +1697,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 
 ### SOCIAL MEDIA INTEGRATION — New Features
 
-- [ ] **BL-SOCIAL-H1**: Twitter/X sharing integration
+- [x] **BL-SOCIAL-H1**: Twitter/X sharing integration
   - **Severity:** High (Marketing)
   - **Files:** `frontend/index.html` (share modal), `frontend/js/social-share.js` (create)
   - **Problem:** No Twitter/X sharing functionality. Share modal has placeholder buttons.
@@ -1706,7 +1706,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Tweet template:** "Just discovered I'm a {Type} {Profile} ✨ My decision style: {Authority}. Check out your energy blueprint at {referral_link}"
   - **Verify:** Twitter button opens pre-filled tweet with referral link
 
-- [ ] **BL-SOCIAL-H2**: Instagram sharing with image export
+- [x] **BL-SOCIAL-H2**: Instagram sharing with image export
   - **Severity:** High (Marketing)
   - **Files:** `frontend/js/social-share.js`, `frontend/js/chart-image-generator.js` (create)
   - **Problem:** No Instagram sharing. Need visual content for IG.
@@ -1715,7 +1715,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Image format:** Bodygraph visual, "Type: Generator 3/5", "Authority: Emotional", "primeself.net" watermark
   - **Verify:** Download button gives beautiful Instagram-ready image
 
-- [ ] **BL-SOCIAL-H3**: Facebook sharing with Open Graph tags
+- [x] **BL-SOCIAL-H3**: Facebook sharing with Open Graph tags
   - **Severity:** High (Marketing)
   - **Files:** `frontend/index.html` (meta tags), `frontend/js/social-share.js`
   - **Problem:** No Facebook sharing, missing OG tags for rich previews.

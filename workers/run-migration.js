@@ -22,11 +22,19 @@ const { Client } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const CONNECTION_STRING = process.env.NEON_CONNECTION_STRING || process.argv[2];
+const rawArgs = process.argv.slice(2);
+const positionalSqlArg = rawArgs.find(a => a.endsWith('.sql'));
+
+// Support both env names used across scripts/docs.
+const CONNECTION_STRING =
+  process.env.NEON_CONNECTION_STRING ||
+  process.env.NEON_CONNECT_STRING ||
+  // Backward-compatible fallback: if first arg looks like a URL, treat it as connection string.
+  (rawArgs[0] && /^postgres(ql)?:\/\//.test(rawArgs[0]) ? rawArgs[0] : undefined);
 
 if (!CONNECTION_STRING) {
   console.error('❌ Missing database connection string.');
-  console.error('   Set NEON_CONNECTION_STRING environment variable or pass as argument:');
+  console.error('   Set NEON_CONNECTION_STRING (or NEON_CONNECT_STRING) environment variable, or pass a connection URL as argument:');
   console.error('   NEON_CONNECTION_STRING="postgresql://..." node run-migration.js');
   process.exit(1);
 }
@@ -52,9 +60,14 @@ async function getAppliedMigrations(client) {
 }
 
 async function runMigration() {
-  const args = process.argv.slice(2);
+  const args = rawArgs;
   const statusOnly = args.includes('--status');
   const specificFile = args.find((a, i) => args[i - 1] === '--file');
+  // Operator-friendly mode: allow `node run-migration.js path/to/019_foo.sql`
+  // and infer --file 019_foo from it.
+  const inferredSpecificFile = !specificFile && positionalSqlArg
+    ? positionalSqlArg.split('/').pop().split('\\').pop().replace('.sql', '')
+    : undefined;
 
   console.log('🔄 Prime Self Migration Runner\n');
 
@@ -97,10 +110,11 @@ async function runMigration() {
       files = [];
     }
 
-    if (specificFile) {
-      files = files.filter(f => f.startsWith(specificFile));
+    if (specificFile || inferredSpecificFile) {
+      const target = specificFile || inferredSpecificFile;
+      files = files.filter(f => f.startsWith(target));
       if (files.length === 0) {
-        console.error(`❌ No migration file matching "${specificFile}" found.`);
+        console.error(`❌ No migration file matching "${target}" found.`);
         process.exit(1);
       }
     }
