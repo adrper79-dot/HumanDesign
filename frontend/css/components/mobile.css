@@ -136,9 +136,9 @@
     padding-bottom: calc(var(--mobile-nav-height) + var(--space-4));
   }
   
-  /* ── Tabs: Touch-Friendly ──────────────────────────────── */
+  /* ── Tabs: Hidden on mobile (sidebar handles this) ────── */
   .tabs {
-    display: none; /* Hide desktop tabs on mobile (use bottom nav instead) */
+    display: none;
   }
   
   /* Hide sub-tabs on mobile — bottom nav handles navigation */
@@ -455,10 +455,6 @@
     display: none; /* Hide bottom nav on tablet */
   }
   
-  .tabs {
-    display: flex; /* Show desktop tabs on tablet */
-  }
-  
   /* Step guide: smaller on tablet */
   .step-item {
     min-width: 140px;
@@ -474,14 +470,6 @@
 @media (min-width: 769px) {
   .mobile-nav {
     display: none;
-  }
-  
-  .tabs {
-    display: flex; /* Show desktop tabs as flex row */
-  }
-  
-  .tab-list {
-    display: flex; /* Ensure tab buttons display in row */
   }
   
   .mobile-only {
