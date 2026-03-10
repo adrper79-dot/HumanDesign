@@ -9,33 +9,25 @@
 
 ## 🚨 Current Status (Updated March 9, 2026)
 
-**Code Quality**: ✅ Excellent (207/207 tests passing)  
-**Production Deployment**: ❌ **BROKEN** — Requires immediate attention  
-**UX Status**: 🔄 **Sprint 18 In Progress** — Major UX overhaul underway
+**Code Quality**: ✅ Excellent (263/263 tests passing locally)  
+**Production Deployment**: ⚠️ Not re-verified in this repo-only audit  
+**UX Status**: 🔄 Sprint 18 partially shipped; backlog and build docs were reconciled with the current frontend
 
-**Production Issues**:
-- Multiple API routes returning 404/500 errors
-- CSP violations blocking Cloudflare analytics
-- Database connection issues
+**Repository Audit Highlights**:
+- Table-driven Workers API with a broad handler surface and 100+ route registrations
+- Frontend already includes grouped sidebar navigation, mobile bottom nav, onboarding, PDF export, composite charts, practitioner tools, share-card export, and plain-language explanations
+- Documentation drift was the biggest repo problem: broken links, obsolete file names, stale test counts, and backlog items left open after implementation
 
-**UX Improvements Underway** (Sprint 18):
-- Color system consolidation (3 competing systems → 1 canonical)
-- WCAG accessibility fixes (contrast, keyboard nav, screen readers)
-- Contextual explanations for all HD/astrology terms
-- Navigation restructure (13 tabs → 4 primary + More dropdown)
-- Social media integration (Twitter, Instagram, Facebook, TikTok, Threads, Bluesky)
-- Progressive onboarding and guided user journey
-
-**See**: [UX_DEEP_REVIEW.md](UX_DEEP_REVIEW.md) for complete UX analysis and [BACKLOG.md](BACKLOG.md) Sprint 18 for implementation plan.
+**See**: [audits/REPOSITORY_ASSESSMENT_2026-03-09.md](audits/REPOSITORY_ASSESSMENT_2026-03-09.md) for the current assessment and [BACKLOG.md](BACKLOG.md) for the updated backlog status.
 
 ---
 
-## ✨ Try It Now (When Production is Restored)
+## ✨ Try It Now
 
 **Live Demo:** [https://selfprime.net](https://selfprime.net)  
 **API Status:** [Health Check](https://prime-self-api.adrper79.workers.dev/api/health)
 
-*(Currently experiencing technical difficulties — code complete, deployment in progress)*
+*(Deployment health should be verified separately before marketing or release use.)*
 
 ---
 
@@ -58,7 +50,7 @@ Get a comprehensive 8-layer synthesis combining:
 ### 🌙 Daily Transit Insights
 See how today's planetary positions interact with your birth chart. Know when to initiate, when to wait, and when key opportunities or challenges are emerging.
 
-### 📱 Social Sharing (Coming Soon)
+### 📱 Social Sharing
 Share your energy blueprint beautifully across all major platforms:
 - **Instagram-ready images** — 1080x1080 bodygraph cards with your key insights
 - **Twitter/X** — Pre-filled tweets with chart highlights and referral link
@@ -136,7 +128,7 @@ npm install
 
 ```bash
 npx vitest run
-# Expected: 190 tests passing (as of 2026-03-03)
+# Expected: 263 tests passing (4 test files)
 ```
 
 ### Serve the Frontend Locally
@@ -219,7 +211,7 @@ HumanDesign/
 │
 ├── workers/
 │   └── src/
-│       ├── index.js          # Worker entry point & router (32 endpoints)
+│       ├── index.js          # Worker entry point & table-driven router
 │       ├── handlers/         # One file per endpoint group
 │       │   ├── calculate.js  # POST /api/chart/calculate
 │       │   ├── profile.js    # POST /api/profile/generate, GET /api/profile/*
@@ -244,10 +236,12 @@ HumanDesign/
 │           └── parseToUTC.js
 │
 ├── frontend/
-│   └── index.html       # Single-file SPA (Chart, Profile, Transits, History tabs)
+│   ├── index.html       # Main SPA shell with sidebar + mobile navigation
+│   └── js/              # Frontend modules (bodygraph, explanations, offline, share card, i18n)
 │
 ├── tests/
-│   ├── engine.test.js   # Engine unit tests (86 tests)
+│   ├── canonical.test.js # Canonical framework tests (56 tests)
+│   ├── engine.test.js   # Engine unit tests (103 tests)
 │   ├── handlers.test.js # Handler integration tests (41 tests)
 │   └── numerology.test.js # Numerology tests (63 tests)
 │
@@ -285,7 +279,7 @@ All chart calculations verified against two reference charts:
 | LLM | Anthropic Claude → xAI Grok → Groq (automatic failover) |
 | Auth | PBKDF2-SHA256 passwords, HS256 JWT |
 | SMS | Telnyx |
-| Tests | Vitest (190 tests across 3 test files) |
+| Tests | Vitest (263 tests across 4 test files) |
 | Frontend | Vanilla HTML/CSS/JS (no build step) |
 | Geocoding | OpenStreetMap Nominatim + BigDataCloud (free, no API keys) |
 
@@ -294,7 +288,9 @@ All chart calculations verified against two reference charts:
 ## Documentation
 
 - [Architecture overview](ARCHITECTURE.md) — system design and data flow
-- [API reference](docs/API_SPEC.md) — endpoint documentation (see spec accuracy notice at top)
+- [Documentation index](DOCUMENTATION_INDEX.md) — current documentation map
+- [API reference overview](docs/API.md) — quick API reference
+- [Detailed API spec](docs/API_SPEC.md) — historical detailed spec; verify against router for newer routes
 - [Operations runbook](docs/OPERATION.md) — deployment, secrets, monitoring, rollback
 - [Lessons learned](docs/LESSONS_LEARNED.md) — debugging cases, audit findings, preventive measures
 - [Backlog](BACKLOG.md) — all known issues by severity, sprint plan

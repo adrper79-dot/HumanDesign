@@ -133,7 +133,7 @@ npm test
 
 Runs all tests in `tests/` using Vitest.
 
-**Expected**: 207/207 tests passing ✅
+**Expected**: 263/263 tests passing ✅
 
 ---
 

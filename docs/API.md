@@ -33,7 +33,7 @@ GET /api/health
 **Response:**
 
 ```json
-{ "status": "ok", "version": "0.2.0", "endpoints": 13 }
+{ "status": "ok", "version": "0.2.0" }
 ```
 
 ---

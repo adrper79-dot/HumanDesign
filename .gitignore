@@ -1,4 +1,5 @@
 Secrets.txt
+secrets.txt
 PLan-convo
 *.env
 .env.*
@@ -16,3 +17,6 @@ videos/
 HD_LOGOVID2.mp4
 HumanDesign_LogoMovie.mp4
 secrets
+secrets/
+secrets.*
+*.secrets

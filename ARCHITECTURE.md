@@ -49,7 +49,7 @@ The technology exists to serve the philosophy. Every architectural decision flow
 │                       DATA LAYER                                     │
 │                                                                      │
 │  ┌─────────────┐  ┌─────────────────┐  ┌────────────────────────┐  │
-│  │  Neon (D1)   │  │  KV (Cloudflare) │  │  R2 (Object Storage)  │  │
+│  │  Neon (PostgreSQL) │ │  KV (Cloudflare) │ │  R2 (Object Storage) │ │
 │  │  User charts │  │  Session cache    │  │  Generated PDFs       │  │
 │  │  Practitioner│  │  Transit cache    │  │  Knowledgebase corpus │  │
 │  │  Clusters    │  │  Rate limiting    │  │  Savannah narrative   │  │
@@ -77,9 +77,9 @@ The technology exists to serve the philosophy. Every architectural decision flow
 
 ---
 
-## 4. Calculation Engine — The 8 Layers
+## 4. Calculation Engine — The 8 Core Layers
 
-Each layer is an independent, testable JS module. Layers build on each other sequentially. Every layer is verified against the **AP Test Vector** before moving forward.
+Each core layer is an independent, testable JS module. Layers build on each other sequentially. Supporting interpretation modules such as numerology, Gene Keys, Vedic, and Ogham live alongside the core engine rather than replacing the 8-layer flow. Every layer is verified against the **AP Test Vector** before moving forward.
 
 ### AP Test Vector (Verification Anchor)
 ```
@@ -424,7 +424,7 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] Layer 6: Astrology (signs, houses, aspects)
 - [x] Layer 7: Transit engine
 - [x] Numerology engine (Life Path, Personal Year, Tarot Birth Card)
-- [x] 207/207 tests passing (vitest) — engine, handler, numerology suites (Sprint 17 verified)
+- [x] 263/263 tests passing (vitest) — canonical, engine, handler, and numerology suites
 
 ### Phase 3: Data Layer (Complete ✅)
 - [x] Neon schema migration (48 tables live + indexes, verified 2026-06-25)
@@ -554,7 +554,7 @@ Full codebase and live-DB audit using 3 parallel subagents + Neon MCP + targeted
 - Added GATE_WHEEL sync-warning comment in `src/engine/gates.js` about duplication with `src/data/gate_wheel.json`
 - Fixed 2 pre-existing test failures (Mars gate boundary precision 88.16° → Gate 12 not 15; transit body count 14 with Chiron not 13)
 - Cleaned up 10 obsolete root files (`fix-cloudflare.js`, `quick-test.js`, `test-results.txt`, `RUN_MCP_FIX.js`, `CLOUFLARE_MCP_FIX.md`, `CLOUDFLARE_STATUS_REVIEW.md`, `REVIEW_SUMMARY_2026-03-08.md`, `nul`, `Secrets.txt`, `PLan-convo/`)
-- Reorganized 4 files: `CODEBASE_AUDIT_2026-03-08.md` → `docs/AUDIT_2026-03-08.md`, `DEEP_DIVE_AUDIT_REPORT.md` → `docs/AUDIT_2025-01.md`, `FRONTEND_AUDIT.md` → `docs/FRONTEND_AUDIT.md`, `test-api.js` → `tests/api-smoke.js`
+- Reorganized 4 files: `CODEBASE_AUDIT_2026-03-08.md` → `audits/AUDIT_2026-03-08.md`, `DEEP_DIVE_AUDIT_REPORT.md` → `audits/archive/AUDIT_2025-01.md`, `FRONTEND_AUDIT.md` → `audits/FRONTEND_AUDIT.md`, `test-api.js` → `tests/api-smoke.js`
 - Updated `.gitignore` with `test-results.txt` and `nul` entries
 
 ### Database Reconciliation
@@ -564,8 +564,8 @@ Full codebase and live-DB audit using 3 parallel subagents + Neon MCP + targeted
 - `practitioners.created_at` column confirmed present (added by migration)
 
 ### Test Suite
-- **207/207 passing** (Vitest 3.2.4)
-- All Sprint 17 changes verified — no regressions
+- **263/263 passing** (Vitest 3.2.4)
+- Current local baseline includes canonical framework coverage in addition to engine, handler, and numerology suites
 
 ### Known Remaining Low-Priority Items
 | ID | Description |

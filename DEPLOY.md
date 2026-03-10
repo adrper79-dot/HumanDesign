@@ -10,7 +10,7 @@
 
 Before deploying, verify:
 
-- [ ] All tests passing: `npm test` (expect 190/190 ✅)
+- [ ] All tests passing: `npm test` (expect 263/263 ✅)
 - [ ] No TypeScript/lint errors: Review with Copilot or run linter
 - [ ] Database migration planned (if schema changes)
 - [ ] Environment secrets configured (see "Required Secrets" below)
@@ -342,6 +342,6 @@ cd workers && npx wrangler deploy --force
 ---
 
 **See Also**:
-- [CODEBASE_AUDIT_2026-03-08.md](CODEBASE_AUDIT_2026-03-08.md) — Production issues analysis
+- [audits/AUDIT_2026-03-08.md](audits/AUDIT_2026-03-08.md) — Production issues analysis
 - [QUICK_START_STRIPE.md](QUICK_START_STRIPE.md) — Stripe webhook setup
 - [docs/OPERATION.md](docs/OPERATION.md) — Operational procedures
