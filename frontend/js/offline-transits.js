@@ -188,20 +188,20 @@
     let userChart = null;
     try {
       const meResp = await window.apiFetch('/api/auth/me');
-      if (meResp && meResp.ok) {
-        const meData = await meResp.json();
-        if (meData.user && meData.user.default_birth_date) {
+      if (meResp && meResp.ok && meResp.user) {
+        if (meResp.user.default_birth_date) {
           userChart = {
-            birthDate: meData.user.default_birth_date,
-            birthTime: meData.user.default_birth_time || '12:00',
-            birthTimezone: meData.user.default_birth_timezone || 'UTC',
-            lat: meData.user.default_birth_lat || 0,
-            lng: meData.user.default_birth_lng || 0,
+            birthDate: meResp.user.default_birth_date,
+            birthTime: meResp.user.default_birth_time || '12:00',
+            birthTimezone: meResp.user.default_birth_timezone || 'UTC',
+            lat: meResp.user.default_birth_lat || 0,
+            lng: meResp.user.default_birth_lng || 0,
           };
         }
       }
-    } catch {
-      // User not authenticated — will use generic transits only
+    } catch (error) {
+      // User not authenticated or API error — will use generic transits only
+      console.log('Auth check failed, using generic transits:', error);
     }
 
     const today = new Date();
