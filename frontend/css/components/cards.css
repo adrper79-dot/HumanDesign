@@ -185,7 +185,8 @@
 
 .data-label {
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--color-neutral-200);
+  font-weight: 500;
 }
 
 .data-value {
