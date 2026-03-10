@@ -373,15 +373,33 @@ select option { background: var(--bg3); }
 
 /* Mobile styles for data display */
 @media (max-width: 768px) {
-  .data-value {
-    max-width: 60%; /* Slightly more space on mobile */
-    font-size: 0.82rem; /* Slightly smaller for better fit */
+  /* Stack label/value pairs vertically so long values aren't truncated */
+  .data-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 0;
   }
+  .data-value {
+    max-width: 100%;
+    text-align: left;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 0.85rem;
+  }
+  /* Allow channel names and gate tags to wrap rather than clip */
   .channel-name {
-    font-size: 0.85rem; /* Ensure readable size on mobile */
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 0.85rem;
   }
   .gate-name-tag {
-    font-size: 0.68rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 0.72rem;
   }
 }
 
