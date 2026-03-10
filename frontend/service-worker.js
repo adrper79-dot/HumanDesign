@@ -7,9 +7,10 @@
  * 2026-03-09: v11 - UI-008 transit row mobile grid stacking fix
  * 2026-03-09: v12 - Phase 6 dead CSS cleanup (removed IP-risky type classes)
  * 2026-03-09: v13 - Sprint 19: Prime Self data integration, Priming/Forge UI, mobile CTA, error consolidation
+ * 2026-03-09: v14 - Sidebar navigation: replaced horizontal tab bar with persistent left sidebar
  */
 
-const CACHE_VERSION = 'v13';
+const CACHE_VERSION = 'v14';
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
@@ -31,6 +32,7 @@ const STATIC_ASSETS = [
   '/css/components/cards.css',
   '/css/components/forms.css',
   '/css/components/layout.css',
+  '/css/components/sidebar.css',
   '/css/components/tabs.css',
   '/css/components/modals.css',
   '/css/components/alerts.css',

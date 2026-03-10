@@ -55,6 +55,7 @@
 <link rel="stylesheet" href="css/components/modals.css">
 <link rel="stylesheet" href="css/components/alerts.css">
 <link rel="stylesheet" href="css/components/layout.css">
+<link rel="stylesheet" href="css/components/sidebar.css">
 <!-- Premium Overrides (no more @imports — loaded last for cascade) -->
 <link rel="stylesheet" href="css/prime-self-premium.css">
 <!-- Mobile Optimizations (deferred) -->
@@ -338,6 +339,7 @@
 <header>
   <!-- Premium background gradient -->
   <div class="geometric-bg"></div>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open navigation menu" aria-expanded="false">☰</button>
   <div class="logo-lockup">
     <div class="logo-lockup-icon">
       <img data-logo-poster src="/icons/icon-72.png" alt="Prime Self"
@@ -438,28 +440,125 @@
   </div>
 </div>
 
-<!-- Navigation Tabs -->
-<div class="tabs" role="tablist" aria-label="Main navigation tabs">
-  <!-- PRIMARY: 5 clear destinations -->
-  <button class="tab-btn primary-tab" id="btn-home" role="tab" aria-selected="false" onclick="switchTab('overview', this)"><span class="icon-chart"></span> Home</button>
-  <button class="tab-btn primary-tab active" id="btn-blueprint" role="tab" aria-selected="true" onclick="switchTab('chart', this)"><span class="icon-chart"></span> My Chart</button>
-  <button class="tab-btn primary-tab" id="btn-today" role="tab" aria-selected="false" onclick="switchTab('transits', this)"><span class="icon-transit"></span> Today</button>
-  <button class="tab-btn primary-tab" id="btn-connect" role="tab" aria-selected="false" onclick="switchTab('composite', this)"><span class="icon-partnership"></span> Connect</button>
-  <button class="tab-btn primary-tab" id="btn-grow" role="tab" aria-selected="false" onclick="switchTab('enhance', this)"><span class="icon-star"></span> Grow</button>
-  <button class="tab-btn primary-tab" id="btn-practitioner" role="tab" aria-selected="false" onclick="switchTab('practitioner', this)">★ Practitioner</button>
-  <div class="tab-divider" aria-hidden="true"></div>
-  <!-- SETTINGS: utility items -->
-  <div class="more-menu-btn" style="display:flex;align-items:center">
-    <button class="tab-btn" id="btn-more" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" style="display:flex;align-items:center;gap:var(--space-1)" title="Account, settings and tools">⚙ <span id="more-arrow" style="font-size:var(--font-size-xs);transition:transform 0.15s">▾</span></button>
-    <div class="more-dropdown" id="more-dropdown" role="menu">
-      <button class="tab-btn" id="btn-history" role="menuitem" tabindex="0" aria-controls="tab-history" onclick="switchTab('history', this); closeMoreMenu()"><span class="icon-archive"></span> Saved Charts</button>
-      <button class="tab-btn" id="btn-sms" role="menuitem" tabindex="0" aria-controls="tab-sms" onclick="switchTab('sms', this); closeMoreMenu()"><span class="icon-sms"></span> SMS Alerts</button>
-      <button class="tab-btn" id="btn-rectify" role="menuitem" tabindex="0" aria-controls="tab-rectify" onclick="switchTab('rectify', this); closeMoreMenu()"><span class="icon-time"></span> Birth Time Rectify</button>
-      <button class="tab-btn" id="btn-onboarding" role="menuitem" tabindex="0" aria-controls="tab-onboarding" onclick="switchTab('onboarding', this); closeMoreMenu()"><span class="icon-compass"></span> Restart Onboarding</button>
+<!-- ═══ Sidebar Navigation ═══ -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+<div class="app-layout" id="appLayout">
+<nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebarCollapse()" aria-label="Collapse sidebar" title="Collapse sidebar">◂</button>
+
+  <!-- Mobile drawer header -->
+  <div class="sidebar-drawer-header">
+    <span class="drawer-logo">Prime Self</span>
+    <button class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close navigation">✕</button>
+  </div>
+
+  <div class="sidebar-nav">
+    <!-- DISCOVER -->
+    <div class="nav-group">
+      <div class="nav-group-title">Discover</div>
+      <button class="nav-item" data-tab="overview" onclick="sidebarNav('overview')">
+        <span class="nav-icon">✦</span><span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item nav-parent active" data-tab="chart" onclick="sidebarNav('chart')">
+        <span class="nav-icon">◉</span><span class="nav-label">My Chart</span><span class="nav-expand">▸</span>
+      </button>
+      <div class="nav-sub-items">
+        <button class="nav-item active" data-tab="chart" onclick="sidebarNav('chart')">
+          <span class="nav-label">Bodygraph</span>
+        </button>
+        <button class="nav-item" data-tab="profile" onclick="sidebarNav('profile')">
+          <span class="nav-label">AI Profile</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- DAILY -->
+    <div class="nav-group">
+      <div class="nav-group-title">Daily</div>
+      <button class="nav-item nav-parent" data-tab="transits" onclick="sidebarNav('transits')">
+        <span class="nav-icon">☽</span><span class="nav-label">Today's Energy</span><span class="nav-expand">▸</span>
+      </button>
+      <div class="nav-sub-items">
+        <button class="nav-item" data-tab="transits" onclick="sidebarNav('transits')">
+          <span class="nav-label">Transits</span>
+        </button>
+        <button class="nav-item" data-tab="checkin" onclick="sidebarNav('checkin')">
+          <span class="nav-label">Check-In</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RELATIONSHIPS -->
+    <div class="nav-group">
+      <div class="nav-group-title">Relationships</div>
+      <button class="nav-item nav-parent" data-tab="composite" onclick="sidebarNav('composite')">
+        <span class="nav-icon">⊕</span><span class="nav-label">Connect</span><span class="nav-expand">▸</span>
+      </button>
+      <div class="nav-sub-items">
+        <button class="nav-item" data-tab="composite" onclick="sidebarNav('composite')">
+          <span class="nav-label">Composite</span>
+        </button>
+        <button class="nav-item" data-tab="clusters" onclick="sidebarNav('clusters')">
+          <span class="nav-label">Clusters</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- GROWTH -->
+    <div class="nav-group">
+      <div class="nav-group-title">Growth</div>
+      <button class="nav-item nav-parent" data-tab="enhance" onclick="sidebarNav('enhance')">
+        <span class="nav-icon">★</span><span class="nav-label">Grow</span><span class="nav-expand">▸</span>
+      </button>
+      <div class="nav-sub-items">
+        <button class="nav-item" data-tab="enhance" onclick="sidebarNav('enhance')">
+          <span class="nav-label">Enhance</span>
+        </button>
+        <button class="nav-item" data-tab="diary" onclick="sidebarNav('diary')">
+          <span class="nav-label">Diary</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <!-- TOOLS -->
+    <div class="nav-group">
+      <div class="nav-group-title">Tools</div>
+      <button class="nav-item" data-tab="practitioner" onclick="sidebarNav('practitioner')">
+        <span class="nav-icon">⚷</span><span class="nav-label">Practitioner</span><span class="nav-badge pro">PRO</span>
+      </button>
+      <button class="nav-item" data-tab="history" onclick="sidebarNav('history')">
+        <span class="nav-icon">📂</span><span class="nav-label">Saved Charts</span>
+      </button>
+      <button class="nav-item" data-tab="rectify" onclick="sidebarNav('rectify')">
+        <span class="nav-icon">⏱</span><span class="nav-label">Birth Time Rectify</span>
+      </button>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <!-- SETTINGS -->
+    <div class="nav-group">
+      <div class="nav-group-title">Settings</div>
+      <button class="nav-item" data-tab="sms" onclick="sidebarNav('sms')">
+        <span class="nav-icon">✉</span><span class="nav-label">SMS Alerts</span>
+      </button>
+      <button class="nav-item" data-tab="onboarding" onclick="sidebarNav('onboarding')">
+        <span class="nav-icon">🧭</span><span class="nav-label">Restart Onboarding</span>
+      </button>
     </div>
   </div>
-</div>
 
+  <div class="sidebar-footer">
+    <div class="nav-item" style="cursor:default;opacity:0.6">
+      <span class="nav-icon">⊙</span>
+      <span class="nav-label sidebar-footer-text" id="sidebarTierText">Free Tier</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-main">
 <!-- Main Content -->
 <div class="container">
 
@@ -1280,6 +1379,8 @@
   </div>
 
 </div><!-- /container -->
+</div><!-- /app-main -->
+</div><!-- /app-layout -->
 
 <script>
 const API = 'https://prime-self-api.adrper79.workers.dev';
@@ -1322,6 +1423,10 @@ function updateAuthUI() {
       badgeEl.textContent = cfg.label;
       badgeEl.className   = 'tier-badge ' + cfg.badge;
       badgeEl.style.display = '';
+
+      // Update sidebar tier footer
+      const sidebarTier = document.getElementById('sidebarTierText');
+      if (sidebarTier) sidebarTier.textContent = cfg.label + ' Tier';
 
       // Upgrade button: visible for tiers that can still upgrade
       upgradeEl.style.display  = cfg.canUpgrade ? '' : 'none';
@@ -1809,17 +1914,29 @@ const TAB_GROUPS = {
   history: null, sms: null, rectify: null, onboarding: null
 };
 
+// Sidebar parent mapping: which parent nav items expand for sub-tabs
+const SIDEBAR_PARENTS = {
+  chart: 'chart', profile: 'chart',
+  transits: 'transits', checkin: 'transits',
+  composite: 'composite', clusters: 'composite',
+  enhance: 'enhance', diary: 'enhance'
+};
+
 function switchTab(id, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  // legacy support: remove active from old .tabs .tab-btn if any remain
   document.querySelectorAll('.tabs .tab-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
   const panel = document.getElementById('tab-' + id);
   if (panel) panel.classList.add('active');
 
-  // Activate the correct primary tab button (group-aware)
+  // Activate the correct primary tab button (group-aware) — legacy support
   const groupBtn = TAB_GROUPS[id] ? document.getElementById(TAB_GROUPS[id]) : btn;
   if (groupBtn) { groupBtn.classList.add('active'); groupBtn.setAttribute('aria-selected', 'true'); }
   else if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
   
+  // Update sidebar active states
+  updateSidebarActive(id);
+
   // Update step guide progress
   updateStepGuide(id);
 
@@ -1835,13 +1952,89 @@ function switchTab(id, btn) {
   if (typeof updateMobileNavForTab === 'function') updateMobileNavForTab(id);
 }
 
+// ── Sidebar Navigation ────────────────────────────────────────
+
+function sidebarNav(tabId) {
+  switchTab(tabId);
+  // Close mobile drawer if open
+  if (window.innerWidth <= 768) closeSidebar();
+}
+
+function updateSidebarActive(tabId) {
+  // Remove all active states from nav items
+  document.querySelectorAll('.sidebar .nav-item').forEach(el => {
+    el.classList.remove('active');
+  });
+  // Remove expanded from all parents
+  document.querySelectorAll('.sidebar .nav-parent').forEach(el => {
+    el.classList.remove('expanded');
+  });
+
+  // Activate the correct nav item(s)
+  document.querySelectorAll('.sidebar .nav-item[data-tab="' + tabId + '"]').forEach(el => {
+    el.classList.add('active');
+  });
+
+  // Expand the parent group if this is a sub-tab
+  const parentTab = SIDEBAR_PARENTS[tabId];
+  if (parentTab) {
+    document.querySelectorAll('.sidebar .nav-parent[data-tab="' + parentTab + '"]').forEach(el => {
+      el.classList.add('active');
+      el.classList.add('expanded');
+    });
+  }
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const hamburger = document.getElementById('hamburgerBtn');
+  const isOpen = sidebar.classList.toggle('open');
+  backdrop.classList.toggle('visible', isOpen);
+  hamburger.setAttribute('aria-expanded', String(isOpen));
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const hamburger = document.getElementById('hamburgerBtn');
+  sidebar.classList.remove('open');
+  backdrop.classList.remove('visible');
+  if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}
+
+function toggleSidebarCollapse() {
+  const layout = document.getElementById('appLayout');
+  layout.classList.toggle('sidebar-collapsed');
+  const isCollapsed = layout.classList.contains('sidebar-collapsed');
+  localStorage.setItem('ps_sidebar_collapsed', isCollapsed ? '1' : '0');
+}
+
+// Restore sidebar collapsed state from localStorage
+(function() {
+  if (localStorage.getItem('ps_sidebar_collapsed') === '1') {
+    const layout = document.getElementById('appLayout');
+    if (layout) layout.classList.add('sidebar-collapsed');
+  }
+})();
+
+// Close sidebar on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeSidebar();
+});
+
 function toggleMoreMenu(e) {
+  // Legacy — kept for backward compat but sidebar replaces this
   e.stopPropagation();
   const dd = document.getElementById('more-dropdown');
+  if (!dd) return;
   const arrow = document.getElementById('more-arrow');
   const isOpen = dd.classList.toggle('open');
-  arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
-  document.getElementById('btn-more').setAttribute('aria-expanded', isOpen);
+  if (arrow) arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
+  const btn = document.getElementById('btn-more');
+  if (btn) btn.setAttribute('aria-expanded', isOpen);
 }
 
 function closeMoreMenu() {
@@ -4687,57 +4880,17 @@ if (token) fetchUserProfile();
     <span class="mobile-nav-icon">⊕</span>
     <span class="mobile-nav-label">Connect</span>
   </a>
-  <a href="#" class="mobile-nav-item" data-tab="enhance" data-group="grow" onclick="switchTab('enhance'); return false;" aria-label="Grow & Deepen">
-    <span class="mobile-nav-icon">★</span>
-    <span class="mobile-nav-label" data-i18n="nav.enhance">Grow</span>
-  </a>
-  <a href="#" class="mobile-nav-item" id="mobileMoreBtn" onclick="toggleMobileMore(); return false;" aria-label="More tools" aria-expanded="false">
-    <span class="mobile-nav-icon">⚙</span>
-    <span class="mobile-nav-label">More</span>
+  <a href="#" class="mobile-nav-item" id="mobileMoreBtn" onclick="toggleSidebar(); return false;" aria-label="All sections" aria-expanded="false">
+    <span class="mobile-nav-icon">☰</span>
+    <span class="mobile-nav-label">Menu</span>
   </a>
 </nav>
 
-<!-- Mobile "More" overflow drawer -->
-<div id="mobileMoreDrawer" class="mobile-more-drawer" role="dialog" aria-label="More navigation" style="display:none">
-  <div class="mobile-more-backdrop" onclick="toggleMobileMore()"></div>
-  <div class="mobile-more-panel">
-    <div class="mobile-more-header">
-      <span>More</span>
-      <button onclick="toggleMobileMore()" aria-label="Close">&times;</button>
-    </div>
-    <div class="mobile-more-grid">
-      <a href="#" class="mobile-more-item" data-tab="practitioner" onclick="switchTab('practitioner'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">★</span><span data-i18n="nav.practitioner">Practitioner</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="history" onclick="switchTab('history'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">📂</span><span data-i18n="nav.saved">Saved Charts</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="sms" onclick="switchTab('sms'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">✉</span><span data-i18n="nav.sms">SMS Alerts</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="clusters" onclick="switchTab('clusters'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">⬢</span><span data-i18n="nav.clusters">Clusters</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="rectify" onclick="switchTab('rectify'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">⏱</span><span data-i18n="nav.rectify">Rectify</span>
-      </a>
-      <a href="#" class="mobile-more-item" data-tab="onboarding" onclick="switchTab('onboarding'); toggleMobileMore(); return false;">
-        <span class="mobile-more-icon">🧭</span><span data-i18n="nav.onboarding">Onboarding</span>
-      </a>
-    </div>
-  </div>
-</div>
-
 <!-- Mobile Navigation Script -->
 <script>
-// Toggle mobile "More" overflow drawer
+// toggleMobileMore redirects to sidebar drawer now
 function toggleMobileMore() {
-  const drawer = document.getElementById('mobileMoreDrawer');
-  const btn = document.getElementById('mobileMoreBtn');
-  const isOpen = drawer.style.display !== 'none';
-  drawer.style.display = isOpen ? 'none' : 'block';
-  btn.setAttribute('aria-expanded', String(!isOpen));
-  document.body.style.overflow = isOpen ? '' : 'hidden';
+  toggleSidebar();
 }
 
 // Update mobile nav active state
@@ -4775,7 +4928,6 @@ function updateMobileNavForTab(tabName) {
   // Try to find by group first, then by tab
   let navItem = group ? document.querySelector(`.mobile-nav-item[data-group="${group}"]`) : null;
   if (!navItem) navItem = document.querySelector(`.mobile-nav-item[data-tab="${tabName}"]`);
-  if (!navItem) navItem = document.getElementById('mobileMoreBtn');
   if (navItem) {
     navItem.classList.add('active');
     navItem.setAttribute('aria-current', 'page');
