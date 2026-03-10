@@ -483,8 +483,22 @@ export default {
             hasJwt: !!env?.JWT_SECRET,
             hasStripe: !!env?.STRIPE_SECRET_KEY,
             hasTelnyx: !!env?.TELNYX_API_KEY,
+            hasResend: !!env?.RESEND_API_KEY,
           };
-          response = Response.json(Object.assign(base, { secrets }));
+          // DB connectivity check
+          let db = { ok: false, latencyMs: null, error: null };
+          if (env?.NEON_CONNECTION_STRING) {
+            const { createQueryFn } = await import('./db/queries.js');
+            const query = createQueryFn(env.NEON_CONNECTION_STRING);
+            const t0 = Date.now();
+            try {
+              await query('SELECT 1 AS ping');
+              db = { ok: true, latencyMs: Date.now() - t0, error: null };
+            } catch (dbErr) {
+              db = { ok: false, latencyMs: Date.now() - t0, error: dbErr.message };
+            }
+          }
+          response = Response.json(Object.assign(base, { secrets, db }));
         } else {
           response = Response.json(base);
         }

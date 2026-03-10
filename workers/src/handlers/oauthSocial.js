@@ -7,7 +7,8 @@
  *      (Apple uses POST for its callback — both are handled)
  *
  * After success, browser is redirected to:
- *   ${FRONTEND_URL}/?oauth=success&token=ACCESS_JWT&refresh=REFRESH_JWT
+ *   ${FRONTEND_URL}/?oauth=success&token=ACCESS_JWT
+ * The refresh token is set as an HttpOnly cookie (ps_refresh).
  *
  * Required Worker secrets per provider:
  *
@@ -35,8 +36,12 @@ import { signJWT, sha256 } from '../lib/jwt.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { sendWelcomeEmail1 } from '../lib/email.js';
 
-const ACCESS_TOKEN_TTL  = 60 * 60 * 24;       // 24 hours
+const ACCESS_TOKEN_TTL  = 60 * 15;             // 15 minutes (matches auth.js)
 const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30;  // 30 days
+
+function buildRefreshCookie(refreshToken) {
+  return `ps_refresh=${refreshToken}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${REFRESH_TOKEN_TTL}`;
+}
 const STATE_TTL_MS      = 10 * 60 * 1000;      // 10 minutes
 
 // ─── Router ──────────────────────────────────────────────────
@@ -278,13 +283,18 @@ async function handleCallback(provider, request, env) {
       ).catch(() => {});
     }
 
-    // Redirect to frontend with tokens in URL (frontend picks them up and stores in localStorage)
+    // Redirect to frontend — access token in URL param (short TTL, browser cleans it immediately)
+    // Refresh token is set as HttpOnly cookie (never exposed to JS)
     const dest = new URL(`${frontendUrl}/`);
     dest.searchParams.set('oauth', 'success');
     dest.searchParams.set('token', accessToken);
-    dest.searchParams.set('refresh', refreshToken);
+    // Note: refresh param removed — now delivered via HttpOnly cookie below
     if (isNewUser) dest.searchParams.set('new_user', '1');
-    return Response.redirect(dest.toString(), 302);
+    const redirectHeaders = new Headers({
+      Location: dest.toString()
+    });
+    redirectHeaders.append('Set-Cookie', buildRefreshCookie(refreshToken));
+    return new Response(null, { status: 302, headers: redirectHeaders });
 
   } catch (err) {
     console.error(`[oauth:${provider}] callback error:`, err.message);

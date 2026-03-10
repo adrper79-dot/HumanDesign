@@ -21,8 +21,35 @@ import { sendWelcomeEmail1, sendPasswordResetEmail } from '../lib/email.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 
 // JWT expiry durations
-const ACCESS_TOKEN_TTL = 60 * 60 * 24;      // 24 hours
+// Access token is short-lived so that a stolen in-memory token has a small
+// exposure window.  The refresh token (stored in HttpOnly cookie) is long-lived.
+const ACCESS_TOKEN_TTL  = 60 * 15;           // 15 minutes
 const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30; // 30 days
+
+/**
+ * Build Set-Cookie header values for the token pair.
+ * Both cookies are HttpOnly and Secure.  SameSite=None is required because
+ * the API origin differs from the frontend origin.
+ * CSRF protection is maintained via the short-lived access token sent in
+ * the Authorization header — cross-origin forms cannot forge that header.
+ */
+function buildRefreshCookie(refreshToken) {
+  return `ps_refresh=${refreshToken}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${REFRESH_TOKEN_TTL}`;
+}
+
+function clearRefreshCookie() {
+  return 'ps_refresh=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+}
+
+/**
+ * Read the ps_refresh cookie value from the Cookie request header.
+ * Returns null if absent.
+ */
+function getRefreshCookie(request) {
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const match = cookieHeader.match(/(?:^|;\s*)ps_refresh=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 // ─── Route Dispatcher ────────────────────────────────────────
 
@@ -209,13 +236,15 @@ async function handleRegister(request, env) {
     });
   }
 
-  return Response.json({
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+
+  return new Response(JSON.stringify({
     ok: true,
     user: { id: userId, email: email.toLowerCase() },
     accessToken,
-    refreshToken,
     expiresIn: ACCESS_TOKEN_TTL
-  }, { status: 201 });
+  }), { status: 201, headers });
 }
 
 // ─── Login ───────────────────────────────────────────────────
@@ -318,29 +347,33 @@ async function handleLogin(request, env) {
     console.error('[auth] Failed to update last_login_at:', err.message);
   });
 
-  return Response.json({
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+
+  return new Response(JSON.stringify({
     ok: true,
     user: { id: user.id, email: user.email },
     accessToken,
-    refreshToken,
     expiresIn: ACCESS_TOKEN_TTL
-  });
+  }), { headers });
 }
 
 // ─── Refresh Token (with rotation & theft detection) ─────────
 
 async function handleRefresh(request, env) {
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json(
-      { error: 'Invalid JSON body' },
-      { status: 400 }
-    );
+  // Prefer the HttpOnly cookie; fall back to request body for backward compat
+  let refreshToken = getRefreshCookie(request);
+
+  if (!refreshToken) {
+    // Body fallback (clients that haven't migrated yet)
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      // Empty / non-JSON body is fine — just means no body token either
+    }
+    refreshToken = body?.refreshToken;
   }
-  
-  const { refreshToken } = body;
 
   if (!refreshToken) {
     return Response.json(
@@ -418,12 +451,14 @@ async function handleRefresh(request, env) {
   const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
   await query(QUERIES.insertRefreshToken, [user.id, newHash, row.family_id, expiresAtEpoch]);
 
-  return Response.json({
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', buildRefreshCookie(newRefreshToken));
+
+  return new Response(JSON.stringify({
     ok: true,
     accessToken,
-    refreshToken: newRefreshToken,
     expiresIn: ACCESS_TOKEN_TTL
-  });
+  }), { headers });
 }
 
 // ─── Logout (Revoke All Tokens) ─────────────────────────────
@@ -441,7 +476,10 @@ async function handleLogout(request, env) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   await query(QUERIES.revokeAllUserRefreshTokens, [userId]);
 
-  return Response.json({ ok: true, message: 'All sessions revoked' });
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', clearRefreshCookie());
+
+  return new Response(JSON.stringify({ ok: true, message: 'All sessions revoked' }), { headers });
 }
 
 // ─── Password Hashing (PBKDF2 via Web Crypto) ───────────────

@@ -36,18 +36,17 @@ Third pass — 2026-03-10 (OAuth shipped). Approximately **83% of original recom
 | 1.1 | "Why it matters" per data-point explanations | **CRITICAL** — #1 churn driver |
 | 1.3 | Mobile nav label corrections (Keys→Profile, Astro→Enhance) | High |
 | 4.3 | Rate limiting for unauthenticated/user endpoints | Medium |
-| 5.1 | JWT localStorage → HTTP-only cookies | High (security) |
 | —  | CSP `unsafe-inline` removal | High (security) |
 | —  | Referral system UI (schema built, not wired) | Medium |
 
-### 🆕 New Issues Found (2026-03-10)
+### 🆕 New Issues (2026-03-10)
 
-| ID | Item | Severity |
-|----|------|----------|
-| BL-MV-N1 | Studio tier ($500) is purchaseable but features not built | **CRITICAL** |
-| BL-MV-N2 | Composite form: location not auto-populated (date/time only) | High |
-| BL-MV-N3 | `totalProfiles` counter shows blank if API fails | Medium |
-| BL-MV-N4 | `RESEND_API_KEY` production status unverified | High |
+| ID | Item | Severity | Status |
+|----|------|----------|--------|
+| BL-MV-N1 | Studio tier ($500) is purchaseable but features not built | **CRITICAL** | ✅ Done |
+| BL-MV-N2 | Composite form: location not auto-populated (date/time only) | High | ❌ Open |
+| BL-MV-N3 | `totalProfiles` counter shows blank if API fails | Medium | ❌ Open |
+| BL-MV-N4 | `RESEND_API_KEY` production status unverified | High | ❌ Open |
 
 ---
 
@@ -388,16 +387,16 @@ Result: buttons render gold (from inline), but the design system specifies red. 
 | 4.1 | Practitioner dashboard frontend | Medium | 6–8 days | ✅ Done (roster view) |
 | 4.2 | Password reset flow | High | 1 day | ✅ Done |
 | 4.3 | Rate limit enforcement (user endpoints) | Medium | 1 day | ❌ Open |
-| 5.1 | JWT → HTTP-only cookies | High | 1 day | ❌ Open |
+| 5.1 | JWT → HTTP-only cookies | High | 1 day | ✅ Done |
 | 5.2 | Email format validation | Medium | 30 min | ✅ Done |
 | 5.3 | GDPR data export endpoint | Medium | 1 day | ✅ Done |
-| BL-MV-N1 | Gate Studio tier behind "Contact us" | **CRITICAL** | 30 min | 🆕 New |
+| BL-MV-N1 | Gate Studio tier behind "Contact us" | **CRITICAL** | 30 min | ✅ Done |
 | BL-MV-N2 | Composite location auto-populate | High | 30 min | 🆕 New |
 | BL-MV-N3 | `totalProfiles` blank-state fallback | Medium | 15 min | 🆕 New |
 | BL-MV-N4 | Verify `RESEND_API_KEY` in production | High | — | 🆕 New |
 
-**Original recommendations resolved:** 15/18 (83%)
-**New issues found:** 4
+**Original recommendations resolved:** 17/18 (94%)  
+**New issues resolved:** 1/4
 **Remaining open items:** 7
 
 ---

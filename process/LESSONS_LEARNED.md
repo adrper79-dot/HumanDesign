@@ -8,6 +8,46 @@ This document catalogs key learnings from development, debugging, and production
 
 ## Incident Log
 
+### 2026-03-10 | Launch Certification Drift: Stale Report Fragments and Spec Path Mismatch
+
+**Context**
+During final pre-launch certification refresh, the launch readiness report required a full protocol-aligned rewrite. Existing report content had mixed states (some items fixed in code but still described as blockers) and contained stale appended sections from an earlier version.
+
+**Key Findings**
+1. **Audit artifact drift can invert decision quality**
+   - `LAUNCH_READINESS_REPORT.md` still carried older blocker language after code-level fixes were already landed and backlog statuses were updated.
+   - Result: report sign-off contradicted current implementation reality.
+
+2. **Spec source-of-truth mismatch causes orchestration friction**
+   - Protocol expected `docs/API_REFERENCE.md`, but the active repository file is `docs/API_SPEC.md`.
+   - Result: pre-flight instructions and repo topology were semantically aligned but path-incompatible.
+
+3. **Partial rewrites can leave trailing stale sections**
+   - A large report replacement initially left residual legacy content at EOF.
+   - Result: document contained two conflicting launch sequences/sign-offs.
+
+**Resolution**
+- Rebuilt launch report into a protocol-shaped v3 structure with explicit evidence-backed sections.
+- Removed stale trailing content and revalidated final file boundaries.
+- Captured source-of-truth note in pre-flight summary: API spec currently lives at `docs/API_SPEC.md`.
+
+**Key Learnings**
+1. **Certification docs are production controls, not narrative docs**
+   - Treat them like executable artifacts tied to current backlog state and verified evidence.
+
+2. **When replacing long files, always perform EOF sanity read**
+   - Full-file replacement without post-read can silently preserve contradictory legacy fragments.
+
+3. **Protocol references must be path-resilient**
+   - If file naming evolves (`API_REFERENCE` vs `API_SPEC`), protocol should map to canonical equivalent instead of hard-failing the workflow.
+
+**Preventive Measures**
+- [ ] Add a report regeneration checklist: rewrite -> full readback -> contradiction scan -> sign-off.
+- [ ] Add a docs alias note in onboarding docs: `API_REFERENCE` maps to `docs/API_SPEC.md` in this repo.
+- [ ] Add a lightweight lint/check for duplicate "Final Sign-Off" or duplicate "Launch Sequence" headings in release reports.
+
+---
+
 ### 2026-03-10 | Launch Remediation Sprint: Route Drift, Contract Drift, and Dead-Code Risk
 
 **Context**
