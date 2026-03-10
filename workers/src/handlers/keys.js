@@ -29,13 +29,10 @@ export async function handleApiKeys(request, env, path) {
   // All routes require authentication
   const user = await getUserFromRequest(request, env);
   if (!user) {
-    return new Response(JSON.stringify({ 
+    return Response.json({ 
       error: 'Unauthorized',
       message: 'Authentication required' 
-    }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 401 });
   }
 
   // POST /api/keys - Generate new API key
@@ -66,13 +63,10 @@ export async function handleApiKeys(request, env, path) {
     return getUsageStats(request, env, user, keyId);
   }
 
-  return new Response(JSON.stringify({
+  return Response.json({
     error: 'Not Found',
     message: 'API endpoint not found'
-  }), {
-    status: 404,
-    headers: { 'Content-Type': 'application/json' }
-  });
+  }, { status: 404 });
 }
 
 /**
@@ -87,13 +81,10 @@ async function generateKey(request, env, user) {
 
     // Validate name
     if (!name || name.trim().length === 0) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Name is required',
         message: 'Please provide a name for your API key'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
 
     // Determine tier based on user's subscription
@@ -102,14 +93,11 @@ async function generateKey(request, env, user) {
     const effectiveTier = user.tier || 'free';
     let keyTier = tier || 'free';
     if (effectiveTier === 'free' && keyTier !== 'free') {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Upgrade required',
         message: 'Upgrade to Seeker tier or higher to create Basic/Pro API keys',
         upgradeUrl: '/app/pricing'
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 403 });
     }
 
     // Check key limit (free users: 2 keys, paid users: 10 keys)
@@ -119,15 +107,12 @@ async function generateKey(request, env, user) {
     const existingKeysResult = countRows[0];
 
     if (existingKeysResult.count >= keyLimit) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Key limit reached',
         message: `You have reached the maximum of ${keyLimit} active API keys. Delete an existing key to create a new one.`,
         limit: keyLimit,
         current: existingKeysResult.count
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 403 });
     }
 
     // Generate the API key
@@ -137,8 +122,8 @@ async function generateKey(request, env, user) {
       expiresInDays: expiresInDays
     });
 
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       message: 'API key generated successfully. Save it now - it will not be shown again!',
       apiKey: result.key,  // Only shown once
       keyId: result.keyId,
@@ -149,20 +134,14 @@ async function generateKey(request, env, user) {
       rateLimitPerDay: result.rateLimitPerDay,
       expiresAt: result.expiresAt,
       createdAt: new Date().toISOString()
-    }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 201 });
 
   } catch (error) {
     console.error('Generate API key error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Internal error',
       message: 'Failed to generate API key'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -193,24 +172,18 @@ async function listKeys(request, env, user) {
       }
     }));
 
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       keys: keys,
       total: keys.length
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('List API keys error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Internal error',
       message: 'Failed to retrieve API keys'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -225,17 +198,14 @@ async function getKey(request, env, user, keyId) {
     const result = rows[0] || null;
 
     if (!result) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Not found',
         message: 'API key not found'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 404 });
     }
 
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       key: {
         id: result.id,
         name: result.name,
@@ -248,20 +218,14 @@ async function getKey(request, env, user, keyId) {
         lastUsedAt: result.last_used_at,
         createdAt: result.created_at
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('Get API key error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Internal error',
       message: 'Failed to retrieve API key'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -277,35 +241,26 @@ async function deleteKey(request, env, user, keyId) {
     const result = rows[0] || null;
 
     if (!result) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Not found',
         message: 'API key not found'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 404 });
     }
 
     // Soft delete (deactivate instead of actual delete to preserve usage history)
     await query(QUERIES.deactivateApiKey, [keyId]);
 
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       message: 'API key deactivated successfully'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('Delete API key error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Internal error',
       message: 'Failed to delete API key'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -322,13 +277,10 @@ async function getUsageStats(request, env, user, keyId) {
     const keyResult = keyRows[0] || null;
 
     if (!keyResult) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Not found',
         message: 'API key not found'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 404 });
     }
 
     // Parse query params
@@ -345,8 +297,8 @@ async function getUsageStats(request, env, user, keyId) {
     // Get daily usage (for chart)
     const { rows: dailyRows } = await query(QUERIES.getApiKeyDailyUsage, [keyId, days]);
 
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       keyName: keyResult.name,
       tier: keyResult.tier,
       rateLimitPerDay: keyResult.rate_limit_per_day,
@@ -372,19 +324,13 @@ async function getUsageStats(request, env, user, keyId) {
         requests: d.requests,
         errors: d.errors
       }))
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('Get usage stats error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Internal error',
       message: 'Failed to retrieve usage statistics'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }

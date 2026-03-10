@@ -193,7 +193,7 @@ Save the `accessToken` from the response.
 ### Create a checkout session
 
 ```bash
-curl -X POST https://prime-self-api.adrper79.workers.dev/api/checkout/create \
+curl -X POST https://prime-self-api.adrper79.workers.dev/api/billing/checkout \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE" \
   -H "Content-Type: application/json" \
   -d '{

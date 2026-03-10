@@ -171,7 +171,7 @@
         ? getCrossName(chart.cross.gates[0], chart.cross.line) : '');
     if (crossName) {
       sectionLabel('Purpose');
-      dataRow('Incarnation Cross', crossName);
+      dataRow('Soul Cross', crossName);
     }
 
     // Footer
@@ -182,7 +182,7 @@
     ctx.fillStyle = TEXT_MUTED;
     ctx.font = '12px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('primeself.app — Human Design + Astrology + AI', CARD_W / 2, y + 10);
+    ctx.fillText('primeself.app — Energy Blueprint + Astrology + AI', CARD_W / 2, y + 10);
 
     ctx.fillStyle = TEXT_MUTED + '80';
     ctx.font = '10px system-ui, -apple-system, sans-serif';
@@ -250,7 +250,7 @@
         const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
         const file = new File([blob], 'prime-self-design.png', { type: 'image/png' });
         if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'My Prime Self Design', text: 'My Human Design at a glance' });
+          await navigator.share({ files: [file], title: 'My Prime Self Design', text: 'My Energy Blueprint at a glance' });
         } else {
           // Fallback: copy to clipboard
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
@@ -258,7 +258,7 @@
           setTimeout(() => shareBtn.textContent = '📤 Share', 2000);
         }
       } catch (e) {
-        console.warn('Share failed:', e);
+        window.DEBUG && console.warn('Share failed:', e);
       }
     });
 

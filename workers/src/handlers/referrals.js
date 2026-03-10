@@ -28,22 +28,16 @@ export async function handleGenerateCode(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     // Check if user already has a referral code
     if (user.referral_code) {
-      return new Response(JSON.stringify({
-        success: true,
+      return Response.json({
+        ok: true,
         code: user.referral_code,
         url: `${env.FRONTEND_URL}/signup?ref=${user.referral_code}`,
         existing: true
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
       });
     }
     
@@ -68,13 +62,10 @@ export async function handleGenerateCode(request, env, ctx) {
     }
     
     if (exists) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Failed to generate unique code',
         message: 'Please try again'
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 500 });
     }
     
     // Update user with referral code
@@ -83,24 +74,18 @@ export async function handleGenerateCode(request, env, ctx) {
       [code, user.id]
     );
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       code: code,
       url: `${env.FRONTEND_URL}/signup?ref=${code}`,
       existing: false
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Generate code error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Failed to generate referral code' // BL-R-H2
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -114,10 +99,7 @@ export async function handleGetStats(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -145,8 +127,8 @@ export async function handleGetStats(request, env, ctx) {
       ? (convertedReferrals.count / totalReferrals.count * 100).toFixed(1)
       : 0;
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       stats: {
         referralCode: user.referral_code,
         referralUrl: user.referral_code ? `${env.FRONTEND_URL}/signup?ref=${user.referral_code}` : null,
@@ -167,19 +149,13 @@ export async function handleGetStats(request, env, ctx) {
         rewardValue: ref.reward_value,
         createdAt: ref.created_at
       }))
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Get referral stats error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Failed to get referral stats'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -193,10 +169,7 @@ export async function handleGetHistory(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const url = new URL(request.url);
@@ -213,8 +186,8 @@ export async function handleGetHistory(request, env, ctx) {
     // Get paginated history
     const { rows: referrals } = await query(QUERIES.getReferralHistory, [user.id, limit, offset]);
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       pagination: {
         page,
         limit,
@@ -232,19 +205,13 @@ export async function handleGetHistory(request, env, ctx) {
         rewardValue: ref.reward_value,
         signupDate: ref.created_at
       }))
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Get referral history error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Failed to get referral history'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -265,13 +232,10 @@ export async function handleValidateCode(request, env, ctx) {
     const { code } = body;
     
     if (!code) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Missing code',
         message: 'Referral code is required'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -281,16 +245,13 @@ export async function handleValidateCode(request, env, ctx) {
     const referrer = referrerRows[0] || null;
     
     if (!referrer) {
-      return new Response(JSON.stringify({
+      return Response.json({
         valid: false,
         error: 'Invalid referral code'
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    return new Response(JSON.stringify({
+    return Response.json({
       valid: true,
       code: referrer.referral_code,
       referrerEmail: referrer.email.replace(/(.{3}).*(@.*)/, '$1***$2'),  // Masked
@@ -299,19 +260,13 @@ export async function handleValidateCode(request, env, ctx) {
         description: 'First month free on Seeker tier',
         value: 1500  // $15 in cents
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Validate code error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Failed to validate referral code'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -330,23 +285,17 @@ export async function handleApplyCode(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const body = await request.json();
     const { code } = body;
     
     if (!code) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Missing code',
         message: 'Referral code is required'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -356,36 +305,27 @@ export async function handleApplyCode(request, env, ctx) {
     const referrer = referrerRows[0] || null;
     
     if (!referrer) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Invalid referral code'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     // Check if user already has a referral
     const { rows: existingRows } = await query(QUERIES.checkExistingReferral, [user.id]);
     
     if (existingRows.length > 0) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Referral already applied',
         message: 'You have already used a referral code'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     // Cannot refer yourself
     if (referrer.id === user.id) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Invalid referral',
         message: 'You cannot use your own referral code'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     // Create referral record
@@ -394,27 +334,21 @@ export async function handleApplyCode(request, env, ctx) {
     // Track achievement event for the referrer (they got a new referral)
     await trackEvent(env, referrer.id, 'referral_signup', { referredUserId: user.id }, 'free');
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       message: 'Referral code applied successfully',
       discount: {
         type: 'first_month_free',
         description: 'First month free on Seeker tier',
         value: 1500
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Apply code error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Failed to apply referral code'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -428,10 +362,7 @@ export async function handleGetRewards(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -441,8 +372,8 @@ export async function handleGetRewards(request, env, ctx) {
     
     const totalPendingValue = pendingRewards.reduce((sum, r) => sum + r.reward_value, 0);
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       pendingRewards: pendingRewards.map(r => ({
         id: r.id,
         referredEmail: r.referred_email.replace(/(.{3}).*(@.*)/, '$1***$2'),
@@ -453,19 +384,13 @@ export async function handleGetRewards(request, env, ctx) {
       })),
       totalPending: pendingRewards.length,
       totalValue: totalPendingValue
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Get rewards error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Failed to get rewards'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 
@@ -484,22 +409,16 @@ export async function handleClaimReward(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const body = await request.json();
     const { referralId } = body;
     
     if (!referralId) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Missing referralId'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -509,31 +428,22 @@ export async function handleClaimReward(request, env, ctx) {
     const referral = refRows[0] || null;
     
     if (!referral) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Referral not found'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 404 });
     }
     
     if (!referral.converted) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Referral not converted',
         message: 'Referred user must upgrade to paid tier first'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     if (referral.reward_granted) {
-      return new Response(JSON.stringify({
+      return Response.json({
         error: 'Reward already claimed'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
     
     // Mark reward as granted
@@ -560,27 +470,21 @@ export async function handleClaimReward(request, env, ctx) {
       }
     }
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       message: 'Reward claimed successfully',
       reward: {
         type: 'free_month',
         value: 1500,
         description: 'One month free Seeker subscription applied to your account'
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Claim reward error:', error);
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Failed to claim reward'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }
 

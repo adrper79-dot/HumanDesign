@@ -9,7 +9,7 @@
  * Usage:
  *   // Automatically initializes on DOMContentLoaded
  *   // From any script:
- *   const label = window.t('chart.title');           // "Human Design Chart"
+ *   const label = window.t('chart.title');           // "Energy Blueprint Chart"
  *   const msg   = window.t('errors.missingField', { field: 'email' });
  *
  * The language switcher is auto-injected near the auth area if a container
@@ -85,7 +85,7 @@
       localeCache[locale] = data;
       return data;
     } catch (err) {
-      console.warn(`[i18n] Failed to load ${locale}.json:`, err.message);
+      window.DEBUG && console.warn(`[i18n] Failed to load ${locale}.json:`, err.message);
       // Fall back to English
       if (locale !== DEFAULT && !localeCache[DEFAULT]) {
         return loadLocale(DEFAULT);

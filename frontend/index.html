@@ -97,12 +97,12 @@
 <link rel="apple-touch-startup-image" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" href="/icons/splash-2048x2732.png">
 
 <!-- Description for App Stores -->
-<meta name="description" content="Your Energy Blueprint & Complete Astrology System - Human Design, Gene Keys, Natal Chart, and Daily Transit Guidance">
-<meta name="keywords" content="human design, astrology, gene keys, bodygraph, natal chart, transits, energy blueprint">
+<meta name="description" content="Your Personal Energy Blueprint — AI-powered birth chart analysis combining Gene Keys, Astrology, and Numerology for personalized daily guidance">
+<meta name="keywords" content="energy blueprint, birth chart analysis, AI astrology, gene keys, natal chart reading, numerology, life purpose, personal energy type, daily transits, soul blueprint, cosmic chart, life path calculator, astrology AI, personality chart, energy centers">
 
 <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
 <meta property="og:title" content="Prime Self — Energy Blueprint & Astrology">
-<meta property="og:description" content="Discover your unique energy blueprint through Human Design, Gene Keys, and complete astrology. Get personalized insights and daily transit guidance.">
+<meta property="og:description" content="Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology. AI-powered personal chart analysis with personalized daily transit guidance.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://primeself.app">
 <meta property="og:image" content="https://primeself.app/og-image.png">
@@ -115,7 +115,7 @@
 <!-- Twitter Card Meta Tags -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Prime Self — Your Energy Blueprint">
-<meta name="twitter:description" content="Discover your unique energy blueprint through Human Design, Gene Keys, and astrology. Personalized insights and daily guidance.">
+<meta name="twitter:description" content="Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology. Personalized AI insights and daily guidance.">
 <meta name="twitter:image" content="https://primeself.app/twitter-card.png">
 <meta name="twitter:site" content="@primeself">
 <meta name="twitter:creator" content="@primeself">
@@ -178,6 +178,50 @@
     <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>
     <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:var(--space-3)" data-i18n="auth.signIn">Sign In</button>
     </form>
+    <div id="forgotPasswordLink" style="text-align:right;margin-top:var(--space-2)">
+      <a style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)" onclick="showForgotPassword()">Forgot password?</a>
+    </div>
+
+    <!-- Social login divider -->
+    <div style="display:flex;align-items:center;gap:var(--space-3);margin:var(--space-4) 0 var(--space-3)">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:var(--font-size-sm);color:var(--text-dim);white-space:nowrap">or continue with</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <!-- Social login buttons -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+      <a href="https://prime-self-api.adrper79.workers.dev/api/auth/oauth/google" id="oauthGoogleBtn"
+         style="display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:10px var(--space-4);background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:var(--space-1);font-size:var(--font-size-base);font-weight:500;text-decoration:none;cursor:pointer;transition:box-shadow 0.15s"
+         onmouseover="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.2)'" onmouseout="this.style.boxShadow='none'">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </a>
+
+      <a href="https://prime-self-api.adrper79.workers.dev/api/auth/oauth/apple" id="oauthAppleBtn"
+         style="display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:10px var(--space-4);background:#000;color:#fff;border:1px solid #000;border-radius:var(--space-1);font-size:var(--font-size-base);font-weight:500;text-decoration:none;cursor:pointer;transition:opacity 0.15s"
+         onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        <svg width="18" height="18" viewBox="0 0 814 1000" aria-hidden="true" fill="currentColor">
+          <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 376.7 0 248.3 0 168.4c0-127.2 82.9-194.4 164.3-194.4 83.3 0 135.1 54.8 179.8 54.8 42.8 0 102.9-57.8 194.9-57.8 31 0 108.2 2.6 163.7 94.3zm-234-181.5c39.5-46.8 70.1-112.1 70.1-177.4 0-9-1.3-18.7-3.2-26.7-66.7 2.6-146.1 44.5-191.6 98.7-37.4 41.5-72 106.8-72 173.4 0 10.3 1.3 20.7 2.6 23.8 3.2.6 8.4 1.3 13.6 1.3 60.9 0 134.2-40.2 180.5-92.9z"/>
+        </svg>
+        Continue with Apple
+      </a>
+
+      <a href="https://prime-self-api.adrper79.workers.dev/api/auth/oauth/facebook" id="oauthFacebookBtn"
+         style="display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:10px var(--space-4);background:#1877f2;color:#fff;border:1px solid #1877f2;border-radius:var(--space-1);font-size:var(--font-size-base);font-weight:500;text-decoration:none;cursor:pointer;transition:opacity 0.15s"
+         onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+        Continue with Facebook
+      </a>
+    </div>
+
     <div class="auth-toggle">
       <span id="authToggleText" data-i18n="auth.noAccount">Don't have an account?</span>
       <a onclick="toggleAuthMode()" id="authToggleLink" data-i18n="auth.createOne">Create one</a>
@@ -253,7 +297,7 @@
     <!-- Practitioner CTA -->
     <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border);text-align:center">
       <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-2)">
-        Are you a guide, coach, or Human Design practitioner?
+        Are you a guide, coach, or energy blueprint practitioner?
       </p>
       <a onclick="openPractitionerPricingModal();closePricingModal();"
          style="font-size:var(--font-size-sm);cursor:pointer;color:var(--gold);text-decoration:underline">
@@ -281,7 +325,7 @@
       </span>
     </div>
     <h2 id="practitionerPricingTitle">Serve Your Clients with Precision</h2>
-    <p class="subtitle">Built for Human Design practitioners, coaches, and platforms.</p>
+    <p class="subtitle">Built for energy coaches, guides, and practitioner platforms.</p>
 
     <div class="pricing-grid pricing-grid--2col">
 
@@ -317,8 +361,13 @@
           <li>Custom theme &amp; accent colors</li>
           <li>Dedicated account manager</li>
         </ul>
-        <button class="btn-primary tier-cta" id="priceBtn-white_label"
-                onclick="startCheckout('white_label', event)">Upgrade to Studio</button>
+        <p style="font-size:0.75rem;opacity:0.65;margin:0.25rem 0 0.75rem;line-height:1.4">Available for enterprise teams — reach out to discuss scope and custom pricing.</p>
+        <a href="mailto:hello@selfprime.net?subject=Studio%20Plan%20Inquiry"
+           id="priceBtn-white_label"
+           class="btn btn-secondary tier-cta"
+           style="width:100%;text-align:center;display:block;text-decoration:none;box-sizing:border-box">
+          Contact us
+        </a>
       </div>
 
     </div>
@@ -358,6 +407,8 @@
     <button class="btn-secondary btn-sm" id="billingBtn" style="display:none" onclick="openBillingPortal()" data-i18n="auth.billing">Billing</button>
     <button class="btn-secondary btn-sm" id="authBtn" onclick="openAuthOverlay()" data-i18n="auth.signIn">Sign In</button>
     <button class="btn-danger btn-sm" id="logoutBtn" style="display:none" onclick="logout()" data-i18n="auth.signOut">Sign Out</button>
+    <button class="btn-secondary btn-sm" id="exportDataBtn" style="display:none;margin-left:4px;font-size:0.75rem" onclick="exportMyData()">Export Data</button>
+    <button class="btn-danger btn-sm" id="deleteAccountBtn" style="display:none;margin-left:4px;opacity:0.7;font-size:0.75rem" onclick="deleteAccount()">Delete Account</button>
   </div>
 </header>
 
@@ -365,7 +416,7 @@
 <div class="social-proof-banner" id="socialProofBanner">
   <div class="social-proof-stat">
     <span class="social-proof-number">4</span>
-    <span class="social-proof-label">systems combined: Human Design · Gene Keys · Astrology · Numerology</span>
+    <span class="social-proof-label">systems combined: Energy Blueprint · Gene Keys · Astrology · Numerology</span>
   </div>
   <div class="social-proof-stat">
     <span class="social-proof-number">64</span>
@@ -400,7 +451,7 @@
       <div class="frm-step active" id="frm-step-1">
         <div class="frm-step-icon" aria-hidden="true">⊙</div>
         <h2 id="frm-title" class="frm-step-title">Welcome to Prime Self</h2>
-        <p class="frm-step-body">Your personalized energy blueprint combines Human Design, Gene Keys, Western Astrology, and Numerology — all calculated from your birth data and synthesized by AI into plain-English guidance.</p>
+        <p class="frm-step-body">Your personalized energy blueprint combines Energy Blueprint analysis, Gene Keys, Western Astrology, and Numerology — all calculated from your birth data and synthesized by AI into plain-English guidance.</p>
         <div class="frm-what-you-need">
           <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>exact birth date</strong></span></div>
           <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>birth time</strong> (as precise as possible)</span></div>
@@ -680,7 +731,7 @@
       <button class="btn-secondary btn-sm" onclick="expandChartForm()">✎ Edit</button>
     </div>
 
-    <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Human Design &amp; astrology data.</p></div>
+    <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Energy Blueprint &amp; astrology data.</p></div>
 
     <!-- Mobile Sticky CTA (Sprint 19.3) - Shows when form scrolls out of viewport -->
     <div id="stickyChartCta" class="sticky-chart-cta" aria-hidden="true">
@@ -717,16 +768,16 @@
       <div class="form-grid">
         <div class="form-group">
           <label data-i18n="chart.birthDate">Birth Date</label>
-          <input type="date" id="p-date" value="1990-06-15">
+          <input type="date" id="p-date" value="1990-06-15" required aria-required="true">
         </div>
         <div class="form-group">
           <label data-i18n="chart.birthTime">Birth Time</label>
-          <input type="time" id="p-time" value="14:30">
+          <input type="time" id="p-time" value="14:30" required aria-required="true">
         </div>
         <div class="form-group full">
           <label data-i18n="chart.birthLocation">Birth Location</label>
           <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
-            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1;min-width:160px"
+            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1;min-width:160px" required aria-required="true"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('p')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('p')" id="p-geoBtn"
               style="white-space:nowrap;padding:0 16px;font-size:var(--font-size-base)" data-i18n="chart.lookupLocation">Look Up</button>
@@ -1188,15 +1239,15 @@
       
       <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-4) 0 8px" data-i18n="composite.personA">Person A</h4>
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" value="1990-06-15"></div>
-        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" value="14:30"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" value="1990-06-15" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" value="14:30" required aria-required="true"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
           <div style="display:flex;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap">
             <input type="text" id="comp-A-location" placeholder="New York, NY"
-              style="flex:1;min-width:160px"
+              style="flex:1;min-width:160px" required aria-required="true"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-A')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-A')" id="comp-A-geoBtn"
               style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
@@ -1209,15 +1260,15 @@
 
       <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-5) 0 8px" data-i18n="composite.personB">Person B</h4>
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" value="1988-03-22"></div>
-        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" value="09:15"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" value="1988-03-22" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" value="09:15" required aria-required="true"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
           <div style="display:flex;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap">
             <input type="text" id="comp-B-location" placeholder="Los Angeles, CA"
-              style="flex:1;min-width:160px"
+              style="flex:1;min-width:160px" required aria-required="true"
               onkeydown="if(event.key==='Enter'){event.preventDefault();geocodeLocation('comp-B')}">
             <button type="button" class="btn-secondary" onclick="geocodeLocation('comp-B')" id="comp-B-geoBtn"
               style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
@@ -1284,32 +1335,55 @@
 
   <!-- ═══ PRACTITIONER TAB ═══ -->
   <div class="tab-content" id="tab-practitioner" role="tabpanel" aria-labelledby="btn-practitioner">
-    <div id="practitionerUpgradeNotice" class="alert alert-warn" style="display:none">
-      <strong>🔒 Practitioner Tools Locked</strong><br>
-      The Practitioner Portal requires a Guide or Practitioner tier subscription for client management, batch processing, and advanced features.
-      <a href="#" onclick="openPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:var(--space-2)">Upgrade to unlock</a>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="icon-star"></span> <span data-i18n="practitioner.title">Practitioner Portal</span></div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Manage client roster and session notes (requires practitioner account).</p>
-      
-      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-4) 0 8px" data-i18n="practitioner.addClient">Add Client</h4>
-      <div class="form-grid">
-        <div class="form-group"><label>Client Name</label><input type="text" id="prac-name" placeholder="Jane Smith"></div>
-        <div class="form-group"><label>Profile ID</label><input type="text" id="prac-profileId" placeholder="Optional"></div>
-      </div>
-      <button class="btn-primary" onclick="addClient()" id="pracAddBtn" style="margin-top:var(--space-2)">
-        <span class="spinner" id="pracAddSpinner" style="display:none"></span>
-        Add to Roster
-      </button>
 
-      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-6) 0 8px" data-i18n="practitioner.roster">My Roster</h4>
-      <button class="btn-secondary" onclick="loadRoster()" id="pracLoadBtn">
-        <span class="spinner" id="pracLoadSpinner" style="display:none"></span>
-        View My Clients
-      </button>
+    <!-- Upgrade notice for non-practitioner tiers -->
+    <div id="practitionerUpgradeNotice" class="alert alert-warn" style="display:none">
+      <strong>Practitioner Tools Locked</strong><br>
+      Client management requires a Guide tier subscription.
+      <a href="#" onclick="openPractitionerPricingModal(); return false;" style="color:var(--gold);text-decoration:underline;margin-left:var(--space-2)">Upgrade to Guide →</a>
     </div>
+
+    <!-- Header card: status + add client -->
+    <div class="card" id="pracHeaderCard">
+      <div class="card-title"><span class="icon-star"></span> Practitioner Portal</div>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Manage your client roster. View their charts and profiles, export PDFs, and keep your session work organized.</p>
+
+      <!-- Client limit progress bar -->
+      <div id="pracLimitBar" style="display:none;margin-bottom:var(--space-5)">
+        <div style="display:flex;justify-content:space-between;font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-1)">
+          <span>Clients on roster</span>
+          <span id="pracLimitLabel">0 / 50</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:999px;height:6px;overflow:hidden">
+          <div id="pracLimitFill" style="background:var(--gold);height:100%;width:0%;transition:width 0.4s ease"></div>
+        </div>
+      </div>
+
+      <!-- Add client form (collapsible) -->
+      <button class="btn-secondary btn-sm" onclick="togglePracAddForm()" id="pracAddToggle" style="margin-bottom:var(--space-3)">+ Add Client</button>
+      <div id="pracAddForm" style="display:none;background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-4);margin-bottom:var(--space-4)">
+        <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-3)">The client must already have a Prime Self account. Enter the email address they registered with.</p>
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:flex-end">
+          <div class="form-group" style="flex:1;min-width:200px;margin:0">
+            <label for="prac-email">Client Email</label>
+            <input type="email" id="prac-email" placeholder="client@email.com" required aria-required="true">
+          </div>
+          <button class="btn-primary" onclick="addClient()" id="pracAddBtn" style="white-space:nowrap;height:40px">
+            <span class="spinner" id="pracAddSpinner" style="display:none"></span>
+            Add to Roster
+          </button>
+          <button class="btn-secondary" onclick="togglePracAddForm()" style="height:40px">Cancel</button>
+        </div>
+        <div id="pracAddStatus" style="margin-top:var(--space-3)"></div>
+      </div>
+    </div>
+
+    <!-- Roster (auto-loads on tab open) -->
     <div id="pracResult"></div>
+
+    <!-- Client detail panel (expands below the tapped client row) -->
+    <div id="pracDetailPanel" style="display:none"></div>
+
   </div>
 
   <!-- ═══ CLUSTERS TAB ═══ -->
@@ -1319,7 +1393,7 @@
       <button class="sub-tab active" onclick="switchTab('clusters')">⬢ Groups</button>
     </div>
     <div class="card">
-      <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Human Design and Prime Self Forge philosophy"></span></div>
+      <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Energy Blueprint analysis and Prime Self Forge philosophy"></span></div>
       <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-5)">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
       
       <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-5)">
@@ -1437,6 +1511,8 @@ function updateAuthUI() {
   const statusEl = document.getElementById('authStatusText');
   const btnEl    = document.getElementById('authBtn');
   const logoutEl = document.getElementById('logoutBtn');
+  const deleteAcctEl = document.getElementById('deleteAccountBtn');
+  const exportDataEl = document.getElementById('exportDataBtn');
   const badgeEl  = document.getElementById('tierBadge');
   const upgradeEl  = document.getElementById('upgradeBtn');
   const billingEl  = document.getElementById('billingBtn');
@@ -1446,6 +1522,8 @@ function updateAuthUI() {
     statusEl.className   = 'auth-status logged-in';
     btnEl.style.display    = 'none';
     logoutEl.style.display = '';
+    if (deleteAcctEl) deleteAcctEl.style.display = '';
+    if (exportDataEl) exportDataEl.style.display = '';
 
     // Update tier badge and billing/upgrade buttons from cached profile
     const user = window.currentUser;
@@ -1475,6 +1553,8 @@ function updateAuthUI() {
     statusEl.className   = 'auth-status';
     btnEl.style.display    = '';
     logoutEl.style.display = 'none';
+    if (deleteAcctEl) deleteAcctEl.style.display = 'none';
+    if (exportDataEl) exportDataEl.style.display = 'none';
     badgeEl.style.display  = 'none';
     upgradeEl.style.display  = 'none';
     billingEl.style.display  = 'none';
@@ -1574,9 +1654,182 @@ function toggleAuthMode() {
   document.getElementById('authToggleText').textContent = isReg ? window.t('auth.alreadyAccount') : window.t('auth.noAccount');
   document.getElementById('authToggleLink').textContent = isReg ? window.t('auth.signInLink') : window.t('auth.createOne');
   document.getElementById('authError').textContent = '';
+  // Show password field and forgot link in login/register mode
+  document.getElementById('authPassword').parentElement.style.display = '';
+  document.getElementById('forgotPasswordLink').style.display = '';
+}
+
+function showForgotPassword() {
+  document.getElementById('authTitle').textContent = 'Reset Password';
+  document.getElementById('authSubtitle').textContent = 'Enter your email and we\'ll send you a reset link.';
+  document.getElementById('authSubmit').textContent = 'Send Reset Link';
+  document.getElementById('authToggleText').textContent = 'Remember your password?';
+  document.getElementById('authToggleLink').textContent = 'Sign In';
+  document.getElementById('authToggleLink').setAttribute('onclick', 'toggleAuthMode(); document.getElementById("authPassword").parentElement.style.display=""; document.getElementById("forgotPasswordLink").style.display="";');
+  document.getElementById('authError').textContent = '';
+  // Hide password field and forgot link
+  document.getElementById('authPassword').parentElement.style.display = 'none';
+  document.getElementById('forgotPasswordLink').style.display = 'none';
+  authMode = 'forgot';
+}
+
+async function submitForgotPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  const errorEl = document.getElementById('authError');
+  const btn = document.getElementById('authSubmit');
+
+  if (!email) {
+    errorEl.textContent = 'Please enter your email address.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  errorEl.textContent = '';
+
+  try {
+    const res = await fetch(API + '/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    errorEl.style.color = 'var(--color-success, #30d158)';
+    errorEl.textContent = data.message || 'If an account exists, a reset link has been sent.';
+    btn.textContent = 'Email Sent ✓';
+  } catch (e) {
+    errorEl.style.color = '';
+    errorEl.textContent = 'Connection error. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Send Reset Link';
+  }
+}
+
+// Handle OAuth redirect-back (?oauth=success&token=...&refresh=...)
+// Called on page load — picks up tokens issued by social login callback
+function checkOAuthCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const oauthStatus = params.get('oauth');
+  if (!oauthStatus) return;
+
+  // Clean URL immediately so tokens don't persist in history
+  window.history.replaceState({}, '', window.location.pathname);
+
+  if (oauthStatus === 'error') {
+    const msg = params.get('msg') || 'Social login failed. Please try again.';
+    showNotification(msg, 'error');
+    openAuthOverlay();
+    return;
+  }
+
+  if (oauthStatus === 'success') {
+    const accessToken  = params.get('token');
+    const refreshToken = params.get('refresh');
+    const isNewUser    = params.get('new_user') === '1';
+
+    if (!accessToken) {
+      showNotification('Login failed — no token received. Please try again.', 'error');
+      return;
+    }
+
+    // Store tokens (same mechanism as email login)
+    token = accessToken;
+    localStorage.setItem('ps_token', accessToken);
+    if (refreshToken) localStorage.setItem('ps_refresh_token', refreshToken);
+
+    // Fetch user profile and update UI
+    fetchUserProfile().then(() => {
+      if (isNewUser) {
+        showNotification('Welcome to Prime Self! Enter your birth details below to generate your blueprint.', 'success');
+      } else {
+        showNotification('Signed in successfully.', 'success');
+      }
+    }).catch(() => {
+      showNotification('Signed in. Loading your profile…', 'success');
+    });
+  }
+}
+
+// Handle password reset from URL (?action=reset-password&token=...&email=...)
+function checkResetPasswordAction() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('action') === 'reset-password' && params.get('token')) {
+    showResetPasswordForm(params.get('token'), params.get('email') || '');
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+function showResetPasswordForm(resetToken, email) {
+  const overlay = document.getElementById('authOverlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('authTitle').textContent = 'Set New Password';
+  document.getElementById('authSubtitle').textContent = email ? `Resetting password for ${email}` : 'Enter your new password.';
+  document.getElementById('authEmail').parentElement.style.display = 'none';
+  document.getElementById('authPassword').parentElement.style.display = '';
+  document.getElementById('authPassword').placeholder = 'New password (min 8 chars)';
+  document.getElementById('forgotPasswordLink').style.display = 'none';
+  document.getElementById('authSubmit').textContent = 'Reset Password';
+  document.querySelector('.auth-toggle').style.display = 'none';
+  document.getElementById('authError').textContent = '';
+  authMode = 'reset';
+  window._resetToken = resetToken;
+}
+
+async function submitResetPassword() {
+  const password = document.getElementById('authPassword').value;
+  const errorEl = document.getElementById('authError');
+  const btn = document.getElementById('authSubmit');
+
+  if (!password || password.length < 8) {
+    errorEl.textContent = 'Password must be at least 8 characters.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Resetting...';
+  errorEl.textContent = '';
+
+  try {
+    const res = await fetch(API + '/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: window._resetToken, password })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      errorEl.textContent = data.error || 'Reset failed. The link may have expired.';
+      btn.disabled = false;
+      btn.textContent = 'Reset Password';
+      return;
+    }
+    errorEl.style.color = 'var(--color-success, #30d158)';
+    errorEl.textContent = 'Password reset! Redirecting to sign in...';
+    btn.textContent = 'Done ✓';
+    delete window._resetToken;
+    setTimeout(() => {
+      // Restore auth form to login mode
+      document.getElementById('authEmail').parentElement.style.display = '';
+      document.getElementById('authPassword').placeholder = '••••••••';
+      document.querySelector('.auth-toggle').style.display = '';
+      document.getElementById('forgotPasswordLink').style.display = '';
+      authMode = 'login';
+      toggleAuthMode(); toggleAuthMode(); // Reset UI to login
+      errorEl.style.color = '';
+      errorEl.textContent = '';
+    }, 2000);
+  } catch (e) {
+    errorEl.textContent = 'Connection error. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Reset Password';
+  }
 }
 
 async function submitAuth() {
+  // Route to forgot/reset handlers if in those modes
+  if (authMode === 'forgot') return submitForgotPassword();
+  if (authMode === 'reset') return submitResetPassword();
+
   const emailEl = document.getElementById('authEmail');
   const passwordEl = document.getElementById('authPassword');
   const email = emailEl.value.trim();
@@ -1669,6 +1922,53 @@ function logout() {
     }));
   }
   updateAuthUI();
+}
+
+async function deleteAccount() {
+  if (!confirm('⚠️ This will permanently delete your account and ALL your data (charts, check-ins, diary entries). This action CANNOT be undone.\n\nAre you sure?')) return;
+  const password = prompt('Enter your password to confirm account deletion:');
+  if (!password) return;
+  try {
+    const result = await apiFetch('/api/auth/account', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    if (result?.error) {
+      showNotification(result.error || 'Failed to delete account', 'error');
+      return;
+    }
+    showNotification('Account deleted successfully.', 'success');
+    logout();
+  } catch (e) {
+    showNotification('Error deleting account. Please try again.', 'error');
+  }
+}
+
+async function exportMyData() {
+  try {
+    showNotification('Preparing your data export...', 'info');
+    const headers = {};
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const res = await fetch(API + '/api/auth/export', { headers });
+    if (!res.ok) {
+      let errMsg = 'Failed to export data';
+      try {
+        const errJson = await res.json();
+        errMsg = errJson.error || errMsg;
+      } catch {}
+      showNotification(errMsg, 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'prime-self-data-export.json'; a.click();
+    URL.revokeObjectURL(url);
+    showNotification('Data export downloaded!', 'success');
+  } catch (e) {
+    showNotification('Error exporting data. Please try again.', 'error');
+  }
 }
 
 // ── Pricing Modals ─────────────────────────────────────────
@@ -1791,7 +2091,7 @@ async function applyPromoCode() {
   result.style.color = 'var(--text-dim)';
 
   try {
-    const data = await apiFetch(`/api/billing/redeem/${encodeURIComponent(code)}`);
+    const data = await apiFetch(`/api/promo/validate?code=${encodeURIComponent(code)}`);
     if (data.valid) {
       const savings = data.discount_type === 'percent'
         ? `${data.discount_value}% off`
@@ -1980,6 +2280,11 @@ function switchTab(id, btn) {
     loadClusters();
   }
 
+  // Auto-load practitioner roster when tab is activated
+  if (id === 'practitioner' && token) {
+    loadRoster();
+  }
+
   // Update mobile nav active state
   if (typeof updateMobileNavForTab === 'function') updateMobileNavForTab(id);
 }
@@ -2114,7 +2419,7 @@ document.addEventListener('DOMContentLoaded', () => updateStepGuide('chart'));
 function renderAstroChart(astro) {
   if (window.DEBUG) console.log('[Chart] renderAstroChart called', astro);
   if (!astro || !astro.placements) {
-    console.warn('[Chart] No astrology data or placements:', { astro, hasPlacements: astro?.placements });
+    window.DEBUG && console.warn('[Chart] No astrology data or placements:', { astro, hasPlacements: astro?.placements });
     return '';
   }
   
@@ -2394,7 +2699,7 @@ function saveBirthData() {
       localStorage.setItem(BIRTH_DATA_KEY, JSON.stringify(data));
       if (window.DEBUG) console.log('[BirthData] Saved to localStorage');
     }
-  } catch (e) { console.warn('[BirthData] Save failed:', e); }
+  } catch (e) { window.DEBUG && console.warn('[BirthData] Save failed:', e); }
 }
 
 function restoreBirthData() {
@@ -2438,7 +2743,7 @@ function restoreBirthData() {
 
     if (window.DEBUG) console.log('[BirthData] Restored from localStorage');
     return true;
-  } catch (e) { console.warn('[BirthData] Restore failed:', e); return false; }
+  } catch (e) { window.DEBUG && console.warn('[BirthData] Restore failed:', e); return false; }
 }
 
 // Restore on load
@@ -2561,7 +2866,7 @@ function renderChart(data) {
         const chMeta = window.getChannelMeta ? getChannelMeta(chKey) : null;
         const centers = ch.centers ? '(' + ch.centers.join('↔') + ')' : (chMeta ? '(' + chMeta.centers.join('↔') + ')' : '');
         const circuitBadge = chMeta ? ` <span style="font-size:var(--font-size-xs);background:rgba(106,79,200,0.15);color:var(--accent);padding:var(--border-width-thin) 6px;border-radius:var(--space-1);font-weight:600">${chMeta.circuit}</span>` : '';
-        const hexLabel = ch.gates?.length === 2 ? ch.gates.map(g => { const h = window.getGateHex ? getGateHex(g) : ''; return h ? `<span class="gate-name-tag" aria-label="Gate ${g} hexagram ${h} - ${window.getGateName ? getGateName(g) : 'Human Design gate'}">G${g} ${h}</span>` : ''; }).join(' ') : '';
+        const hexLabel = ch.gates?.length === 2 ? ch.gates.map(g => { const h = window.getGateHex ? getGateHex(g) : ''; return h ? `<span class="gate-name-tag" aria-label="Gate ${g} hexagram ${h} - ${window.getGateName ? getGateName(g) : 'Energy Blueprint gate'}">G${g} ${h}</span>` : ''; }).join(' ') : '';
         return `<div style="margin-bottom:var(--space-3)">
           <span class="pill gold">${chKey} ${centers}</span>${circuitBadge}${info ? ` <span class="channel-name">— ${info.name}</span>` : ''}
           ${hexLabel ? `<div style="margin-top:var(--space-1)">${hexLabel}</div>` : ''}
@@ -2647,7 +2952,7 @@ function renderChart(data) {
           : 'you are highly receptive and sensitive to your environment — a natural empath who samples others\' energy.'}
       ${motorCenters.length ? ` You have <strong>${motorCenters.length} motor center${motorCenters.length > 1 ? 's' : ''}</strong> defined (${motorCenters.join(', ')}), giving you consistent drive and fuel.` : ''}</p>
       ${channelCount ? `<p style="margin:0 0 10px"><strong>${channelCount} active channel${channelCount > 1 ? 's' : ''}</strong> create${channelCount === 1 ? 's' : ''} fixed energy flows between your centers — these are your reliable gifts and talents.</p>` : ''}
-      ${crossDisplay ? `<p style="margin:0 0 10px">Your incarnation cross — <strong>${crossDisplay}</strong> — describes your life purpose and the theme you are here to live out.</p>` : ''}
+      ${crossDisplay ? `<p style="margin:0 0 10px">Your soul cross — <strong>${crossDisplay}</strong> — describes your life purpose and the theme you are here to live out.</p>` : ''}
       <p style="margin:0;font-size:var(--font-size-sm);color:var(--text-muted)">When you feel <em>${(chart.notSelfTheme || 'out of alignment').toLowerCase()}</em>, it\'s a signal to return to your strategy. Experiment with your design — don\'t take it on faith.</p>
     </div>
     <button class="btn-primary" style="margin-top:var(--space-4);font-size:var(--font-size-base);padding:var(--space-2) 20px" onclick="if(typeof showShareCard==='function') showShareCard(window._lastChart)">
@@ -2762,7 +3067,7 @@ function renderProfile(data) {
 
   // Check if data exists (null/undefined, not just empty objects)
   if ((qsg === null || qsg === undefined) && (ti === null || ti === undefined)) {
-    console.warn('[Profile] No profile data found - showing raw response');
+    window.DEBUG && console.warn('[Profile] No profile data found - showing raw response');
     return `<div class="alert alert-warn">Profile generation returned no data. Raw response below.</div>` + rawToggle(data);
   }
   
@@ -3454,27 +3759,40 @@ function renderRectification(data) {
 }
 
 // ── Practitioner Tools ─────────────────────────────────────────
+
+function togglePracAddForm() {
+  const form = document.getElementById('pracAddForm');
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+  document.getElementById('pracAddToggle').textContent = isHidden ? '✕ Cancel' : '+ Add Client';
+  if (isHidden) document.getElementById('prac-email').focus();
+}
+
 async function addClient() {
   if (!token) { openAuthOverlay(); return; }
 
-  const name = document.getElementById('prac-name').value.trim();
-  const profileId = document.getElementById('prac-profileId').value.trim() || undefined;
-
-  if (!name) { showNotification('Client name required', 'warning'); return; }
+  const email = document.getElementById('prac-email').value.trim();
+  if (!email) { showNotification('Client email is required', 'warning'); return; }
 
   const btn = document.getElementById('pracAddBtn');
   const spinner = document.getElementById('pracAddSpinner');
+  const statusEl = document.getElementById('pracAddStatus');
 
   btn.disabled = true;
   spinner.style.display = '';
+  statusEl.innerHTML = '';
 
   try {
-    const data = await apiFetch('/api/practitioner/clients/add', { method: 'POST', body: JSON.stringify({ clientName: name, profileId }) });
-    showNotification(data.message || 'Client added', 'success');
-    document.getElementById('prac-name').value = '';
-    document.getElementById('prac-profileId').value = '';
+    const data = await apiFetch('/api/practitioner/clients/add', {
+      method: 'POST',
+      body: JSON.stringify({ clientEmail: email })
+    });
+    showNotification(data.message || 'Client added to roster', 'success');
+    document.getElementById('prac-email').value = '';
+    togglePracAddForm();
+    loadRoster(); // refresh roster after adding
   } catch (e) {
-    showNotification('Error: ' + e.message, 'error');
+    statusEl.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -3484,45 +3802,186 @@ async function addClient() {
 async function loadRoster() {
   if (!token) { openAuthOverlay(); return; }
 
-  const btn = document.getElementById('pracLoadBtn');
-  const spinner = document.getElementById('pracLoadSpinner');
   const resultEl = document.getElementById('pracResult');
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your roster…</div></div>';
 
-  btn.disabled = true;
-  spinner.style.display = '';
-  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('practitioner.loadingRoster') + '</div></div>';
-
+  // Also load practitioner profile to get limit info
   try {
-    const data = await apiFetch('/api/practitioner/clients');
-    resultEl.innerHTML = renderRoster(data);
+    const [rosterData, profileData] = await Promise.all([
+      apiFetch('/api/practitioner/clients'),
+      apiFetch('/api/practitioner/profile').catch(() => null)
+    ]);
+
+    // Update limit bar
+    if (profileData?.practitioner) {
+      const { clientCount, clientLimit } = profileData.practitioner;
+      const limitEl = document.getElementById('pracLimitBar');
+      const labelEl = document.getElementById('pracLimitLabel');
+      const fillEl  = document.getElementById('pracLimitFill');
+      if (limitEl && clientLimit !== null) {
+        limitEl.style.display = 'block';
+        labelEl.textContent = `${clientCount} / ${clientLimit}`;
+        fillEl.style.width = `${Math.min(100, (clientCount / clientLimit) * 100)}%`;
+        fillEl.style.background = clientCount >= clientLimit ? 'var(--error, #e74c3c)' : 'var(--gold)';
+      }
+    }
+
+    resultEl.innerHTML = renderRoster(rosterData);
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
-  } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
+    resultEl.innerHTML = `<div class="alert alert-error">Error loading roster: ${escapeHtml(e.message)}</div>`;
   }
 }
 
 function renderRoster(data) {
   if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
-  const clients = data.roster || [];
+  const clients = data.clients || [];
 
   if (!clients.length) {
-    return `<div class="empty-state"><span class="icon-star icon-xl"></span>
-      <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">Practitioner Roster Empty</h3>
-      <p style="max-width:min(500px, 90vw);margin:0 auto 16px">Add clients to your professional roster for organized reading management. Each client entry stores their profile ID and notes for quick access during sessions.</p>
+    return `<div class="empty-state">
+      <span class="icon-star icon-xl"></span>
+      <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No clients yet</h3>
+      <p style="max-width:min(500px,90vw);margin:0 auto">Add clients by email using the button above. They must already have a Prime Self account.</p>
     </div>`;
   }
 
-  let html = `<div class="card"><div class="card-title"><span class="icon-star"></span> ${clients.length} Client${clients.length > 1 ? 's' : ''}</div>`;
+  let html = `<div class="card">
+    <div class="card-title"><span class="icon-star"></span> Roster — ${clients.length} client${clients.length !== 1 ? 's' : ''}</div>`;
+
   clients.forEach(c => {
-    html += `<div style="padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);margin:var(--space-2) 0">`;
-    html += `<strong>${escapeHtml(c.clientName)}</strong>`;
-    if (c.profileId) html += ` <span style="color:var(--text-dim);font-size:var(--font-size-sm)">(${c.profileId.slice(0,8)})</span>`;
-    html += `</div>`;
+    const addedDate = c.added_at ? new Date(c.added_at).toLocaleDateString() : '—';
+    const chartDate = c.chart_date ? new Date(c.chart_date).toLocaleDateString() : 'No chart';
+    const chartId   = c.chart_id || null;
+    const clientId  = c.id;
+    const emailSafe = escapeHtml(c.email);
+
+    html += `
+    <div class="client-row" id="client-row-${escapeAttr(clientId)}" style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:var(--border-width-thin) solid var(--border)">
+      <div style="flex:1;min-width:150px">
+        <div style="font-weight:600;color:var(--text)">${emailSafe}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim)">
+          Added ${addedDate} · Last chart: ${chartDate}
+        </div>
+      </div>
+      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+        <button class="btn-secondary btn-sm" onclick="viewClientDetail('${escapeAttr(clientId)}', '${emailSafe}')">View Details</button>
+        <button class="btn-danger btn-sm" onclick="removeClient('${escapeAttr(clientId)}', '${emailSafe}')">Remove</button>
+      </div>
+    </div>`;
   });
+
   html += `</div>`;
   return html;
+}
+
+async function viewClientDetail(clientId, emailLabel) {
+  const panel = document.getElementById('pracDetailPanel');
+  panel.style.display = 'block';
+  panel.innerHTML = `<div class="loading-card"><div class="spinner"></div><div>Loading ${escapeHtml(emailLabel)}…</div></div>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  try {
+    const data = await apiFetch(`/api/practitioner/clients/${clientId}`);
+    panel.innerHTML = renderClientDetail(data, emailLabel);
+  } catch (e) {
+    panel.innerHTML = `<div class="alert alert-error">Error loading client: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderClientDetail(data, emailLabel) {
+  const { client, chart, profile } = data;
+  const email = escapeHtml(emailLabel || client?.email || '');
+
+  let html = `<div class="card" style="border-top:3px solid var(--gold)">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-4)">
+      <div class="card-title" style="margin:0"><span class="icon-star"></span> ${email}</div>
+      <button class="btn-secondary btn-sm" onclick="document.getElementById('pracDetailPanel').style.display='none'">✕ Close</button>
+    </div>`;
+
+  if (!chart) {
+    html += `<div class="alert alert-warn">This client has not generated a chart yet. Ask them to log in and run their blueprint calculation.</div>`;
+  } else {
+    const hd = chart.hdData || {};
+    const type       = escapeHtml(hd.type || hd.hdType || '—');
+    const authority  = escapeHtml(hd.authority || hd.decisionStyle || '—');
+    const profile    = escapeHtml(hd.profile || hd.lifeRole || '—');
+    const strategy   = escapeHtml(hd.strategy || '—');
+    const definition = escapeHtml(hd.definition || '—');
+    const chartDate  = chart.calculatedAt ? new Date(chart.calculatedAt).toLocaleDateString() : '—';
+
+    html += `
+    <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0 0 var(--space-3)">Energy Blueprint</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-3);margin-bottom:var(--space-5)">
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">Pattern</div>
+        <div style="font-weight:600;color:var(--text)">${type}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">Authority</div>
+        <div style="font-weight:600;color:var(--text)">${authority}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">Life Role</div>
+        <div style="font-weight:600;color:var(--text)">${profile}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">Strategy</div>
+        <div style="font-weight:600;color:var(--text)">${strategy}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">Definition</div>
+        <div style="font-weight:600;color:var(--text)">${definition}</div>
+      </div>
+    </div>
+    <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-4)">Chart calculated: ${chartDate}</div>`;
+  }
+
+  if (data.profile) {
+    const pData   = data.profile.profileData || {};
+    const summary = escapeHtml(pData.quickStart || pData.overview || pData.summary || '');
+    const profileDate = data.profile.createdAt ? new Date(data.profile.createdAt).toLocaleDateString() : '—';
+    const profileId   = escapeHtml(data.profile.id || '');
+    const audit       = data.profile.groundingAudit || {};
+
+    html += `
+    <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0 0 var(--space-3)">Profile Synthesis</h4>`;
+
+    if (summary) {
+      html += `<p style="font-size:var(--font-size-base);color:var(--text);line-height:1.6;margin-bottom:var(--space-3)">${summary}</p>`;
+    }
+
+    html += `<div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-4)">
+      <span>Generated: ${profileDate}</span>`;
+
+    if (audit.claimsTotal) {
+      html += `<span>Grounding: ${audit.claimsGrounded}/${audit.claimsTotal} claims verified</span>`;
+    }
+
+    if (profileId) {
+      html += `<button class="btn-secondary btn-sm" onclick="exportPDF('${profileId}')">Download PDF</button>`;
+    }
+
+    html += `</div>`;
+  } else {
+    html += `<div class="alert alert-warn" style="margin-top:var(--space-3)">This client has not generated a profile synthesis yet.</div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+async function removeClient(clientId, emailLabel) {
+  if (!confirm(`Remove ${emailLabel} from your roster? This does not delete their account.`)) return;
+
+  try {
+    await apiFetch(`/api/practitioner/clients/${clientId}`, { method: 'DELETE' });
+    showNotification(`${emailLabel} removed from roster`, 'success');
+    // Hide detail panel if it's showing this client
+    const panel = document.getElementById('pracDetailPanel');
+    if (panel) panel.style.display = 'none';
+    loadRoster();
+  } catch (e) {
+    showNotification('Error removing client: ' + e.message, 'error');
+  }
 }
 
 // ── Clusters ───────────────────────────────────────────────────
@@ -4166,7 +4625,7 @@ function updateOverview(chartResponse) {
     html += `<div class="card" style="margin-bottom:var(--space-4)">
       <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">Your Life Purpose</div>
       <div style="font-size:var(--font-size-md);font-weight:700;color:var(--text)">${crossName}</div>
-      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Your incarnation cross describes the overarching theme of your life journey.</div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">Your soul cross describes the overarching theme of your life journey.</div>
     </div>`;
   }
 
@@ -4695,7 +5154,7 @@ async function shareProfile(title, text, url) {
     // Build share URL with referral tracking
     const shareUrl = url || buildShareUrl(user);
     const shareTitle = title || `Check out my Prime Self Energy Blueprint!`;
-    const shareText = text || `Discover your unique energy blueprint through Human Design, Gene Keys, and astrology.`;
+    const shareText = text || `Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology.`;
     
     // Use Web Share API if available (mobile browsers)
     if (navigator.share) {
@@ -4780,7 +5239,7 @@ async function copyToClipboard(text) {
  */
 function shareToSocial(platform) {
   const shareUrl = buildShareUrl();
-  const shareText = encodeURIComponent('Discover your unique energy blueprint through Human Design, Gene Keys, and astrology on Prime Self!');
+  const shareText = encodeURIComponent('Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology on Prime Self!');
   
   const urls = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
@@ -4965,7 +5424,11 @@ if (!document.getElementById('notificationStyles')) {
 // ── Init ──────────────────────────────────────────────────────
 updateAuthUI();
 // If already signed in, fetch profile/tier for badge and billing buttons
+// Handle OAuth redirect-back before fetchUserProfile (may set token)
+checkOAuthCallback();
 if (token) fetchUserProfile();
+// Check for password reset action in URL
+checkResetPasswordAction();
 </script>
 
 <!-- Mobile Bottom Navigation -->
@@ -5555,7 +6018,7 @@ function showIdentityStrip(chartData) {
     if (profEl) profEl.textContent = chart.profile ? 'Profile ' + chart.profile : '';
     const strip = document.getElementById('identity-strip');
     if (strip) strip.style.display = 'block';
-  } catch(e) { console.warn('[IdentityStrip]', e); }
+  } catch(e) { window.DEBUG && console.warn('[IdentityStrip]', e); }
 }
 </script>
 
@@ -5664,6 +6127,15 @@ document.addEventListener('DOMContentLoaded', initTooltipCollisionDetection);
   });
 })();
 </script>
+
+<!-- Legal Footer -->
+<footer style="text-align:center;padding:var(--space-4) var(--space-3);font-size:var(--font-size-sm);color:var(--text-muted);border-top:1px solid var(--border-color, #2a2a3a);margin-top:var(--space-6)">
+  <p style="margin:0">
+    &copy; 2026 Prime Self. All rights reserved.
+    &nbsp;·&nbsp; <a href="/privacy.html" style="color:var(--text-dim)">Privacy Policy</a>
+    &nbsp;·&nbsp; <a href="/terms.html" style="color:var(--text-dim)">Terms of Service</a>
+  </p>
+</footer>
 
 </body>
 </html>

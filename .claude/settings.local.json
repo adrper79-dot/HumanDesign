@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -c '\"\"shadow\"\"' src/knowledgebase/genekeys/keys.json)",
+      "Bash(grep -c '\"\"gift\"\"' src/knowledgebase/genekeys/keys.json)",
+      "Bash(grep -c '\"\"siddhi\"\"' src/knowledgebase/genekeys/keys.json)",
+      "Bash(node -e \":*)",
+      "Bash(ls workers/src/db/migrations/022* workers/src/handlers/oauthSocial.js)"
+    ]
+  }
+}

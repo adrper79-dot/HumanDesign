@@ -192,7 +192,7 @@ Follow the test scenarios in `docs/UPGRADE_FLOW_TESTING.md`:
 
 3. Create checkout session:
    ```bash
-   curl -X POST https://prime-self-api.adrper79.workers.dev/api/checkout/create \
+   curl -X POST https://prime-self-api.adrper79.workers.dev/api/billing/checkout \
      -H "Authorization: Bearer YOUR_TOKEN_HERE" \
      -H "Content-Type: application/json" \
      -d '{

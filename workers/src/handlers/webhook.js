@@ -15,7 +15,7 @@
 import { createStripeClient, verifyWebhook } from '../lib/stripe.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { markReferralAsConverted } from './referrals.js';
-import { sendEmail } from '../lib/email.js';
+import { sendEmail, sendSubscriptionConfirmationEmail } from '../lib/email.js';
 
 /**
  * Map Stripe subscription status to our internal status
@@ -40,13 +40,9 @@ function mapStripeStatus(stripeStatus) {
  */
 function getTierFromPriceId(priceId, env) {
   const priceIdMap = {
-    // Current live price IDs (set in wrangler.toml)
     [env.STRIPE_PRICE_REGULAR]:      'regular',
     [env.STRIPE_PRICE_PRACTITIONER]: 'practitioner',
     [env.STRIPE_PRICE_WHITE_LABEL]:  'white_label',
-    // Legacy fallbacks (old env var names, kept for safety during transition)
-    [env.STRIPE_PRICE_SEEKER]:       'regular',
-    [env.STRIPE_PRICE_GUIDE]:        'practitioner',
   };
 
   return priceIdMap[priceId] || 'free';
@@ -170,6 +166,23 @@ async function handleCheckoutCompleted(event, query, stripe, env) {
 
   // Track referral conversion
   try { await markReferralAsConverted(env, userId); } catch (e) { console.warn('Referral tracking error:', e); }
+
+  // Send subscription confirmation email (fire and forget)
+  if (env.RESEND_API_KEY) {
+    const TIER_LABELS = { regular: 'Explorer', practitioner: 'Practitioner', white_label: 'Studio' };
+    const tierLabel = TIER_LABELS[tier] || tier;
+    // Look up user email
+    try {
+      const userResult = await query(QUERIES.getUserById, [userId]);
+      const userEmail = userResult.rows?.[0]?.email;
+      if (userEmail) {
+        sendSubscriptionConfirmationEmail(
+          userEmail, tierLabel, env.RESEND_API_KEY,
+          env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+        ).catch(err => console.error('Subscription confirmation email failed:', err));
+      }
+    } catch (e) { console.warn('Could not send subscription confirmation email:', e); }
+  }
 
   console.log(`Checkout completed for user ${userId}, tier: ${tier}`);
 }

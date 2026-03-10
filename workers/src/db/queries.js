@@ -1644,5 +1644,103 @@ export const QUERIES = {
            valid_until, applicable_tiers, active, created_at
     FROM promo_codes
     ORDER BY created_at DESC
+  `,
+
+  // ─── Password Reset ──────────────────────────────────────────
+  createPasswordResetToken: `
+    INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+    VALUES ($1, $2, $3)
+    RETURNING id
+  `,
+
+  getPasswordResetToken: `
+    SELECT id, user_id, expires_at, used_at
+    FROM password_reset_tokens
+    WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+  `,
+
+  markPasswordResetUsed: `
+    UPDATE password_reset_tokens SET used_at = now()
+    WHERE id = $1
+  `,
+
+  invalidatePasswordResetTokens: `
+    UPDATE password_reset_tokens SET used_at = now()
+    WHERE user_id = $1 AND used_at IS NULL
+  `,
+
+  updatePasswordHash: `
+    UPDATE users SET password_hash = $2, updated_at = NOW()
+    WHERE id = $1
+  `,
+
+  // ─── Account Deletion ────────────────────────────────────────
+  deleteUserAccount: `
+    DELETE FROM users WHERE id = $1
+  `,
+
+  // ─── GDPR Data Export ──────────────────────────────────────
+  exportUserData: `
+    SELECT id, email, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng,
+           sms_opted_in, tier, referral_code, email_verified, last_login_at, created_at, updated_at
+    FROM users WHERE id = $1
+  `,
+  exportUserCharts: `
+    SELECT id, hd_json, astro_json, calculated_at FROM charts WHERE user_id = $1 ORDER BY calculated_at DESC
+  `,
+  exportUserProfiles: `
+    SELECT id, chart_id, profile_json, model_used, created_at FROM profiles WHERE user_id = $1 ORDER BY created_at DESC
+  `,
+  exportUserCheckins: `
+    SELECT checkin_date, alignment_score, followed_strategy, followed_authority, mood, energy_level, notes, created_at
+    FROM daily_checkins WHERE user_id = $1 ORDER BY checkin_date DESC
+  `,
+  exportUserDiary: `
+    SELECT event_date, event_title, event_description, event_type, significance, transit_snapshot, created_at
+    FROM diary_entries WHERE user_id = $1 ORDER BY event_date DESC
+  `,
+  exportUserSubscription: `
+    SELECT tier, status, current_period_start, current_period_end, cancel_at_period_end, created_at
+    FROM subscriptions WHERE user_id = $1
+  `,
+  exportUserAlerts: `
+    SELECT alert_type, config, name, active, created_at FROM transit_alerts WHERE user_id = $1
+  `,
+  exportUserSMS: `
+    SELECT direction, body, sent_at FROM sms_messages WHERE user_id = $1 ORDER BY sent_at DESC
+  `,
+
+  // ─── Social Auth (migration 022) ──────────────────────────
+
+  getSocialAccount: `
+    SELECT sa.user_id, u.email, u.tier, u.email_verified
+    FROM social_accounts sa
+    JOIN users u ON u.id = sa.user_id
+    WHERE sa.provider = $1 AND sa.provider_user_id = $2
+    LIMIT 1
+  `,
+
+  insertSocialAccount: `
+    INSERT INTO social_accounts (user_id, provider, provider_user_id, provider_email, display_name, avatar_url)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    ON CONFLICT (provider, provider_user_id) DO UPDATE SET
+      provider_email = EXCLUDED.provider_email,
+      display_name   = EXCLUDED.display_name,
+      avatar_url     = EXCLUDED.avatar_url
+  `,
+
+  insertOAuthStatePublic: `
+    INSERT INTO oauth_states (provider, state, expires_at)
+    VALUES ($1, $2, $3)
+  `,
+
+  verifyOAuthStatePublic: `
+    SELECT expires_at FROM oauth_states
+    WHERE provider = $1 AND state = $2 AND expires_at > NOW()
+    LIMIT 1
+  `,
+
+  deleteOAuthStatePublic: `
+    DELETE FROM oauth_states WHERE provider = $1 AND state = $2
   `
 };

@@ -1,10 +1,10 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-09 (Repo audit + documentation reconciliation)
+**Last audited:** 2026-03-10 (Market validation review — second pass)
 **Test suite:** 263/263 passing (vitest 3.2.4)
-**Code status:** Sprints 1–17 COMPLETE ✅ | Sprint 18: 40 items originally identified, 11 now verified shipped in code, 29 remaining
+**Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10
 **Deployment status:** ⚠️ Last external production report showed stale deployment issues; not re-verified in this repo-only audit
-**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration**
+**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration** + **market validation (2026-03-10)**
 
 ---
 
@@ -1759,6 +1759,274 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Fix:** (1) Track share button clicks by platform, (2) Track referral conversions from each platform using UTM parameters, (3) Create admin dashboard showing share counts and conversion rates per platform, (4) Store in analytics or new social_shares table
   - **Schema:** `social_shares (id, user_id, platform, shared_at, referral_code, utm_source, converted BOOLEAN)`
   - **Verify:** Admin can see "Instagram: 245 shares, 12 conversions (4.9%)" type metrics
+
+---
+
+---
+
+## Practitioner Dashboard — Shipped (2026-03-10)
+
+Full practitioner dashboard built and wired. Replaced the broken stub (wrong API fields, wrong data keys, no actions).
+
+### What Guide ($60/mo) tier now includes
+
+| Feature | Status |
+|---------|--------|
+| Client roster — view all clients | ✅ Shipped |
+| Add client by email | ✅ Shipped (fixed: was sending `clientName`, now sends `clientEmail`) |
+| Client limit progress bar (X / 50 used) | ✅ Shipped |
+| Per-client: chart summary (type, authority, profile, strategy, definition) | ✅ Shipped |
+| Per-client: profile synthesis preview (quickStart paragraph) | ✅ Shipped |
+| Per-client: PDF export button | ✅ Shipped |
+| Per-client: grounding audit display | ✅ Shipped |
+| Remove client from roster (with confirm) | ✅ Shipped (fixed: was missing entirely) |
+| Auto-loads roster on tab open | ✅ Shipped (was: required manual button click) |
+| Upgrade CTA routes to practitioner pricing overlay | ✅ Shipped |
+
+### What is NOT yet included (future)
+
+- Session notes per client (needs new DB table)
+- Bulk chart generation for multiple clients at once
+- Notion sync per client (OAuth setup required)
+- Client invite via email (currently client must self-register first)
+- Client birth data entry by practitioner (currently client must enter their own)
+
+---
+
+## Market Validation Issues (2026-03-10) — 4 new items
+
+Found during second-pass market validation review. See `docs/MARKET_VALIDATION_RECOMMENDATIONS.md` for full context.
+
+### BL-MV-N1 | Studio tier ($500/mo) purchaseable but features not built
+- [ ] **Status:** Open
+- **Severity:** Critical
+- **Files:** `frontend/index.html` (line 309), `workers/src/handlers/billing.js`
+- **Problem:** The Studio pricing card has a working Stripe checkout button. Promised features — white-label embed (remove "Powered by Prime Self"), unlimited client profiles, custom theme/accent colors, 10,000 API calls/month — are not implemented. A user can pay $500/mo today and receive nothing beyond the Guide tier.
+- **Impact:** Legal/trust liability. Potential chargebacks. Credibility damage if discovered by early adopters or press.
+- **Fix (quick):** Replace the "Upgrade to Studio" button with a "Contact us" mailto/Typeform link. Add a note: "Launching Q2 2026 — join waitlist." Takes 30 minutes.
+- **Fix (full):** Build white-label features, then re-enable checkout.
+- **Verify:** Studio checkout button does not initiate Stripe payment session. Contact form or waitlist page opens instead.
+
+### BL-MV-N2 | Composite form: birth location not auto-populated
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `frontend/index.html` (`restoreBirthData()` function, ~line 2607)
+- **Problem:** `restoreBirthData()` restores `comp-dateA` and `comp-timeA` from localStorage, but does NOT restore `comp-A-location`, `comp-A-lat`, or `comp-A-lng`. The composite form still requires the user to manually re-enter their own birth location (and re-geocode) even after their chart has been saved.
+- **Impact:** Friction on composite chart generation. Contradicts the "enter once" intent of the localStorage birth data system.
+- **Fix:** In `restoreBirthData()`, after filling `comp-dateA` and `comp-timeA`, also fill:
+  ```js
+  const compLocA = document.getElementById('comp-A-location');
+  const compLatA = document.getElementById('comp-A-lat');
+  const compLngA = document.getElementById('comp-A-lng');
+  if (compLocA && data.location) compLocA.value = data.location;
+  if (compLatA && data.lat) compLatA.value = data.lat;
+  if (compLngA && data.lng) compLngA.value = data.lng;
+  ```
+- **Verify:** After calculating a chart, navigate to Composite tab → Person A location field pre-filled with saved location.
+
+### BL-MV-N3 | `totalProfiles` counter shows blank on API failure
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `frontend/index.html` (line 380)
+- **Problem:** The social proof banner has `<span id="totalProfiles"></span>` with no default value. If the API call that populates it fails, returns zero, or is slow, users see: "— AI synthesis reports generated" which looks broken and undermines trust rather than building it.
+- **Impact:** Degrades the trust signal the banner is designed to create. First impression damage on landing.
+- **Fix (option A):** Initialize the span with a floor value: `<span id="totalProfiles">100+</span>` — overwritten by real count when available.
+- **Fix (option B):** Hide the entire stat row until the API returns a non-zero count.
+- **Verify:** Load page with network throttled to slow 3G → profile count stat still shows a meaningful value.
+
+### BL-MV-N4 | `RESEND_API_KEY` production status unverified
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `workers/src/lib/email.js` (line ~14), production Worker secrets
+- **Problem:** Email delivery via Resend is fully implemented in code but soft-fails silently if `RESEND_API_KEY` is not set (`console.warn` only, registration still succeeds). There is no confirmation that the key is configured in production Cloudflare Worker secrets. Welcome emails and password reset emails may be silently dropping for all production users.
+- **Impact:** All welcome emails and password reset emails fail to deliver without any visible error. Users who forget their password cannot recover their account.
+- **Fix:** (1) Verify `RESEND_API_KEY` is set in `wrangler secret list`. (2) Trigger a test registration and confirm email received. (3) Consider adding a startup health check that logs email config status.
+- **Verify:** Register new account → welcome email received. Trigger "Forgot Password" → reset email received within 60 seconds.
+
+---
+
+## Launch Readiness Audit — 2026-03-10
+
+**Verdict:** 🔴 DO NOT LAUNCH — 4 blockers must be cleared before any paying customer is accepted.  
+**Source:** `LAUNCH_READINESS_REPORT.md` (v2 — full evidence re-audit)
+
+---
+
+### Required — Launch Blockers (4)
+
+### BL-LR-C1 | IDOR: cluster endpoints expose member emails and birth data to any authenticated user
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** Critical (Security / GDPR)
+- **Files:** `workers/src/handlers/cluster.js` (lines 333, 407), `workers/src/db/queries.js` (line 339)
+- **Problem:** `handleGet()` and `handleSynthesize()` both call `getClusterMembers(clusterId)` with no membership check. The SQL is `WHERE cm.cluster_id = $1` — no `user_id` filter. Any authenticated user (including free tier) can call `GET /api/cluster/<uuid>` with any valid cluster ID and receive every member's: `email`, `birth_date`, `birth_time`, `birth_timezone`, `birth_lat`, `birth_lng`.
+- **Impact:** Active data breach — GDPR Article 5(1)(f) integrity violation. Constitutes a reportable breach under GDPR Article 33 if exploited.
+- **Fix:** Add membership pre-check in both handlers before the cluster query:
+  ```javascript
+  const userId = request._user?.sub;
+  const memberCheck = await query(
+    `SELECT 1 FROM cluster_members WHERE cluster_id = $1 AND user_id = $2`,
+    [clusterId, userId]
+  );
+  if (!memberCheck.rows?.length) {
+    return Response.json({ error: 'Access denied' }, { status: 403 });
+  }
+  ```
+- **Effort:** 30–60 min
+- **Verify:** `GET /api/cluster/:id` with a token whose `sub` is NOT a member of that cluster → returns 403, not member data.
+
+### BL-LR-C2 | "Human Design" trademark appears in shareable PNG, embed widget, and SEO meta tags
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** Critical (IP / Legal)
+- **Files:** `frontend/js/share-card.js` (lines 185, 174, 253), `frontend/js/explanations.js` (lines 8, 91+), `frontend/index.html` (lines 100–118), `frontend/embed.html` (line 258), `frontend/js/bodygraph.js` (line 178)
+- **Problem:** "Human Design" is a trademark held by IHDS / Jovian Archive Corp. It appears in: the footer of every share-card PNG that gets distributed to social media; the `navigator.share()` text; every page's `<meta name="description">`, OG tags, and Twitter card; the distributed `embed.html` widget (highest-risk: not under your domain control); and the bodygraph SVG aria-label. The type names (Generator, Manifesting Generator, Projector, Manifestor, Reflector) are also trademarked concepts. Additionally, `explanations.js:8` credits "Ra Uru Hu" by name in user-facing JS.
+- **Impact:** C&D from Jovian Archive. Embed widget distribution compounds risk because the trademark is being redistributed to third-party sites. Share cards distribute it at social media scale.
+- **Fix (choose one):**
+  - **(a) License:** Obtain commercial license from Jovian Archive (www.jovianarchive.com).
+  - **(b) Rebrand:** Replace with IP-safe terms already partially adopted: "Energy Blueprint" for "Human Design", "Soul Cross" for "Incarnation Cross", "Pattern/Guide/Builder/Initiator/Mirror" for type names, remove Ra Uru Hu credit.
+  - **(c) Nominative fair use + disclaimer (weakest):** Add "Human Design® is a registered trademark of Jovian Archive Corp." on all pages; remove from embed and share surfaces; consult IP attorney.
+- **Effort:** 2–4 h for rebrand option; legal timeline unknown for license option.
+- **Verify:** No instance of "Human Design" remains in: share-card footer/share-text, `embed.html`, `<meta>` tags. All type names use IP-safe equivalents in user-facing surfaces.
+
+### BL-LR-C3 | Migration 020 not confirmed applied to production — Stripe tier constraint may crash on checkout
+- [ ] **Status:** Open
+- **Severity:** Critical (Revenue)
+- **Files:** `workers/src/db/migrations/020_fix_subscription_constraints.sql`, `workers/src/handlers/webhook.js` (lines 43–45)
+- **Problem:** Webhook handler writes `'regular'`, `'practitioner'`, `'white_label'` to `subscriptions.tier`. The original schema only permitted `('free','seeker','guide','practitioner')`. Migration 020 expands the constraint to include both old and new tier names. The migration file is correctly written — but there is no confirmation it has been applied to the **production** Neon database. If it has not, every Explorer ($12) and Studio ($500) checkout will: complete payment → fire webhook → hit DB CHECK constraint violation → roll back → **customer charged but tier not upgraded**.
+- **Impact:** Revenue loss through chargebacks; subscriber trust destroyed; every paid signup silently broken on 2 of 3 tiers.
+- **Verify in Neon console (production):**
+  ```sql
+  SELECT conname, pg_get_constraintdef(oid)
+  FROM pg_constraint
+  WHERE conrelid = 'subscriptions'::regclass AND contype = 'c';
+  -- Must include: tier IN ('free','seeker','guide','regular','practitioner','white_label')
+  ```
+- **Fix if not applied:** `node workers/run-migration.js workers/src/db/migrations/020_fix_subscription_constraints.sql`
+- **Effort:** 15 min to verify; 5 min to apply if needed.
+- **Verify:** Run `stripe trigger checkout.session.completed` against production → no DB constraint error in Worker logs; `subscriptions.tier` shows `'regular'`.
+
+### BL-LR-C4 | Secrets directory git history status unknown — credentials may be permanently exposed
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** Critical (Security)
+- **Files:** `secrets/` directory, `.gitignore` (lines 19–21)
+- **Note:** Overlaps with `BL-R-C1` (which covers root `Secrets.txt`). This item covers the `secrets/` **directory** — a separate path containing production keys. Both must be verified.
+- **Problem:** The `secrets/` directory contains live production credentials (Stripe `sk_live_*`, Neon connection string with password, Anthropic, Telnyx, Groq, Grok, Cloudflare API token, GitHub PAT). `.gitignore` correctly excludes `secrets`, `secrets/`, and `secrets.*` — but `.gitignore` only prevents **future** commits. If these files were committed before the gitignore rule was added, the credentials are permanently in git history and accessible to anyone with repo access.
+- **Impact:** Full infrastructure compromise: payment fraud (Stripe), database takeover (Neon), AI API cost abuse (Anthropic/Groq/Grok), SMS fraud (Telnyx), Cloudflare account takeover.
+- **Verify:**
+  ```bash
+  git log --all --oneline -- secrets 2>&1
+  git log --all --oneline -- "secrets/*" 2>&1
+  ```
+  If any commits are returned → credentials are in history.
+- **Fix if ever committed:**
+  1. Rotate ALL credentials immediately across all 8 services.
+  2. `git filter-repo --path secrets --invert-paths` to scrub history.
+  3. Force-push all branches; notify all repo collaborators to re-clone.
+  4. Treat current credentials as permanently compromised regardless.
+- **Effort:** 15 min to verify; 2–4 h rotation if secrets were committed.
+- **Verify:** `git log --all --oneline -- secrets` returns no output. All services authenticated with newly rotated credentials.
+
+---
+
+### Recommended — Launch Conditions (8)
+
+### BL-LR-M1 | Promo codes validated but not passed to Stripe checkout — customers pay full price
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** High
+- **Files:** `workers/src/handlers/promo.js`, `workers/src/handlers/billing.js`
+- **Problem:** `POST /api/promo/apply` validates promo codes correctly, but checkout session creation in `billing.js` does not pass the validated promo code to Stripe (`allow_promotion_codes` or `discounts: [{promotion_code}]` absent). A customer who enters a valid promo code sees "Applied" confirmation, then is charged full price.
+- **Impact:** Consumer protection issue; leads to disputes and refund requests once any marketing campaign using promo codes launches.
+- **Fix:** In the checkout session creation call, after validating the promo code, pass it to Stripe:
+  ```javascript
+  const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true });
+  if (promoCodes.data.length > 0) {
+    sessionParams.discounts = [{ promotion_code: promoCodes.data[0].id }];
+  }
+  ```
+- **Effort:** 1–2 h
+- **Verify:** Create a Stripe test promotion code → enter at checkout → confirmed charge shows discount applied.
+
+### BL-LR-M2 | Worker bundle (2.27 MB) requires paid Cloudflare plan — not documented as hard dependency
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** Medium
+- **Files:** `workers/wrangler.toml`, `ARCHITECTURE.md`, deployment documentation
+- **Problem:** `wrangler deploy --dry-run` reports 2266.09 KiB uncompressed (533.49 KiB gzip). The Workers **Free** tier limit is 1 MB; the Workers **Paid** (Bundled) plan limit is 10 MB. The bundle exceeds the free tier. If the Cloudflare account is ever downgraded (billing failure, plan change), `wrangler deploy` will immediately fail with a "Script too large" error — the Worker cannot be re-deployed and the entire service goes dark until the account is re-upgraded or the bundle is shrunk. The main driver of bundle size is the esbuild-inlined knowledgebase JSON in `src/knowledgebase/` (~972 KB).
+- **Impact:** A billing lapse causes a complete, unrecoverable production outage until manually remediated. No code change is needed at current scale — this is a **documentation and process** deficiency.
+- **Fix:** No code change required. Add the following to `ARCHITECTURE.md` and deployment runbooks:
+  > ⚠️ **Hard infrastructure dependency**: The production Cloudflare Worker bundle is 2.27 MB uncompressed. This requires an active **Cloudflare Workers Paid** (Bundled or Unbound) plan. The free tier (1 MB limit) is insufficient. Ensure Cloudflare billing never lapses: a downgrade will prevent all deployments until resolved.
+- **Effort:** 15 min documentation only.
+- **Verify:** `ARCHITECTURE.md` and deployment docs note the paid plan requirement. Cloudflare billing is confirmed active and auto-renewing.
+
+### BL-LR-M3 | API responses missing Content-Security-Policy header
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** Low
+- **Files:** `workers/src/middleware/security.js`
+- **Problem:** `security.js` sets HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy on all responses — but does not set `Content-Security-Policy`. The SPA frontend (`index.html`) has a comprehensive CSP meta tag covering normal browser rendering. The gap is API responses only, which is low-risk for a JSON API.
+- **Fix:** Add to the security header set in `security.js`:
+  ```javascript
+  headers.set('Content-Security-Policy', "default-src 'none'");
+  ```
+  This is appropriate for JSON API endpoints that should never render HTML or load resources.
+- **Effort:** 30 min.
+- **Verify:** `curl -I https://<worker-url>/api/health` response includes `Content-Security-Policy: default-src 'none'`.
+
+### BL-LR-M4 | Migration 019 exited with code 1 — cluster synthesis may fail if columns absent
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `workers/src/db/migrations/019_cluster_member_birth_data.sql`, `workers/src/handlers/cluster.js`
+- **Problem:** Migration 019 adds `birth_date`, `birth_time`, `birth_timezone`, `birth_lat`, `birth_lng` to `cluster_members`. During a prior session, `run-migration.js` exited with code 1 on this file. If the migration did not apply, `handleSynthesize()` will throw a DB column-not-found error for every cluster synthesis attempt. Migration 019 uses `ADD COLUMN IF NOT EXISTS` throughout — it is **safe to re-run**.
+- **Latest diagnostic (2026-03-10):** Re-run from `workers/` fails before SQL execution with `Missing database connection string (NEON_CONNECTION_STRING)`. The previous exit code 1 may have been environment-related, not a migration SQL failure.
+- **Verify in Neon console:**
+  ```sql
+  SELECT column_name FROM information_schema.columns
+  WHERE table_name = 'cluster_members'
+  ORDER BY ordinal_position;
+  -- Must include: birth_date, birth_time, birth_timezone, birth_lat, birth_lng
+  ```
+- **Fix if columns absent:** `node workers/run-migration.js workers/src/db/migrations/019_cluster_member_birth_data.sql`
+- **Effort:** 10 min to verify + run.
+- **Verify:** `\d cluster_members` in Neon console shows all 5 birth data columns.
+
+### BL-LR-M5 | 21 console.log / console.warn statements in production frontend
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** Low
+- **Files:** `frontend/index.html` (21 statements), `frontend/js/offline-transits.js` (12), `frontend/js/lazy.js` (3), `frontend/js/i18n.js` (2), others (~3)
+- **Problem:** Production JS bundles leak internal state to DevTools. Examples include: auth token handling, API response bodies, initialization sequences. Unprofessional and discloses implementation details.
+- **Fix:** Remove or guard all console.* calls behind a `DEBUG` flag:
+  ```javascript
+  const DEBUG = false; // set to true in local dev only
+  if (DEBUG) console.log(...);
+  ```
+- **Effort:** 1–2 h.
+- **Verify:** Chrome DevTools console is clean on production URL with no log output from application code.
+
+### BL-LR-M6 | Wrangler v3 in use; v4 available; 4 moderate dev-only CVEs pending
+- [ ] **Status:** Open
+- **Severity:** Low
+- **Files:** `workers/package.json` (wrangler version), `workers/` npm tree
+- **Problem:** Workers uses `wrangler@3.x`; `wrangler@4.71.0` is available. `npm audit` (workers) reports 4 moderate CVEs: esbuild dev-server exploit (GHSA), undici unbounded decompression (GHSA), miniflare local server (GHSA). All 4 are in **dev dependencies only** — the deployed Worker bundle contains zero CVE-affected code. Root package has 2 high CVEs in `@cloudflare/mcp-server-cloudflare` — also dev-only.
+- **Risk to production:** Zero. This is housekeeping only to reduce audit noise.
+- **Fix:** `npm install --save-dev wrangler@4` in `workers/`. Review wrangler v4 changelog for breaking changes before deploying. Separately: `npm audit fix` in root package (MCP server dev deps).
+- **Effort:** 30–60 min (upgrade + test cycle).
+- **Verify:** `npx wrangler --version` shows v4.x. `npm audit` returns 0 vulnerabilities in `workers/`. All existing wrangler commands still work.
+
+### BL-LR-M7 | ENVIRONMENT_VARIABLES.md documents wrong Stripe price variable names
+- [x] **Status:** Done (2026-03-10)
+- **Severity:** Low (Documentation only)
+- **Files:** `guides/ENVIRONMENT_VARIABLES.md`, `workers/wrangler.toml`, `workers/src/handlers/billing.js`
+- **Problem:** `ENVIRONMENT_VARIABLES.md` documents: `STRIPE_PRICE_SEEKER`, `STRIPE_PRICE_GUIDE`, `STRIPE_PRICE_PRACTITIONER`. Code and `wrangler.toml` use: `STRIPE_PRICE_REGULAR`, `STRIPE_PRICE_PRACTITIONER`, `STRIPE_PRICE_WHITE_LABEL`. The implementation is internally consistent — only the documentation is wrong. This causes confusion when onboarding contributors or when debugging tier mapping issues.
+- **Fix:** Update `ENVIRONMENT_VARIABLES.md` to reflect the actual variable names: `STRIPE_PRICE_REGULAR` (Explorer tier, $12), `STRIPE_PRICE_PRACTITIONER` (Guide tier, $60), `STRIPE_PRICE_WHITE_LABEL` (Studio tier, $500).
+- **Effort:** 15 min.
+- **Verify:** `grep STRIPE_PRICE guides/ENVIRONMENT_VARIABLES.md` matches `grep STRIPE_PRICE workers/wrangler.toml`.
+
+### BL-LR-M8 | Gene Keys knowledgebase — license and attribution scope not verified
+- [ ] **Status:** Open
+- **Severity:** Medium (Legal)
+- **Files:** `src/knowledgebase/genekeys/keys.json`, `frontend/js/explanations.js` (line 8)
+- **Problem:** `keys.json` contains the 64 Gene Keys system content. `explanations.js:8` credits "Gene Keys (Richard Rudd)" in user-facing JS. Gene Keys® is a registered trademark of Gene Keys Ltd (Richard Rudd). Unlike Human Design (aggressively enforced by IHDS), Gene Keys uses a more flexible community model, but commercial use still requires awareness of license terms.
+- **Impact:** Lower enforcement risk than Human Design (BLOCKER-2) but the same structural IP exposure — using a trademarked system commercially without a documented license.
+- **Fix:** (1) Legal review: confirm whether current use qualifies as proper attribution vs. commercial use requiring license. (2) Add "Gene Keys® is a registered trademark of Gene Keys Ltd." disclaimer to relevant pages. (3) Cross-reference with the rebrand approach chosen for BLOCKER-2 — may be able to address both in one pass.
+- **Effort:** Legal review timeline unknown; disclaimer addition 15 min.
+- **Verify:** Legal review documented. Attribution or license clearly stated on any page that uses Gene Keys content.
 
 ---
 

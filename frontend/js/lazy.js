@@ -164,7 +164,7 @@
         var entries = list.getEntries();
         for (var i = 0; i < entries.length; i++) {
           if (entries[i].name === 'first-contentful-paint') {
-            console.log('[Perf] FCP:', Math.round(entries[i].startTime), 'ms');
+            window.DEBUG && console.log('[Perf] FCP:', Math.round(entries[i].startTime), 'ms');
             fcpObserver.disconnect();
           }
         }
@@ -184,7 +184,7 @@
           totalSize += r.transferSize || 0;
           totalDuration += r.duration;
         });
-        console.log(
+        window.DEBUG && console.log(
           '[Perf] Resources:',
           resources.length,
           '| Transfer:',

@@ -10,8 +10,8 @@
 
 ### Backend Infrastructure
 - ✅ Stripe SDK integration (`stripe@^17.4.0`)
-- ✅ Checkout session creation (POST /api/checkout/create)
-- ✅ Customer portal access (POST /api/checkout/portal)
+- ✅ Checkout session creation (POST /api/billing/checkout)
+- ✅ Customer portal access (POST /api/billing/portal)
 - ✅ Webhook event processing (POST /api/webhook/stripe)
 - ✅ Database schema (subscriptions, payment_events, usage_records)
 - ✅ Tier enforcement middleware
@@ -204,7 +204,7 @@ curl -X POST https://your-worker.workers.dev/api/auth/register \
 # Response: {"token": "eyJ...", "user": {...}}
 
 # 2. Create checkout session
-curl -X POST https://your-worker.workers.dev/api/checkout/create \
+curl -X POST https://your-worker.workers.dev/api/billing/checkout \
   -H "Authorization: Bearer eyJ..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -226,7 +226,7 @@ curl -X POST https://your-worker.workers.dev/api/checkout/create \
 ### Test Customer Portal
 
 ```bash
-curl -X POST https://your-worker.workers.dev/api/checkout/portal \
+curl -X POST https://your-worker.workers.dev/api/billing/portal \
   -H "Authorization: Bearer eyJ..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -331,7 +331,7 @@ Create checkout UI in `frontend/index.html`:
 ```javascript
 // Example: Trigger checkout
 async function upgradeToSeeker() {
-  const response = await fetch('/api/checkout/create', {
+  const response = await fetch('/api/billing/checkout', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${localStorage.token}`,
@@ -361,7 +361,7 @@ async function upgradeToSeeker() {
 
 **Files Created**:
 - `workers/src/lib/stripe.js`
-- `workers/src/handlers/checkout.js`
+- `workers/src/handlers/billing.js`
 - `workers/src/handlers/webhook.js`
 - `workers/src/middleware/tierEnforcement.js`
 
@@ -371,6 +371,6 @@ async function upgradeToSeeker() {
 - `usage_records`
 
 **API Endpoints**:
-- POST `/api/checkout/create`
-- POST `/api/checkout/portal`
+- POST `/api/billing/checkout`
+- POST `/api/billing/portal`
 - POST `/api/webhook/stripe`

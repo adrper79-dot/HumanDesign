@@ -12,12 +12,16 @@ const RATE_LIMITS = {
   '/api/auth/login':        { max: 10,  windowSec: 60  },  // 10/min
   '/api/auth/refresh':      { max: 10,  windowSec: 60  },  // 10/min
   '/api/auth/me':           { max: 10,  windowSec: 60  },  // 10/min
+  '/api/auth/forgot-password': { max: 3, windowSec: 60 },  // 3/min (prevent abuse)
   '/api/chart/calculate':   { max: 60,  windowSec: 60  },  // 60/min
   '/api/profile/generate':  { max: 5,   windowSec: 60  },  // 5/min (LLM calls)
   '/api/geocode':           { max: 30,  windowSec: 60  },  // 30/min
   '/api/transits/today':    { max: 60,  windowSec: 60  },  // 60/min
   '/api/transits/forecast': { max: 60,  windowSec: 60  },  // 60/min
   '/api/rectify':           { max: 5,   windowSec: 60  },  // 5/min (CPU-expensive: up to 241 chart calcs)
+  '/api/sms/send-digest':   { max: 5,   windowSec: 60  },  // 5/min (SMS cost control)
+  '/api/sms/subscribe':     { max: 5,   windowSec: 60  },  // 5/min
+  '/api/sms/unsubscribe':   { max: 5,   windowSec: 60  },  // 5/min
   default:                  { max: 60,  windowSec: 60  }
 };
 

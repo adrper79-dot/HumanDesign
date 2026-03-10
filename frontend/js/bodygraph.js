@@ -1,7 +1,7 @@
 /**
  * Interactive Bodygraph Component
  * 
- * Renders an SVG Human Design Bodygraph with:
+ * Renders an SVG Energy Bodygraph with:
  * - 9 clickable energy centers (colored if defined, outline if open)
  * - 36 channels connecting centers (highlighted if active)
  * - Click-to-explain: tapping a center or channel shows its meaning
@@ -175,7 +175,7 @@
 
     // Build SVG
     let svg = `<svg viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg" 
-      style="width:100%;max-width:300px;height:auto;display:block;margin:0 auto" role="img" aria-label="Interactive Human Design Bodygraph">`;
+      style="width:100%;max-width:300px;height:auto;display:block;margin:0 auto" role="img" aria-label="Interactive Energy Bodygraph Chart">`;
 
     // Draw channels first (behind centers)
     for (const [key, centers] of Object.entries(CHANNEL_LINES)) {

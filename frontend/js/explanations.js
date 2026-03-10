@@ -1,11 +1,11 @@
 /**
  * Prime Self — Explanations Module
  * 
- * Centralized plain-English descriptions for every Human Design concept.
+ * Centralized plain-English descriptions for every Energy Blueprint concept.
  * Used by renderChart(), renderTransits(), and renderComposite() 
  * to show "WHY it matters" alongside raw data.
  * 
- * Sources: Standard Human Design System (Ra Uru Hu), Gene Keys (Richard Rudd)
+ * Sources: Gene Keys (Richard Rudd)
  */
 
 // ── Type Explanations ──────────────────────────────────────────
@@ -316,4 +316,4 @@ window.getGateName = function(gateNum) {
   return window.GATE_NAMES[Number(gateNum)] || null;
 };
 
-console.log('[Explanations] Module loaded — types, authorities, strategies, profiles, centers, channels, gates');
+window.DEBUG && console.log('[Explanations] Module loaded — types, authorities, strategies, profiles, centers, channels, gates');
