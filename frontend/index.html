@@ -706,7 +706,13 @@
       <button class="btn-secondary btn-sm" data-action="expandChartForm">✎ Edit</button>
     </div>
 
-    <div id="chartResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Energy Blueprint &amp; astrology data.</p></div>
+    <div id="chartResult">
+      <div class="empty-state">
+        <span class="icon">⊙</span>
+        <p class="empty-title">Your blueprint awaits</p>
+        <p>Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Energy Blueprint &amp; astrology data.</p>
+      </div>
+    </div>
 
     <!-- Mobile Sticky CTA (Sprint 19.3) - Shows when form scrolls out of viewport -->
     <div id="stickyChartCta" class="sticky-chart-cta" aria-hidden="true">
@@ -723,7 +729,13 @@
       <button class="sub-tab" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
       <button class="sub-tab active" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
     </div>
-<p class="tab-hint">Synthesises 64 gates, Gene Keys, astrology &amp; numerology via AI. Takes 15–30 seconds. Sign-in required to save.</p>
+<div class="feature-callout">
+  <span class="feature-callout-icon">⬡</span>
+  <div class="feature-callout-body">
+    <p class="feature-callout-title">AI-Powered Synthesis</p>
+    <p class="feature-callout-text">Combines 64 gates, Gene Keys, astrology &amp; numerology into one deep reading. Takes 15–30 seconds. Sign-in required to save.</p>
+  </div>
+</div>
     <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
       <strong>⚡ Usage Limit</strong><br>
       <span id="profileQuotaText"></span>
@@ -866,7 +878,13 @@
         <p>Validate your chart through real behavioral patterns, track your energy in the Diary, and build the foundation for the most accurate AI readings. Takes about 10 minutes total.</p>
       </div>
     </div>
-<p class="tab-hint">10-minute assessments validate your chart through real behavioral patterns — decision-making, energy type, personality, and character strengths.</p>
+<div class="feature-callout">
+  <span class="feature-callout-icon">★</span>
+  <div class="feature-callout-body">
+    <p class="feature-callout-title">Validate Your Chart</p>
+    <p class="feature-callout-text">10-minute assessments confirm your energy type through real behavioral patterns — decision-making style, energy flow, personality, and character strengths.</p>
+  </div>
+</div>
 
     <!-- Behavioral Validation -->
     <div class="card">
@@ -946,7 +964,13 @@
       <button class="sub-tab" data-action="switchTab" data-arg0="enhance">★ Enhance</button>
       <button class="sub-tab active" data-action="switchTab" data-arg0="diary">📖 Diary</button>
     </div>
-<p class="tab-hint">Log key life events — the system cross-references them with active transits to confirm chart accuracy and refine birth time.</p>
+<div class="feature-callout">
+  <span class="feature-callout-icon">📖</span>
+  <div class="feature-callout-body">
+    <p class="feature-callout-title">Chart Confirmation Log</p>
+    <p class="feature-callout-text">Log key life events — the system cross-references them with active transits to confirm chart accuracy and refine birth time.</p>
+  </div>
+</div>
 
     <div class="card">
       <div class="card-title"><span class="icon-plus"></span> <span data-i18n="diary.addEvent">Add Life Event</span></div>
@@ -1012,7 +1036,13 @@
       <button class="sub-tab" data-action="switchTab" data-arg0="transits">☽ Transits</button>
       <button class="sub-tab active" data-action="switchTab" data-arg0="checkin">♥ Check-In</button>
     </div>
-<p class="tab-hint">Rate your alignment (1–10), log mood and energy. Scores are compared against active transits so you can see which planetary energies support or challenge your design.</p>
+<div class="feature-callout">
+  <span class="feature-callout-icon">♥</span>
+  <div class="feature-callout-body">
+    <p class="feature-callout-title">Daily Alignment Tracking</p>
+    <p class="feature-callout-text">Rate your alignment (1–10), log mood and energy. Scores are correlated with active transits so you can see which planetary energies support or challenge your design.</p>
+  </div>
+</div>
 
     <!-- Today's Check-In Card -->
     <div class="card">
@@ -1155,7 +1185,13 @@
         <span class="icon-transit"></span> See Today's Energy
       </button>
     </div>
-    <div id="transitResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Tap <strong>See Today's Energy</strong> to load current planetary transits and how they interact with your chart.</p></div>
+    <div id="transitResult">
+      <div class="empty-state">
+        <span class="icon">☽</span>
+        <p class="empty-title">Today's planetary energy</p>
+        <p>Tap <strong>See Today's Energy</strong> to load current planetary transits and how they interact with your chart.</p>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ HISTORY TAB ═══ -->
@@ -1168,7 +1204,13 @@
         View Saved Charts
       </button>
     </div>
-    <div id="historyResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Your previously saved profiles will appear here once you sign in and load them.</p></div>
+    <div id="historyResult">
+      <div class="empty-state">
+        <span class="icon">◎</span>
+        <p class="empty-title">No saved profiles yet</p>
+        <p>Your previously saved profiles will appear here once you <strong>sign in</strong> and load them.</p>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ COMPOSITE TAB ═══ -->
@@ -1184,15 +1226,15 @@
         <p>Understand relationship dynamics through composite charts (two people) and group field analysis (Clusters). See which new channels activate when your energy fields overlap.</p>
       </div>
     </div>
-    <div class="alert alert-warn">
-      <strong>Relationship Field Analysis</strong>
-      <ul class="relationship-field-list" style="margin:8px 0 0;padding-left:18px;line-height:1.7">
-        <li>New channels activated when you're together (electromagnetic bridges)</li>
-        <li>Definition changes (e.g., individual becomes emotional authority)</li>
-        <li>Dominant gates &amp; themes in the relationship field</li>
-        <li>Potential blind spots (missing energies)</li>
+    <div class="feature-highlight-card">
+      <p class="feature-highlight-title">What relationship field analysis reveals</p>
+      <ul>
+        <li>New channels that activate when you're together (electromagnetic bridges)</li>
+        <li>Definition changes — e.g., an individual gains emotional authority</li>
+        <li>Dominant gates &amp; shared themes in the relationship field</li>
+        <li>Potential blind spots and missing energies</li>
       </ul>
-      <p style="margin:8px 0 0;font-size:var(--font-size-sm)">Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.</p>
+      <p class="feature-highlight-sub">Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.</p>
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-partnership"></span> <span data-i18n="composite.title">Composite Chart</span></div>
@@ -1245,7 +1287,13 @@
         <span data-i18n="composite.generate">Check Our Compatibility</span>
       </button>
     </div>
-    <div id="compResult"><p class="empty-state" style="text-align:center;color:var(--text-dim);padding:var(--space-6) 0;font-size:var(--font-size-base)">Enter both birth details above and tap <strong>Check Our Compatibility</strong> to see a relationship analysis.</p></div>
+    <div id="compResult">
+      <div class="empty-state">
+        <span class="icon">⊕</span>
+        <p class="empty-title">Relationship analysis</p>
+        <p>Enter both birth details above and tap <strong>Check Our Compatibility</strong> to see a relationship field analysis.</p>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ RECTIFY TAB ═══ -->

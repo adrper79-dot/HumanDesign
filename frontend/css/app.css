@@ -153,6 +153,41 @@ select option { background: var(--bg3); }
 }
 .alert-info { background: rgba(74,130,240,0.15); border: 1px solid rgba(74,130,240,0.4); color: #93baf8; }
 .tab-hint { font-size: var(--font-size-sm); color: var(--text-muted); margin: 0 0 var(--space-4); line-height: 1.6; padding: 0 var(--space-1); } /* [UNIQUE] — subtle section intro text */
+
+/* ── Feature Callout — replaces plain tab-hint text [UNIQUE] ──────────────── */
+.feature-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 20%, transparent);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: var(--space-3) var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+.feature-callout-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  color: var(--gold);
+  margin-top: 1px;
+}
+.feature-callout-body { flex: 1; }
+.feature-callout-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 3px;
+}
+.feature-callout-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0;
+}
 .alert-success { background: rgba(80,200,120,0.12); border: 1px solid rgba(80,200,120,0.3); color: var(--accent2); }
 .alert-error { background: rgba(224,80,80,0.12); border: 1px solid rgba(224,80,80,0.3); color: var(--red); }
 .alert-warn { background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); } /* [UNIQUE] — external has .alert-warning */
@@ -458,8 +493,9 @@ select option { background: var(--bg3); }
 
 /* ── Empty state [UNIQUE] ── */
 .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
-.empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
-.empty-state p { font-size: 0.88rem; }
+.empty-state .icon { font-size: 2.8rem; margin-bottom: var(--space-3); opacity: 0.35; display: block; }
+.empty-state .empty-title { font-size: var(--font-size-base); font-weight: 600; color: var(--text-dim); margin: 0 0 var(--space-2); }
+.empty-state p { font-size: 0.88rem; max-width: 300px; margin: 0 auto; line-height: 1.6; }
 
 /* ── Indicator list [UNIQUE] ── */
 .indicator-list { list-style: none; }
@@ -1031,6 +1067,54 @@ img[data-src].loaded, img:not([data-src]) {
 }
 
 /* Composite intro list: force readable single column on small screens */
+/* ── Feature Highlight Card — replaces alert-warn for feature lists [UNIQUE] ── */
+.feature-highlight-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 6%, transparent) 0%, transparent 100%);
+  border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-radius: 10px;
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+.feature-highlight-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--space-3);
+}
+.feature-highlight-card ul {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-2);
+}
+.feature-highlight-card ul li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--text);
+  line-height: 1.5;
+}
+.feature-highlight-card ul li::before {
+  content: '✦';
+  color: var(--gold);
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  margin-top: 4px;
+}
+.feature-highlight-sub {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  line-height: 1.55;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 15%, transparent);
+  padding-top: var(--space-3);
+}
+
 .relationship-field-list {
   list-style-position: outside;
   columns: 2;
