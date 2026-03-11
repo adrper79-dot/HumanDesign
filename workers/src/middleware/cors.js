@@ -57,12 +57,16 @@ function getAllowedOrigins(environment) {
 export function getCorsHeaders(request, environment) {
   const origin = request.headers.get('Origin');
   const allowed = getAllowedOrigins(environment);
-  const allowedOrigin = allowed.includes(origin)
-    ? origin
-    : PRODUCTION_ORIGINS[0]; // Default to production
+
+  // If the request has no Origin or an unrecognised Origin, return no CORS
+  // headers. Browsers enforce the mismatch; non-browser clients are unaffected.
+  // BL-S-CORS1: Never grant credentials to unrecognised origins.
+  if (!origin || !allowed.includes(origin)) {
+    return { 'Vary': 'Origin' };
+  }
 
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'true',

@@ -12,6 +12,13 @@
   --mobile-nav-height: 64px;
 }
 
+/* ── Base: Mobile Nav Hidden by Default ───────────────────── */
+/* Always hidden unless mobile media query activates it, prevents
+   stray visibility in PWA standalone mode or before CSS breakpoints apply. */
+.mobile-nav {
+  display: none;
+}
+
 /* ── Responsive Breakpoints ────────────────────────────────── */
 @media (max-width: 768px) {
   
@@ -129,6 +136,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    text-align: center;
   }
   
   /* ── Main Content: Bottom Padding for Nav ──────────────── */
@@ -376,9 +384,35 @@
     word-break: break-word;
   }
 
-  /* ── Header: Prevent overflow on narrow screens ─────────── */
+  /* ── Header: Allow dropdown menus to overflow downward ─────── */
+  /* overflow: hidden was clipping the lang-switcher dropdown; use overflow-x
+     to block horizontal scroll without hiding vertical dropdowns. On flex
+     containers overflow-x:clip does not create new stacking context issues. */
   header {
-    overflow: hidden;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  /* ── Auth Bar: Shrinkable on small screens ───────────────── */
+  .auth-bar {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  /* ── Remove account-management buttons from header on mobile ─ */
+  /* These are rare actions; accessible via the sidebar/settings menu instead */
+  #exportDataBtn,
+  #deleteAccountBtn {
+    display: none !important;
+  }
+
+  /* ── Lang-switcher: flag-only on mobile to save header space ─ */
+  .lang-switcher .lang-name {
+    display: none;
+  }
+  .lang-switcher-btn {
+    padding: 4px 6px;
+    gap: 0;
   }
   h4 { font-size: var(--text-base); }
   
