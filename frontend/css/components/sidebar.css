@@ -305,7 +305,7 @@
   .sidebar {
     transform: translateX(-100%);
     width: 280px;
-    top: 0;
+    top: var(--mobile-header-height, 56px); /* start below sticky header */
     z-index: 300;
     box-shadow: none;
   }
@@ -323,14 +323,18 @@
     margin-left: 0 !important;
   }
 
-  /* Backdrop when drawer is open */
+  /* Backdrop when drawer is open — starts below sticky header */
   .sidebar-backdrop {
     display: none;
     position: fixed;
-    inset: 0;
+    top: var(--mobile-header-height, 56px);
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.6);
     z-index: 299;
     backdrop-filter: blur(2px);
+    cursor: pointer; /* required for iOS Safari tap events on non-interactive elements */
   }
   .sidebar-backdrop.visible {
     display: block;
@@ -407,10 +411,7 @@
 @media (max-width: 768px) {
   .hamburger-btn {
     display: flex;
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 101;
+    flex-shrink: 0;
+    /* part of flex flow — no position:absolute so it doesn't overlap the logo */
   }
 }
