@@ -64,7 +64,7 @@
 - ✅ Password reset flow (`handleForgotPassword` + `handleResetPassword`)
 - ✅ GDPR export endpoint (`handleExportData`)
 - ✅ Account deletion (`handleDeleteAccount`)
-- ✅ OAuth social login (Google, Apple, Facebook)
+- ✅ OAuth social login (Google, Apple)
 - ✅ Email format validation
 
 - ✅ **Referral system UI** — `openShareModal` fetches real code via `POST /api/referrals/code`, shows stats; `?ref=CODE` captured on page load, `POST /api/referrals/apply` called after registration
