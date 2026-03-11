@@ -78,7 +78,7 @@ export function generateCelebrityMatchImage(match, userChart) {
       <!-- Bottom CTA -->
       <text x="600" y="580" font-family="Arial, sans-serif" font-size="24" 
             fill="#cbd5e0" text-anchor="middle">
-        Discover your Human Design match → primeself.app
+        Discover your energy blueprint match → primeself.app
       </text>
     </svg>
   `;
@@ -108,13 +108,13 @@ export function generateChartShareImage(chart) {
       
       <!-- Brand -->
       <text x="60" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#ffffff">
-        Prime Self — Human Design
+        Prime Self — Energy Blueprint
       </text>
       
       <!-- Title -->
       <text x="600" y="180" font-family="Arial, sans-serif" font-size="48" font-weight="bold" 
             fill="#fbbf24" text-anchor="middle">
-        My Human Design
+        My Energy Blueprint
       </text>
       
       <!-- Chart details -->
@@ -153,7 +153,7 @@ export function generateChartShareImage(chart) {
       <!-- CTA -->
       <text x="600" y="590" font-family="Arial, sans-serif" font-size="24" 
             fill="#cbd5e0" text-anchor="middle">
-        Get your free Human Design chart → primeself.app
+        Get your free energy blueprint → primeself.app
       </text>
     </svg>
   `;
@@ -191,7 +191,7 @@ export function generateReferralInviteImage(referrer, referralCode) {
       </text>
       <text x="600" y="320" font-family="Arial, sans-serif" font-size="56" font-weight="bold" 
             fill="#fbbf24" text-anchor="middle">
-        Human Design
+        Energy Blueprint
       </text>
       
       <!-- Offer -->
@@ -314,8 +314,8 @@ export function generateShareMetadata(params) {
   return {
     // Open Graph
     'og:type': type || 'website',
-    'og:title': title || 'Prime Self — Human Design Intelligence',
-    'og:description': description || 'Discover your unique Human Design chart and unlock your potential.',
+    'og:title': title || 'Prime Self — Energy Blueprint Intelligence',
+    'og:description': description || 'Discover your unique energy blueprint and unlock your potential.',
     'og:image': imageUrl || defaultImage,
     'og:image:width': '1200',
     'og:image:height': '630',
@@ -324,8 +324,8 @@ export function generateShareMetadata(params) {
     
     // Twitter Card
     'twitter:card': 'summary_large_image',
-    'twitter:title': title || 'Prime Self — Human Design Intelligence',
-    'twitter:description': description || 'Discover your unique Human Design chart and unlock your potential.',
+    'twitter:title': title || 'Prime Self — Energy Blueprint Intelligence',
+    'twitter:description': description || 'Discover your unique energy blueprint and unlock your potential.',
     'twitter:image': imageUrl || defaultImage,
     'twitter:site': '@primeself',
     'twitter:creator': '@primeself'
@@ -345,46 +345,46 @@ export function getShareMessages(shareData) {
   
   const messages = {
     celebrity: {
-      twitter: `I just discovered I'm ${percentage}% like ${celebrityName}! 🤯\n\nFind out which famous person matches YOUR Human Design:\n${baseUrl}/compare\n\n#HumanDesign #PrimeSelf`,
-      facebook: `I'm ${percentage}% like ${celebrityName} according to my Human Design chart! This is wild.\n\nWant to see which celebrity you match? Check out Prime Self: ${baseUrl}`,
-      linkedin: `Fascinating insights from my Human Design analysis: ${percentage}% match with ${celebrityName}.\n\nHuman Design reveals your unique energetic blueprint and decision-making strategy. Worth exploring: ${baseUrl}`,
-      whatsapp: `🤯 I just found out I'm ${percentage}% like ${celebrityName} based on my Human Design!\n\nYou should try this: ${baseUrl}/compare`,
+      twitter: `I just discovered I'm ${percentage}% like ${celebrityName}! 🤯\n\nFind out which famous person matches YOUR energy blueprint:\n${baseUrl}/compare\n\n#PrimeSelf #EnergyBlueprint`,
+      facebook: `I'm ${percentage}% like ${celebrityName} according to my energy blueprint! This is wild.\n\nWant to see which celebrity you match? Check out Prime Self: ${baseUrl}`,
+      linkedin: `Fascinating insights from my energy blueprint analysis: ${percentage}% match with ${celebrityName}.\n\nPrime Self reveals your unique energetic blueprint and decision-making strategy. Worth exploring: ${baseUrl}`,
+      whatsapp: `🤯 I just found out I'm ${percentage}% like ${celebrityName} based on my energy blueprint!\n\nYou should try this: ${baseUrl}/compare`,
       email: {
         subject: `I'm ${percentage}% like ${celebrityName}!`,
-        body: `Hey!\n\nI just discovered something really cool - my Human Design chart shows I'm ${percentage}% similar to ${celebrityName}.\n\nYou can get your own free chart and see which famous person you match at:\n${baseUrl}\n\nIt's pretty accurate and gave me some great insights about my strengths and decision-making style.\n\nLet me know what you get!`
+        body: `Hey!\n\nI just discovered something really cool - my energy blueprint shows I'm ${percentage}% similar to ${celebrityName}.\n\nYou can get your own free chart and see which famous person you match at:\n${baseUrl}\n\nIt's pretty accurate and gave me some great insights about my strengths and decision-making style.\n\nLet me know what you get!`
       }
     },
     
     referral: {
-      twitter: `Just discovered my Human Design and it's mind-blowing! 🌟\n\nGet your first month FREE with my code: ${referralCode}\n${refUrl}\n\n#HumanDesign #SelfDiscovery`,
-      facebook: `I've been using Prime Self to understand my Human Design and it's been really insightful.\n\nIf you're curious about your unique blueprint, you can get your first month free with this link:\n${refUrl}\n\nUse code: ${referralCode}`,
-      linkedin: `Highly recommend checking out Prime Self for Human Design insights.\n\nAs someone who's always looking for tools for self-awareness and better decision-making, this has been valuable.\n\nFirst month free: ${refUrl}`,
-      whatsapp: `Hey! I've been using this app called Prime Self to learn about my Human Design.\n\nThought you might find it interesting - you can get your first month free:\n${refUrl}\n\nCode: ${referralCode}`,
+      twitter: `Just discovered my energy blueprint and it's mind-blowing! 🌟\n\nGet your first month FREE with my code: ${referralCode}\n${refUrl}\n\n#PrimeSelf #SelfDiscovery`,
+      facebook: `I've been using Prime Self to understand my energy blueprint and it's been really insightful.\n\nIf you're curious about your unique blueprint, you can get your first month free with this link:\n${refUrl}\n\nUse code: ${referralCode}`,
+      linkedin: `Highly recommend checking out Prime Self for energy blueprint insights.\n\nAs someone who's always looking for tools for self-awareness and better decision-making, this has been valuable.\n\nFirst month free: ${refUrl}`,
+      whatsapp: `Hey! I've been using this app called Prime Self to learn about my energy blueprint.\n\nThought you might find it interesting - you can get your first month free:\n${refUrl}\n\nCode: ${referralCode}`,
       email: {
         subject: 'Thought you might find this interesting...',
-        body: `Hi!\n\nI recently started using Prime Self to explore my Human Design chart, and it's given me some really valuable insights about how I make decisions and interact with the world.\n\nI thought you might find it interesting too. You can get your first month free with this link:\n${refUrl}\n\nJust use code ${referralCode} when you sign up.\n\nLet me know what you think!`
+        body: `Hi!\n\nI recently started using Prime Self to explore my energy blueprint, and it's given me some really valuable insights about how I make decisions and interact with the world.\n\nI thought you might find it interesting too. You can get your first month free with this link:\n${refUrl}\n\nJust use code ${referralCode} when you sign up.\n\nLet me know what you think!`
       }
     },
     
     achievement: {
-      twitter: `Just unlocked "${achievementName}" on Prime Self! 🏆\n\nExploring my Human Design has been an amazing journey.\n\nStart yours: ${baseUrl}\n\n#HumanDesign #Achievement`,
-      facebook: `Achievement unlocked: ${achievementName}! 🎉\n\nLoving my Human Design journey with Prime Self.\n\nCheck it out: ${baseUrl}`,
-      linkedin: `Milestone reached: ${achievementName}\n\nContinuing to explore practical applications of Human Design for personal and professional growth.\n\n${baseUrl}`,
-      whatsapp: `🏆 Just unlocked "${achievementName}" on Prime Self!\n\nThis Human Design stuff is actually pretty cool: ${baseUrl}`,
+      twitter: `Just unlocked "${achievementName}" on Prime Self! 🏆\n\nExploring my energy blueprint has been an amazing journey.\n\nStart yours: ${baseUrl}\n\n#PrimeSelf #Achievement`,
+      facebook: `Achievement unlocked: ${achievementName}! 🎉\n\nLoving my energy blueprint journey with Prime Self.\n\nCheck it out: ${baseUrl}`,
+      linkedin: `Milestone reached: ${achievementName}\n\nContinuing to explore practical applications of energy blueprints for personal and professional growth.\n\n${baseUrl}`,
+      whatsapp: `🏆 Just unlocked "${achievementName}" on Prime Self!\n\nThis energy blueprint stuff is actually pretty cool: ${baseUrl}`,
       email: {
         subject: 'Achievement unlocked! 🏆',
-        body: `Just wanted to share - I unlocked "${achievementName}" on Prime Self today!\n\nI've been exploring my Human Design chart and it's been really eye-opening.\n\nIf you're interested in self-discovery tools, check it out:\n${baseUrl}`
+        body: `Just wanted to share - I unlocked "${achievementName}" on Prime Self today!\n\nI've been exploring my energy blueprint and it's been really eye-opening.\n\nIf you're interested in self-discovery tools, check it out:\n${baseUrl}`
       }
     },
     
     chart: {
-      twitter: `Just got my Human Design chart! I'm a ${chartType}. 🌟\n\nThis explains SO much about how I operate.\n\nGet your free chart: ${baseUrl}\n\n#HumanDesign`,
-      facebook: `Interesting! My Human Design type is ${chartType}.\n\nThe insights about my decision-making strategy and interaction style are spot-on.\n\nGet your free chart: ${baseUrl}`,
-      linkedin: `Explored my Human Design chart today. Type: ${chartType}.\n\nFascinating framework for understanding personal strengths and optimal decision-making approaches.\n\n${baseUrl}`,
-      whatsapp: `Just discovered I'm a ${chartType} in Human Design!\n\nYou should get your chart, it's free: ${baseUrl}`,
+      twitter: `Just got my energy blueprint! I'm a ${chartType}. 🌟\n\nThis explains SO much about how I operate.\n\nGet your free chart: ${baseUrl}\n\n#PrimeSelf`,
+      facebook: `Interesting! My energy type is ${chartType}.\n\nThe insights about my decision-making strategy and interaction style are spot-on.\n\nGet your free chart: ${baseUrl}`,
+      linkedin: `Explored my energy blueprint today. Type: ${chartType}.\n\nFascinating framework for understanding personal strengths and optimal decision-making approaches.\n\n${baseUrl}`,
+      whatsapp: `Just discovered I'm a ${chartType} in my energy blueprint!\n\nYou should get your chart, it's free: ${baseUrl}`,
       email: {
-        subject: 'Check out my Human Design chart!',
-        body: `Hey!\n\nI just got my Human Design chart and found out I'm a ${chartType}.\n\nIt's given me some really helpful insights about how I make decisions and where my energy comes from.\n\nYou can get your free chart here:\n${baseUrl}\n\nLet me know what type you are!`
+        subject: 'Check out my energy blueprint!',
+        body: `Hey!\n\nI just got my energy blueprint and found out I'm a ${chartType}.\n\nIt's given me some really helpful insights about how I make decisions and where my energy comes from.\n\nYou can get your free chart here:\n${baseUrl}\n\nLet me know what type you are!`
       }
     }
   };

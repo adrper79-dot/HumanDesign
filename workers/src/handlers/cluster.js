@@ -16,6 +16,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { callLLM } from '../lib/llm.js';
 import { trackEvent } from './achievements.js';
+import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 
 // ─── Forge Role Mapping ─────────────────────────────────────────
 const FORGE_ROLES = {
@@ -386,6 +387,10 @@ async function handleSynthesize(request, env, clusterId) {
   
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const userId = request._user?.sub;
+
+  // SEC-016: Gate synthesis behind practitioner tier
+  const tierBlock = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (tierBlock) return tierBlock;
 
   const memberCheck = await query(
     'SELECT 1 FROM cluster_members WHERE cluster_id = $1 AND user_id = $2 LIMIT 1',

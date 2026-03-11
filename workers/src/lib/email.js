@@ -102,7 +102,7 @@ export async function sendWelcomeEmail1(userEmail, userName, apiKey, fromEmail) 
   <div class="content">
     <h2>Welcome, ${userName || 'Explorer'}! 👋</h2>
     
-    <p>You just took the first step on a profound journey of self-discovery. Prime Self combines Human Design, astrology, and numerology to give you a complete picture of who you are.</p>
+    <p>You just took the first step on a profound journey of self-discovery. Prime Self combines your energy blueprint, astrology, and numerology to give you a complete picture of who you are.</p>
     
     <p>Ready to see your unique energetic blueprint?</p>
     
@@ -111,7 +111,7 @@ export async function sendWelcomeEmail1(userEmail, userName, apiKey, fromEmail) 
     <div class="tips">
       <h3>What to expect:</h3>
       <ul>
-        <li><strong>Your Human Design Chart</strong> - Discover your Energy Type, Decision Strategy, and Authority</li>
+        <li><strong>Your Energy Blueprint</strong> - Discover your Energy Type, Decision Strategy, and Authority</li>
         <li><strong>AI Synthesis Report</strong> - Get a personalized 2000+ word analysis connecting all your systems</li>
         <li><strong>Transit Insights</strong> - See how current planetary movements affect your energy</li>
         <li><strong>Daily Check-In</strong> - Track alignment with your design over time</li>
@@ -216,7 +216,7 @@ export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, 
     </div>
     ` : `
     <div class="highlight">
-      <p>Your Human Design chart reveals your optimal decision-making strategy, energy patterns, and life purpose. Each element - from your Energy Type to your defined Centers - creates a unique blueprint.</p>
+      <p>Your energy blueprint reveals your optimal decision-making strategy, energy patterns, and life purpose. Each element - from your Energy Type to your defined Centers - creates a unique blueprint.</p>
       <p><strong>This week:</strong> Read your full synthesis report and identify one pattern you recognize in your life.</p>
     </div>
     `}

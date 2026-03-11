@@ -88,6 +88,11 @@ export async function handleDiaryCreate(request, env) {
     );
   }
 
+  // Validate field lengths
+  if (eventTitle.length > 500 || (eventDescription && eventDescription.length > 10000)) {
+    return Response.json({ error: 'Field too long' }, { status: 422 });
+  }
+
   // Validate event type
   const validEventTypes = ['career', 'relationship', 'health', 'spiritual', 'financial', 'family', 'other'];
   if (eventType && !validEventTypes.includes(eventType)) {

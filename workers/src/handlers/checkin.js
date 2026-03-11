@@ -17,6 +17,49 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 
 /**
+ * Compute the current streak from an ordered array of checkin-date rows.
+ * Returns an object compatible with the former get_user_streak stored proc result.
+ * @param {Array<{checkin_date: string|Date}>} rows - Ascending ordered checkin dates
+ * @param {string|null} todayOverride - Optional ISO date string for "today" (used in POST path)
+ */
+function computeCurrentStreak(rows, todayOverride) {
+  if (!rows || rows.length === 0) {
+    return { current_streak: 0, last_checkin_date: null, streak_start_date: null };
+  }
+
+  // Work backwards from the most-recent checkin
+  const today = todayOverride
+    ? new Date(todayOverride)
+    : new Date(new Date().toISOString().split('T')[0]);
+
+  const lastDate = new Date(rows[rows.length - 1].checkin_date);
+  // If last checkin is more than 1 day before today the streak is broken
+  const gapFromToday = Math.floor((today - lastDate) / 86400000);
+  if (gapFromToday > 1) {
+    return { current_streak: 0, last_checkin_date: lastDate, streak_start_date: null };
+  }
+
+  let streak = 1;
+  let streakStart = lastDate;
+  for (let i = rows.length - 2; i >= 0; i--) {
+    const cur = new Date(rows[i + 1].checkin_date);
+    const prev = new Date(rows[i].checkin_date);
+    if (Math.floor((cur - prev) / 86400000) === 1) {
+      streak++;
+      streakStart = prev;
+    } else {
+      break;
+    }
+  }
+
+  return {
+    current_streak: streak,
+    last_checkin_date: lastDate,
+    streak_start_date: streakStart
+  };
+}
+
+/**
  * Get user's local date (from timezone or default to UTC).
  * Returns YYYY-MM-DD format.
  */
@@ -128,10 +171,9 @@ export async function handleCheckinCreate(request, env, ctx) {
       mood
     }, user.tier);
 
-    // Get updated streak info
-    const { rows: streakResults } = await query(QUERIES.getCheckinStreak, [user.id]);
-
-    const streak = streakResults[0] || { current_streak: 1, last_checkin_date: checkinDate, streak_start_date: checkinDate };
+    // Get updated streak info (computed in JS — avoids dependency on get_user_streak stored proc)
+    const { rows: allStreakDates } = await query(QUERIES.getCheckinDatesOrdered, [user.id]);
+    const streak = computeCurrentStreak(allStreakDates, checkinDate);
 
     return Response.json({
       success: true,
@@ -144,7 +186,7 @@ export async function handleCheckinCreate(request, env, ctx) {
         notes: checkin.notes,
         mood: checkin.mood,
         energyLevel: checkin.energy_level,
-        transitSnapshot: checkin.transit_snapshot ? JSON.parse(checkin.transit_snapshot) : null,
+        transitSnapshot: checkin.transit_snapshot || null,
         createdAt: checkin.created_at,
         updatedAt: checkin.updated_at
       },
@@ -199,7 +241,7 @@ export async function handleCheckinToday(request, env, ctx) {
         notes: checkin.notes,
         mood: checkin.mood,
         energyLevel: checkin.energy_level,
-        transitSnapshot: checkin.transit_snapshot ? JSON.parse(checkin.transit_snapshot) : null,
+        transitSnapshot: checkin.transit_snapshot || null,
         createdAt: checkin.created_at,
         updatedAt: checkin.updated_at
       }
@@ -246,7 +288,7 @@ export async function handleCheckinHistory(request, env, ctx) {
         notes: c.notes,
         mood: c.mood,
         energyLevel: c.energy_level,
-        transitSnapshot: c.transit_snapshot ? JSON.parse(c.transit_snapshot) : null,
+        transitSnapshot: c.transit_snapshot || null,
         createdAt: c.created_at
       })),
       pagination: {
@@ -371,14 +413,15 @@ export async function handleCheckinStreak(request, env, ctx) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    // Get current streak from materialized view
-    const { rows: streakResults } = await query(QUERIES.getCheckinStreak, [user.id]);
+    // Compute streak directly from checkin dates — avoids get_user_streak stored proc dependency
+    const { rows: allCheckins } = await query(QUERIES.getCheckinDatesOrdered, [user.id]);
 
-    if (streakResults.length === 0) {
+    if (allCheckins.length === 0) {
       return Response.json({
         success: true,
         streak: {
           current: 0,
+          longest: 0,
           lastCheckinDate: null,
           streakStartDate: null,
           message: 'Start your first check-in today!'
@@ -386,10 +429,8 @@ export async function handleCheckinStreak(request, env, ctx) {
       });
     }
 
-    const streak = streakResults[0];
-
-    // Calculate longest streak (all-time)
-    const { rows: allCheckins } = await query(QUERIES.getCheckinDatesOrdered, [user.id]);
+    const streak = computeCurrentStreak(allCheckins, null);
+    // allCheckins also used below for longest streak calc
 
     let longestStreak = 0;
     let currentStreak = 0;
@@ -429,6 +470,7 @@ export async function handleCheckinStreak(request, env, ctx) {
     return Response.json({ error: 'Failed to retrieve streak info' }, { status: 500 });
   }
 }
+
 
 /**
  * POST /api/checkin/reminder
@@ -484,7 +526,7 @@ export async function handleSetCheckinReminder(request, env, ctx) {
         enabled: !!reminder.enabled,
         reminderTime: reminder.reminder_time,
         timezone: reminder.timezone,
-        notificationMethod: JSON.parse(reminder.notification_method),
+        notificationMethod: reminder.notification_method || [],
         lastSentAt: reminder.last_sent_at,
         updatedAt: reminder.updated_at
       }
@@ -525,7 +567,7 @@ export async function handleGetCheckinReminder(request, env, ctx) {
         enabled: !!reminder.enabled,
         reminderTime: reminder.reminder_time,
         timezone: reminder.timezone,
-        notificationMethod: JSON.parse(reminder.notification_method),
+        notificationMethod: reminder.notification_method || [],
         lastSentAt: reminder.last_sent_at,
         createdAt: reminder.created_at,
         updatedAt: reminder.updated_at

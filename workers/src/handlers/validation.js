@@ -122,7 +122,7 @@ export async function handleValidation(request, env, subpath) {
     return handleValidationSave(request, env);
   }
 
-  if (subpath === '' && method === 'GET') {
+  if ((subpath === '' || subpath === '/') && method === 'GET') {
     return handleValidationGet(request, env);
   }
 

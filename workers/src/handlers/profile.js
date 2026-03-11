@@ -313,6 +313,7 @@ export async function handleListProfiles(request, env) {
     }));
     return Response.json({ ok: true, data: profiles });
   } catch (err) {
+    console.error('[list-profiles] DB error:', err.message);
     return Response.json({ error: 'Database error' }, { status: 500 });
   }
 }

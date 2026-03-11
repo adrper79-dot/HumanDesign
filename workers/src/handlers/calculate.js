@@ -157,16 +157,20 @@ export async function handleGetChart(request, env, chartId) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const hdChart = typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json;
+    const astroChart = typeof chart.astro_json === 'string' ? JSON.parse(chart.astro_json) : chart.astro_json;
+
     return Response.json({
       ok: true,
       data: {
         id: chart.id,
-        hdChart: typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json,
-        astroChart: typeof chart.astro_json === 'string' ? JSON.parse(chart.astro_json) : chart.astro_json,
+        hdChart,
+        astroChart,
         calculatedAt: chart.calculated_at
       }
     });
   } catch (err) {
-    return Response.json({ error: 'Database error' }, { status: 500 });
+    console.error('[get-chart] Error:', err.message);
+    return Response.json({ error: 'Failed to retrieve chart' }, { status: 500 });
   }
 }
