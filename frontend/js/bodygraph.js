@@ -145,7 +145,7 @@
       const info = window.getChannelInfo ? window.getChannelInfo(key) : null;
       const meta = window.getChannelMeta ? window.getChannelMeta(key) : null;
       const isActive = (chartData.activeChannels || []).some(ch => (ch.channel || (ch.gates?.[0] + '-' + ch.gates?.[1])) === key);
-      const circuitBadge = meta?.circuit ? `<span style="font-size:0.68rem;background:rgba(106,79,200,0.15);color:var(--accent);padding:1px 6px;border-radius:3px;font-weight:600;margin-left:6px">${esc(meta.circuit)}</span>` : '';
+      const circuitBadge = meta?.circuit ? `<span style="font-size:0.68rem;background:rgba(74,130,240,0.15);color:var(--accent);padding:1px 6px;border-radius:3px;font-weight:600;margin-left:6px">${esc(meta.circuit)}</span>` : '';
       
       return `<div style="padding:12px;background:var(--bg2);border-radius:8px;border-left:3px solid ${isActive ? 'var(--gold)' : 'var(--border)'};margin-top:8px">
         <div style="font-weight:700;font-size:0.9rem;color:${isActive ? 'var(--gold)' : 'var(--text)'};margin-bottom:4px">Channel ${esc(key)}${circuitBadge} <span style="font-size:0.72rem;color:var(--text-muted)">(${isActive ? 'Active' : 'Dormant'})</span></div>
