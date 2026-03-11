@@ -169,6 +169,54 @@ The calculation engine was **100% accurate** when given correct input data.
 
 **Preventive Measures**
 - [ ] Add input validation warnings for ambiguous dates (e.g., if day ≤ 12, ask user to confirm MM/DD format) — *tracked in backlog as future UX improvement*
+
+---
+
+### 2026-03-11 | Mobile Cache Transparency, CSS Spec Gotchas, Click-Blocking Overlay
+
+**Context**
+Multi-round mobile debugging session. User reported changes were invisible on a Samsung S25 / Dolphin Browser after multiple rounds of fixes and confirmed Cloudflare deployments.
+
+**Key Findings**
+
+1. **`overflow-x: clip` + `overflow-y: visible` coerces both axes to `clip`**
+   - CSS spec: if either overflow axis is `clip` and the other is `visible`, the `visible` is promoted to `clip` automatically
+   - Effect: the `<header>` still clipped the language-switcher dropdown even after the "fix"
+   - Fix: use `overflow: visible` to allow the dropdown to bleed outside the header boundary
+
+2. **Decorative overlay blocked all pointer events on the header**
+   - `div.geometric-bg` used `position: absolute; inset: 0` with NO `pointer-events: none`
+   - It sat directly in the header stacking context, intercepting all mouse/touch events
+   - The hamburger button was visually present but completely unclickable
+   - Fix: always add `pointer-events: none` to decorative/background elements that use full-bleed positioning
+
+3. **"Clear Cache" in mobile browsers does NOT clear Service Worker cache**
+   - Browser HTTP cache and SW `caches.open(...)` storage are two completely separate systems
+   - Clearing the browser cache leaves the SW cache intact; the SW continues intercepting requests and serving stale files
+   - The only reliable fixes are: bump `CACHE_VERSION` (to trigger SW reinstall), or go to browser Settings → Site Data → Clear All
+
+4. **Service worker version bumps are useless if the SW file itself is CDN-cached**
+   - Cloudflare Pages was serving `service-worker.js` with `Cache-Control: max-age=14400` (4-hour CDN cache)
+   - This meant mobile browsers wouldn't even fetch the new SW for up to 4 hours after deployment
+   - The browser SW spec says to bypass HTTP cache for SW scripts, but third-party browsers (Dolphin, Samsung Internet, older Webviews) may not honor this
+   - Fix: add an explicit `_headers` rule: `/service-worker.js → Cache-Control: no-cache, no-store, must-revalidate`
+
+5. **Dolphin Browser uses an older Blink fork**
+   - Does not reliably honor the SW HTTP cache bypass that Chrome enforces
+   - Test mobile UX with both Chrome Mobile and Dolphin/Samsung Internet before declaring fixes complete
+
+**Key Learnings**
+1. **`overflow: visible` not `overflow-x/overflow-y` when you need one axis to clip and one to overflow** — The spec coercion makes mixed values unpredictable.
+2. **`pointer-events: none` is mandatory on decorative full-bleed elements** — Any `position: absolute/fixed; inset: 0` element without this is a UX landmine.
+3. **Service worker must be served with `no-store`** — Add this to `_headers` on day one, not as a hotfix.
+4. **Separate the 3 cache layers mentally: CDN → Browser HTTP → Service Worker** — Each layer must be explicitly managed. Only bumping SW version does nothing if the CDN is caching the SW file itself.
+5. **Version bump convention: comment the SW version change inline with the fix reason** — Makes it traceable: "v16 - Mobile fixes: [description]".
+
+**Preventive Measures**
+- ✅ Added `/service-worker.js → Cache-Control: no-cache, no-store` to `frontend/_headers`
+- ✅ SW version bumped to `v16` with inline comment describing reason
+- [ ] Add deployment checklist item: "Bump SW version for any CSS/JS/HTML change"
+- [ ] Test on Dolphin + Samsung Internet before closing any mobile UX ticket
 - [ ] Display calculated birth data summary before final chart generation: "Confirm: Born on **[Day of Week], [Month Name] [Day], [Year]** at [time]?" — *tracked in backlog as future UX improvement*
 - [ ] Add "Compare with Jovian Archive" feature: allow users to upload a reference PDF and auto-extract the birth data for comparison — *deferred: requires PDF parsing library*
 - [ ] Show P/D Sun positions in degrees alongside gate/line for power users (helps spot gross errors) — *low effort, can add to chart response*
