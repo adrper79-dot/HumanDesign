@@ -384,13 +384,13 @@
     word-break: break-word;
   }
 
-  /* ── Header: Allow dropdown menus to overflow downward ─────── */
-  /* overflow: hidden was clipping the lang-switcher dropdown; use overflow-x
-     to block horizontal scroll without hiding vertical dropdowns. On flex
-     containers overflow-x:clip does not create new stacking context issues. */
+  /* ── Header: Remove all overflow clipping so the lang-switcher dropdown
+     can extend below the header. CSS spec coerces overflow-x:clip +
+     overflow-y:visible → both clip, so we must set overflow: visible.
+     Horizontal overflow is no longer an issue thanks to auth-bar compression
+     and hiding of extra buttons below. */
   header {
-    overflow-x: clip;
-    overflow-y: visible;
+    overflow: visible;
   }
 
   /* ── Auth Bar: Shrinkable on small screens ───────────────── */
