@@ -193,11 +193,12 @@ function closeAuthOverlay() {
 function toggleAuthMode() {
   authMode = authMode === 'login' ? 'register' : 'login';
   const isReg = authMode === 'register';
-  document.getElementById('authTitle').textContent = isReg ? window.t('auth.createAccount') : window.t('auth.signIn');
-  document.getElementById('authSubtitle').textContent = isReg ? window.t('auth.startJourney') : window.t('auth.accessProfile');
-  document.getElementById('authSubmit').textContent = isReg ? window.t('auth.createAccount') : window.t('auth.signIn');
-  document.getElementById('authToggleText').textContent = isReg ? window.t('auth.alreadyAccount') : window.t('auth.noAccount');
-  document.getElementById('authToggleLink').textContent = isReg ? window.t('auth.signInLink') : window.t('auth.createOne');
+  const _t = typeof window.t === 'function' ? window.t : (k) => k.split('.').pop();
+  document.getElementById('authTitle').textContent = isReg ? _t('auth.createAccount') : _t('auth.signIn');
+  document.getElementById('authSubtitle').textContent = isReg ? _t('auth.startJourney') : _t('auth.accessProfile');
+  document.getElementById('authSubmit').textContent = isReg ? _t('auth.createAccount') : _t('auth.signIn');
+  document.getElementById('authToggleText').textContent = isReg ? _t('auth.alreadyAccount') : _t('auth.noAccount');
+  document.getElementById('authToggleLink').textContent = isReg ? _t('auth.signInLink') : _t('auth.createOne');
   document.getElementById('authError').textContent = '';
   // Show password field and forgot link in login/register mode
   document.getElementById('authPassword').parentElement.style.display = '';
@@ -252,6 +253,8 @@ async function submitForgotPassword() {
 
 // Handle OAuth redirect-back (?oauth=success&token=...&refresh=...)
 // Called on page load — picks up tokens issued by social login callback
+let _sessionRestoredByOauth = false;
+
 function checkOAuthCallback() {
   const params = new URLSearchParams(window.location.search);
   const oauthStatus = params.get('oauth');
@@ -279,6 +282,7 @@ function checkOAuthCallback() {
 
     // Store tokens — access token in memory only; refresh token in HttpOnly cookie (set by server)
     token = accessToken;
+    _sessionRestoredByOauth = true; // prevent boot IIFE from calling fetchUserProfile again
     localStorage.setItem('ps_email', userEmail || '');
     localStorage.removeItem('ps_token'); // legacy cleanup
     localStorage.removeItem('ps_refresh_token'); // SEC-001: remove any stale refresh token from localStorage
@@ -382,6 +386,7 @@ async function submitAuth() {
   const password = passwordEl.value;
   const errorEl = document.getElementById('authError');
   const btn = document.getElementById('authSubmit');
+  const _t = typeof window.t === 'function' ? window.t : (k) => k.split('.').pop();
 
   // Clear previous validation states
   emailEl.removeAttribute('aria-invalid');
@@ -392,7 +397,7 @@ async function submitAuth() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email) {
     emailEl.setAttribute('aria-invalid', 'true');
-    errorEl.textContent = window.t('auth.emailRequired');
+    errorEl.textContent = _t('auth.emailRequired');
     emailEl.focus();
     return;
   }
@@ -404,7 +409,7 @@ async function submitAuth() {
   }
   if (!password) {
     passwordEl.setAttribute('aria-invalid', 'true');
-    errorEl.textContent = window.t('auth.passwordRequired') || 'Password is required';
+    errorEl.textContent = _t('auth.passwordRequired') || 'Password is required';
     passwordEl.focus();
     return;
   }
@@ -416,7 +421,7 @@ async function submitAuth() {
   }
 
   btn.disabled = true;
-  btn.textContent = window.t('auth.pleaseWait');
+  btn.textContent = _t('auth.pleaseWait');
   errorEl.textContent = '';
 
   try {
@@ -459,10 +464,10 @@ async function submitAuth() {
     // Fetch subscription/tier info now that we have a valid token
     fetchUserProfile();
   } catch (e) {
-    errorEl.textContent = window.t('auth.connectionError', { message: e.message });
+    errorEl.textContent = _t('auth.connectionError', { message: e.message });
   } finally {
     btn.disabled = false;
-    btn.textContent = authMode === 'register' ? window.t('auth.createAccount') : window.t('auth.signIn');
+    btn.textContent = authMode === 'register' ? _t('auth.createAccount') : _t('auth.signIn');
   }
 }
 
@@ -783,8 +788,12 @@ async function apiFetch(path, options = {}) {
       // Retry original request with new token
       const retryHeaders = { 'Content-Type': 'application/json', ...(options.headers || {}) };
       retryHeaders['Authorization'] = 'Bearer ' + token;
-      const retryRes = await fetch(API + path, { ...options, headers: retryHeaders, credentials: 'include' });
-      if (retryRes.status !== 401) return retryRes.json();
+      try {
+        const retryRes = await fetch(API + path, { ...options, headers: retryHeaders, credentials: 'include' });
+        if (retryRes.status !== 401) return retryRes.json();
+      } catch (retryErr) {
+        return { ok: false, error: 'Network/CORS error on retry.' };
+      }
     }
     // Refresh failed — force sign-in
     token = null;
@@ -793,7 +802,7 @@ async function apiFetch(path, options = {}) {
     window.currentUser = null;
     updateAuthUI();
     openAuthOverlay();
-    document.getElementById('authError').textContent = window.t('auth.sessionExpired');
+    document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.sessionExpired') : 'Session expired. Please sign in.';
     return { error: 'Authentication required. Please sign in.' };
   }
 
@@ -1521,15 +1530,17 @@ function renderChart(data) {
           const pPlanets = (pgByGate[g] || []).map(p => p.planet).join(', ');
           const dPlanets = (dgByGate[g] || []).map(p => p.planet).join(', ');
           const planetHint = [pPlanets && 'via ' + pPlanets + ' (C)', dPlanets && 'via ' + dPlanets + ' (U)'].filter(Boolean).join(' · ');
+          const gateExpl = window.GATE_EXPLANATIONS?.[g] || '';
           return `<div style="background:var(--surface-2);border-radius:var(--border-radius);padding:var(--space-3);border:var(--border-width-thin) solid var(--border)">
               <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1);flex-wrap:wrap">
-                <span class="pill ${pillClass}">G${g}</span>
-                ${center ? `<span style="font-size:var(--font-size-xs);color:var(--text-muted)">${escapeHtml(center)}</span>` : ''}
+                <span class="pill ${pillClass}">Gate ${g}</span>
+                ${center ? `<span style="font-size:var(--font-size-xs);color:var(--text-muted)">${escapeHtml(center)} Center</span>` : ''}
                 <span style="font-size:var(--font-size-xs);color:${sideColor};margin-left:auto;white-space:nowrap">${sideLabel}</span>
               </div>
-              ${name ? `<div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text);margin-bottom:2px">${escapeHtml(name)}</div>` : ''}
-              ${theme ? `<div style="font-size:var(--font-size-xs);color:var(--text-dim);line-height:1.45;margin-bottom:${planetHint ? '4px' : '0'}">${escapeHtml(theme)}</div>` : ''}
-              ${planetHint ? `<div style="font-size:var(--font-size-xs);color:var(--text-muted);font-style:italic">${escapeHtml(planetHint)}</div>` : ''}
+              ${name ? `<div style="font-size:var(--font-size-sm);font-weight:700;color:var(--text);margin-bottom:4px">"${escapeHtml(name)}"</div>` : ''}
+              ${gateExpl ? `<div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.6;margin-bottom:${(theme || planetHint) ? '6px' : '0'}">${escapeHtml(gateExpl)}</div>` : ''}
+              ${theme ? `<div style="font-size:var(--font-size-xs);color:var(--text-dim);line-height:1.4;font-style:italic;margin-bottom:${planetHint ? '4px' : '0'}">Theme: ${escapeHtml(theme)}</div>` : ''}
+              ${planetHint ? `<div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:2px">${escapeHtml(planetHint)}</div>` : ''}
             </div>`;
         }).join('')}
       </div>
@@ -1540,47 +1551,86 @@ function renderChart(data) {
 
   // Western Astrology block with planet explanations
   const planetMeanings = {
-    Sun: 'Core identity and life force',
-    Moon: 'Emotional nature and instincts',
-    Mercury: 'Communication and thinking style',
-    Venus: 'Values, love, and beauty',
-    Mars: 'Drive, passion, and action',
-    Jupiter: 'Expansion, wisdom, and luck',
-    Saturn: 'Structure, discipline, and lessons',
-    Uranus: 'Innovation and breakthrough',
-    Neptune: 'Dreams, intuition, and spirituality',
-    Pluto: 'Transformation and power'
+    Sun:     { label: 'Your Sun',     short: 'Your core identity & life force',         full: 'Your Sun sign is the central force of who you are — your ego, your vitality, what you\'re here to express. It\'s the most fundamental energy you carry.' },
+    Moon:    { label: 'Your Moon',    short: 'Your emotional nature & instincts',        full: 'Your Moon sign governs your emotional world, your instincts, and what makes you feel safe and nourished. It\'s the inner you that most people don\'t see right away.' },
+    Mercury: { label: 'Your Mercury', short: 'How you think & communicate',              full: 'Your Mercury sign governs your mind — how you process information, speak, write, and learn. It shapes your communication style and what your intellect focuses on.' },
+    Venus:   { label: 'Your Venus',   short: 'Your values, style & way of loving',       full: 'Your Venus sign governs what you find beautiful, how you love and want to be loved, and what you value in relationships. It shapes your aesthetic and your approach to intimacy.' },
+    Mars:    { label: 'Your Mars',    short: 'Your drive, desire & action',               full: 'Your Mars sign governs how you take action, pursue what you want, and deal with anger and desire. It\'s your motivational engine and your fighting spirit.' },
+    Jupiter: { label: 'Your Jupiter', short: 'Where you expand, grow & find luck',       full: 'Your Jupiter sign shows where expansion and good fortune flow most naturally. It governs your philosophical beliefs, your optimism, and the areas of life where abundance tends to arrive.' },
+    Saturn:  { label: 'Your Saturn',  short: 'Where you build discipline & face lessons',full: 'Your Saturn sign governs the areas of life where you face your greatest tests and build your greatest mastery. Saturn lessons are hard but they produce lasting achievement.' },
+    Uranus:  { label: 'Your Uranus',  short: 'Where you break conventions & innovate',   full: 'Your Uranus sign shows where you break free from what\'s outdated and bring innovation. This planet\'s placement reveals your generation\'s revolutionary impulse.' },
+    Neptune: { label: 'Your Neptune', short: 'Your dreams, spirituality & imagination',  full: 'Your Neptune sign governs your spiritual sensitivity, your imagination, and your connection to something larger than yourself. It\'s where reality gets beautifully blurry.' },
+    Pluto:   { label: 'Your Pluto',   short: 'Where you transform & encounter deep power',full: 'Your Pluto sign governs deep transformation, power, and the cycles of death and rebirth. It shows where your generation is being asked to fundamentally transform.' }
   };
+
+  function renderPlanetCard(name, data, planetMeanings) {
+    const pm = planetMeanings[name] || {};
+    const signInfo = window.SIGN_EXPLANATIONS?.[data.sign] || {};
+    const houseInfo = data.house ? (window.HOUSE_EXPLANATIONS?.[Number(data.house)] || {}) : {};
+    const symbolMap = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇' };
+    const colorMap  = { Sun: '#FFD700', Moon: '#C0C0C0', Mercury: '#FFA500', Venus: '#FF69B4', Mars: '#FF4500', Jupiter: '#9370DB', Saturn: '#4169E1', Uranus: '#00CED1', Neptune: '#1E90FF', Pluto: '#8B4513' };
+    const sym   = symbolMap[name] || name[0];
+    const color = colorMap[name]  || 'var(--gold)';
+    const deg   = data.degrees != null ? data.degrees.toFixed(1) + '°' : '';
+    return `<div style="background:var(--surface-2);border-radius:var(--border-radius);padding:var(--space-3);border:var(--border-width-thin) solid var(--border);margin-bottom:var(--space-3)">
+      <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${color};color:var(--bg1);font-size:16px;font-weight:bold;flex-shrink:0">${sym}</span>
+        <span style="font-weight:700;color:var(--text);font-size:var(--font-size-base)">${escapeHtml(pm.label || name)}</span>
+        <span style="margin-left:auto;font-size:var(--font-size-sm);color:var(--gold);font-weight:600">${escapeHtml(data.sign || '')} ${deg}${data.house ? ' · House ' + data.house : ''}</span>
+      </div>
+      ${pm.full ? `<p style="font-size:var(--font-size-sm);color:var(--text-dim);margin:0 0 var(--space-2);line-height:1.55">${escapeHtml(pm.full)}</p>` : ''}
+      ${signInfo.full ? `<div style="background:var(--bg2);border-radius:var(--space-1);padding:var(--space-2) var(--space-3);margin-bottom:var(--space-2)">
+        <div style="font-size:var(--font-size-xs);text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:2px">In ${escapeHtml(data.sign || '')}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.55">${escapeHtml(signInfo.full)}</div>
+      </div>` : ''}
+      ${houseInfo.full ? `<div style="background:var(--bg2);border-radius:var(--space-1);padding:var(--space-2) var(--space-3)">
+        <div style="font-size:var(--font-size-xs);text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:2px">House ${data.house} — ${escapeHtml(houseInfo.name || '')}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.55">${escapeHtml(houseInfo.full)}</div>
+      </div>` : ''}
+    </div>`;
+  }
 
   if (astro && astro.placements) {
     const planets = Object.entries(astro.placements).slice(0, 10);
+
+    // Ascendant / Midheaven cards
+    let specialHtml = '';
+    if (astro.ascendant) {
+      const ascSign = window.SIGN_EXPLANATIONS?.[astro.ascendant.sign] || {};
+      specialHtml += `<div style="background:var(--surface-2);border-radius:var(--border-radius);padding:var(--space-3);border:var(--border-width-thin) solid var(--border);margin-bottom:var(--space-3)">
+        <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#FF1493;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">ASC</span>
+          <span style="font-weight:700;color:var(--text);font-size:var(--font-size-base)">Your Rising Sign (Ascendant)</span>
+          <span style="margin-left:auto;font-size:var(--font-size-sm);color:var(--gold);font-weight:600">${escapeHtml(astro.ascendant.sign || '')} ${astro.ascendant.degrees != null ? astro.ascendant.degrees.toFixed(1) + '°' : ''}</span>
+        </div>
+        <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin:0 0 var(--space-2);line-height:1.55">Your Rising Sign is the mask you wear with the world — the energy people feel when they first meet you. It governs your body, your style, and how you naturally approach anything new.</p>
+        ${ascSign.full ? `<div style="background:var(--bg2);border-radius:var(--space-1);padding:var(--space-2) var(--space-3)">
+          <div style="font-size:var(--font-size-xs);text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:2px">In ${escapeHtml(astro.ascendant.sign || '')}</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.55">${escapeHtml(ascSign.full)}</div>
+        </div>` : ''}
+      </div>`;
+    }
+    if (astro.midheaven) {
+      const mcSign = window.SIGN_EXPLANATIONS?.[astro.midheaven.sign] || {};
+      specialHtml += `<div style="background:var(--surface-2);border-radius:var(--border-radius);padding:var(--space-3);border:var(--border-width-thin) solid var(--border);margin-bottom:var(--space-3)">
+        <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#7B68EE;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">MC</span>
+          <span style="font-weight:700;color:var(--text);font-size:var(--font-size-base)">Your Midheaven (Career & Legacy)</span>
+          <span style="margin-left:auto;font-size:var(--font-size-sm);color:var(--gold);font-weight:600">${escapeHtml(astro.midheaven.sign || '')} ${astro.midheaven.degrees != null ? astro.midheaven.degrees.toFixed(1) + '°' : ''}</span>
+        </div>
+        <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin:0 0 var(--space-2);line-height:1.55">Your Midheaven is the summit of your chart — it governs your public reputation, your calling, and what you want to be known for. It\'s the direction your ambitions are meant to point.</p>
+        ${mcSign.full ? `<div style="background:var(--bg2);border-radius:var(--space-1);padding:var(--space-2) var(--space-3)">
+          <div style="font-size:var(--font-size-xs);text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:2px">In ${escapeHtml(astro.midheaven.sign || '')}</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.55">${escapeHtml(mcSign.full)}</div>
+        </div>` : ''}
+      </div>`;
+    }
+
     html += `<div class="card">
       <div class="card-title">♈ Western Astrology</div>
-      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-3)">Your planetary placements show how different life energies express through you. Hover over each planet's info icon for its meaning.</p>
-      <div class="chart-grid">
-        <div class="data-block">
-          <h4>Key Placements <span class="icon-info help-icon" title="Your planets' zodiac signs, degrees, and houses. These show life themes and energy expressions"></span></h4>
-          ${astro.ascendant ? row('Ascendant <span class="icon-info help-icon" title="Your rising sign: how you appear to others and approach new situations. This is your social mask and first impression"></span>', astro.ascendant.sign + ' ' + (astro.ascendant.degrees?.toFixed(1)||'') + '°') : ''}
-          ${astro.midheaven ? row('Midheaven <span class="icon-info help-icon" title="Your public image, career path, and legacy. This is what you are known for in the world"></span>', astro.midheaven.sign + ' ' + (astro.midheaven.degrees?.toFixed(1)||'') + '°') : ''}
-          ${planets.slice(0,6).map(([p, v]) => {
-            const meaning = planetMeanings[p] || '';
-            return row(
-              `${p} <span class="icon-info help-icon" title="${meaning}. This planet is in ${v.sign} (how it expresses) and House ${v.house} (where it operates)"></span>`,
-              v.sign + ' ' + (v.degrees?.toFixed(1)||'') + '° H'+v.house
-            );
-          }).join('')}
-        </div>
-        <div class="data-block">
-          <h4>More Planets</h4>
-          ${planets.slice(6).map(([p, v]) => {
-            const meaning = planetMeanings[p] || '';
-            return row(
-              `${p} <span class="icon-info help-icon" title="${meaning}. This planet is in ${v.sign} (how it expresses) and House ${v.house} (where it operates)"></span>`,
-              v.sign + ' ' + (v.degrees?.toFixed(1)||'') + '° H'+v.house
-            );
-          }).join('')}
-        </div>
-      </div>
+      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-4);line-height:1.6">Each planet represents a different facet of who you are. The <em>sign</em> it\'s in tells you HOW that energy expresses itself — like a costume the planet wears. The <em>house</em> tells you WHERE in life that energy plays out. Together, they describe a very specific part of your story.</p>
+      ${specialHtml}
+      ${planets.map(([p, v]) => renderPlanetCard(p, v, planetMeanings)).join('')}
     </div>`;
     
     // Add astrological chart wheel
@@ -4169,6 +4219,11 @@ if (!document.getElementById('notificationStyles')) {
 (async () => {
   checkOAuthCallback();
   checkResetPasswordAction();
+  if (_sessionRestoredByOauth) {
+    // OAuth callback already set token and called fetchUserProfile — skip silentRefresh
+    userEmail = localStorage.getItem('ps_email');
+    return;
+  }
   const restored = await silentRefresh();
   if (restored) {
     userEmail = localStorage.getItem('ps_email');
@@ -4247,6 +4302,32 @@ function toggleDetails(toggleId, btn) {
 })();
 
 // Ensure delegated actions are always discoverable on global scope.
+// (top-level function declarations in non-module scripts are already on window,
+//  but explicit assignment makes the intent clear and safe for any tooling.)
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+window.openAuthOverlay = openAuthOverlay;
+window.closeAuthOverlay = closeAuthOverlay;
+window.submitAuth = submitAuth;
+window.toggleAuthMode = toggleAuthMode;
+window.showForgotPassword = showForgotPassword;
+window.openPricingModal = openPricingModal;
+window.openBillingPortal = openBillingPortal;
+window.exportMyData = exportMyData;
+window.deleteAccount = deleteAccount;
+window.switchTab = switchTab;
+window.geocodeLocation = geocodeLocation;
+window.calculateChart = calculateChart;
+window.generateProfile = generateProfile;
+window.prefillExample = prefillExample;
+window.expandChartForm = expandChartForm;
+window.openLastShareCard = openLastShareCard;
+window.toggleRaw = toggleRaw;
+window.toggleDetails = toggleDetails;
+window.hideMemberForm = hideMemberForm;
+window.hidePracDetail = hidePracDetail;
+window.switchToPricingModal = switchToPricingModal;
+window.switchToPracPricingModal = switchToPracPricingModal;
 window.logout = logout;
 window.saveDiaryEntry = saveDiaryEntry;
 window.loadDiaryEntries = loadDiaryEntries;

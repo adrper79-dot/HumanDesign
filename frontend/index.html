@@ -32,11 +32,8 @@
 <link rel="preload" href="css/design-tokens.css" as="style">
 <link rel="preload" href="css/design-tokens-premium.css" as="style">
 <link rel="preload" href="css/base.css" as="style">
-<!-- Preload lazy loading utilities (BL-OPT-005) -->
-<link rel="preload" href="js/lazy.js" as="script">
-<!-- Preload i18n (BL-OPT-006) -->
-<link rel="preload" href="js/i18n.js" as="script">
-<link rel="preload" href="locales/en.json" as="fetch" crossorigin>
+<!-- i18n — no crossorigin: same-origin fetch, crossorigin attribute caused cache mismatch -->
+<link rel="preload" href="locales/en.json" as="fetch">
 <!-- Explanations data module (must load before renderChart) -->
 <script src="js/explanations.js"></script>
 <script src="js/hd-data.js"></script>
@@ -58,9 +55,8 @@
 <link rel="stylesheet" href="css/components/sidebar.css">
 <!-- Premium Overrides (no more @imports — loaded last for cascade) -->
 <link rel="stylesheet" href="css/prime-self-premium.css">
-<!-- Mobile Optimizations (deferred) -->
-<link rel="preload" href="css/components/mobile.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="css/components/mobile.css"></noscript>
+<!-- Mobile Optimizations -->
+<link rel="stylesheet" href="css/components/mobile.css">
 <!-- App-specific styles (extracted from inline block — Phase 4) -->
 <link rel="stylesheet" href="css/app.css">
 
@@ -156,13 +152,7 @@
   <div class="auth-box">
     <!-- Logo Animation (randomized v1/v2) -->
     <div style="text-align:center;margin-bottom:var(--space-4)">
-      <video data-logo-video autoplay muted playsinline loop
-             poster="logo-poster.jpg"
-             style="max-width:180px;height:auto;border-radius:var(--space-3)">
-        <source src="logo-animation.webm" type="video/webm">
-        <source src="logo-animation.mp4" type="video/mp4">
-        <img data-logo-poster src="logo-poster.jpg" alt="Prime Self" style="max-width:180px">
-      </video>
+      <img src="/icons/icon-192.png" alt="Prime Self" style="width:80px;height:80px;border-radius:16px">
     </div>
     <h2 id="authTitle" data-i18n="auth.signIn">Sign In</h2>
     <p id="authSubtitle" data-i18n="auth.accessProfile">Access your Prime Self profile and saved charts.</p>

@@ -206,7 +206,7 @@
     btn.type = 'button';
     btn.setAttribute('aria-label', 'Change language');
     btn.setAttribute('aria-expanded', 'false');
-    btn.textContent = `${LOCALE_FLAGS[currentLocale]} ${LOCALE_NAMES[currentLocale]}`;
+    btn.innerHTML = `<span class="lang-flag" aria-hidden="true">${LOCALE_FLAGS[currentLocale]}</span><span class="lang-name"> ${LOCALE_NAMES[currentLocale]}</span>`;
 
     const dropdown = document.createElement('div');
     dropdown.className = 'lang-switcher-dropdown';

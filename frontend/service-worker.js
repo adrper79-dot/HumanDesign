@@ -10,7 +10,7 @@
  * 2026-03-09: v14 - Sidebar navigation: replaced horizontal tab bar with persistent left sidebar
  */
 
-const CACHE_VERSION = 'v14';
+const CACHE_VERSION = 'v15';
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
@@ -136,13 +136,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip video/audio files — browser uses Range requests (HTTP 206) for
+  // media streaming/scrubbing. Cache API does not support 206 responses,
+  // so we let the browser handle these natively.
+  const ext = url.pathname.split('.').pop().toLowerCase();
+  if (['mp4', 'webm', 'm4v', 'mkv', 'mov', 'avi', 'mp3', 'ogg', 'wav', 'm4a', 'aac', 'flac'].includes(ext)) {
+    return;
+  }
+
   // API requests: Network first, cache fallback (with eviction)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache successful GET responses, then trim
-          if (response.ok) {
+          // Cache successful GET responses (exclude 206 — Cache API rejects partial content)
+          if (response.ok && response.status !== 206) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, responseClone);
@@ -205,8 +213,8 @@ self.addEventListener('fetch', (event) => {
 
         // Fetch from network and cache
         return fetch(request).then((response) => {
-          // Only cache successful responses
-          if (response.ok) {
+          // Only cache successful, complete responses (exclude 206 partial content)
+          if (response.ok && response.status !== 206) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, responseClone);
