@@ -567,6 +567,9 @@
       <span class="nav-icon">⊙</span>
       <span class="nav-label sidebar-footer-text" id="sidebarTierText">Free Tier</span>
     </div>
+    <button class="nav-item" id="pwaInstallNavBtn" style="display:none" data-action="pwaInstallFromNav" aria-label="Install app on your device">
+      <span class="nav-icon">⬇</span><span class="nav-label">Install App</span>
+    </button>
   </div>
 </nav>
 
@@ -650,15 +653,7 @@
       </div>
     </div>
 
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)" data-i18n="chart.welcomeTitle">Welcome to Prime Self</strong>
-      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
-        <li>Enter your exact birth date, time, and location to calculate your Energy Blueprint</li>
-        <li>Maps 64 gate activations, planetary positions, and numerological patterns</li>
-        <li>Reveals <strong>defined centers</strong> (consistent energy) vs <strong>open centers</strong> (experienced through others)</li>
-        <li>Forms the foundation for AI-powered synthesis</li>
-      </ul>
-    </div>
+
     <div class="card" id="chartFormCard">
       <div class="card-title"><span class="icon-chart"></span> <span data-i18n="chart.birthData">Birth Data</span></div>
       <div class="form-grid">
@@ -738,16 +733,7 @@
       <button class="sub-tab" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
       <button class="sub-tab active" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(213,0,28,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)" data-i18n="profile.aiSynthesis">AI-Powered Multi-System Synthesis</strong>
-      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
-        <li>64 gate activations — conscious &amp; unconscious</li>
-        <li>Gene Keys shadows, gifts &amp; siddhis</li>
-        <li>Astrological aspects with orbs</li>
-        <li>Numerology — all systems synthesized by Claude AI</li>
-      </ul>
-      <p style="margin:8px 0 0;font-size:var(--font-size-sm)">You get specific scenarios ("When X happens, you notice Y") instead of vague statements. <strong>Takes 15–30 seconds.</strong> Sign-in required to save.</p>
-    </div>
+<p class="tab-hint">Synthesises 64 gates, Gene Keys, astrology &amp; numerology via AI. Takes 15–30 seconds. Sign-in required to save.</p>
     <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
       <strong>⚡ Usage Limit</strong><br>
       <span id="profileQuotaText"></span>
@@ -890,16 +876,7 @@
         <p>Validate your chart through real behavioral patterns, track your energy in the Diary, and build the foundation for the most accurate AI readings. Takes about 10 minutes total.</p>
       </div>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(106,79,200,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)">Dramatically Improve Reading Accuracy</strong>
-      <p style="margin:6px 0 4px;font-size:var(--font-size-sm)">10 minutes of quick assessments validates your chart through behavioral patterns:</p>
-      <ul style="margin:4px 0 0;padding-left:18px;line-height:1.7">
-        <li><strong>Decision patterns</strong> — validates Authority</li>
-        <li><strong>Energy patterns</strong> — validates Type</li>
-        <li><strong>Big Five personality</strong> — cross-validates chart</li>
-        <li><strong>Character Strengths</strong> — maps to Gene Keys</li>
-      </ul>
-    </div>
+<p class="tab-hint">10-minute assessments validate your chart through real behavioral patterns — decision-making, energy type, personality, and character strengths.</p>
 
     <!-- Behavioral Validation -->
     <div class="card">
@@ -979,14 +956,7 @@
       <button class="sub-tab" data-action="switchTab" data-arg0="enhance">★ Enhance</button>
       <button class="sub-tab active" data-action="switchTab" data-arg0="diary">📖 Diary</button>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid #d5001c">
-      <strong style="color:#d5001c">Life Events Timeline</strong>
-      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
-        <li>Log major life events with dates — the system auto-correlates active transits with your natal gates</li>
-        <li>Proves chart accuracy through lived experience (e.g. "Got promoted — June 2019")</li>
-        <li>Essential for <strong>birth time rectification</strong>: consistent transit correlations at a given time confirm the correct birth time</li>
-      </ul>
-    </div>
+<p class="tab-hint">Log key life events — the system cross-references them with active transits to confirm chart accuracy and refine birth time.</p>
 
     <div class="card">
       <div class="card-title"><span class="icon-plus"></span> <span data-i18n="diary.addEvent">Add Life Event</span></div>
@@ -1052,15 +1022,7 @@
       <button class="sub-tab" data-action="switchTab" data-arg0="transits">☽ Transits</button>
       <button class="sub-tab active" data-action="switchTab" data-arg0="checkin">♥ Check-In</button>
     </div>
-    <div class="alert alert-info" style="background:linear-gradient(135deg, rgba(213,0,28,0.08) 0%, rgba(212,175,55,0.06) 100%);border-left:var(--space-1) solid var(--gold)">
-      <strong style="color:var(--gold)" data-i18n="checkin.title">Daily Alignment Tracker</strong>
-      <ul style="margin:8px 0 0;padding-left:18px;line-height:1.7">
-        <li>Rate your strategy &amp; authority alignment (1–10) each day</li>
-        <li>Log mood and energy — watch patterns emerge over time</li>
-        <li>Build streaks to maintain consistency</li>
-        <li>Scores are correlated with current transits to show which energies support or challenge your design</li>
-      </ul>
-    </div>
+<p class="tab-hint">Rate your alignment (1–10), log mood and energy. Scores are compared against active transits so you can see which planetary energies support or challenge your design.</p>
 
     <!-- Today's Check-In Card -->
     <div class="card">
@@ -1558,4 +1520,3 @@
 
 </body>
 </html>
-<- frontend/index.html: 1090→1592 lines ( +502 lines, 46% increase Auto-deploy enabled Wed Mar  4 15:51:42 EST 2026 -->
