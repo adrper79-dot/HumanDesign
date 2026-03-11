@@ -26,3 +26,12 @@ secrets.*
 **/secrets.*
 **/Secrets.txt
 **/secrets.txt
+
+# Apple Sign In private keys
+*.p8
+AuthKey_*.p8
+
+# Non-source binary docs (keep Markdown docs tracked)
+/*.docx
+/*.pdf
+docs/*.docx

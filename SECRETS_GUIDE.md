@@ -248,14 +248,13 @@ These are infrastructure bindings, not secrets.
 
 ---
 
-### 12. Social OAuth — Facebook
+### 12. Social OAuth — Facebook (disabled)
 
 | Field | Value |
 |-------|-------|
-| **Service** | [Meta for Developers](https://developers.facebook.com/) → My Apps → Your App |
-| **Used by** | `workers/src/handlers/oauthSocial.js` |
-| **Setup** | Create a new App (Consumer type). Add Facebook Login product. Add `https://prime-self-api.adrper79.workers.dev/api/auth/oauth/facebook/callback` to Valid OAuth Redirect URIs. Enable `email` and `public_profile` permissions. App must pass Review to use with real users. |
-| **wrangler commands** | `npx wrangler secret put FACEBOOK_APP_ID` and `npx wrangler secret put FACEBOOK_APP_SECRET` |
+| **Status** | Removed from production auth flow on 2026-03-10 |
+| **Used by** | No active auth route. Kept only as historical note. |
+| **Setup** | Not required. `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` are no longer needed unless Facebook login is reintroduced. |
 
 ---
 

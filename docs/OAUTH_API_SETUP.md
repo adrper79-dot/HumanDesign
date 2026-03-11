@@ -2,7 +2,7 @@
 > All social auth and messaging integrations for Prime Self
 > Last updated: 2026-03-10
 
-This document covers every external API key required for social login (Google, Apple, Facebook) and X/Twitter messaging. Follow each section in order — each has a "time to complete" estimate and exact steps.
+This document covers external API keys for social login (Google, Apple) and X/Twitter messaging. Facebook login was removed from production on 2026-03-10.
 
 ---
 
@@ -12,7 +12,6 @@ This document covers every external API key required for social login (Google, A
 |---------|------------|-----------|------|
 | Google OAuth | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Yes — unlimited | 5 min |
 | Apple Sign In | `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Yes (Dev account $99/yr) | 30 min |
-| Facebook Login | `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` | Yes (App Review required for public) | 20 min |
 | X/Twitter Messaging | `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`, `X_BEARER_TOKEN` | Partial (Basic $100/mo for DMs) | 15 min |
 
 After obtaining each key, set it in your Cloudflare Worker:
@@ -150,61 +149,15 @@ Open: `https://prime-self-api.adrper79.workers.dev/api/auth/oauth/apple`
 
 ---
 
-## 3. Facebook Login
+## 3. Facebook Login (disabled)
 
-**What it enables:** "Continue with Facebook" button. Reaches HD community in Facebook Groups and Instagram.
+Facebook login was removed from production auth routes and UI on 2026-03-10.
 
-**Note:** Facebook requires App Review before real users (not test accounts) can log in. Plan 1–2 weeks for Review.
+- Removed endpoint: `/api/auth/oauth/facebook`
+- Removed endpoint: `/api/auth/oauth/facebook/callback`
+- Removed UI control: `Continue with Facebook`
 
-### Step-by-step
-
-**1. Create a Meta Developer app**
-1. Go to [developers.facebook.com](https://developers.facebook.com) → **My Apps** → **Create App**
-2. Use case: **Authenticate and request data from users** → Next
-3. App name: `Prime Self` → Create App
-4. (If prompted for Business Portfolio, skip or use None)
-
-**2. Add Facebook Login product**
-1. In your app dashboard → **Add a Product** → **Facebook Login** → **Set up** → **Web**
-2. Site URL: `https://selfprime.net` → Save
-
-**3. Configure OAuth redirect URIs**
-1. In Facebook Login settings (left sidebar: **Facebook Login** → **Settings**)
-2. **Valid OAuth Redirect URIs** — add:
-   ```
-   https://prime-self-api.adrper79.workers.dev/api/auth/oauth/facebook/callback
-   http://localhost:8787/api/auth/oauth/facebook/callback
-   ```
-3. Save Changes
-
-**4. Get credentials**
-1. **App Settings** → **Basic** (left sidebar)
-2. Copy **App ID** → this is `FACEBOOK_APP_ID`
-3. Click **Show** next to App Secret → copy → this is `FACEBOOK_APP_SECRET`
-
-**5. Add test users** (for development before App Review)
-1. **App Roles** → **Test Users** → Add
-2. Use these accounts during development
-
-**6. Submit for App Review** (before public launch)
-1. **App Review** → **Permissions and Features**
-2. Request `email` and `public_profile` permissions
-3. Submit screencast showing how login is used
-4. Approval typically takes 5–10 business days
-
-**7. Set secrets**
-```bash
-npx wrangler secret put FACEBOOK_APP_ID
-# paste App ID
-
-npx wrangler secret put FACEBOOK_APP_SECRET
-# paste App Secret
-```
-
-**8. Test** (with a test user account)
-Open: `https://prime-self-api.adrper79.workers.dev/api/auth/oauth/facebook`
-→ Should redirect to Facebook login
-→ After approving, redirects to frontend with `?oauth=success`
+If Facebook login is reintroduced later, add a new section with fresh setup instructions and re-enable the routes in `workers/src/index.js` and `workers/src/handlers/oauthSocial.js`.
 
 ---
 
@@ -305,17 +258,6 @@ APPLE SIGN IN
 [ ] APPLE_KEY_ID set in wrangler
 [ ] APPLE_PRIVATE_KEY set in wrangler
 [ ] End-to-end test passes
-
-FACEBOOK LOGIN
-[ ] Meta Developer app created
-[ ] Facebook Login product added
-[ ] Valid OAuth redirect URIs set
-[ ] Test users added for development
-[ ] App Review submitted (before public launch)
-[ ] FACEBOOK_APP_ID set in wrangler
-[ ] FACEBOOK_APP_SECRET set in wrangler
-[ ] End-to-end test with test user passes
-[ ] App Review approved before going live
 
 X MESSAGING (OPTIONAL — requires $100/mo Basic plan)
 [ ] X Developer account with Basic subscription

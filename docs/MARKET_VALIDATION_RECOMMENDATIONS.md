@@ -17,7 +17,7 @@ Third pass — 2026-03-10 (OAuth shipped). Approximately **83% of original recom
 | 2.1 | Email delivery | Resend API integrated (`workers/src/lib/email.js`); welcome + reset emails wired |
 | 2.2 | Complete Gene Keys KB | 64/64 shadow/gift/siddhi populated (was 38/64) |
 | 3.2 | Add mid-market pricing tier | $12/mo consumer, $60/mo practitioner (was $15/$97) |
-| 3.1 | Google/Apple/Facebook OAuth | **Shipped 2026-03-10** — `oauthSocial.js` handler, migration 022, social login buttons in auth overlay, `checkOAuthCallback()` on load. Secrets setup in SECRETS_GUIDE.md §11–13. |
+| 3.1 | Google/Apple OAuth | **Shipped 2026-03-10** — `oauthSocial.js` handler, migration 022, social login buttons in auth overlay, `checkOAuthCallback()` on load. Facebook login removed from production auth flow on 2026-03-10. Secrets setup in SECRETS_GUIDE.md §11 and §13. |
 | 3.3 | Consolidate CSS token systems | Sidebar CSS system introduced; design tokens streamlined |
 | 3.4 | Fix WCAG AA contrast failures | 51/51 UI defects cleared per UI_DEFECT_BACKLOG.md |
 | 4.1 | Practitioner dashboard frontend | **Fully rebuilt 2026-03-10** — roster, client detail, chart summary, profile preview, PDF export, remove action, limit bar, auto-load. Fixed API field mismatch (clientEmail) and data key mismatch (data.clients). |
@@ -380,7 +380,7 @@ Result: buttons render gold (from inline), but the design system specifies red. 
 | 2.2 | Complete Gene Keys KB | High | 1 day | ✅ Done (64/64) |
 | 2.3 | Wire referral system | High | 2 days | ❌ Open |
 | 2.4 | Wire promo code system | High | 1 day | ✅ Done |
-| 3.1 | Google/Apple/Facebook OAuth | Medium | 3 days | ✅ Done (2026-03-10) |
+| 3.1 | Google/Apple OAuth | Medium | 3 days | ✅ Done (2026-03-10; Facebook login removed) |
 | 3.2 | Mid-market pricing tier | Medium | 1 day | ✅ Done ($12/$60) |
 | 3.3 | Consolidate CSS token systems | Medium | 1 day | ✅ Done |
 | 3.4 | Fix WCAG AA contrast failures | Medium | 30 min | ✅ Done (51/51 cleared) |
