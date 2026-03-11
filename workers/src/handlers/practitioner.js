@@ -36,48 +36,53 @@ export async function handlePractitioner(request, env, subpath) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
   }
 
-  // Enforce practitioner tools feature access (except for /register endpoint)
-  if (subpath !== '/register') {
-    const featureCheck = await enforceFeatureAccess(request, env, 'practitionerTools');
-    if (featureCheck) return featureCheck;
+  try {
+    // Enforce practitioner tools feature access (except for /register endpoint)
+    if (subpath !== '/register') {
+      const featureCheck = await enforceFeatureAccess(request, env, 'practitionerTools');
+      if (featureCheck) return featureCheck;
+    }
+
+    const method = request.method;
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+    // POST /api/practitioner/register
+    if (subpath === '/register' && method === 'POST') {
+      return handleRegister(request, env, userId, query);
+    }
+
+    // GET /api/practitioner/profile
+    if (subpath === '/profile' && method === 'GET') {
+      return handleGetProfile(userId, query);
+    }
+
+    // GET /api/practitioner/clients
+    if (subpath === '/clients' && method === 'GET') {
+      return handleListClients(userId, query);
+    }
+
+    // POST /api/practitioner/clients/add
+    if (subpath === '/clients/add' && method === 'POST') {
+      return handleAddClient(request, env, userId, query);
+    }
+
+    // GET /api/practitioner/clients/:id
+    const clientDetailMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
+    if (clientDetailMatch && method === 'GET') {
+      return handleGetClientDetail(userId, clientDetailMatch[1], query);
+    }
+
+    // DELETE /api/practitioner/clients/:id
+    const clientDeleteMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
+    if (clientDeleteMatch && method === 'DELETE') {
+      return handleRemoveClient(userId, clientDeleteMatch[1], query);
+    }
+
+    return Response.json({ error: 'Not Found' }, { status: 404 });
+  } catch (err) {
+    console.error('[practitioner] Unhandled error:', err.message);
+    return Response.json({ error: 'Service temporarily unavailable' }, { status: 500 });
   }
-
-  const method = request.method;
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
-
-  // POST /api/practitioner/register
-  if (subpath === '/register' && method === 'POST') {
-    return handleRegister(request, env, userId, query);
-  }
-
-  // GET /api/practitioner/profile
-  if (subpath === '/profile' && method === 'GET') {
-    return handleGetProfile(userId, query);
-  }
-
-  // GET /api/practitioner/clients
-  if (subpath === '/clients' && method === 'GET') {
-    return handleListClients(userId, query);
-  }
-
-  // POST /api/practitioner/clients/add
-  if (subpath === '/clients/add' && method === 'POST') {
-    return handleAddClient(request, env, userId, query);
-  }
-
-  // GET /api/practitioner/clients/:id
-  const clientDetailMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
-  if (clientDetailMatch && method === 'GET') {
-    return handleGetClientDetail(userId, clientDetailMatch[1], query);
-  }
-
-  // DELETE /api/practitioner/clients/:id
-  const clientDeleteMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
-  if (clientDeleteMatch && method === 'DELETE') {
-    return handleRemoveClient(userId, clientDeleteMatch[1], query);
-  }
-
-  return Response.json({ error: 'Not Found' }, { status: 404 });
 }
 
 async function handleRegister(request, env, userId, query) {

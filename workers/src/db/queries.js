@@ -949,7 +949,7 @@ export const QUERIES = {
     SELECT id, user_id, stripe_customer_id, stripe_subscription_id, tier, status,
            current_period_start, current_period_end, cancel_at_period_end, created_at, updated_at
     FROM subscriptions
-    WHERE user_id = $1 AND status = 'active'
+    WHERE user_id = $1 AND status IN ('active', 'trialing', 'past_due')
     ORDER BY created_at DESC
     LIMIT 1
   `,

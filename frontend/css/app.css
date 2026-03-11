@@ -1029,3 +1029,22 @@ img[data-src].loaded, img:not([data-src]) {
   line-height: 1.55;
   max-width: clamp(280px, 90vw, 600px);
 }
+
+/* Composite intro list: force readable single column on small screens */
+.relationship-field-list {
+  list-style-position: outside;
+  columns: 2;
+  column-gap: 24px;
+}
+
+.relationship-field-list li {
+  break-inside: avoid;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 720px) {
+  .relationship-field-list {
+    columns: 1;
+    padding-left: 18px !important;
+  }
+}

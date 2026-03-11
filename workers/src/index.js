@@ -230,7 +230,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation/', '/api/psychometric/', '/api/diary', '/api/billing/', '/api/referrals/', '/api/achievements/', '/api/webhooks/', '/api/push/', '/api/alerts/', '/api/keys/', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin/', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -454,6 +454,16 @@ export default {
       if (path.startsWith('/api/')) {
         const rlResult = await rateLimit(request, env);
         if (rlResult) return addCorsHeaders(rlResult, request, env.ENVIRONMENT);
+      }
+
+      // Body size limit (1 MB) — reject oversized payloads early
+      const MAX_BODY_BYTES = 1_048_576;
+      const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+      if (contentLength > MAX_BODY_BYTES) {
+        return addCorsHeaders(
+          Response.json({ error: 'Payload too large' }, { status: 413 }),
+          request, env.ENVIRONMENT
+        );
       }
 
       let response;

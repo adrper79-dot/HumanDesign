@@ -169,82 +169,87 @@ async function handleRegister(request, env) {
     );
   }
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  // Check if user already exists
-  const existing = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
-  if (existing.rows && existing.rows.length > 0) {
-    return Response.json(
-      { error: 'An account with this email already exists' },
-      { status: 409 }
-    );
-  }
+    // Check if user already exists
+    const existing = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
+    if (existing.rows && existing.rows.length > 0) {
+      return Response.json(
+        { error: 'An account with this email already exists' },
+        { status: 409 }
+      );
+    }
 
-  // Hash password
-  const passwordHash = await hashPassword(password);
+    // Hash password
+    const passwordHash = await hashPassword(password);
 
-  // Create user
-  const result = await query(QUERIES.createUserWithPassword, [
-    email.toLowerCase(),
-    phone || null,
-    passwordHash,
-    birthDate || null,
-    birthTime || null,
-    birthTimezone || null,
-    lat ? parseFloat(lat) : null,
-    lng ? parseFloat(lng) : null
-  ]);
-
-  const userId = result.rows?.[0]?.id;
-  if (!userId) {
-    return Response.json(
-      { error: 'Failed to create user' },
-      { status: 500 }
-    );
-  }
-
-  // Issue tokens
-  const accessToken = await signJWT(
-    { sub: userId, email: email.toLowerCase(), type: 'access' },
-    env.JWT_SECRET,
-    ACCESS_TOKEN_TTL
-  );
-
-  const familyId = crypto.randomUUID();
-  const refreshToken = await signJWT(
-    { sub: userId, type: 'refresh', fid: familyId },
-    env.JWT_SECRET,
-    REFRESH_TOKEN_TTL
-  );
-
-  // Store hashed refresh token in DB
-  const tokenHash = await sha256(refreshToken);
-  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
-  await query(QUERIES.insertRefreshToken, [userId, tokenHash, familyId, expiresAtEpoch]);
-
-  // Send welcome email (BL-ENG-007)
-  // Fire and forget - don't block registration on email send
-  if (env.RESEND_API_KEY) {
-    sendWelcomeEmail1(
+    // Create user
+    const result = await query(QUERIES.createUserWithPassword, [
       email.toLowerCase(),
-      email.split('@')[0], // Use email prefix as name fallback
-      env.RESEND_API_KEY,
-      env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
-    ).catch(err => {
-      console.error('Failed to send welcome email:', err);
-      // Don't fail registration if email fails
-    });
+      phone || null,
+      passwordHash,
+      birthDate || null,
+      birthTime || null,
+      birthTimezone || null,
+      lat ? parseFloat(lat) : null,
+      lng ? parseFloat(lng) : null
+    ]);
+
+    const userId = result.rows?.[0]?.id;
+    if (!userId) {
+      return Response.json(
+        { error: 'Failed to create user' },
+        { status: 500 }
+      );
+    }
+
+    // Issue tokens
+    const accessToken = await signJWT(
+      { sub: userId, email: email.toLowerCase(), type: 'access' },
+      env.JWT_SECRET,
+      ACCESS_TOKEN_TTL
+    );
+
+    const familyId = crypto.randomUUID();
+    const refreshToken = await signJWT(
+      { sub: userId, type: 'refresh', fid: familyId },
+      env.JWT_SECRET,
+      REFRESH_TOKEN_TTL
+    );
+
+    // Store hashed refresh token in DB
+    const tokenHash = await sha256(refreshToken);
+    const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
+    await query(QUERIES.insertRefreshToken, [userId, tokenHash, familyId, expiresAtEpoch]);
+
+    // Send welcome email (BL-ENG-007)
+    // Fire and forget - don't block registration on email send
+    if (env.RESEND_API_KEY) {
+      sendWelcomeEmail1(
+        email.toLowerCase(),
+        email.split('@')[0], // Use email prefix as name fallback
+        env.RESEND_API_KEY,
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+      ).catch(err => {
+        console.error('Failed to send welcome email:', err);
+        // Don't fail registration if email fails
+      });
+    }
+
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+
+    return new Response(JSON.stringify({
+      ok: true,
+      user: { id: userId, email: email.toLowerCase() },
+      accessToken,
+      expiresIn: ACCESS_TOKEN_TTL
+    }), { status: 201, headers });
+  } catch (err) {
+    console.error('[register] Error:', err.message);
+    return Response.json({ error: 'Registration failed' }, { status: 500 });
   }
-
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
-
-  return new Response(JSON.stringify({
-    ok: true,
-    user: { id: userId, email: email.toLowerCase() },
-    accessToken,
-    expiresIn: ACCESS_TOKEN_TTL
-  }), { status: 201, headers });
 }
 
 // ─── Login ───────────────────────────────────────────────────
@@ -287,75 +292,80 @@ async function handleLogin(request, env) {
     }
   }
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
-  const user = result.rows?.[0];
+    const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
+    const user = result.rows?.[0];
 
-  if (!user) {
-    // Track failed attempt
-    if (env.CACHE) {
-      const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
-      await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
+    if (!user) {
+      // Track failed attempt
+      if (env.CACHE) {
+        const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
+        await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
+      }
+      return Response.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      );
     }
-    return Response.json(
-      { error: 'Invalid email or password' },
-      { status: 401 }
-    );
-  }
 
-  // Verify password
-  const valid = await verifyPassword(password, user.password_hash);
-  if (!valid) {
-    // Track failed attempt
-    if (env.CACHE) {
-      const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
-      await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
+    // Verify password
+    const valid = await verifyPassword(password, user.password_hash);
+    if (!valid) {
+      // Track failed attempt
+      if (env.CACHE) {
+        const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
+        await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
+      }
+      return Response.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      );
     }
-    return Response.json(
-      { error: 'Invalid email or password' },
-      { status: 401 }
+
+    // Successful login — clear failed attempts
+    if (env.CACHE) {
+      await env.CACHE.delete(lockoutKey);
+    }
+
+    // Issue tokens
+    const accessToken = await signJWT(
+      { sub: user.id, email: user.email, type: 'access' },
+      env.JWT_SECRET,
+      ACCESS_TOKEN_TTL
     );
+
+    const familyId = crypto.randomUUID();
+    const refreshToken = await signJWT(
+      { sub: user.id, type: 'refresh', fid: familyId },
+      env.JWT_SECRET,
+      REFRESH_TOKEN_TTL
+    );
+
+    // Store hashed refresh token in DB
+    const tokenHash = await sha256(refreshToken);
+    const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
+    await query(QUERIES.insertRefreshToken, [user.id, tokenHash, familyId, expiresAtEpoch]);
+
+    // BL-FIX: Update last_login_at for re-engagement tracking and cron accuracy
+    await query(QUERIES.updateLastLogin, [user.id]).catch(err => {
+      console.error('[auth] Failed to update last_login_at:', err.message);
+    });
+
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+
+    return new Response(JSON.stringify({
+      ok: true,
+      user: { id: user.id, email: user.email },
+      accessToken,
+      expiresIn: ACCESS_TOKEN_TTL
+    }), { headers });
+  } catch (err) {
+    console.error('[login] Error:', err.message);
+    return Response.json({ error: 'Login failed' }, { status: 500 });
   }
-
-  // Successful login — clear failed attempts
-  if (env.CACHE) {
-    await env.CACHE.delete(lockoutKey);
-  }
-
-  // Issue tokens
-  const accessToken = await signJWT(
-    { sub: user.id, email: user.email, type: 'access' },
-    env.JWT_SECRET,
-    ACCESS_TOKEN_TTL
-  );
-
-  const familyId = crypto.randomUUID();
-  const refreshToken = await signJWT(
-    { sub: user.id, type: 'refresh', fid: familyId },
-    env.JWT_SECRET,
-    REFRESH_TOKEN_TTL
-  );
-
-  // Store hashed refresh token in DB
-  const tokenHash = await sha256(refreshToken);
-  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
-  await query(QUERIES.insertRefreshToken, [user.id, tokenHash, familyId, expiresAtEpoch]);
-
-  // BL-FIX: Update last_login_at for re-engagement tracking and cron accuracy
-  await query(QUERIES.updateLastLogin, [user.id]).catch(err => {
-    console.error('[auth] Failed to update last_login_at:', err.message);
-  });
-
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
-
-  return new Response(JSON.stringify({
-    ok: true,
-    user: { id: user.id, email: user.email },
-    accessToken,
-    expiresIn: ACCESS_TOKEN_TTL
-  }), { headers });
 }
 
 // ─── Refresh Token (with rotation & theft detection) ─────────
@@ -473,8 +483,13 @@ async function handleLogout(request, env) {
     );
   }
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  await query(QUERIES.revokeAllUserRefreshTokens, [userId]);
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    await query(QUERIES.revokeAllUserRefreshTokens, [userId]);
+  } catch (err) {
+    console.error('[logout] DB error (non-fatal):', err.message);
+    // Still clear the cookie even if DB revoke fails
+  }
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', clearRefreshCookie());
@@ -584,36 +599,41 @@ async function handleForgotPassword(request, env) {
     message: 'If an account with that email exists, a password reset link has been sent.'
   });
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
-  const user = result.rows?.[0];
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
+    const user = result.rows?.[0];
 
-  if (!user) return successResponse;
+    if (!user) return successResponse;
 
-  // Invalidate any existing reset tokens for this user
-  await query(QUERIES.invalidatePasswordResetTokens, [user.id]);
+    // Invalidate any existing reset tokens for this user
+    await query(QUERIES.invalidatePasswordResetTokens, [user.id]);
 
-  // Generate a cryptographically random token
-  const rawToken = crypto.randomUUID() + '-' + crypto.randomUUID();
-  const tokenHash = await sha256(rawToken);
-  const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL * 1000).toISOString();
+    // Generate a cryptographically random token
+    const rawToken = crypto.randomUUID() + '-' + crypto.randomUUID();
+    const tokenHash = await sha256(rawToken);
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL * 1000).toISOString();
 
-  await query(QUERIES.createPasswordResetToken, [user.id, tokenHash, expiresAt]);
+    await query(QUERIES.createPasswordResetToken, [user.id, tokenHash, expiresAt]);
 
-  // Build reset URL
-  const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
-  const resetUrl = `${frontendUrl}/?action=reset-password&token=${encodeURIComponent(rawToken)}&email=${encodeURIComponent(email.toLowerCase())}`;
+    // Build reset URL
+    const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
+    const resetUrl = `${frontendUrl}/?action=reset-password&token=${encodeURIComponent(rawToken)}&email=${encodeURIComponent(email.toLowerCase())}`;
 
-  // Send email (fire and forget — don't block response)
-  if (env.RESEND_API_KEY) {
-    sendPasswordResetEmail(
-      email.toLowerCase(),
-      resetUrl,
-      env.RESEND_API_KEY,
-      env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
-    ).catch(err => {
-      console.error('Failed to send password reset email:', err);
-    });
+    // Send email (fire and forget — don't block response)
+    if (env.RESEND_API_KEY) {
+      sendPasswordResetEmail(
+        email.toLowerCase(),
+        resetUrl,
+        env.RESEND_API_KEY,
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+      ).catch(err => {
+        console.error('Failed to send password reset email:', err);
+      });
+    }
+  } catch (err) {
+    // Log but always return success — prevents email enumeration and masks DB errors
+    console.error('[forgot-password] Error:', err.message);
   }
 
   return successResponse;
@@ -641,36 +661,41 @@ async function handleResetPassword(request, env) {
     return Response.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
   }
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const tokenHash = await sha256(token);
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const tokenHash = await sha256(token);
 
-  // Look up the token
-  const result = await query(QUERIES.getPasswordResetToken, [tokenHash]);
-  const resetRow = result.rows?.[0];
+    // Look up the token
+    const result = await query(QUERIES.getPasswordResetToken, [tokenHash]);
+    const resetRow = result.rows?.[0];
 
-  if (!resetRow) {
-    return Response.json(
-      { error: 'Invalid or expired reset token. Please request a new one.' },
-      { status: 400 }
-    );
+    if (!resetRow) {
+      return Response.json(
+        { error: 'Invalid or expired reset token. Please request a new one.' },
+        { status: 400 }
+      );
+    }
+
+    // Hash new password
+    const passwordHash = await hashPassword(password);
+
+    // Update password
+    await query(QUERIES.updatePasswordHash, [resetRow.user_id, passwordHash]);
+
+    // Mark token as used
+    await query(QUERIES.markPasswordResetUsed, [resetRow.id]);
+
+    // Revoke all refresh tokens (force re-login everywhere)
+    await query(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
+
+    return Response.json({
+      ok: true,
+      message: 'Password has been reset successfully. Please sign in with your new password.'
+    });
+  } catch (err) {
+    console.error('[reset-password] Error:', err.message);
+    return Response.json({ error: 'Password reset failed. Please try again.' }, { status: 500 });
   }
-
-  // Hash new password
-  const passwordHash = await hashPassword(password);
-
-  // Update password
-  await query(QUERIES.updatePasswordHash, [resetRow.user_id, passwordHash]);
-
-  // Mark token as used
-  await query(QUERIES.markPasswordResetUsed, [resetRow.id]);
-
-  // Revoke all refresh tokens (force re-login everywhere)
-  await query(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
-
-  return Response.json({
-    ok: true,
-    message: 'Password has been reset successfully. Please sign in with your new password.'
-  });
 }
 
 // ─── Account Deletion ────────────────────────────────────────

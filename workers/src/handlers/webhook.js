@@ -111,6 +111,14 @@ export async function handleStripeWebhook(request, env) {
         await handlePaymentFailed(event, query, env);
         break;
 
+      case 'charge.refunded':
+        await handleChargeRefunded(event, query);
+        break;
+
+      case 'charge.dispute.created':
+        await handleChargeDispute(event, query);
+        break;
+
       default:
         console.log('Unhandled event type:', event.type);
     }
@@ -201,7 +209,10 @@ async function handleSubscriptionUpdated(event, query, env) {
   const existingSub = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
 
   if (existingSub.rows.length === 0) {
-    console.error('No subscription found for customer:', customerId);
+    // TXN-013 FIX: Log ghost subscription instead of silently returning.
+    // This means Stripe is charging a customer we don't have a DB record for.
+    console.error('GHOST SUBSCRIPTION — No DB record for Stripe customer:', customerId,
+      'subscription:', subscriptionId, 'tier:', tier);
     return;
   }
 
@@ -396,5 +407,92 @@ async function handleInvoicePaid(event, query) {
   ]);
 
   console.log(`Invoice paid for subscription ${subscriptionId}: ${amountPaid} ${invoice.currency}`);
+}
+
+/**
+ * Handle charge.refunded — TXN-016 FIX
+ * Downgrade user to free tier when a charge is refunded.
+ */
+async function handleChargeRefunded(event, query) {
+  const charge = event.data.object;
+  const customerId = charge.customer;
+
+  if (!customerId) {
+    console.error('charge.refunded: No customer ID on charge:', charge.id);
+    return;
+  }
+
+  const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
+
+  if (result.rows.length === 0) {
+    console.error('charge.refunded: No subscription found for customer:', customerId);
+    return;
+  }
+
+  const userId = result.rows[0].user_id;
+  const subscriptionDbId = result.rows[0].id;
+
+  // Record the refund event
+  await query(QUERIES.createPaymentEvent, [
+    subscriptionDbId,
+    event.id,
+    'charge_refunded',
+    charge.amount_refunded,
+    charge.currency,
+    'refunded',
+    null,
+    JSON.stringify(charge)
+  ]);
+
+  // Downgrade user to free tier
+  await query(QUERIES.updateUserTier, ['free', userId]);
+
+  console.log(`Charge refunded for user ${userId}, downgraded to free tier. Amount: ${charge.amount_refunded} ${charge.currency}`);
+}
+
+/**
+ * Handle charge.dispute.created — TXN-025 FIX
+ * Downgrade user to free tier when a chargeback/dispute is opened.
+ */
+async function handleChargeDispute(event, query) {
+  const dispute = event.data.object;
+  const chargeId = dispute.charge;
+
+  // Dispute object has charge ID, which contains customer ID
+  const customerId = dispute.customer || dispute.payment_intent;
+
+  // Try to find via the evidence.customer field or payment_intent metadata
+  // The dispute object should have a 'customer' field at the top level (Stripe API 2024-12)
+  if (!customerId) {
+    console.error('charge.dispute.created: No customer ID on dispute:', dispute.id);
+    return;
+  }
+
+  const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
+
+  if (result.rows.length === 0) {
+    console.error('charge.dispute.created: No subscription found for customer:', customerId);
+    return;
+  }
+
+  const userId = result.rows[0].user_id;
+  const subscriptionDbId = result.rows[0].id;
+
+  // Record the dispute event
+  await query(QUERIES.createPaymentEvent, [
+    subscriptionDbId,
+    event.id,
+    'charge_dispute',
+    dispute.amount,
+    dispute.currency,
+    'disputed',
+    dispute.reason || 'unknown',
+    JSON.stringify(dispute)
+  ]);
+
+  // Downgrade user to free tier immediately
+  await query(QUERIES.updateUserTier, ['free', userId]);
+
+  console.error(`DISPUTE opened for user ${userId}. Charge: ${chargeId}, Amount: ${dispute.amount} ${dispute.currency}, Reason: ${dispute.reason}. User downgraded to free.`);
 }
 

@@ -199,7 +199,7 @@ export async function handlePsychometric(request, env, subpath) {
     return handlePsychometricSave(request, env);
   }
 
-  if (subpath === '' && method === 'GET') {
+  if ((subpath === '' || subpath === '/') && method === 'GET') {
     return handlePsychometricGet(request, env);
   }
 

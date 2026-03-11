@@ -277,11 +277,11 @@ function checkOAuthCallback() {
       return;
     }
 
-    // Store tokens — access token in memory only; refresh token in HttpOnly cookie
+    // Store tokens — access token in memory only; refresh token in HttpOnly cookie (set by server)
     token = accessToken;
     localStorage.setItem('ps_email', userEmail || '');
     localStorage.removeItem('ps_token'); // legacy cleanup
-    if (refreshToken) localStorage.setItem('ps_refresh_token', refreshToken);
+    localStorage.removeItem('ps_refresh_token'); // SEC-001: remove any stale refresh token from localStorage
 
     // Fetch user profile and update UI
     fetchUserProfile().then(() => {
@@ -404,7 +404,7 @@ async function submitAuth() {
   }
   if (!password) {
     passwordEl.setAttribute('aria-invalid', 'true');
-    errorEl.textContent = window.t('auth.emailRequired');
+    errorEl.textContent = window.t('auth.passwordRequired') || 'Password is required';
     passwordEl.focus();
     return;
   }
@@ -425,6 +425,7 @@ async function submitAuth() {
     const rawRes = await fetch(API + endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ email, password })
     });
     const res = await rawRes.json();
@@ -2092,6 +2093,42 @@ function renderTransits(data) {
     Chiron: 'Where collective wounding and healing are surfacing. A chance to help others through your own experience.'
   };
 
+  function getTransitGateExplanation(gate, line, planet, isNatalHit) {
+    const gateName = (typeof getGateName === 'function' && gate) ? getGateName(gate) : '';
+    const gateTheme = window.GATE_THEMES?.[gate] || '';
+    const lineTone = {
+      1: 'Line 1 asks for grounding and foundations before action.',
+      2: 'Line 2 favors natural talent and allowing the right invitation to come to you.',
+      3: 'Line 3 is experimental: test, iterate, and learn quickly from feedback.',
+      4: 'Line 4 works best through your network, trust, and direct conversations.',
+      5: 'Line 5 carries projection: be clear and practical so expectations stay realistic.',
+      6: 'Line 6 prefers perspective: zoom out, observe patterns, then choose deliberately.'
+    };
+    const planetFocus = {
+      Sun: 'Visibility is high now, so this gate can shape your public tone.',
+      Moon: 'Emotions are moving quickly, so notice this gate in moods and body signals.',
+      Mercury: 'Communication is highlighted, so this gate may show up in talks and decisions.',
+      Venus: 'Values and relationship choices are active through this gate right now.',
+      Mars: 'Action pressure is high here, so channel this gate into clean, intentional moves.',
+      Jupiter: 'Growth opportunities are available if you stay aligned with this gate’s lesson.',
+      Saturn: 'Responsibility and boundaries are being tested through this gate.',
+      Uranus: 'Expect surprises and breakthroughs around this gate’s theme.',
+      Neptune: 'Intuition is strong, but avoid assumptions around this gate.',
+      Pluto: 'Deep transformation is happening here over a longer arc.',
+      NorthNode: 'This gate points toward current collective growth direction.',
+      TrueNode: 'This gate points toward current collective growth direction.',
+      Chiron: 'Healing and mentoring themes may surface through this gate.'
+    };
+
+    const parts = [];
+    if (gateName && gateTheme) parts.push(`Gate ${gate} (${gateName}) focuses on ${gateTheme.toLowerCase()}.`);
+    else if (gateTheme) parts.push(`Gate ${gate} focuses on ${gateTheme.toLowerCase()}.`);
+    if (lineTone[line]) parts.push(lineTone[line]);
+    if (planetFocus[planet]) parts.push(planetFocus[planet]);
+    if (isNatalHit) parts.push('Because this also touches your natal gate, the effect is usually more personal and noticeable.');
+    return parts.join(' ');
+  }
+
   // Collect natal hits if available
   const natalHits = (t.gateActivations || []).filter(a => a.natalGatePresent);
   const natalGateSet = new Set(natalHits.map(a => String(a.gate)));
@@ -2112,6 +2149,7 @@ function renderTransits(data) {
       const pos = positions[a.transitPlanet] || {};
       const speed = PLANET_SPEED[a.transitPlanet] || '';
       const theme = PLANET_THEME[a.transitPlanet] || '';
+      const gateExplanation = getTransitGateExplanation(a.gate, pos.line || a.line, a.transitPlanet, true);
       html += `<div style="background:rgba(201,168,76,0.08);border:var(--border-width-thin) solid rgba(201,168,76,0.35);border-radius:var(--space-2);padding:var(--space-4) 16px;margin-bottom:var(--space-2)">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap">
           <div style="font-size:var(--font-size-md);font-weight:700;color:var(--gold)">${sym} ${a.transitPlanet} → your Gate ${a.gate}${getGateName(a.gate) ? ` <span class="gate-name-tag">— ${getGateName(a.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(a.gate) ? ` <span style="font-size:var(--font-size-xs);color:var(--text-muted);font-weight:400;font-style:italic">☰ ${getGateHex(a.gate)}</span>` : ''}</div>
@@ -2121,6 +2159,7 @@ function renderTransits(data) {
           </div>
         </div>
         <div style="font-size:var(--font-size-sm);color:var(--text);margin-top:var(--space-2);line-height:1.55">${theme}</div>
+        ${gateExplanation ? `<div style="font-size:var(--font-size-sm);color:var(--text);margin-top:var(--space-2);line-height:1.55">${escapeHtml(gateExplanation)}</div>` : ''}
         ${window.GATE_THEMES?.[a.gate] ? `<div style="font-size:var(--font-size-sm);color:var(--gold-dim);margin-top:var(--space-2);line-height:1.5;padding:var(--space-2) 10px;background:rgba(201,168,76,0.08);border-radius:var(--space-1)">✦ Your Gate ${a.gate} theme: <em>${escapeHtml(window.GATE_THEMES[a.gate])}</em></div>` : ''}
         <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-2)">⏱ Duration: ${speed}</div>
       </div>`;
@@ -2137,6 +2176,7 @@ function renderTransits(data) {
     const theme = PLANET_THEME[body] || 'Planetary influence';
     const speed = PLANET_SPEED[body] || '';
     const isNatalHit = natalGateSet.has(String(pos.gate));
+    const gateExplanation = getTransitGateExplanation(pos.gate, pos.line, body, isNatalHit);
     html += `<div class="transit-row${isNatalHit ? ' transit-row-hit' : ''}">
       <div>
         <div class="planet-name">${sym} ${body}</div>
@@ -2145,6 +2185,7 @@ function renderTransits(data) {
       <div>
         <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
         <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1);line-height:1.4">${theme}</div>
+        ${gateExplanation ? `<div style="font-size:var(--font-size-sm);color:var(--text);margin-top:var(--space-1);line-height:1.45">${escapeHtml(gateExplanation)}</div>` : ''}
       </div>
       <div class="gate-badge" role="img" aria-label="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}" title="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ' ('+getGateHex(pos.gate)+')' : ''}">Gate ${pos.gate || '?'}.${pos.line || '?'}${getGateName(pos.gate) ? ` <span class="gate-name-tag">${getGateName(pos.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ` <span style="font-size:var(--font-size-xs);color:var(--text-muted);font-style:italic">☰ ${getGateHex(pos.gate)}</span>` : ''}</div>
     </div>`;
@@ -3576,19 +3617,25 @@ async function saveDiaryEntry() {
 
     if (currentDiaryEdit) {
       // Update existing entry
-      await apiFetch(`/api/diary/${currentDiaryEdit}`, {
+      const updateResult = await apiFetch(`/api/diary/${currentDiaryEdit}`, {
         method: 'PUT',
         body: JSON.stringify(payload)
       });
+      if (updateResult?.error || updateResult?.success === false) {
+        throw new Error(updateResult?.error || 'Failed to update event');
+      }
       showEnhanceStatus('diaryStatus', 'Event updated!', 'success');
       currentDiaryEdit = null;
       document.getElementById('diaryCancelBtn').style.display = 'none';
     } else {
       // Create new entry
-      await apiFetch('/api/diary', {
+      const createResult = await apiFetch('/api/diary', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+      if (createResult?.error || createResult?.success === false) {
+        throw new Error(createResult?.error || 'Failed to save event');
+      }
       showEnhanceStatus('diaryStatus', 'Event saved! Transits auto-calculated for correlation.', 'success');
     }
 
@@ -3621,7 +3668,8 @@ async function loadDiaryEntries() {
 
   try {
     const data = await apiFetch('/api/diary');
-    const entries = data.data || [];
+    if (data?.error) throw new Error(data.error);
+    const entries = Array.isArray(data?.data) ? data.data : [];
 
     if (entries.length === 0) {
       container.innerHTML = `<div class="alert alert-info">${window.t('diary.noEvents')}</div>`;
@@ -3672,6 +3720,7 @@ async function editDiaryEntry(entryId) {
 
   try {
     const data = await apiFetch(`/api/diary/${entryId}`);
+    if (data?.error || !data?.data) throw new Error(data?.error || 'Failed to load entry');
     const entry = data.data;
 
     // Populate form
@@ -3705,7 +3754,10 @@ async function deleteDiaryEntry(entryId) {
   if (!confirm('Delete this event? This cannot be undone.')) return;
 
   try {
-    await apiFetch(`/api/diary/${entryId}`, { method: 'DELETE' });
+    const result = await apiFetch(`/api/diary/${entryId}`, { method: 'DELETE' });
+    if (result?.error || result?.success === false) {
+      throw new Error(result?.error || 'Failed to delete event');
+    }
     showEnhanceStatus('diaryStatus', 'Event deleted', 'success');
     loadDiaryEntries();
   } catch (e) {
@@ -4193,3 +4245,11 @@ function toggleDetails(toggleId, btn) {
     if (target) { e.preventDefault(); geocodeLocation(target); }
   });
 })();
+
+// Ensure delegated actions are always discoverable on global scope.
+window.logout = logout;
+window.saveDiaryEntry = saveDiaryEntry;
+window.loadDiaryEntries = loadDiaryEntries;
+window.editDiaryEntry = editDiaryEntry;
+window.cancelDiaryEdit = cancelDiaryEdit;
+window.deleteDiaryEntry = deleteDiaryEntry;

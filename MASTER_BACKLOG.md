@@ -1,7 +1,7 @@
 # MASTER BACKLOG — PRIME SELF
 
-**Last Updated:** 2026-03-10  
-**Source consolidation of:** BACKLOG.md, LAUNCH_READINESS_REPORT.md, MARKET_VALIDATION_RECOMMENDATIONS.md, UI_DEFECT_BACKLOG.md, all audit files
+**Last Updated:** 2026-03-11  
+**Source consolidation of:** BACKLOG.md, LAUNCH_READINESS_REPORT_2026.md, MARKET_VALIDATION_RECOMMENDATIONS.md, UI_DEFECT_BACKLOG.md, all audit files
 
 ---
 
@@ -12,6 +12,15 @@
 | **BLOCKER-IP** | "Human Design" trademark in shareable content, embed widget, SEO meta tags | ✅ Resolved (live files clean — worktrees were stale copies) | — |
 | **BLOCKER-DB** | Migration 020 applied to production Neon DB (Stripe tier columns) — **unverified** | ⚠️ Verify in prod — use `GET /api/health?full=1` to check DB connectivity; run migration if `db.ok` is false | 30 min |
 | **BLOCKER-GIT** | Secrets never committed to git history | ✅ Resolved (`git log` is empty) | — |
+| **IP-001** | "Human Design" trademark in email templates + share image SVGs (email.js, shareImage.js) | ✅ Fixed — replaced with "energy blueprint" / "Prime Self blueprint" | — |
+| **IP-002** | Gene Keys terminology used without license/attribution | ✅ Fixed — added attribution footer to relevant share messages | — |
+| **IP-003** | Studio $500/mo tier advertises unbuilt features (custom themes, dedicated account manager) | ✅ Fixed — reworded to "Contact us" with accurate feature list | — |
+| **TXN-016** | No `charge.refunded` webhook handler — refunded users keep paid tier | ✅ Fixed — handler added to webhook.js | — |
+| **TXN-025** | No `charge.dispute.created` webhook handler — chargebacks don't downgrade | ✅ Fixed — handler added to webhook.js | — |
+| **TXN-012** | `getActiveSubscription` filters `status='active'` only — ignores trialing/past_due | ✅ Fixed — filter expanded to include trialing, past_due | — |
+| **TXN-013** | Webhook silently exits for unknown Stripe customers (ghost subscriptions) | ✅ Fixed — logs warning + records payment event for unknown customers | — |
+| **SEC-001** | Refresh token stored in `localStorage` alongside HttpOnly cookie (XSS risk) | ✅ Fixed — removed localStorage write of refresh token | — |
+| **SEC-016** | Cluster synthesis not tier-gated — free users trigger expensive LLM calls | ✅ Fixed — added `enforceFeatureAccess` check requiring `practitionerTools` | — |
 
 > Previously there were 4 blockers. **IDOR (cluster endpoints)** was fixed — membership check added to `handleGet` and `handleSynthesize`.
 
