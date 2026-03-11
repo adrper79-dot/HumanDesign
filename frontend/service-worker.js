@@ -8,9 +8,10 @@
  * 2026-03-09: v12 - Phase 6 dead CSS cleanup (removed IP-risky type classes)
  * 2026-03-09: v13 - Sprint 19: Prime Self data integration, Priming/Forge UI, mobile CTA, error consolidation
  * 2026-03-09: v14 - Sidebar navigation: replaced horizontal tab bar with persistent left sidebar
+ * v16 - Mobile fixes: hamburger pointer-events, i18n sidebar/nav, header overflow, text clutter
  */
 
-const CACHE_VERSION = 'v15';
+const CACHE_VERSION = 'v16';
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
