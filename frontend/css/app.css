@@ -120,7 +120,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 @media(max-width: 600px) { .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; } }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 .form-group.full { grid-column: 1 / -1; }
-label { font-size: 0.8rem; font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+label { font-size: 0.8rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
 input, select, textarea {
   background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
   color: var(--text); padding: 9px 12px; font-size: 0.9rem; transition: border 0.15s;
@@ -305,7 +305,6 @@ select option { background: var(--bg3); }
   border-left: 2px solid var(--gold-dim);
   max-width: clamp(280px, 90vw, 700px);
 }
-}
 .exemplar-lesson strong,
 .exemplar-invoke strong {
   color: var(--gold);
@@ -353,7 +352,7 @@ select option { background: var(--bg3); }
 .knowledge-focus-badge {
   display: inline-block;
   background: linear-gradient(135deg, var(--gold) 0%, rgba(201,168,76,0.7) 100%);
-  color: var(--bg1);
+  color: var(--bg);
   font-weight: 600;
   font-size: var(--font-size-base);
   padding: var(--space-2) var(--space-4);
@@ -402,7 +401,7 @@ select option { background: var(--bg3); }
     white-space: normal;
     overflow: visible;
     text-overflow: unset;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
   }
 }
 
@@ -1047,4 +1046,36 @@ img[data-src].loaded, img:not([data-src]) {
     columns: 1;
     padding-left: 18px !important;
   }
+}
+
+/* ── Mobile Readability: Minimum Font Size Enforcement ─────────────────── */
+/* Many informational elements use sub-12px fonts that are illegible on mobile.
+   This block sets mobile minimums for all such elements. */
+@media (max-width: 768px) {
+  /* Section dividers / column headers */
+  .section-header   { font-size: 0.8rem; }
+  .data-block h4    { font-size: 0.82rem; }
+
+  /* Inline explanation text */
+  .center-explain,
+  .channel-detail   { font-size: 0.82rem; }
+  .explanation-text { font-size: 0.85rem; }
+
+  /* Status / confidence pills */
+  .confidence-pill  { font-size: 0.75rem; padding: 3px 10px; }
+
+  /* Tags and small badges */
+  .pill             { font-size: 0.82rem; }
+  .gate-badge       { font-size: 0.82rem; }
+  .cluster-card-meta,
+  .history-meta     { font-size: 0.82rem; }
+
+  /* Indicator type badges (sys-badge) — still small but more legible */
+  .indicator-list li .sys-badge { font-size: 0.72rem; }
+
+  /* Sub-navigation tabs */
+  .sub-tab          { font-size: 0.85rem; }
+
+  /* Auth status text */
+  .auth-status      { font-size: 0.85rem; }
 }

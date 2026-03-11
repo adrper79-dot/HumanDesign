@@ -661,21 +661,31 @@ async function handleResetPassword(request, env) {
     return Response.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
   }
 
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const tokenHash = await sha256(token);
+
+  // Token lookup in its own try/catch: a DB failure here (e.g. migration not
+  // applied) should return the same 400 as "token not found" — never a 500.
+  let resetRow;
   try {
-    const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const tokenHash = await sha256(token);
-
-    // Look up the token
     const result = await query(QUERIES.getPasswordResetToken, [tokenHash]);
-    const resetRow = result.rows?.[0];
+    resetRow = result.rows?.[0];
+  } catch (err) {
+    console.error('[reset-password] DB error on token lookup:', err.message);
+    return Response.json(
+      { error: 'Invalid or expired reset token. Please request a new one.' },
+      { status: 400 }
+    );
+  }
 
-    if (!resetRow) {
-      return Response.json(
-        { error: 'Invalid or expired reset token. Please request a new one.' },
-        { status: 400 }
-      );
-    }
+  if (!resetRow) {
+    return Response.json(
+      { error: 'Invalid or expired reset token. Please request a new one.' },
+      { status: 400 }
+    );
+  }
 
+  try {
     // Hash new password
     const passwordHash = await hashPassword(password);
 
