@@ -45,7 +45,7 @@
   gap: var(--space-2);
   background: linear-gradient(135deg, 
     rgba(201, 168, 76, 0.15), 
-    rgba(106, 79, 200, 0.15)
+    rgba(74, 130, 240, 0.15)
   );
   border: var(--border-width-thin) solid var(--border-emphasis);
   border-radius: var(--radius-full);
@@ -109,8 +109,8 @@
 }
 
 .gate-badge {
-  background: rgba(106, 79, 200, 0.25);
-  border: var(--border-width-thin) solid rgba(106, 79, 200, 0.5);
+  background: rgba(74, 130, 240, 0.25);
+  border: var(--border-width-thin) solid rgba(74, 130, 240, 0.5);
   color: var(--color-purple-300);
   border-radius: var(--radius-sm);
   padding: var(--space-1) var(--space-2);
@@ -188,8 +188,8 @@
 }
 
 .forge-role-badge.vision {
-  background: rgba(106, 79, 200, 0.15);
-  border-color: rgba(106, 79, 200, 0.4);
+  background: rgba(74, 130, 240, 0.15);
+  border-color: rgba(74, 130, 240, 0.4);
   color: var(--color-purple-300);
 }
 

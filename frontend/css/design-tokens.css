@@ -28,10 +28,10 @@
   --color-neutral-500: #8882a0;
   --color-neutral-600: #6a6580;
   --color-neutral-700: #4a4560;
-  --color-neutral-800: #2a2a3a;
-  --color-neutral-850: #1a1a24;
-  --color-neutral-900: #111118;
-  --color-neutral-950: #0a0a0f;
+  --color-neutral-800: #1a2d4a;
+  --color-neutral-850: #111d38;
+  --color-neutral-900: #0b1226;
+  --color-neutral-950: #05091a;
   
   /* Primary - Gold */
   --color-gold-50: #fef9ed;
@@ -45,29 +45,29 @@
   --color-gold-800: #5a4824;
   --color-gold-900: #3a3018;
   
-  /* Accent - Purple */
-  --color-purple-50: #f5f3ff;
-  --color-purple-100: #ede9fe;
-  --color-purple-200: #ddd6fe;
-  --color-purple-300: #c8b8f8;
-  --color-purple-400: #b8a8f0;
-  --color-purple-500: #6a4fc8;  /* Primary accent */
-  --color-purple-600: #5a3fb8;
-  --color-purple-700: #4a2f98;
-  --color-purple-800: #3a2078;
-  --color-purple-900: #2a1058;
+  /* Accent - Blue (trust) */
+  --color-purple-50: #f0f5ff;
+  --color-purple-100: #e0eafe;
+  --color-purple-200: #c0d5fc;
+  --color-purple-300: #a8c8fc;
+  --color-purple-400: #93baf8;
+  --color-purple-500: #4a82f0;  /* Primary accent */
+  --color-purple-600: #3a72e0;
+  --color-purple-700: #2a5fc8;
+  --color-purple-800: #1a4aaa;
+  --color-purple-900: #0e3280;
   
-  /* Accent 2 - Teal */
-  --color-teal-50: #f0fdf9;
-  --color-teal-100: #ccfbef;
-  --color-teal-200: #99f6e0;
-  --color-teal-300: #5eead4;
-  --color-teal-400: #4fc8a0;  /* Accent2 */
-  --color-teal-500: #14b8a6;
-  --color-teal-600: #0d9488;
-  --color-teal-700: #0f766e;
-  --color-teal-800: #115e59;
-  --color-teal-900: #134e4a;
+  /* Accent 2 - Emerald (growth) */
+  --color-teal-50: #f0fdf8;
+  --color-teal-100: #ccfbea;
+  --color-teal-200: #99f5d2;
+  --color-teal-300: #5ee8b4;
+  --color-teal-400: #22c78e;  /* Accent2 */
+  --color-teal-500: #10a870;
+  --color-teal-600: #0d9060;
+  --color-teal-700: #0a7550;
+  --color-teal-800: #085c40;
+  --color-teal-900: #064530;
   
   /* Semantic Colors */
   --color-success-50: #f0fdf4;
@@ -308,16 +308,16 @@
      Used throughout index.html inline styles. All map to tokens above.
      ══════════════════════════════════════════════════════════ */
 
-  --bg:        var(--color-neutral-950);   /* #0a0a0f */
-  --bg2:       var(--color-neutral-900);   /* #111118 */
-  --bg3:       var(--color-neutral-850);   /* #1a1a24 */
-  --border:    #32324a;                    /* visible against bg3 */
+  --bg:        var(--color-neutral-950);   /* #05091a */
+  --bg2:       var(--color-neutral-900);   /* #0b1226 */
+  --bg3:       var(--color-neutral-850);   /* #111d38 */
+  --border:    #1d2f52;                    /* visible against bg3 */
   --gold:      var(--color-gold-500);      /* #c9a84c — THE gold */
   --gold-dim:  var(--color-gold-600);      /* #a88840 */
   --text:      #eceaf4;                    /* primary text */
   --text-dim:  #c4c0d8;                    /* WCAG AA 5.5:1 on #1a1a24 (was #b0acc8 @ 4.2:1) */
-  --text-muted:#918db0;                    /* WCAG AA 4.5:1 on #0a0a0f (was #7a76a0 @ 3.1:1) */
-  --accent:    #7a5fd8;                    /* purple accent */
+  --text-muted:#8fafc8;                    /* WCAG AA on #05091a — blue-tinted muted text */
+  --accent:    #5b8af0;                    /* trust-blue accent */
   --accent2:   var(--color-teal-400);      /* #4fc8a0 */
   --red:       var(--color-error-500);     /* #e05050 */
   --green:     var(--color-success-500);   /* #50c878 */

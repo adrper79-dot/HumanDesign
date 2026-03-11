@@ -85,7 +85,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Step indicator banner [UNIQUE] */
 .step-guide {
-  background: linear-gradient(135deg, rgba(201,168,76,0.07) 0%, rgba(122,95,216,0.05) 100%);
+  background: linear-gradient(135deg, rgba(201,168,76,0.07) 0%, rgba(91,138,240,0.05) 100%);
   border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px;
   margin-bottom: 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
@@ -151,7 +151,7 @@ select option { background: var(--bg3); }
   padding: 12px 16px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 16px;
   display: flex; align-items: flex-start; gap: 8px;
 }
-.alert-info { background: rgba(106,79,200,0.15); border: 1px solid rgba(106,79,200,0.4); color: #b8a8f0; }
+.alert-info { background: rgba(74,130,240,0.15); border: 1px solid rgba(74,130,240,0.4); color: #93baf8; }
 .tab-hint { font-size: var(--font-size-sm); color: var(--text-muted); margin: 0 0 var(--space-4); line-height: 1.6; padding: 0 var(--space-1); } /* [UNIQUE] — subtle section intro text */
 .alert-success { background: rgba(80,200,120,0.12); border: 1px solid rgba(80,200,120,0.3); color: var(--accent2); }
 .alert-error { background: rgba(224,80,80,0.12); border: 1px solid rgba(224,80,80,0.3); color: var(--red); }
@@ -160,11 +160,11 @@ select option { background: var(--bg3); }
 /* ── Tooltips [UNIQUE] ── */
 .help-icon {
   display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center;
-  background: rgba(106,79,200,0.2); color: var(--accent); border-radius: 50%;
+  background: rgba(74,130,240,0.2); color: var(--accent); border-radius: 50%;
   font-size: 0.7rem; font-weight: 700; cursor: help; margin-left: 4px;
   position: relative; user-select: none;
 }
-.help-icon:hover { background: rgba(106,79,200,0.4); }
+.help-icon:hover { background: rgba(74,130,240,0.4); }
 .help-icon[title]:hover::after {
   content: attr(title); position: fixed;
   left: var(--tooltip-left, calc(50% + 8px)); top: var(--tooltip-top, calc(100% + 8px));
@@ -216,7 +216,7 @@ select option { background: var(--bg3); }
 /* ── Forge badge [DUP] prime-self.css ── */
 .forge-badge {
   display: inline-flex; align-items: center; gap: 8px;
-  background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(106,79,200,0.15));
+  background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(74,130,240,0.15));
   border: 1px solid var(--gold-dim); border-radius: 100px;
   padding: 8px 16px; font-size: 0.88rem; font-weight: 700; color: var(--gold);
   margin-bottom: 12px;
@@ -252,7 +252,7 @@ select option { background: var(--bg3); }
   color: var(--text);
 }
 .forge-shadow {
-  background: linear-gradient(135deg, rgba(224,80,80,0.1) 0%, rgba(106,79,200,0.08) 100%);
+  background: linear-gradient(135deg, rgba(224,80,80,0.1) 0%, rgba(74,130,240,0.08) 100%);
   border-left: 3px solid var(--red);
   color: var(--text-dim);
 }
@@ -277,7 +277,7 @@ select option { background: var(--bg3); }
 
 /* ═══ Priming Recommendations (Sprint 19.2) ═══ */
 .exemplar-card {
-  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(106,79,200,0.06) 100%);
+  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(74,130,240,0.06) 100%);
   border: 1px solid var(--gold-dim);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
@@ -362,7 +362,7 @@ select option { background: var(--bg3); }
 
 /* ── Tags / Pills [UNIQUE] ── */
 .pill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.pill { background: rgba(106,79,200,0.2); border: 1px solid rgba(106,79,200,0.4); border-radius: 100px; padding: 3px 10px; font-size: 0.78rem; color: #c8b8f8; }
+.pill { background: rgba(74,130,240,0.2); border: 1px solid rgba(74,130,240,0.4); border-radius: 100px; padding: 3px 10px; font-size: 0.78rem; color: #93baf8; }
 .pill.green { background: rgba(80,200,120,0.15); border-color: rgba(80,200,120,0.3); color: var(--accent2); }
 .pill.gold { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.3); color: var(--gold); }
 
@@ -437,8 +437,8 @@ select option { background: var(--bg3); }
 .planet-name { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
 .planet-pos { font-size: 0.8rem; color: var(--text); }
 .gate-badge {
-  background: rgba(106,79,200,0.25); border: 1px solid rgba(106,79,200,0.5);
-  color: #c8b8f8; border-radius: 5px; padding: 3px 8px; font-size: 0.78rem; font-weight: 700;
+  background: rgba(74,130,240,0.25); border: 1px solid rgba(74,130,240,0.5);
+  color: #93baf8; border-radius: 5px; padding: 3px 8px; font-size: 0.78rem; font-weight: 700;
 }
 
 /* ── Profile history card [DUP] prime-self.css ── */
@@ -464,10 +464,10 @@ select option { background: var(--bg3); }
 /* ── Indicator list [UNIQUE] ── */
 .indicator-list { list-style: none; }
 .indicator-list li {
-  padding: 7px 10px; border-left: 2px solid var(--accent); background: rgba(106,79,200,0.08);
+  padding: 7px 10px; border-left: 2px solid var(--accent); background: rgba(74,130,240,0.08);
   margin-bottom: 5px; border-radius: 0 5px 5px 0; font-size: 0.82rem;
 }
-.indicator-list li .sys-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; background: rgba(106,79,200,0.3); border-radius: 3px; padding: 1px 5px; margin-right: 6px; color: #c8b8f8; }
+.indicator-list li .sys-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; background: rgba(74,130,240,0.3); border-radius: 3px; padding: 1px 5px; margin-right: 6px; color: #93baf8; }
 .indicator-list li .sys-badge.astro { background: rgba(79,200,160,0.3); color: var(--accent2); }
 
 /* ── Cluster Cards [DUP] prime-self.css ── */
@@ -490,7 +490,7 @@ select option { background: var(--bg3); }
 }
 .forge-role-badge.power { background: rgba(224,80,80,0.15); border-color: rgba(224,80,80,0.4); color: #f08080; }
 .forge-role-badge.craft { background: rgba(80,200,120,0.15); border-color: rgba(80,200,120,0.4); color: #80e0a0; }
-.forge-role-badge.vision { background: rgba(106,79,200,0.15); border-color: rgba(106,79,200,0.4); color: #b8a8f0; }
+.forge-role-badge.vision { background: rgba(74,130,240,0.15); border-color: rgba(74,130,240,0.4); color: #93baf8; }
 .forge-role-badge.mirrors { background: rgba(79,200,200,0.15); border-color: rgba(79,200,200,0.4); color: #80e0e0; } /* [UNIQUE] */
 
 /* ── Composition Bar Chart [DUP] prime-self.css ── */
@@ -521,7 +521,7 @@ select option { background: var(--bg3); }
 }
 .pricing-modal--pro {
   border-color: var(--accent);
-  box-shadow: 0 12px 60px rgba(106,79,200,0.3);
+  box-shadow: 0 12px 60px rgba(74,130,240,0.3);
 }
 .pricing-modal h2 { color: var(--gold); margin-bottom: 8px; font-size: 1.8rem; text-align: center; }
 .pricing-modal--pro h2 { color: var(--accent); }
@@ -540,7 +540,7 @@ select option { background: var(--bg3); }
 }
 .pricing-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
 .pricing-card.featured { border-color: var(--gold); background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, var(--bg3) 100%); }
-.pricing-modal--pro .pricing-card.featured { border-color: var(--accent); background: linear-gradient(135deg, rgba(106,79,200,0.1) 0%, var(--bg3) 100%); }
+.pricing-modal--pro .pricing-card.featured { border-color: var(--accent); background: linear-gradient(135deg, rgba(74,130,240,0.1) 0%, var(--bg3) 100%); }
 /* "Most Popular" label inside card */
 .tier-badge-label {
   position: absolute; top: -1px; right: 16px;
@@ -572,7 +572,7 @@ select option { background: var(--bg3); }
 }
 .tier-badge.tier-free { background: rgba(136,130,160,0.15); border-color: rgba(136,130,160,0.3); color: var(--text-dim); }
 .tier-badge.tier-seeker { background: rgba(79,200,160,0.15); border-color: rgba(79,200,160,0.4); color: var(--accent2); }
-.tier-badge.tier-guide { background: rgba(106,79,200,0.15); border-color: rgba(106,79,200,0.4); color: var(--accent); }
+.tier-badge.tier-guide { background: rgba(74,130,240,0.15); border-color: rgba(74,130,240,0.4); color: var(--accent); }
 .tier-badge.tier-practitioner { background: rgba(201,168,76,0.2); border-color: rgba(201,168,76,0.5); color: var(--gold); }
 
 /* ── Daily Check-In Alignment Buttons [UNIQUE] ── */
@@ -624,7 +624,7 @@ select option { background: var(--bg3); }
 
 /* ── Social Proof Banner [UNIQUE] ── */
 .social-proof-banner {
-  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(106,79,200,0.06) 100%);
+  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(74,130,240,0.06) 100%);
   border-bottom: 1px solid var(--border);
   padding: 12px 20px;
   display: flex;
