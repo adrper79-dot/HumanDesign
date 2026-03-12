@@ -284,8 +284,9 @@ export const QUERIES = {
   `,
 
   getPractitionerByUserId: `
-    SELECT id, user_id, certified, tier,
-           discord_guild_ids, discord_brand_name, discord_bot_accent_color
+    -- Keep this query compatible with older production schemas that may not
+    -- yet include Discord integration columns.
+    SELECT id, user_id, certified, tier
     FROM practitioners WHERE user_id = $1
   `,
 
