@@ -69,7 +69,7 @@ export async function handleStripeWebhook(request, env) {
     let event;
     
     try {
-      event = verifyWebhook(body, signature, env.STRIPE_WEBHOOK_SECRET, stripe);
+      event = await verifyWebhook(body, signature, env.STRIPE_WEBHOOK_SECRET, stripe);
     } catch (error) {
       console.error('Webhook verification failed:', error);
       return Response.json({ error: 'Webhook verification failed' }, { status: 400 });
