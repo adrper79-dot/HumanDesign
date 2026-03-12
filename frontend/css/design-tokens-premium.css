@@ -226,6 +226,7 @@
     --text-primary: var(--color-black);
     --text-secondary: rgba(0, 0, 0, 0.85);
     --text-tertiary: rgba(0, 0, 0, 0.55);
+    --text-dim: rgba(0, 0, 0, 0.65); /* fix: #c4c0d8 is invisible on light --bg-tertiary (#c7c7cc) */
     
     --border-primary: rgba(0, 0, 0, 0.12);
     --border-secondary: rgba(0, 0, 0, 0.06);
