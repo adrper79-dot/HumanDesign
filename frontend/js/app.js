@@ -1372,6 +1372,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('chartGenerated')) {
     collapseChartForm();
   }
+  // Show first-run welcome modal for new visitors (slight delay so page renders first)
+  try {
+    if (!localStorage.getItem('primeself_frm_seen') && !localStorage.getItem('chartGenerated')) {
+      setTimeout(frmShow, 800);
+    }
+  } catch(e) {}
 });
 
 function renderChart(data) {
@@ -4367,6 +4373,46 @@ function hidePracDetail()  { const el = document.getElementById('pracDetailPanel
 function openLastShareCard() { if (typeof showShareCard === 'function') showShareCard(window._lastChart); }
 function switchToPricingModal()    { closePractitionerPricingModal(); openPricingModal(); }
 function switchToPracPricingModal() { openPractitionerPricingModal(); closePricingModal(); }
+// ── First-Run Onboarding Modal ─────────────────────────────────────────────
+let _frmCurrentStep = 1;
+const FRM_TOTAL_STEPS = 3;
+
+function frmShow() {
+  const modal = document.getElementById('first-run-modal');
+  if (modal) modal.style.display = '';
+  _frmCurrentStep = 1;
+  _frmRender();
+}
+
+function frmClose() {
+  const modal = document.getElementById('first-run-modal');
+  if (modal) modal.style.display = 'none';
+  try { localStorage.setItem('primeself_frm_seen', '1'); } catch(e) {}
+}
+
+function frmNext() {
+  if (_frmCurrentStep < FRM_TOTAL_STEPS) {
+    _frmCurrentStep++;
+    _frmRender();
+  }
+}
+
+function frmBack() {
+  if (_frmCurrentStep > 1) {
+    _frmCurrentStep--;
+    _frmRender();
+  }
+}
+
+function _frmRender() {
+  for (let i = 1; i <= FRM_TOTAL_STEPS; i++) {
+    const step = document.getElementById('frm-step-' + i);
+    const dot  = document.getElementById('frm-dot-' + i);
+    if (step) step.classList.toggle('active', i === _frmCurrentStep);
+    if (dot)  dot.classList.toggle('active', i === _frmCurrentStep);
+  }
+}
+
 function frmCloseChart()   { frmClose(); switchTab('chart'); }
 function shareProfileAndClose() { if (typeof shareProfile === 'function') shareProfile(); closeShareModal(); }
 function toggleDetails(toggleId, btn) {
@@ -4465,3 +4511,8 @@ window.deleteDiaryEntry = deleteDiaryEntry;
 window.selectAlignment = selectAlignment;
 window.saveCheckin = saveCheckin;
 window.loadCheckinStats = loadCheckinStats;
+window.frmShow = frmShow;
+window.frmClose = frmClose;
+window.frmNext = frmNext;
+window.frmBack = frmBack;
+window.frmCloseChart = frmCloseChart;
