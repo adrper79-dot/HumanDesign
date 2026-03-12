@@ -4359,6 +4359,12 @@ if (!document.getElementById('notificationStyles')) {
     userEmail = localStorage.getItem('ps_email');
     return;
   }
+  // Avoid noisy /auth/refresh 400s for users who have never signed in on this device.
+  const hasSessionHint = !!localStorage.getItem('ps_email');
+  if (!hasSessionHint) {
+    updateAuthUI();
+    return;
+  }
   const restored = await silentRefresh();
   if (restored) {
     userEmail = localStorage.getItem('ps_email');
