@@ -3815,6 +3815,134 @@ async function deleteDiaryEntry(entryId) {
   }
 }
 
+// ─── Check-In Functions ──────────────────────────────────────────────────────
+
+function selectAlignment(score) {
+  const scoreNum = parseInt(score, 10);
+  document.getElementById('checkin-alignment-score').value = scoreNum;
+  document.querySelectorAll('.alignment-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.score, 10) === scoreNum);
+  });
+}
+
+async function saveCheckin() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const score = parseInt(document.getElementById('checkin-alignment-score').value, 10);
+  if (!score || score < 1 || score > 10) {
+    showEnhanceStatus('checkinStatus', 'Please select an alignment score (1–10)', 'error');
+    return;
+  }
+
+  const followedStrategy = document.getElementById('checkin-followed-strategy').checked;
+  const followedAuthority = document.getElementById('checkin-followed-authority').checked;
+  const mood = document.getElementById('checkin-mood').value || null;
+  const energyRaw = document.getElementById('checkin-energy-level').value;
+  const energyLevel = energyRaw ? parseInt(energyRaw, 10) : null;
+  const notes = document.getElementById('checkin-notes').value.trim() || null;
+
+  const btn = document.getElementById('checkinBtn');
+  const spinner = document.getElementById('checkinSpinner');
+  btn.disabled = true;
+  spinner.style.display = '';
+
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const result = await apiFetch('/api/checkin', {
+      method: 'POST',
+      body: JSON.stringify({ alignmentScore: score, followedStrategy, followedAuthority, mood, energyLevel, notes, timezone })
+    });
+
+    if (result?.error) throw new Error(result.error);
+
+    // Show completed banner
+    document.getElementById('checkinCompletedMsg').style.display = '';
+
+    // Update streak badge
+    const streak = result?.streak?.current;
+    if (streak && streak > 0) {
+      document.getElementById('streakDays').textContent = streak;
+      document.getElementById('checkinStreakBadge').style.display = '';
+    }
+
+    showEnhanceStatus('checkinStatus', 'Check-in saved! ✓', 'success');
+
+    // Clear notes field only; keep score visible so user can re-edit today
+    document.getElementById('checkin-notes').value = '';
+  } catch (e) {
+    showEnhanceStatus('checkinStatus', 'Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+async function loadCheckinStats() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const btn = document.getElementById('checkinStatsBtn');
+  const spinner = document.getElementById('checkinStatsSpinner');
+  btn.disabled = true;
+  spinner.style.display = '';
+
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const [statsData, streakData, historyData] = await Promise.all([
+      apiFetch('/api/checkin/stats?period=30'),
+      apiFetch('/api/checkin/streak'),
+      apiFetch('/api/checkin/history?days=10')
+    ]);
+
+    if (statsData?.error) throw new Error(statsData.error);
+
+    const s = statsData?.stats || {};
+    const streak = streakData?.streak?.current || 0;
+
+    // Stat tiles
+    const summary = document.getElementById('checkinStatsSummary');
+    const tile = (label, value, sub) => `
+      <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--gold)">${value}</div>
+        <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin:2px 0">${label}</div>
+        ${sub ? `<div style="font-size:var(--font-size-xs);color:var(--text-muted)">${sub}</div>` : ''}
+      </div>`;
+
+    summary.innerHTML =
+      tile('Avg Alignment', s.avgAlignmentScore ? s.avgAlignmentScore.toFixed(1) : '—', '30-day avg') +
+      tile('Total Check-ins', s.totalCheckins ?? 0, '30 days') +
+      tile('Strategy %', s.strategyAdherenceRate != null ? s.strategyAdherenceRate.toFixed(0) + '%' : '—', 'adherence') +
+      tile('Authority %', s.authorityAdherenceRate != null ? s.authorityAdherenceRate.toFixed(0) + '%' : '—', 'adherence') +
+      tile('🔥 Streak', streak, streak === 1 ? 'day' : 'days');
+
+    // Recent history list
+    const historyEl = document.getElementById('checkinHistoryList');
+    const checkins = historyData?.checkins || [];
+    if (checkins.length === 0) {
+      historyEl.innerHTML = '<div class="alert alert-info">No check-in history yet. Save your first check-in above!</div>';
+    } else {
+      const moodIcon = { great: '😊', good: '🙂', neutral: '😐', challenging: '😕', difficult: '😞' };
+      historyEl.innerHTML = checkins.slice().reverse().map(c => {
+        const d = new Date(c.checkinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const scoreColor = c.alignmentScore >= 7 ? 'var(--accent2)' : c.alignmentScore >= 4 ? 'var(--gold)' : 'var(--red)';
+        return `<div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:var(--border-width-thin) solid var(--border)">
+          <div style="width:36px;height:36px;border-radius:50%;background:${scoreColor};color:var(--bg1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--font-size-base);flex-shrink:0">${c.alignmentScore}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text)">${d} ${c.mood ? moodIcon[c.mood] || '' : ''}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-dim)">${c.followedStrategy ? '✓ Strategy' : '✗ Strategy'} · ${c.followedAuthority ? '✓ Authority' : '✗ Authority'}${c.notes ? ' · ' + escapeHtml(c.notes.substring(0, 60)) + (c.notes.length > 60 ? '…' : '') : ''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    document.getElementById('checkinStatsContainer').style.display = '';
+  } catch (e) {
+    showEnhanceStatus('checkinStatus', 'Error loading stats: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
 function showEnhanceStatus(elementId, message, type = 'info') {
   const el = document.getElementById(elementId);
   if (!el) return;
@@ -4334,3 +4462,6 @@ window.loadDiaryEntries = loadDiaryEntries;
 window.editDiaryEntry = editDiaryEntry;
 window.cancelDiaryEdit = cancelDiaryEdit;
 window.deleteDiaryEntry = deleteDiaryEntry;
+window.selectAlignment = selectAlignment;
+window.saveCheckin = saveCheckin;
+window.loadCheckinStats = loadCheckinStats;
