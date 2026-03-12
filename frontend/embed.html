@@ -309,7 +309,7 @@
         <div class="gates-grid" id="resultGates"></div>
       </div>
 
-      <button id="viewFullBtn" onclick="openFullChart()" style="margin-top: 20px;">
+      <button id="viewFullBtn" style="margin-top: 20px;">
         View Full Chart & Profile
       </button>
     </div>
@@ -522,6 +522,8 @@
         window.open(fullChartUrl, '_blank');
       }
     }
+
+    document.getElementById('viewFullBtn')?.addEventListener('click', openFullChart);
 
     function notifyResize() {
       // Send height to parent for iframe auto-sizing

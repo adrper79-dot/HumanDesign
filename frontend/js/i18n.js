@@ -79,7 +79,9 @@
     if (localeCache[locale]) return localeCache[locale];
 
     try {
-      const resp = await fetch(`${LOCALE_PATH}${locale}.json`);
+      const resp = await fetch(`${LOCALE_PATH}${locale}.json`, {
+        credentials: 'include'
+      });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       localeCache[locale] = data;
