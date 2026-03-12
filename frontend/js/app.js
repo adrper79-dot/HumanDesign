@@ -83,8 +83,9 @@ async function fetchUserProfile() {
     });
     if (!res.ok) return; // silently ignore — expired tokens handled by apiFetch elsewhere
     const data = await res.json();
-    if (data && data.id) {
-      window.currentUser = data;
+    const user = data?.user || data;
+    if (user && user.id) {
+      window.currentUser = user;
       updateAuthUI();
     }
   } catch (e) {

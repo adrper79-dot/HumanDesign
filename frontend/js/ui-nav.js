@@ -416,15 +416,24 @@ window.addEventListener('DOMContentLoaded', () => {
   const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
   if (chartFormCard && stickyChartCta && isMobile) {
+    // Keep hidden CTA non-focusable to avoid aria-hidden + focused-descendant violations.
+    stickyChartCta.inert = true;
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         // Show sticky CTA when form is NOT visible (out of viewport)
         if (!entry.isIntersecting) {
           stickyChartCta.classList.add('visible');
           stickyChartCta.setAttribute('aria-hidden', 'false');
+          stickyChartCta.inert = false;
         } else {
+          const activeEl = document.activeElement;
+          if (activeEl && stickyChartCta.contains(activeEl) && typeof activeEl.blur === 'function') {
+            activeEl.blur();
+          }
           stickyChartCta.classList.remove('visible');
           stickyChartCta.setAttribute('aria-hidden', 'true');
+          stickyChartCta.inert = true;
         }
       });
     }, {
