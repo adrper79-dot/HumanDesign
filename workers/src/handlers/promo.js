@@ -98,7 +98,7 @@ export async function handleApplyPromo(request, env) {
   const { rows } = await query(QUERIES.redeemPromoCode, [code.toUpperCase()]);
 
   if (!rows || rows.length === 0) {
-    return Response.json({ error: 'Code not found or already exhausted' }, { status: 200, ok: false });
+    return Response.json({ ok: false, error: 'Code not found or already exhausted' }, { status: 404 });
   }
 
   const promo = rows[0];
@@ -107,8 +107,9 @@ export async function handleApplyPromo(request, env) {
   if (promo.applicable_tiers && promo.applicable_tiers.length > 0 && tier) {
     if (!promo.applicable_tiers.includes(tier)) {
       return Response.json({
+        ok: false,
         error: `Code "${promo.code}" is not valid for the ${tier} plan`
-      }, { status: 200 });
+      }, { status: 422 });
     }
   }
 
@@ -149,8 +150,15 @@ export async function handleCreatePromo(request, env) {
   if (typeof discount_value !== 'number' || discount_value <= 0) {
     return Response.json({ error: 'discount_value must be a positive number' }, { status: 400 });
   }
+  if (discount_type === 'percentage' && discount_value > 100) {
+    return Response.json({ error: 'Percentage discount_value cannot exceed 100' }, { status: 400 });
+  }
   if (!/^[A-Z0-9_-]+$/i.test(code) || code.length > 64) {
     return Response.json({ error: 'Invalid code format (alphanumeric, hyphens, underscores, max 64 chars)' }, { status: 400 });
+  }
+  const validTiers = ['free', 'regular', 'practitioner', 'white_label'];
+  if (applicable_tiers && (!Array.isArray(applicable_tiers) || !applicable_tiers.every(t => validTiers.includes(t)))) {
+    return Response.json({ error: `applicable_tiers must be array of: ${validTiers.join(', ')}` }, { status: 400 });
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);

@@ -10,10 +10,10 @@
  *   DELETE /api/practitioner/clients/:id  — Remove client from roster
  *
  * Tier definitions:
- *   free        — Basic access, no client management
- *   standard    — Up to 10 clients
- *   professional — Up to 50 clients
- *   enterprise  — Unlimited clients
+ *   free          — Basic access, no client management (0 clients)
+ *   regular       — Up to 5 clients
+ *   practitioner  — Up to 50 clients
+ *   white_label   — Unlimited clients
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
@@ -165,6 +165,12 @@ async function handleAddClient(request, env, userId, query) {
     return Response.json({ error: 'clientEmail is required' }, { status: 400 });
   }
 
+  // Basic email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(clientEmail)) {
+    return Response.json({ error: 'clientEmail must be a valid email address' }, { status: 400 });
+  }
+
   // Verify practitioner and check tier limit
   const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (!practResult.rows?.length) {
@@ -269,6 +275,9 @@ async function handleRemoveClient(userId, clientId, query) {
     return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
   }
 
-  await query(QUERIES.removeClient, [practResult.rows[0].id, clientId]);
+  const result = await query(QUERIES.removeClient, [practResult.rows[0].id, clientId]);
+  if (!result.rowCount) {
+    return Response.json({ error: 'Client not found on your roster' }, { status: 404 });
+  }
   return Response.json({ ok: true, message: 'Client removed from roster' });
 }

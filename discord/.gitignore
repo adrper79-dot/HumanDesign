@@ -1,0 +1,9 @@
+# Wrangler build output and local dev state
+.wrangler/
+dist/
+
+# Node modules
+node_modules/
+
+# Local dev
+*.log

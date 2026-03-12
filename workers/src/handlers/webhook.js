@@ -232,6 +232,14 @@ async function handleSubscriptionUpdated(event, query, env) {
 
     // BL-R-C4: Also sync users.tier to match subscription state
     await q(QUERIES.updateUserTier, [tier, userId]);
+
+    // Ensure a practitioners row exists + keep practitioners.tier in sync.
+    // createPractitioner uses ON CONFLICT DO NOTHING, so we follow it with an
+    // explicit UPDATE to ensure the tier is current for existing practitioners.
+    if (tier === 'practitioner' || tier === 'white_label') {
+      await q(QUERIES.createPractitioner, [userId, false, tier]);
+      await q(QUERIES.updatePractitionerTier, [userId, tier]);
+    }
   });
 
   console.log(`Subscription updated for user ${userId}, tier: ${tier}, status: ${subscription.status}`);
@@ -260,7 +268,7 @@ async function handleSubscriptionDeleted(event, query) {
       userId,
       subscriptionId,
       'free',
-      'cancelled',
+      'canceled',
       null,
       null,
       false
@@ -374,7 +382,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
     }
   }
 
-  console.error(`Payment failed for user ${userId}, subscription ${subscriptionId}: ${failureReason}`);
+  // Log failure without PII — failureReason may contain card/bank details
+  console.error(`Payment failed for subscription ${subscriptionId}`);
 }
 
 /**

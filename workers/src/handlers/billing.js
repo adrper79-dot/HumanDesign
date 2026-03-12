@@ -53,6 +53,26 @@ export async function handleCheckout(request, env, ctx) {
     if (!tier || !['regular', 'practitioner', 'white_label'].includes(tier)) {
       return Response.json({ error: 'Invalid tier. Must be regular, practitioner, or white_label' }, { status: 400 });
     }
+
+    // Validate redirect URLs — must be valid https URLs on the same origin to prevent open-redirect
+    const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
+    function isSafeUrl(url) {
+      if (!url || typeof url !== 'string') return true; // undefined falls through to default
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:') return false;
+        if (frontendOrigin && !url.startsWith(frontendOrigin)) return false;
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    if (!isSafeUrl(successUrl)) {
+      return Response.json({ error: 'Invalid successUrl' }, { status: 400 });
+    }
+    if (!isSafeUrl(cancelUrl)) {
+      return Response.json({ error: 'Invalid cancelUrl' }, { status: 400 });
+    }
     
     // Get tier configuration
     const tierConfig = getTier(tier, env);

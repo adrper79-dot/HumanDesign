@@ -1,0 +1,16 @@
+{
+  "name": "prime-self-discord",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Prime Self Discord slash command bot — Cloudflare Worker",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "register": "node scripts/register-commands.js"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.17"
+  }
+}

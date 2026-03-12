@@ -123,7 +123,7 @@ export async function handleCheckinCreate(request, env, ctx) {
     return Response.json({ error: `mood must be one of: ${validMoods.join(', ')}` }, { status: 400 });
   }
 
-  if (energyLevel && (energyLevel < 1 || energyLevel > 10)) {
+  if (energyLevel != null && (energyLevel < 1 || energyLevel > 10)) {
     return Response.json({ error: 'energyLevel must be between 1 and 10' }, { status: 400 });
   }
 
@@ -176,7 +176,7 @@ export async function handleCheckinCreate(request, env, ctx) {
     const streak = computeCurrentStreak(allStreakDates, checkinDate);
 
     return Response.json({
-      success: true,
+      ok: true,
       checkin: {
         id: checkin.id,
         checkinDate: checkin.checkin_date,
@@ -222,6 +222,7 @@ export async function handleCheckinToday(request, env, ctx) {
 
     if (results.length === 0) {
       return Response.json({
+        ok: true,
         completed: false,
         checkinDate: today,
         message: 'No check-in for today yet'
@@ -231,6 +232,7 @@ export async function handleCheckinToday(request, env, ctx) {
     const checkin = results[0];
 
     return Response.json({
+      ok: true,
       completed: true,
       checkin: {
         id: checkin.id,
@@ -263,8 +265,8 @@ export async function handleCheckinHistory(request, env, ctx) {
   }
 
   const url = new URL(request.url);
-  const days = Math.min(parseInt(url.searchParams.get('days') || '30'), 365);  // Max 1 year
-  const offset = Math.min(parseInt(url.searchParams.get('offset') || '0'), 10000);  // BL-R-M15
+  const days = Math.min(parseInt(url.searchParams.get('days')) || 30, 365);  // Max 1 year
+  const offset = Math.min(parseInt(url.searchParams.get('offset')) || 0, 10000);  // BL-R-M15
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -278,7 +280,7 @@ export async function handleCheckinHistory(request, env, ctx) {
     const total = countResults[0]?.total || 0;
 
     return Response.json({
-      success: true,
+      ok: true,
       checkins: checkins.map(c => ({
         id: c.id,
         checkinDate: c.checkin_date,
@@ -315,7 +317,7 @@ export async function handleCheckinStats(request, env, ctx) {
   }
 
   const url = new URL(request.url);
-  const period = Math.min(parseInt(url.searchParams.get('period') || '30'), 365);  // Days
+  const period = Math.min(parseInt(url.searchParams.get('period')) || 30, 365);  // Days
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -330,7 +332,7 @@ export async function handleCheckinStats(request, env, ctx) {
 
     if (checkins.length === 0) {
       return Response.json({
-        success: true,
+        ok: true,
         period: { days: period, startDate: periodStartStr, endDate: new Date().toISOString().split('T')[0] },
         stats: {
           totalCheckins: 0,
@@ -378,7 +380,7 @@ export async function handleCheckinStats(request, env, ctx) {
     }));
 
     return Response.json({
-      success: true,
+      ok: true,
       period: {
         days: period,
         startDate: periodStartStr,
@@ -418,7 +420,7 @@ export async function handleCheckinStreak(request, env, ctx) {
 
     if (allCheckins.length === 0) {
       return Response.json({
-        success: true,
+        ok: true,
         streak: {
           current: 0,
           longest: 0,
@@ -454,7 +456,7 @@ export async function handleCheckinStreak(request, env, ctx) {
     longestStreak = Math.max(longestStreak, currentStreak);
 
     return Response.json({
-      success: true,
+      ok: true,
       streak: {
         current: streak.current_streak,
         longest: longestStreak,
@@ -521,7 +523,7 @@ export async function handleSetCheckinReminder(request, env, ctx) {
     const reminder = results[0];
 
     return Response.json({
-      success: true,
+      ok: true,
       reminder: {
         enabled: !!reminder.enabled,
         reminderTime: reminder.reminder_time,
@@ -553,7 +555,7 @@ export async function handleGetCheckinReminder(request, env, ctx) {
 
     if (results.length === 0) {
       return Response.json({
-        success: true,
+        ok: true,
         reminder: null,
         message: 'No reminder set. Use POST /api/checkin/reminder to create one.'
       });
@@ -562,7 +564,7 @@ export async function handleGetCheckinReminder(request, env, ctx) {
     const reminder = results[0];
 
     return Response.json({
-      success: true,
+      ok: true,
       reminder: {
         enabled: !!reminder.enabled,
         reminderTime: reminder.reminder_time,

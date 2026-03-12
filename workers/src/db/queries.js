@@ -270,12 +270,40 @@ export const QUERIES = {
   createPractitioner: `
     INSERT INTO practitioners (user_id, certified, tier)
     VALUES ($1, $2, $3)
+    ON CONFLICT (user_id) DO NOTHING
     RETURNING id, user_id, certified, tier, created_at
   `,
 
+  // Update practitioners.tier when subscription upgrades/downgrades.
+  // Used by the Stripe webhook handler — createPractitioner uses ON CONFLICT DO NOTHING
+  // so existing rows are never updated by that query alone.
+  updatePractitionerTier: `
+    UPDATE practitioners
+    SET tier = $2
+    WHERE user_id = $1
+  `,
+
   getPractitionerByUserId: `
-    SELECT id, user_id, certified, tier
+    SELECT id, user_id, certified, tier,
+           discord_guild_ids, discord_brand_name, discord_bot_accent_color
     FROM practitioners WHERE user_id = $1
+  `,
+
+  // Discord integration (Phase 2)
+  getPractitionerByGuildId: `
+    SELECT id, user_id, certified, tier,
+           discord_guild_ids, discord_brand_name, discord_bot_accent_color
+    FROM practitioners WHERE $1 = ANY(discord_guild_ids)
+    LIMIT 1
+  `,
+
+  updatePractitionerDiscordGuilds: `
+    UPDATE practitioners
+    SET discord_guild_ids = $2,
+        discord_brand_name = COALESCE($3, discord_brand_name),
+        discord_bot_accent_color = COALESCE($4, discord_bot_accent_color)
+    WHERE user_id = $1
+    RETURNING id, discord_guild_ids, discord_brand_name, discord_bot_accent_color
   `,
 
   countPractitionerClients: `
@@ -1453,9 +1481,9 @@ export const QUERIES = {
   `,
   getAnalyticsMrr: `
     SELECT
-      COUNT(*) FILTER (WHERE tier = 'seeker' AND status = 'active') AS seeker_count,
-      COUNT(*) FILTER (WHERE tier = 'guide' AND status = 'active') AS guide_count,
+      COUNT(*) FILTER (WHERE tier = 'regular' AND status = 'active') AS regular_count,
       COUNT(*) FILTER (WHERE tier = 'practitioner' AND status = 'active') AS practitioner_count,
+      COUNT(*) FILTER (WHERE tier = 'white_label' AND status = 'active') AS white_label_count,
       COUNT(*) FILTER (WHERE status = 'active') AS total_active,
       COUNT(*) FILTER (WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days') AS recent_churn
     FROM subscriptions
@@ -1504,7 +1532,7 @@ export const QUERIES = {
   // ─── Chart History ────────────────────────────────────────
 
   getChartHistory: `
-    SELECT id, calculated_at, hd_json::jsonb->'chart'->'type' as type
+    SELECT id, calculated_at, hd_json::jsonb->'chart'->>'type' as type
     FROM charts
     WHERE user_id = $1
     ORDER BY calculated_at DESC

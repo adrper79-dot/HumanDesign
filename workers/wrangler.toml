@@ -52,3 +52,4 @@ crons = ["0 6 * * *"]
 # VAPID_PUBLIC_KEY
 # VAPID_SUBJECT
 # ADMIN_TOKEN          (used by POST /api/admin/promo — set via: wrangler secret put ADMIN_TOKEN)
+# PRIME_SELF_API_SECRET (used by the discord/ Worker to auth internal API calls — set on both workers)

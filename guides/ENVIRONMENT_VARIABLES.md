@@ -94,6 +94,40 @@ Set in `workers/wrangler.toml` under `[vars]`:
 | `NOTION_CLIENT_SECRET` | `handlers/notion.js` | Same page as above |
 | `NOTION_TOKEN_ENCRYPTION_KEY` | `handlers/notion.js`, `lib/tokenCrypto.js` | Generate: `openssl rand -hex 32` — encrypts stored OAuth tokens |
 
+### Discord Bot — `discord/` Worker (Required for Discord integration)
+
+> These secrets are set in the **`discord/` Worker**, not the main `workers/` Worker.
+> Run all `wrangler` commands from the `discord/` directory.
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `DISCORD_APPLICATION_ID` | `discord/src/index.js` | [Discord Developer Portal](https://discord.com/developers/applications) → Your App → General Information |
+| `DISCORD_PUBLIC_KEY` | `discord/src/index.js` | Discord Developer Portal → Your App → General Information |
+| `DISCORD_BOT_TOKEN` | `discord/src/index.js` | Discord Developer Portal → Your App → Bot → Reset Token |
+| `PRIME_SELF_API_SECRET` | `discord/src/index.js` | Generate: `openssl rand -base64 48` — guards internal API calls (Phase 2+) |
+
+| Binding | Type | Used In | Description |
+|---------|------|---------|-------------|
+| `DISCORD_RATE_LIMIT` | KV Namespace | `discord/src/index.js` | Per-user rate limiting (3 requests/24h) |
+| `PRIME_SELF_API_URL` | `[vars]` | `discord/src/index.js` | Deployed Prime Self Worker URL — set in `discord/wrangler.toml [vars]` |
+
+**Setup commands (from `discord/` directory):**
+```bash
+# Create KV namespace (paste the generated id into discord/wrangler.toml)
+npx wrangler kv namespace create DISCORD_RATE_LIMIT
+
+# Set secrets
+npx wrangler secret put DISCORD_APPLICATION_ID
+npx wrangler secret put DISCORD_PUBLIC_KEY
+npx wrangler secret put DISCORD_BOT_TOKEN
+npx wrangler secret put PRIME_SELF_API_SECRET
+
+# Deploy
+npx wrangler deploy
+```
+
+---
+
 ### Admin & Misc
 
 | Secret/Var | Used In | Description |
