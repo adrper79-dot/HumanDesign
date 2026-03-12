@@ -123,7 +123,6 @@ async function handleGetMe(request, env) {
 
   // Remove sensitive fields
   delete user.password_hash;
-  delete user.refresh_token;
 
   return Response.json({
     ok: true,

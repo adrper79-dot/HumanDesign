@@ -1,0 +1,22 @@
+name = "prime-self-discord"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+# Non-sensitive configuration
+[vars]
+ENVIRONMENT = "production"
+# URL of the deployed Prime Self API Worker
+PRIME_SELF_API_URL = "https://prime-self-api.adrper79.workers.dev"
+
+# KV namespace for per-user rate limiting (3 requests per 24h per Discord user ID)
+# Create with: npx wrangler kv namespace create DISCORD_RATE_LIMIT
+# Then paste the generated id below
+[[kv_namespaces]]
+binding = "DISCORD_RATE_LIMIT"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets (set via: npx wrangler secret put <NAME>)
+# DISCORD_APPLICATION_ID  — Discord Developer Portal → App → General
+# DISCORD_PUBLIC_KEY      — Discord Developer Portal → App → General
+# DISCORD_BOT_TOKEN       — Discord Developer Portal → App → Bot
+# PRIME_SELF_API_SECRET   — Shared secret for internal Prime Self API calls (Phase 2+)

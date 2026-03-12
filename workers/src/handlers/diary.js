@@ -144,7 +144,7 @@ export async function handleDiaryCreate(request, env) {
     ]);
 
     return Response.json({
-      success: true,
+      ok: true,
       data: result.rows[0]
     });
   } catch (error) {
@@ -175,6 +175,7 @@ export async function handleDiaryList(request, env) {
     const result = await query(QUERIES.getDiaryEntries, [userId, limit, offset]);
 
     return Response.json({
+      ok: true,
       data: result.rows,
       pagination: { limit, offset, count: result.rows?.length || 0 }
     });
@@ -206,6 +207,7 @@ export async function handleDiaryGet(request, env, entryId) {
     }
 
     return Response.json({
+      ok: true,
       data: result.rows[0]
     });
   } catch (error) {
@@ -243,6 +245,29 @@ export async function handleDiaryUpdate(request, env, entryId) {
     );
   }
 
+  // Validate field lengths
+  if (eventTitle.length > 500 || (eventDescription && eventDescription.length > 10000)) {
+    return Response.json({ error: 'Field too long' }, { status: 422 });
+  }
+
+  // Validate event type
+  const validEventTypes = ['career', 'relationship', 'health', 'spiritual', 'financial', 'family', 'other'];
+  if (eventType && !validEventTypes.includes(eventType)) {
+    return Response.json(
+      { error: 'Invalid event type', validOptions: validEventTypes },
+      { status: 400 }
+    );
+  }
+
+  // Validate significance
+  const validSignificance = ['major', 'moderate', 'minor'];
+  if (significance && !validSignificance.includes(significance)) {
+    return Response.json(
+      { error: 'Invalid significance', validOptions: validSignificance },
+      { status: 400 }
+    );
+  }
+
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   try {
@@ -261,7 +286,7 @@ export async function handleDiaryUpdate(request, env, entryId) {
     }
 
     return Response.json({
-      success: true,
+      ok: true,
       data: result.rows[0]
     });
   } catch (error) {
@@ -292,7 +317,7 @@ export async function handleDiaryDelete(request, env, entryId) {
     }
 
     return Response.json({
-      success: true,
+      ok: true,
       deleted: result.rows[0].id
     });
   } catch (error) {

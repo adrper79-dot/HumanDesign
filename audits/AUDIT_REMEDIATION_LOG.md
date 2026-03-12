@@ -360,7 +360,77 @@ Reviewed and verified:
 | 2026-03-08 | 8 | 3 |
 | 2026-07-15c | 16 | 14 |
 | 2026-03-09 (UI) | 12 | 8 |
-| **Total** | **71** | **~35 unique files** |
+| 2026-07-16 (Audit Sprint 2) | 21 | 9 |
+| **Total** | **92** | **~40 unique files** |
 
 **Final Test Status: 263/263 tests passing**
+
+---
+
+## Continuation — Session 2026-07-16 (Audit Sprint 2)
+
+### Protocol
+Full 6-phase codebase audit continuing from previous sprint. Phases 0–2 (bootstrap, discovery, backlog) carried forward from conversation summary. Phase 4 remediation executed below.
+
+### Phase 4 Remediation — This Session
+
+#### P0 / Critical Fixes
+
+| ID | File | Issue | Fix Applied |
+|----|------|-------|-------------|
+| C9  | `workers/src/handlers/billing.js` | `successUrl`/`cancelUrl` from request body passed to Stripe without validation — open redirect | Added `isSafeUrl()` helper validating HTTPS + same origin as `FRONTEND_URL`; returns 400 on mismatch |
+| C10 | `workers/src/db/queries.js` + `workers/src/handlers/webhook.js` | `practitioners.tier` never updated on subscription upgrade — `createPractitioner` uses `ON CONFLICT DO NOTHING`, existing rows never touched → all paying practitioners locked at free tier | Added `updatePractitionerTier` query; called it after `createPractitioner` in `handleSubscriptionUpdated` |
+| C11 | `workers/src/handlers/promo.js` | `handleApplyPromo` passed `ok: false` as `ResponseInit` property (silently ignored by `Response.json()`); errors returned as HTTP 200 | Moved `ok: false` into JSON body; set proper 404/422 status codes |
+
+#### P1 / High Fixes
+
+| ID | File | Issue | Fix Applied |
+|----|------|-------|-------------|
+| H16 | `workers/src/handlers/webhook.js` | `'cancelled'` (British) vs `'canceled'` (DB CHECK constraint) | Fixed spelling in `handleSubscriptionDeleted` |
+| H17 | `workers/src/handlers/webhook.js` | Stripe `failureReason` (card error message — PII) logged in plaintext | Removed `failureReason` from log; kept only `subscriptionId` |
+| H18 | `workers/src/handlers/share.js` | `handleGetShareStats` `referralResult.rows?.[0]?.total` — `QUERIES.countReferrals` returns field named `count`, not `total` → `referredUsers` always 0 | Changed `.total` to `.count` |
+| H19 | `workers/src/handlers/checkin.js` | `if (energyLevel && ...)` skips validation when `energyLevel = 0` (falsy) — 0 stored to DB despite 1–10 CHECK constraint | Changed to `if (energyLevel != null && ...)` |
+| H20 | `workers/src/handlers/checkin.js` | `parseInt(param \|\| 'default')` pattern: `?days=abc` → `parseInt('abc')` = `NaN` → `Math.min(NaN, 365)` = `NaN` → `LIMIT NaN` → DB error | Changed to `parseInt(param) \|\| default` in `handleCheckinHistory` (days, offset) and `handleCheckinStats` (period) |
+| H21 | `workers/src/handlers/keys.js` | `generateKey` only blocked `free → non-free`; `regular` user could request `practitioner` tier API key | Added `TIER_ORDER` array + tier index comparison; also validates keyTier against known values |
+
+#### P2 / Medium Fixes
+
+| ID | File | Issue | Fix Applied |
+|----|------|-------|-------------|
+| M13 | `workers/src/db/queries.js` | `getAnalyticsMrr` used stale tier names `seeker`/`guide` → MRR always 0 for all tiers | Updated to `regular`/`practitioner`/`white_label` |
+| M14 | `workers/src/db/queries.js` | `getChartHistory` used `->` (returns JSON node) instead of `->>` (returns text) for chart type → type comparison always failed | Changed to `->>` |
+| M15 | `workers/src/handlers/promo.js` | `handleCreatePromo` accepted `discount_value > 100` for percentage type; no `applicable_tiers` enum validation | Added `> 100` guard; added enum check against `['free','regular','practitioner','white_label']` |
+| M16 | `workers/src/handlers/diary.js` | `handleDiaryUpdate` missing length, enum and required validations present in `handleDiaryCreate` — bypass via PUT | Added: `eventTitle.length > 500`, `eventDescription.length > 10000`, `eventType` enum, `significance` enum |
+| M17 | `workers/src/handlers/practitioner.js` | `handleRemoveClient` never checks `result.rowCount` — returns `ok: true` even if clientId not on roster | Returns 404 when `rowCount` is 0 |
+| M18 | `workers/src/handlers/practitioner.js` | `handleAddClient` only presence-checks `clientEmail` — no format validation | Added `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` regex check |
+
+#### P3 / Low Fixes (Envelope + Dead Code)
+
+| ID | File | Issue | Fix Applied |
+|----|------|-------|-------------|
+| L5  | `workers/src/handlers/share.js` | All 5 handlers returned `success: true/false` instead of canonical `ok: true/false`; used `new Response(JSON.stringify(...))` | Migrated to `ok: true/false` + `Response.json()` throughout |
+| L6  | `workers/src/handlers/checkin.js` | All 9 success responses used `success: true`; `handleCheckinToday` had no `ok` field at all | Migrated to `ok: true` throughout |
+| L7  | `workers/src/handlers/diary.js` | `handleDiaryCreate/Update/Delete` used `success: true`; `handleDiaryList/Get` had no `ok` field | Added `ok: true` to all 5 handlers |
+| L8  | `workers/src/handlers/practitioner.js` | File header docstring listed `standard/professional/enterprise` tiers — contradicted by code | Updated to `free/regular/practitioner/white_label` |
+| L9  | `workers/src/handlers/auth.js` | `delete user.refresh_token` — dead code; users table has no such column, refresh tokens live in `refresh_tokens` table | Removed line |
+
+### Phase 5 — Cleanup
+No orphaned files found. `checkout.js` was removed in a prior sprint (PL-5). Dual webhook files (`webhook.js` Stripe handler, `webhooks.js` user webhook manager) are intentional.
+
+### Files Modified This Session
+
+| File | Changes |
+|------|---------|
+| `workers/src/db/queries.js` | Added `updatePractitionerTier`; fixed `getAnalyticsMrr` tier names; fixed `getChartHistory` `->>` operator |
+| `workers/src/handlers/webhook.js` | Added `updatePractitionerTier` call; fixed `'cancelled'` spelling; removed PII from payment-failure log |
+| `workers/src/handlers/promo.js` | Fixed `ok: false` body placement + status codes; added discount >100 + tier enum validation |
+| `workers/src/handlers/billing.js` | Added `isSafeUrl()` guard for `successUrl`/`cancelUrl` |
+| `workers/src/handlers/share.js` | Fixed `.total` → `.count` bug; migrated all responses to `ok:` + `Response.json()` |
+| `workers/src/handlers/checkin.js` | Fixed `energyLevel=0` bypass; fixed NaN parseInt; migrated all responses to `ok:` |
+| `workers/src/handlers/keys.js` | Replaced free-only tier guard with full TIER_ORDER index comparison |
+| `workers/src/handlers/diary.js` | Added full validation to `handleDiaryUpdate`; added `ok:true` to all handlers |
+| `workers/src/handlers/practitioner.js` | Fixed header comment; added email validation; added rowCount check |
+| `workers/src/handlers/auth.js` | Removed dead `delete user.refresh_token` |
+
+**Session Total: 21 fixes across 10 files**
 

@@ -1,7 +1,9 @@
 # MASTER BACKLOG — PRIME SELF
 
-**Last Updated:** 2026-03-11  
+**Last Updated:** 2026-07-16
 **Source consolidation of:** BACKLOG.md, LAUNCH_READINESS_REPORT_2026.md, MARKET_VALIDATION_RECOMMENDATIONS.md, UI_DEFECT_BACKLOG.md, all audit files
+
+> **2026-07-16 Sprint:** 21 backend defects resolved — full details in `audits/AUDIT_REMEDIATION_LOG.md` (Session 2026-07-16). Resolved: practitioners.tier never updated on upgrade (C10), promo ok: false envelope bug (C11), billing URL open-redirect (C9), share.js referredUsers always 0 (H18), checkin energyLevel=0 bypass (H19), checkin NaN parseInt (H20), keys.js tier elevation bypass (H21), diary.js missing update validation (M16), practitioner.js rowCount check (M17), email format validation (M18), full `success:`→`ok:` envelope standardisation across share/checkin/diary handlers (L5–L9).
 
 ---
 

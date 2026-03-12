@@ -88,14 +88,26 @@ async function generateKey(request, env, user) {
     }
 
     // Determine tier based on user's subscription
-    // Free users get free tier, paid users can create higher tier keys
+    // Free users get free tier, paid users can only create keys up to their own tier
     // BL-FIX: Normalize null/undefined tier to 'free' to prevent null bypass
+    const TIER_ORDER = ['free', 'regular', 'practitioner', 'white_label'];
     const effectiveTier = user.tier || 'free';
     let keyTier = tier || 'free';
-    if (effectiveTier === 'free' && keyTier !== 'free') {
+
+    // Reject unknown tier values outright
+    if (!TIER_ORDER.includes(keyTier)) {
+      return Response.json({
+        error: 'Invalid tier',
+        message: 'Key tier must be one of: free, regular, practitioner, white_label'
+      }, { status: 400 });
+    }
+
+    const userTierIdx = TIER_ORDER.indexOf(effectiveTier);
+    const keyTierIdx  = TIER_ORDER.indexOf(keyTier);
+    if (keyTierIdx > (userTierIdx === -1 ? 0 : userTierIdx)) {
       return Response.json({
         error: 'Upgrade required',
-        message: 'Upgrade to Seeker tier or higher to create Basic/Pro API keys',
+        message: 'Cannot create an API key with a higher tier than your subscription',
         upgradeUrl: '/app/pricing'
       }, { status: 403 });
     }

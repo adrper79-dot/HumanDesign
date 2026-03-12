@@ -33,24 +33,18 @@ export async function handleShareCelebrity(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return Response.json({ success: false, error: 'Authentication required' }, { status: 401 });
+      return Response.json({ ok: false, error: 'Authentication required' }, { status: 401 });
     }
     const body = await request.json();
     const { celebrityId, platform } = body;
     
     if (!celebrityId) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Celebrity ID required'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ ok: false, error: 'Celebrity ID required' }, { status: 400 });
     }
     
     // Get user's birth data from users table + latest chart
     if (!user.birth_date || !user.birth_time) {
-      return Response.json({ success: false, error: 'No birth data found — calculate your chart first' }, { status: 400 });
+      return Response.json({ ok: false, error: 'No birth data found — calculate your chart first' }, { status: 400 });
     }
     
     // Import celebrity match function
@@ -68,13 +62,7 @@ export async function handleShareCelebrity(request, env, ctx) {
     const match = await getCelebrityMatch(userChart, celebrityId);
     
     if (!match) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Celebrity not found'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ ok: false, error: 'Celebrity not found' }, { status: 404 });
     }
     
     // Generate share image
@@ -115,8 +103,8 @@ export async function handleShareCelebrity(request, env, ctx) {
       }), platform || 'unknown']
     );
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       shareContent: {
         imageUrl: imageDataUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
@@ -124,20 +112,11 @@ export async function handleShareCelebrity(request, env, ctx) {
         title: `I'm ${match.similarity.percentage}% like ${match.celebrity.name}!`,
         description: `Based on my Human Design chart, I share ${match.similarity.percentage}% similarity with ${match.celebrity.name}.`
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Error generating celebrity share:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to generate share content'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
   }
 }
 
@@ -149,14 +128,14 @@ export async function handleShareChart(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return Response.json({ success: false, error: 'Authentication required' }, { status: 401 });
+      return Response.json({ ok: false, error: 'Authentication required' }, { status: 401 });
     }
     const body = await request.json();
     const { platform } = body;
     
     // Get user's birth data
     if (!user.birth_date || !user.birth_time) {
-      return Response.json({ success: false, error: 'No birth data found — calculate your chart first' }, { status: 400 });
+      return Response.json({ ok: false, error: 'No birth data found — calculate your chart first' }, { status: 400 });
     }
     
     const utc = parseToUTC(user.birth_date, user.birth_time, user.birth_tz);
@@ -202,8 +181,8 @@ export async function handleShareChart(request, env, ctx) {
       }), platform || 'unknown']
     );
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       shareContent: {
         imageUrl: imageDataUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
@@ -211,20 +190,11 @@ export async function handleShareChart(request, env, ctx) {
         title: `I'm a ${fullChart.chart.type} in Human Design`,
         description: `My Human Design type is ${fullChart.chart.type} with profile ${fullChart.chart.profile}.`
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Error generating chart share:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to generate share content'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
   }
 }
 
@@ -236,32 +206,20 @@ export async function handleShareAchievement(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return Response.json({ success: false, error: 'Authentication required' }, { status: 401 });
+      return Response.json({ ok: false, error: 'Authentication required' }, { status: 401 });
     }
     const body = await request.json();
     const { achievementId, platform } = body;
     
     if (!achievementId) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Achievement ID required'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ ok: false, error: 'Achievement ID required' }, { status: 400 });
     }
     
     // Get achievement details
     const achievement = ACHIEVEMENTS[achievementId];
     
     if (!achievement) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Achievement not found'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ ok: false, error: 'Achievement not found' }, { status: 404 });
     }
     
     // Verify user has unlocked this achievement
@@ -272,13 +230,7 @@ export async function handleShareAchievement(request, env, ctx) {
     );
     
     if (!unlockResult.rows || unlockResult.rows.length === 0) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Achievement not unlocked'
-      }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ ok: false, error: 'Achievement not unlocked' }, { status: 403 });
     }
     
     // Generate share image
@@ -320,8 +272,8 @@ export async function handleShareAchievement(request, env, ctx) {
       }), platform || 'unknown']
     );
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       shareContent: {
         imageUrl: imageDataUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
@@ -329,20 +281,11 @@ export async function handleShareAchievement(request, env, ctx) {
         title: `Achievement Unlocked: ${achievement.name}`,
         description: achievement.description
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Error generating achievement share:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to generate share content'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
   }
 }
 
@@ -354,7 +297,7 @@ export async function handleShareReferral(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return Response.json({ success: false, error: 'Authentication required' }, { status: 401 });
+      return Response.json({ ok: false, error: 'Authentication required' }, { status: 401 });
     }
     const body = await request.json();
     const { platform } = body;
@@ -363,13 +306,7 @@ export async function handleShareReferral(request, env, ctx) {
     const referralCode = user.referral_code;
     
     if (!referralCode) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'No referral code found. Generate one first at /api/referrals/code'
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json({ ok: false, error: 'No referral code found. Generate one first at /api/referrals/code' }, { status: 404 });
     }
     
     // Generate share image
@@ -407,8 +344,8 @@ export async function handleShareReferral(request, env, ctx) {
       }), platform || 'unknown']
     );
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       shareContent: {
         imageUrl: imageDataUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
@@ -417,20 +354,11 @@ export async function handleShareReferral(request, env, ctx) {
         title: 'Join me on Prime Self — First Month Free',
         description: 'Discover your Human Design chart and get your first month free.'
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Error generating referral share:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to generate share content'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
   }
 }
 
@@ -442,7 +370,7 @@ export async function handleGetShareStats(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
-      return Response.json({ success: false, error: 'Authentication required' }, { status: 401 });
+      return Response.json({ ok: false, error: 'Authentication required' }, { status: 401 });
     }
     
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -466,7 +394,7 @@ export async function handleGetShareStats(request, env, ctx) {
       QUERIES.countReferrals,
       [user.id]
     );
-    const referredUsers = referralResult.rows?.[0]?.total || 0;
+    const referredUsers = referralResult.rows?.[0]?.count || 0;
     
     const totalShares = sharesByType.reduce((sum, row) => sum + row.count, 0);
 
@@ -475,8 +403,8 @@ export async function handleGetShareStats(request, env, ctx) {
     const estimatedConversionRate = 0.05;
     const viralCoefficient = totalShares * estimatedConversionRate;
     
-    return new Response(JSON.stringify({
-      success: true,
+    return Response.json({
+      ok: true,
       stats: {
         totalShares,
         sharesByType: Object.fromEntries(sharesByType.map(r => [r.share_type, r.count])),
@@ -489,19 +417,10 @@ export async function handleGetShareStats(request, env, ctx) {
           date: s.created_at
         }))
       }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
     });
     
   } catch (error) {
     console.error('Error getting share stats:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to get share stats'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json({ ok: false, error: 'Failed to get share stats' }, { status: 500 });
   }
 }
