@@ -242,11 +242,11 @@ export async function cancelSubscription(stripe, subscriptionId, immediately = f
  * @param {string} signature - Stripe signature header
  * @param {string} webhookSecret - Stripe webhook secret
  * @param {Stripe} stripe - Stripe client
- * @returns {Object} Verified Stripe event
+ * @returns {Promise<Object>} Verified Stripe event
  */
-export function verifyWebhook(payload, signature, webhookSecret, stripe) {
+export async function verifyWebhook(payload, signature, webhookSecret, stripe) {
   try {
-    return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    return await stripe.webhooks.constructEventAsync(payload, signature, webhookSecret);
   } catch (error) {
     console.error('Webhook verification failed:', error);
     throw new Error(`Webhook verification failed: ${error.message}`);
