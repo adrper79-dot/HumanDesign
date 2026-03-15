@@ -1178,9 +1178,14 @@ async function openBillingPortal() {
 }
 
 // Helper to show upgrade modal on quota/feature errors
+// Routes free → Individual (consumer modal) and Individual → Practitioner (pro modal)
 function showUpgradePrompt(message, feature) {
-  openPricingModal();
-  // Could enhance this to highlight specific tier needed for the feature
+  const practitionerFeatures = ['practitionerTools', 'whiteLabel', 'clients', 'composite', 'pdf'];
+  if (feature && practitionerFeatures.includes(feature)) {
+    openPractitionerPricingModal();
+  } else {
+    openPricingModal();
+  }
 }
 
 // ── API Fetch ─────────────────────────────────────────────────
@@ -1472,6 +1477,18 @@ function updateStepGuide(activeTab) {
     if (p) { p.classList.add('done'); p.classList.remove('active-step'); }
   }
 }
+
+// CMO-004: Auto-trigger geocoding when a user leaves a location field without
+// manually clicking "Look Up". Only fires if no coordinates are set yet.
+document.addEventListener('blur', (e) => {
+  const el = e.target;
+  if (!el.matches || !el.matches('input[data-geocode-target]')) return;
+  const prefix = el.getAttribute('data-geocode-target');
+  const latEl = document.getElementById(prefix + '-lat');
+  if (latEl && !latEl.value && el.value.trim()) {
+    geocodeLocation(prefix);
+  }
+}, true); // capture phase so blur fires on the input element
 
 // Call on load to set initial step state
 document.addEventListener('DOMContentLoaded', () => updateStepGuide('chart'));
@@ -3330,7 +3347,10 @@ function renderRoster(data) {
     return `<div class="empty-state">
       <span class="icon-star icon-xl"></span>
       <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No clients yet</h3>
-      <p style="max-width:min(500px,90vw);margin:0 auto">Add clients by email using the button above. They must already have a Prime Self account.</p>
+      <p style="max-width:min(500px,90vw);margin:0 auto 24px">Invite your first client to start building their energy blueprint together. They'll receive an email with a personalized invitation to join Prime Self.</p>
+      <button class="btn-primary" style="display:inline-block;margin:0 auto" data-action="togglePracAddForm">
+        <span class="icon-star"></span> Invite Your First Client
+      </button>
     </div>`;
   }
 
@@ -3499,6 +3519,21 @@ function renderClientDetail(data, emailLabel, clientId, notesData) {
   }
 
   html += `</div></div>`;
+
+  // ── Cross-Chart Compatibility (PRAC-005) ──
+  // Provide a direct path to generate a composite chart between practitioner and this client.
+  if (chart) {
+    html += `
+    <div class="card" style="margin-top:var(--space-4);border-top:3px solid var(--primary)">
+      <div class="card-title" style="margin-bottom:var(--space-3)"><span class="icon-chart"></span> Compatibility Chart</div>
+      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">
+        Generate a composite relationship chart between you and ${email}. This reveals compatibility dynamics, communication patterns, and energy synergies.
+      </p>
+      <button class="btn-primary" data-action="openCompatibilityWithClient" data-arg0="${safeClientId}" data-arg1="${escapeAttr(emailLabel || '')}">
+        <span class="icon-chart"></span> Generate Compatibility Chart
+      </button>
+    </div>`;
+  }
 
   html += `</div>`;
   return html;
@@ -5074,12 +5109,15 @@ async function updateTierUI() {
       }
     }
     
-    // Show profile quota notice (fetch current usage from API)
+    // Show profile quota notice — for free/individual tiers, include upgrade CTA
     const profileQuotaNotice = document.getElementById('profileQuotaNotice');
     const profileQuotaText = document.getElementById('profileQuotaText');
     if (profileQuotaNotice && profileQuotaText && limits.profileGenerations !== Infinity) {
-      // This would require a /api/usage endpoint - for now just show limit
-      profileQuotaText.textContent = `You have ${limits.profileGenerations} profile generation${limits.profileGenerations === 1 ? '' : 's'} per month on the ${tier} tier.`;
+      if (tier === 'free') {
+        profileQuotaText.innerHTML = `Free plan includes 1 AI synthesis per month. <a href="#" data-action="openPricingModal" style="text-decoration:underline">Upgrade to Individual ($19/mo)</a> for 10 syntheses, full transit reports, and more.`;
+      } else {
+        profileQuotaText.textContent = `You have ${limits.profileGenerations} profile generation${limits.profileGenerations === 1 ? '' : 's'} per month on the ${tier} tier.`;
+      }
       profileQuotaNotice.style.display = 'block';
     } else if (profileQuotaNotice) {
       profileQuotaNotice.style.display = 'none';
@@ -5433,6 +5471,17 @@ if (!document.getElementById('notificationStyles')) {
 // ── Wrapper functions for complex inline handlers ───────────────────────────
 function hideMemberForm() { const el = document.getElementById('addMemberFormCard'); if (el) el.style.display = 'none'; }
 function hidePracDetail()  { const el = document.getElementById('pracDetailPanel');  if (el) el.style.display = 'none'; }
+
+// PRAC-005: Navigate to composite tab to generate a compatibility chart with a client.
+// Scrolls the composite form into view so the practitioner can fill in their own birth data
+// (Person A) alongside the client's birth data (Person B).
+function openCompatibilityWithClient(clientId, emailLabel) {
+  switchTab('composite');
+  const compResult = document.getElementById('compResult');
+  if (compResult) compResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const name = emailLabel || 'this client';
+  showNotification(`Composite tab opened. Enter your birth data as Person A and ${name}'s birth data as Person B to generate the compatibility chart.`, 'info');
+}
 function openLastShareCard() { if (typeof showShareCard === 'function') showShareCard(window._lastChart); }
 function openBlueprintCard() { if (typeof showBlueprintCard === 'function') showBlueprintCard(window._lastChart, window._lastForge); }
 function switchToPricingModal()    { closePractitionerPricingModal(); openPricingModal(); }
@@ -5658,6 +5707,7 @@ window.toggleRaw = toggleRaw;
 window.toggleDetails = toggleDetails;
 window.hideMemberForm = hideMemberForm;
 window.hidePracDetail = hidePracDetail;
+window.openCompatibilityWithClient = openCompatibilityWithClient;
 window.loadPractitionerInvitations = loadPractitionerInvitations;
 window.revokePractitionerInvitation = revokePractitionerInvitation;
 window.showNewNoteForm = showNewNoteForm;
