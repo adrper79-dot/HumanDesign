@@ -80,16 +80,33 @@ export function createQueryFn(connectionString) {
     return false;
   }
 
+  // CTO-010: Threshold above which a query is flagged as slow in structured logs.
+  const SLOW_QUERY_MS = 1000;
+
   async function query(sqlText, params = []) {
     const MAX_RETRIES = 3;
+    const t0 = Date.now();
     let lastError;
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
-        return await pool.query(sqlText, params);
+        const result = await pool.query(sqlText, params);
+        const durationMs = Date.now() - t0;
+        // CTO-010: Surface slow queries so they can be indexed/optimised.
+        if (durationMs > SLOW_QUERY_MS) {
+          console.warn(JSON.stringify({ event: 'slow_query', durationMs, attempt }));
+        }
+        return result;
       } catch (error) {
         lastError = error;
         if (!isRetriable(error) || attempt === MAX_RETRIES - 1) {
-          console.error('Database query error:', error);
+          // CTO-010: Include durationMs so trace shows how long before failure.
+          console.error(JSON.stringify({
+            event: 'db_query_error',
+            durationMs: Date.now() - t0,
+            attempt,
+            code: error.code,
+            message: error.message,
+          }));
           throw error;
         }
         // Exponential backoff: 100ms, 200ms, 400ms
@@ -119,10 +136,21 @@ export function createQueryFn(connectionString) {
 
       // Provide a query function bound to this specific client
       const txQuery = async (sqlText, params = []) => {
+        const t0 = Date.now();
         try {
-          return await client.query(sqlText, params);
+          const result = await client.query(sqlText, params);
+          const durationMs = Date.now() - t0;
+          if (durationMs > SLOW_QUERY_MS) {
+            console.warn(JSON.stringify({ event: 'slow_txn_query', durationMs }));
+          }
+          return result;
         } catch (error) {
-          console.error('Transaction query error:', error);
+          console.error(JSON.stringify({
+            event: 'txn_query_error',
+            durationMs: Date.now() - t0,
+            code: error.code,
+            message: error.message,
+          }));
           throw error;
         }
       };
@@ -134,7 +162,12 @@ export function createQueryFn(connectionString) {
       try {
         await client.query('ROLLBACK');
       } catch (rollbackError) {
-        console.error('Transaction rollback failed:', rollbackError);
+        // CTO-011: Structured log so rollback failures are searchable in CF logs.
+        console.error(JSON.stringify({
+          event: 'txn_rollback_failed',
+          code: rollbackError.code,
+          message: rollbackError.message,
+        }));
       }
       throw error;
     } finally {
@@ -1091,6 +1124,17 @@ export const QUERIES = {
     WHERE s.cancel_at_period_end = true
       AND s.status IN ('active', 'trialing', 'past_due')
       AND s.current_period_end < NOW()
+  `,
+
+  // CFO-005: Conditional UPDATE — only cancels if still in a live state.
+  // Returns the user_id if the row was actually changed, empty if webhook
+  // already processed it. Eliminates the cron/webhook double-fire race.
+  cancelExpiredSubscription: `
+    UPDATE subscriptions
+    SET status = 'canceled'
+    WHERE id = $1
+      AND status IN ('active', 'trialing', 'past_due')
+    RETURNING user_id
   `,
 
   // ─── Notion Integration ───────────────────────────────────
