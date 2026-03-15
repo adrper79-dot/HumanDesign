@@ -36,7 +36,10 @@
     "relationships": "Relaciones",
     "growth": "Crecimiento",
     "tools": "Herramientas",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "celebrity": "Celebridad",
+    "achievements": "Logros",
+    "directory": "Directorio"
   },
   "auth": {
     "signIn": "Iniciar Sesión",

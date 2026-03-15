@@ -245,9 +245,10 @@ export async function createCheckoutSession(stripe, {
   successUrl,
   cancelUrl,
   discounts,
-  metadata = {}
+  metadata = {},
+  trialDays = 0
 }) {
-  return await stripe.checkout.sessions.create({
+  const params = {
     customer: customerId,
     mode: 'subscription',
     line_items: [
@@ -265,7 +266,11 @@ export async function createCheckoutSession(stripe, {
     subscription_data: {
       metadata
     }
-  });
+  };
+  if (trialDays > 0) {
+    params.subscription_data.trial_period_days = trialDays;
+  }
+  return await stripe.checkout.sessions.create(params);
 }
 
 /**

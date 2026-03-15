@@ -36,7 +36,10 @@
     "relationships": "Relationships",
     "growth": "Growth",
     "tools": "Tools",
-    "settings": "Settings"
+    "settings": "Settings",
+    "celebrity": "Celebrity",
+    "achievements": "Achievements",
+    "directory": "Directory"
   },
   "auth": {
     "signIn": "Sign In",

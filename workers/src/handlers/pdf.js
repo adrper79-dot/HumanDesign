@@ -88,7 +88,9 @@ export async function handlePdfExport(request, env, profileId) {
     env.R2.put(r2Key, pdfBytes, {
       httpMetadata: { contentType: 'application/pdf' },
       customMetadata: { profileId, userId: profile.user_id, createdAt: profile.created_at }
-    }).catch(() => { /* non-fatal */ });
+    }).catch(e => {
+      console.warn(JSON.stringify({ event: 'r2_put_failed', key: r2Key, error: e.message }));
+    });
   }
 
   return new Response(pdfBytes, {
@@ -189,7 +191,9 @@ export async function handleBrandedPdfExport(request, env, clientId) {
     env.R2.put(r2Key, pdfBytes, {
       httpMetadata: { contentType: 'application/pdf' },
       customMetadata: { profileId: profile.id, practitionerId, clientId }
-    }).catch(() => { /* non-fatal */ });
+    }).catch(e => {
+      console.warn(JSON.stringify({ event: 'r2_put_failed', key: r2Key, error: e.message }));
+    });
   }
 
   return new Response(pdfBytes, {

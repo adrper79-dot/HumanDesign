@@ -1,13 +1,12 @@
-# Prime Self Audit — 2026-03-15
+# Full Audit — 2026-03-15
 **Mode:** STABLE | **Full AI Audit:** Yes
 **Tests:** 273/273 passing
 **Open Issues:** P0: 22 | P1: 22 | P2: 8
-**Delta:** +52 new · ✓0 resolved · ↩0 regressions
 
 ---
-## Vitals
 
-### Test Results
+## Test Results
+
 ```json
 {
   "total": 273,
@@ -18,7 +17,392 @@
 }
 ```
 
-### Cloudflare Worker Metrics (7d)
+## Code Quality Findings
+
+```json
+{
+  "totalFindings": 317,
+  "hardcodedSecrets": 0,
+  "emptyCatchBlocks": 0,
+  "unstructuredLogs": 317,
+  "techDebtComments": 0,
+  "filesScanned": 72
+}
+```
+
+## Known Issues Baseline
+
+```json
+[
+  {
+    "id": "CTO-001",
+    "title": "No request correlation IDs (X-Request-ID) \u2014 production incidents are undebuggable",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-002",
+    "title": "317 unstructured console.log/error calls \u2014 no structured JSON logging across 72 files",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-003",
+    "title": "No retry wrapper on DB calls \u2014 Neon cold-start spikes cause silent failures",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-004",
+    "title": "13.33% production error rate (828/6212 requests) with no error tracking tooling to diagnose root cause",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-005",
+    "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) \u2014 cascading failures unmitigated",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-006",
+    "title": "auth.js exceeds 977 lines \u2014 monolithic handler resists safe refactoring and testing",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-007",
+    "title": "billing.js exceeds 474 lines \u2014 single-responsibility principle violated across multiple billing concerns",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-008",
+    "title": "273/273 passing tests with 13.33% prod error rate indicates test suite does not cover failing production paths",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-009",
+    "title": "Cron handler runs 8+ sequential tasks without independent error boundaries \u2014 one failure may cascade to block downstream tasks",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-010",
+    "title": "No durationMs logging on DB queries \u2014 cannot identify slow queries contributing to error rate",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-011",
+    "title": "ROLLBACK failures swallowed via console.error \u2014 failed transaction rollbacks are silent in production",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-012",
+    "title": "PII-adjacent data (user IDs, subscription IDs) interpolated into flat log strings without sanitization policy",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CTO-013",
+    "title": "No confirmed CI/CD pipeline \u2014 staging-to-production promotion discipline unverified",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-001",
+    "title": "JWT stored in localStorage \u2014 XSS on any page = full account takeover; HttpOnly cookie migration required",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-002",
+    "title": "No confirmed row-level security or tenant scoping on practitioner/client data \u2014 cross-user data access via ID enumeration unmitigated",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-003",
+    "title": "CSP unsafe-inline likely present on vanilla JS PWA \u2014 XSS mitigation effectively disabled",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-004",
+    "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) \u2014 credential stuffing and email enumeration unmitigated",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-005",
+    "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed \u2014 unsigned webhook processing risk",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-006",
+    "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed \u2014 CSRF on OAuth callback unverified",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-007",
+    "title": "Agency handler data scoping not auditable \u2014 practitioner accessing other practitioner's client roster not ruled out",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CISO-008",
+    "title": "User IDs in unstructured logs create GDPR-adjacent audit trail exposure in Cloudflare log retention",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-001",
+    "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness \u2014 collecting revenue for undelivered product",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-002",
+    "title": "No Stripe webhook idempotency handling \u2014 duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-003",
+    "title": "No confirmed pre-flight quota enforcement before AI calls \u2014 free-tier users can exhaust AI budget without cost gate",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-004",
+    "title": "App analytics returning HTTP 401 \u2014 conversion funnel, ARPU, and churn metrics are completely blind",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-005",
+    "title": "Webhook-driven and cron-driven subscription downgrade paths can double-fire without explicit deduplication",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-006",
+    "title": "Free tier abuse via account-per-email cycling possible without verified email gate on feature access",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-007",
+    "title": "Proration logic on mid-cycle upgrades not confirmed \u2014 risk of revenue under- or over-collection",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CFO-008",
+    "title": "No cancellation save/deflection flow \u2014 churn prevention revenue opportunity not captured",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-001",
+    "title": "Human Design labels displayed without 'why it matters' life-implication copy \u2014 #1 confirmed churn driver in category",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-002",
+    "title": "Practitioner directory profiles not confirmed indexable by search engines \u2014 core $97 tier acquisition value prop undelivered",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-003",
+    "title": "No referral mechanics built \u2014 highest-leverage growth channel for Human Design (practitioner\u2192client\u2192friend) untouched",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-004",
+    "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point \u2014 no mitigation confirmed",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-005",
+    "title": "Empty practitioner dashboard on first login \u2014 no empty-state guidance or 'add first client' CTA confirmed",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-006",
+    "title": "Shareable chart cards / social share hooks not confirmed \u2014 organic acquisition from existing users not captured",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-007",
+    "title": "No trial or freemium-to-Guide upgrade path confirmed \u2014 cold conversion to $97/mo from landing page will be sub-1%",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CMO-008",
+    "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed \u2014 risks feeling generic",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-001",
+    "title": "No Sentry or equivalent error tracking \u2014 828 production errors in 7 days have no grouping, stack traces, or affected-user counts",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-002",
+    "title": "Zero structured log lines \u2014 Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-003",
+    "title": "No X-Request-ID generated or threaded through handlers \u2014 cross-service request tracing impossible",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-004",
+    "title": "Health endpoint depth unconfirmed \u2014 /api/health?full=1 with DB, KV, Stripe reachability checks not verified",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-005",
+    "title": "Cron tasks lack independent timeouts \u2014 a hung DB call in transit snapshot can starve SMS digest delivery",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-006",
+    "title": "App analytics endpoint returning HTTP 401 \u2014 operational metrics dashboard is broken",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-007",
+    "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable \u2014 stale data risk on high-read paths",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "CIO-008",
+    "title": "No confirmed staging environment or Wrangler promotion workflow \u2014 production deployments risk untested regressions",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "PRAC-001",
+    "title": "Session notes handler not found in codebase scan \u2014 critical practitioner workflow absent from Guide/Agency tier",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "PRAC-002",
+    "title": "Notion sync integration handler absent from codebase \u2014 if marketed as a feature, constitutes undelivered paid functionality",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "PRAC-003",
+    "title": "Practitioner directory handler not found in scan \u2014 public profile discoverability for Guide/Agency tier unconfirmed",
+    "severity": "P0",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "PRAC-004",
+    "title": "Client invite email content not auditable \u2014 cold system email without Prime Self context yields <15% acceptance rate",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "PRAC-005",
+    "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) \u2014 key practitioner workflow missing",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "PRAC-006",
+    "title": "AI per-client context personalization depth to specific chart data (type, authority, profile) not confirmed",
+    "severity": "P1",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  },
+  {
+    "id": "PRAC-007",
+    "title": "No downgrade-instead-of-cancel path in billing portal \u2014 practitioners who would accept $19/mo are lost at $97/mo churn",
+    "severity": "P2",
+    "status": "resolved",
+    "source": "issue-registry.json"
+  }
+]
+```
+
+## Cloudflare Metrics (7d)
+
 ```json
 {
   "available": true,
@@ -32,7 +416,8 @@
 }
 ```
 
-### App Analytics
+## App Analytics
+
 ```json
 {
   "available": false,
@@ -40,24 +425,28 @@
 }
 ```
 
-### Code Quality Scan
-```json
-{
-  "totalFindings": 317,
-  "hardcodedSecrets": 0,
-  "emptyCatchBlocks": 0,
-  "unstructuredLogs": 317,
-  "techDebtComments": 0,
-  "filesScanned": 72
-}
-```
+## Flow Analysis
 
-## AI Audit
+### billing.js
+**Race Condition**: Checkout session creation and subscription state write are not atomic. If the webhook arrives before the DB write, the subscription is created with incorrect state.
+**Missing Idempotency**: `POST /api/billing/checkout` does not check for an existing pending session for the same user+price combination, allowing duplicate checkout sessions.
+**Quota Gap**: AI call quota is not checked before initiating Stripe checkout for tier upgrades.
 
-# Prime Self — Full-Spectrum Audit Report
-**Audit Mode: STABLE | Date: 2026-03-18 | API: prime-self-api.adrper79.workers.dev**
+### auth.js
+**Missing Validation**: Email verification token replay is possible — tokens are not invalidated after single use in the primary code path.
+**Incorrect Error Code**: OAuth callback errors return 200 with error payload in some paths rather than the correct 4xx status.
 
----
+### webhook.js
+**Missing Idempotency**: `customer.subscription.created` events are not deduplicated against a processed-event log. Stripe can retry events, causing double-credit of quota on network errors.
+**Charge Without Delivery**: If the DB write after `checkout.session.completed` fails, Stripe has charged the customer but the subscription is not activated. No compensation/retry logic present.
+
+### tierEnforcement.js
+**Quota Bypass Vector**: Tier enforcement reads the `subscription_tier` column but does not verify active subscription status. A cancelled subscription retains tier access until next sync.
+**Missing Validation**: Studio tier features are not gated — the tier check for `studio` falls through to `guide` level in some code paths.
+
+### rateLimit.js
+**Fail-Closed**: Rate limiter correctly returns 503 when KV is unavailable (verified by tests). ✅
+**Bypass Vector**: Rate limits are keyed on IP from `CF-Connecting-IP`. Behind a shared NAT or proxy, all users share the same limit bucket.
 
 ## CTO Synopsis
 
@@ -266,7 +655,7 @@ Fix P0 billing risks and data isolation before any paid acquisition. Structured 
 
 ---
 
-## Issue Registry
+## Master Issue Registry
 
 ```json
 [
@@ -275,366 +664,428 @@ Fix P0 billing risks and data isolation before any paid acquisition. Structured 
     "persona": "CTO",
     "severity": "P0",
     "area": "logging",
-    "title": "No request correlation IDs (X-Request-ID) — production incidents are undebuggable"
+    "title": "No request correlation IDs (X-Request-ID) \u2014 production incidents are undebuggable",
+    "status": "open"
   },
   {
     "id": "CTO-002",
     "persona": "CTO",
     "severity": "P0",
     "area": "logging",
-    "title": "317 unstructured console.log/error calls — no structured JSON logging across 72 files"
+    "title": "317 unstructured console.log/error calls \u2014 no structured JSON logging across 72 files",
+    "status": "open"
   },
   {
     "id": "CTO-003",
     "persona": "CTO",
     "severity": "P0",
     "area": "error-handling",
-    "title": "No retry wrapper on DB calls — Neon cold-start spikes cause silent failures"
+    "title": "No retry wrapper on DB calls \u2014 Neon cold-start spikes cause silent failures",
+    "status": "open"
   },
   {
     "id": "CTO-004",
     "persona": "CTO",
     "severity": "P0",
     "area": "observability",
-    "title": "13.33% production error rate (828/6212 requests) with no error tracking tooling to diagnose root cause"
+    "title": "13.33% production error rate (828/6212 requests) with no error tracking tooling to diagnose root cause",
+    "status": "open"
   },
   {
     "id": "CTO-005",
     "persona": "CTO",
     "severity": "P0",
     "area": "error-handling",
-    "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) — cascading failures unmitigated"
+    "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) \u2014 cascading failures unmitigated",
+    "status": "open"
   },
   {
     "id": "CTO-006",
     "persona": "CTO",
     "severity": "P1",
     "area": "handler-complexity",
-    "title": "auth.js exceeds 977 lines — monolithic handler resists safe refactoring and testing"
+    "title": "auth.js exceeds 977 lines \u2014 monolithic handler resists safe refactoring and testing",
+    "status": "open"
   },
   {
     "id": "CTO-007",
     "persona": "CTO",
     "severity": "P1",
     "area": "handler-complexity",
-    "title": "billing.js exceeds 474 lines — single-responsibility principle violated across multiple billing concerns"
+    "title": "billing.js exceeds 474 lines \u2014 single-responsibility principle violated across multiple billing concerns",
+    "status": "open"
   },
   {
     "id": "CTO-008",
     "persona": "CTO",
     "severity": "P1",
     "area": "testing",
-    "title": "273/273 passing tests with 13.33% prod error rate indicates test suite does not cover failing production paths"
+    "title": "273/273 passing tests with 13.33% prod error rate indicates test suite does not cover failing production paths",
+    "status": "open"
   },
   {
     "id": "CTO-009",
     "persona": "CTO",
     "severity": "P1",
     "area": "cron",
-    "title": "Cron handler runs 8+ sequential tasks without independent error boundaries — one failure may cascade to block downstream tasks"
+    "title": "Cron handler runs 8+ sequential tasks without independent error boundaries \u2014 one failure may cascade to block downstream tasks",
+    "status": "open"
   },
   {
     "id": "CTO-010",
     "persona": "CTO",
     "severity": "P1",
     "area": "logging",
-    "title": "No durationMs logging on DB queries — cannot identify slow queries contributing to error rate"
+    "title": "No durationMs logging on DB queries \u2014 cannot identify slow queries contributing to error rate",
+    "status": "open"
   },
   {
     "id": "CTO-011",
     "persona": "CTO",
     "severity": "P1",
     "area": "error-handling",
-    "title": "ROLLBACK failures swallowed via console.error — failed transaction rollbacks are silent in production"
+    "title": "ROLLBACK failures swallowed via console.error \u2014 failed transaction rollbacks are silent in production",
+    "status": "open"
   },
   {
     "id": "CTO-012",
     "persona": "CTO",
     "severity": "P2",
     "area": "logging",
-    "title": "PII-adjacent data (user IDs, subscription IDs) interpolated into flat log strings without sanitization policy"
+    "title": "PII-adjacent data (user IDs, subscription IDs) interpolated into flat log strings without sanitization policy",
+    "status": "open"
   },
   {
     "id": "CTO-013",
     "persona": "CTO",
     "severity": "P2",
     "area": "deployment",
-    "title": "No confirmed CI/CD pipeline — staging-to-production promotion discipline unverified"
+    "title": "No confirmed CI/CD pipeline \u2014 staging-to-production promotion discipline unverified",
+    "status": "open"
   },
   {
     "id": "CISO-001",
     "persona": "CISO",
     "severity": "P0",
     "area": "auth",
-    "title": "JWT stored in localStorage — XSS on any page = full account takeover; HttpOnly cookie migration required"
+    "title": "JWT stored in localStorage \u2014 XSS on any page = full account takeover; HttpOnly cookie migration required",
+    "status": "open"
   },
   {
     "id": "CISO-002",
     "persona": "CISO",
     "severity": "P0",
     "area": "data-isolation",
-    "title": "No confirmed row-level security or tenant scoping on practitioner/client data — cross-user data access via ID enumeration unmitigated"
+    "title": "No confirmed row-level security or tenant scoping on practitioner/client data \u2014 cross-user data access via ID enumeration unmitigated",
+    "status": "open"
   },
   {
     "id": "CISO-003",
     "persona": "CISO",
     "severity": "P0",
     "area": "csp",
-    "title": "CSP unsafe-inline likely present on vanilla JS PWA — XSS mitigation effectively disabled"
+    "title": "CSP unsafe-inline likely present on vanilla JS PWA \u2014 XSS mitigation effectively disabled",
+    "status": "open"
   },
   {
     "id": "CISO-004",
     "persona": "CISO",
     "severity": "P0",
     "area": "rate-limiting",
-    "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) — credential stuffing and email enumeration unmitigated"
+    "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) \u2014 credential stuffing and email enumeration unmitigated",
+    "status": "open"
   },
   {
     "id": "CISO-005",
     "persona": "CISO",
     "severity": "P1",
     "area": "webhooks",
-    "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed — unsigned webhook processing risk"
+    "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed \u2014 unsigned webhook processing risk",
+    "status": "open"
   },
   {
     "id": "CISO-006",
     "persona": "CISO",
     "severity": "P1",
     "area": "auth",
-    "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed — CSRF on OAuth callback unverified"
+    "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed \u2014 CSRF on OAuth callback unverified",
+    "status": "open"
   },
   {
     "id": "CISO-007",
     "persona": "CISO",
     "severity": "P1",
     "area": "data-isolation",
-    "title": "Agency handler data scoping not auditable — practitioner accessing other practitioner's client roster not ruled out"
+    "title": "Agency handler data scoping not auditable \u2014 practitioner accessing other practitioner's client roster not ruled out",
+    "status": "open"
   },
   {
     "id": "CISO-008",
     "persona": "CISO",
     "severity": "P2",
     "area": "logging",
-    "title": "User IDs in unstructured logs create GDPR-adjacent audit trail exposure in Cloudflare log retention"
+    "title": "User IDs in unstructured logs create GDPR-adjacent audit trail exposure in Cloudflare log retention",
+    "status": "open"
   },
   {
     "id": "CFO-001",
     "persona": "CFO",
     "severity": "P0",
     "area": "billing",
-    "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness — collecting revenue for undelivered product"
+    "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness \u2014 collecting revenue for undelivered product",
+    "status": "open"
   },
   {
     "id": "CFO-002",
     "persona": "CFO",
     "severity": "P0",
     "area": "billing",
-    "title": "No Stripe webhook idempotency handling — duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge"
+    "title": "No Stripe webhook idempotency handling \u2014 duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge",
+    "status": "open"
   },
   {
     "id": "CFO-003",
     "persona": "CFO",
     "severity": "P0",
     "area": "quota",
-    "title": "No confirmed pre-flight quota enforcement before AI calls — free-tier users can exhaust AI budget without cost gate"
+    "title": "No confirmed pre-flight quota enforcement before AI calls \u2014 free-tier users can exhaust AI budget without cost gate",
+    "status": "open"
   },
   {
     "id": "CFO-004",
     "persona": "CFO",
     "severity": "P0",
     "area": "analytics",
-    "title": "App analytics returning HTTP 401 — conversion funnel, ARPU, and churn metrics are completely blind"
+    "title": "App analytics returning HTTP 401 \u2014 conversion funnel, ARPU, and churn metrics are completely blind",
+    "status": "open"
   },
   {
     "id": "CFO-005",
     "persona": "CFO",
     "severity": "P1",
     "area": "billing",
-    "title": "Webhook-driven and cron-driven subscription downgrade paths can double-fire without explicit deduplication"
+    "title": "Webhook-driven and cron-driven subscription downgrade paths can double-fire without explicit deduplication",
+    "status": "open"
   },
   {
     "id": "CFO-006",
     "persona": "CFO",
     "severity": "P1",
     "area": "abuse",
-    "title": "Free tier abuse via account-per-email cycling possible without verified email gate on feature access"
+    "title": "Free tier abuse via account-per-email cycling possible without verified email gate on feature access",
+    "status": "open"
   },
   {
     "id": "CFO-007",
     "persona": "CFO",
     "severity": "P1",
     "area": "billing",
-    "title": "Proration logic on mid-cycle upgrades not confirmed — risk of revenue under- or over-collection"
+    "title": "Proration logic on mid-cycle upgrades not confirmed \u2014 risk of revenue under- or over-collection",
+    "status": "open"
   },
   {
     "id": "CFO-008",
     "persona": "CFO",
     "severity": "P2",
     "area": "billing",
-    "title": "No cancellation save/deflection flow — churn prevention revenue opportunity not captured"
+    "title": "No cancellation save/deflection flow \u2014 churn prevention revenue opportunity not captured",
+    "status": "open"
   },
   {
     "id": "CMO-001",
     "persona": "CMO",
     "severity": "P0",
     "area": "retention",
-    "title": "Human Design labels displayed without 'why it matters' life-implication copy — #1 confirmed churn driver in category"
+    "title": "Human Design labels displayed without 'why it matters' life-implication copy \u2014 #1 confirmed churn driver in category",
+    "status": "open"
   },
   {
     "id": "CMO-002",
     "persona": "CMO",
     "severity": "P0",
     "area": "practitioner-value",
-    "title": "Practitioner directory profiles not confirmed indexable by search engines — core $97 tier acquisition value prop undelivered"
+    "title": "Practitioner directory profiles not confirmed indexable by search engines \u2014 core $97 tier acquisition value prop undelivered",
+    "status": "open"
   },
   {
     "id": "CMO-003",
     "persona": "CMO",
     "severity": "P0",
     "area": "referral",
-    "title": "No referral mechanics built — highest-leverage growth channel for Human Design (practitioner→client→friend) untouched"
+    "title": "No referral mechanics built \u2014 highest-leverage growth channel for Human Design (practitioner\u2192client\u2192friend) untouched",
+    "status": "open"
   },
   {
     "id": "CMO-004",
     "persona": "CMO",
     "severity": "P1",
     "area": "onboarding",
-    "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point — no mitigation confirmed"
+    "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point \u2014 no mitigation confirmed",
+    "status": "open"
   },
   {
     "id": "CMO-005",
     "persona": "CMO",
     "severity": "P1",
     "area": "onboarding",
-    "title": "Empty practitioner dashboard on first login — no empty-state guidance or 'add first client' CTA confirmed"
+    "title": "Empty practitioner dashboard on first login \u2014 no empty-state guidance or 'add first client' CTA confirmed",
+    "status": "open"
   },
   {
     "id": "CMO-006",
     "persona": "CMO",
     "severity": "P1",
     "area": "social",
-    "title": "Shareable chart cards / social share hooks not confirmed — organic acquisition from existing users not captured"
+    "title": "Shareable chart cards / social share hooks not confirmed \u2014 organic acquisition from existing users not captured",
+    "status": "open"
   },
   {
     "id": "CMO-007",
     "persona": "CMO",
     "severity": "P1",
     "area": "conversion",
-    "title": "No trial or freemium-to-Guide upgrade path confirmed — cold conversion to $97/mo from landing page will be sub-1%"
+    "title": "No trial or freemium-to-Guide upgrade path confirmed \u2014 cold conversion to $97/mo from landing page will be sub-1%",
+    "status": "open"
   },
   {
     "id": "CMO-008",
     "persona": "CMO",
     "severity": "P2",
     "area": "onboarding",
-    "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed — risks feeling generic"
+    "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed \u2014 risks feeling generic",
+    "status": "open"
   },
   {
     "id": "CIO-001",
     "persona": "CIO",
     "severity": "P0",
     "area": "observability",
-    "title": "No Sentry or equivalent error tracking — 828 production errors in 7 days have no grouping, stack traces, or affected-user counts"
+    "title": "No Sentry or equivalent error tracking \u2014 828 production errors in 7 days have no grouping, stack traces, or affected-user counts",
+    "status": "open"
   },
   {
     "id": "CIO-002",
     "persona": "CIO",
     "severity": "P0",
     "area": "logging",
-    "title": "Zero structured log lines — Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure"
+    "title": "Zero structured log lines \u2014 Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure",
+    "status": "open"
   },
   {
     "id": "CIO-003",
     "persona": "CIO",
     "severity": "P0",
     "area": "logging",
-    "title": "No X-Request-ID generated or threaded through handlers — cross-service request tracing impossible"
+    "title": "No X-Request-ID generated or threaded through handlers \u2014 cross-service request tracing impossible",
+    "status": "open"
   },
   {
     "id": "CIO-004",
     "persona": "CIO",
     "severity": "P1",
     "area": "health",
-    "title": "Health endpoint depth unconfirmed — /api/health?full=1 with DB, KV, Stripe reachability checks not verified"
+    "title": "Health endpoint depth unconfirmed \u2014 /api/health?full=1 with DB, KV, Stripe reachability checks not verified",
+    "status": "open"
   },
   {
     "id": "CIO-005",
     "persona": "CIO",
     "severity": "P1",
     "area": "cron",
-    "title": "Cron tasks lack independent timeouts — a hung DB call in transit snapshot can starve SMS digest delivery"
+    "title": "Cron tasks lack independent timeouts \u2014 a hung DB call in transit snapshot can starve SMS digest delivery",
+    "status": "open"
   },
   {
     "id": "CIO-006",
     "persona": "CIO",
     "severity": "P1",
     "area": "analytics",
-    "title": "App analytics endpoint returning HTTP 401 — operational metrics dashboard is broken"
+    "title": "App analytics endpoint returning HTTP 401 \u2014 operational metrics dashboard is broken",
+    "status": "open"
   },
   {
     "id": "CIO-007",
     "persona": "CIO",
     "severity": "P2",
     "area": "cache",
-    "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable — stale data risk on high-read paths"
+    "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable \u2014 stale data risk on high-read paths",
+    "status": "open"
   },
   {
     "id": "CIO-008",
     "persona": "CIO",
     "severity": "P2",
     "area": "deployment",
-    "title": "No confirmed staging environment or Wrangler promotion workflow — production deployments risk untested regressions"
+    "title": "No confirmed staging environment or Wrangler promotion workflow \u2014 production deployments risk untested regressions",
+    "status": "open"
   },
   {
     "id": "PRAC-001",
     "persona": "Practitioner",
     "severity": "P0",
     "area": "feature-gap",
-    "title": "Session notes handler not found in codebase scan — critical practitioner workflow absent from Guide/Agency tier"
+    "title": "Session notes handler not found in codebase scan \u2014 critical practitioner workflow absent from Guide/Agency tier",
+    "status": "open"
   },
   {
     "id": "PRAC-002",
     "persona": "Practitioner",
     "severity": "P0",
     "area": "feature-gap",
-    "title": "Notion sync integration handler absent from codebase — if marketed as a feature, constitutes undelivered paid functionality"
+    "title": "Notion sync integration handler absent from codebase \u2014 if marketed as a feature, constitutes undelivered paid functionality",
+    "status": "open"
   },
   {
     "id": "PRAC-003",
     "persona": "Practitioner",
     "severity": "P0",
     "area": "feature-gap",
-    "title": "Practitioner directory handler not found in scan — public profile discoverability for Guide/Agency tier unconfirmed"
+    "title": "Practitioner directory handler not found in scan \u2014 public profile discoverability for Guide/Agency tier unconfirmed",
+    "status": "open"
   },
   {
     "id": "PRAC-004",
     "persona": "Practitioner",
     "severity": "P1",
     "area": "client-onboarding",
-    "title": "Client invite email content not auditable — cold system email without Prime Self context yields <15% acceptance rate"
+    "title": "Client invite email content not auditable \u2014 cold system email without Prime Self context yields <15% acceptance rate",
+    "status": "open"
   },
   {
     "id": "PRAC-005",
     "persona": "Practitioner",
     "severity": "P1",
     "area": "interpretation",
-    "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) — key practitioner workflow missing"
+    "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) \u2014 key practitioner workflow missing",
+    "status": "open"
   },
   {
     "id": "PRAC-006",
     "persona": "Practitioner",
     "severity": "P1",
     "area": "ai",
-    "title": "AI per-client context personalization depth to specific chart data (type, authority, profile) not confirmed"
+    "title": "AI per-client context personalization depth to specific chart data (type, authority, profile) not confirmed",
+    "status": "open"
   },
   {
     "id": "PRAC-007",
     "persona": "Practitioner",
     "severity": "P2",
     "area": "billing",
-    "title": "No downgrade-instead-of-cancel path in billing portal — practitioners who would accept $19/mo are lost at $97/mo churn"
+    "title": "No downgrade-instead-of-cancel path in billing portal \u2014 practitioners who would accept $19/mo are lost at $97/mo churn",
+    "status": "open"
   }
 ]
+```
+
+## Delta Summary
+
+```json
+{
+  "new": 52,
+  "resolved": 0,
+  "regressions": 0
+}
 ```
 
 ---

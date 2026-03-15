@@ -28,6 +28,7 @@ import {
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
+import { withCircuitBreaker } from '../lib/circuitBreaker.js';
 import { createLogger } from '../lib/logger.js';
 
 // Validate Stripe redirect URLs — must be https and on the same frontend origin.
@@ -123,6 +124,26 @@ export async function handleCheckout(request, env, ctx) {
       );
     }
     
+    // CFO-002-BL: Idempotency check — if this customer already has an open
+    // (unpaid) Stripe Checkout session for the same price, return it instead of
+    // creating a second one. This prevents duplicate sessions when the user
+    // double-clicks or retries before the first session expires.
+    if (customerId) {
+      const existingSessions = await stripe.checkout.sessions.list({
+        customer: customerId,
+        status: 'open',
+        limit: 5,
+      });
+      const dupe = existingSessions.data.find(s =>
+        s.line_items?.data?.some?.(li => li.price?.id === priceId) ||
+        s.metadata?.user_id === user.id && s.metadata?.tier === tier
+      );
+      if (dupe) {
+        log.info('checkout_session_reused', { userId: user.id, tier, sessionId: dupe.id });
+        return Response.json({ ok: true, sessionId: dupe.id, url: dupe.url });
+      }
+    }
+
     let discounts;
     if (promoCode) {
       const normalizedPromoCode = String(promoCode).trim().toUpperCase();
@@ -143,8 +164,10 @@ export async function handleCheckout(request, env, ctx) {
       discounts = [{ promotion_code: promoResult.data[0].id }];
     }
 
-    // Create checkout session
-    const session = await createCheckoutSession(stripe, {
+    // Create checkout session (circuit-breaker protected)
+    // CMO-007: Offer 7-day trial for new practitioner subscribers
+    const trialDays = (tier === 'practitioner' && user.tier === 'free') ? 7 : 0;
+    const session = await withCircuitBreaker('stripe', () => createCheckoutSession(stripe, {
       customerId,
       priceId,
       successUrl: successUrl || `${env.FRONTEND_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -154,8 +177,9 @@ export async function handleCheckout(request, env, ctx) {
         user_id: user.id,
         tier: tier,
         billing_period: period
-      }
-    });
+      },
+      trialDays
+    }));
     
     trackEvent(env, EVENTS.CHECKOUT_START, { userId: user.id, tier, period }).catch(e => log.error('track_checkout_start_failed', { error: e.message }));
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
@@ -377,11 +401,11 @@ export async function handleCancelSubscription(request, env, ctx) {
     const { immediately } = body;
     
     const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
-    const canceledSubscription = await cancelSubscription(
+    const canceledSubscription = await withCircuitBreaker('stripe', () => cancelSubscription(
       stripe,
       subscription.stripe_subscription_id,
       immediately || false
-    );
+    ));
     
     // Update database — BL-FIX: wrap in transaction so cancellation and tier downgrade stay atomic
     const newStatus = immediately ? 'canceled' : 'active';
@@ -481,11 +505,11 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     const tierConfig = getTier(tier, env);
     const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
     
-    const updatedSubscription = await updateSubscription(
+    const updatedSubscription = await withCircuitBreaker('stripe', () => updateSubscription(
       stripe,
       subscription.stripe_subscription_id,
       tierConfig.priceId
-    );
+    ));
     
     // Update database — BL-FIX: wrap in transaction so subscription and user tier stay in sync
     await query.transaction(async (q) => {

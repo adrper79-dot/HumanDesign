@@ -17,6 +17,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { dispatchWebhookEvent } from '../lib/webhookDispatcher.js';
 import { sendNotificationToUser } from './push.js';
+import { normalizeTierName } from '../lib/stripe.js';
 
 /**
  * Main handler for alert routes
@@ -132,13 +133,15 @@ async function createAlert(request, env, user) {
       }, { status: 400 });
     }
 
-    // Check alert limit per tier (BL-FIX-H2: added guide tier)
+    // Check alert limit per tier — normalize to handle legacy aliases
+    // (e.g. 'guide' → 'practitioner', 'studio' / 'white_label' → 'agency')
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const { rows: countRows } = await query(QUERIES.countUserAlerts, [user.id]);
     const existingCount = countRows[0];
 
-    const tierLimits = { free: 3, individual: 10, regular: 10, practitioner: 25, agency: Infinity, white_label: Infinity, seeker: 10, guide: 25 };
-    const limit = tierLimits[user.tier] || 3;
+    const canonicalTier = normalizeTierName(user.tier);
+    const tierLimits = { free: 3, individual: 10, practitioner: 25, agency: Infinity };
+    const limit = tierLimits[canonicalTier] ?? 3;
 
     if (existingCount.count >= limit) {
       return Response.json({
@@ -392,10 +395,10 @@ async function createAlertFromTemplate(request, env, user, templateId) {
       }, { status: 404 });
     }
 
-    // Check tier requirement
-    const tierHierarchy = { free: 0, regular: 1, practitioner: 2, white_label: 3, seeker: 1, guide: 2 };
-    const requiredTier = tierHierarchy[template.tier_required] || 0;
-    const userTier = tierHierarchy[user.tier] || 0;
+    // Check tier requirement — normalize to handle legacy aliases
+    const tierHierarchy = { free: 0, individual: 1, practitioner: 2, agency: 3 };
+    const requiredTier = tierHierarchy[normalizeTierName(template.tier_required)] ?? 0;
+    const userTier = tierHierarchy[normalizeTierName(user.tier)] ?? 0;
 
     if (userTier < requiredTier) {
       return Response.json({

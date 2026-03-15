@@ -146,12 +146,21 @@ async function handleCallback(provider, request, env) {
 
     if (!code || !state) return oauthErrorRedirect(frontendUrl, 'Missing code or state');
 
-    // Verify CSRF state token
-    const storedProvider = env.CACHE ? await env.CACHE.get(`oauth_state:${state}`) : null;
-    if (storedProvider && storedProvider !== provider) {
-      return oauthErrorRedirect(frontendUrl, 'State mismatch');
+    // CISO-006: Verify CSRF state token — fail closed if state cannot be verified.
+    // If KV is configured, the state MUST be present and match; missing state
+    // (e.g. forged callback or expired token) is treated as an attack.
+    if (env.CACHE) {
+      const storedProvider = await env.CACHE.get(`oauth_state:${state}`).catch(() => null);
+      if (!storedProvider) {
+        return oauthErrorRedirect(frontendUrl, 'Invalid or expired OAuth state — please try again');
+      }
+      if (storedProvider !== provider) {
+        return oauthErrorRedirect(frontendUrl, 'State mismatch');
+      }
+      env.CACHE.delete(`oauth_state:${state}`).catch(e => console.error('[oauth] state cleanup failed:', e.message));
     }
-    if (env.CACHE) env.CACHE.delete(`oauth_state:${state}`).catch(e => console.error('[oauth] state cleanup failed:', e.message));
+    // If KV is not configured (local dev only) we skip the state check.
+    // In production, CACHE must always be bound.
 
     // Exchange code for user info
     let providerUserId, providerEmail, displayName, avatarUrl;

@@ -3780,11 +3780,77 @@ async function saveDirectoryProfile() {
       return;
     }
 
-    showNotification('Directory profile saved', 'success');
+    const profileUrl = body.is_public
+      ? `${window.location.origin}/directory/${encodeURIComponent(body.display_name)}`
+      : null;
+    showNotification(
+      profileUrl
+        ? 'Directory profile saved! <a href="' + escapeHtml(profileUrl) + '" target="_blank" style="color:var(--gold);text-decoration:underline">View my profile →</a>'
+        : 'Directory profile saved',
+      'success'
+    );
     toggleDirectoryForm();
     await loadDirectoryProfile();
   } catch (e) {
     showNotification('Error saving profile: ' + e.message, 'error');
+  }
+}
+
+// ── Notion Sync ──
+async function checkNotionStatus() {
+  const statusEl = document.getElementById('notionStatus');
+  const actionsEl = document.getElementById('notionActions');
+  const connectEl = document.getElementById('notionConnectWrap');
+  if (!statusEl) return;
+  statusEl.textContent = 'Checking…';
+  try {
+    const res = await apiFetch('/api/notion/status');
+    if (res.connected) {
+      statusEl.innerHTML = `<span class="pill green">Connected</span> to <strong>${escapeHtml(res.workspaceName || 'Notion')}</strong>`;
+      if (actionsEl) actionsEl.style.display = '';
+      if (connectEl) connectEl.style.display = 'none';
+    } else {
+      statusEl.textContent = 'Not connected';
+      if (actionsEl) actionsEl.style.display = 'none';
+      if (connectEl) connectEl.style.display = '';
+    }
+  } catch (e) {
+    statusEl.textContent = 'Not connected';
+    if (actionsEl) actionsEl.style.display = 'none';
+    if (connectEl) connectEl.style.display = '';
+  }
+}
+
+async function connectNotion() {
+  try {
+    const res = await apiFetch('/api/notion/auth');
+    if (res.url) window.location.href = res.url;
+  } catch (e) {
+    showNotification('Could not start Notion connection: ' + e.message, 'error');
+  }
+}
+
+async function syncNotionClients() {
+  const btn = document.getElementById('notionSyncBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  try {
+    const res = await apiFetch('/api/notion/sync/clients', { method: 'POST' });
+    showNotification(`Synced ${res.synced ?? 0} clients to Notion`, 'success');
+  } catch (e) {
+    showNotification('Sync failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Sync Clients to Notion'; }
+  }
+}
+
+async function disconnectNotion() {
+  if (!confirm('Disconnect Notion? Your synced data in Notion will remain but no new syncs will occur.')) return;
+  try {
+    await apiFetch('/api/notion/disconnect', { method: 'DELETE' });
+    showNotification('Notion disconnected', 'success');
+    checkNotionStatus();
+  } catch (e) {
+    showNotification('Error disconnecting: ' + e.message, 'error');
   }
 }
 
@@ -5719,6 +5785,10 @@ window.updateSessionNote = updateSessionNote;
 window.deleteSessionNote = deleteSessionNote;
 window.toggleDirectoryForm = toggleDirectoryForm;
 window.saveDirectoryProfile = saveDirectoryProfile;
+window.checkNotionStatus = checkNotionStatus;
+window.connectNotion = connectNotion;
+window.syncNotionClients = syncNotionClients;
+window.disconnectNotion = disconnectNotion;
 window.switchToPricingModal = switchToPricingModal;
 window.switchToPracPricingModal = switchToPracPricingModal;
 window.logout = logout;
@@ -6020,6 +6090,13 @@ async function loadAchievements() {
 
     // Badge grid
     const achievements = achData.achievements || [];
+    const newlyUnlocked = achievements.filter(a => a.unlocked && a.unlockedAt &&
+      (Date.now() - new Date(a.unlockedAt).getTime()) < 86400000);
+    if (newlyUnlocked.length > 0) {
+      newlyUnlocked.forEach(a => {
+        showNotification(`🎉 Achievement Unlocked: ${a.name} (+${a.points || 0} pts)`, 'success');
+      });
+    }
     if (status) status.textContent = '';
     if (badges) badges.innerHTML = achievements.length
       ? achievements.map(a => `

@@ -33,6 +33,7 @@ import {
   sendUpgradeNudgeEmail
 } from './lib/email.js';
 import { createCronLogger } from './lib/logger.js';
+import { initSentry } from './lib/sentry.js';
 
 /**
  * CIO-005: Race a promise against a hard timeout so a hung DB call in one
@@ -55,6 +56,7 @@ function withTimeout(promise, ms, label) {
  */
 export async function runDailyTransitCron(env) {
   const log = createCronLogger('cron');
+  const sentry = initSentry(env);
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth() + 1;
@@ -87,6 +89,7 @@ export async function runDailyTransitCron(env) {
 
     // ─── Step 3: Send digests to opted-in users ─────────
     // BL-FIX: Use named query instead of SELECT * to avoid exposing password_hash in memory
+    await withTimeout((async () => {
     const usersResult = await query(
       QUERIES.getSmsSubscribedUsers + ` AND birth_date IS NOT NULL`
     );
@@ -111,6 +114,7 @@ export async function runDailyTransitCron(env) {
     }
 
     log.info('digest_delivery_complete', { sent, failed });
+    })(), 45000, 'sms_digest');
 
     // ─── Step 4: Process webhook retries ────────────────
     try {
@@ -118,6 +122,7 @@ export async function runDailyTransitCron(env) {
       log.info('webhook_retry_complete');
     } catch (webhookErr) {
       log.error('webhook_retry_error', { error: webhookErr?.message });
+      sentry.captureException(webhookErr, { tags: { source: 'cron', step: 'webhook_retry' } });
       // Don't throw - webhook failures shouldn't break the main cron
     }
 
@@ -132,6 +137,7 @@ export async function runDailyTransitCron(env) {
 
     // ─── Step 5: Send push notifications ────────────────
     try {
+      await withTimeout((async () => {
       // Get users with active push subscriptions and transit_daily preference enabled
       const { rows: pushUsers } = await query(QUERIES.cronGetPushUsers);
       log.info('push_notification_users', { count: pushUsers.length });
@@ -172,13 +178,16 @@ export async function runDailyTransitCron(env) {
       }
 
       log.info('push_notifications_sent', { sent: pushSent, failed: pushFailed });
+      })(), 45000, 'push_notifications');
     } catch (pushErr) {
       log.error('push_processing_error', { error: pushErr?.message });
+      sentry.captureException(pushErr, { tags: { source: 'cron', step: 'push_notifications' } });
       // Don't throw - push failures shouldn't break the main cron
     }
 
     // ─── Step 6: Evaluate transit alerts ────────────────
     try {
+      await withTimeout((async () => {
       // Get users with active transit alerts
       const { rows: alertUsers } = await query(QUERIES.cronGetAlertUsers);
       log.info('alert_evaluation_start', { count: alertUsers.length });
@@ -198,13 +207,16 @@ export async function runDailyTransitCron(env) {
       }
 
       log.info('alert_evaluation_complete', { alertsTriggered });
+      })(), 30000, 'alert_evaluation');
     } catch (alertErr) {
       log.error('alert_processing_error', { error: alertErr?.message });
+      sentry.captureException(alertErr, { tags: { source: 'cron', step: 'alert_evaluation' } });
       // Don't throw - alert failures shouldn't break the main cron
     }
 
     // ─── Step 7: Email Drip Campaigns (BL-ENG-007) ─────
     try {
+      await withTimeout((async () => {
       log.info('drip_campaigns_start');
       let emailsSent = 0, emailsFailed = 0;
 
@@ -302,8 +314,10 @@ export async function runDailyTransitCron(env) {
       }
 
       log.info('drip_campaigns_complete', { sent: emailsSent, failed: emailsFailed });
+      })(), 60000, 'drip_campaigns');
     } catch (emailErr) {
       log.error('drip_campaign_error', { error: emailErr?.message });
+      sentry.captureException(emailErr, { tags: { source: 'cron', step: 'drip_campaigns' } });
       // Don't throw - email failures shouldn't break the main cron
     }
 
@@ -351,6 +365,7 @@ export async function runDailyTransitCron(env) {
 
   } catch (err) {
     log.error('cron_fatal_error', { error: err?.message, stack: err?.stack?.split('\n').slice(0,3).join(' | ') });
+    sentry.captureException(err, { tags: { source: 'cron', step: 'fatal' } });
     throw err;
   }
 }

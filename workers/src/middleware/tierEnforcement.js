@@ -262,9 +262,15 @@ export async function enforceDailyCeiling(request, env, action) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
   }
 
-  // KV binding is optional — skip if not configured
+  // CFO-003: KV binding is REQUIRED for quota enforcement.
+  // Fail closed — if KV is not available, deny the request rather than
+  // allowing unlimited free access.
   if (!env.RATE_LIMIT_KV) {
-    return null;
+    console.error('[enforceDailyCeiling] RATE_LIMIT_KV not bound — blocking request');
+    return Response.json(
+      { error: 'Service temporarily unavailable — please try again shortly' },
+      { status: 503, headers: { 'Retry-After': '30' } }
+    );
   }
 
   const tier = request._tier || 'free';
@@ -302,9 +308,13 @@ export async function enforceDailyCeiling(request, env, action) {
 
     return null; // Within daily ceiling
   } catch (error) {
-    // KV read failure — fail open to avoid blocking legitimate requests
+    // CFO-003: Fail closed — KV read failure should block the request
+    // to prevent unlimited free access during KV outages.
     console.error('Daily ceiling check failed:', error);
-    return null;
+    return Response.json(
+      { error: 'Service temporarily unavailable — please try again shortly' },
+      { status: 503, headers: { 'Retry-After': '30' } }
+    );
   }
 }
 

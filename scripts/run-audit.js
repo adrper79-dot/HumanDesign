@@ -18,12 +18,13 @@
  */
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs';
-import { resolve }    from 'path';
+import { resolve, join }    from 'path';
 
 import { collectTestResults }       from './collectors/test-results.js';
 import { collectCloudflareMetrics } from './collectors/cloudflare-metrics.js';
 import { collectAppMetrics }        from './collectors/app-metrics.js';
 import { collectCodeQuality }       from './collectors/code-quality.js';
+import { collectKnownIssues }       from './collectors/known-issues.js';
 import {
   readRegistry,
   writeRegistry,
@@ -38,6 +39,11 @@ const AUDITS_DIR   = resolve(process.cwd(), 'audits');
 const TODAY        = new Date().toISOString().slice(0, 10);
 const VITALS_ONLY  = process.argv.includes('--vitals-only');
 const FORCE_FULL   = process.argv.includes('--force-full');
+
+// ─── Prompt size budget constants ────────────────────────────────────
+const MAX_HANDLER_LINES           = 200;  // lines of handler code to include per file
+const MAX_KNOWN_ISSUES_IN_PROMPT  = 20;   // known issues to include in the AI prompt
+const MAX_REGISTRY_ISSUES_IN_PROMPT = 30; // open registry issues to include in the AI prompt
 
 // ─── Ensure output directory ─────────────────────────────────────────
 
@@ -58,17 +64,21 @@ async function main() {
 
   // ── Collect all data in parallel ──
   console.log('[Audit] Collecting data...');
-  const [testResults, cfMetrics, appMetrics, codeQuality] = await Promise.all([
+  const [testResults, cfMetrics, appMetrics, codeQuality, knownIssues] = await Promise.all([
     collectTestResults()       .catch(e => ({ error: e.message })),
     collectCloudflareMetrics() .catch(e => ({ available: false, reason: e.message })),
     collectAppMetrics()        .catch(e => ({ available: false, reason: e.message })),
     collectCodeQuality()       .catch(e => ({ error: e.message })),
+    collectKnownIssues()       .catch(e => ({ issues: [], error: e.message })),
   ]);
+
+  const handlerContent = collectHandlerFiles();
 
   console.log(`[Audit] Tests: ${testResults.passed}/${testResults.total} passed, ${testResults.failed} failed`);
   console.log(`[Audit] CF Metrics: ${cfMetrics.available ? `${cfMetrics.totalRequests} reqs, ${cfMetrics.errorRatePct}% errors` : 'unavailable'}`);
   console.log(`[Audit] App Metrics: ${appMetrics.available ? `DAU=${appMetrics.dau}` : 'unavailable'}`);
   console.log(`[Audit] Code Quality: ${codeQuality.summary?.totalFindings ?? 'error'} findings`);
+  console.log(`[Audit] Known Issues: ${knownIssues.issues?.length ?? 0} open issues from previous audits`);
 
   let auditReport = null;
   let newIssues   = [];
@@ -76,7 +86,7 @@ async function main() {
   // ── Full AI audit ──
   if (runFull) {
     console.log('[Audit] Running full AI audit (calling Anthropic API)...');
-    const result = await runFullAudit({ testResults, cfMetrics, appMetrics, codeQuality, registry, mode });
+    const result = await runFullAudit({ testResults, cfMetrics, appMetrics, codeQuality, knownIssues, handlerContent, registry, mode });
     auditReport = result.report;
     newIssues   = result.issues;
   }
@@ -114,7 +124,7 @@ async function main() {
   const outputPath = resolve(AUDITS_DIR, filename);
   const outputMd   = buildMarkdown({
     runFull, mode, TODAY, testResults, cfMetrics, appMetrics, codeQuality,
-    auditReport, counts, delta, runRecord,
+    knownIssues, auditReport, counts, delta, runRecord,
   });
 
   writeFileSync(outputPath, outputMd, 'utf8');
@@ -137,14 +147,14 @@ async function main() {
 
 // ─── Full AI Audit ───────────────────────────────────────────────────
 
-async function runFullAudit({ testResults, cfMetrics, appMetrics, codeQuality, registry, mode }) {
+async function runFullAudit({ testResults, cfMetrics, appMetrics, codeQuality, knownIssues, handlerContent, registry, mode }) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.warn('[Audit] ANTHROPIC_API_KEY not set — skipping AI personas.');
     return { report: null, issues: [] };
   }
 
-  const prompt = buildAuditPrompt({ testResults, cfMetrics, appMetrics, codeQuality, registry, mode });
+  const prompt = buildAuditPrompt({ testResults, cfMetrics, appMetrics, codeQuality, knownIssues, handlerContent, registry, mode });
 
   let res;
   try {
@@ -182,19 +192,86 @@ async function runFullAudit({ testResults, cfMetrics, appMetrics, codeQuality, r
 }
 
 function extractIssueRegistry(text) {
-  const match = text.match(/```json\s*\[[\s\S]*?\]\s*```/);
-  if (!match) return [];
+  // Match all JSON array blocks in the response
+  const matches = [...text.matchAll(/```json\s*(\[[\s\S]*?\])\s*```/g)];
+  if (!matches.length) return [];
+
+  // Find the last JSON array that looks like an issue registry
+  // (contains objects with id, persona, severity fields)
+  const issueArrayMatches = matches.filter(m => {
+    try {
+      const parsed = JSON.parse(m[1]);
+      return Array.isArray(parsed) && parsed.length > 0 &&
+        parsed[0] && typeof parsed[0] === 'object' &&
+        'id' in parsed[0] && 'severity' in parsed[0];
+    } catch {
+      return false;
+    }
+  });
+
+  const target = issueArrayMatches.length > 0
+    ? issueArrayMatches[issueArrayMatches.length - 1]
+    : matches[matches.length - 1];
+
   try {
-    return JSON.parse(match[0].replace(/```json\s*/, '').replace(/\s*```/, ''));
+    const parsed = JSON.parse(target[1]);
+    if (!Array.isArray(parsed)) return [];
+    // Ensure every issue has status: "open" if AI omitted it
+    return parsed.map(issue => ({
+      ...issue,
+      status: issue.status || 'open',
+    }));
   } catch {
     return [];
   }
 }
 
-// ─── Prompt Builder ──────────────────────────────────────────────────
+// ─── Handler File Reader ─────────────────────────────────────────────
 
-function buildAuditPrompt({ testResults, cfMetrics, appMetrics, codeQuality, registry, mode }) {
-  const prevIssues = registry.issues.filter(i => i.status === 'open').slice(0, 30);
+/**
+ * Read key handler and middleware files for AI flow analysis.
+ * Truncates each file to keep prompt size manageable.
+ */
+function collectHandlerFiles() {
+  const targets = [
+    { key: 'billing',         path: 'workers/src/handlers/billing.js' },
+    { key: 'auth',            path: 'workers/src/handlers/auth.js' },
+    { key: 'webhook',         path: 'workers/src/handlers/webhook.js' },
+    { key: 'tierEnforcement', path: 'workers/src/middleware/tierEnforcement.js' },
+    { key: 'rateLimit',       path: 'workers/src/middleware/rateLimit.js' },
+  ];
+
+  const files = {};
+  for (const { key, path: relPath } of targets) {
+    const fullPath = resolve(process.cwd(), relPath);
+    if (existsSync(fullPath)) {
+      try {
+        // Truncate at MAX_HANDLER_LINES lines to keep context window manageable
+        const content = readFileSync(fullPath, 'utf8')
+          .split('\n').slice(0, MAX_HANDLER_LINES).join('\n');
+        files[key] = content;
+      } catch {
+        files[key] = `/* Error reading ${relPath} */`;
+      }
+    } else {
+      files[key] = `/* File not found: ${relPath} */`;
+    }
+  }
+  return files;
+}
+
+function buildAuditPrompt({ testResults, cfMetrics, appMetrics, codeQuality, knownIssues, handlerContent, registry, mode }) {
+  const prevIssues = registry.issues.filter(i => i.status === 'open').slice(0, MAX_REGISTRY_ISSUES_IN_PROMPT);
+
+  // Summarise known issues for the prompt (keep size in check)
+  const knownIssuesSummary = (knownIssues?.issues || []).slice(0, MAX_KNOWN_ISSUES_IN_PROMPT)
+    .map(i => `- [${i.severity}] ${i.title} (${i.source})`)
+    .join('\n') || '(none)';
+
+  // Summarise handler content (billing + webhook most critical)
+  const handlerSummary = Object.entries(handlerContent || {})
+    .map(([k, v]) => `\n### ${k}.js\n\`\`\`js\n${v}\n\`\`\``)
+    .join('\n');
 
   return `You are conducting a full-spectrum audit of Prime Self — a Cloudflare Workers API + vanilla JS PWA.
 Product: Personal development SaaS using Human Design synthesis. Tiers: Free, Individual ($19/mo), Guide/Practitioner ($97/mo), Agency ($349/mo).
@@ -213,31 +290,48 @@ ${JSON.stringify(cfMetrics, null, 2)}
 ${JSON.stringify(appMetrics, null, 2)}
 
 ### Code Quality Scan
-${JSON.stringify(codeQuality, null, 2)}
+${JSON.stringify(codeQuality?.summary, null, 2)}
 
-### Currently Open Issues from Previous Run
+### Known Issues from Previous Audits (open)
+${knownIssuesSummary}
+
+### Currently Open Issues from Registry
 ${JSON.stringify(prevIssues, null, 2)}
+
+### Handler & Middleware Source (for flow analysis)
+${handlerSummary}
 
 ## YOUR TASK
 
-Produce a structured audit report with these EXACT sections in this order:
+Produce a structured audit report with these EXACT section names and order.
+Use ## (H2) for every section header below.
 
-### CTO Synopsis
+## Flow Analysis
+Analyze billing.js, auth.js, webhook.js, tierEnforcement.js, rateLimit.js provided above.
+Identify for each file:
+- Race conditions
+- Missing idempotency keys
+- Incorrect HTTP error codes
+- Quota enforcement gaps
+- Any path that could result in a charge without delivery or delivery without a charge
+Be specific with file:function references.
+
+## CTO Synopsis
 Analyze: architecture soundness, handler complexity, missing error handling patterns (no structured logging, no request IDs, no retry wrapper on DB calls), test coverage gaps, tech debt that blocks scaling. Rate each area GREEN/YELLOW/RED. 300 words max.
 
-### CISO Synopsis
+## CISO Synopsis
 Analyze: JWT in localStorage (known gap — HttpOnly cookies pending), CSP unsafe-inline, OAuth flow, practitioner data isolation (can User A see User B?), Stripe webhook signature verification, SQL injection surface, rate limiting gaps. Rate each area GREEN/YELLOW/RED. 300 words max.
 
-### CFO Synopsis
+## CFO Synopsis
 Analyze: Studio tier checkout active but features not built (BL-MV-N1 CRIT), Stripe webhook idempotency (double-charge risk), subscription state sync, quota enforcement before AI calls, free tier abuse vectors, revenue recognition. Rate each area GREEN/YELLOW/RED. 300 words max.
 
-### CMO Synopsis
+## CMO Synopsis
 Analyze: registration-to-profile funnel drop points, "why it matters" explanations (#1 churn driver — every data point shows raw labels without life implications), onboarding Savannah arc quality, practitioner dashboard discoverability, referral mechanics, social share hooks. Rate each area GREEN/YELLOW/RED. 300 words max.
 
-### CIO Synopsis
+## CIO Synopsis
 Analyze: structured logging coverage (is X-Request-ID present? durationMs logged?), Sentry integration, health endpoint depth (/api/health?full=1), KV cache strategy, Worker CPU efficiency from CF metrics, deployment pipeline, cron job reliability. Rate each area GREEN/YELLOW/RED. 300 words max.
 
-### Practitioner UX Journey
+## Practitioner UX Journey
 Walk through steps 1-10:
 1. Discovery → signup → Guide tier checkout
 2. Dashboard first load
@@ -251,11 +345,11 @@ Walk through steps 1-10:
 10. Billing portal / cancel flow
 For each: complete? gaps? friction points? Rate 1 (broken) to 5 (seamless).
 
-### CEO Executive Summary
+## CEO Executive Summary
 200 words max. Overall health. Top 5 issues that would cause a practitioner to churn. Top 3 legal/financial risks. Readiness rating: NOT READY / SOFT LAUNCH READY / LAUNCH READY.
 
-### Issue Registry
-Output a JSON array of ALL issues identified across all personas. Use this exact format:
+## Master Issue Registry
+Output a JSON array of ALL issues identified across all personas. Use this EXACT format including the status field:
 
 \`\`\`json
 [
@@ -264,7 +358,8 @@ Output a JSON array of ALL issues identified across all personas. Use this exact
     "persona": "CTO",
     "severity": "P0",
     "area": "logging",
-    "title": "No request correlation IDs — undebuggable in production"
+    "title": "No request correlation IDs — undebuggable in production",
+    "status": "open"
   }
 ]
 \`\`\`
@@ -274,55 +369,118 @@ Severity rules:
 - P1: Degrades experience significantly or blocks a user journey step
 - P2: Polish, performance, or nice-to-have improvement
 
-Use sequential IDs per persona: CTO-001, CTO-002, CISO-001, CFO-001, etc.`;
+Use sequential IDs per persona: CTO-001, CTO-002, CISO-001, CFO-001, etc.
+Every issue MUST include "status": "open".`;
 }
 
 // ─── Markdown Builder ────────────────────────────────────────────────
 
 function buildMarkdown({ runFull, mode, TODAY, testResults, cfMetrics, appMetrics,
-                         codeQuality, auditReport, counts, delta, runRecord }) {
-  const header = `# Prime Self Audit — ${TODAY}
+                         codeQuality, knownIssues, auditReport, counts, delta, runRecord }) {
+  const header = `# Full Audit — ${TODAY}
 **Mode:** ${mode} | **Full AI Audit:** ${runFull ? 'Yes' : 'No'}
 **Tests:** ${testResults.passed}/${testResults.total} passing${testResults.failed > 0 ? ` — ⚠ ${testResults.failed} FAILING` : ''}
 **Open Issues:** P0: ${counts.P0} | P1: ${counts.P1} | P2: ${counts.P2}
-**Delta:** +${delta.new} new · ✓${delta.resolved} resolved · ↩${delta.regressions} regressions
 
 ---
 `;
 
-  const vitalsSection = `## Vitals
+  // ── Static data sections ──
 
-### Test Results
+  const testSection = `## Test Results
 \`\`\`json
 ${JSON.stringify(testResults, null, 2)}
 \`\`\`
 
-### Cloudflare Worker Metrics (7d)
-\`\`\`json
-${JSON.stringify(cfMetrics, null, 2)}
-\`\`\`
+`;
 
-### App Analytics
-\`\`\`json
-${JSON.stringify(appMetrics, null, 2)}
-\`\`\`
+  const topFindings = (codeQuality?.findings || []).slice(0, 20)
+    .map(f => `- \`${f.file}:${f.line}\` [${f.type}] — ${f.snippet}`)
+    .join('\n');
 
-### Code Quality Scan
+  const codeQualitySection = `## Code Quality Findings
 \`\`\`json
 ${JSON.stringify(codeQuality?.summary, null, 2)}
+\`\`\`
+${topFindings ? '\n### Top Findings\n\n' + topFindings + '\n' : ''}
+`;
+
+  const knownIssuesSection = `## Known Issues Baseline
+\`\`\`json
+${JSON.stringify(knownIssues?.issues || [], null, 2)}
 \`\`\`
 
 `;
 
-  const aiSection = runFull && auditReport
-    ? `## AI Audit\n\n${auditReport}\n\n`
-    : `## AI Audit\n\n*Vitals-only run — AI audit not executed.*\n\n`;
+  const cfSection = `## Cloudflare Metrics (7d)
+\`\`\`json
+${JSON.stringify(cfMetrics, null, 2)}
+\`\`\`
+
+## App Analytics
+\`\`\`json
+${JSON.stringify(appMetrics, null, 2)}
+\`\`\`
+
+`;
+
+  // ── AI sections (Flow Analysis → Master Issue Registry) ──
+  const aiContent = runFull && auditReport
+    ? auditReport + '\n\n'
+    : [
+        '## Flow Analysis',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## CTO Synopsis',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## CISO Synopsis',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## CFO Synopsis',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## CMO Synopsis',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## CIO Synopsis',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## Practitioner UX Journey',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## CEO Executive Summary',
+        '',
+        '*Vitals-only run — AI audit not executed.*',
+        '',
+        '## Master Issue Registry',
+        '',
+        '```json',
+        '[]',
+        '```',
+        '',
+      ].join('\n') + '\n';
+
+  // ── Delta Summary ──
+  const deltaSection = `## Delta Summary
+\`\`\`json
+${JSON.stringify({ new: delta.new, resolved: delta.resolved, regressions: delta.regressions }, null, 2)}
+\`\`\`
+
+`;
 
   const footer = `---
 *Generated by Prime Self Audit Bot on ${new Date().toISOString()}*
 `;
 
-  return header + vitalsSection + aiSection + footer;
+  return header + testSection + codeQualitySection + knownIssuesSection + cfSection + aiContent + deltaSection + footer;
 }
 
 // ─── Run ─────────────────────────────────────────────────────────────

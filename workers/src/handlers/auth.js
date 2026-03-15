@@ -212,31 +212,35 @@ async function handleRegister(request, env) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    // Check if user already exists
-    const existing = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
-    if (existing.rows && existing.rows.length > 0) {
-      return Response.json(
-        { error: 'An account with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    // Hash password
+    // Hash password first (before any DB calls)
     const passwordHash = await hashPassword(password);
 
-    // Create user
-    const result = await query(QUERIES.createUserWithPassword, [
-      email.toLowerCase(),
-      phone || null,
-      passwordHash,
-      birthDate || null,
-      birthTime || null,
-      birthTimezone || null,
-      lat ? parseFloat(lat) : null,
-      lng ? parseFloat(lng) : null
-    ]);
+    // CTO-014: Use INSERT ... ON CONFLICT to atomically prevent duplicate
+    // registration (no race between SELECT + INSERT).
+    let userId;
+    try {
+      const result = await query(QUERIES.createUserWithPassword, [
+        email.toLowerCase(),
+        phone || null,
+        passwordHash,
+        birthDate || null,
+        birthTime || null,
+        birthTimezone || null,
+        lat ? parseFloat(lat) : null,
+        lng ? parseFloat(lng) : null
+      ]);
+      userId = result.rows?.[0]?.id;
+    } catch (dbErr) {
+      // If unique constraint violation on email, return 409
+      if (dbErr.code === '23505') {
+        return Response.json(
+          { error: 'An account with this email already exists' },
+          { status: 409 }
+        );
+      }
+      throw dbErr;
+    }
 
-    const userId = result.rows?.[0]?.id;
     if (!userId) {
       return Response.json(
         { error: 'Failed to create user' },
@@ -805,7 +809,11 @@ async function handleVerifyEmail(request, env) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const tokenHash = await sha256(token);
 
-    const result = await query(QUERIES.getEmailVerificationToken, [tokenHash]);
+    // AUDIT-SEC-001: Use atomic DELETE...RETURNING to consume the token in a
+    // single statement. This eliminates the SELECT-then-DELETE race condition
+    // where two concurrent requests could both read the token before either
+    // deletes it, allowing the same link to verify twice.
+    const result = await query(QUERIES.atomicVerifyEmailToken, [tokenHash]);
     const record = result.rows?.[0];
 
     if (!record) {
@@ -815,11 +823,8 @@ async function handleVerifyEmail(request, env) {
       );
     }
 
-    // Mark user as verified
+    // Mark user as verified (token is already consumed above)
     await query(QUERIES.markEmailVerified, [record.user_id]);
-
-    // Delete all verification tokens for this user (cleanup)
-    await query(QUERIES.deleteEmailVerificationTokens, [record.user_id]);
 
     return Response.json({
       ok: true,
@@ -1070,7 +1075,9 @@ async function handle2FAVerify(request, env) {
   const { accessToken, refreshToken } = await issueTokenPair(env, query, user.id, user.email);
 
   // Update last login
-  await query(QUERIES.updateLastLogin, [user.id]).catch(() => {});
+  await query(QUERIES.updateLastLogin, [user.id]).catch(e => {
+    console.warn(JSON.stringify({ event: 'update_last_login_failed', userId: user.id, error: e.message }));
+  });
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', buildRefreshCookie(refreshToken));

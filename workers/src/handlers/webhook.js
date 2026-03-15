@@ -17,6 +17,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { markReferralAsConverted } from './referrals.js';
 import { sendEmail, sendSubscriptionConfirmationEmail } from '../lib/email.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
+import { createLogger } from '../lib/logger.js';
 
 /**
  * Map Stripe subscription status to our internal status
@@ -60,6 +61,7 @@ function getTierFromPriceId(priceId, env) {
  * Process Stripe webhook events
  */
 export async function handleStripeWebhook(request, env) {
+  const log = request._log || createLogger(request._reqId || 'webhook');
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   try {
@@ -78,70 +80,75 @@ export async function handleStripeWebhook(request, env) {
     try {
       event = await verifyWebhook(body, signature, env.STRIPE_WEBHOOK_SECRET, stripe);
     } catch (error) {
-      console.error('Webhook verification failed:', error);
+      log.warn({ action: 'webhook_verify_failed', error: error.message });
       return Response.json({ error: 'Webhook verification failed' }, { status: 400 });
     }
 
     // Check if event already processed (idempotency)
     const existingEvent = await query(QUERIES.checkEventProcessed, [event.id]);
     if (existingEvent.rows.length > 0) {
-      console.log('Event already processed:', event.id);
+      log.info({ action: 'webhook_event_duplicate', eventId: event.id });
       return Response.json({ received: true, already_processed: true }, { status: 200 });
     }
 
-    console.log('Processing Stripe event:', event.type, event.id);
+    // CFO-002: Mark event as processing BEFORE handling to prevent concurrent
+    // webhook retries from double-processing. Uses ON CONFLICT DO NOTHING
+    // so only the first INSERT succeeds — all concurrent attempts are no-ops.
+    const obj = event.data?.object;
+    const amount   = obj?.amount_paid ?? obj?.amount ?? null;
+    const currency = obj?.currency ?? 'usd';
+    const evtStatus = obj?.status ?? 'processing';
+    const inserted = await query(QUERIES.markEventProcessed, [null, event.id, event.type, amount, currency, evtStatus]);
+    if (inserted.rowCount === 0) {
+      // Another worker already claimed this event
+      return Response.json({ received: true, already_processed: true }, { status: 200 });
+    }
+
+    log.info({ action: 'webhook_event_processing', type: event.type, eventId: event.id });
 
     // Process event based on type
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutCompleted(event, query, stripe, env);
+        await handleCheckoutCompleted(event, query, stripe, env, log);
         break;
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event, query, env);
+        await handleSubscriptionUpdated(event, query, env, log);
         break;
 
       case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event, query);
+        await handleSubscriptionDeleted(event, query, log);
         break;
 
       case 'invoice.payment_succeeded':
-        await handlePaymentSucceeded(event, query);
+        await handlePaymentSucceeded(event, query, log);
         break;
 
       case 'invoice.paid':
-        await handleInvoicePaid(event, query, env);
+        await handleInvoicePaid(event, query, env, log);
         break;
 
       case 'invoice.payment_failed':
-        await handlePaymentFailed(event, query, env);
+        await handlePaymentFailed(event, query, env, log);
         break;
 
       case 'charge.refunded':
-        await handleChargeRefunded(event, query);
+        await handleChargeRefunded(event, query, log);
         break;
 
       case 'charge.dispute.created':
-        await handleChargeDispute(event, query, stripe);
+        await handleChargeDispute(event, query, stripe, log);
         break;
 
       default:
-        console.log('Unhandled event type:', event.type);
+        log.info({ action: 'webhook_event_unhandled', type: event.type });
     }
-
-    // CFO-002: Record this event as processed for idempotency.
-    // ON CONFLICT (stripe_event_id) DO NOTHING handles races silently.
-    const obj = event.data?.object;
-    const amount   = obj?.amount_paid ?? obj?.amount ?? null;
-    const currency = obj?.currency ?? 'usd';
-    const status   = obj?.status ?? 'processed';
-    await query(QUERIES.markEventProcessed, [null, event.id, event.type, amount, currency, status]);
 
     return Response.json({ received: true }, { status: 200 });
 
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    log.error({ action: 'webhook_processing_error', error: error.message, stack: error.stack });
     return Response.json({ 
       error: 'Webhook processing failed' // BL-R-H2
     }, { status: 500 });
@@ -152,19 +159,19 @@ export async function handleStripeWebhook(request, env) {
  * Handle checkout.session.completed
  * BL-FIX: Use UPSERT to handle case where subscription row doesn't exist yet
  */
-async function handleCheckoutCompleted(event, query, stripe, env) {
+async function handleCheckoutCompleted(event, query, stripe, env, log) {
   const session = event.data.object;
   const customerId = session.customer;
   const userId = session.metadata?.user_id;
 
   if (!userId) {
-    console.error('No user_id in checkout session metadata');
+    log.error({ action: 'checkout_missing_user_id', sessionId: session.id });
     return;
   }
 
   // HD_UPDATES3: Handle one-time purchases (mode: 'payment')
   if (session.mode === 'payment') {
-    await handleOneTimePurchaseCompleted(session, query, userId);
+    await handleOneTimePurchaseCompleted(session, query, userId, log);
     return;
   }
 
@@ -196,7 +203,7 @@ async function handleCheckoutCompleted(event, query, stripe, env) {
   });
 
   // Track referral conversion
-  try { await markReferralAsConverted(env, userId); } catch (e) { console.warn('Referral tracking error:', e); }
+  try { await markReferralAsConverted(env, userId); } catch (e) { log.warn({ action: 'referral_tracking_error', userId, error: e.message }); }
 
   // Send subscription confirmation email (fire and forget)
   if (env.RESEND_API_KEY) {
@@ -214,72 +221,82 @@ async function handleCheckoutCompleted(event, query, stripe, env) {
         sendSubscriptionConfirmationEmail(
           userEmail, tierLabel, env.RESEND_API_KEY,
           env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
-        ).catch(err => console.error('Subscription confirmation email failed:', err));
+        ).catch(err => log.warn({ action: 'subscription_email_failed', error: err.message }));
       }
-    } catch (e) { console.warn('Could not send subscription confirmation email:', e); }
+    } catch (e) { log.warn({ action: 'subscription_email_lookup_failed', error: e.message }); }
   }
 
-  console.log(`Checkout completed for user ${userId}, tier: ${tier}`);
-  trackEvent(env, EVENTS.CHECKOUT_COMPLETE, { userId, tier }).catch(e => console.error('[webhook] trackEvent checkout_complete failed:', e.message));
+  log.info({ action: 'checkout_completed', userId, tier });
+  trackEvent(env, EVENTS.CHECKOUT_COMPLETE, { userId, tier }).catch(e => log.warn({ action: 'track_event_failed', event: 'checkout_complete', error: e.message }));
 }
 
 /**
  * HD_UPDATES3: Handle one-time purchase checkout completion
  * Grants credits/access based on product metadata
  */
-async function handleOneTimePurchaseCompleted(session, query, userId) {
+async function handleOneTimePurchaseCompleted(session, query, userId, log) {
   const product = session.metadata?.product;
   const grantsRaw = session.metadata?.grants;
 
   if (!product || !grantsRaw) {
-    console.error('One-time purchase missing product/grants metadata:', session.id);
+    log.error({ action: 'onetime_missing_metadata', sessionId: session.id });
+    return;
+  }
+
+  // CFO-010: Idempotency — check if this session's grants were already applied.
+  // The checkout session ID is unique per purchase, so we use it as dedup key.
+  const existingGrant = await query(
+    `SELECT 1 FROM usage_records WHERE endpoint = $1 LIMIT 1`,
+    [`one-time:${session.id}`]
+  );
+  if (existingGrant.rows.length > 0) {
+    log.info({ action: 'onetime_dedup_skip', sessionId: session.id });
     return;
   }
 
   let grants;
   try { grants = JSON.parse(grantsRaw); } catch {
-    console.error('Invalid grants JSON in one-time purchase metadata:', grantsRaw);
+    log.error({ action: 'onetime_invalid_grants_json', sessionId: session.id });
     return;
   }
 
+  // Use the session ID as the endpoint to enable dedup
+  const dedupEndpoint = `one-time:${session.id}`;
+
   // Grant credits based on product type
   if (grants.profileGenerations) {
-    // Single synthesis — add negative usage record as bonus credits
     await query(QUERIES.createUsageRecord, [
-      userId, 'profile_generation_bonus', 'one-time-purchase', -grants.profileGenerations
+      userId, 'profile_generation_bonus', dedupEndpoint, -grants.profileGenerations
     ]);
   }
 
   if (grants.compositeCharts) {
     await query(QUERIES.createUsageRecord, [
-      userId, 'composite_chart_bonus', 'one-time-purchase', -grants.compositeCharts
+      userId, 'composite_chart_bonus', dedupEndpoint, -grants.compositeCharts
     ]);
   }
 
   if (grants.transitPassDays) {
-    // Store transit pass expiry (7 days from now)
     const expiresAt = new Date(Date.now() + grants.transitPassDays * 86400000).toISOString();
     await query(QUERIES.createUsageRecord, [
-      userId, 'transit_pass', 'one-time-purchase', -1
+      userId, 'transit_pass', dedupEndpoint, -1
     ]);
-    // MED-INLINE-SQL: Use registered query instead of inline SQL
     await query(QUERIES.updateTransitPassExpiry, [expiresAt, userId]);
   }
 
   if (grants.lifetimeTier) {
-    // MED-INLINE-SQL: Use registered query instead of inline SQL
     await query(QUERIES.grantLifetimeAccess, [
       grants.lifetimeTier, userId
     ]);
   }
 
-  console.log(`One-time purchase '${product}' fulfilled for user ${userId}:`, grants);
+  log.info({ action: 'onetime_fulfilled', product, userId, grants });
 }
 
 /**
  * Handle customer.subscription.created/updated
  */
-async function handleSubscriptionUpdated(event, query, env) {
+async function handleSubscriptionUpdated(event, query, env, log) {
   const subscription = event.data.object;
   const customerId = subscription.customer;
   const subscriptionId = subscription.id;
@@ -290,10 +307,31 @@ async function handleSubscriptionUpdated(event, query, env) {
   const existingSub = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
 
   if (existingSub.rows.length === 0) {
-    // TXN-013 FIX: Log ghost subscription instead of silently returning.
-    // This means Stripe is charging a customer we don't have a DB record for.
-    console.error('GHOST SUBSCRIPTION — No DB record for Stripe customer:', customerId,
-      'subscription:', subscriptionId, 'tier:', tier);
+    // CFO-009 FIX: Instead of silently returning, create the missing DB record.
+    // This handles the case where checkout.session.completed webhook failed
+    // but Stripe still created the subscription.
+    log.warn({ action: 'ghost_subscription_detected', customerId, subscriptionId, tier });
+
+    // Look up user by stripe_customer_id on users table
+    const userLookup = await query(QUERIES.getUserByStripeCustomerId, [customerId]);
+    const ghostUserId = userLookup.rows?.[0]?.id;
+    if (!ghostUserId) {
+      log.error({ action: 'ghost_subscription_unresolvable', customerId });
+      return;
+    }
+
+    // Create the missing subscription record
+    await query.transaction(async (q) => {
+      await q(QUERIES.upsertSubscription, [
+        ghostUserId, customerId, subscriptionId, tier,
+        mapStripeStatus(subscription.status),
+        new Date(subscription.current_period_start * 1000).toISOString(),
+        new Date(subscription.current_period_end * 1000).toISOString(),
+        subscription.cancel_at_period_end || false
+      ]);
+      await q(QUERIES.updateUserTier, [tier, ghostUserId]);
+    });
+    log.info({ action: 'ghost_subscription_resolved', userId: ghostUserId, tier });
     return;
   }
 
@@ -323,13 +361,13 @@ async function handleSubscriptionUpdated(event, query, env) {
     }
   });
 
-  console.log(`Subscription updated for user ${userId}, tier: ${tier}, status: ${subscription.status}`);
+  log.info({ action: 'subscription_updated', userId, tier, status: subscription.status });
 }
 
 /**
  * Handle customer.subscription.deleted
  */
-async function handleSubscriptionDeleted(event, query) {
+async function handleSubscriptionDeleted(event, query, log) {
   const subscription = event.data.object;
   const subscriptionId = subscription.id;
 
@@ -337,7 +375,7 @@ async function handleSubscriptionDeleted(event, query) {
   const result = await query(QUERIES.getSubscriptionByStripeSubscriptionId, [subscriptionId]);
   
   if (result.rows.length === 0) {
-    console.error('No subscription found for ID:', subscriptionId);
+    log.error({ action: 'subscription_delete_not_found', subscriptionId });
     return;
   }
 
@@ -359,13 +397,13 @@ async function handleSubscriptionDeleted(event, query) {
     await q(QUERIES.updateUserTier, ['free', userId]);
   });
 
-  console.log(`Subscription cancelled for user ${userId}, downgraded to free tier`);
+  log.info({ action: 'subscription_cancelled', userId });
 }
 
 /**
  * Handle invoice.payment_succeeded
  */
-async function handlePaymentSucceeded(event, query) {
+async function handlePaymentSucceeded(event, query, log) {
   const invoice = event.data.object;
   const customerId = invoice.customer;
   const subscriptionId = invoice.subscription;
@@ -376,7 +414,7 @@ async function handlePaymentSucceeded(event, query) {
   const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
   
   if (result.rows.length === 0) {
-    console.error('No subscription found for customer:', customerId);
+    log.error({ action: 'payment_succeeded_no_subscription', customerId });
     return;
   }
 
@@ -394,13 +432,13 @@ async function handlePaymentSucceeded(event, query) {
     JSON.stringify(event.data.object)
   ]);
 
-  console.log(`Payment succeeded for subscription ${subscriptionId}: ${amount} ${currency}`);
+  log.info({ action: 'payment_succeeded', subscriptionId, amount, currency });
 }
 
 /**
  * Handle invoice.payment_failed
  */
-async function handlePaymentFailed(event, query, env) {
+async function handlePaymentFailed(event, query, env, log) {
   const invoice = event.data.object;
   const customerId = invoice.customer;
   const subscriptionId = invoice.subscription;
@@ -412,7 +450,7 @@ async function handlePaymentFailed(event, query, env) {
   const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
   
   if (result.rows.length === 0) {
-    console.error('No subscription found for customer:', customerId);
+    log.error({ action: 'payment_failed_no_subscription', customerId });
     return;
   }
 
@@ -459,19 +497,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
 </body></html>`
       }, env.RESEND_API_KEY, env.FROM_EMAIL || 'Prime Self <hello@primeself.app>');
     } catch (err) {
-      console.error('Payment failure email error:', err);
+      log.warn({ action: 'payment_failure_email_error', error: err.message });
     }
   }
 
-  // Log failure without PII — failureReason may contain card/bank details
-  console.error(`Payment failed for subscription ${subscriptionId}`);
+  log.error({ action: 'payment_failed', subscriptionId });
 }
 
 /**
  * Handle invoice.paid — BL-R-C4: Consolidated from billing.js
  * HD_UPDATES3: Now includes 25% recurring revenue share for referrers
  */
-async function handleInvoicePaid(event, query, env) {
+async function handleInvoicePaid(event, query, env, log) {
   const invoice = event.data.object;
   const subscriptionId = invoice.subscription;
   const amountPaid = invoice.amount_paid;
@@ -479,7 +516,7 @@ async function handleInvoicePaid(event, query, env) {
   // Find subscription
   const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [invoice.customer]);
   if (result.rows.length === 0) {
-    console.error('No subscription found for customer:', invoice.customer);
+    log.error({ action: 'invoice_paid_no_subscription', customerId: invoice.customer });
     return;
   }
 
@@ -498,7 +535,7 @@ async function handleInvoicePaid(event, query, env) {
     JSON.stringify(event.data.object)
   ]);
 
-  console.log(`Invoice paid for subscription ${subscriptionId}: ${amountPaid} ${invoice.currency}`);
+  log.info({ action: 'invoice_paid', subscriptionId, amount: amountPaid, currency: invoice.currency });
 
   // HD_UPDATES3: 25% recurring revenue share — credit referrer on each renewal
   // Agency tier: cap credit at 50% of subscription cost (per HD_UPDATES3 spec)
@@ -520,12 +557,12 @@ async function handleInvoicePaid(event, query, env) {
           }, {
             idempotencyKey: `referral-credit-${event.id}`,
           });
-          console.log(`Applied $${(creditAmount / 100).toFixed(2)} referral credit to ${referrer.referrer_stripe_id}`);
+          log.info({ action: 'referral_credit_applied', amount: creditAmount, referrerStripeId: referrer.referrer_stripe_id });
         }
       }
     } catch (refErr) {
       // Don't fail the invoice handler for referral credit errors
-      console.error('Referral revenue share error:', refErr);
+      log.warn({ action: 'referral_share_error', error: refErr.message });
     }
   }
 }
@@ -535,19 +572,19 @@ async function handleInvoicePaid(event, query, env) {
  * Only downgrade to free tier on FULL refund. Partial refunds log
  * the event but preserve the user's current tier.
  */
-async function handleChargeRefunded(event, query) {
+async function handleChargeRefunded(event, query, log) {
   const charge = event.data.object;
   const customerId = charge.customer;
 
   if (!customerId) {
-    console.error('charge.refunded: No customer ID on charge:', charge.id);
+    log.error({ action: 'refund_no_customer_id', chargeId: charge.id });
     return;
   }
 
   const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
 
   if (result.rows.length === 0) {
-    console.error('charge.refunded: No subscription found for customer:', customerId);
+    log.error({ action: 'refund_no_subscription', customerId });
     return;
   }
 
@@ -570,9 +607,9 @@ async function handleChargeRefunded(event, query) {
   const isFullRefund = charge.refunded === true;
   if (isFullRefund) {
     await query(QUERIES.updateUserTier, ['free', userId]);
-    console.log(`Full refund for user ${userId}, downgraded to free tier. Amount: ${charge.amount_refunded} ${charge.currency}`);
+    log.info({ action: 'full_refund_downgrade', userId, amount: charge.amount_refunded, currency: charge.currency });
   } else {
-    console.log(`Partial refund for user ${userId} — tier preserved. Refunded: ${charge.amount_refunded}/${charge.amount} ${charge.currency}`);
+    log.info({ action: 'partial_refund_preserved', userId, refunded: charge.amount_refunded, total: charge.amount, currency: charge.currency });
   }
 }
 
@@ -580,7 +617,7 @@ async function handleChargeRefunded(event, query) {
  * Handle charge.dispute.created — TXN-025 FIX
  * Downgrade user to free tier when a chargeback/dispute is opened.
  */
-async function handleChargeDispute(event, query, stripe) {
+async function handleChargeDispute(event, query, stripe, log) {
   const dispute = event.data.object;
   const chargeId = dispute.charge;
 
@@ -592,19 +629,19 @@ async function handleChargeDispute(event, query, stripe) {
       const charge = await stripe.charges.retrieve(chargeId);
       customerId = charge.customer;
     } catch (err) {
-      console.error('charge.dispute.created: Failed to retrieve charge:', chargeId, err.message);
+      log.error({ action: 'dispute_charge_lookup_failed', chargeId, error: err.message });
     }
   }
 
   if (!customerId) {
-    console.error('charge.dispute.created: No customer ID on dispute:', dispute.id);
+    log.error({ action: 'dispute_no_customer_id', disputeId: dispute.id });
     return;
   }
 
   const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
 
   if (result.rows.length === 0) {
-    console.error('charge.dispute.created: No subscription found for customer:', customerId);
+    log.error({ action: 'dispute_no_subscription', customerId });
     return;
   }
 
@@ -626,6 +663,6 @@ async function handleChargeDispute(event, query, stripe) {
   // Downgrade user to free tier immediately
   await query(QUERIES.updateUserTier, ['free', userId]);
 
-  console.error(`DISPUTE opened for user ${userId}. Charge: ${chargeId}, Amount: ${dispute.amount} ${dispute.currency}, Reason: ${dispute.reason}. User downgraded to free.`);
+  log.error({ action: 'dispute_opened', userId, chargeId, amount: dispute.amount, currency: dispute.currency, reason: dispute.reason });
 }
 

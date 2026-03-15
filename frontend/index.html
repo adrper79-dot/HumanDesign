@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Content Security Policy -->
+<!-- CISO-003: style-src 'unsafe-inline' is required for dynamic inline styles.
+     script-src is strict (no unsafe-inline/eval). CSS-only injection risk is accepted. -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io;
@@ -1023,7 +1025,7 @@
                 📋 Copy
               </button>
             </div>
-            <p class="share-reward-text" data-i18n="share.earnRewards">Share this link and earn rewards when friends sign up!</p>
+            <p class="share-reward-text">🎁 <strong>Earn 25% revenue share</strong> on every friend who subscribes! Share your link and build passive income from your network.</p>
           </div>
 
           <!-- Social Share Buttons -->
@@ -1685,6 +1687,23 @@
           <button class="btn-secondary btn-sm" data-action="toggleDirectoryForm">Cancel</button>
           <button class="btn-primary btn-sm" data-action="saveDirectoryProfile">Save Profile</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Notion Integration (Practitioner/Agency) -->
+    <div class="card" id="notionCard">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">📓</span> Notion Sync</div>
+        <button class="btn-secondary btn-sm" data-action="checkNotionStatus" id="notionRefreshBtn">Check Status</button>
+      </div>
+      <p class="card-hint">Connect your Notion workspace to sync client data and export profiles as Notion pages.</p>
+      <div id="notionStatus" class="geo-status">Not checked yet</div>
+      <div id="notionActions" style="display:none;margin-top:var(--space-3)">
+        <button class="btn-primary btn-sm" data-action="syncNotionClients" id="notionSyncBtn">Sync Clients to Notion</button>
+        <button class="btn-secondary btn-sm" data-action="disconnectNotion" id="notionDisconnectBtn" style="margin-left:var(--space-2)">Disconnect</button>
+      </div>
+      <div id="notionConnectWrap" style="display:none;margin-top:var(--space-3)">
+        <button class="btn-primary btn-sm" data-action="connectNotion">Connect Notion</button>
       </div>
     </div>
 

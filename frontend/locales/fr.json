@@ -36,7 +36,10 @@
     "relationships": "Relations",
     "growth": "Croissance",
     "tools": "Outils",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "celebrity": "Célébrité",
+    "achievements": "Réalisations",
+    "directory": "Annuaire"
   },
   "auth": {
     "signIn": "Se connecter",

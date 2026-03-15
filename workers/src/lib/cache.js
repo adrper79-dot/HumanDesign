@@ -252,7 +252,9 @@ export const kvCache = Object.freeze({
     const data = await fetchFn();
 
     // 4. Store in KV (fire-and-forget)
-    this.put(env, key, data, ttlSeconds).catch(() => {});
+    this.put(env, key, data, ttlSeconds).catch(e => {
+      console.warn(JSON.stringify({ event: 'cache_put_failed', key, error: e.message }));
+    });
 
     // 5. Store in memory
     if (opts.memCache) {

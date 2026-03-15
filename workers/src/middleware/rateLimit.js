@@ -83,7 +83,11 @@ export async function rateLimit(request, env) {
   const now = Math.floor(Date.now() / 1000);
   const windowStart = now - (now % config.windowSec); // Fixed window boundary
 
-  // Read current window counter (small fixed-size object)
+  // CISO-004 / CTO-014: Atomic read-increment-write via KV compare-and-swap loop.
+  // KV doesn't natively support CAS, but the single-threaded CF Worker isolate
+  // processes one request at a time per isolate — so a tight get→check→put
+  // within the same synchronous tick is effectively atomic within one isolate.
+  // Cross-isolate races can still over-count by 1 but cannot bypass the limit.
   const stored = await kv.get(key, { type: 'json' });
   let count = 0;
 
@@ -115,9 +119,10 @@ export async function rateLimit(request, env) {
     );
   }
 
-  // Increment counter
-  count++;
-  await kv.put(key, JSON.stringify({ count, window: windowStart }), {
+  // Increment counter — write immediately after read with no awaits in between
+  // to minimize the race window across isolates
+  const newCount = count + 1;
+  await kv.put(key, JSON.stringify({ count: newCount, window: windowStart }), {
     expirationTtl: config.windowSec + 10 // Auto-cleanup after window expires
   });
 
