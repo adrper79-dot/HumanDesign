@@ -55,6 +55,15 @@ jobs:
       - name: Run coverage
         run: npm run test:coverage
 
+      - name: P0 issue gate (block deploy if critical issues open)
+        run: |
+          P0=$(node scripts/count-issues.js --severity P0 --status open || true)
+          echo "Open P0 issues: $P0"
+          if [ "${P0:-0}" -gt "0" ]; then
+            echo "::error::$P0 open P0 issue(s) in issue-registry.json. Resolve before deploying."
+            exit 1
+          fi
+
   deploy:
     needs: gate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
