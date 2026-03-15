@@ -120,46 +120,51 @@ The 12 archetypal energies: Aries (pioneer), Taurus (builder), Gemini (communica
 
 ### The Five Forges
 
-Your Forge is your Prime Self archetype — the domain of power you're called to master. Determined by your Energy Blueprint structure + Astrological signatures.
+Your Forge is your Prime Self archetype — the domain of power you're called to master. Determined deterministically by `computeForge()` using a 9-step weighted scoring algorithm from `forge_mapping.json` (type weight 10, gate indicators 3, center indicators 2, motor-to-throat 4, astro signs 2, astro houses 1).
 
-**Chronos (The Forge of Time)**  
+**Canonical names** (used in code and validation): Initiation, Mastery, Guidance, Perception, Transformation  
+**Archetype aliases** (used in narrative/onboarding): Chronos, Eros, Aether, Lux, Phoenix
+
+**Initiation / Chronos (The Forge of Time)**  
 Domain: Mastering past/present/future. HD Triggers: Root center definition, Saturn-related gates (38, 54, 58). Astro Triggers: Saturn aspects, Capricorn placements. Historical Exemplars: Marcus Aurelius, Nelson Mandela, Maya Angelou. Weapon: The Hourglass. Defense: Strategic Patience.
 
-**Eros (The Forge of Passion)**  
+**Mastery / Eros (The Forge of Passion)**  
 Domain: Mastering desire and creative fire. HD Triggers: Defined Sacral Center, Channel 59-6 (Intimacy). Astro Triggers: Venus aspects, Mars strength, Scorpio/Taurus placements. Historical Exemplars: Frida Kahlo, Pablo Neruda, Josephine Baker. Weapon: The Flame. Defense: Sustained Devotion.
 
-**Aether (The Forge of Connection)**  
+**Guidance / Aether (The Forge of Connection)**  
 Domain: Interconnectedness and unity consciousness. HD Triggers: G Center definition, Channel 25-51 (Initiation). Astro Triggers: Neptune aspects, 12th house emphasis, Pisces placements. Historical Exemplars: Rumi, Thich Nhat Hanh, Mother Teresa. Weapon: The Thread. Defense: Compassionate Boundaries.
 
-**Lux (The Forge of Illumination)**  
+**Perception / Lux (The Forge of Illumination)**  
 Domain: Truth, clarity, and knowledge. HD Triggers: Ajna center definition, Head Center activation. Astro Triggers: Mercury strength, Uranus aspects, Aquarius/Gemini placements. Historical Exemplars: Leonardo da Vinci, Marie Curie, Nikola Tesla. Weapon: The Prism. Defense: Radical Honesty.
 
-**Phoenix (The Forge of Rebirth)**  
+**Transformation / Phoenix (The Forge of Rebirth)**  
 Domain: Transformation, renewal, and resurrection. HD Triggers: Solar Plexus definition, Channel 36-35 (Transitoriness). Astro Triggers: Pluto aspects, 8th house emphasis, Scorpio placements. Historical Exemplars: Nelson Mandela, Malcolm X, Frida Kahlo. Weapon: Ashes of the Past. Defense: Surrender to Cycles.
 
 ---
 
 ### The Six Knowledges
 
-The domains of wisdom every Prime Self practitioner explores:
+The domains of wisdom every Prime Self practitioner explores. Determined deterministically by `computeKnowledge()` from `knowledges.json`.
 
-**Knowledge of Self** (#1)  
-Prime Question: "Who am I when no one is watching?" Foundation of all other knowledge. HD Mapping: Personality (conscious) chart — your chosen expression.
+**Canonical names** (used in code): Sciences, Arts, Defenses, Heresies, Connections, Mysteries
 
-**Knowledge of Ancestors** (#2)  
-Prime Question: "What gifts am I carrying forward?" Genetic wisdom and inherited patterns. HD Mapping: Design (unconscious) chart — your ancestral inheritance.
+**Sciences** (#1)  
+Prime Question: "What can be measured, tested, and verified?" Empirical wisdom — the discipline of structured inquiry. Includes Mindfulness, Alchemy, Divination, Astrology, Reiki, Behavioral sciences.
 
-**Knowledge of The One** (#3)  
-Prime Question: "How does my individual expression serve the collective?" Universal connection and service. HD Mapping: Cross, Nodal gates — your contribution to humanity.
+**Arts** (#2)  
+Prime Question: "What can be created, expressed, and felt?" Creative wisdom — the discipline of embodied expression. Includes Aromatherapy, Semiotics, Quantum Mind, Crystallography, and more.
 
-**Knowledge of Constructive Behaviors** (#4)  
-Prime Question: "What builds rather than depletes?" Practices that generate sustainable energy. Relates to Signature themes (Satisfaction, Success, Peace, Surprise).
+**Defenses** (#3)  
+Prime Question: "What must be protected, fortified, and maintained?" Protective wisdom — the discipline of energetic boundaries. Includes Reflexology, Acupressure, Chromotherapy, and more.
 
-**Knowledge of Destructive Behaviors** (#5)  
-Prime Question: "What patterns must I release to evolve?" Shadow work and transformation. Relates to Not-Self themes (Frustration, Bitterness, Anger, Disappointment).
+**Heresies** (#4)  
+Prime Question: "What sacred cows must be questioned?" Shadow wisdom — the discipline of necessary transgression. These are the shadow powers that challenge consensus reality. Comes with warnings.
 
-**Knowledge of Healing & Reparation** (#6)  
-Prime Question: "How do I restore what has been broken?" Integration and wholeness. Combines all other Knowledges into practical repair.
+**Connections** (#5)  
+Prime Question: "How do I link to others and to the whole?" Relational wisdom — the discipline of interdependence. Maps to collective circuitry and tribal bonds.
+
+**Mysteries** (#6)  
+Prime Question: "What lies beyond the known?" Transcendent wisdom — the discipline of surrender to the unknowable. Combines all other Knowledges into integration and wholeness.
 
 ---
 

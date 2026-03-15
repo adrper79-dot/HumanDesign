@@ -49,15 +49,22 @@ const ELEMENTS = {
     I: [1.84969142, -0.00813131], L: [-4.55343205, 19140.30268499],
     w: [-23.94362959, 0.44441088], O: [49.55953891, -0.29257343]
   },
+  // Table 2 elements (1800–2050) — more accurate than Table 1 for modern dates.
+  // Perturbation correction terms (Standish 1992 Table 2) for outer planets:
+  //   ΔL = b·T² + c·cos(f·T°) + s·sin(f·T°)  (degrees, T in Julian centuries)
+  // Corrects the Great Inequality (Jupiter–Saturn mutual perturbation, up to ~0.9°)
+  // and similar interactions for Uranus–Neptune.
   jupiter: {
-    a: [5.20288700, -0.00011607], e: [0.04838624, -0.00013253],
-    I: [1.30439695, -0.00183714], L: [34.39644051, 3034.74612775],
-    w: [14.72847983, 0.21252668],  O: [100.47390909, 0.20469106]
+    a: [5.20248019, -0.00002864], e: [0.04853590, 0.00005208],
+    I: [1.30327940, -0.00019015], L: [34.39644051, 3034.90371757],
+    w: [14.72847983, 0.21252668],  O: [100.47390909, 0.20469106],
+    perturbation: { b: -0.00012452, c: 0.06064060, s: -0.35635438, f: 38.35125000 }
   },
   saturn: {
     a: [9.53667594, -0.00125060], e: [0.05386179, -0.00050991],
-    I: [2.48599187, 0.00193609],  L: [49.95424423, 1222.49362201],
-    w: [92.59887831, -0.41897216], O: [113.66242448, -0.28867794]
+    I: [2.44494426, -0.00041039], L: [49.95424423, 1222.46137231],
+    w: [92.59887831, -0.41897216], O: [113.66242448, -0.28867794],
+    perturbation: { b: 0.00025899, c: -0.13434469, s: 0.87320147, f: 38.35125000 }
   },
   uranus: {
     a: [19.18916464, -0.00196176], e: [0.04725744, -0.00004397],
@@ -171,9 +178,17 @@ function getHelioPosition(T, elem) {
   const a = elem.a[0] + elem.a[1] * T;
   const e = elem.e[0] + elem.e[1] * T;
   const I = elem.I[0] + elem.I[1] * T;
-  const L = normalizeDegrees(elem.L[0] + elem.L[1] * T);
+  let L = normalizeDegrees(elem.L[0] + elem.L[1] * T);
   const w = normalizeDegrees(elem.w[0] + elem.w[1] * T);
   const O = normalizeDegrees(elem.O[0] + elem.O[1] * T);
+
+  // Apply Standish 1992 Table 2 perturbation correction to L (outer planets only).
+  // Corrects Great Inequality (Jupiter–Saturn) and Uranus–Neptune interactions.
+  if (elem.perturbation) {
+    const { b, c, s, f } = elem.perturbation;
+    const fTrad = degToRad(f * T); // f*T in degrees → radians for trig
+    L = normalizeDegrees(L + b * T * T + c * Math.cos(fTrad) + s * Math.sin(fTrad));
+  }
 
   // Mean anomaly
   const M_deg = normalizeDegrees(L - w);
@@ -265,8 +280,9 @@ function getMoonLongitude(T) {
     - T3 / 3526000 + T4 / 863310000
   );
 
-  // Eccentricity correction for terms involving Sun's anomaly
-  const E  = 1 - 0.002516 * T - 0.0000074 * T2;
+  // Eccentricity correction for terms involving Sun's anomaly (Meeus Table 47.A).
+  // Clamped to [0.9, 1.1] to prevent runaway values for extreme dates far from J2000.
+  const E  = Math.max(0.9, Math.min(1.1, 1 - 0.002516 * T - 0.0000074 * T2));
   const E2 = E * E;
 
   const Dr = degToRad(D);
@@ -342,7 +358,6 @@ function getMoonLongitude(T) {
   // Additional corrections (Venus A1, Jupiter A2, flattening A3)
   const A1 = degToRad(normalizeDegrees(119.75 + 131.849 * T));
   const A2 = degToRad(normalizeDegrees(53.09 + 479264.290 * T));
-  const A3 = degToRad(normalizeDegrees(313.45 + 481266.484 * T));
 
   sumL += 3958 * Math.sin(A1)
         + 1962 * Math.sin(degToRad(Lp) - Fr)

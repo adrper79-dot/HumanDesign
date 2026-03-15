@@ -3,6 +3,9 @@
 **Status:** In Progress  
 **Owner:** Product / Engineering
 
+> Historical implementation plan. This document uses an obsolete pricing and tier model and should be treated as archive material only.
+> For current billing and packaging semantics use `workers/src/lib/stripe.js` and the canonical docs index.
+
 ---
 
 ## Executive Summary
@@ -21,9 +24,9 @@ This document covers the complete implementation plan for:
 
 ### The Problem
 Mixing consumer and professional pricing in one modal is a well-documented UX anti-pattern:
-- It causes **price shock**: "$12 vs $500 on the same screen" makes the $500 tier look extremely expensive and the $12 tier look cheap.
+- It causes **price shock**: "$12 vs $149 on the same screen" makes the $149 tier look extremely expensive and the $12 tier look cheap.
 - It creates **wrong-audience confusion**: a seeker looking for self-discovery shouldn't be pitched "client management tools" and "white-label API."
-- It creates a **trust gap**: end-users don't want to know their practitioner is paying $500/mo—it changes the perceived relationship.
+- It creates a **trust gap**: end-users don't want to know their practitioner is paying $149/mo—it changes the perceived relationship.
 
 ### The Solution: Experience Isolation by Role
 
@@ -36,7 +39,7 @@ Consumer Journey (selfprime.net)
 
 Practitioner Journey (selfprime.net/practitioner or via CTA)
   └─ Professional tone: "Serve your clients with precision."
-  └─ Pricing Modal: Guide ($60/mo) | Studio ($500/mo — White Label)
+  └─ Pricing Modal: Guide ($60/mo) | Studio ($149/mo — White Label)
   └─ Sign-up has "I'm a professional" self-selection step
 ```
 
@@ -59,7 +62,7 @@ Practitioner Journey (selfprime.net/practitioner or via CTA)
 | `free`        | Free           | $0/mo     | 0         | Anyone — exploration |
 | `regular`     | Explorer       | $12/mo    | 0         | Personal seekers     |
 | `practitioner`| Guide          | $60/mo    | 1,000/mo  | Coaches, readers     |
-| `white_label` | Studio         | $500/mo   | 10,000/mo | Agencies, platforms  |
+| `white_label` | Studio         | $149/mo   | 10,000/mo | Agencies, platforms  |
 
 ### Files Changed
 
@@ -76,7 +79,7 @@ Before deploying, create products in the Stripe Dashboard:
 1. Go to https://dashboard.stripe.com/products
 2. Create "Explorer" product → Monthly recurring → $12.00
 3. Create "Guide" product → Monthly recurring → $60.00
-4. Create "Studio" product → Monthly recurring → $500.00
+4. Create "Studio" product → Monthly recurring → $149.00
 5. Copy each price ID (format: `price_xxxx`) 
 6. Update wrangler.toml vars: `STRIPE_PRICE_REGULAR`, `STRIPE_PRICE_PRACTITIONER`, `STRIPE_PRICE_WHITE_LABEL`
 
@@ -116,7 +119,7 @@ if (hideAttribution) {
   document.getElementById('attribution').classList.add('hidden');
 }
 ```
-Anyone can pass `?hideAttribution=true` and remove the "Powered by Prime Self" branding without paying $500/month.
+Anyone can pass `?hideAttribution=true` and remove the "Powered by Prime Self" branding without paying $149/month.
 
 ### Fix (Defense in Depth)
 1. **Server-side validation endpoint**: `GET /api/embed/validate?apiKey=xxx` 
@@ -231,9 +234,9 @@ X-Origin: https://example.com (optional)
 | Audience    | Tone | Key Messages |
 |-------------|------|--------------|
 | Consumer (Free) | Mystical, personal | "Discover your energy blueprint" |
-| Consumer (Explorer $12) | Growth-focused | "Unlock unlimited charts, travel deeper" |
-| Practitioner (Guide $60) | Professional | "Serve your clients with precision" |
-| Practitioner (Studio $500) | Business | "Your branded experience, your clients, your platform" |
+| Consumer (historical Explorer model) | Growth-focused | "Unlock unlimited charts, travel deeper" |
+| Practitioner (historical Guide model) | Professional | "Serve your clients with precision" |
+| Practitioner (historical Studio model) | Business | "Your branded experience, your clients, your platform" |
 
 **Never mix languages**: Don't say "practitioner dashboard" on a consumer pricing card. Don't say "personal growth" on the Studio pricing card.
 

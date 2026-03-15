@@ -1,9 +1,0 @@
-1. Register: 201 uid: b4775981-e00a-4d3d-8da5-6b42ab64e2da token: true
-2. Calculate: 200 keys: ok,data,usage,meta
-   hdChart found: true data keys: birth,design,personalityGates,designGates,chart,astrology,transits,numerology,geneKeys,vedic,ogham
-3. Save: 200 chartId: 28baefc8-481c-4971-bd59-1656f39a4d14
-4. GET chart: 500 text/html; charset=UTF-8 (html): <!DOCTYPE html>
-<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 8]>    <html class="no-
-EXIT:0

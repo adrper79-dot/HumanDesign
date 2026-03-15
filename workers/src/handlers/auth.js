@@ -1,11 +1,13 @@
 /**
  * Auth Endpoints
  *
- *   POST /api/auth/register   – Create account, get JWT pair
- *   POST /api/auth/login      – Email-based login, get JWT pair
- *   POST /api/auth/refresh    – Rotate refresh token, get new JWT pair
- *   POST /api/auth/logout     – Revoke all refresh tokens for user
- *   GET  /api/auth/me         – Get current user info
+ *   POST /api/auth/register              – Create account, get JWT pair
+ *   POST /api/auth/login                 – Email-based login, get JWT pair
+ *   POST /api/auth/refresh               – Rotate refresh token, get new JWT pair
+ *   POST /api/auth/logout                – Revoke all refresh tokens for user
+ *   GET  /api/auth/me                    – Get current user info
+ *   POST /api/auth/verify-email          – Verify email with token (AUDIT-SEC-003)
+ *   POST /api/auth/resend-verification   – Resend verification email (auth required)
  *
  * Uses HS256 JWTs with standard iss/aud claims (see lib/jwt.js).
  * Refresh tokens are stored (hashed) in the refresh_tokens table
@@ -15,16 +17,18 @@
  * Passwords are hashed with PBKDF2 via Web Crypto API.
  */
 
-import { signJWT, verifyHS256, sha256 } from '../lib/jwt.js';
-import { sendWelcomeEmail1, sendPasswordResetEmail } from '../lib/email.js';
-
+import { signJWT, verifyHS256, sha256, jwtClaims } from '../lib/jwt.js';
+import { sendWelcomeEmail1, sendPasswordResetEmail, sendVerificationEmail } from '../lib/email.js';
+import { createStripeClient } from '../lib/stripe.js';  // P2-BIZ-004: cancel sub on account deletion
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { generateSecret, buildOTPAuthURL, verifyTOTP } from '../lib/totp.js';
 
 // JWT expiry durations
 // Access token is short-lived so that a stolen in-memory token has a small
 // exposure window.  The refresh token (stored in HttpOnly cookie) is long-lived.
 const ACCESS_TOKEN_TTL  = 60 * 15;           // 15 minutes
 const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30; // 30 days
+const TOTP_PENDING_TTL  = 60 * 5;            // 5 minutes (2FA challenge window)
 
 /**
  * Build Set-Cookie header values for the token pair.
@@ -55,12 +59,13 @@ function getRefreshCookie(request) {
 
 export async function handleAuth(request, env, path) {
   // Known auth paths
-  const knownPaths = ['/api/auth/register', '/api/auth/login', '/api/auth/refresh', '/api/auth/logout', '/api/auth/me', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/auth/account', '/api/auth/export'];
+  const knownPaths = ['/api/auth/register', '/api/auth/login', '/api/auth/refresh', '/api/auth/logout', '/api/auth/me', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/auth/account', '/api/auth/export', '/api/auth/verify-email', '/api/auth/resend-verification', '/api/auth/2fa/setup', '/api/auth/2fa/enable', '/api/auth/2fa/disable', '/api/auth/2fa/verify'];
   
   // GET requests
   if (request.method === 'GET') {
     if (path === '/api/auth/me') return handleGetMe(request, env);
     if (path === '/api/auth/export') return handleExportData(request, env);
+    if (path === '/api/auth/2fa/setup') return handle2FASetup(request, env);
     // Known path but wrong method
     if (knownPaths.includes(path)) {
       return Response.json({ error: 'Method not allowed' }, { status: 405 });
@@ -85,6 +90,11 @@ export async function handleAuth(request, env, path) {
     if (path === '/api/auth/logout') return handleLogout(request, env);
     if (path === '/api/auth/forgot-password') return handleForgotPassword(request, env);
     if (path === '/api/auth/reset-password') return handleResetPassword(request, env);
+    if (path === '/api/auth/verify-email') return handleVerifyEmail(request, env);
+    if (path === '/api/auth/resend-verification') return handleResendVerification(request, env);
+    if (path === '/api/auth/2fa/enable')  return handle2FAEnable(request, env);
+    if (path === '/api/auth/2fa/disable') return handle2FADisable(request, env);
+    if (path === '/api/auth/2fa/verify')  return handle2FAVerify(request, env);
     return Response.json({ error: 'Not found' }, { status: 404 });
   }
 
@@ -207,14 +217,16 @@ async function handleRegister(request, env) {
     const accessToken = await signJWT(
       { sub: userId, email: email.toLowerCase(), type: 'access' },
       env.JWT_SECRET,
-      ACCESS_TOKEN_TTL
+      ACCESS_TOKEN_TTL,
+      jwtClaims(env)
     );
 
     const familyId = crypto.randomUUID();
     const refreshToken = await signJWT(
       { sub: userId, type: 'refresh', fid: familyId },
       env.JWT_SECRET,
-      REFRESH_TOKEN_TTL
+      REFRESH_TOKEN_TTL,
+      jwtClaims(env)
     );
 
     // Store hashed refresh token in DB
@@ -234,6 +246,23 @@ async function handleRegister(request, env) {
         console.error('Failed to send welcome email:', err);
         // Don't fail registration if email fails
       });
+
+      // Send verification email (AUDIT-SEC-003)
+      const rawVerifyToken = crypto.randomUUID() + '-' + crypto.randomUUID();
+      const verifyTokenHash = await sha256(rawVerifyToken);
+      const verifyExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
+      await query(QUERIES.createEmailVerificationToken, [userId, verifyTokenHash, verifyExpiresAt]);
+
+      const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
+      const verifyUrl = `${frontendUrl}/?action=verify-email&token=${encodeURIComponent(rawVerifyToken)}`;
+      sendVerificationEmail(
+        email.toLowerCase(),
+        verifyUrl,
+        env.RESEND_API_KEY,
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+      ).catch(err => {
+        console.error('Failed to send verification email:', err);
+      });
     }
 
     const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -241,7 +270,7 @@ async function handleRegister(request, env) {
 
     return new Response(JSON.stringify({
       ok: true,
-      user: { id: userId, email: email.toLowerCase() },
+      user: { id: userId, email: email.toLowerCase(), emailVerified: false },
       accessToken,
       expiresIn: ACCESS_TOKEN_TTL
     }), { status: 201, headers });
@@ -323,23 +352,41 @@ async function handleLogin(request, env) {
       );
     }
 
-    // Successful login — clear failed attempts
+    // Successful password check — clear failed attempts
     if (env.CACHE) {
       await env.CACHE.delete(lockoutKey);
+    }
+
+    // 2FA gate: if user has TOTP enabled, issue a short-lived pending token
+    // instead of full credentials. The client must then supply the TOTP code.
+    if (user.totp_enabled && user.totp_secret) {
+      const pendingToken = await signJWT(
+        { sub: user.id, email: user.email, type: '2fa_pending' },
+        env.JWT_SECRET,
+        TOTP_PENDING_TTL,
+        jwtClaims(env)
+      );
+      return Response.json({
+        ok: true,
+        requires_2fa: true,
+        pending_token: pendingToken,
+      });
     }
 
     // Issue tokens
     const accessToken = await signJWT(
       { sub: user.id, email: user.email, type: 'access' },
       env.JWT_SECRET,
-      ACCESS_TOKEN_TTL
+      ACCESS_TOKEN_TTL,
+      jwtClaims(env)
     );
 
     const familyId = crypto.randomUUID();
     const refreshToken = await signJWT(
       { sub: user.id, type: 'refresh', fid: familyId },
       env.JWT_SECRET,
-      REFRESH_TOKEN_TTL
+      REFRESH_TOKEN_TTL,
+      jwtClaims(env)
     );
 
     // Store hashed refresh token in DB
@@ -392,7 +439,7 @@ async function handleRefresh(request, env) {
   }
 
   // Verify JWT signature & standard claims (iss, aud, exp)
-  const payload = await verifyHS256(refreshToken, env.JWT_SECRET);
+  const payload = await verifyHS256(refreshToken, env.JWT_SECRET, jwtClaims(env));
   if (!payload || payload.type !== 'refresh') {
     return Response.json(
       { error: 'Invalid refresh token' },
@@ -446,13 +493,15 @@ async function handleRefresh(request, env) {
   const accessToken = await signJWT(
     { sub: user.id, email: user.email, type: 'access' },
     env.JWT_SECRET,
-    ACCESS_TOKEN_TTL
+    ACCESS_TOKEN_TTL,
+    jwtClaims(env)
   );
 
   const newRefreshToken = await signJWT(
     { sub: user.id, type: 'refresh', fid: row.family_id },
     env.JWT_SECRET,
-    REFRESH_TOKEN_TTL
+    REFRESH_TOKEN_TTL,
+    jwtClaims(env)
   );
 
   // Store new refresh token
@@ -688,14 +737,19 @@ async function handleResetPassword(request, env) {
     // Hash new password
     const passwordHash = await hashPassword(password);
 
-    // Update password
-    await query(QUERIES.updatePasswordHash, [resetRow.user_id, passwordHash]);
-
-    // Mark token as used
-    await query(QUERIES.markPasswordResetUsed, [resetRow.id]);
-
-    // Revoke all refresh tokens (force re-login everywhere)
-    await query(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
+    // BL-RESET-001: Wrap all three mutations in a transaction so a crash
+    // between steps cannot leave the token unmarked (reusable) or old
+    // refresh tokens active.
+    await query('BEGIN');
+    try {
+      await query(QUERIES.updatePasswordHash, [resetRow.user_id, passwordHash]);
+      await query(QUERIES.markPasswordResetUsed, [resetRow.id]);
+      await query(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
+      await query('COMMIT');
+    } catch (txErr) {
+      await query('ROLLBACK').catch(e => console.error('[auth] ROLLBACK failed:', e.message));
+      throw txErr;
+    }
 
     return Response.json({
       ok: true,
@@ -741,10 +795,34 @@ async function handleDeleteAccount(request, env) {
     return Response.json({ error: 'Incorrect password' }, { status: 403 });
   }
 
+  // P2-BIZ-004: Cancel active Stripe subscription before deleting DB records
+  // Prevents billing ghosts and Stripe dunning emails to defunct addresses
+  if (env.STRIPE_SECRET_KEY) {
+    try {
+      const { rows: subRows } = await query(QUERIES.getActiveSubscription, [userId]);
+      const sub = subRows[0];
+      if (sub?.stripe_subscription_id) {
+        const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
+        await stripe.subscriptions.cancel(sub.stripe_subscription_id);
+        console.log(`[delete-account] Cancelled Stripe subscription ${sub.stripe_subscription_id} for user ${userId}`);
+      }
+    } catch (stripeErr) {
+      // Log but continue — user wants account deleted regardless
+      console.error(`[delete-account] Stripe cancellation failed for user ${userId}:`, stripeErr.message);
+    }
+  }
+
   // Delete user and all associated data (cascading)
   await query(QUERIES.deleteUserAccount, [userId]);
 
-  return Response.json({ ok: true, message: 'Your account and all associated data have been permanently deleted.' });
+  // P2-BIZ-006: Clear refresh token cookie so browser doesn't retain stale auth
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', clearRefreshCookie());
+
+  return new Response(
+    JSON.stringify({ ok: true, message: 'Your account and all associated data have been permanently deleted.' }),
+    { status: 200, headers }
+  );
 }
 
 // ─── GDPR Data Export ────────────────────────────────────────
@@ -787,4 +865,325 @@ async function handleExportData(request, env) {
       'Content-Disposition': 'attachment; filename="prime-self-data-export.json"',
     },
   });
+}
+
+// ─── Email Verification (AUDIT-SEC-003) ──────────────────────
+
+const VERIFICATION_TOKEN_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const RESEND_COOLDOWN = 60 * 1000; // 60 seconds
+
+/**
+ * POST /api/auth/verify-email
+ * Accepts { token } in body. No auth required — the token itself is proof.
+ * Hashes the raw token, looks it up, marks user as verified, deletes all tokens.
+ */
+async function handleVerifyEmail(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { token } = body;
+  if (!token || typeof token !== 'string') {
+    return Response.json({ error: 'Verification token is required' }, { status: 400 });
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const tokenHash = await sha256(token);
+
+    const result = await query(QUERIES.getEmailVerificationToken, [tokenHash]);
+    const record = result.rows?.[0];
+
+    if (!record) {
+      return Response.json(
+        { error: 'Invalid or expired verification link. Please request a new one.' },
+        { status: 400 }
+      );
+    }
+
+    // Mark user as verified
+    await query(QUERIES.markEmailVerified, [record.user_id]);
+
+    // Delete all verification tokens for this user (cleanup)
+    await query(QUERIES.deleteEmailVerificationTokens, [record.user_id]);
+
+    return Response.json({
+      ok: true,
+      message: 'Email verified successfully. You now have full access to AI features.'
+    });
+  } catch (err) {
+    console.error('[verify-email] Error:', err.message);
+    return Response.json({ error: 'Verification failed' }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/auth/resend-verification
+ * Requires auth. Generates a new token and sends a new verification email.
+ * Rate limited to 1 request per 60 seconds.
+ */
+async function handleResendVerification(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+    // Check if already verified
+    const statusResult = await query(QUERIES.getEmailVerifiedStatus, [userId]);
+    const user = statusResult.rows?.[0];
+    if (user?.email_verified) {
+      return Response.json({ ok: true, message: 'Email is already verified.' });
+    }
+
+    // Rate limit: check if a token was created within the cooldown period
+    // We use the user's email from the JWT (set during registration/login)
+    const userResult = await query(QUERIES.getUserById, [userId]);
+    const userEmail = userResult.rows?.[0]?.email;
+    if (!userEmail) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Delete old tokens and create a new one
+    await query(QUERIES.deleteEmailVerificationTokens, [userId]);
+
+    const rawToken = crypto.randomUUID() + '-' + crypto.randomUUID();
+    const tokenHash = await sha256(rawToken);
+    const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL).toISOString();
+    await query(QUERIES.createEmailVerificationToken, [userId, tokenHash, expiresAt]);
+
+    const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
+    const verifyUrl = `${frontendUrl}/?action=verify-email&token=${encodeURIComponent(rawToken)}`;
+
+    if (env.RESEND_API_KEY) {
+      await sendVerificationEmail(
+        userEmail,
+        verifyUrl,
+        env.RESEND_API_KEY,
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+      );
+    }
+
+    return Response.json({
+      ok: true,
+      message: 'Verification email sent. Please check your inbox.'
+    });
+  } catch (err) {
+    console.error('[resend-verification] Error:', err.message);
+    return Response.json({ error: 'Failed to resend verification email' }, { status: 500 });
+  }
+}
+
+// ─── 2FA / TOTP (PRA-OPS-004 / AUDIT-UX-006) ────────────────
+
+/**
+ * GET /api/auth/2fa/setup
+ * Auth required. Returns a new TOTP secret and otpauth:// URL for QR code.
+ * The secret is NOT saved yet — user must confirm with /2fa/enable.
+ */
+async function handle2FASetup(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const res = await query(QUERIES.getUserById, [userId]);
+  const user = res.rows?.[0];
+  if (!user) return Response.json({ error: 'User not found' }, { status: 404 });
+
+  if (user.totp_enabled) {
+    return Response.json(
+      { error: '2FA is already enabled. Disable it first before re-enrolling.' },
+      { status: 409 }
+    );
+  }
+
+  const secret = generateSecret();
+  const otpauth_url = buildOTPAuthURL(secret, user.email);
+
+  // Temporarily store the secret so enable can validate the TOTP code.
+  // We save it (with totp_enabled=false) so it persists across requests.
+  await query(QUERIES.setTOTPSecret, [secret, userId]);
+
+  return Response.json({
+    ok: true,
+    secret,
+    otpauth_url,
+    message: 'Scan the QR code in your authenticator app, then call /api/auth/2fa/enable with a valid code.',
+  });
+}
+
+/**
+ * POST /api/auth/2fa/enable
+ * Auth required. Body: { totp_code }
+ * Verifies the TOTP code against the pending secret and enables 2FA.
+ */
+async function handle2FAEnable(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let body;
+  try { body = await request.json(); } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { totp_code } = body;
+  if (!totp_code) {
+    return Response.json({ error: 'totp_code is required' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const res = await query(QUERIES.getUserById, [userId]);
+  const user = res.rows?.[0];
+  if (!user) return Response.json({ error: 'User not found' }, { status: 404 });
+
+  if (user.totp_enabled) {
+    return Response.json({ error: '2FA is already enabled' }, { status: 409 });
+  }
+  if (!user.totp_secret) {
+    return Response.json(
+      { error: 'No pending 2FA setup. Call /api/auth/2fa/setup first.' },
+      { status: 400 }
+    );
+  }
+
+  const valid = await verifyTOTP(user.totp_secret, totp_code);
+  if (!valid) {
+    return Response.json(
+      { error: 'Invalid TOTP code. Check your authenticator app and try again.' },
+      { status: 400 }
+    );
+  }
+
+  await query(QUERIES.enableTOTP, [userId]);
+
+  return Response.json({
+    ok: true,
+    message: '2FA has been enabled. You will be asked for a code on each login.',
+  });
+}
+
+/**
+ * POST /api/auth/2fa/disable
+ * Auth required. Body: { password, totp_code }
+ * Requires both the current password AND a valid TOTP code to disable.
+ */
+async function handle2FADisable(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let body;
+  try { body = await request.json(); } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { password, totp_code } = body;
+  if (!password || !totp_code) {
+    return Response.json({ error: 'password and totp_code are required' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const res = await query(QUERIES.getUserById, [userId]);
+  const user = res.rows?.[0];
+  if (!user) return Response.json({ error: 'User not found' }, { status: 404 });
+
+  if (!user.totp_enabled || !user.totp_secret) {
+    return Response.json({ error: '2FA is not currently enabled' }, { status: 400 });
+  }
+
+  const passwordOk = await verifyPassword(password, user.password_hash);
+  if (!passwordOk) {
+    return Response.json({ error: 'Incorrect password' }, { status: 403 });
+  }
+
+  const totpOk = await verifyTOTP(user.totp_secret, totp_code);
+  if (!totpOk) {
+    return Response.json(
+      { error: 'Invalid TOTP code. Check your authenticator app and try again.' },
+      { status: 400 }
+    );
+  }
+
+  await query(QUERIES.disableTOTP, [userId]);
+
+  return Response.json({
+    ok: true,
+    message: '2FA has been disabled.',
+  });
+}
+
+/**
+ * POST /api/auth/2fa/verify
+ * No pre-auth required (the pending_token acts as the credential).
+ * Body: { pending_token, totp_code }
+ * Validates the TOTP code and exchanges the pending_token for a full JWT pair.
+ */
+async function handle2FAVerify(request, env) {
+  let body;
+  try { body = await request.json(); } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { pending_token, totp_code } = body;
+  if (!pending_token || !totp_code) {
+    return Response.json({ error: 'pending_token and totp_code are required' }, { status: 400 });
+  }
+
+  // Validate the pending token (short-lived JWT)
+  const payload = await verifyHS256(pending_token, env.JWT_SECRET, jwtClaims(env));
+  if (!payload || payload.type !== '2fa_pending') {
+    return Response.json({ error: 'Invalid or expired 2FA session. Please log in again.' }, { status: 401 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const res = await query(QUERIES.getUserById, [payload.sub]);
+  const user = res.rows?.[0];
+  if (!user || !user.totp_enabled || !user.totp_secret) {
+    return Response.json({ error: 'Invalid 2FA state' }, { status: 401 });
+  }
+
+  const valid = await verifyTOTP(user.totp_secret, totp_code);
+  if (!valid) {
+    return Response.json(
+      { error: 'Invalid TOTP code. Check your authenticator app and try again.' },
+      { status: 400 }
+    );
+  }
+
+  // TOTP verified — issue full token pair
+  const accessToken = await signJWT(
+    { sub: user.id, email: user.email, type: 'access' },
+    env.JWT_SECRET,
+    ACCESS_TOKEN_TTL,
+    jwtClaims(env)
+  );
+
+  const familyId = crypto.randomUUID();
+  const refreshToken = await signJWT(
+    { sub: user.id, type: 'refresh', fid: familyId },
+    env.JWT_SECRET,
+    REFRESH_TOKEN_TTL,
+    jwtClaims(env)
+  );
+
+  const tokenHash = await sha256(refreshToken);
+  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
+  await query(QUERIES.insertRefreshToken, [user.id, tokenHash, familyId, expiresAtEpoch]);
+
+  // Update last login
+  await query(QUERIES.updateLastLogin, [user.id]).catch(() => {});
+
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+
+  return new Response(JSON.stringify({
+    ok: true,
+    user: { id: user.id, email: user.email },
+    accessToken,
+    expiresIn: ACCESS_TOKEN_TTL,
+  }), { headers });
 }

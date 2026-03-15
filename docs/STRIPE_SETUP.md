@@ -1,5 +1,8 @@
 # Stripe Integration Setup Guide
 
+> Historical setup snapshot. Product names, tier names, prices, and internal key mappings below reflect an obsolete billing model.
+> For current commercial semantics use `workers/src/lib/stripe.js`, `docs/TIER_ENFORCEMENT.md`, and `audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md`.
+
 **Created**: March 6, 2026  
 **Status**: Implementation Complete — Configuration Pending  
 **Related Tasks**: BL-REV-001, BL-REV-002
@@ -26,12 +29,14 @@
 - ✅ `invoice.payment_failed` - Failed payments
 
 ### Tier Configuration
-| Tier | Price | Chart Calc | Profile Gen | API Calls/mo | Features |
-|------|-------|------------|-------------|--------------|----------|
-| Free | $0 | 1 | 1 | 0 | Basic |
-| Seeker | $15 | ∞ | 10 | 0 | +SMS Digests |
-| Guide | $97 | ∞ | ∞ | 1,000 | +Practitioner Tools |
-| Practitioner | $500 | ∞ | ∞ | 10,000 | +White Label |
+| Tier | Internal Key | Price | Profiles/mo | AI Q/mo | Daily Synth Limit | Daily Q Limit | Features |
+|------|---|---|---|---|---|---|---|
+| Free | `free` | $0 | 1 | 5 | 1 | 5 | Basic |
+| Explorer | `regular` | $12 | 30 | 30 | 10 | 15 | +SMS, Diary, Composites, Timing, PDF |
+| Guide | `practitioner` | $60 | 200 | 200 | 20 | 50 | +Practitioner Tools, Client Mgmt |
+| Studio | `white_label` | $149 | 1,000 | 1,000 | 50 | 100 | +White Label API (10K calls/mo), Custom Webhooks |
+
+> **Note:** Daily ceilings enforced via RATE_LIMIT_KV (Cloudflare KV). See [TIER_ENFORCEMENT.md](TIER_ENFORCEMENT.md) for details.
 
 ---
 
@@ -69,41 +74,40 @@ WHERE table_schema = 'public'
 
 In Stripe Dashboard → Products:
 
-**Seeker Tier**
-- Product: "Prime Self — Seeker"
-- Price: $15.00 USD / month
+**Explorer Tier**
+- Product: "Prime Self — Explorer"
+- Price: $12.00 USD / month
 - Recurring billing
 - Copy Price ID (e.g., `price_1AbC123xyz`)
 
 **Guide Tier**
 - Product: "Prime Self — Guide"
-- Price: $97.00 USD / month
+- Price: $60.00 USD / month
 - Recurring billing
 - Copy Price ID (e.g., `price_2DeF456xyz`)
 
-**Practitioner Tier**
-- Product: "Prime Self — Practitioner"
-- Price: $500.00 USD / month
+**Studio Tier**
+- Product: "Prime Self — Studio"
+- Price: $149.00 USD / month
 - Recurring billing
-- Copy Price ID (e.g., `price_3GhI789xyz`)
+- Copy Price ID (e.g., `price_4JkL012xyz`)
 
 ### 3. Configure Environment Variables
 
 Set environment variables for Stripe price IDs:
 
 ```bash
-# Development (optional - defaults to 'price_seeker', 'price_guide', 'price_practitioner')
-export STRIPE_PRICE_SEEKER="price_1AbC123xyz"
-export STRIPE_PRICE_GUIDE="price_2DeF456xyz"
-export STRIPE_PRICE_PRACTITIONER="price_3GhI789xyz"
+export STRIPE_PRICE_REGULAR="price_1AbC123xyz"
+export STRIPE_PRICE_PRACTITIONER="price_2DeF456xyz"
+export STRIPE_PRICE_WHITE_LABEL="price_4JkL012xyz"
 ```
 
 Or add to `wrangler.toml`:
 ```toml
 [vars]
-STRIPE_PRICE_SEEKER = "price_1AbC123xyz"
-STRIPE_PRICE_GUIDE = "price_2DeF456xyz"
-STRIPE_PRICE_PRACTITIONER = "price_3GhI789xyz"
+STRIPE_PRICE_REGULAR = "price_1AbC123xyz"
+STRIPE_PRICE_PRACTITIONER = "price_2DeF456xyz"
+STRIPE_PRICE_WHITE_LABEL = "price_4JkL012xyz"
 ```
 
 ### 4. Set Stripe API Keys
@@ -208,7 +212,7 @@ curl -X POST https://your-worker.workers.dev/api/billing/checkout \
   -H "Authorization: Bearer eyJ..." \
   -H "Content-Type: application/json" \
   -d '{
-    "tier": "seeker",
+    "tier": "regular",
     "successUrl": "https://primeself.app/success",
     "cancelUrl": "https://primeself.app/pricing"
   }'
@@ -220,7 +224,7 @@ curl -X POST https://your-worker.workers.dev/api/billing/checkout \
 
 # 4. Verify subscription created
 # Check database: SELECT * FROM subscriptions WHERE user_id = '...';
-# Should show tier='seeker', status='active'
+# Should show tier='regular', status='active'
 ```
 
 ### Test Customer Portal

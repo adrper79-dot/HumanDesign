@@ -502,7 +502,7 @@ Components for displaying historical exemplars, book recommendations, and knowle
 </div>
 
 <!-- Knowledge Focus Badge -->
-<div class="knowledge-focus-badge">Knowledge of Self</div>
+<div class="knowledge-focus-badge">Knowledge of Sciences</div>
 ```
 
 Classes:

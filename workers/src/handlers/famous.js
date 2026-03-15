@@ -45,7 +45,7 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
     
     if (charts.length === 0) {
       return new Response(JSON.stringify({
-        success: false,
+        ok: false,
         error: 'No chart found. Please calculate your chart first.'
       }), {
         status: 404,
@@ -80,7 +80,7 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
     
     // Format response
     const response = {
-      success: true,
+      ok: true,
       matches: matches.map(match => ({
         celebrity: match.celebrity,
         similarity: {
@@ -104,7 +104,7 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
   } catch (error) {
     console.error('Error finding celebrity matches:', error);
     return new Response(JSON.stringify({
-      success: false,
+      ok: false,
       error: 'Failed to find celebrity matches'
     }), {
       status: 500,
@@ -119,6 +119,11 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
  */
 export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId) {
   try {
+    // P2-BIZ-018: Validate celebrity ID format (UUID or short slug, max 50 chars)
+    if (!celebrityId || celebrityId.length > 50) {
+      return Response.json({ error: 'Invalid celebrity ID' }, { status: 400 });
+    }
+
     const user = await getUserFromRequest(request, env);
     if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
 
@@ -129,7 +134,7 @@ export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId
     
     if (charts.length === 0) {
       return new Response(JSON.stringify({
-        success: false,
+        ok: false,
         error: 'No chart found. Please calculate your chart first.'
       }), {
         status: 404,
@@ -158,7 +163,7 @@ export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId
     
     if (!match) {
       return new Response(JSON.stringify({
-        success: false,
+        ok: false,
         error: 'Celebrity not found'
       }), {
         status: 404,
@@ -174,7 +179,7 @@ export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId
     }, user.tier);
     
     return new Response(JSON.stringify({
-      success: true,
+      ok: true,
       match,
       userChart: {
         type: userChart.chart.type,
@@ -191,7 +196,7 @@ export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId
   } catch (error) {
     console.error('Error getting celebrity match:', error);
     return new Response(JSON.stringify({
-      success: false,
+      ok: false,
       error: 'Failed to get celebrity match'
     }), {
       status: 500,
@@ -210,7 +215,7 @@ export async function handleGetCelebritiesByCategory(request, env, ctx, category
     
     if (celebrities.length === 0) {
       return new Response(JSON.stringify({
-        success: false,
+        ok: false,
         error: 'Category not found or empty'
       }), {
         status: 404,
@@ -219,7 +224,7 @@ export async function handleGetCelebritiesByCategory(request, env, ctx, category
     }
     
     return new Response(JSON.stringify({
-      success: true,
+      ok: true,
       category,
       celebrities: celebrities.map(c => ({
         id: c.id,
@@ -238,7 +243,7 @@ export async function handleGetCelebritiesByCategory(request, env, ctx, category
   } catch (error) {
     console.error('Error getting celebrities by category:', error);
     return new Response(JSON.stringify({
-      success: false,
+      ok: false,
       error: 'Failed to get celebrities'
     }), {
       status: 500,
@@ -258,7 +263,7 @@ export async function handleSearchCelebrities(request, env, ctx) {
     
     if (!query || query.trim().length < 2) {
       return new Response(JSON.stringify({
-        success: false,
+        ok: false,
         error: 'Query must be at least 2 characters'
       }), {
         status: 400,
@@ -269,7 +274,7 @@ export async function handleSearchCelebrities(request, env, ctx) {
     const celebrities = searchCelebrities(query);
     
     return new Response(JSON.stringify({
-      success: true,
+      ok: true,
       query,
       celebrities: celebrities.map(c => ({
         id: c.id,
@@ -288,7 +293,7 @@ export async function handleSearchCelebrities(request, env, ctx) {
   } catch (error) {
     console.error('Error searching celebrities:', error);
     return new Response(JSON.stringify({
-      success: false,
+      ok: false,
       error: 'Failed to search celebrities'
     }), {
       status: 500,
@@ -304,7 +309,7 @@ export async function handleSearchCelebrities(request, env, ctx) {
 export async function handleGetAllCelebrities(request, env, ctx) {
   try {
     return new Response(JSON.stringify({
-      success: true,
+      ok: true,
       celebrities: celebsData.celebrities.map(c => ({
         id: c.id,
         name: c.name,
@@ -323,7 +328,7 @@ export async function handleGetAllCelebrities(request, env, ctx) {
   } catch (error) {
     console.error('Error getting all celebrities:', error);
     return new Response(JSON.stringify({
-      success: false,
+      ok: false,
       error: 'Failed to get celebrities'
     }), {
       status: 500,

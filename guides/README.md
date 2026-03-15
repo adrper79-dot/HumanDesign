@@ -1,6 +1,8 @@
 # Implementation Guides
 
-Step-by-step tutorials for setting up, integrating, and customizing Prime Self.
+Current setup and integration guides for Prime Self.
+
+Use this directory for practical setup instructions. For current product strategy, pricing, or audit status, start from [DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md) instead of treating these guides as product truth.
 
 ## 🚀 Getting Started (Essential First Steps)
 
@@ -48,27 +50,15 @@ Set up key features and external services:
 
 ---
 
-## 📚 Advanced Guides (Customization & Deployment)
+## 📚 Published Guides Only
 
-Customize the platform and deploy variations:
+The `guides/advanced/` path is not currently published in this repository. Do not rely on references to advanced/custom theme/white-label guides unless those files are added explicitly.
 
-### Customization
-- **[advanced/CUSTOM_THEMES.md](advanced/CUSTOM_THEMES.md)**
-  - Create custom color themes
-  - Build white-label designs
-  - Override design tokens and CSS
+For current related docs, use:
 
-### API Integration
-- **[advanced/API_INTEGRATION.md](advanced/API_INTEGRATION.md)**
-  - Build external applications with the Prime Self API
-  - Authentication and rate limiting
-  - Example client libraries
-
-### White-Label Deployment
-- **[advanced/WHITE_LABEL.md](advanced/WHITE_LABEL.md)**
-  - Deploy Prime Self under your brand
-  - Custom domain configuration
-  - Admin panel customization
+- [../EMBED_WIDGET_GUIDE.md](../EMBED_WIDGET_GUIDE.md)
+- [../docs/API_MARKETPLACE.md](../docs/API_MARKETPLACE.md)
+- [../docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](../docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md)
 
 ---
 
@@ -82,9 +72,6 @@ Customize the platform and deploy variations:
 | **Background video** | [BACKGROUND_VIDEO.md](BACKGROUND_VIDEO.md) | 20 min |
 | **PWA features** | [PWA_CONFIGURATION.md](PWA_CONFIGURATION.md) | 15 min |
 | **Embed widget** | [EMBED_WIDGET.md](EMBED_WIDGET.md) | 15 min |
-| **Custom themes** | [advanced/CUSTOM_THEMES.md](advanced/CUSTOM_THEMES.md) | — |
-| **API integration** | [advanced/API_INTEGRATION.md](advanced/API_INTEGRATION.md) | — |
-| **White-label** | [advanced/WHITE_LABEL.md](advanced/WHITE_LABEL.md) | — |
 
 ---
 

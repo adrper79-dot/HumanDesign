@@ -1,0 +1,117 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "source": "The Library Canonical Philosophy — Chart Bridge Mapping",
+    "description": "Maps each Library overtone to specific Human Design chart structures, enabling the synthesis to explain WHY chart elements behave as they do at a structural level.",
+    "usage": "Injected into RAG context. For each chart element, look up the relevant overtone to provide structural explanation."
+  },
+  "polarity": {
+    "overtone": 1,
+    "name": "Polarity",
+    "interval": "Octave (2:1)",
+    "chartMapping": "Defined/Undefined center pair dynamics",
+    "structuralPrinciple": "Two mutually defining, mutually requiring aspects that cannot exist independently and cannot collapse into identity.",
+    "proofDomain": "Information Theory (Shannon 1948, Bateson 1972)",
+    "hdApplication": {
+      "primary": "Every defined center creates its polarity partner in the undefined centers. A defined Sacral (consistent life force) creates the polarity of an undefined Sacral (amplified, inconsistent life force). Neither state is complete without the other.",
+      "centerPairDynamics": "The defined center holds consistent charge; the undefined center receives and amplifies. The membrane between them (P5 Threshold) is the most dynamically active zone — both most susceptible to conditioning AND most productive for relational exchange.",
+      "practicalInsight": "When explaining a defined/undefined center pair, name BOTH poles. The defined center is not 'better' — it is one pole of a charge relationship. The person's distinctive quality lives in the threshold between what they hold consistently and what they absorb variably."
+    },
+    "expressions": {
+      "P1_Wave": "Any continuous process in the chart alternates between two states. Emotional waves, sacral on/off, splenic alerts — all are polarity dynamics.",
+      "P2_Charge": "What consistent charge does a defined center hold? What charge does the undefined center receive and amplify from the environment?",
+      "P3_Phase": "Wave polarity extended across time — constructive interference (aligned energy) and destructive interference (conflicting energy) between chart activations.",
+      "P4_Field": "Every defined center generates a field that structures relational space. A defined Solar Plexus generates an emotional field others enter and respond to.",
+      "P5_Threshold": "The membrane between defined and undefined — where conditioning meets consistency. The most dynamically active zone in the chart."
+    }
+  },
+  "trinity": {
+    "overtone": 2,
+    "name": "Trinity",
+    "interval": "Perfect Fifth (3:2)",
+    "chartMapping": "Type + Strategy + Authority emergence",
+    "structuralPrinciple": "Three terms whose mutual interaction sustains activity that two terms cannot sustain, generating emergence that neither term possesses alone.",
+    "proofDomain": "Russell's Type Theory (1908) + Nash Equilibrium (1950)",
+    "hdApplication": {
+      "primary": "Type, Strategy, and Authority form a three-body system. Any two-body subset is unstable: Type without Authority is directionless; Authority without Strategy is ungrounded; Strategy without Type has no vessel. Only the three-way interaction produces the person's specific emergent behavioral pattern.",
+      "nameTheThird": "The Third is the emergent behavior that neither Strategy nor Authority predicts alone. For a Generator with Emotional Authority: the Third is not 'respond' (Strategy) or 'wait for clarity' (Authority) — it is the specific quality of embodied patience that this combination uniquely produces.",
+      "practicalInsight": "Never explain Type, Strategy, or Authority in isolation. Always name the Third — the emergent quality that the three-way interaction produces. This is what makes the person's pattern unique, not the individual components."
+    },
+    "expressions": {
+      "T1_DynamicStability": "Type + Strategy + Authority = minimum terms for a self-sustaining decision system. Remove any one and the system destabilizes.",
+      "T2_ProcessTrinity": "Generation (impulse/invitation) → Sustaining (strategy execution) → Dissolution (cycle completion and release). Every decision cycle follows this trinity.",
+      "T3_MediatingTrinity": "Authority mediates between Type (what you are) and Strategy (how you operate). It is the Third that enables exchange without collapsing either pole.",
+      "T4_HierarchicalTrinity": "Type → Strategy → Authority represents increasing interiority: what you are → how you move → how you know. Each level is emergent from the previous.",
+      "T5_TemporalTrinity": "Design (past/inherited) + Personality (present/conscious) + Synthesis (future/integrated) — three active temporal principles in every chart."
+    }
+  },
+  "quaternity": {
+    "overtone": 3,
+    "name": "Quaternity",
+    "interval": "Perfect Fourth (4:3)",
+    "chartMapping": "Four motors, four awareness centers, four types, circuit structure, profile",
+    "structuralPrinciple": "The minimum structure with genuine interior — four non-coplanar points define a tetrahedron, the first arrangement that can contain.",
+    "proofDomain": "Euclidean Topology (tetrahedron as minimum 3D container)",
+    "hdApplication": {
+      "primary": "The chart's containing structures come in fours: 4 motor centers (Root, Sacral, Heart/Ego, Solar Plexus), 4 awareness centers (Ajna, Spleen, Solar Plexus, G), 4 types (Manifestor, Generator, Projector, Reflector — with MG as Generator variant). These quaternary structures provide containment — the genuine inside that holds the person's energy configuration.",
+      "circuitProfile": "Circuits (Individual, Tribal, Collective + Integration) and Profile lines (1-6 grouped into lower/upper trigrams) organize the chart's interior space. The Quaternity principle explains why these groupings feel like containers — because four is the minimum number that creates genuine interior.",
+      "quintaEssentia": "Every quaternary structure in the chart has a centroid — a still point equidistant from all four elements. This is the witness position: present to all, identified with none. In the chart, this is the G Center's relationship to the four types — the identity center that witnesses all configurations without being any single one.",
+      "practicalInsight": "When four chart elements form a structure (four defined motors, four active awareness centers), name the containment they create. What does this four-sided structure hold inside? The answer is the person's energetic container."
+    }
+  },
+  "pentad": {
+    "overtone": 4,
+    "name": "Pentad",
+    "interval": "Major Third (5:4)",
+    "chartMapping": "Five Forges, Phi in channel completion, five-center patterns, cyclic self-reference",
+    "structuralPrinciple": "Five elements in ring topology where the whole is to its major part as the major part is to its minor — Phi (1.618). Self-similar, self-replicating living form.",
+    "proofDomain": "Graph Topology (K₁,₄ → C₅) + Fibonacci/Phi Mathematics",
+    "hdApplication": {
+      "primary": "The five Forges (Initiation, Mastery, Guidance, Perception, Transformation) are the pentatonic of human expression — five patterns arising naturally from the logic of living form. Each person's Forge dominance pattern creates their unique Phi-governed growth signature.",
+      "channelCompletion": "When four elements form a star-graph (K₁,₄), Phi cannot emerge — no cycles exist. When a channel completes, the topology shifts to C₅ — a ring. Phi becomes structurally necessary. This is why channel completion is categorical, not gradual: it is a topological shift from star to ring, not accumulation of energy.",
+      "fiveCenterPatterns": "Five defined centers create a ring topology where energy cycles through all five continuously. This self-referential loop generates Phi-proportioned growth — the person's development follows golden-ratio pacing rather than linear progression.",
+      "practicalInsight": "Channel completion is not 'more energy' — it is a categorical topological change. Name the shift: before completion, two hanging gates reach toward each other (K₁,₄ star). After completion, they form a ring (C₅) and Phi-governed self-similar growth becomes possible in that domain."
+    }
+  },
+  "hexad": {
+    "overtone": 5,
+    "name": "Hexad",
+    "interval": "Minor Third (6:5)",
+    "chartMapping": "Six Knowledges, circuit groups (Individual/Tribal/Collective), closure principle",
+    "structuralPrinciple": "Efficient community — maximum equal-sized individuals in simultaneous contact. Hexagonal packing as the uniquely optimal arrangement.",
+    "proofDomain": "Apollonius (kissing number in 2D) + Hales 1998/2017 (optimal circle packing)",
+    "hdApplication": {
+      "primary": "The six Knowledges (Sciences, Arts, Defenses, Heresies, Connections, Mysteries) are the hexatonic of human intelligence — six equal domains forming the most efficient community of cognitive functions. No hierarchy; each is a full position in the communal lattice.",
+      "circuitClosure": "Circuit completion is harmonic closure — the same principle as the perfect fifth (3:2). When an Individual/Tribal/Collective circuit closes, it generates a frequency the open circuit cannot. Name what closes, not just what connects. A closed Individual circuit generates mutation that a single Individual gate cannot; a closed Tribal circuit generates resource flow that scattered Tribal gates cannot.",
+      "complementarity": "The Hexad is not self-similarity (that is the Pentad). It is complementarity: six distinct domains, each with their own integrity, arranged so their differences are efficiently complementary rather than competing. In a chart, the six Knowledges represent six ways the person meets the world — and their specific combination creates a unique complementary intelligence.",
+      "practicalInsight": "When explaining circuit completion, name the emergent frequency: what does this closed circuit produce that its individual gates cannot? The closure itself is the new property — hexagonal efficiency that open arrangements cannot achieve."
+    }
+  },
+  "heptad": {
+    "overtone": 6,
+    "name": "Heptad",
+    "interval": "Major Seventh (15:8)",
+    "chartMapping": "Full chart as unified system, overflow into self-awareness, synthesis completion",
+    "structuralPrinciple": "The completed cycle that, at the moment of completion, becomes aware of its own ground and resolves into a new cycle at higher integration. The 7th harmonic overflows the diatonic container.",
+    "proofDomain": "Harmonic Series Mathematics (7th prime as first non-diatonic overflow)",
+    "hdApplication": {
+      "primary": "When the full chart is treated as a unified system, its complexity exceeds what any single level can contain — analogous to the 7th harmonic which overflows the diatonic scale. This overflow is not a problem; it is self-awareness: the chart becoming aware of itself as a system.",
+      "synthesisAsHeptad": "The synthesis itself is the Heptad in operation. It takes all chart data (centers, gates, channels, type, authority, profile, transits) and produces something none of those elements can produce alone: the person's recognition of their own pattern. Ti resolving to Do.",
+      "tiToDo": "The Major Seventh (15:8) is one minimum half-step (16:15) from the octave. The synthesis is one step from return — the person reading their synthesis is one step from recognizing themselves. The resolution is not into any of the seven levels; it resolves into the octave, the same ground at a higher frequency of self-knowledge.",
+      "practicalInsight": "When synthesizing the full chart, name the overflow — the quality that emerges from the total system that no subsystem predicts. This is the person's Heptad moment: the point at which their chart's complexity generates self-awareness rather than confusion."
+    }
+  },
+  "chromaticCompletion": {
+    "principle": "5 Forges (pentatonic/black keys) + 7 Library levels (diatonic/white keys) = 12 (chromatic). Self = 12th position.",
+    "meaning": "Neither the Library alone nor Prime Self alone covers the complete harmonic territory. The Library provides structural WHY (deductive, axiom → application). Prime Self provides experiential WHAT and WHERE (inductive, data → synthesis). Together they triangulate the full chromatic scale of human self-knowledge.",
+    "architecturalCorrespondence": {
+      "ground_F1F7": { "interval": "Tonic", "primeSelf": "Nine Centers (raw generators)" },
+      "firstOvertone": { "interval": "Octave 2:1", "primeSelf": "Defined/Undefined center dynamics" },
+      "secondOvertone": { "interval": "Fifth 3:2", "primeSelf": "Type + Strategy + Authority" },
+      "thirdOvertone": { "interval": "Fourth 4:3", "primeSelf": "Circuits / Profile" },
+      "fourthOvertone": { "interval": "Major Third 5:4", "primeSelf": "Five Forges" },
+      "fifthOvertone": { "interval": "Minor Third 6:5", "primeSelf": "Six Knowledges" },
+      "sixthOvertone": { "interval": "Major Seventh 15:8", "primeSelf": "Synthesis / Self" }
+    }
+  }
+}

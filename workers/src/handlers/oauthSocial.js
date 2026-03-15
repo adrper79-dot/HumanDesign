@@ -28,7 +28,7 @@
  *     FRONTEND_URL          — existing secret (e.g. https://selfprime.net)
  */
 
-import { signJWT, sha256 } from '../lib/jwt.js';
+import { signJWT, sha256, jwtClaims } from '../lib/jwt.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { sendWelcomeEmail1 } from '../lib/email.js';
 
@@ -151,7 +151,7 @@ async function handleCallback(provider, request, env) {
     if (storedProvider && storedProvider !== provider) {
       return oauthErrorRedirect(frontendUrl, 'State mismatch');
     }
-    if (env.CACHE) env.CACHE.delete(`oauth_state:${state}`).catch(() => {});
+    if (env.CACHE) env.CACHE.delete(`oauth_state:${state}`).catch(e => console.error('[oauth] state cleanup failed:', e.message));
 
     // Exchange code for user info
     let providerUserId, providerEmail, displayName, avatarUrl;
@@ -194,7 +194,7 @@ async function handleCallback(provider, request, env) {
         providerEmail?.toLowerCase() || null,
         displayName || null,
         avatarUrl || null
-      ]).catch(() => {}); // best-effort update
+      ]).catch(err => console.error('[OAuth] Social account upsert failed:', err.message)); // best-effort update
     } else {
       // No social account found — check by email to link existing account
       let userRow = null;
@@ -234,14 +234,16 @@ async function handleCallback(provider, request, env) {
     const accessToken = await signJWT(
       { sub: userId, email: userEmail, type: 'access' },
       env.JWT_SECRET,
-      ACCESS_TOKEN_TTL
+      ACCESS_TOKEN_TTL,
+      jwtClaims(env)
     );
 
     const familyId    = crypto.randomUUID();
     const refreshToken = await signJWT(
       { sub: userId, type: 'refresh', fid: familyId },
       env.JWT_SECRET,
-      REFRESH_TOKEN_TTL
+      REFRESH_TOKEN_TTL,
+      jwtClaims(env)
     );
 
     const tokenHash    = await sha256(refreshToken);
@@ -255,21 +257,32 @@ async function handleCallback(provider, request, env) {
         displayName || providerEmail.split('@')[0],
         env.RESEND_API_KEY,
         env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
-      ).catch(() => {});
+      ).catch(err => console.error('[OAuth] Welcome email failed:', err.message));
     }
 
-    // Redirect to frontend — access token in URL param (short TTL, browser cleans it immediately)
-    // Refresh token is set as HttpOnly cookie (never exposed to JS)
+    // P2-SEC-011: Authorization code flow — never put tokens in URL.
+    // Store tokens under a random one-time code in KV (60s TTL).
+    // Frontend exchanges the code via POST /api/auth/oauth/exchange.
+    const oauthCode = crypto.randomUUID();
+    const codePayload = JSON.stringify({
+      accessToken,
+      refreshToken,
+      isNewUser,
+      userId
+    });
+
+    if (env.CACHE) {
+      await env.CACHE.put(`oauth_code:${oauthCode}`, codePayload, { expirationTtl: 60 });
+    } else {
+      console.error('[oauth] KV CACHE unavailable — cannot store auth code');
+      return oauthErrorRedirect(frontendUrl, 'Service temporarily unavailable — please try again');
+    }
+
     const dest = new URL(`${frontendUrl}/`);
     dest.searchParams.set('oauth', 'success');
-    dest.searchParams.set('token', accessToken);
-    // Note: refresh param removed — now delivered via HttpOnly cookie below
+    dest.searchParams.set('code', oauthCode);
     if (isNewUser) dest.searchParams.set('new_user', '1');
-    const redirectHeaders = new Headers({
-      Location: dest.toString()
-    });
-    redirectHeaders.append('Set-Cookie', buildRefreshCookie(refreshToken));
-    return new Response(null, { status: 302, headers: redirectHeaders });
+    return Response.redirect(dest.toString(), 302);
 
   } catch (err) {
     console.error(`[oauth:${provider}] callback error:`, err.message);
@@ -372,6 +385,54 @@ async function buildAppleClientSecret(env) {
     .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
   return `${signingInput}.${sigB64}`;
+}
+
+// ─── P2-SEC-011: Exchange one-time code for tokens ───────────
+
+export async function handleOAuthExchange(request, env) {
+  if (request.method !== 'POST') {
+    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  }
+
+  let body;
+  try { body = await request.json(); } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { code } = body;
+  if (!code || typeof code !== 'string') {
+    return Response.json({ error: 'Missing authorization code' }, { status: 400 });
+  }
+
+  if (!env.CACHE) {
+    return Response.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+  }
+
+  // Retrieve and immediately delete (one-time use)
+  const kvKey = `oauth_code:${code}`;
+  const raw = await env.CACHE.get(kvKey);
+  if (!raw) {
+    return Response.json({ error: 'Invalid or expired authorization code' }, { status: 400 });
+  }
+  // Delete immediately to prevent replay
+  await env.CACHE.delete(kvKey);
+
+  let payload;
+  try { payload = JSON.parse(raw); } catch {
+    return Response.json({ error: 'Corrupted authorization data' }, { status: 500 });
+  }
+
+  const { accessToken, refreshToken, isNewUser } = payload;
+
+  // Return tokens securely — refresh token as HttpOnly cookie, access token in response body
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+
+  return new Response(JSON.stringify({
+    ok: true,
+    token: accessToken,
+    new_user: !!isNewUser
+  }), { status: 200, headers });
 }
 
 // ─── Helpers ─────────────────────────────────────────────────

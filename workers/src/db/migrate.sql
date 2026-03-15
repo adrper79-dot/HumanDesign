@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   user_id                 UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   stripe_customer_id      TEXT UNIQUE NOT NULL,
   stripe_subscription_id  TEXT UNIQUE,
-  tier                    TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'seeker', 'guide', 'practitioner')),
+  tier                    TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'regular', 'practitioner', 'white_label')),
   status                  TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'past_due', 'unpaid', 'trialing')),
   current_period_start    TIMESTAMPTZ,
   current_period_end      TIMESTAMPTZ,

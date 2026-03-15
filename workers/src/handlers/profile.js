@@ -26,13 +26,18 @@ import {
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { callLLM } from '../lib/llm.js';
-import { enforceUsageQuota, recordUsage } from '../middleware/tierEnforcement.js';
+import { enforceUsageQuota, recordUsage, enforceDailyCeiling, incrementDailyCounter } from '../middleware/tierEnforcement.js';
+import { getTier } from '../lib/stripe.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 
 export async function handleProfile(request, env) {
-  // Enforce usage quota for profile generation
+  // Enforce usage quota for profile generation (BL-RACE-001: atomic check+insert)
   const quotaCheck = await enforceUsageQuota(request, env, 'profile_generation', 'profileGenerations');
   if (quotaCheck) return quotaCheck;
+
+  // BL-DAILY-001: Enforce daily ceiling to prevent burning entire monthly quota in one session
+  const dailyCheck = await enforceDailyCeiling(request, env, 'synthesis');
+  if (dailyCheck) return dailyCheck;
 
   let body;
   try {
@@ -87,14 +92,19 @@ export async function handleProfile(request, env) {
   let psychometricData = null;
   let diaryEntries = null;
 
+  let practitionerContext = null;
+
   if (userId) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
     // Parallel DB reads (same pattern as profile-stream.js)
-    const [valResult, psyResult, diaryResult] = await Promise.allSettled([
+    const [valResult, psyResult, diaryResult, practCtxResult, sharedNotesResult] = await Promise.allSettled([
       query(QUERIES.getValidationData, [userId]),
       query(QUERIES.getPsychometricData, [userId]),
-      query(QUERIES.getDiaryEntries, [userId, 50, 0])
+      query(QUERIES.getDiaryEntries, [userId, 50, 0]),
+      // HD_UPDATES4: Fetch practitioner context if this user is a client
+      query(QUERIES.getPractitionerAIContext, [userId]),
+      query(QUERIES.getAISharedNotes, [userId]),
     ]);
 
     if (valResult.status === 'fulfilled' && valResult.value.rows.length > 0) {
@@ -105,6 +115,17 @@ export async function handleProfile(request, env) {
     }
     if (diaryResult.status === 'fulfilled' && diaryResult.value.rows.length > 0) {
       diaryEntries = diaryResult.value.rows;
+    }
+
+    // Build practitioner context from HD_UPDATES4 vectors
+    const practRow = practCtxResult.status === 'fulfilled' ? practCtxResult.value.rows[0] : null;
+    const sharedNotes = sharedNotesResult.status === 'fulfilled' ? sharedNotesResult.value.rows : [];
+    if (practRow || sharedNotes.length > 0) {
+      practitionerContext = {
+        synthesisStyle: practRow?.synthesis_style || null,
+        clientAiContext: practRow?.ai_context || null,
+        sharedNotes,
+      };
     }
   }
 
@@ -122,7 +143,7 @@ export async function handleProfile(request, env) {
     validationData,
     psychometricData,
     diaryEntries
-  }, question);
+  }, question, practitionerContext, request._tier || 'free');
 
   // Call LLM via AI Gateway
   let llmResponse;
@@ -187,8 +208,16 @@ export async function handleProfile(request, env) {
       ]);
       chartId = chartResult.rows?.[0]?.id || null;
 
-      // Save profile
-      if (validation.parsed && chartId) {
+      // Save profile — gated by tier's savedProfilesMax
+      // Free users (max=0) get generation results but no history persistence
+      const tierCfg = getTier(request._tier || 'free');
+      const maxSavedProfiles = tierCfg.features.savedProfilesMax;
+      let canSaveProfile = maxSavedProfiles > 0;
+      if (canSaveProfile && maxSavedProfiles !== Infinity) {
+        const countResult = await query(QUERIES.countSavedProfilesByUser, [userId]);
+        canSaveProfile = parseInt(countResult.rows[0]?.count || 0) < maxSavedProfiles;
+      }
+      if (validation.parsed && chartId && canSaveProfile) {
         const profileResult = await query(QUERIES.saveProfile, [
           userId,
           chartId,
@@ -207,12 +236,10 @@ export async function handleProfile(request, env) {
     }
   }
 
-  // BL-FIX-C2: Record usage after successful generation to enforce quota.
-  // Without this, the non-streaming endpoint bypasses the usage counter
-  // and users get unlimited profile generations.
-  // BL-FIX-C3: Correct signature is (env, userId, action, endpoint) - was (request, env, action)
+  // BL-DAILY-001: Increment daily counter after successful generation
+  // Note: Monthly usage is now recorded atomically inside enforceUsageQuota (BL-RACE-001)
   if (userId) {
-    await recordUsage(env, userId, 'profile_generation', '/api/profile/generate').catch(() => {});
+    await incrementDailyCounter(env, userId, 'synthesis').catch(err => console.error('[profile] Daily counter increment failed:', err.message));
   }
 
   return Response.json({
@@ -314,6 +341,45 @@ export async function handleListProfiles(request, env) {
     return Response.json({ ok: true, data: profiles });
   } catch (err) {
     console.error('[list-profiles] DB error:', err.message);
+    return Response.json({ error: 'Database error' }, { status: 500 });
+  }
+}
+
+/**
+ * GET /api/profile/search?q=term
+ *
+ * Search saved profiles for the authenticated user by keyword.
+ */
+export async function handleSearchProfiles(request, env) {
+  const userId = request._user?.sub || null;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  if (!env.NEON_CONNECTION_STRING) {
+    return Response.json({ error: 'Database unavailable' }, { status: 503 });
+  }
+
+  const url = new URL(request.url);
+  const searchTerm = (url.searchParams.get('q') || '').trim();
+  if (!searchTerm || searchTerm.length < 2) {
+    return Response.json({ error: 'Search term must be at least 2 characters' }, { status: 400 });
+  }
+  if (searchTerm.length > 100) {
+    return Response.json({ error: 'Search term too long' }, { status: 400 });
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const result = await query(QUERIES.searchProfilesByUser, [userId, searchTerm]);
+    const profiles = (result?.rows || []).map(p => ({
+      id: p.id,
+      chartId: p.chart_id,
+      modelUsed: p.model_used,
+      createdAt: p.created_at
+    }));
+    return Response.json({ ok: true, data: profiles });
+  } catch (err) {
+    console.error('[search-profiles] DB error:', err.message);
     return Response.json({ error: 'Database error' }, { status: 500 });
   }
 }

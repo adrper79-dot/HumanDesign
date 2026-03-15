@@ -6,6 +6,9 @@
  *   GET  /api/practitioner/profile         — Get own practitioner profile
  *   GET  /api/practitioner/clients         — List all clients
  *   POST /api/practitioner/clients/add     — Add a client by email
+ *   POST /api/practitioner/clients/invite  — Invite or add client by email
+ *   GET  /api/practitioner/clients/invitations — List pending invitations
+ *   DELETE /api/practitioner/clients/invitations/:id — Revoke invitation
  *   GET  /api/practitioner/clients/:id     — Get a specific client's chart + profiles
  *   DELETE /api/practitioner/clients/:id  — Remove client from roster
  *
@@ -18,17 +21,50 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+import { sendPractitionerInvitationEmail } from '../lib/email.js';
 
-// Tier limits aligned with billing tier names (regular/practitioner/white_label)
+// Tier limits aligned with billing tier names (individual/practitioner/agency)
 const TIER_LIMITS = {
   free: 0,
-  regular: 5,
-  practitioner: 50,
-  white_label: Infinity,
+  individual: 0,          // Individual tier has no client management
+  practitioner: Infinity,  // HD_UPDATES3: unlimited invites
+  agency: Infinity,
   // Legacy aliases — kept for users whose tier was set before rename
-  seeker: 5,
-  guide: 50,
+  regular: 0,
+  seeker: 0,
+  white_label: Infinity,
+  guide: Infinity,
 };
+
+function parseJsonSafe(value, fallback = null) {
+  if (value == null) return fallback;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function makeInviteToken(bytes = 32) {
+  const randomBytes = new Uint8Array(bytes);
+  crypto.getRandomValues(randomBytes);
+  let binary = '';
+  for (let i = 0; i < randomBytes.length; i += 1) {
+    binary += String.fromCharCode(randomBytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function sha256Hex(input) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 export async function handlePractitioner(request, env, subpath) {
   const userId = request._user?.sub;
@@ -64,6 +100,22 @@ export async function handlePractitioner(request, env, subpath) {
     // POST /api/practitioner/clients/add
     if (subpath === '/clients/add' && method === 'POST') {
       return handleAddClient(request, env, userId, query);
+    }
+
+    // POST /api/practitioner/clients/invite
+    if (subpath === '/clients/invite' && method === 'POST') {
+      return handleInviteClient(request, env, userId, query);
+    }
+
+    // GET /api/practitioner/clients/invitations
+    if (subpath === '/clients/invitations' && method === 'GET') {
+      return handleListInvitations(userId, query);
+    }
+
+    // DELETE /api/practitioner/clients/invitations/:id
+    const invitationDeleteMatch = subpath.match(/^\/clients\/invitations\/([a-f0-9-]+)$/i);
+    if (invitationDeleteMatch && method === 'DELETE') {
+      return handleDeleteInvitation(userId, invitationDeleteMatch[1], query);
     }
 
     // GET /api/practitioner/clients/:id
@@ -166,8 +218,7 @@ async function handleAddClient(request, env, userId, query) {
   }
 
   // Basic email format validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(clientEmail)) {
+  if (!isValidEmail(clientEmail)) {
     return Response.json({ error: 'clientEmail must be a valid email address' }, { status: 400 });
   }
 
@@ -203,9 +254,11 @@ async function handleAddClient(request, env, userId, query) {
   // Find client user by email
   const clientResult = await query(QUERIES.getUserByEmail, [clientEmail.toLowerCase()]);
   if (!clientResult.rows?.length) {
+    const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
     return Response.json({
       error: 'Client not found',
-      message: 'No account found with that email. Client must register first.'
+      message: 'No account found with that email. Ask the client to register, then add them from your roster.',
+      signupUrl: `${frontendUrl}/`
     }, { status: 404 });
   }
 
@@ -221,9 +274,146 @@ async function handleAddClient(request, env, userId, query) {
 
   return Response.json({
     ok: true,
-    message: `${clientEmail} added to your roster`,
-    client: { id: client.id, email: client.email }
+    message: `Client added to your roster`,
+    client: { id: client.id }
   }, { status: 201 });
+}
+
+async function handleInviteClient(request, env, userId, query) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const clientEmail = String(body?.clientEmail || '').trim().toLowerCase();
+  const clientName = body?.clientName ? String(body.clientName).trim() : null;
+  const message = body?.message ? String(body.message).trim() : null;
+
+  if (!clientEmail) {
+    return Response.json({ error: 'clientEmail is required' }, { status: 400 });
+  }
+  if (!isValidEmail(clientEmail)) {
+    return Response.json({ error: 'clientEmail must be a valid email address' }, { status: 400 });
+  }
+  if (clientName && clientName.length > 120) {
+    return Response.json({ error: 'clientName must be 120 characters or fewer' }, { status: 400 });
+  }
+  if (message && message.length > 600) {
+    return Response.json({ error: 'message must be 600 characters or fewer' }, { status: 400 });
+  }
+
+  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practResult.rows?.length) {
+    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
+  }
+
+  const pract = practResult.rows[0];
+  const limit = TIER_LIMITS[pract.tier] || 0;
+  if (limit === 0) {
+    return Response.json({
+      error: 'Upgrade required',
+      message: 'Free tier cannot manage clients. Upgrade to standard or higher.'
+    }, { status: 403 });
+  }
+
+  const countResult = await query(QUERIES.countPractitionerClients, [pract.id]);
+  const currentCount = parseInt(countResult.rows?.[0]?.count || '0', 10);
+  if (currentCount >= limit) {
+    return Response.json({
+      error: 'Client limit reached',
+      message: `${pract.tier} tier allows up to ${limit} clients. Upgrade to add more.`,
+      currentCount,
+      limit
+    }, { status: 403 });
+  }
+
+  const clientResult = await query(QUERIES.getUserByEmail, [clientEmail]);
+  if (clientResult.rows?.length) {
+    const existingClient = clientResult.rows[0];
+    if (existingClient.id === userId) {
+      return Response.json({ error: 'Cannot add yourself as a client' }, { status: 400 });
+    }
+
+    await query(QUERIES.addClient, [pract.id, existingClient.id]);
+    return Response.json({
+      ok: true,
+      mode: 'added',
+      message: `${clientEmail} added to your roster`,
+      client: { id: existingClient.id, email: existingClient.email }
+    }, { status: 201 });
+  }
+
+  await query(QUERIES.expirePendingPractitionerInvitationsByEmail, [pract.id, clientEmail]);
+
+  const rawToken = makeInviteToken(32);
+  const tokenHash = await sha256Hex(rawToken);
+  const expiresAt = new Date(Date.now() + (14 * 24 * 60 * 60 * 1000)).toISOString();
+  const inviteInsert = await query(QUERIES.createPractitionerInvitation, [
+    pract.id,
+    clientEmail,
+    clientName,
+    tokenHash,
+    message,
+    expiresAt
+  ]);
+  const invitation = inviteInsert.rows?.[0];
+
+  const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
+  const inviteUrl = `${frontendUrl.replace(/\/$/, '')}/?invite=${encodeURIComponent(rawToken)}`;
+  const practitionerName = pract.display_name || pract.business_name || request._user?.email || 'Your practitioner';
+
+  let emailResult = { success: false, error: 'Email service not configured' };
+  if (env.RESEND_API_KEY) {
+    emailResult = await sendPractitionerInvitationEmail(
+      clientEmail,
+      practitionerName,
+      inviteUrl,
+      env.RESEND_API_KEY,
+      env.FROM_EMAIL
+    );
+  }
+
+  return Response.json({
+    ok: true,
+    mode: 'invited',
+    message: emailResult.success
+      ? `Invitation sent to ${clientEmail}`
+      : `Invitation created for ${clientEmail}. Email delivery unavailable; share invite link manually.`,
+    invitation,
+    inviteUrl,
+    emailSent: !!emailResult.success,
+    emailError: emailResult.success ? null : emailResult.error
+  }, { status: 201 });
+}
+
+async function handleListInvitations(userId, query) {
+  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practResult.rows?.length) {
+    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
+  }
+
+  const invitations = await query(QUERIES.listPractitionerInvitations, [practResult.rows[0].id]);
+  return Response.json({
+    ok: true,
+    invitations: invitations.rows || [],
+    count: invitations.rows?.length || 0
+  });
+}
+
+async function handleDeleteInvitation(userId, invitationId, query) {
+  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practResult.rows?.length) {
+    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
+  }
+
+  const result = await query(QUERIES.deletePractitionerInvitation, [invitationId, practResult.rows[0].id]);
+  if (!result.rowCount) {
+    return Response.json({ error: 'Invitation not found' }, { status: 404 });
+  }
+
+  return Response.json({ ok: true, message: 'Invitation revoked' });
 }
 
 async function handleGetClientDetail(userId, clientId, query) {
@@ -244,6 +434,16 @@ async function handleGetClientDetail(userId, clientId, query) {
     return Response.json({ error: 'Client not found' }, { status: 404 });
   }
 
+  // P2-SEC-008: Whitelist safe fields — exclude password_hash, stripe IDs, phone, etc.
+  const rawClient = clientResult.rows[0];
+  const safeClient = {
+    id: rawClient.id,
+    email: rawClient.email,
+    display_name: rawClient.display_name,
+    tier: rawClient.tier,
+    created_at: rawClient.created_at,
+  };
+
   // Get client's most recent chart
   const chartResult = await query(QUERIES.getLatestChart, [clientId]);
   const chart = chartResult.rows?.[0] || null;
@@ -254,16 +454,16 @@ async function handleGetClientDetail(userId, clientId, query) {
 
   return Response.json({
     ok: true,
-    client: clientResult.rows[0],
+    client: safeClient,
     chart: chart ? {
       id: chart.id,
-      hdData: typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json,
+      hdData: parseJsonSafe(chart.hd_json),
       calculatedAt: chart.calculated_at
     } : null,
     profile: profile ? {
       id: profile.id,
-      profileData: typeof profile.profile_json === 'string' ? JSON.parse(profile.profile_json) : profile.profile_json,
-      groundingAudit: typeof profile.grounding_audit === 'string' ? JSON.parse(profile.grounding_audit) : profile.grounding_audit,
+      profileData: parseJsonSafe(profile.profile_json),
+      groundingAudit: parseJsonSafe(profile.grounding_audit),
       createdAt: profile.created_at
     } : null
   });

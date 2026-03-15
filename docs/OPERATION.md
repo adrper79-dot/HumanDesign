@@ -34,12 +34,14 @@ npx wrangler secret list
 | `NEON_CONNECTION_STRING` | Neon PostgreSQL pooled connection string |
 | `JWT_SECRET` | Random 32+ byte string for signing JWTs |
 | `ANTHROPIC_API_KEY` | Anthropic Claude API key (primary LLM) |
-| `GROK_API_KEY` | xAI Grok API key (failover LLM 2) |
+| `GROK_API_KEY` | xAI Grok 4 Fast API key (failover LLM 2) |
 | `GROQ_API_KEY` | Groq API key (failover LLM 3) |
 | `TELNYX_API_KEY` | Telnyx API key for SMS |
 | `TELNYX_PHONE_NUMBER` | Outbound SMS number (E.164 format) |
 | `TELNYX_CONNECTION_ID` | Telnyx connection / messaging profile ID |
 | `AI_GATEWAY_URL` | Cloudflare AI Gateway URL (optional — adds caching + observability) |
+| `SENTRY_DSN` | Sentry DSN for error tracking (optional — errors silently no-op without it) |
+| `SENTRY_RELEASE` | Release tag for Sentry error grouping (optional — e.g. git SHA or date) |
 
 ---
 
@@ -165,6 +167,50 @@ npx wrangler tail
 ### Neon dashboard
 
 `console.neon.tech` — query statistics, connection counts, branch management.
+
+### Sentry Error Tracking
+
+Sentry captures all unhandled Worker exceptions with full stack traces, request context, and user tier.
+
+#### Setup (one-time)
+
+```bash
+# 1. Create account at sentry.io → New Project → JavaScript (Node/Cloudflare Workers)
+# 2. Copy the DSN from Project Settings → Client Keys
+cd workers
+npx wrangler secret put SENTRY_DSN
+# Paste your DSN: https://<key>@<org>.ingest.sentry.io/<project-id>
+
+# Optional: pin a release tag to Sentry errors
+npx wrangler secret put SENTRY_RELEASE
+# e.g. "2026-03-13" or a git SHA
+```
+
+#### Daily workflow
+
+1. `sentry.io` → Issues → sort by **Frequency** — triage new errors
+2. Assign issues to yourself, add context in comments
+3. Mark resolved once the fix is deployed
+4. Set up **Alert Rules** (Sentry → Alerts → Create Alert):
+   - New issue → notify via email/Slack immediately
+   - Error rate spike (>10 errors/min) → urgent notification
+   - First occurrence of new error type → email
+
+#### What gets captured automatically
+
+| Trigger | What Sentry receives |
+|---------|----------------------|
+| Unhandled Worker exception | Stack trace, request URL/method, user ID + tier |
+| Any 5xx response path | Via `sentry.captureException()` in `index.js` global error handler |
+| Manually instrumented | Call `sentry.captureMessage()` or `sentry.captureException()` in any handler |
+
+#### Adding breadcrumbs in a handler (optional)
+
+```javascript
+// In index.js or any handler, after initSentry(env):
+sentry.addBreadcrumb({ category: 'billing', message: 'Checkout started', data: { tier } });
+// ... later if an error occurs, Sentry includes this trail
+```
 
 ### Stripe Integration Monitoring
 

@@ -653,6 +653,63 @@ export function buildRAGContext(chartData) {
       }
     }
 
+    // ─── Library Structural Context (chart_bridge.json) ────────
+    // Maps Library overtones to specific chart structures for structural WHY explanations
+    const chartBridge = loadKB('library', 'chart_bridge.json');
+    if (chartBridge && chartBridge._meta) {
+      const libSections = [];
+
+      // Polarity context — defined/undefined center dynamics
+      if (chartData.hdChart?.definedCenters?.length > 0 && chartData.hdChart?.undefinedCenters?.length > 0) {
+        const pol = chartBridge.polarity;
+        if (pol) {
+          const definedList = chartData.hdChart.definedCenters.slice(0, 4).join(', ');
+          const undefinedList = chartData.hdChart.undefinedCenters.slice(0, 4).join(', ');
+          libSections.push(
+            `**POLARITY (Octave 2:1):** Defined centers [${definedList}] hold consistent charge (P2). ` +
+            `Undefined centers [${undefinedList}] receive and amplify from environment. ` +
+            `The threshold between them (P5) is the most dynamically active zone. ` +
+            `${pol.hdApplication.practicalInsight}`
+          );
+        }
+      }
+
+      // Trinity context — Type + Strategy + Authority emergence
+      if (chartData.hdChart?.type && chartData.hdChart?.authority) {
+        const tri = chartBridge.trinity;
+        if (tri) {
+          libSections.push(
+            `**TRINITY (Fifth 3:2):** ${chartData.hdChart.type} + Strategy + ${chartData.hdChart.authority} form a three-body system. ` +
+            `${tri.hdApplication.nameTheThird}`
+          );
+        }
+      }
+
+      // Pentad context — channel completion topology
+      const channelCount = chartData.hdChart?.activeChannels?.length || 0;
+      if (channelCount > 0) {
+        const pen = chartBridge.pentad;
+        if (pen) {
+          libSections.push(
+            `**PENTAD (Major Third 5:4):** ${channelCount} completed channel${channelCount > 1 ? 's' : ''} — each is a categorical topological shift from star (K₁,₄) to ring (C₅). ` +
+            `${pen.hdApplication.channelCompletion}`
+          );
+        }
+      }
+
+      // Heptad context — full chart integration
+      const hep = chartBridge.heptad;
+      if (hep) {
+        libSections.push(
+          `**HEPTAD (Major Seventh 15:8):** ${hep.hdApplication.synthesisAsHeptad}`
+        );
+      }
+
+      if (libSections.length) {
+        sections.push(`### LIBRARY STRUCTURAL CONTEXT\n\n${libSections.join('\n\n')}`);
+      }
+    }
+
     return sections.length ? `## KNOWLEDGEBASE CONTEXT (RAG)\n\n${sections.join('\n\n---\n\n')}` : '';
   } catch {
     return '';

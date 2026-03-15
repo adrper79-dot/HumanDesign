@@ -72,7 +72,7 @@ export async function handleValidationSave(request, env) {
     ]);
 
     return Response.json({
-      success: true,
+      ok: true,
       data: result.rows[0]
     });
   } catch (error) {

@@ -66,6 +66,13 @@ export const EVENTS = Object.freeze({
   ERROR:               'error',
   SEARCH:              'search',
 
+  // Security & Enforcement
+  QUOTA_EXCEEDED:      'quota_exceeded',
+  DAILY_CEILING_HIT:   'daily_ceiling_hit',
+  RATE_LIMITED:         'rate_limited',
+  ADMIN_AUTH_FAIL:     'admin_auth_fail',
+  PASSWORD_RESET:      'password_reset',
+
   // Practitioner
   CLIENT_ADD:          'client_add',
   CLIENT_REMOVE:       'client_remove',
@@ -170,7 +177,7 @@ export async function trackEvent(env, eventName, opts = {}) {
  * @param {string} [opts.sessionId]
  * @param {Request} [opts.request]
  */
-export async function trackPageView(env, opts = {}) {
+async function trackPageView(env, opts = {}) {
   const { path, referrer, ...rest } = opts;
   return trackEvent(env, EVENTS.PAGE_VIEW, {
     ...rest,
@@ -242,7 +249,7 @@ export async function trackError(env, error, opts = {}) {
  * @param {object} env
  * @param {Array<{eventName: string, userId?: string, sessionId?: string, properties?: object}>} events
  */
-export async function trackBatch(env, events) {
+async function trackBatch(env, events) {
   try {
     if (!env?.NEON_CONNECTION_STRING || !events?.length) return;
 

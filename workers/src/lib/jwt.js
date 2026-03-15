@@ -3,28 +3,48 @@
  * Shared implementation for signing and verifying JWTs.
  *
  * Standard claims added to every token:
- *   iss  – issuer  ("primeself")
- *   aud  – audience ("primeself-api")
+ *   iss  – issuer  (env.JWT_ISSUER  || "primeself")
+ *   aud  – audience (env.JWT_AUDIENCE || "primeself-api")
+ *
+ * PRA-SEC-002: issuer/audience are now env-configurable so a staged deployment
+ * uses a different value, preventing cross-environment token replay.
+ * Set JWT_ISSUER and JWT_AUDIENCE in wrangler.toml [vars] per environment.
  */
 
-const JWT_ISSUER   = 'primeself';
-const JWT_AUDIENCE = 'primeself-api';
+const DEFAULT_ISSUER   = 'primeself';
+const DEFAULT_AUDIENCE = 'primeself-api';
+
+/**
+ * Build JWT claims config from Worker env bindings.
+ * Falls back to hardcoded defaults for backward compatibility.
+ * @param {object} env - Worker env
+ * @returns {{ issuer: string, audience: string }}
+ */
+export function jwtClaims(env) {
+  return {
+    issuer:   env?.JWT_ISSUER   || DEFAULT_ISSUER,
+    audience: env?.JWT_AUDIENCE || DEFAULT_AUDIENCE,
+  };
+}
 
 /**
  * Sign a JWT with HS256 algorithm.
  * @param {object} payload - JWT payload (claims)
  * @param {string} secret - Secret key for HMAC signing
  * @param {number} ttlSeconds - Time-to-live in seconds
+ * @param {{ issuer?: string, audience?: string }} [claims] - Override issuer/audience (use jwtClaims(env))
  * @returns {Promise<string>} - JWT token
  */
-export async function signJWT(payload, secret, ttlSeconds) {
+export async function signJWT(payload, secret, ttlSeconds, claims = {}) {
+  const issuer   = claims.issuer   || DEFAULT_ISSUER;
+  const audience = claims.audience || DEFAULT_AUDIENCE;
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
 
   const fullPayload = {
     ...payload,
-    iss: JWT_ISSUER,
-    aud: JWT_AUDIENCE,
+    iss: issuer,
+    aud: audience,
     iat: now,
     exp: now + ttlSeconds
   };
@@ -60,10 +80,12 @@ export async function signJWT(payload, secret, ttlSeconds) {
  * Checks signature, expiration, issuer and audience in one step.
  * @param {string} token - JWT token
  * @param {string} secret - Secret key for HMAC verification
- * @param {object} [opts] - { skipExp: false }
+ * @param {object} [opts] - { skipExp: false, issuer?, audience? } — pass jwtClaims(env) fields here
  * @returns {Promise<object|null>} - Decoded payload or null if invalid/expired
  */
 export async function verifyHS256(token, secret, opts = {}) {
+  const expectedIssuer   = opts.issuer   || DEFAULT_ISSUER;
+  const expectedAudience = opts.audience || DEFAULT_AUDIENCE;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
 
@@ -94,8 +116,8 @@ export async function verifyHS256(token, secret, opts = {}) {
   const payload = JSON.parse(payloadStr);
 
   // Validate standard claims
-  if (payload.iss && payload.iss !== JWT_ISSUER) return null;
-  if (payload.aud && payload.aud !== JWT_AUDIENCE) return null;
+  if (payload.iss && payload.iss !== expectedIssuer) return null;
+  if (payload.aud && payload.aud !== expectedAudience) return null;
   if (!opts.skipExp && payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
 
   return payload;
@@ -106,7 +128,7 @@ export async function verifyHS256(token, secret, opts = {}) {
  * @param {string} str - String to encode
  * @returns {string} - Base64url encoded string
  */
-export function base64UrlEncode(str) {
+function base64UrlEncode(str) {
   return btoa(str)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -118,7 +140,7 @@ export function base64UrlEncode(str) {
  * @param {string} str - Base64url encoded string
  * @returns {ArrayBuffer} - Decoded bytes
  */
-export function base64UrlDecode(str) {
+function base64UrlDecode(str) {
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
   const pad = base64.length % 4;
   if (pad === 2) base64 += '==';

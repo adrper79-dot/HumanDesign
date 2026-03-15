@@ -257,7 +257,7 @@ Overlays two full bodygraphs to identify electromagnetic connections, dominance 
     "compromise": [ ... ],
     "combinedDefinition": "Single",
     "combinedCenters": ["G", "Throat", ...],
-    "personA": { "type": "Projector", "authority": "...", "profile": "6/2", "forge": "Forge of Vision", ... },
+    "personA": { "type": "Projector", "authority": "...", "profile": "6/2", "forge": "Perception", ... },
     "personB": { "type": "Generator", ... },
     "dynamics": [
       { "area": "decision-making", "note": "..." },
@@ -386,7 +386,7 @@ POST /api/cluster/:id/join
     "type": "Projector",
     "authority": "Emotional - Solar Plexus",
     "profile": "6/2",
-    "forgeRole": { "forge": "Forge of Vision", "role": "Guide", "brings": "Seeing the other, direction, efficiency" }
+    "forgeRole": { "forge": "Perception", "role": "Guide", "brings": "Seeing the other, direction, efficiency" }
   }
 }
 ```
@@ -409,7 +409,7 @@ GET /api/cluster/:id
   "clusterId": "...",
   "members": [{ "userId": "...", "email": "...", "forgeRole": { ... } }],
   "composition": {
-    "forges": ["Forge of Vision", "Forge of Craft"],
+    "forges": ["Perception", "Mastery"],
     "missingForges": ["Forge of Power", "Forge of Mirrors"],
     "typeCount": { "Guide": 1, "Builder": 1 },
     "insights": ["No Manifestor — the cluster may struggle to initiate..."]
@@ -455,7 +455,7 @@ Runs LLM-based group dynamics synthesis (Claude Sonnet).
     "warning": "..."
   },
   "composition": { ... },
-  "members": [{ "name": "Alice", "type": "Projector", "forge": "Forge of Vision", "role": "Guide" }]
+  "members": [{ "name": "Alice", "type": "Projector", "forge": "Perception", "role": "Guide" }]
 }
 ```
 

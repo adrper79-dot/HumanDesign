@@ -470,7 +470,7 @@ Plus a PDF URL for downloading and sharing the profile.
 
 **Why it matters:** This turns abstract chart patterns into practical life guidance. The AI synthesis uses RAG (Retrieval-Augmented Generation) to ground insights in verified Energy Blueprint, Gene Keys, Astrology, and Numerology knowledge - not generic ChatGPT fluff.
 
-**How it works:** LLM failover cascade (Anthropic Claude → Grok → Groq) ensures 99%+ uptime. The synthesis prompt includes all chart data + knowledge base excerpts + grounding audit rules to prevent hallucination.
+**How it works:** LLM failover cascade (Anthropic Claude 2-retry → Grok 4 Fast → Groq) ensures 99%+ uptime. Forge is determined by deterministic `computeForge()` scoring (not LLM guessing). The synthesis prompt includes all chart data + knowledge base excerpts + grounding audit rules to prevent hallucination.
 
 **Request**
 ```json

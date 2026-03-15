@@ -33,6 +33,10 @@
   let db = null;
   let isOnline = navigator.onLine;
 
+  function isApiSuccess(payload) {
+    return !!payload && typeof payload === 'object' && !payload.error;
+  }
+
   // ─── IndexedDB Setup ─────────────────────────────────────────────
 
   function openDB() {
@@ -144,7 +148,7 @@
     if (isOnline && typeof window.apiFetch === 'function') {
       try {
         const resp = await window.apiFetch(`/api/transits/today`);
-        if (resp && resp.ok) {
+        if (isApiSuccess(resp)) {
           await cacheTransit(targetDate, resp);
           return { ...resp, _cached: false };
         }
@@ -193,7 +197,7 @@
     let userChart = null;
     try {
       const meResp = await window.apiFetch('/api/auth/me');
-      if (meResp && meResp.ok && meResp.user) {
+      if (isApiSuccess(meResp) && meResp.user) {
         if (meResp.user.default_birth_date) {
           userChart = {
             birthDate: meResp.user.default_birth_date,
@@ -245,7 +249,7 @@
         }
 
         const resp = await window.apiFetch(endpoint);
-        if (resp && resp.ok) {
+        if (isApiSuccess(resp)) {
           await cacheTransit(dateStr, resp);
           fetched++;
         }
@@ -511,12 +515,12 @@
           const result = await originalFetch(path, options);
 
           // Cache transit responses
-          if (path.startsWith('/api/transits/today') && result && result.ok) {
+          if (path.startsWith('/api/transits/today') && isApiSuccess(result)) {
             cacheTransit(todayISO(), result);
           }
 
           // Cache chart responses
-          if (path.startsWith('/api/chart/') && result && result.ok && result.data) {
+          if (path.startsWith('/api/chart/') && isApiSuccess(result) && result.data) {
             const chartId = result.data.id || 'last';
             cacheChart(chartId, result.data);
           }

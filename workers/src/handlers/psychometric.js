@@ -144,7 +144,7 @@ export async function handlePsychometricSave(request, env) {
     ]);
 
     return Response.json({
-      success: true,
+      ok: true,
       data: {
         id: result.rows[0].id,
         bigFiveScores,

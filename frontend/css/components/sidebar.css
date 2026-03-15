@@ -11,7 +11,7 @@
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 64px;
   --sidebar-bg: rgba(13, 13, 26, 0.97);
-  --sidebar-border: var(--border, #32324a);
+  --sidebar-border: var(--border-subtle);
   --sidebar-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-z: 95;
 }

@@ -262,17 +262,17 @@ export const ACHIEVEMENTS = {
   
   UPGRADED_SEEKER: {
     id: 'upgraded_seeker',
-    name: 'Committed Seeker',
-    description: 'Upgraded to Seeker tier',
+    name: 'Committed Explorer',
+    description: 'Upgraded to Explorer tier',
     category: 'premium',
     icon: '⭐',
     tier: 'gold',
     points: 100,
     criteria: {
       type: 'tier_upgrade',
-      tier: 'seeker'
+      tier: 'regular'
     },
-    unlockMessage: '⭐ Achievement unlocked: Committed Seeker! Welcome to unlimited exploration.'
+    unlockMessage: '⭐ Achievement unlocked: Committed Explorer! Welcome to unlimited exploration.'
   },
   
   UPGRADED_GUIDE: {
@@ -285,7 +285,7 @@ export const ACHIEVEMENTS = {
     points: 250,
     criteria: {
       type: 'tier_upgrade',
-      tier: 'guide'
+      tier: 'practitioner'
     },
     unlockMessage: '🌟 Achievement unlocked: Professional Guide! You\'re empowering others.'
   },
@@ -293,14 +293,14 @@ export const ACHIEVEMENTS = {
   UPGRADED_PRACTITIONER: {
     id: 'upgraded_practitioner',
     name: 'Master Practitioner',
-    description: 'Upgraded to Practitioner tier',
+    description: 'Upgraded to Studio tier',
     category: 'premium',
     icon: '👑',
     tier: 'platinum',
     points: 500,
     criteria: {
       type: 'tier_upgrade',
-      tier: 'practitioner'
+      tier: 'white_label'
     },
     unlockMessage: '👑 Achievement unlocked: Master Practitioner! You are the guide.'
   },
@@ -546,7 +546,7 @@ export function checkAchievementCriteria(achievement, userProgress) {
  * Get tier rank for comparison (higher number = higher tier)
  */
 function getTierRank(tier) {
-  const ranks = { free: 0, seeker: 1, guide: 2, practitioner: 3 };
+  const ranks = { free: 0, regular: 1, practitioner: 2, white_label: 3, seeker: 1, guide: 2 };
   return ranks[tier] || 0;
 }
 

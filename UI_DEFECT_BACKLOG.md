@@ -306,7 +306,7 @@ Any `display:flex` containing a text input and a button side-by-side must have `
 | **Effort** | S |
 | **Blocks** | All focus ring styling; brand color consistency |
 
-### UI-032: $500/mo Practitioner Tier Advertising Unbuilt Features ✅ FIXED
+### UI-032: $149/mo Studio Tier Feature Description Updated ✅ FIXED
 | Property | Details |
 |----------|---------|
 | **Severity** | Critical — false advertising |
@@ -314,8 +314,8 @@ Any `display:flex` containing a text input and a button side-by-side must have `
 | **Viewport** | All |
 | **Surface** | Pricing modal |
 | **New/Regression** | Open from CHANGELOG_UX (never fixed despite `[ ]` item) |
-| **Description** | $500/mo pricing card advertised "White-label API access", "Custom integrations", "Revenue sharing eligible" — none of these features are implemented. CHANGELOG_UX.md `[ ] Remove $500/mo tier until practitioner features are actually built`. |
-| **Fix Applied 2026-03-09** | Removed $500/mo Practitioner pricing card entirely. Pricing now shows: Free / $15 Seeker / $97 Guide |
+| **Description** | Pricing card advertised unbuilt features: "Custom integrations", "Revenue sharing eligible". |
+| **Fix Applied 2026-03-09** | Reworded pricing cards to match actual features. Current pricing: Free / $12 Explorer / $60 Guide / $149 Studio |
 | **Effort** | S |
 
 ---
@@ -395,7 +395,7 @@ Any `display:flex` containing a text input and a button side-by-side must have `
 
 | # | Question | Context | Owner |
 |---|----------|---------|-------|
-| OQ-01 | When will practitioner white-label API be built? | $500/mo tier removed until then. Need timeline to re-add or remove permanently. | Product |
+| OQ-01 | When will Studio white-label API features be fully built? | $149/mo Studio tier is live with core features. Remaining: custom themes, dedicated support. | Product |
 | OQ-02 | Should `design-tokens-premium.css` ever be conditionally loaded for specific tiers? | Currently applied to all users since whole UI uses `.theme-premium` body class. | Design/Frontend |
 | OQ-03 | Gene Keys Shadow→Gift→Siddhi journey context — implement or permanently defer? | CHANGELOG_UX `[ ]` item; meaningful UX feature but licensing complexity. | Product/Legal |
 | OQ-04 | Onboarding tab vs default flow — when to implement? | New users see onboarding tab; should auto-trigger for users with no saved birth data. | Product |
@@ -410,17 +410,17 @@ Any `display:flex` containing a text input and a button side-by-side must have `
 | DEF-02 | Sub-tab bars duplicated 7× in HTML | Extract to JS-generated component | Open |
 | DEF-03 | ~50 [DUP] selectors in app.css vs component files | Cascade conflicts; needs systematic audit | Open |
 | DEF-04 | Replace remaining hardcoded px spacing with tokens | Partially done; need systematic sweep | Open |
-| DEF-05 | Background video on mobile bandwidth/GPU | Conditionally load based on `navigator.connection` | Open |
-| DEF-06 | "More" dropdown keyboard navigation | WCAG 2.1 AA keyboard access gap | Open — doesn't trap users |
+| DEF-05 | Background video on mobile bandwidth/GPU | Conditionally load based on `navigator.connection` | ✅ Fixed |
+| DEF-06 | "More" dropdown keyboard navigation | WCAG 2.1 AA keyboard access gap | ✅ Fixed — aria-expanded synced |
 | DEF-07 | Form data sync between tabs (Profile→Chart) | Use shared JS state object | Open |
-| DEF-08 | Profile timezone select fewer options than Chart | Unify both selects | Open |
-| DEF-09 | Sticky CTA for chart generation on mobile | `position:sticky` wrapper needed | Open |
-| DEF-10 | Back-to-top button in deep results | Add floating button | Open |
+| DEF-08 | Profile timezone select fewer options than Chart | Unify both selects | ✅ Fixed |
+| DEF-09 | Sticky CTA for chart generation on mobile | `position:sticky` wrapper needed | ✅ Fixed — already implemented |
+| DEF-10 | Back-to-top button in deep results | Add floating button | ✅ Fixed |
 | DEF-11 | Conditionally apply premium artwork by tier | Don't render lava blobs for free users | Open |
 | DEF-12 | Convert onboarding to default new-user experience | Auto-show for users with no stored birth data | Open — needs product decision (OQ-04) |
 | DEF-13 | Make step guide persistent/persistent breadcrumb | Extend to 5 steps, always visible | Open |
-| DEF-14 | border-color unification (--border vs --border-primary) | Complete token unification | Open |
-| DEF-15 | Heading hierarchy in chart results (h2/h3) | Add semantic heading tags to `renderChart()` output | Open |
+| DEF-14 | border-color unification (--border vs --border-primary) | Complete token unification | ✅ Fixed |
+| DEF-15 | Heading hierarchy in chart results (h2/h3) | Add semantic heading tags to `renderChart()` output | ✅ Fixed |
 | DEF-16 | UI-026 Collapsible max-height 2000px | Pattern not found in current code — may not exist; re-verify after DEF-03 CSS cleanup | Investigating |
 
 ---

@@ -1,19 +1,19 @@
 # Prime Self — Embeddable Chart Widget
 
-**Created**: March 6, 2026  
-**Status**: ✅ Complete — Ready for Production  
-**Version**: 1.0.0
+**Last Reviewed**: March 14, 2026  
+**Status**: Current guide  
+**Primary Audience**: Practitioners and agencies using Prime Self as a client acquisition or delivery surface
 
 ---
 
 ## Overview
 
-The Prime Self Embeddable Chart Widget allows practitioners, bloggers, and website owners to embed a Human Design chart calculator directly on their websites. This enables:
+The Prime Self embeddable widget allows practitioners and agencies to place a Prime Self-powered chart experience on external websites. This enables:
 
 - **Lead Generation**: Collect email addresses from widget users
 - **Brand Extension**: Practitioners can offer chart calculations on their own sites
-- **Viral Distribution**: Every embedded widget = free Prime Self marketing
-- **Revenue Share**: Practitioners receive commissions on conversions (future feature)
+- **Client Capture**: Convert visitor curiosity into practitioner-owned follow-up
+- **Distribution**: Extend Prime Self into practitioner or agency-owned properties
 
 ---
 
@@ -52,7 +52,7 @@ Add this to any HTML page:
     elementId: 'primeself-widget',
     theme: 'dark',              // 'dark' or 'light'
     accentColor: '#c9a84c',     // Any hex color
-    hideAttribution: false,     // Requires Practitioner tier
+    hideAttribution: false,     // Requires Agency / white-label capability
     width: '100%',
     height: '600px',
     apiEndpoint: 'https://primeself.app/api',
@@ -78,7 +78,7 @@ Add this to any HTML page:
 | `elementId` | string | `'primeself-widget'` | ID of container element |
 | `theme` | string | `'dark'` | `'dark'` or `'light'` |
 | `accentColor` | string | `'#c9a84c'` | Hex color for buttons/highlights |
-| `hideAttribution` | boolean | `false` | Hide "Powered by Prime Self" (Practitioner tier only) |
+| `hideAttribution` | boolean | `false` | Hide "Powered by Prime Self" (Agency / white-label capability only) |
 | `width` | string | `'100%'` | Widget width (CSS value) |
 | `height` | string | `'600px'` | Initial height (auto-resizes) |
 | `apiEndpoint` | string | `'https://primeself.app/api'` | API endpoint URL |
@@ -98,14 +98,14 @@ Add this to any HTML page:
 </div>
 ```
 
-### Practitioner Integration (No Attribution)
+### Agency / White-Label Integration (No Attribution)
 ```html
 <script>
   PrimeSelf.init({
     elementId: 'primeself-widget',
     theme: 'dark',
     accentColor: '#e91e63',  // Match your brand
-    hideAttribution: true,    // ⚠️ Requires Practitioner tier
+    hideAttribution: true,    // Requires Agency / white-label capability
     onChartCalculated: function(data) {
       // Send to your email list
       fetch('https://your-backend.com/leads', {
@@ -139,7 +139,7 @@ Add this to any HTML page:
 
 ### WordPress
 
-**Option 1: Shortcode (requires plugin - see BL-INT-005)**
+**Option 1: Shortcode (requires plugin support)**
 ```
 [primeself-calculator theme="dark" accent="#c9a84c"]
 ```
@@ -218,6 +218,18 @@ Remove all widget instances.
 ```javascript
 PrimeSelf.destroyAll();
 ```
+
+---
+
+## Commercial Notes
+
+- The embed widget is part of the practitioner-first distribution model.
+- White-label behavior should be understood as an Agency capability, not a separate canonical plan name.
+- If pricing or entitlement language changes, update this guide together with:
+  - [guides/EMBED_WIDGET.md](guides/EMBED_WIDGET.md)
+  - [docs/API_MARKETPLACE.md](docs/API_MARKETPLACE.md)
+  - [docs/TIER_ENFORCEMENT.md](docs/TIER_ENFORCEMENT.md)
+  - [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md)
 
 ---
 

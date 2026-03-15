@@ -66,12 +66,12 @@ The technology exists to serve the philosophy. Every architectural decision flow
 |---------|--------|-----------|
 | **Runtime** | Cloudflare Workers (V8 isolates) | Edge-first, zero cold start, aligns with The Factory |
 | **Database** | Neon (PostgreSQL) | Already provisioned, serverless Postgres, branching for dev |
-| **Cache / KV** | Cloudflare KV | Transit position caching, session state |
+| **Cache / KV** | Cloudflare KV | Transit position caching, session state, daily ceiling counters (RATE_LIMIT_KV) |
 | **Object Store** | Cloudflare R2 | PDF exports, knowledgebase corpus files |
 | **SMS / Voice** | Telnyx | Daily transit digests, appointment reminders |
-| **LLM – Reasoning** | Claude Opus 4.6 (via Groq or direct) | Deep synthesis, Prime Self profile generation |
-| **LLM – Structured** | Claude Sonnet 4.6 | Chart reading generation, JSON schema adherence |
-| **LLM – High Volume** | Claude Haiku 4.5 / Groq Llama | Daily SMS transit digests |
+| **LLM – Reasoning** | claude-opus-4-20250514 → grok-4-fast → llama-3.3-70b-versatile | Deep synthesis, Prime Self profile generation (3-provider failover with 2-retry on Anthropic) |
+| **LLM – Structured** | claude-sonnet-4-20250514 → grok-3-mini-latest → llama-3.1-70b-versatile | Chart reading generation, JSON schema adherence |
+| **LLM – High Volume** | claude-3-haiku-20240307 → grok-3-mini-latest → llama-3.1-8b-instant | Daily SMS transit digests |
 | **Calculation** | Pure JS (Jean Meeus algorithms) | No WASM, no external deps, runs natively in Workers |
 | **AI Gateway** | Cloudflare AI Gateway | Rate limiting, caching, model routing, observability |
 
@@ -185,8 +185,8 @@ src/knowledgebase/
     ✅ aspects.json        Major aspects and orb definitions
     ✅ houses.json         12 houses
   prime_self/
-    ✅ forges_canonical.json       5 Forges (Chronos, Eros, Aether, Lux, Phoenix)
-    ✅ knowledges_canonical.json   6 Knowledges (Self, Ancestors, The One, Constructive, Destructive, Healing)
+    ✅ forges_canonical.json       5 Forges — canonical: Initiation, Mastery, Guidance, Perception, Transformation (aliases: Chronos, Eros, Aether, Lux, Phoenix)
+    ✅ knowledges_canonical.json   6 Knowledges — canonical: Sciences, Arts, Defenses, Heresies, Connections, Mysteries
     ✅ sciences_canonical.json     6 Sciences (Mindfulness, Alchemy, Divination, Astrology, Reiki, Behavioral)
     ✅ arts_canonical.json         6 Arts (Aromatherapy, Semiotics, Quantum Mind, Crystallography, etc.)
     ✅ defenses_canonical.json     6 Defenses (Reflexology, Acupressure, Chromotherapy, etc.)
@@ -354,7 +354,7 @@ No new tables. Drops per-statement trigger on `daily_checkins`. Adds `get_user_s
     "ungroundedFields": []
   },
   "meta": {
-    "model": "claude-sonnet-4.6",
+    "model": "claude-sonnet-4-20250514",
     "calculationMs": 42,
     "synthesisMs": 1200
   }
@@ -369,12 +369,12 @@ No new tables. Drops per-statement trigger on `daily_checkins`. Adds `get_user_s
 
 | Agent Role | Model | When Used |
 |------------|-------|-----------|
-| **Calculation Verifier** | Sonnet 4.6 | Post-build — validates each layer against test vectors |
-| **Knowledgebase Generator** | Opus 4.6 | One-time — generates 64 gene keys, 36 channels, 192 purpose vectors from I Ching source |
-| **Profile Synthesizer** | Opus 4.6 | Per-request — reasons across HD + Astro + Transits + Prime Self |
-| **Transit Digest Writer** | Haiku 4.5 | Daily cron — short, structured SMS/push messages |
-| **Quality Auditor** | Sonnet 4.6 | Post-generation — checks for ungrounded claims, IP derivation |
-| **Build Agent** | Sonnet 4.6 (Claude Code) | Development — layer-by-layer implementation with inline verification |
+| **Calculation Verifier** | claude-sonnet-4-20250514 | Post-build — validates each layer against test vectors |
+| **Knowledgebase Generator** | claude-opus-4-20250514 | One-time — generates 64 gene keys, 36 channels, 192 purpose vectors from I Ching source |
+| **Profile Synthesizer** | claude-opus-4-20250514 | Per-request — reasons across HD + Astro + Transits + Prime Self |
+| **Transit Digest Writer** | claude-3-haiku-20240307 | Daily cron — short, structured SMS/push messages |
+| **Quality Auditor** | claude-sonnet-4-20250514 | Post-generation — checks for ungrounded claims, IP derivation |
+| **Build Agent** | claude-sonnet-4-20250514 (Claude Code) | Development — layer-by-layer implementation with inline verification |
 
 ### 7.2 MCP (Model Context Protocol) Integrations
 
@@ -431,7 +431,7 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] Layer 6: Astrology (signs, houses, aspects)
 - [x] Layer 7: Transit engine
 - [x] Numerology engine (Life Path, Personal Year, Tarot Birth Card)
-- [x] 263/263 tests passing (vitest) — canonical, engine, handler, and numerology suites
+- [x] Current local Vitest suite passing — canonical, engine, handler, and numerology coverage in place
 
 ### Phase 3: Data Layer (Complete ✅)
 - [x] Neon schema migration (48 tables live + indexes, verified 2026-06-25)
@@ -445,7 +445,7 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] combined/ directory — verified_correlations.json (10 HD/Astro entries, policy: no interpolation)
 
 ### Phase 4: Synthesis Layer (Complete ✅)
-- [x] System prompt engineering (synthesis.js — SYSTEM_PROMPT, FORGE_MAPPING)
+- [x] System prompt engineering (synthesis.js — SYSTEM_PROMPT, deterministic computeForge())
 - [x] Reference facts builder (buildReferenceFacts)
 - [x] RAG injection (getRAGContext — reads gates, channels, types, forges)
 - [x] Grounding audit validation logic (validateSynthesisResponse)
@@ -464,7 +464,7 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 - [x] Telnyx connection ID set as Worker secret (2887319279378629637)
 
 ### Phase 6: Narrative Integration (Complete ✅)
-- [x] Savannah onboarding narrative mapped to all 5 Forges (Chronos/Eros/Aether/Lux/Phoenix)
+- [x] Savannah onboarding narrative mapped to all 5 Forges (Initiation/Mastery/Guidance/Perception/Transformation)
 - [x] savannah_narrative.json — 22-chapter story with per-Forge arcs, teachings, and user messages
 - [x] Onboarding handler — 5 routes: intro (public), forge, forge/:key, progress (KV), advance
 - [x] Progress tracking via KV namespace (no schema migration required)
@@ -529,9 +529,9 @@ ORCHESTRATOR (you, in VS Code with Copilot)
 | Tier | Price | Features |
 |------|-------|----------|
 | **Free** | $0 | Basic chart + Forge identification |
-| **Seeker** | $15/mo | Full forge activations, daily transit guidance, practice protocols |
-| **Adept** | $97/mo | Clustering sessions, practitioner access, advanced timing, composites |
-| **Practitioner** | $500+ | Certification path, client roster, bulk charts, white-label API |
+| **Individual** | $19/mo | Personal AI guidance, full transit tools, saved profiles, PDF export |
+| **Practitioner** | $97/mo | Client management, practitioner workflows, branded reports, composites |
+| **Agency** | $349/mo | Multi-seat practitioner operations, white-label distribution, API and webhook access |
 
 ---
 
@@ -571,8 +571,8 @@ Full codebase and live-DB audit using 3 parallel subagents + Neon MCP + targeted
 - `practitioners.created_at` column confirmed present (added by migration)
 
 ### Test Suite
-- **263/263 passing** (Vitest 3.2.4)
-- Current local baseline includes canonical framework coverage in addition to engine, handler, and numerology suites
+- Current local Vitest baseline is passing
+- Local coverage includes canonical framework tests in addition to engine, handler, and numerology suites
 
 ### Known Remaining Low-Priority Items
 | ID | Description |

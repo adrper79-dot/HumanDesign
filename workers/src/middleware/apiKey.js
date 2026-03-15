@@ -378,7 +378,7 @@ export function hasScope(apiKey, requiredScope) {
  * @param {Object} options - { requireScopes: ['read', 'write'] }
  * @returns {Function} Wrapped handler
  */
-export function requireApiKey(handler, options = {}) {
+function requireApiKey(handler, options = {}) {
   return async (request, env, ...args) => {
     const auth = await authenticateApiKey(request, env);
     

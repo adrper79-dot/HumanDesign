@@ -3,6 +3,32 @@ function toggleMobileMore() {
   toggleSidebar();
 }
 
+// DEF-10: Back-to-top button
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+(function initBackToTop() {
+  var btn = document.getElementById('backToTopBtn');
+  if (!btn) return;
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 300) {
+      btn.style.display = '';
+      // Force reflow before adding class so CSS transition plays
+      btn.offsetHeight; // eslint-disable-line no-unused-expressions
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+      // Hide after transition
+      btn.addEventListener('transitionend', function hide() {
+        if (!btn.classList.contains('visible')) btn.style.display = 'none';
+        btn.removeEventListener('transitionend', hide);
+      });
+    }
+  }, { passive: true });
+})();
+window.scrollToTop = scrollToTop;
+
 // Update mobile nav active state
 function updateMobileNav(clickedItem) {
   if (window.innerWidth > 768) return; // Only on mobile
@@ -20,13 +46,20 @@ function updateMobileNav(clickedItem) {
   }
 }
 
-// Group-aware mobile nav: highlights the correct parent tab for sub-tabs
+// Group-aware mobile nav: highlights the correct parent tab for sub-tabs.
+// Groups must match data-group values on .mobile-nav-item elements in index.html:
+//   home | blueprint | today | connect
+// Tabs not listed here fall through to the data-tab direct-match (accessed via sidebar drawer).
 const MOBILE_TAB_GROUPS = {
+  // Home
   overview: 'home',
+  // Blueprint (chart & identity)
   chart: 'blueprint', profile: 'blueprint',
-  transits: 'today', checkin: 'today',
+  celebrity: 'blueprint', achievements: 'blueprint', directory: 'blueprint',
+  // Today (transits & check-in)
+  transits: 'today', checkin: 'today', timing: 'today',
+  // Connect
   composite: 'connect', clusters: 'connect',
-  enhance: 'grow', diary: 'grow'
 };
 
 function updateMobileNavForTab(tabName) {
@@ -79,7 +112,7 @@ if ('ontouchstart' in window && window.innerWidth <= 768) {
           font-size: 1.5rem;
           color: var(--gold);
           transition: all 0.3s;
-          z-index: 1000;
+          z-index: var(--z-notification, 400);
         `;
         document.body.appendChild(refreshIndicator);
       }
@@ -106,11 +139,23 @@ if ('ontouchstart' in window && window.innerWidth <= 768) {
       refreshIndicator.innerHTML = '⟳';
       refreshIndicator.style.animation = 'spin 1s linear infinite';
       
-      // Reload transit data or current tab
+      // Reload tab-specific data when available.
       const activeTab = document.querySelector('.tab-content.active')?.id;
-      if (activeTab === 'transitsTab') {
-        // Reload transits (would call API in production)
-        if (window.DEBUG) console.log('🔄 Refreshing transit data...');
+      const refreshActions = {
+        'tab-transits':     () => typeof loadTransits          === 'function' && loadTransits(),
+        'tab-history':      () => typeof loadHistory           === 'function' && loadHistory(),
+        'tab-checkin':      () => typeof loadCheckinStats      === 'function' && loadCheckinStats(),
+        'tab-practitioner': () => typeof loadRoster            === 'function' && loadRoster(),
+        'tab-clusters':     () => typeof loadClusters          === 'function' && loadClusters(),
+        'tab-diary':        () => typeof loadDiaryEntries      === 'function' && loadDiaryEntries(),
+        'tab-celebrity':    () => typeof loadCelebrityMatches  === 'function' && loadCelebrityMatches(),
+        'tab-achievements': () => typeof loadAchievements      === 'function' && loadAchievements(),
+        'tab-directory':    () => typeof searchDirectory       === 'function' && searchDirectory(),
+      };
+
+      const action = refreshActions[activeTab];
+      if (typeof action === 'function') {
+        action();
       }
       
       // Hide indicator after 1 second
@@ -280,9 +325,9 @@ async function loadCheckInStats() {
         if (historyEl) {
           historyEl.innerHTML = stats.dailyScores.slice().reverse().slice(0, 14).map(d => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) 0;border-bottom:var(--border-width-thin) solid var(--border)">
-              <span style="font-size:var(--font-size-base);color:var(--text-dim)">${d.date}</span>
+              <span style="font-size:var(--font-size-base);color:var(--text-dim)">${escapeHtml(String(d.date))}</span>
               <span style="display:flex;gap:var(--space-2);align-items:center;font-size:var(--font-size-base)">
-                <span title="Alignment">${d.alignmentScore}/10</span>
+                <span title="Alignment">${escapeHtml(String(d.alignmentScore))}/10</span>
                 ${d.followedStrategy ? '<span style="color:var(--accent2)" title="Followed strategy">✓S</span>' : '<span style="color:var(--text-dim)" title="Did not follow strategy">✗S</span>'}
                 ${d.followedAuthority ? '<span style="color:var(--accent2)" title="Followed authority">✓A</span>' : '<span style="color:var(--text-dim)" title="Did not follow authority">✗A</span>'}
                 ${d.mood ? '<span title="Mood: ' + escapeAttr(d.mood) + '">' + ({great:'😊',good:'🙂',neutral:'😐',challenging:'😕',difficult:'😞'}[d.mood] || '') + '</span>' : ''}

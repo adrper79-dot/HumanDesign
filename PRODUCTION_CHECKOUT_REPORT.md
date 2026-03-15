@@ -1,5 +1,8 @@
 # Production Checkout Report — Prime Self
 
+> Historical checkout audit snapshot. Hardcoded test counts, placeholder IDs, and environment findings below reflect the repo state at the time of the audit and are not the current canonical baseline.
+> Use `DOCUMENTATION_INDEX.md` for current navigation and the latest audits for active readiness work.
+
 **Date**: Generated during audit session  
 **Auditor**: Automated Pre-Production Checkout (Claude Opus 4.6)  
 **Test Suite**: 263/263 passing (vitest 3.2.4) — 4 test files, 7.03s  
@@ -11,7 +14,7 @@
 
 ### SS-1: Stripe Price IDs Are Placeholders
 - **File**: `workers/wrangler.toml` lines 10–12
-- **Finding**: All three Stripe price environment variables are set to `"price_placeholder_seeker"`, `"price_placeholder_guide"`, `"price_placeholder_practitioner"`
+- **Finding**: All three Stripe price environment variables are set to `"price_placeholder_regular"`, `"price_placeholder_practitioner"`, `"price_placeholder_white_label"`
 - **Impact**: ANY checkout attempt will fail — Stripe will reject invalid price IDs
 - **Fix**: Replace with real Stripe price IDs from the Stripe Dashboard before deploy
 - **Severity**: BLOCKING — no revenue possible
@@ -78,7 +81,7 @@
 ## 3. FUNCTIONAL GAPS (Feature Incomplete / Broken Path)
 
 ### FG-1: Stripe Checkout Pipeline Untestable Without Real Keys
-- **Finding**: `getTierConfig()` in `workers/src/lib/stripe.js` falls back to `'price_1234_seeker'` etc. when env vars are missing — these are also invalid
+- **Finding**: `getTierConfig()` in `workers/src/lib/stripe.js` falls back to `'price_1234_regular'` etc. when env vars are missing — these are also invalid
 - **Impact**: The entire subscription → checkout → billing → tier enforcement chain cannot function until real Stripe products/prices are created
 - **Status**: Tier enforcement middleware exists and is well-structured (enforceFeatureAccess, enforceUsageQuota, recordUsage, getUserTier). Blocked only by Stripe config.
 
@@ -90,8 +93,8 @@
 
 ### FG-3: LLM Failover — Groq max_tokens Capped at 8000
 - **File**: `workers/src/lib/llm.js` line 122
-- **Finding**: `max_tokens: Math.min(promptPayload.config.max_tokens, 8000)` — synthesis prompt requests 4096, which is fine. But if Groq is the only surviving provider and a future prompt requests >8000, it will be silently truncated
-- **Impact**: Low risk currently (4096 < 8000). Defensive code that could cause confusion if limits change.
+- **Finding**: `max_tokens: Math.min(promptPayload.config.max_tokens, 8000)` — synthesis prompt requests 6000, which is fine. But if Groq is the only surviving provider and a future prompt requests >8000, it will be silently truncated
+- **Impact**: Low risk currently (6000 < 8000). Defensive code that could cause confusion if limits change.
 
 ---
 

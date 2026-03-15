@@ -74,7 +74,7 @@ HIGH: 3.4 Escape overview synthesis data
 
 ## New Issues Found (2026-03-10 Review)
 ```
-CRIT: BL-MV-N1 — Studio $500 tier checkout active, features not built
+CRIT: BL-MV-N1 — Studio $149 tier checkout active, feature descriptions updated
 HIGH: BL-MV-N2 — Composite form location not auto-populated
 HIGH: BL-MV-N4 — RESEND_API_KEY production status unverified
 MED:  BL-MV-N3 — totalProfiles counter blank on API failure

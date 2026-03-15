@@ -1,5 +1,7 @@
 # Prime Self Workers — Comprehensive Codebase Audit
 
+> Historical workers audit. Tier names, prices, and schema notes below reflect an older repo state and are preserved for audit history.
+
 **Date:** 2025-01-XX  
 **Scope:** All source files in `workers/src/` (~80 files)  
 **Runtime:** Cloudflare Workers + Neon PostgreSQL  
@@ -44,11 +46,11 @@ The Prime Self API (`workers/src/`) contains **~80 source files** implementing a
 ### Stack
 - **Runtime:** Cloudflare Workers (compatibility_date 2024-12-01, `nodejs_compat`)
 - **Database:** Neon PostgreSQL via `@neondatabase/serverless` v1.0.2
-- **Payments:** Stripe v17.4.0 (3 tiers: Seeker $15, Guide $97, Practitioner $500)
+- **Payments:** Stripe v17.4.0 (4 tiers: Explorer $12, Guide $60, Studio $149 + Free)
 - **Auth:** JWT HS256 (24h access + 30d refresh tokens with rotation)
-- **Cache:** Workers KV (`CACHE` binding) + in-memory LRU
+- **Cache:** Workers KV (`CACHE` binding) + in-memory LRU + `RATE_LIMIT_KV` for daily ceilings
 - **Storage:** R2 (`prime-self-exports` bucket) for PDFs
-- **AI:** Anthropic Claude → Grok → Groq failover chain
+- **AI:** Anthropic Claude → Grok 4 Fast → Groq failover chain (3-provider)
 - **Email:** Resend API
 - **SMS:** Telnyx
 - **Cron:** Daily at 06:00 UTC (8 tasks)
@@ -286,8 +288,8 @@ The SMS digest flow queries for `charts.chart_type` and `charts.authority` via t
 ### 6.1 — MEDIUM: Two Different Tier Systems
 
 **`handlers/practitioner.js`** uses a 4-tier system: `free, standard, professional, enterprise`
-**`handlers/billing.js`** and `lib/stripe.js` use a 3-tier system: `seeker, guide, practitioner`
-**`subscriptions` table constraint:** `CHECK (tier IN ('free', 'seeker', 'guide', 'practitioner'))`
+**`handlers/billing.js`** and `lib/stripe.js` use a 4-tier system: `free, regular, practitioner, white_label`
+**`subscriptions` table constraint:** `CHECK (tier IN ('free', 'regular', 'practitioner', 'white_label'))`
 
 The practitioner module's `standard`/`professional`/`enterprise` tiers are incompatible with the billing tiers. The `practitioners` table has its own `tier` column, but the mismatch creates confusion about which tier system governs feature access.
 

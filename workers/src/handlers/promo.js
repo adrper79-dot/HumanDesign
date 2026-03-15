@@ -20,7 +20,28 @@ function isAdmin(request, env) {
   const adminToken = env.ADMIN_TOKEN;
   if (!adminToken) return false; // Admin token not configured — block all admin ops
   const provided = request.headers.get('X-Admin-Token');
-  return provided === adminToken;
+  if (!provided) return false;
+  // BL-ADMIN-001: Constant-time comparison to prevent timing side-channel attacks
+  const result = constantTimeEqual(provided, adminToken);
+  if (!result) {
+    console.warn(JSON.stringify({
+      event: 'admin_auth_fail', ip: request.headers.get('CF-Connecting-IP') || 'unknown', path: new URL(request.url).pathname
+    }));
+  }
+  return result;
+}
+
+/**
+ * Constant-time string comparison to prevent timing attacks.
+ * Always compares all bytes regardless of where a mismatch occurs.
+ */
+function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 // ─── User-Facing: Validate Promo Code ────────────────────────
@@ -156,7 +177,7 @@ export async function handleCreatePromo(request, env) {
   if (!/^[A-Z0-9_-]+$/i.test(code) || code.length > 64) {
     return Response.json({ error: 'Invalid code format (alphanumeric, hyphens, underscores, max 64 chars)' }, { status: 400 });
   }
-  const validTiers = ['free', 'regular', 'practitioner', 'white_label'];
+  const validTiers = ['free', 'regular', 'individual', 'practitioner', 'white_label', 'agency'];
   if (applicable_tiers && (!Array.isArray(applicable_tiers) || !applicable_tiers.every(t => validTiers.includes(t)))) {
     return Response.json({ error: `applicable_tiers must be array of: ${validTiers.join(', ')}` }, { status: 400 });
   }

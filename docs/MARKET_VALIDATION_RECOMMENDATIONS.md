@@ -1,6 +1,7 @@
 # Market Validation Recommendations
+> Historical strategy snapshot. Use [PRACTITIONER_FIRST_90_DAY_ROADMAP.md](PRACTITIONER_FIRST_90_DAY_ROADMAP.md) for the current strategy view and [../DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md) for canonical navigation.
 > Generated: 2026-03-10 | Updated: 2026-03-10 (post-implementation review)
-> Status: Active — see resolved/open/new sections below
+> Status: Historical reference only — contains obsolete pricing labels, market assumptions, and implementation status kept for audit trail purposes.
 
 ---
 
@@ -43,7 +44,7 @@ Third pass — 2026-03-10 (OAuth shipped). Approximately **83% of original recom
 
 | ID | Item | Severity | Status |
 |----|------|----------|--------|
-| BL-MV-N1 | Studio tier ($500) is purchaseable but features not built | **CRITICAL** | ✅ Done |
+| BL-MV-N1 | Studio tier ($149) is purchaseable but features not built | **CRITICAL** | ✅ Done |
 | BL-MV-N2 | Composite form: location not auto-populated (date/time only) | High | ❌ Open |
 | BL-MV-N3 | `totalProfiles` counter shows blank if API fails | Medium | ❌ Open |
 | BL-MV-N4 | `RESEND_API_KEY` production status unverified | High | ❌ Open |
@@ -232,17 +233,17 @@ This is the single highest-friction point in the core user flow.
 
 ### 3.2 Add Mid-Market Pricing Tier ($9/mo)
 
-**The problem:** $0 → $15 → $97 leaves casual users without a comfortable entry point. The spiritual app market price anchor is $7–10/mo. $15 Seeker is survivable but adds friction. The $97 Adept tier reads as "professional only" to casual users browsing the pricing page.
+**The problem:** $0 → $12 → $60 pricing is now well-structured. The spiritual app market price anchor is $7–10/mo. $12 Explorer is a comfortable entry point.
 
-**Recommended restructure:**
+**Current structure (Plan v4):**
 ```
-Free        $0      1 chart, basic Forge ID, no synthesis
-Explorer    $9/mo   Unlimited charts, full synthesis, daily digest
-Adept       $29/mo  All Explorer + composites, clustering, PDF export, diary
-Pro         $97/mo  All Adept + practitioner tools, API access, white-label
+Free        $0      1 profile, 5 AI questions, 1 daily synthesis
+Explorer    $12/mo  30 profiles, 30 AI questions, 10 daily syntheses
+Guide       $60/mo  200 profiles, practitioner tools, 20 daily syntheses
+Studio      $149/mo White-label, 10K API calls, 50 daily syntheses
 ```
 
-Note: Cut the $500/mo tier from public pricing until Practitioner dashboard frontend is complete. It currently creates a trust gap (purchased tier, missing features).
+Note: Studio tier description now matches actual delivered features. Daily ceilings enforced via RATE_LIMIT_KV.
 
 **Effort:** 1 day (Stripe product/price creation + frontend pricing page update).
 
@@ -288,7 +289,7 @@ Result: buttons render gold (from inline), but the design system specifies red. 
 
 ### 4.1 Practitioner Dashboard Frontend
 
-**The problem:** All practitioner API endpoints exist and are functional server-side. The frontend is missing, which means the $500 Practitioner tier (or any future Pro practitioner tier) cannot be sold credibly.
+**The problem:** All practitioner API endpoints exist and are functional server-side. The frontend is missing, which means the $149 Studio tier (or any future Pro practitioner tier) cannot be sold credibly.
 
 **What to build:**
 - Client roster view (list, add, remove clients)

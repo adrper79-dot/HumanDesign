@@ -543,6 +543,7 @@ export function calculateLifeCycles(natalPositions, natalJDN, options = {}) {
             type: 'return',
             occurrence: i,
             date: formatDate(returnDate.year, returnDate.month, returnDate.day),
+            approximate: true, // P2-ENGINE-004: linear period estimate, not exact planetary position
             ageAtCycle: Math.round(returnAge * 10) / 10,
             yearsUntil: Math.round(yearsUntil * 10) / 10,
             status,
@@ -580,6 +581,7 @@ export function calculateLifeCycles(natalPositions, natalJDN, options = {}) {
               cycle: name,
               type,
               date: formatDate(phaseDate.year, phaseDate.month, phaseDate.day),
+              approximate: true, // P2-ENGINE-004: linear period estimate, not exact planetary position
               ageAtCycle: Math.round(targetAge * 10) / 10,
               yearsUntil: Math.round(yearsUntil * 10) / 10,
               status,

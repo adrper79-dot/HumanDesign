@@ -1,5 +1,8 @@
 # Quick Start: Stripe Integration
 
+> Historical quick-start snapshot. The migration SQL, product names, tier names, and environment variable examples below reflect an older pricing model.
+> Do not use this file as the current billing source of truth. Use `workers/src/lib/stripe.js`, `docs/TIER_ENFORCEMENT.md`, and `audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md` instead.
+
 **Time: 15-20 minutes**
 
 Follow these steps in order to get Stripe payments working.
@@ -22,7 +25,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   user_id                 UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   stripe_customer_id      TEXT UNIQUE NOT NULL,
   stripe_subscription_id  TEXT UNIQUE,
-  tier                    TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'seeker', 'guide', 'practitioner')),
+  tier                    TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'regular', 'practitioner', 'white_label')),
   status                  TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'past_due', 'unpaid', 'trialing')),
   current_period_start    TIMESTAMPTZ,
   current_period_end      TIMESTAMPTZ,
@@ -104,38 +107,38 @@ CREATE INDEX IF NOT EXISTS idx_usage_action ON usage_records (action, created_at
 
 Go to: https://dashboard.stripe.com/products
 
-### Product 1: Seeker Tier
+### Product 1: Explorer Tier (regular)
 
 1. Click **"Add product"**
 2. Fill in:
-   - **Name**: `Prime Self - Seeker`
-   - **Description**: `Unlimited charts, 10 profiles/month, SMS digests`
+   - **Name**: `Prime Self - Explorer`
+   - **Description**: `30 profiles/month, 30 AI questions, daily limits enforced`
    - **Pricing model**: Standard pricing
-   - **Price**: `15.00 USD`
+   - **Price**: `12.00 USD`
    - **Billing period**: Monthly
 3. Click **"Add product"**
 4. **IMPORTANT:** Copy the **Price ID** (looks like `price_1A2B3C4D...`)
    - You'll find it under "Pricing" section or in the URL
 5. Save it somewhere (you need it for Step 4)
 
-### Product 2: Guide Tier
+### Product 2: Guide Tier (practitioner)
 
 1. Click **"Add product"** again
 2. Fill in:
    - **Name**: `Prime Self - Guide`
-   - **Description**: `Everything unlimited, practitioner tools, 1K API calls/month`
-   - **Price**: `97.00 USD`
+   - **Description**: `200 profiles/month, 200 AI questions, practitioner tools`
+   - **Price**: `60.00 USD`
    - **Billing period**: Monthly
 3. Click **"Add product"**
 4. **Copy the Price ID**
 
-### Product 3: Practitioner Tier
+### Product 3: Studio Tier (white_label)
 
 1. Click **"Add product"** again
 2. Fill in:
-   - **Name**: `Prime Self - Practitioner`
-   - **Description**: `White-label, 10K API calls/month, everything unlimited`
-   - **Price**: `500.00 USD`
+   - **Name**: `Prime Self - Studio`
+   - **Description**: `White-label, 10K API calls/month, 1000 profiles, custom webhooks`
+   - **Price**: `149.00 USD`
    - **Billing period**: Monthly
 3. Click **"Add product"**
 4. **Copy the Price ID**
@@ -149,15 +152,15 @@ Go to: https://dashboard.stripe.com/products
 1. Open `workers/wrangler.toml` in your editor
 2. Find these lines:
    ```toml
-   STRIPE_PRICE_SEEKER = "price_placeholder_seeker"
-   STRIPE_PRICE_GUIDE = "price_placeholder_guide"
+   STRIPE_PRICE_REGULAR = "price_placeholder_regular"
    STRIPE_PRICE_PRACTITIONER = "price_placeholder_practitioner"
+   STRIPE_PRICE_WHITE_LABEL = "price_placeholder_white_label"
    ```
 3. Replace with your actual Price IDs:
    ```toml
-   STRIPE_PRICE_SEEKER = "price_YOUR_SEEKER_ID"
-   STRIPE_PRICE_GUIDE = "price_YOUR_GUIDE_ID"
-   STRIPE_PRICE_PRACTITIONER = "price_YOUR_PRACTITIONER_ID"
+   STRIPE_PRICE_REGULAR = "price_YOUR_EXPLORER_ID"
+   STRIPE_PRICE_PRACTITIONER = "price_YOUR_GUIDE_ID"
+   STRIPE_PRICE_WHITE_LABEL = "price_YOUR_STUDIO_ID"
    ```
 4. Save the file
 5. Deploy:
@@ -197,7 +200,7 @@ curl -X POST https://prime-self-api.adrper79.workers.dev/api/billing/checkout \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE" \
   -H "Content-Type: application/json" \
   -d '{
-    "tier": "seeker",
+    "tier": "regular",
     "successUrl": "https://primeself.app/success",
     "cancelUrl": "https://primeself.app/pricing"
   }'
@@ -221,7 +224,7 @@ curl https://prime-self-api.adrper79.workers.dev/api/auth/me \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE"
 ```
 
-Response should show: `"tier": "seeker"`
+Response should show: `"tier": "regular"`
 
 ✅ **Success!** You can now process subscriptions!
 

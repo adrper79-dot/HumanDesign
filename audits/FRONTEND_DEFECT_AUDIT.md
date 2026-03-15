@@ -42,7 +42,7 @@
 | **Category** | Logic & Correctness |
 | **File** | `frontend/index.html` line 1210 |
 | **Description** | `startCheckout(tier)` references `event.target` on line 1210, but the function signature only declares `tier` as a parameter. It relies on the implicit `window.event` global, which is `undefined` in Firefox and in strict-mode contexts. This causes a `TypeError` when users click any "Upgrade to …" button, completely blocking Stripe checkout. |
-| **Recommended Fix** | Change the function signature to `startCheckout(tier, event)` and update the three `onclick` callsites to pass `event`: `onclick="startCheckout('seeker', event)"` (lines 224, 239, 254). Alternatively, derive the button from `document.querySelector` instead of `event.target`. |
+| **Recommended Fix** | Change the function signature to `startCheckout(tier, event)` and update the three `onclick` callsites to pass `event`: `onclick="startCheckout('regular', event)"` (lines 224, 239, 254). Alternatively, derive the button from `document.querySelector` instead of `event.target`. |
 | **Effort** | 10 min |
 
 ---

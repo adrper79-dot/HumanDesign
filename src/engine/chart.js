@@ -398,17 +398,29 @@ function determineCross(pSunGate, pEarthGate, dSunGate, dEarthGate, personalityS
  * @param {object} designGates – Design gate/line map (same structure)
  * @returns {object} Complete chart
  */
+// Standard 13 HD bodies used for chart determination (channels, centers, type, authority).
+// Chiron and other non-standard bodies are excluded from channel detection to prevent
+// spurious channels that could yield incorrect Type/Authority/Definition.  (P2-ENGINE-001)
+const HD_STANDARD_BODIES = new Set([
+  'sun', 'earth', 'moon', 'northNode', 'southNode',
+  'mercury', 'venus', 'mars', 'jupiter', 'saturn',
+  'uranus', 'neptune', 'pluto'
+]);
+
 export function calculateChart(personalityGates, designGates) {
   // Collect all active gates (union of personality + design)
+  // Only standard HD bodies participate in channel/center/type determination
   const allGateNumbers = new Set();
   const personalityGateNumbers = new Set();
   const designGateNumbers = new Set();
 
-  for (const data of Object.values(personalityGates)) {
+  for (const [body, data] of Object.entries(personalityGates)) {
+    if (!HD_STANDARD_BODIES.has(body)) continue;  // P2-ENGINE-001: skip Chiron etc.
     allGateNumbers.add(data.gate);
     personalityGateNumbers.add(data.gate);
   }
-  for (const data of Object.values(designGates)) {
+  for (const [body, data] of Object.entries(designGates)) {
+    if (!HD_STANDARD_BODIES.has(body)) continue;  // P2-ENGINE-001: skip Chiron etc.
     allGateNumbers.add(data.gate);
     designGateNumbers.add(data.gate);
   }

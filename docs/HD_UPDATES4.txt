@@ -1,0 +1,150 @@
+1. The Practitioner Directory — Yes, Build It, It Closes the Flywheel
+The directory isn't just a nice-to-have. It's the piece that makes the entire revenue share model self-reinforcing.
+
+How it works:
+
+Every practitioner with a public profile at selfprime.net/practitioners gets a shareable URL: selfprime.net/p/jane-doe
+Users browsing the app see "Find a Practitioner" — surfaced when the AI defers a complex question, on the free tier upgrade screen, and as a standalone nav item
+Each profile shows: name, photo, bio, specialties (types they work with), certification status, booking link, starting price range
+User clicks "Book a Session" → goes to practitioner's external booking page (their Calendly, their website, etc.)
+If the user doesn't have a Prime Self account yet, clicking a practitioner's share link lands them on a signup page attributed to that practitioner — they get added to the practitioner's referral chain
+The flywheel close: A user discovers Prime Self through a practitioner's public profile → signs up → eventually upgrades to Individual ($19/mo) → practitioner earns the 25% recurring credit forever. The directory is a passive acquisition channel for practitioners that generates ongoing subscription income for them with zero effort after setup.
+
+What goes on a practitioner profile:
+
+
+- Display name, photo, short bio (250 chars)
+- Specializations: checkboxes (Generators, Projectors, Reflectors, Relationships, Business, Parenting, etc.)
+- Certification: IHDS / Jovian Archive / Self-Certified / Other
+- Languages spoken
+- Session format: Remote / In-person / Both
+- Session length + starting price range (text field — "60 min from $120")
+- Booking URL (their Calendly, website, etc.)
+- External payment methods (display only — see below)
+- "X clients use Prime Self with me" — live count badge (social proof)
+Filterable by: specialty, certification, language, session format. No location filter needed — this market is 95% remote.
+
+2. Payment Processing — Do Not Touch It
+Do not process payments. Do not integrate Cash App, Venmo, PayPal, or Stripe Connect for practitioner payouts. This is a trap that looks simple and is deeply complex.
+
+Why not:
+
+Problem	Reality
+Stripe Connect	Requires KYC for every practitioner (government ID verification). Takes 2-3 weeks to implement properly. Ongoing compliance burden.
+Chargebacks	If Prime Self processes the payment, Prime Self owns the dispute. A client claims "my reading was bad" → chargeback → your Stripe account at risk.
+1099s / tax reporting	Once you process >$600/yr for a contractor in the US, you owe them a 1099-K. Multiply by hundreds of practitioners.
+International	Venmo is US-only. Cash App is US/UK. Practitioners are global. You'd need to support 10+ payment methods to be comprehensive.
+Practitioner expectation	Professional practitioners already have their payment setup. They don't want a new system. They want a client management tool.
+Your core business	You make money on subscriptions, not booking commissions. Adding payment processing adds complexity with minimal incremental revenue.
+The clean solution — display, don't process:
+
+Add a payment_links field to practitioner profiles. It's just a structured list of external links:
+
+
+{
+  "venmo": "@jane-hd",
+  "cashapp": "$janedesign",
+  "paypal": "paypal.me/janehd",
+  "stripe": "buy.stripe.com/...",
+  "website": "janehd.com/book"
+}
+On the practitioner's public profile, these render as simple buttons:
+
+Book & Pay → [Calendly link]
+Venmo → @jane-hd
+Cash App → $janedesign
+You display them. You don't touch the money. Zero liability. Zero compliance burden. Practitioners love it because it's just their existing setup presented cleanly.
+
+In practitioner settings UI: A simple "Payment & Booking" section with labeled input fields for each platform. Practitioner fills in what they use, leaves blank what they don't. Takes 10 minutes to build.
+
+3. The One Revenue Share Exception
+There is one case where you could take a cut without processing payments directly — and it's worth considering later, not now:
+
+Stripe Payment Links. Stripe offers hosted payment links (buy.stripe.com/...) that practitioners can create in their own Stripe account. With Stripe Connect (platform model), you can take an application fee on those transactions without handling funds directly. Stripe handles the KYC, the payouts, the 1099s.
+
+At scale this looks like: practitioner charges $150 for a session → Prime Self takes 5% ($7.50) as platform fee → practitioner nets $142.50.
+
+At 400 practitioners × 4 sessions/week × $7.50 = $12,000/week in platform fees.
+
+But this is a Phase 4+ consideration. Right now it adds complexity you don't need. The subscription revenue model is cleaner, more predictable, and requires nothing from practitioners except $97/mo. Build the directory and the payment display first. Revisit platform fees when you have 200+ active practitioners.
+
+Summary
+Question	Answer
+Build a practitioner directory?	Yes — it closes the flywheel and is part of the $97/mo value
+Process practitioner payments?	No — display their external links, don't touch the money
+Support Cash App / Venmo?	Yes — as display-only fields on their public profile
+Future revenue from bookings?	Possible via Stripe Connect platform fees at scale — not now
+The directory goes in the practitioner settings as a 30-minute build. The payment fields are four text inputs. Both ship in the same sprint as the public profile feature.
+
+do i need a way for practitioners to add feedback into the AI logic?
+Yes — but the answer is about which kind of feedback, and there are three distinct vectors here with very different complexity levels.
+
+The Three Feedback Vectors
+Vector 1: Session Notes → Client AI Context
+Build this. High value, low complexity. Ships with Phase 1.
+
+Right now when a client generates a profile, Claude gets: chart data, psychometric responses, diary entries, validation data. It gets nothing from the practitioner's perspective on that client.
+
+That's a miss. A practitioner who has seen a client for 6 sessions knows things about them that no chart data captures — "struggles to trust their splenic authority because of past trauma," "in a career transition, needs grounding not expansion energy right now," "has a very strong conditioning from undefined ego center, shows up as overcommitment."
+
+The fix: add a share_with_ai boolean to the practitioner_session_notes table. When a practitioner writes a note, they can toggle "Include in AI synthesis for this client." Notes with this flag on get pulled and injected into the synthesis prompt when that client generates a profile.
+
+What the synthesis prompt gains:
+
+
+PRACTITIONER CONTEXT (from your practitioner's session notes):
+- 2026-02-15: Client is navigating a major career transition. Currently leaving corporate finance to start a healing practice. The tension between Sacral yes/no and mental override is showing up strongly.
+- 2026-03-01: Client reports finally acting on a Sacral yes after 6 months of deliberation. Energy shift was immediate and notable.
+Claude can then respond with actual continuity — "Building on what you've been working through in your practice, your Sacral authority is telling you something your mind keeps arguing with..."
+
+Implementation: One flag on the notes table (already planned as 025_session_notes.sql). One new query: getPractitionerNotesForClientAI. One new parameter in buildSynthesisPrompt. The synthesis already accepts diary entries — practitioner notes are the same pattern.
+
+Vector 2: Practitioner Synthesis Style
+Build this. One text field. Changes the entire feel of the output.
+
+Every practitioner has a framework. Some are Ra-lineage orthodox. Some blend Gene Keys. Some work exclusively in business contexts. Some are trauma-informed. Some work with children. The AI currently gives everyone the same framing voice.
+
+Add a synthesis_style text field to the practitioners table (250 chars max). When a client of that practitioner generates a profile, this field gets prepended to the synthesis system prompt.
+
+Examples of what practitioners would write:
+
+"My practice focuses on Human Design in business and leadership contexts. Frame interpretations through career, decision-making under pressure, and team dynamics."
+"I work with mothers navigating the transition to parenthood. Connect HD patterns to family dynamics, parenting style, and identity shift."
+"I integrate Gene Keys contemplative framing with traditional HD. Use shadow/gift/siddhi language where appropriate."
+"My clients are skeptics and analytical types. Be concrete, evidence-grounded, avoid mystical language."
+This is a 30-minute build on the backend and two text inputs in the practitioner settings UI. The downstream effect is enormous — every practitioner's clients get AI output that sounds like their practitioner's school of thought, not a generic synthesis. Practitioners will notice immediately and value it.
+
+Important constraint: This is a style guide, not a prompt override. Practitioners enter free text but it gets sanitized and injected into a system prompt section they don't fully control. You don't let them write arbitrary instructions that could manipulate the AI in unintended ways.
+
+Vector 3: Per-Client AI Context Field
+Build this. One rich-text field per client relationship. Ships with Phase 1.
+
+Separate from session notes. This is a standing brief — what Claude should always know about this person before generating anything for them.
+
+Lives on the practitioner_clients join table or a separate client_ai_context column. The practitioner fills it in after their first session and updates it as the relationship evolves.
+
+What goes here:
+
+Communication style preferences ("responds to directness, avoid softening language")
+Conditioning patterns that have been identified ("heavy white-manifesting in family system — external pressure shows up as feeling like they're not doing enough")
+Life context ("recently separated, navigating co-parenting — avoid framing that assumes partnership")
+Practitioner flags ("client has confirmed 2/4 profile resonance through multiple sessions — this is solid ground")
+What this enables: When the client talks to the AI and asks "why do I keep overriding my gut feelings?", Claude doesn't start from scratch. It starts with the practitioner's accumulated understanding of that specific person.
+
+This is something no other HD tool or AI tool of any kind offers. It turns the AI into an extension of the practitioner relationship rather than a competitor to it.
+
+What NOT to Build
+Global feedback loops / RLHF-style improvement: Don't let practitioner feedback affect the AI for anyone else's clients. This sounds powerful but is a rabbit hole — quality control, consistency, practitioner disagreements, liability. It would take months to build safely and is a distraction from the core product.
+
+Free-form system prompt editing: Don't let practitioners write raw system prompts. Even with good intentions, this creates a jailbreaking surface and inconsistent output. The style field is the right abstraction — opinionated enough to be useful, constrained enough to be safe.
+
+Thumbs up/down on AI output affecting future responses: This is the right long-term vision but wrong now. Without significant volume and a proper feedback pipeline, the signal is noise. Collect it passively (log the ratings) and revisit when you have 10K+ data points.
+
+Implementation Priority
+Feature	Table change	Query	Prompt change	UI	Time
+Session notes share_with_ai flag	Add column to practitioner_session_notes	getPractitionerNotesForClientAI	Add practitionerContext param to buildSynthesisPrompt	Toggle on note card	3 hrs
+Practitioner synthesis style	Add synthesis_style to practitioners	Already exists via getPractitionerByUserId	Inject into system prompt preamble	Text area in practitioner settings	1.5 hrs
+Per-client AI context	Add ai_context to practitioner_clients	Add to client detail query	Inject before client's diary entries	Rich text field on client detail view	1.5 hrs
+Total: ~6 hours of focused work. All three ship together as "Practitioner AI Integration" in Phase 1.
+
+The combined effect: a client who works with a practitioner on Prime Self gets AI responses that carry the practitioner's knowledge of them, the practitioner's interpretive framework, and the continuity of their ongoing work together. That's not a feature. That's a reason for practitioners to build their entire practice on this platform.

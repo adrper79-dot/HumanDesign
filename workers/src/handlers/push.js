@@ -222,6 +222,17 @@ async function subscribe(request, env, user) {
     if (endpoint.length > 2048) {
       return Response.json({ ok: false, error: 'endpoint exceeds maximum length of 2048 characters' }, { status: 400 });
     }
+
+    // SSRF prevention: only allow HTTPS push service endpoints
+    try {
+      const epUrl = new URL(endpoint);
+      if (epUrl.protocol !== 'https:') {
+        return Response.json({ ok: false, error: 'Push endpoint must use HTTPS' }, { status: 400 });
+      }
+    } catch {
+      return Response.json({ ok: false, error: 'Invalid push endpoint URL' }, { status: 400 });
+    }
+
     if (keys.p256dh.length > 256 || keys.auth.length > 256) {
       return Response.json({ ok: false, error: 'keys exceed maximum length of 256 characters' }, { status: 400 });
     }
@@ -621,7 +632,7 @@ export async function sendPushNotification(env, subscription, notification) {
 
     // If 410 Gone, subscription expired — deactivate it
     if (response.status === 410 || response.status === 404) {
-      await query(QUERIES.deactivatePushSubscription, [subscription.id]).catch(() => {});
+      await query(QUERIES.deactivatePushSubscription, [subscription.id]).catch(err => console.error('[PUSH] Failed to deactivate subscription:', err.message));
       console.log(`[PUSH] Subscription ${subscription.id} expired, deactivated`);
     }
     

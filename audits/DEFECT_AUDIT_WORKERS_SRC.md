@@ -105,11 +105,11 @@ The practitioner handler defines client limits using tier names `standard`, `pro
 const tierLimits = { free: 0, standard: 10, professional: 50, enterprise: Infinity };
 ```
 
-But the billing system uses `free`, `seeker`, `guide`, `practitioner`. Since `seeker`, `guide`, and `practitioner` are not in the map, all paying users fall through to `|| 0`, meaning **no paying user can add clients** to their practitioner dashboard.
+But the billing system uses `free`, `regular`, `practitioner`, `white_label`. Since `regular`, `practitioner`, and `white_label` are not in the map, all paying users fall through to `|| 0`, meaning **no paying user can add clients** to their practitioner dashboard.
 
 **Recommended Fix:**  
 ```js
-const tierLimits = { free: 0, seeker: 10, guide: 50, practitioner: Infinity };
+const tierLimits = { free: 0, regular: 10, practitioner: 50, white_label: Infinity };
 ```
 
 ---
@@ -124,11 +124,11 @@ const tierLimits = { free: 0, seeker: 10, guide: 50, practitioner: Infinity };
 | **Effort** | 10 min |
 
 **Description:**  
-Alert limits are `{ free: 3, seeker: 10, practitioner: Infinity }`. The "guide" tier ($97/mo) is missing, so guide users default to `|| 3` — same as free.
+Alert limits are `{ free: 3, regular: 10, white_label: Infinity }`. The "practitioner" tier ($60/mo Guide) is missing, so Guide users default to `|| 3` — same as free.
 
 **Recommended Fix:**  
 ```js
-const tierLimits = { free: 3, seeker: 10, guide: 25, practitioner: Infinity };
+const tierLimits = { free: 3, regular: 10, practitioner: 25, white_label: Infinity };
 ```
 
 ---

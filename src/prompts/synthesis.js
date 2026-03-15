@@ -13,9 +13,67 @@
 
 import { buildRAGContext } from './rag.js';
 
+// ─── KB LOADER (same pattern as rag.js) ────────────────────────
+
+const _kbCache = {};
+function loadKB(category, file) {
+  const key = `${category}/${file}`;
+  if (!_kbCache[key]) {
+    try {
+      _kbCache[key] = globalThis.__PRIME_DATA?.kb?.[key] || {};
+    } catch {
+      _kbCache[key] = {};
+    }
+  }
+  return _kbCache[key];
+}
+
 // ─── SYSTEM PROMPT (STATIC) ────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are the Prime Self Oracle — an advanced synthesis engine that delivers personalized, grounded guidance through layered interpretation.
+const SYSTEM_PROMPT = `You are the Prime Self Oracle — an advanced synthesis engine that delivers personalized, grounded guidance through layered interpretation. This synthesis is the 6th Forge in operation — the Forge of Self. You are not producing a report about the person. You are constructing the mirror in which they recognize what they already are.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRUCTURAL FRAMEWORK (The Library Integration)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your structural explanations draw from a cross-validated perennial philosophy framework organized by the harmonic series. Each level is formally derived from the previous — these are not metaphors but structural necessities proven from information theory, type theory, Euclidean topology, graph topology, circle packing, and harmonic mathematics. Use these principles when explaining WHY chart elements interact, not just WHAT they mean:
+
+POLARITY DYNAMICS (for defined/undefined center pairs — First Overtone, Octave 2:1):
+  Polarity is the first necessary structure of manifestation: two mutually defining, mutually requiring aspects that cannot collapse into identity.
+  • P1 Wave — any continuous process in the chart alternates between two states. Emotional waves, sacral on/off, splenic alerts — all are polarity dynamics.
+  • P2 Charge — what consistent charge does a defined center hold? What charge does the undefined center receive and amplify from the environment?
+  • P3 Phase — wave polarity extended across time: constructive interference (aligned energy) or destructive interference (conflicting energy) between chart activations across a period.
+  • P4 Field — what field does the defined center generate? How does it structure the person's relational space?
+  • P5 Threshold — the membrane between defined and undefined. The most dynamically active zone — both most susceptible to conditioning AND most productive for relational exchange.
+
+TRINITY (for Type + Strategy + Authority — Second Overtone, Perfect Fifth 3:2):
+  Trinity is the minimum structure of dynamic stability: three terms whose mutual interaction generates emergence that neither term possesses alone.
+  • T1 Dynamic Stability — Type + Strategy + Authority = minimum terms for a self-sustaining decision system. Remove any one and it destabilizes.
+  • T2 Process Trinity — generation (impulse/invitation) → sustaining (strategy execution) → dissolution (cycle completion). Every decision follows this trinity.
+  • T3 Mediating Trinity — Authority mediates between Type and Strategy. It is the Third that enables exchange without collapsing either pole.
+  • T4 Hierarchical Trinity — Type → Strategy → Authority = increasing interiority: what you are → how you move → how you know.
+  • T5 Temporal Trinity — Design (inherited past) + Personality (conscious present) + Synthesis (integrated future).
+  • Name the Third — the emergent behavior that neither Strategy nor Authority predicts alone.
+
+CO-ARISING (Principle F4 — for chart contradictions):
+  • Nothing pre-exists its relations. When two chart elements appear to contradict, name the contradiction explicitly: both are real, both require each other, the tension between them is where the person's most distinctive quality lives. Chart contradictions are structural features, not errors.
+
+EMERGENCE (Principle F6 — for channel synthesis):
+  • A channel is not the sum of its gates. It is an emergent property neither gate possesses alone. Name what the channel produces that neither gate can produce by itself.
+
+QUATERNITY → PENTAD TRANSITION (for channel completion — Fourth Overtone, Major Third 5:4):
+  • When four elements form a star-graph (K₁,₄), Phi cannot emerge — no cycles exist. When a channel completes, the topology shifts to C₅ — a ring. Phi becomes structurally necessary. This is why channel completion is categorical, not gradual: it is a topological shift, not accumulation of energy. Name the shift: before completion, two hanging gates reach toward each other (acyclic star). After completion, they form a ring and Phi-governed self-similar growth becomes possible in that domain.
+
+HEXAD CLOSURE (for circuit group completions — Fifth Overtone, Minor Third 6:5):
+  • Circuit completion is harmonic closure — the same principle as the perfect fifth (3:2). When an Individual/Tribal/Collective circuit closes, it generates a frequency the open circuit cannot. Name what closes, not just what connects. A closed Individual circuit generates mutation that a single Individual gate cannot; a closed Tribal circuit generates resource flow that scattered Tribal gates cannot.
+
+HEPTAD OVERFLOW (for full chart integration — Sixth Overtone, Major Seventh 15:8):
+  • When the full chart is treated as a unified system, its complexity exceeds what any single level can contain — analogous to the 7th harmonic which overflows the diatonic scale. This overflow is not a problem; it is self-awareness: the chart becoming aware of itself as a system. Name the overflow — the quality that emerges from the total system that no subsystem predicts. The synthesis itself is the Heptad moment: Ti resolving to Do.
+
+CHROMATIC COMPLETION (architectural frame):
+  • 5 Forges (pentatonic) + 7 Library levels (diatonic) = 12 (chromatic). Neither system alone covers the complete territory. The Library provides structural WHY (deductive). Prime Self provides experiential WHAT and WHERE (inductive). Together they triangulate the full chromatic scale of human self-knowledge. Self = the 12th position, the return Do.
+
+GUARD: Every Library-derived structural claim must still pass the Anti-Barnum test and cite specific Reference Facts. If adding the structural vocabulary does not make the claim more specific and accurate than the simpler version, use the simpler version. The framework explains the person, not itself.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OUTPUT STRUCTURE (REQUIRED)
@@ -230,7 +288,8 @@ OUTPUT SCHEMA (strict JSON)
       "connectionPattern": "string"
     },
     "forgeIdentification": {
-      "primaryForge": "string",
+      "forge": "Initiation|Mastery|Guidance|Perception|Transformation (USE the deterministic result from DETERMINISTIC FORGE IDENTIFICATION section)",
+      "archetype": "string (Chronos|Eros|Aether|Lux|Phoenix — the mythic alias)",
       "confidence": "high|medium|low",
       "indicators": [{ "system": "string", "dataPoint": "string" }],
       "forgeWeapon": "string (the weapon this person wields from their Forge)",
@@ -254,6 +313,10 @@ OUTPUT SCHEMA (strict JSON)
         "nonFiction": { "title": "string", "author": "string", "why": "string (how this book supports their development)" }
       },
       "currentKnowledgeFocus": "string (which of the Six Knowledges to prioritize right now)"
+    },
+    "selfReflection": {
+      "nativeEpistemology": "string (how this person knows what they know — their Authority type as cognitive architecture, 2-3 sentences)",
+      "forgeOfSelf": "string (what this person's specific pattern of self-recognition looks like, given their dominant Forge + Authority, 1-2 sentences)"
     }
   },
   "groundingAudit": {
@@ -266,115 +329,224 @@ OUTPUT SCHEMA (strict JSON)
 Respond ONLY with valid JSON matching this schema. No markdown, no code fences.`;
 
 
-// ─── FORGE MAPPING REFERENCE (CANONICAL) ────────────────────────
+// ─── DETERMINISTIC FORGE SCORING (from forge_mapping.json) ──────
 
-const FORGE_MAPPING = [
-  {
-    forge: 'Chronos',
-    domain: 'Time',
-    essence: 'The one who conquers time conquers all.',
-    hdTriggers: ['defined Ajna', 'gates 61,63,64', 'Abstract/Logical circuitry', 'profile lines 1,2', 'strong Design-side definition'],
-    astroTriggers: ['Saturn dominant', 'South Node emphasis', '12th house stellium', 'strong Capricorn/Cancer'],
-    weapon: 'Patience — the ability to outlast any obstacle',
-    defense: 'Historical Memory — learning from collective past to avoid repetition',
-    masterForm: 'The Eternal — one whose work transcends their lifespan',
-    shadowForm: 'The Anachronist — paralyzed by reverence for past or fear of future',
-    exemplars: ['Marcus Aurelius', 'Marie Curie', 'Warren Buffett', 'H.G. Wells']
-  },
-  {
-    forge: 'Eros',
-    domain: 'Passion',
-    essence: 'Passion is the engine of creation.',
-    hdTriggers: ['defined Sacral', 'Generator/MG type', 'Gate 34 active', 'Integration circuit channels', 'emotional authority'],
-    astroTriggers: ['Mars/Venus dominant', 'strong 5th house', 'Scorpio/Aries emphasis', 'Pluto aspects to personal planets'],
-    weapon: 'Creative Fire — transforming raw desire into beautiful form',
-    defense: 'Heart Coherence — emotional intelligence as protective force',
-    masterForm: 'The Lover — whose passion becomes devotional art',
-    shadowForm: 'The Addict — consumed by passion rather than channeling it',
-    exemplars: ['Frida Kahlo', 'Rumi', 'Freddie Mercury', 'Beethoven']
-  },
-  {
-    forge: 'Aether',
-    domain: 'Universal Connection',
-    essence: 'The bridge between souls cannot be broken by distance.',
-    hdTriggers: ['open/undefined Head,Ajna,Spleen', 'Gate 57 active', 'Projector/Reflector type', 'individual circuitry'],
-    astroTriggers: ['Neptune dominant', 'strong Pisces/12th house', 'prominent North Node', 'Jupiter-Neptune aspects'],
-    weapon: 'Empathy — feeling the truth of others\' experience',
-    defense: 'Sacred Boundaries — protecting openness without closing',
-    masterForm: 'The Connector — who facilitates genuine communion',
-    shadowForm: 'The Martyr — dissolving self completely in service of others',
-    exemplars: ['Thich Nhat Hanh', 'The Dalai Lama', 'Carl Rogers', 'Mother Teresa']
-  },
-  {
-    forge: 'Lux',
-    domain: 'Illumination',
-    essence: 'Truth, once seen, cannot be unseen.',
-    hdTriggers: ['defined Head + Ajna', 'gates 43,23 (Channel of Structuring)', 'Projector type', 'Collective circuitry'],
-    astroTriggers: ['Sun/Mercury dominant', 'strong 9th house', 'Sagittarius/Aquarius emphasis', 'Jupiter aspects'],
-    weapon: 'Clarity — cutting through confusion to essential truth',
-    defense: 'Discernment — knowing what is true from what merely appears true',
-    masterForm: 'The Illuminator — whose clarity serves collective awakening',
-    shadowForm: 'The Blinder — using light to dazzle rather than enlighten',
-    exemplars: ['Nikola Tesla', 'Albert Einstein', 'Ra Uru Hu', 'Steven Spielberg']
-  },
-  {
-    forge: 'Phoenix',
-    domain: 'Rebirth',
-    essence: 'What rises from ashes carries the wisdom of the fire.',
-    hdTriggers: ['profile lines 3,5,6', 'Gate 25 (Spirit of Self)', 'Cross of Planning/Sleeping Phoenix incarnation cross'],
-    astroTriggers: ['Pluto dominant', 'strong 8th house', 'Scorpio emphasis', 'major Pluto transits'],
-    weapon: 'Transmutation — turning any experience into wisdom',
-    defense: 'Resilience — the deep knowing that you have survived before',
-    masterForm: 'The Transformer — who guides others through death/rebirth',
-    shadowForm: 'The Destroyer — addicted to burning without rebuilding',
-    exemplars: ['Nelson Mandela', 'Carl Jung', 'Maya Angelou', 'Malcolm X']
+/**
+ * Compute primary and secondary Forge using the deterministic scoring
+ * algorithm from forge_mapping.json. Replaces LLM guessing.
+ *
+ * @param {object} data - Chart data with hdChart, astroChart
+ * @returns {{ primary: string, secondary: string|null, confidence: number, scores: object, indicators: string[] }}
+ */
+function computeForge(data) {
+  const forgeMap = loadKB('prime_self', 'forge_mapping.json');
+  if (!forgeMap.primaryRules) {
+    return { primary: 'Mastery', secondary: null, confidence: 0.5, scores: {}, indicators: ['fallback — forge_mapping.json unavailable'] };
   }
-];
 
-const SIX_KNOWLEDGES = [
-  { 
-    name: 'Knowledge of Self',
-    number: 1,
-    essence: 'The practitioner who knows themselves cannot be surprised by themselves in battle.',
-    hdMapping: 'HD Type + Authority + Profile',
-    primeQuestion: 'Who am I when no one is watching and nothing is at stake?'
-  },
-  { 
-    name: 'Knowledge of Ancestors',
-    number: 2,
-    essence: 'To know your ancestors is to multiply your intelligence across generations.',
-    hdMapping: 'Unconscious/Design-side gates + Incarnation Cross',
-    primeQuestion: 'What wisdom did my ancestors earn that I can inherit through deliberate practice?'
-  },
-  { 
-    name: 'Knowledge of The One',
-    number: 3,
-    essence: 'Compassion is the highest form of intelligence, because it sees reality as it is.',
-    hdMapping: 'Channel connections, electromagnetic potential, open centers',
-    primeQuestion: 'How is what I see in others a reflection of what exists in me?'
-  },
-  { 
-    name: 'Knowledge of Constructive Behaviors',
-    number: 4,
-    essence: 'These are not rigidly good traits — they are contextually appropriate behaviors chosen with consciousness.',
-    hdMapping: 'Defined centers — reliable access, consistent gifts',
-    primeQuestion: 'What constructive action is mine to take in this moment?'
-  },
-  { 
-    name: 'Knowledge of Destructive Behaviors',
-    number: 5,
-    essence: 'Destruction is not inherently negative — sometimes things must be torn down for growth.',
-    hdMapping: 'Undefined centers — amplification, vulnerability, wisdom through experience',
-    primeQuestion: 'What must I end or destroy so that something better can emerge?'
-  },
-  { 
-    name: 'Knowledge of Healing and Reparation',
-    number: 6,
-    essence: 'No Prime can be fully reached while carrying unprocessed wounds.',
-    hdMapping: 'Profile line wound/gift dynamic, Chiron placement',
-    primeQuestion: 'What wound am I carrying that, if healed, would liberate my full power?'
+  const scores = { Initiation: 0, Mastery: 0, Guidance: 0, Perception: 0, Transformation: 0 };
+  const indicators = [];
+  const hd = data.hdChart || {};
+  const astro = data.astroChart || {};
+
+  // Step 1: Type base weight (10)
+  const typeMap = forgeMap.primaryRules.byType;
+  const hdType = hd.type || '';
+  // Normalize type: strip spaces for matching
+  const typeKey = hdType.replace(/\s+/g, ' ');
+  if (typeMap[typeKey]) {
+    scores[typeMap[typeKey].forge] += typeMap[typeKey].weight;
+    indicators.push(`Type ${typeKey} → ${typeMap[typeKey].forge} (+${typeMap[typeKey].weight})`);
   }
-];
+
+  // Collect all active gates from personality + design
+  const activeGates = new Set();
+  if (data.personalityGates) {
+    for (const g of Object.values(data.personalityGates)) {
+      if (g?.gate) activeGates.add(g.gate);
+    }
+  }
+  if (data.designGates) {
+    for (const g of Object.values(data.designGates)) {
+      if (g?.gate) activeGates.add(g.gate);
+    }
+  }
+
+  // Step 2: Gate indicators
+  const si = forgeMap.secondaryIndicators || {};
+  if (si.hdGateIndicators) {
+    for (const ind of si.hdGateIndicators) {
+      const matchedGates = ind.gates.filter(g => activeGates.has(g));
+      if (matchedGates.length > 0) {
+        scores[ind.forge] += ind.weight;
+        indicators.push(`Gates [${matchedGates.join(',')}] → ${ind.forge} (+${ind.weight})`);
+      }
+    }
+  }
+
+  // Step 3: Center indicators
+  const definedCenters = new Set((hd.definedCenters || []).map(c => c.toLowerCase()));
+  if (si.hdCenterIndicators) {
+    for (const ind of si.hdCenterIndicators) {
+      if (ind.defined && definedCenters.has(ind.center.toLowerCase())) {
+        scores[ind.forge] += ind.weight;
+        indicators.push(`Defined ${ind.center} → ${ind.forge} (+${ind.weight})`);
+      }
+    }
+  }
+
+  // Step 4: Motor-to-Throat check
+  if (si.hdMotorToThroat && hd.activeChannels) {
+    const motorCenters = ['heart', 'solarplexus', 'root', 'sacral'];
+    const hasMotorToThroat = hd.activeChannels.some(ch => {
+      const centers = (ch.centers || []).map(c => c.toLowerCase());
+      return centers.includes('throat') && centers.some(c => motorCenters.includes(c));
+    });
+    if (hasMotorToThroat) {
+      scores[si.hdMotorToThroat.forge] += si.hdMotorToThroat.weight;
+      indicators.push(`Motor→Throat → ${si.hdMotorToThroat.forge} (+${si.hdMotorToThroat.weight})`);
+    }
+  }
+
+  // Step 5: Astro sign indicators
+  if (si.astroSignIndicators && astro.placements) {
+    for (const ind of si.astroSignIndicators) {
+      for (const planet of ind.planets) {
+        const placement = astro.placements[planet.toLowerCase()] || astro.placements[planet];
+        if (placement && ind.signs.includes(placement.sign)) {
+          scores[ind.forge] += ind.weight;
+          indicators.push(`${planet} in ${placement.sign} → ${ind.forge} (+${ind.weight})`);
+        }
+      }
+    }
+  }
+
+  // Step 6: Astro house indicators
+  if (si.astroHouseIndicators && astro.placements) {
+    for (const ind of si.astroHouseIndicators) {
+      for (const [planet, placement] of Object.entries(astro.placements)) {
+        if (placement.house && ind.houses.includes(placement.house)) {
+          scores[ind.forge] += ind.weight;
+          indicators.push(`${planet} in H${placement.house} → ${ind.forge} (+${ind.weight})`);
+        }
+      }
+    }
+  }
+
+  // Step 7-8: Determine primary + secondary
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const primary = sorted[0][0];
+  const primaryScore = sorted[0][1];
+  const secondary = sorted[1][1] > 5 ? sorted[1][0] : null;
+  const maxPossible = 10 + 15 + 10 + 4 + 10 + 5; // rough max
+  const confidence = Math.min(primaryScore / maxPossible, 1.0);
+
+  return { primary, secondary, confidence: Math.round(confidence * 100) / 100, scores, indicators };
+}
+
+// ─── DETERMINISTIC KNOWLEDGE SCORING (from knowledges.json) ────
+
+/**
+ * Compute primary Knowledge domain from chart data using HD circuit
+ * and gate mappings from knowledges.json.
+ *
+ * @param {object} data - Chart data
+ * @returns {{ primary: string, secondary: string|null, scores: object }}
+ */
+function computeKnowledge(data) {
+  const knowledgesData = loadKB('prime_self', 'knowledges.json');
+  if (!knowledgesData.sciences) {
+    return { primary: 'Sciences', secondary: null, scores: {} };
+  }
+
+  const scores = {};
+  const hd = data.hdChart || {};
+  const astro = data.astroChart || {};
+
+  // Collect active gates
+  const activeGates = new Set();
+  if (data.personalityGates) {
+    for (const g of Object.values(data.personalityGates)) {
+      if (g?.gate) activeGates.add(g.gate);
+    }
+  }
+  if (data.designGates) {
+    for (const g of Object.values(data.designGates)) {
+      if (g?.gate) activeGates.add(g.gate);
+    }
+  }
+
+  // Gate-to-Knowledge mapping derived from knowledges.json hdMapping
+  const gateMap = {
+    Sciences:    [63, 4, 17, 62, 16, 48, 18, 58], // Logic/Understanding circuit
+    Arts:        [1, 8, 56, 35, 36, 22, 12, 45],   // Sensing/Abstract circuit expression
+    Defenses:    [44, 50, 32, 28, 26, 21, 40, 37],  // Tribal/Defense circuit
+    Heresies:    [43, 23, 61, 24, 38, 39, 28, 3],   // Individual/Knowing circuit
+    Connections: [37, 40, 6, 59, 19, 49, 13, 33],   // Tribal/Community circuit
+    Mysteries:   [61, 64, 63, 47, 57, 20, 34, 10]   // Individual/Knowing + awareness
+  };
+
+  // Score from active gates
+  for (const [knowledge, gates] of Object.entries(gateMap)) {
+    scores[knowledge] = 0;
+    for (const gate of gates) {
+      if (activeGates.has(gate)) scores[knowledge] += 3;
+    }
+  }
+
+  // Score from defined centers
+  const definedCenters = new Set((hd.definedCenters || []).map(c => c.toLowerCase()));
+  const centerMap = {
+    Sciences:    ['ajna'],
+    Arts:        ['throat'],
+    Defenses:    ['spleen', 'heart'],
+    Heresies:    ['head', 'ajna'],
+    Connections: ['solarplexus'],
+    Mysteries:   ['head']
+  };
+  for (const [knowledge, centers] of Object.entries(centerMap)) {
+    for (const c of centers) {
+      if (definedCenters.has(c)) scores[knowledge] += 2;
+    }
+  }
+
+  // Score from astro sign emphasis
+  const signMap = {
+    Sciences:    ['Virgo', 'Aquarius'],
+    Arts:        ['Leo', 'Pisces'],
+    Defenses:    ['Aries', 'Scorpio'],
+    Heresies:    ['Aquarius', 'Sagittarius'],
+    Connections: ['Cancer', 'Libra'],
+    Mysteries:   ['Pisces', 'Scorpio']
+  };
+  if (astro.placements) {
+    const keyPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars'];
+    for (const [knowledge, signs] of Object.entries(signMap)) {
+      for (const planet of keyPlanets) {
+        const p = astro.placements[planet] || astro.placements[planet.charAt(0).toUpperCase() + planet.slice(1)];
+        if (p && signs.includes(p.sign)) scores[knowledge] += 2;
+      }
+    }
+  }
+
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  return {
+    primary: sorted[0][0],
+    secondary: sorted[1]?.[1] > 3 ? sorted[1][0] : null,
+    scores: Object.fromEntries(sorted)
+  };
+}
+
+// ─── FORGE ARCHETYPE DETAILS (for narrative reference) ─────────
+
+const FORGE_ARCHETYPES = {
+  Initiation: { archetype: 'Chronos', element: 'Fire', keyword: 'Begin', weapon: 'Patience — the ability to outlast any obstacle', defense: 'Historical Memory', masterForm: 'The Eternal', shadowForm: 'The Anachronist' },
+  Mastery:    { archetype: 'Eros',    element: 'Earth', keyword: 'Build', weapon: 'Creative Fire — transforming raw desire into beautiful form', defense: 'Heart Coherence', masterForm: 'The Lover', shadowForm: 'The Addict' },
+  Guidance:   { archetype: 'Aether',  element: 'Air',   keyword: 'Direct', weapon: 'Empathy — feeling the truth of others\' experience', defense: 'Sacred Boundaries', masterForm: 'The Connector', shadowForm: 'The Martyr' },
+  Perception: { archetype: 'Lux',     element: 'Water', keyword: 'Mirror', weapon: 'Clarity — cutting through confusion to essential truth', defense: 'Discernment', masterForm: 'The Illuminator', shadowForm: 'The Blinder' },
+  Transformation: { archetype: 'Phoenix', element: 'Void', keyword: 'Dissolve', weapon: 'Transmutation — turning any experience into wisdom', defense: 'Resilience', masterForm: 'The Transformer', shadowForm: 'The Destroyer' },
+  Self:       { archetype: 'Mirror', element: 'All', keyword: 'Recognize', weapon: 'Integration — the capacity to hold all patterns as one', defense: 'Presence', masterForm: 'The Return', shadowForm: 'The Performer', activation: 'Not scored. Present in every chart. Activated by the act of genuine self-inquiry.' }
+};
 
 
 // ─── REFERENCE FACTS BUILDER ────────────────────────────────────
@@ -589,35 +761,77 @@ function buildReferenceFacts(data) {
     sections.push(`Birth Tree: ${og.treeKey ? og.treeKey.charAt(0).toUpperCase() + og.treeKey.slice(1) : 'Unknown'}`);
   }
 
-  // ── Forge Mapping Reference ──
-  sections.push('\n=== FORGE MAPPING REFERENCE (CANONICAL) ===');
-  for (const f of FORGE_MAPPING) {
-    sections.push(`\n${f.forge} (${f.domain}): "${f.essence}"`);
-    sections.push(`  HD indicators: ${f.hdTriggers.join(', ')}`);
-    sections.push(`  Astro indicators: ${f.astroTriggers.join(', ')}`);
-    sections.push(`  Weapon: ${f.weapon}`);
-    sections.push(`  Defense: ${f.defense}`);
-    sections.push(`  Master Form: ${f.masterForm}`);
-    sections.push(`  Shadow Form: ${f.shadowForm}`);
-    sections.push(`  Historical Exemplars: ${f.exemplars.join(', ')}`);
+  // ── Deterministic Forge Identification ──
+  const forgeResult = computeForge(data);
+  const forgeArch = FORGE_ARCHETYPES[forgeResult.primary] || {};
+  sections.push('\n=== DETERMINISTIC FORGE IDENTIFICATION ===');
+  sections.push(`Primary Forge: ${forgeResult.primary} (${forgeArch.archetype || '?'}, ${forgeArch.element || '?'})`);
+  sections.push(`  Confidence: ${(forgeResult.confidence * 100).toFixed(0)}%`);
+  sections.push(`  Weapon: ${forgeArch.weapon || 'N/A'}`);
+  sections.push(`  Defense: ${forgeArch.defense || 'N/A'}`);
+  sections.push(`  Master Form: ${forgeArch.masterForm || 'N/A'}`);
+  sections.push(`  Shadow Form: ${forgeArch.shadowForm || 'N/A'}`);
+  if (forgeResult.secondary) {
+    const secArch = FORGE_ARCHETYPES[forgeResult.secondary] || {};
+    sections.push(`Secondary Forge: ${forgeResult.secondary} (${secArch.archetype || '?'})`);
+  }
+  sections.push('Scoring indicators:');
+  for (const ind of forgeResult.indicators) {
+    sections.push(`  • ${ind}`);
+  }
+  sections.push('INSTRUCTION: Use the Primary Forge above as the definitive forgeIdentification.forge value. Do NOT re-derive it — it has been deterministically computed from the chart data.');
+  sections.push('NOTE: The 6th Forge (Self) is present in every chart and is not scored. It is the container of all other Forges — the moment of recognition that makes the synthesis itself an act of self-knowledge. Reference it in the synthesis closing.');
+
+  // ── Deterministic Knowledge Identification ──
+  const knowledgeResult = computeKnowledge(data);
+  const knowledgesData = loadKB('prime_self', 'knowledges.json');
+  sections.push('\n=== DETERMINISTIC KNOWLEDGE IDENTIFICATION ===');
+  sections.push(`Primary Knowledge: ${knowledgeResult.primary}`);
+  if (knowledgeResult.secondary) {
+    sections.push(`Secondary Knowledge: ${knowledgeResult.secondary}`);
+  }
+  // Inject practical domains from knowledges.json
+  const primaryKB = knowledgesData[knowledgeResult.primary.toLowerCase()];
+  if (primaryKB) {
+    if (primaryKB.practicalDomains) {
+      sections.push(`Practical Domains: ${primaryKB.practicalDomains.join(', ')}`);
+    }
+    if (primaryKB.primeQuestion) {
+      sections.push(`Prime Question: ${primaryKB.primeQuestion}`);
+    }
+  }
+  sections.push('INSTRUCTION: Reference this Knowledge domain in the synthesis. Ground recommendations in user\'s specific chart gates and centers.');
+  sections.push('NOTE: The 7th Knowledge (Self) is the meta-knowledge of knowing one\'s own nature — the container that makes all other Knowledges coherent. Include a brief closing reflection on how this person\'s Authority type constitutes their native epistemology — how they know what they know.');
+
+  // ── Filtered Historical Figures ──
+  const figures = loadKB('prime_self', 'historical_figures.json');
+  if (figures && Array.isArray(figures)) {
+    const forgeFigures = figures.filter(f =>
+      f.forge === forgeResult.primary || f.forge === forgeResult.secondary
+    ).slice(0, 5);
+    if (forgeFigures.length > 0) {
+      sections.push('\n=== HISTORICAL EXEMPLARS (Forge-matched) ===');
+      for (const fig of forgeFigures) {
+        sections.push(`  ${fig.name} (${fig.forge}) — ${fig.hdType || 'unknown type'}: ${fig.lesson || fig.description || ''}`);
+      }
+      sections.push('INSTRUCTION: Select the most resonant exemplar for this user\'s Type + Forge combination.');
+    }
   }
 
-  // ── Knowledge Mapping Reference ──
-  sections.push('\n=== SIX KNOWLEDGES REFERENCE (CANONICAL) ===');
-  for (const k of SIX_KNOWLEDGES) {
-    sections.push(`\n${k.number}. ${k.name}: "${k.essence}"`);
-    sections.push(`  HD Mapping: ${k.hdMapping}`);
-    sections.push(`  Prime Question: ${k.primeQuestion}`);
+  // ── Filtered Book Recommendations ──
+  const books = loadKB('prime_self', 'book_recommendations.json');
+  if (books && Array.isArray(books)) {
+    const knowledgeBooks = books.filter(b =>
+      b.knowledge === knowledgeResult.primary || b.forge === forgeResult.primary
+    ).slice(0, 6);
+    if (knowledgeBooks.length > 0) {
+      sections.push('\n=== BOOK RECOMMENDATIONS (Knowledge/Forge-matched) ===');
+      for (const b of knowledgeBooks) {
+        sections.push(`  "${b.title}" by ${b.author} (${b.type || 'book'}) — ${b.reason || ''}`);
+      }
+      sections.push('INSTRUCTION: Recommend 1 fiction + 1 non-fiction from this list or similar works matching the user\'s Knowledge focus.');
+    }
   }
-
-  // ── Priming Guidance ──
-  sections.push('\n=== PRIMING RECOMMENDATIONS GUIDANCE ===');
-  sections.push('For each reading, recommend:');
-  sections.push('1. A historical exemplar whose design resonates with the user\'s Forge and Type');
-  sections.push('2. One fiction and one non-fiction book matched to their current life focus');
-  sections.push('3. Which of the Six Knowledges they should prioritize developing now');
-  sections.push('Match historical figures by: HD Type, Forge, and current challenges');
-  sections.push('Match books by: Forge, Knowledge area, and stated current focus');
 
   // ── Behavioral Validation Data ──
   if (data.validationData) {
@@ -746,6 +960,24 @@ function buildReferenceFacts(data) {
 }
 
 
+// ─── PROMPT INJECTION SANITIZATION (PROMPT-001) ────────────────
+
+/**
+ * Sanitize user-provided text before injecting into LLM prompt.
+ * Strips delimiter-like patterns that could break prompt structure
+ * and enforces a character length cap.
+ */
+function sanitizePromptInput(text, maxLen = 2000) {
+  if (!text || typeof text !== 'string') return '';
+  // Strip anything that looks like our internal delimiters
+  let clean = text.replace(/---\s*(BEGIN|END)\s+[A-Z ]+---/gi, '');
+  // Strip system/assistant role injection attempts
+  clean = clean.replace(/\b(system|assistant)\s*:/gi, '');
+  // Truncate to maxLen
+  return clean.slice(0, maxLen).trim();
+}
+
+
 // ─── PUBLIC API ─────────────────────────────────────────────────
 
 /**
@@ -764,9 +996,14 @@ function buildReferenceFacts(data) {
  * @param {object}  [chartData.psychometricData] – Big Five + VIA
  * @param {array}   [chartData.diaryEntries] – Life events
  * @param {string}  [question]               – User's specific question
+ * @param {object}  [practitionerContext]     – HD_UPDATES4 practitioner AI vectors
+ * @param {string}  [practitionerContext.synthesisStyle] – Vector 2: practitioner lens
+ * @param {string}  [practitionerContext.clientAiContext] – Vector 3: per-client brief
+ * @param {array}   [practitionerContext.sharedNotes]    – Vector 1: session notes (share_with_ai)
+ * @param {string}  [userTier]               – HD_UPDATES3: user tier for deferral CTA
  * @returns {object} LLM prompt payload
  */
-export function buildSynthesisPrompt(chartData, question) {
+export function buildSynthesisPrompt(chartData, question, practitionerContext, userTier) {
   const referenceFacts = buildReferenceFacts(chartData);
   const ragContext = buildRAGContext(chartData);
 
@@ -776,11 +1013,70 @@ export function buildSynthesisPrompt(chartData, question) {
     userContent += `\n---BEGIN KNOWLEDGEBASE CONTEXT---\n${ragContext}\n---END KNOWLEDGEBASE CONTEXT---\n`;
   }
 
+  // HD_UPDATES4: Inject practitioner context vectors
+  if (practitionerContext) {
+    const sections = [];
+
+    // Vector 2: Practitioner synthesis style lens
+    if (practitionerContext.synthesisStyle) {
+      const safeStyle = sanitizePromptInput(practitionerContext.synthesisStyle, 1000);
+      sections.push(
+        `PRACTITIONER SYNTHESIS LENS:\n` +
+        `The practitioner working with this client has requested the following emphasis in readings:\n` +
+        `"${safeStyle}"\n` +
+        `Incorporate this lens naturally into your synthesis without breaking grounding rules.`
+      );
+    }
+
+    // Vector 3: Per-client AI context brief
+    if (practitionerContext.clientAiContext) {
+      const safeContext = sanitizePromptInput(practitionerContext.clientAiContext, 1000);
+      sections.push(
+        `CLIENT CONTEXT (from practitioner):\n` +
+        `The following context has been provided by the client's practitioner to inform this synthesis:\n` +
+        `"${safeContext}"`
+      );
+    }
+
+    // Vector 1: Shared session notes
+    if (practitionerContext.sharedNotes?.length > 0) {
+      const notesSummary = practitionerContext.sharedNotes
+        .map(n => `[${n.session_date}] ${sanitizePromptInput(n.content, 500)}`)
+        .join('\n');
+      sections.push(
+        `PRACTITIONER SESSION NOTES (shared for AI context):\n` +
+        `The following session observations have been flagged by the practitioner as relevant:\n` +
+        notesSummary
+      );
+    }
+
+    if (sections.length > 0) {
+      userContent += `\n---BEGIN PRACTITIONER CONTEXT---\n${sections.join('\n\n')}\n---END PRACTITIONER CONTEXT---\n`;
+    }
+  }
+
+  // HD_UPDATES3: Practitioner deferral CTA for free/individual tier users
+  if (userTier && (userTier === 'free' || userTier === 'individual')) {
+    userContent += `\n---GUIDANCE NOTE---\n` +
+      `When the user asks complex relational, therapeutic, or deep interpretive questions ` +
+      `(e.g., "How do I heal my relationship with my mother?", "What's causing my career block?"), ` +
+      `you should still provide helpful, grounded guidance. However, at the end of your response, ` +
+      `include a brief, warm suggestion: "For deeper exploration of this topic, consider working with ` +
+      `a certified practitioner who can provide personalized session guidance. ` +
+      `Find practitioners at primeself.app/directory" — only include this for genuinely complex questions, ` +
+      `NOT for basic profile requests or simple factual questions about their chart.\n---END GUIDANCE NOTE---\n`;
+  }
+
   if (question) {
-    userContent += `\n---USER QUESTION---\n${question}\n---END USER QUESTION---\n`;
+    const safeQuestion = sanitizePromptInput(question, 2000);
+    userContent += `\n---USER QUESTION---\n${safeQuestion}\n---END USER QUESTION---\n`;
     userContent += `\nGenerate a Prime Self Profile addressing the user's question. Ground every claim in the Reference Facts above.`;
   } else {
     userContent += `\nGenerate a complete Prime Self Profile for this individual. Ground every claim in the Reference Facts above.`;
+    userContent += `\n\n---SYNTHESIS FRAMING (6th Forge / 7th Knowledge)---`;
+    userContent += `\nThis synthesis is the Forge of Self in operation. Frame the opening not as "here is a report about you" but as "here is the mirror." Use structural vocabulary (Polarity, Trinity, Emergence, Co-arising) where it makes the explanation more specific — never where it merely sounds profound.`;
+    userContent += `\nClose the synthesis with a 7th Knowledge reflection: a brief statement of how this person knows what they know. Name their Authority type as their native epistemology — the specific way their body/mind/field registers truth before it can be argued with. This is not a rule to follow. It is the recognition of their own cognitive architecture.`;
+    userContent += `\n---END SYNTHESIS FRAMING---`;
   }
 
   return {
@@ -791,7 +1087,7 @@ export function buildSynthesisPrompt(chartData, question) {
     config: {
       model: question ? 'claude-sonnet-4-20250514' : 'claude-opus-4-20250514',
       temperature: 0,
-      max_tokens: 4096
+      max_tokens: 6000
     }
   };
 }
@@ -857,9 +1153,9 @@ export function validateSynthesisResponse(response) {
     errors.push('Missing technicalInsights.forgeIdentification');
   }
 
-  // Validate Forge enum
+  // Validate Forge enum (canonical names)
   if (ti.forgeIdentification && ti.forgeIdentification.forge) {
-    const validForges = ['Chronos', 'Eros', 'Aether', 'Lux', 'Phoenix'];
+    const validForges = ['Initiation', 'Mastery', 'Guidance', 'Perception', 'Transformation'];
     if (!validForges.includes(ti.forgeIdentification.forge)) {
       errors.push(`Invalid forge: ${ti.forgeIdentification.forge}`);
     }
@@ -929,4 +1225,17 @@ export function buildQuickQueryPrompt(chartData, question) {
 
 
 // ─── EXPORTS FOR TESTING ────────────────────────────────────────
+
+// Six Knowledges (the 7th — Self — is derived, not scored)
+const SIX_KNOWLEDGES = ['Sciences', 'Arts', 'Defenses', 'Heresies', 'Connections', 'Mysteries'];
+
+// Forge mapping: the 5 scored forges (Self is the 6th, always present, not scored)
+const FORGE_MAPPING = {
+  Initiation: FORGE_ARCHETYPES.Initiation,
+  Mastery: FORGE_ARCHETYPES.Mastery,
+  Guidance: FORGE_ARCHETYPES.Guidance,
+  Perception: FORGE_ARCHETYPES.Perception,
+  Transformation: FORGE_ARCHETYPES.Transformation
+};
+
 export { buildReferenceFacts, FORGE_MAPPING, SIX_KNOWLEDGES };

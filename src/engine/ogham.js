@@ -49,6 +49,13 @@ const TREE_CALENDAR = [
  * @returns {string} tree key
  */
 function findBirthTree(month, day) {
+  // Explicit boundary guards for the year-end transition — matches both src traditions:
+  // Dec 23 = the "Nameless Day" (outside the 13-month calendar)
+  // Dec 24 = first day of Birch (new year begins)
+  // Both checked explicitly to avoid any ambiguity from MMDD integer comparison.
+  if (month === 12 && day === 23) return 'nameless';
+  if (month === 12 && day >= 24) return 'birch';
+
   // Convert to a simple day-of-year approximation for comparison (leap-year agnostic)
   // We work through the list in reverse: first period whose start ≤ birth date wins.
 
@@ -60,7 +67,7 @@ function findBirthTree(month, day) {
   const entries = TREE_CALENDAR.map(t => ({ mmdd: t.month * 100 + t.day, key: t.key }))
     .sort((a, b) => a.mmdd - b.mmdd);
 
-  let result = 'birch'; // default (Dec 24 – Jan 20 wraps)
+  let result = 'birch'; // default (Jan 1–20 wraps from Dec 24)
 
   for (let i = entries.length - 1; i >= 0; i--) {
     if (birthMMDD >= entries[i].mmdd) {
@@ -69,8 +76,7 @@ function findBirthTree(month, day) {
     }
   }
 
-  // Handle Dec 24-31 (start of Birch, new year)
-  if (month === 12 && day >= 24) result = 'birch';
+  // Dec 24-31 guard is now handled up top; this redundant check is removed.
 
   return result;
 }

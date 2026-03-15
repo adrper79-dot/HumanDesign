@@ -94,7 +94,7 @@ export async function handleCalculate(request, env) {
       ]);
 
       const hdJson = JSON.stringify(result.chart || result);
-      const astroJson = JSON.stringify(result.westernAstrology || null);
+      const astroJson = JSON.stringify(result.astrology || null);
       const saved = await query(QUERIES.saveChart, [userId, hdJson, astroJson]);
       chartId = saved?.rows?.[0]?.id || null;
     } catch (e) {
@@ -170,7 +170,7 @@ export async function handleGetChart(request, env, chartId) {
       }
     });
   } catch (err) {
-    console.error('[get-chart] Error:', err.message);
+    console.error('[get-chart] Error retrieving chart:', err.message, { code: err.code, detail: err.detail, chartId });
     return Response.json({ error: 'Failed to retrieve chart' }, { status: 500 });
   }
 }

@@ -32,7 +32,7 @@ export async function sendEmail({ to, subject, html, text = '', replyTo = '' }, 
   }
 
   // BL-FIX: Replace {{unsubscribe_url}} placeholder with a real URL
-  const unsubscribeUrl = `https://primeself.app/?action=email-unsubscribe&email=${encodeURIComponent(to)}`;
+  const unsubscribeUrl = `https://selfprime.net/?action=email-unsubscribe&email=${encodeURIComponent(to)}`;
   let finalHtml = html.replace(/\{\{unsubscribe_url\}\}/g, unsubscribeUrl);
 
   // CAN-SPAM: Inject physical mailing address before closing </body>
@@ -170,14 +170,14 @@ export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, 
     
     <p>Yesterday you generated your chart. Today, let's dive deeper into what it means.</p>
     
-    ${chartType === 'Generator' ? `
+    ${chartType === 'Generator' || chartType === 'Manifesting Generator' ? `
     <div class="highlight">
-      <h3>As a Generator, you:</h3>
+      <h3>As a ${chartType}, you:</h3>
       <ul>
         <li>Have sustainable life force energy when doing what lights you up</li>
         <li>Make best decisions by waiting to respond (not initiating)</li>
         <li>Know the answer through gut feelings (Sacral response)</li>
-        <li>Build mastery through repetition and commitment</li>
+        ${chartType === 'Manifesting Generator' ? `<li>Move quickly and juggle multiple passions — that's your design</li>` : `<li>Build mastery through repetition and commitment</li>`}
       </ul>
       <p><strong>This week:</strong> Notice what you're genuinely excited to respond to. That's your Sacral saying YES.</p>
     </div>
@@ -376,7 +376,7 @@ export async function sendWelcomeEmail4(userEmail, userName, apiKey, fromEmail) 
     
     <a href="https://primeself.app/transits" class="cta">View Your Transits →</a>
     
-    <p><strong>Bonus:</strong> Upgrade to Seeker tier to get weekly transit alerts. We'll email you when major planets activate important gates in your chart.</p>
+    <p><strong>Bonus:</strong> Upgrade to Explorer tier to get weekly transit alerts. We'll email you when major planets activate important gates in your chart.</p>
     
     <p>That wraps our welcome series! You now have the foundations to work with your design. Keep exploring - there's always more to discover.</p>
     
@@ -510,14 +510,14 @@ export async function sendUpgradeNudgeEmail(userEmail, userName, apiKey, fromEma
     
     <!-- BL-R-C2: Testimonials must be from real users only (FTC §255 compliance) -->
     
-    <p><strong>Seeker Tier - $15/month</strong></p>
+    <p><strong>Explorer Tier - $12/month</strong></p>
     <ul>
       <li>Everything above</li>
       <li>Priority email support</li>
       <li>Early access to new features</li>
     </ul>
     
-    <a href="https://primeself.app/pricing" class="cta">Upgrade to Seeker →</a>
+    <a href="https://primeself.app/pricing" class="cta">Upgrade to Explorer →</a>
     
     <p><strong>Not ready?</strong> No problem. Your free tier stays active forever. We just wanted you to know what's available when you're ready to go deeper.</p>
     
@@ -612,6 +612,76 @@ export async function sendPasswordResetEmail(userEmail, resetUrl, apiKey, fromEm
   `;
 
   return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Send Email Verification Email (AUDIT-SEC-003)
+ * @param {string} userEmail - Recipient email
+ * @param {string} verifyUrl - Full verification URL with raw token
+ * @param {string} apiKey - Resend API key
+ * @param {string} fromEmail - From email address
+ */
+export async function sendVerificationEmail(userEmail, verifyUrl, apiKey, fromEmail) {
+  const subject = 'Verify your Prime Self email';
+
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px 24px;text-align:center;border-bottom:1px solid #2a2a3a">
+        <div style="font-size:28px;margin-bottom:8px">✦</div>
+        <h1 style="color:#c9a84c;font-size:22px;margin:0">Verify Your Email</h1>
+      </div>
+      <div style="padding:24px">
+        <p style="margin:0 0 16px;line-height:1.6">Welcome to Prime Self! Please verify your email address to unlock AI-powered chart analysis and profile features.</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${verifyUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:16px">Verify Email</a>
+        </div>
+        <p style="margin:0 0 16px;line-height:1.6;color:#8882a0;font-size:14px">This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.</p>
+        <p style="margin:0;line-height:1.6;color:#8882a0;font-size:14px">If the button doesn't work, copy and paste this URL into your browser:</p>
+        <p style="margin:8px 0 0;word-break:break-all;font-size:13px;color:#6a6580">${verifyUrl}</p>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+        <p style="margin:0">Prime Self — Discover your unique energy blueprint</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Send Practitioner Invitation Email
+ * @param {string} clientEmail - Recipient email
+ * @param {string} practitionerName - Practitioner display name
+ * @param {string} inviteUrl - Invitation acceptance URL
+ * @param {string} apiKey - Resend API key
+ * @param {string} fromEmail - From email address
+ */
+export async function sendPractitionerInvitationEmail(clientEmail, practitionerName, inviteUrl, apiKey, fromEmail) {
+  const subject = `${practitionerName} invited you to Prime Self`;
+
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px 24px;text-align:center;border-bottom:1px solid #2a2a3a">
+        <div style="font-size:28px;margin-bottom:8px">✦</div>
+        <h1 style="color:#c9a84c;font-size:22px;margin:0">Practitioner Invitation</h1>
+      </div>
+      <div style="padding:24px">
+        <p style="margin:0 0 16px;line-height:1.6"><strong>${practitionerName}</strong> invited you to Prime Self to start your chart and profile journey.</p>
+        <div style="text-align:center;margin:24px 0">
+          <a href="${inviteUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:16px">Accept Invitation</a>
+        </div>
+        <p style="margin:0 0 16px;line-height:1.6;color:#8882a0;font-size:14px">This link expires in 14 days.</p>
+        <p style="margin:0;line-height:1.6;color:#8882a0;font-size:14px">If the button doesn't work, copy and paste this URL into your browser:</p>
+        <p style="margin:8px 0 0;word-break:break-all;font-size:13px;color:#6a6580">${inviteUrl}</p>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+        <p style="margin:0">Prime Self — Discover your unique energy blueprint</p>
+        <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({ to: clientEmail, subject, html }, apiKey, fromEmail);
 }
 
 /**

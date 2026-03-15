@@ -9,9 +9,11 @@
  * 2026-03-09: v13 - Sprint 19: Prime Self data integration, Priming/Forge UI, mobile CTA, error consolidation
  * 2026-03-09: v14 - Sidebar navigation: replaced horizontal tab bar with persistent left sidebar
  * v16 - Mobile fixes: hamburger pointer-events, i18n sidebar/nav, header overflow, text clutter
+ * v17 - Performance: defer render-blocking head scripts; SW cache: add app.js, ui-nav.js, pwa.js, first-run.js, tooltip.js, bg-video.js; dark mode toggle
+ * v18 - Audit 2026-03-14: resilient cache install (Promise.allSettled per-asset), DOM cleared on logout
  */
 
-const CACHE_VERSION = 'v16';
+const CACHE_VERSION = 'v18';
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
@@ -21,6 +23,7 @@ const API_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/pricing.html',
   '/css/base.css',
   '/css/design-tokens.css',
   '/css/design-tokens-premium.css',
@@ -46,6 +49,12 @@ const STATIC_ASSETS = [
   '/js/hd-data.js',
   '/js/bodygraph.js',
   '/js/share-card.js',
+  '/js/app.js',
+  '/js/ui-nav.js',
+  '/js/pwa.js',
+  '/js/first-run.js',
+  '/js/tooltip.js',
+  '/js/bg-video.js',
   '/locales/en.json',
   '/manifest.json',
   // Brand variant v1 assets
@@ -87,7 +96,12 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[Service Worker] Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
+        // Use per-asset adds so a single 404 doesn't abort the entire SW install
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url =>
+            cache.add(url).catch(err => console.warn('[Service Worker] Failed to cache:', url, err))
+          )
+        );
       })
       .then(() => {
         console.log('[Service Worker] Installation complete');

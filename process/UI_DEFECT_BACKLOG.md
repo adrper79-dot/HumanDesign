@@ -378,17 +378,17 @@
 | DEF-02 | Sub-tab bars duplicated 7× in HTML | Extract to JS-generated component | Open |
 | DEF-03 | ~50 [DUP] selectors in app.css vs component files | Cascade conflicts; needs systematic audit | Open |
 | DEF-04 | Replace remaining hardcoded px spacing with tokens | Partially done; need systematic sweep | Open |
-| DEF-05 | Background video on mobile bandwidth/GPU | Conditionally load based on `navigator.connection` | Open |
-| DEF-06 | "More" dropdown keyboard navigation | WCAG 2.1 AA keyboard access gap | Open — doesn't trap users |
+| DEF-05 | Background video on mobile bandwidth/GPU | Conditionally load based on `navigator.connection` | ✅ Fixed |
+| DEF-06 | "More" dropdown keyboard navigation | WCAG 2.1 AA keyboard access gap | ✅ Fixed — aria-expanded synced |
 | DEF-07 | Form data sync between tabs (Profile→Chart) | Use shared JS state object | Open |
-| DEF-08 | Profile timezone select fewer options than Chart | Unify both selects | Open |
-| DEF-09 | Sticky CTA for chart generation on mobile | `position:sticky` wrapper needed | Open |
-| DEF-10 | Back-to-top button in deep results | Add floating button | Open |
+| DEF-08 | Profile timezone select fewer options than Chart | Unify both selects | ✅ Fixed |
+| DEF-09 | Sticky CTA for chart generation on mobile | `position:sticky` wrapper needed | ✅ Fixed — already implemented |
+| DEF-10 | Back-to-top button in deep results | Add floating button | ✅ Fixed |
 | DEF-11 | Conditionally apply premium artwork by tier | Don't render lava blobs for free users | Open |
 | DEF-12 | Convert onboarding to default new-user experience | Auto-show for users with no stored birth data | Open — needs product decision (OQ-04) |
 | DEF-13 | Make step guide persistent/persistent breadcrumb | Extend to 5 steps, always visible | Open |
-| DEF-14 | border-color unification (--border vs --border-primary) | Complete token unification | Open |
-| DEF-15 | Heading hierarchy in chart results (h2/h3) | Add semantic heading tags to `renderChart()` output | Open |
+| DEF-14 | border-color unification (--border vs --border-primary) | Complete token unification | ✅ Fixed |
+| DEF-15 | Heading hierarchy in chart results (h2/h3) | Add semantic heading tags to `renderChart()` output | ✅ Fixed |
 | DEF-16 | UI-026 Collapsible max-height 2000px | Pattern not found in current code — may not exist; re-verify after DEF-03 CSS cleanup | Investigating |
 
 ---

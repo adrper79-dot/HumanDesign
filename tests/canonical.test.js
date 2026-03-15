@@ -25,13 +25,13 @@ describe('Five Forges (Canonical)', () => {
     forges = loadCanonicalJSON('forges_canonical.json');
   });
 
-  it('should define exactly 5 Forges', () => {
+  it('should define exactly 6 Forges', () => {
     const forgeKeys = Object.keys(forges).filter(k => !k.startsWith('_'));
-    expect(forgeKeys).toHaveLength(5);
+    expect(forgeKeys).toHaveLength(6);
   });
 
-  it('should include the canonical Five Forges by name', () => {
-    const canonicalForges = ['chronos', 'eros', 'aether', 'lux', 'phoenix'];
+  it('should include the canonical Six Forges by name', () => {
+    const canonicalForges = ['chronos', 'eros', 'aether', 'lux', 'phoenix', 'self'];
     canonicalForges.forEach(forgeName => {
       expect(forges).toHaveProperty(forgeName);
     });
@@ -140,15 +140,15 @@ describe('Six Knowledges (Canonical)', () => {
     knowledges = loadCanonicalJSON('knowledges_canonical.json');
   });
 
-  it('should define exactly 6 Knowledges', () => {
+  it('should define exactly 7 Knowledges', () => {
     const knowledgeKeys = Object.keys(knowledges).filter(k => !k.startsWith('_'));
-    expect(knowledgeKeys).toHaveLength(6);
+    expect(knowledgeKeys).toHaveLength(7);
   });
 
-  it('should include the canonical Six Knowledges', () => {
+  it('should include the canonical Seven Knowledges', () => {
     const canonicalKnowledges = [
       'self', 'ancestors', 'theOne', 
-      'constructive', 'destructive', 'healing'
+      'constructive', 'destructive', 'healing', 'selfMeta'
     ];
     canonicalKnowledges.forEach(kName => {
       expect(knowledges).toHaveProperty(kName);
@@ -185,12 +185,12 @@ describe('Six Knowledges (Canonical)', () => {
     expect(essence.includes('compassion') || essence.includes('unity') || essence.includes('universal')).toBe(true);
   });
 
-  it('Knowledges should be numbered 1-6', () => {
+  it('Knowledges should be numbered 1-7', () => {
     const numbers = Object.values(knowledges)
       .filter(k => typeof k === 'object' && k.number)
       .map(k => k.number)
       .sort();
-    expect(numbers).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(numbers).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 });
 
@@ -451,36 +451,41 @@ describe('Synthesis Prompt (Canonical Integration)', () => {
     synthesis = await import('../src/prompts/synthesis.js');
   });
 
-  it('should export FORGE_MAPPING with canonical Forges', () => {
+  it('should export buildSynthesisPrompt and validateSynthesisResponse', () => {
+    expect(synthesis.buildSynthesisPrompt).toBeDefined();
+    expect(synthesis.validateSynthesisResponse).toBeDefined();
+  });
+
+  it('should export FORGE_MAPPING and SIX_KNOWLEDGES for RAG use', () => {
+    // FORGE_MAPPING and SIX_KNOWLEDGES are exported for RAG pipeline use
     expect(synthesis.FORGE_MAPPING).toBeDefined();
-    expect(synthesis.FORGE_MAPPING).toHaveLength(5);
-    
-    const forgeNames = synthesis.FORGE_MAPPING.map(f => f.forge);
-    expect(forgeNames).toContain('Chronos');
-    expect(forgeNames).toContain('Eros');
-    expect(forgeNames).toContain('Aether');
-    expect(forgeNames).toContain('Lux');
-    expect(forgeNames).toContain('Phoenix');
-  });
-
-  it('should export SIX_KNOWLEDGES', () => {
     expect(synthesis.SIX_KNOWLEDGES).toBeDefined();
-    expect(synthesis.SIX_KNOWLEDGES).toHaveLength(6);
   });
 
-  it('FORGE_MAPPING should include weapons and defenses', () => {
-    synthesis.FORGE_MAPPING.forEach(forge => {
-      expect(forge, `Forge ${forge.forge} missing weapon`).toHaveProperty('weapon');
-      expect(forge, `Forge ${forge.forge} missing defense`).toHaveProperty('defense');
-      expect(forge, `Forge ${forge.forge} missing exemplars`).toHaveProperty('exemplars');
-    });
+  it('should validate canonical forge names (Initiation/Mastery/Guidance/Perception/Transformation)', () => {
+    const canonical = ['Initiation', 'Mastery', 'Guidance', 'Perception', 'Transformation'];
+    for (const forge of canonical) {
+      const valid = {
+        quickStartGuide: { whoYouAre: 'T', decisionStyle: 'T', lifeStrategy: 'T', thisMonth: 'T', workingWithOthers: 'T' },
+        technicalInsights: { geneKeysProfile: {}, forgeIdentification: { forge, confidence: 'high', indicators: [] } },
+        groundingAudit: { claimsTotal: 1, claimsGrounded: 1, ungroundedFields: [] }
+      };
+      const result = synthesis.validateSynthesisResponse(valid);
+      expect(result.valid, `canonical forge '${forge}' should be accepted`).toBe(true);
+    }
   });
 
-  it('SIX_KNOWLEDGES should include essence and primeQuestion', () => {
-    synthesis.SIX_KNOWLEDGES.forEach(knowledge => {
-      expect(knowledge, `Knowledge ${knowledge.name} missing essence`).toHaveProperty('essence');
-      expect(knowledge, `Knowledge ${knowledge.name} missing primeQuestion`).toHaveProperty('primeQuestion');
-    });
+  it('should reject old forge names (Chronos/Eros/Aether/Lux/Phoenix)', () => {
+    const oldNames = ['Chronos', 'Eros', 'Aether', 'Lux', 'Phoenix'];
+    for (const forge of oldNames) {
+      const bad = {
+        quickStartGuide: { whoYouAre: 'T', decisionStyle: 'T', lifeStrategy: 'T', thisMonth: 'T', workingWithOthers: 'T' },
+        technicalInsights: { geneKeysProfile: {}, forgeIdentification: { forge, confidence: 'high', indicators: [] } },
+        groundingAudit: { claimsTotal: 1, claimsGrounded: 1, ungroundedFields: [] }
+      };
+      const result = synthesis.validateSynthesisResponse(bad);
+      expect(result.errors).toContain(`Invalid forge: ${forge}`);
+    }
   });
 });
 

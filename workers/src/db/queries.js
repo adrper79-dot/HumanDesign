@@ -143,17 +143,17 @@ export const QUERIES = {
   `,
 
   getUserById: `
-    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, created_at, updated_at
+    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, transit_pass_expires, lifetime_access, totp_enabled, totp_secret, created_at, updated_at
     FROM users WHERE id = $1
   `,
 
   getUserByEmail: `
-    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, created_at, updated_at
+    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, transit_pass_expires, lifetime_access, totp_enabled, totp_secret, created_at, updated_at
     FROM users WHERE email = $1
   `,
 
   getUserByPhone: `
-    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, created_at, updated_at
+    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, transit_pass_expires, lifetime_access, created_at, updated_at
     FROM users WHERE phone = $1
   `,
 
@@ -239,6 +239,16 @@ export const QUERIES = {
     LIMIT 50
   `,
 
+  searchProfilesByUser: `
+    SELECT id, chart_id, model_used, created_at
+    FROM profiles
+    WHERE user_id = $1
+      AND (model_used ILIKE '%' || $2 || '%'
+           OR profile_json::text ILIKE '%' || $2 || '%')
+    ORDER BY created_at DESC
+    LIMIT 50
+  `,
+
   getProfileById: `
     SELECT id, user_id, chart_id, profile_json, model_used, grounding_audit, created_at
     FROM profiles WHERE id = $1
@@ -258,12 +268,6 @@ export const QUERIES = {
     ON CONFLICT (snapshot_date) DO UPDATE
     SET positions_json = EXCLUDED.positions_json
     RETURNING id
-  `,
-
-  getTransitSnapshot: `
-    SELECT id, snapshot_date, positions_json, created_at
-    FROM transit_snapshots
-    WHERE snapshot_date = $1
   `,
 
   // Practitioners
@@ -290,23 +294,6 @@ export const QUERIES = {
     FROM practitioners WHERE user_id = $1
   `,
 
-  // Discord integration (Phase 2)
-  getPractitionerByGuildId: `
-    SELECT id, user_id, certified, tier,
-           discord_guild_ids, discord_brand_name, discord_bot_accent_color
-    FROM practitioners WHERE $1 = ANY(discord_guild_ids)
-    LIMIT 1
-  `,
-
-  updatePractitionerDiscordGuilds: `
-    UPDATE practitioners
-    SET discord_guild_ids = $2,
-        discord_brand_name = COALESCE($3, discord_brand_name),
-        discord_bot_accent_color = COALESCE($4, discord_bot_accent_color)
-    WHERE user_id = $1
-    RETURNING id, discord_guild_ids, discord_brand_name, discord_bot_accent_color
-  `,
-
   countPractitionerClients: `
     SELECT COUNT(*) AS count FROM practitioner_clients
     WHERE practitioner_id = $1
@@ -321,13 +308,6 @@ export const QUERIES = {
   removeClient: `
     DELETE FROM practitioner_clients
     WHERE practitioner_id = $1 AND client_user_id = $2
-  `,
-
-  getPractitionerClients: `
-    SELECT u.id, u.email, u.phone, u.birth_date, u.birth_time, u.birth_tz, u.birth_lat, u.birth_lng, u.created_at
-    FROM users u
-    JOIN practitioner_clients pc ON pc.client_user_id = u.id
-    WHERE pc.practitioner_id = $1
   `,
 
   getPractitionerClientsWithCharts: `
@@ -346,11 +326,45 @@ export const QUERIES = {
     ORDER BY pc.created_at DESC
   `,
 
+  expirePendingPractitionerInvitationsByEmail: `
+    UPDATE practitioner_invitations
+    SET status = 'expired'
+    WHERE practitioner_id = $1
+      AND LOWER(client_email) = LOWER($2)
+      AND status = 'pending'
+  `,
+
+  createPractitionerInvitation: `
+    INSERT INTO practitioner_invitations (
+      practitioner_id,
+      client_email,
+      client_name,
+      token_hash,
+      message,
+      expires_at
+    )
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id, practitioner_id, client_email, client_name, status, expires_at, created_at
+  `,
+
+  listPractitionerInvitations: `
+    SELECT id, practitioner_id, client_email, client_name, status, message, expires_at, accepted_at, created_at
+    FROM practitioner_invitations
+    WHERE practitioner_id = $1
+      AND status = 'pending'
+    ORDER BY created_at DESC
+  `,
+
+  deletePractitionerInvitation: `
+    DELETE FROM practitioner_invitations
+    WHERE id = $1 AND practitioner_id = $2
+  `,
+
   // Clusters
   createCluster: `
-    INSERT INTO clusters (name, created_by, challenge)
-    VALUES ($1, $2, $3)
-    RETURNING id, created_at
+    INSERT INTO clusters (name, created_by, challenge, invite_code)
+    VALUES ($1, $2, $3, upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8)))
+    RETURNING id, created_at, invite_code
   `,
 
   addClusterMember: `
@@ -373,31 +387,10 @@ export const QUERIES = {
     WHERE cm.cluster_id = $1
   `,
 
-  getClustersByUser: `
-    SELECT c.id, c.name, c.created_by, c.challenge, c.created_at
-    FROM clusters c
-    JOIN cluster_members cm ON cm.cluster_id = c.id
-    WHERE cm.user_id = $1
-  `,
+  // P2-SEC-019: Moved inline SQL to QUERIES registry
+  checkClusterMembership: `SELECT 1 FROM cluster_members WHERE cluster_id = $1 AND user_id = $2 LIMIT 1`,
 
   // SMS
-  getOptedInUsers: `
-    SELECT id, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng
-    FROM users
-    WHERE sms_opted_in = true AND phone IS NOT NULL
-  `,
-
-  setSmsPref: `
-    UPDATE users SET sms_opted_in = $2 WHERE phone = $1
-    RETURNING id, sms_opted_in
-  `,
-
-  logSmsMessage: `
-    INSERT INTO sms_messages (user_id, direction, body)
-    VALUES ($1, $2, $3)
-    RETURNING id
-  `,
-
   // Behavioral Validation
   saveValidationData: `
     INSERT INTO validation_data (user_id, decision_pattern, energy_pattern, current_focus)
@@ -470,22 +463,7 @@ export const QUERIES = {
     WHERE id = $1 AND user_id = $2
   `,
 
-  getDiaryEntriesInRange: `
-    SELECT id, user_id, event_date, event_title, event_description, event_type, significance, transit_snapshot, created_at, updated_at
-    FROM diary_entries
-    WHERE user_id = $1
-      AND event_date >= $2
-      AND event_date <= $3
-    ORDER BY event_date DESC
-  `,
-
   // ─── Subscriptions ────────────────────────────────────────
-
-  createSubscription: `
-    INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, tier, status, current_period_start, current_period_end)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-    RETURNING id, created_at
-  `,
 
   // BL-FIX: UPSERT subscription to handle checkout.session.completed when no row exists
   upsertSubscription: `
@@ -547,13 +525,6 @@ export const QUERIES = {
     RETURNING id, created_at
   `,
 
-  getPaymentEventsBySubscription: `
-    SELECT id, subscription_id, stripe_event_id, event_type, amount, currency, status, failure_reason, raw_event, created_at
-    FROM payment_events
-    WHERE subscription_id = $1
-    ORDER BY created_at DESC
-  `,
-
   checkEventProcessed: `
     SELECT id FROM payment_events WHERE stripe_event_id = $1
   `,
@@ -574,14 +545,57 @@ export const QUERIES = {
       AND created_at >= $3
   `,
 
-  getUsageByUserInPeriod: `
-    SELECT action, COUNT(*) as count, SUM(quota_cost) as total_cost
+  // BL-RACE-001: Atomic quota check + insert in a single statement.
+  // Uses a CTE to count current usage and bonus credits, then only inserts
+  // a new usage_records row if the net usage is within the tier limit.
+  // Returns current net_usage and whether the quota was exceeded.
+  atomicQuotaCheckAndInsert: `
+    WITH usage AS (
+      SELECT COALESCE(COUNT(*), 0) AS raw_count
+      FROM usage_records
+      WHERE user_id = $1 AND action = $2 AND created_at >= $3
+    ),
+    bonus AS (
+      SELECT COALESCE(SUM(quota_cost), 0) AS total_bonus
+      FROM usage_records
+      WHERE user_id = $1 AND action = $4
+    ),
+    net AS (
+      SELECT GREATEST(0, (SELECT raw_count FROM usage) - ABS((SELECT total_bonus FROM bonus))) AS net_usage
+    ),
+    inserted AS (
+      INSERT INTO usage_records (user_id, action, endpoint, quota_cost)
+      SELECT $1, $2, 'atomic-quota', 1
+      WHERE (SELECT net_usage FROM net) < $5
+      RETURNING id
+    )
+    SELECT
+      (SELECT net_usage FROM net) AS net_usage,
+      CASE WHEN EXISTS (SELECT 1 FROM inserted) THEN false ELSE true END AS quota_exceeded
+  `,
+
+  // Count how many profiles a user has saved (for savedProfilesMax enforcement)
+  countSavedProfilesByUser: `
+    SELECT COUNT(*) as count FROM profiles WHERE user_id = $1
+  `,
+
+  // MED-INLINE-SQL: Webhook queries migrated from inline SQL
+  updateTransitPassExpiry: `
+    UPDATE users SET transit_pass_expires = $1 WHERE id = $2
+  `,
+
+  grantLifetimeAccess: `
+    UPDATE users SET tier = $1, lifetime_access = true WHERE id = $2
+  `,
+
+  // MED-N+1-001: Batch query for SMS usage counts — eliminates per-user query in loop
+  getBatchSmsUsageCounts: `
+    SELECT user_id, COUNT(*) AS count
     FROM usage_records
-    WHERE user_id = $1
+    WHERE user_id = ANY($1)
+      AND action = 'sms_digest'
       AND created_at >= $2
-      AND created_at <= $3
-    GROUP BY action
-    ORDER BY total_cost DESC
+    GROUP BY user_id
   `,
 
   // ─── Achievements ─────────────────────────────────────────
@@ -934,7 +948,7 @@ export const QUERIES = {
   getPendingReferralRewards: `
     SELECT 
       r.id, u.email as referred_email, r.conversion_date,
-      'free_month' as reward_type, 1500 as reward_value
+      'revenue_share' as reward_type, 500 as reward_value
     FROM referrals r
     JOIN users u ON r.referred_user_id = u.id
     WHERE r.referrer_user_id = $1 AND r.converted = true AND r.reward_granted = false
@@ -946,10 +960,13 @@ export const QUERIES = {
     FROM referrals WHERE id = $1 AND referrer_user_id = $2
   `,
 
+  // P2-BIZ-001: Atomic claim — only succeeds if reward_granted is still false
+  // Concurrent requests will get 0 rows returned, preventing double-spend
   claimReferralReward: `
     UPDATE referrals 
-    SET reward_granted = true, reward_type = 'free_month', reward_value = 1500, updated_at = NOW()
-    WHERE id = $1
+    SET reward_granted = true, reward_type = 'revenue_share', reward_value = 500, updated_at = NOW()
+    WHERE id = $1 AND reward_granted = false
+    RETURNING *
   `,
 
   getUserStripeCustomerId: `
@@ -962,10 +979,32 @@ export const QUERIES = {
     WHERE referred_user_id = $1 AND converted = false
   `,
 
+  /** HD_UPDATES3: Get referrer for recurring revenue share credits */
+  getReferrerForUser: `
+    SELECT r.id AS referral_id, r.referrer_user_id, u.stripe_customer_id AS referrer_stripe_id
+    FROM referrals r
+    JOIN users u ON u.id = r.referrer_user_id
+    WHERE r.referred_user_id = $1 AND r.converted = true
+    LIMIT 1
+  `,
+
   markReferralConverted: `
     UPDATE referrals
     SET converted = true, conversion_date = NOW(), updated_at = NOW()
     WHERE id = $1
+  `,
+
+  // P2-BIZ-002: Anti-Sybil queries
+  countReferrerLifetimeCredits: `
+    SELECT COUNT(*)::int AS count FROM referrals
+    WHERE referrer_user_id = $1 AND reward_granted = true
+  `,
+
+  countReferralsByDomain: `
+    SELECT COUNT(*)::int AS count FROM referrals r
+    JOIN users u ON u.id = r.referred_user_id
+    WHERE r.referrer_user_id = $1
+      AND LOWER(SPLIT_PART(u.email, '@', 2)) = LOWER($2)
   `,
 
   // ─── Billing ──────────────────────────────────────────────
@@ -1003,45 +1042,19 @@ export const QUERIES = {
     UPDATE subscriptions SET tier = $1, updated_at = NOW() WHERE id = $2
   `,
 
-  insertCheckoutSubscription: `
-    INSERT INTO subscriptions (
-      user_id, tier, stripe_subscription_id, stripe_customer_id,
-      status, current_period_start, current_period_end,
-      created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, 'active', NOW(), NOW() + INTERVAL '30 days', NOW(), NOW())
-  `,
-
   updateUserTierAndStripe: `
     UPDATE users 
     SET tier = $1, stripe_customer_id = $2, updated_at = NOW()
     WHERE id = $3
   `,
 
-  updateSubscriptionPeriod: `
-    UPDATE subscriptions 
-    SET status = $1, current_period_end = $2, cancel_at_period_end = $3, updated_at = NOW()
-    WHERE stripe_subscription_id = $4
-  `,
-
-  getSubscriptionUserByStripeId: `
-    SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1
-  `,
-
-  cancelSubscriptionByStripeId: `
-    UPDATE subscriptions SET status = 'canceled', updated_at = NOW()
-    WHERE stripe_subscription_id = $1
-  `,
-
-  insertInvoicePaid: `
-    INSERT INTO invoices (subscription_id, stripe_invoice_id, amount_paid, status, paid_at, created_at)
-    SELECT id, $1, $2, 'paid', NOW(), NOW()
-    FROM subscriptions WHERE stripe_subscription_id = $3
-  `,
-
-  insertInvoiceFailed: `
-    INSERT INTO invoices (subscription_id, stripe_invoice_id, amount_paid, status, created_at)
-    SELECT id, $1, 0, 'failed', NOW()
-    FROM subscriptions WHERE stripe_subscription_id = $2
+  // TXN-014: Find subscriptions marked for cancellation whose period has expired
+  getExpiredCancelledSubscriptions: `
+    SELECT s.id, s.user_id, s.stripe_subscription_id, s.tier
+    FROM subscriptions s
+    WHERE s.cancel_at_period_end = true
+      AND s.status IN ('active', 'trialing', 'past_due')
+      AND s.current_period_end < NOW()
   `,
 
   // ─── Notion Integration ───────────────────────────────────
@@ -1297,11 +1310,6 @@ export const QUERIES = {
     ORDER BY checkin_date ASC
   `,
 
-  getCheckinStreak: `
-    SELECT current_streak, last_checkin_date, streak_start_date
-    FROM get_user_streak($1)
-  `,
-
   getCheckinDatesOrdered: `
     SELECT checkin_date FROM daily_checkins
     WHERE user_id = $1 ORDER BY checkin_date ASC
@@ -1481,16 +1489,35 @@ export const QUERIES = {
     ORDER BY date DESC
   `,
   getAnalyticsMrr: `
+    WITH normalized_subscriptions AS (
+      SELECT
+        CASE
+          WHEN LOWER(COALESCE(tier, 'free')) IN ('individual', 'regular', 'explorer', 'seeker') THEN 'individual'
+          WHEN LOWER(COALESCE(tier, 'free')) IN ('practitioner', 'guide') THEN 'practitioner'
+          WHEN LOWER(COALESCE(tier, 'free')) IN ('agency', 'white_label', 'studio') THEN 'agency'
+          ELSE LOWER(COALESCE(tier, 'free'))
+        END AS canonical_tier,
+        status,
+        updated_at
+      FROM subscriptions
+    )
     SELECT
-      COUNT(*) FILTER (WHERE tier = 'regular' AND status = 'active') AS regular_count,
-      COUNT(*) FILTER (WHERE tier = 'practitioner' AND status = 'active') AS practitioner_count,
-      COUNT(*) FILTER (WHERE tier = 'white_label' AND status = 'active') AS white_label_count,
+      COUNT(*) FILTER (WHERE canonical_tier = 'individual' AND status = 'active') AS individual_count,
+      COUNT(*) FILTER (WHERE canonical_tier = 'practitioner' AND status = 'active') AS practitioner_count,
+      COUNT(*) FILTER (WHERE canonical_tier = 'agency' AND status = 'active') AS agency_count,
       COUNT(*) FILTER (WHERE status = 'active') AS total_active,
       COUNT(*) FILTER (WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days') AS recent_churn
-    FROM subscriptions
+    FROM normalized_subscriptions
   `,
   getAnalyticsTierDistribution: `
-    SELECT tier, COUNT(*) AS count
+    SELECT
+      CASE
+        WHEN LOWER(COALESCE(tier, 'free')) IN ('individual', 'regular', 'explorer', 'seeker') THEN 'individual'
+        WHEN LOWER(COALESCE(tier, 'free')) IN ('practitioner', 'guide') THEN 'practitioner'
+        WHEN LOWER(COALESCE(tier, 'free')) IN ('agency', 'white_label', 'studio') THEN 'agency'
+        ELSE LOWER(COALESCE(tier, 'free'))
+      END AS tier,
+      COUNT(*) AS count
     FROM users
     GROUP BY tier
     ORDER BY count DESC
@@ -1515,10 +1542,14 @@ export const QUERIES = {
   getUserPhone: `SELECT phone FROM users WHERE id = $1`,
   smsUnsubscribeByUserId: `UPDATE users SET sms_opted_in = false WHERE id = $1`,
 
+  // ─── Email Marketing Opt-out (AUDIT-SEC-005: CAN-SPAM) ────
+  emailMarketingOptOut: `UPDATE users SET email_marketing_opted_out = true WHERE email = $1 RETURNING id`,
+  emailMarketingOptIn: `UPDATE users SET email_marketing_opted_out = false WHERE id = $1`,
+
   // ─── Clusters ─────────────────────────────────────────────
 
   listUserClusters: `
-    SELECT c.id, c.name, c.challenge, c.created_at, cm.joined_at
+    SELECT c.id, c.name, c.challenge, c.created_at, c.invite_code, c.created_by, cm.joined_at
     FROM cluster_members cm
     JOIN clusters c ON c.id = cm.cluster_id
     WHERE cm.user_id = $1
@@ -1528,6 +1559,19 @@ export const QUERIES = {
     DELETE FROM cluster_members
     WHERE cluster_id = $1 AND user_id = $2
     RETURNING cluster_id
+  `,
+  getClusterByInviteCode: `
+    SELECT id, name, challenge, created_by, invite_code, created_at
+    FROM clusters WHERE invite_code = $1
+  `,
+  regenerateClusterInviteCode: `
+    UPDATE clusters
+    SET invite_code = upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8))
+    WHERE id = $1 AND created_by = $2
+    RETURNING invite_code
+  `,
+  getClusterOwner: `
+    SELECT created_by FROM clusters WHERE id = $1
   `,
 
   // ─── Chart History ────────────────────────────────────────
@@ -1590,6 +1634,7 @@ export const QUERIES = {
     WHERE u.created_at >= NOW() - INTERVAL '25 hours'
       AND u.created_at <= NOW() - INTERVAL '23 hours'
       AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
   `,
 
   // BL-FIX: charts table has no authority column — extract from hd_json JSONB
@@ -1603,6 +1648,7 @@ export const QUERIES = {
     WHERE u.created_at >= NOW() - INTERVAL '73 hours'
       AND u.created_at <= NOW() - INTERVAL '71 hours'
       AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
   `,
 
   cronGetWelcome4Users: `
@@ -1611,6 +1657,7 @@ export const QUERIES = {
     WHERE u.created_at >= NOW() - INTERVAL '7 days 1 hour'
       AND u.created_at <= NOW() - INTERVAL '6 days 23 hours'
       AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
   `,
 
   cronGetReengagementUsers: `
@@ -1621,6 +1668,7 @@ export const QUERIES = {
       AND u.last_login_at >= NOW() - INTERVAL '8 days'
       AND u.last_login_at <= NOW() - INTERVAL '6 days'
       AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
       AND u.created_at < NOW() - INTERVAL '14 days'
   `,
 
@@ -1631,16 +1679,10 @@ export const QUERIES = {
       AND u.created_at >= NOW() - INTERVAL '31 days'
       AND u.created_at <= NOW() - INTERVAL '29 days'
       AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
   `,
 
   // ─── Promo Codes ──────────────────────────────────────────
-
-  getPromoCode: `
-    SELECT id, code, discount_type, discount_value, max_redemptions, redemptions,
-           valid_until, applicable_tiers, active
-    FROM promo_codes
-    WHERE code = $1 AND active = TRUE
-  `,
 
   validatePromoCode: `
     SELECT id, code, discount_type, discount_value, max_redemptions, redemptions,
@@ -1703,6 +1745,33 @@ export const QUERIES = {
     WHERE id = $1
   `,
 
+  // ─── Email Verification ──────────────────────────────────────
+  createEmailVerificationToken: `
+    INSERT INTO email_verification_tokens (user_id, token_hash, expires_at)
+    VALUES ($1, $2, $3)
+    RETURNING id
+  `,
+
+  getEmailVerificationToken: `
+    SELECT id, user_id, expires_at
+    FROM email_verification_tokens
+    WHERE token_hash = $1 AND expires_at > now()
+  `,
+
+  deleteEmailVerificationTokens: `
+    DELETE FROM email_verification_tokens
+    WHERE user_id = $1
+  `,
+
+  markEmailVerified: `
+    UPDATE users SET email_verified = true, updated_at = NOW()
+    WHERE id = $1
+  `,
+
+  getEmailVerifiedStatus: `
+    SELECT email_verified FROM users WHERE id = $1
+  `,
+
   // ─── Account Deletion ────────────────────────────────────────
   deleteUserAccount: `
     DELETE FROM users WHERE id = $1
@@ -1763,13 +1832,252 @@ export const QUERIES = {
     VALUES ($1, $2, $3)
   `,
 
-  verifyOAuthStatePublic: `
-    SELECT expires_at FROM oauth_states
-    WHERE provider = $1 AND state = $2 AND expires_at > NOW()
+  // ─── Session Notes (HD_UPDATES4) ──────────────────────────────
+
+  createSessionNote: `
+    INSERT INTO practitioner_session_notes
+      (practitioner_id, client_user_id, content, share_with_ai, transit_snapshot, session_date)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *
+  `,
+
+  updateSessionNote: `
+    UPDATE practitioner_session_notes
+    SET content = $2, share_with_ai = $3, updated_at = NOW()
+    WHERE id = $1
+    RETURNING *
+  `,
+
+  deleteSessionNote: `
+    DELETE FROM practitioner_session_notes WHERE id = $1 AND practitioner_id = $2
+  `,
+
+  listSessionNotes: `
+    SELECT id, content, share_with_ai, transit_snapshot, session_date, created_at, updated_at
+    FROM practitioner_session_notes
+    WHERE practitioner_id = $1 AND client_user_id = $2
+    ORDER BY session_date DESC, created_at DESC
+    LIMIT 50
+  `,
+
+  getAISharedNotes: `
+    SELECT content, session_date
+    FROM practitioner_session_notes
+    WHERE client_user_id = $1 AND share_with_ai = true
+    ORDER BY session_date DESC
+    LIMIT 10
+  `,
+
+  // ─── Per-Client AI Context (HD_UPDATES4 Vector 3) ─────────────
+
+  updateClientAIContext: `
+    UPDATE practitioner_clients SET ai_context = $3
+    WHERE practitioner_id = $1 AND client_user_id = $2
+  `,
+
+  getClientAIContext: `
+    SELECT ai_context FROM practitioner_clients
+    WHERE practitioner_id = $1 AND client_user_id = $2
+  `,
+
+  // ─── Practitioner Directory (HD_UPDATES4) ─────────────────────
+
+  updatePractitionerProfile: `
+    UPDATE practitioners SET
+      is_public = $2,
+      slug = $3,
+      display_name = $4,
+      photo_url = $5,
+      bio = $6,
+      specializations = $7,
+      certification = $8,
+      languages = $9,
+      session_format = $10,
+      session_info = $11,
+      booking_url = $12,
+      payment_links = $13,
+      synthesis_style = $14
+    WHERE id = $1
+    RETURNING *
+  `,
+
+  getPractitionerBySlug: `
+    SELECT p.id, p.display_name, p.photo_url, p.bio, p.specializations,
+           p.certification, p.languages, p.session_format, p.session_info,
+           p.booking_url, p.payment_links, p.slug,
+           (SELECT COUNT(*) FROM practitioner_clients pc WHERE pc.practitioner_id = p.id) AS client_count
+    FROM practitioners p
+    WHERE p.slug = $1 AND p.is_public = true
+  `,
+
+  listPublicPractitioners: `
+    SELECT p.id, p.display_name, p.photo_url, p.bio, p.specializations,
+           p.certification, p.languages, p.session_format, p.session_info,
+           p.booking_url, p.slug,
+           (SELECT COUNT(*) FROM practitioner_clients pc WHERE pc.practitioner_id = p.id) AS client_count
+    FROM practitioners p
+    WHERE p.is_public = true
+    ORDER BY client_count DESC, p.display_name ASC
+    LIMIT $1 OFFSET $2
+  `,
+
+  searchPublicPractitioners: `
+    SELECT p.id, p.display_name, p.photo_url, p.bio, p.specializations,
+           p.certification, p.languages, p.session_format, p.session_info,
+           p.booking_url, p.slug,
+           (SELECT COUNT(*) FROM practitioner_clients pc WHERE pc.practitioner_id = p.id) AS client_count
+    FROM practitioners p
+    WHERE p.is_public = true
+      AND ($1::text IS NULL OR p.specializations && ARRAY[$1::text])
+      AND ($2::text IS NULL OR p.certification = $2)
+      AND ($3::text IS NULL OR $3 = ANY(p.languages))
+      AND ($4::text IS NULL OR p.session_format = $4)
+    ORDER BY client_count DESC, p.display_name ASC
+    LIMIT $5 OFFSET $6
+  `,
+
+  getPractitionerDirectoryProfile: `
+    SELECT id, is_public, slug, display_name, photo_url, bio,
+           specializations, certification, languages, session_format,
+           session_info, booking_url, payment_links, synthesis_style
+    FROM practitioners
+    WHERE user_id = $1
+  `,
+
+  // ─── Combined Practitioner AI Context for Client (HD_UPDATES4) ─
+
+  /** Fetch all 3 AI vectors for a client in a single query */
+  getPractitionerAIContext: `
+    SELECT
+      p.synthesis_style,
+      pc.ai_context
+    FROM practitioner_clients pc
+    JOIN practitioners p ON p.id = pc.practitioner_id
+    WHERE pc.client_user_id = $1
     LIMIT 1
   `,
 
-  deleteOAuthStatePublic: `
-    DELETE FROM oauth_states WHERE provider = $1 AND state = $2
-  `
+  // ─── Branded PDF branding (Migration 029) ──────────────────────
+
+  getPractitionerBranding: `
+    SELECT display_name, website_url, booking_url, brand_color, logo_url
+    FROM practitioners
+    WHERE user_id = $1
+  `,
+
+  // ─── Agency Seats (Migration 029) ──────────────────────────────
+
+  getAgencySeats: `
+    SELECT
+      s.id, s.member_user_id, s.invited_email,
+      s.invited_at, s.accepted_at,
+      u.email AS member_email
+    FROM agency_seats s
+    LEFT JOIN users u ON u.id = s.member_user_id
+    WHERE s.owner_user_id = $1
+    ORDER BY s.invited_at ASC
+  `,
+
+  countAgencySeats: `
+    SELECT COUNT(*) AS count FROM agency_seats WHERE owner_user_id = $1
+  `,
+
+  addAgencySeat: `
+    INSERT INTO agency_seats (owner_user_id, member_user_id, invited_email)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (member_user_id) DO NOTHING
+    RETURNING id, member_user_id, invited_email, invited_at
+  `,
+
+  removeAgencySeat: `
+    DELETE FROM agency_seats
+    WHERE owner_user_id = $1 AND member_user_id = $2
+    RETURNING id
+  `,
+
+  /** Returns the agency owner's user_id for a seat member — used in tier propagation */
+  getAgencyOwnerForMember: `
+    SELECT s.owner_user_id, sub.tier AS owner_tier
+    FROM agency_seats s
+    LEFT JOIN subscriptions sub
+      ON sub.user_id = s.owner_user_id
+      AND (sub.status = 'active' OR sub.status = 'trialing')
+    WHERE s.member_user_id = $1
+    LIMIT 1
+  `,
+
+  /** Look up a user id by email — used when inviting a seat member */
+  // Note: getUserByEmail already exists above with full user columns
+
+  // ─── Admin ────────────────────────────────────────────────
+
+  adminListUsers: `
+    SELECT id, email, tier, email_verified, created_at, last_login_at,
+           stripe_customer_id, lifetime_access, transit_pass_expires
+    FROM users
+    WHERE ($1::text IS NULL OR email ILIKE '%' || $1 || '%')
+    ORDER BY created_at DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  adminCountUsers: `
+    SELECT COUNT(*) AS total FROM users
+    WHERE ($1::text IS NULL OR email ILIKE '%' || $1 || '%')
+  `,
+
+  adminGetUser: `
+    SELECT id, email, phone, tier, email_verified, email_marketing_opted_out,
+           stripe_customer_id, referral_code, created_at, last_login_at,
+           transit_pass_expires, lifetime_access
+    FROM users WHERE id = $1
+  `,
+
+  adminSetTier: `
+    UPDATE users SET tier = $1, updated_at = NOW() WHERE id = $2
+    RETURNING id, email, tier
+  `,
+
+  adminSetEmailVerified: `
+    UPDATE users SET email_verified = $1, updated_at = NOW() WHERE id = $2
+    RETURNING id, email, email_verified
+  `,
+
+  adminDeactivatePromo: `
+    UPDATE promo_codes SET active = false WHERE id = $1
+    RETURNING id, code, active
+  `,
+
+  adminGetOverviewStats: `
+    SELECT
+      (SELECT COUNT(*) FROM users) AS total_users,
+      (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '24 hours') AS new_users_24h,
+      (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '7 days') AS new_users_7d,
+      (SELECT COUNT(*) FROM users WHERE email_verified = true) AS verified_users,
+      (SELECT COUNT(*) FROM users WHERE tier = 'individual') AS individual_users,
+      (SELECT COUNT(*) FROM users WHERE tier = 'practitioner') AS practitioner_users,
+      (SELECT COUNT(*) FROM users WHERE tier = 'agency') AS agency_users,
+      (SELECT COUNT(*) FROM subscriptions WHERE status = 'active') AS active_subscriptions,
+      (SELECT COUNT(*) FROM charts WHERE calculated_at >= NOW() - INTERVAL '24 hours') AS charts_24h,
+      (SELECT COUNT(*) FROM profiles WHERE created_at >= NOW() - INTERVAL '24 hours') AS profiles_24h
+  `,
+
+  // ─── 2FA / TOTP (migration 038) ─────────────────────────────
+  setTOTPSecret: `
+    UPDATE users SET totp_secret = $1, totp_enabled = false, updated_at = NOW()
+    WHERE id = $2
+    RETURNING id, email, totp_enabled
+  `,
+
+  enableTOTP: `
+    UPDATE users SET totp_enabled = true, updated_at = NOW()
+    WHERE id = $1
+    RETURNING id, email, totp_enabled
+  `,
+
+  disableTOTP: `
+    UPDATE users SET totp_secret = NULL, totp_enabled = false, updated_at = NOW()
+    WHERE id = $1
+    RETURNING id, email, totp_enabled
+  `,
 };
+

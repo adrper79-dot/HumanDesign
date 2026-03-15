@@ -15,6 +15,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { FUNNELS } from '../lib/analytics.js';
+import { getTier, normalizeTierName } from '../lib/stripe.js';
 
 /**
  * Main analytics router.
@@ -23,36 +24,41 @@ export async function handleAnalytics(request, env, subpath) {
   const method = request.method;
   const url = new URL(request.url);
 
-  // Only admin/practitioner users can access analytics
-  const userTier = request._user?.tier || 'free';
-  if (!['guide', 'practitioner', 'admin'].includes(userTier)) {
+  // Only practitioner/agency/admin users can access analytics
+  const userTier = normalizeTierName(request._user?.tier);
+  if (!['practitioner', 'agency', 'admin'].includes(userTier)) {
     return Response.json(
-      { error: 'Analytics access requires Guide tier or above', upgrade_required: true },
+      { error: 'Analytics access requires Practitioner tier or above', upgrade_required: true },
       { status: 403 }
     );
   }
 
-  if (subpath === '/overview' && method === 'GET') {
-    return getOverview(env, url);
-  }
-  if (subpath === '/events' && method === 'GET') {
-    return getEventTrends(env, url);
-  }
-  if (subpath.startsWith('/funnel/') && method === 'GET') {
-    const funnelName = subpath.replace('/funnel/', '');
-    return getFunnelAnalysis(env, funnelName);
-  }
-  if (subpath === '/retention' && method === 'GET') {
-    return getRetention(env, url);
-  }
-  if (subpath === '/errors' && method === 'GET') {
-    return getErrorAnalytics(env, url);
-  }
-  if (subpath === '/revenue' && method === 'GET') {
-    return getRevenueMetrics(env);
-  }
+  try {
+    if (subpath === '/overview' && method === 'GET') {
+      return getOverview(env, url);
+    }
+    if (subpath === '/events' && method === 'GET') {
+      return getEventTrends(env, url);
+    }
+    if (subpath.startsWith('/funnel/') && method === 'GET') {
+      const funnelName = subpath.replace('/funnel/', '');
+      return getFunnelAnalysis(env, funnelName);
+    }
+    if (subpath === '/retention' && method === 'GET') {
+      return getRetention(env, url);
+    }
+    if (subpath === '/errors' && method === 'GET') {
+      return getErrorAnalytics(env, url);
+    }
+    if (subpath === '/revenue' && method === 'GET') {
+      return getRevenueMetrics(env);
+    }
 
-  return Response.json({ error: 'Not found' }, { status: 404 });
+    return Response.json({ error: 'Not found' }, { status: 404 });
+  } catch (err) {
+    console.error('[Analytics] Unhandled error:', err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // ─── Overview ────────────────────────────────────────────────────────
@@ -305,10 +311,13 @@ async function getRevenueMetrics(env) {
   ]);
 
   const m = mrr.rows[0] || {};
-  const seekerRevenue = Number(m.seeker_count || 0) * 1500;
-  const guideRevenue = Number(m.guide_count || 0) * 9700;
-  const practitionerRevenue = Number(m.practitioner_count || 0) * 50000;
-  const totalMrrCents = seekerRevenue + guideRevenue + practitionerRevenue;
+  const individualPrice = getTier('individual', env).price;
+  const practitionerPrice = getTier('practitioner', env).price;
+  const agencyPrice = getTier('agency', env).price;
+  const individualRevenue = Number(m.individual_count || 0) * individualPrice;
+  const practitionerRevenue = Number(m.practitioner_count || 0) * practitionerPrice;
+  const agencyRevenue = Number(m.agency_count || 0) * agencyPrice;
+  const totalMrrCents = individualRevenue + practitionerRevenue + agencyRevenue;
 
   return Response.json({
     ok: true,
@@ -317,9 +326,9 @@ async function getRevenueMetrics(env) {
         totalCents: totalMrrCents,
         totalUsd: `$${(totalMrrCents / 100).toFixed(2)}`,
         breakdown: {
-          seeker: { count: Number(m.seeker_count || 0), revenueCents: seekerRevenue },
-          guide: { count: Number(m.guide_count || 0), revenueCents: guideRevenue },
+          individual: { count: Number(m.individual_count || 0), revenueCents: individualRevenue },
           practitioner: { count: Number(m.practitioner_count || 0), revenueCents: practitionerRevenue },
+          agency: { count: Number(m.agency_count || 0), revenueCents: agencyRevenue },
         },
       },
       totalActiveSubscriptions: Number(m.total_active || 0),

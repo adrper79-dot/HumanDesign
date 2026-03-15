@@ -283,9 +283,17 @@ describe('POST /api/rectify', () => {
 
 // ─── /api/profile/generate (validation only, LLM mocked) ────
 
+// Mock auth so compute-only handler tests pass without real JWTs
+vi.mock('../workers/src/middleware/auth.js', () => ({
+  getUserFromRequest: vi.fn().mockResolvedValue({ id: 'test-user-id', email: 'test@example.com', tier: 'individual' }),
+}));
+
 // Mock tier enforcement so profile tests can reach validation logic
 vi.mock('../workers/src/middleware/tierEnforcement.js', () => ({
+  enforceFeatureAccess: vi.fn().mockResolvedValue(null),
   enforceUsageQuota: vi.fn().mockResolvedValue(null),
+  enforceDailyCeiling: vi.fn().mockResolvedValue(null),
+  incrementDailyCounter: vi.fn().mockResolvedValue(undefined),
   recordUsage: vi.fn().mockResolvedValue(undefined),
   getTier: vi.fn().mockReturnValue({ name: 'free', features: {} }),
   isQuotaExceeded: vi.fn().mockReturnValue(false),

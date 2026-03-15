@@ -1,5 +1,8 @@
 # Stripe Integration Guide
 
+> Historical integration guide. The setup flow remains useful, but tier names, price labels, and some billing examples below refer to an older pricing model.
+> Use `workers/src/lib/stripe.js` and the current documentation index as the live source of truth.
+
 Complete guide to setting up Stripe payments for Prime Self.
 
 **Time to complete**: 30 minutes  
@@ -46,7 +49,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   stripe_customer_id TEXT UNIQUE NOT NULL,
   stripe_subscription_id TEXT UNIQUE,
-  tier TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'seeker', 'guide', 'practitioner')),
+  tier TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'regular', 'practitioner', 'white_label')),
   status TEXT NOT NULL DEFAULT 'active',
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
@@ -115,22 +118,22 @@ NEON_CONNECTION_STRING="postgresql://..." node run-migration.js
 
 In Stripe Dashboard → **Products**:
 
-#### Product 1: Seeker Tier
-- **Name**: `Prime Self — Seeker`
-- **Price**: `$15.00 USD` / month
+#### Product 1: Explorer Tier
+- **Name**: `Prime Self — Explorer`
+- **Price**: `$12.00 USD` / month
 - **Billing interval**: Monthly
 - Click **Save**
 - Copy **Price ID** (e.g., `price_1AbC123xyz`)
 
 #### Product 2: Guide Tier
 - **Name**: `Prime Self — Guide`
-- **Price**: `$97.00 USD` / month
+- **Price**: `$60.00 USD` / month
 - **Billing interval**: Monthly
 - Copy **Price ID**
 
-#### Product 3: Practitioner Tier
-- **Name**: `Prime Self — Practitioner`
-- **Price**: `$500.00 USD` / month
+#### Product 3: Studio Tier
+- **Name**: `Prime Self — Studio`
+- **Price**: `$149.00 USD` / month
 - **Billing interval**: Monthly
 - Copy **Price ID**
 
@@ -161,19 +164,19 @@ npx wrangler secret put STRIPE_WEBHOOK_SECRET
 Edit `workers/wrangler.toml`:
 
 ```toml
-# Add these lines in [env.production]
-STRIPE_PRICE_SEEKER = "price_YOUR_SEEKER_ID"
-STRIPE_PRICE_GUIDE = "price_YOUR_GUIDE_ID"
-STRIPE_PRICE_PRACTITIONER = "price_YOUR_PRACTITIONER_ID"
+# Add these lines in [vars]
+STRIPE_PRICE_REGULAR = "price_YOUR_EXPLORER_ID"
+STRIPE_PRICE_PRACTITIONER = "price_YOUR_GUIDE_ID"
+STRIPE_PRICE_WHITE_LABEL = "price_YOUR_STUDIO_ID"
 ```
 
 Replace with your actual Price IDs from Step 2.
 
 **Example**:
 ```toml
-STRIPE_PRICE_SEEKER = "price_1AbC123def456"
-STRIPE_PRICE_GUIDE = "price_2XyZ789ghi012"
-STRIPE_PRICE_PRACTITIONER = "price_3MnO345jkl678"
+STRIPE_PRICE_REGULAR = "price_1AbC123def456"
+STRIPE_PRICE_PRACTITIONER = "price_2XyZ789ghi012"
+STRIPE_PRICE_WHITE_LABEL = "price_3MnO345jkl678"
 ```
 
 ---
@@ -249,7 +252,7 @@ Copy the `accessToken` from response.
 curl -X POST https://prime-self-api.adrper79.workers.dev/api/stripe/checkout \
   -H "Authorization: Bearer <YOUR_TOKEN>" \
   -H "Content-Type: application/json" \
-  -d '{"tier": "seeker"}'
+  -d '{"tier": "regular"}'
 ```
 
 Response:
@@ -314,7 +317,7 @@ If webhooks show red ❌:
 
 | Scenario | How to Test | Expected |
 |----------|-------------|----------|
-| **Successful payment** | Use card `4242 4242 4242 4242` | User tier updates to "seeker" |
+| **Successful payment** | Use card `4242 4242 4242 4242` | User tier updates to "regular" (Explorer) |
 | **Failed payment** | Use card `4000 0000 0000 0002` | Error shown; subscription not created |
 | **Upgrade mid-cycle** | Create subscription, then upgrade | Prorated charge calculated |
 | **Cancel subscription** | Cancel in Stripe dashboard | User tier reverts to "free" |

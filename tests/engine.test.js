@@ -427,7 +427,7 @@ describe('Layer 8: Synthesis', () => {
     const p = buildSynthesisPrompt(chartData);
     expect(p.config.model).toBe('claude-opus-4-20250514');
     expect(p.config.temperature).toBe(0);
-    expect(p.config.max_tokens).toBe(4096);
+    expect(p.config.max_tokens).toBe(6000);
   });
 
   it('uses Sonnet for questions', () => {
@@ -453,11 +453,12 @@ describe('Layer 8: Synthesis', () => {
     expect(content).toContain('sun: Leo');
   });
 
-  it('includes Forge mapping reference', () => {
+  it('includes deterministic Forge identification', () => {
     const p = buildSynthesisPrompt(chartData);
     const content = p.messages[0].content;
-    expect(content).toContain('Chronos (Time)');
-    expect(content).toContain('Phoenix (Rebirth)');
+    expect(content).toContain('DETERMINISTIC FORGE IDENTIFICATION');
+    expect(content).toContain('Primary Forge:');
+    expect(content).toContain('Scoring indicators:');
   });
 
   describe('validateSynthesisResponse', () => {
@@ -472,7 +473,7 @@ describe('Layer 8: Synthesis', () => {
         },
         technicalInsights: {
           geneKeysProfile: { shadowPatterns: [], giftOpportunities: [], siddhiPotential: [] },
-          forgeIdentification: { forge: 'Aether', confidence: 'medium', indicators: [] }
+          forgeIdentification: { forge: 'Guidance', confidence: 'medium', indicators: [] }
         },
         groundingAudit: { claimsTotal: 3, claimsGrounded: 3, ungroundedFields: [] }
       };
@@ -517,7 +518,7 @@ describe('Layer 8: Synthesis', () => {
         },
         technicalInsights: {
           geneKeysProfile: {},
-          forgeIdentification: { forge: 'Lux' }
+          forgeIdentification: { forge: 'Perception' }
         },
         groundingAudit: { claimsTotal: 5, claimsGrounded: 3, ungroundedFields: ['x', 'y'] }
       };
@@ -526,10 +527,10 @@ describe('Layer 8: Synthesis', () => {
     });
 
     it('parses JSON string input', () => {
-      const json = '{"quickStartGuide":{"whoYouAre":"Test","decisionStyle":"Test","lifeStrategy":"Test","thisMonth":"Test","workingWithOthers":"Test"},"technicalInsights":{"geneKeysProfile":{},"forgeIdentification":{"forge":"Eros"}},"groundingAudit":{"claimsTotal":0,"claimsGrounded":0,"ungroundedFields":[]}}';
+      const json = '{"quickStartGuide":{"whoYouAre":"Test","decisionStyle":"Test","lifeStrategy":"Test","thisMonth":"Test","workingWithOthers":"Test"},"technicalInsights":{"geneKeysProfile":{},"forgeIdentification":{"forge":"Mastery"}},"groundingAudit":{"claimsTotal":0,"claimsGrounded":0,"ungroundedFields":[]}}';
       const result = validateSynthesisResponse(json);
       expect(result.parsed).toBeDefined();
-      expect(result.parsed.technicalInsights.forgeIdentification.forge).toBe('Eros');
+      expect(result.parsed.technicalInsights.forgeIdentification.forge).toBe('Mastery');
     });
   });
 });

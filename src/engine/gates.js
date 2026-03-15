@@ -91,9 +91,11 @@ export function longitudeToGate(longitude) {
 
 /**
  * Get the ecliptic longitude range for a specific gate.
+ * NOTE: When a gate spans the 0°/360° boundary, `end` will be less than `start`.
+ * Consumers should check: `start <= end ? (lon >= start && lon < end) : (lon >= start || lon < end)`.
  *
  * @param {number} gateNumber – Gate number (1–64)
- * @returns {{ start: number, end: number, position: number } | null}
+ * @returns {{ start: number, end: number, position: number, wraps: boolean } | null}
  */
 export function gateToLongitudeRange(gateNumber) {
   const position = GATE_WHEEL.indexOf(gateNumber);
@@ -102,10 +104,14 @@ export function gateToLongitudeRange(gateNumber) {
   const rawStart = position * DEG_PER_GATE;
   const rawEnd = rawStart + DEG_PER_GATE;
 
+  const start = (rawStart + WHEEL_OFFSET) % 360;
+  const end = (rawEnd + WHEEL_OFFSET) % 360;
+
   return {
-    start: (rawStart + WHEEL_OFFSET) % 360,
-    end: (rawEnd + WHEEL_OFFSET) % 360,
-    position
+    start,
+    end,
+    position,
+    wraps: end < start  // P2-ENGINE-003: flag when gate spans 0°/360° boundary
   };
 }
 

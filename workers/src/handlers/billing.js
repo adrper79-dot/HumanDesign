@@ -15,16 +15,19 @@ import {
   createStripeClient,
   ensureCustomer,
   createCheckoutSession,
+  createOneTimeCheckoutSession,
   createPortalSession,
   getSubscription,
   updateSubscription,
   cancelSubscription,
   getTierConfig,
-  getTier
+  getTier,
+  getOneTimeProducts
 } from '../lib/stripe.js';
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
+import { trackEvent, EVENTS } from '../lib/analytics.js';
 
 // ─── Checkout Session ────────────────────────────────────────
 
@@ -34,7 +37,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
  * 
  * Body:
  * {
- *   "tier": "regular" | "practitioner" | "white_label",
+ *   "tier": "individual" | "practitioner" | "agency",
  *   "successUrl": "https://primeself.app/success",
  *   "cancelUrl": "https://primeself.app/cancel"
  * }
@@ -47,12 +50,16 @@ export async function handleCheckout(request, env, ctx) {
     }
     
     const body = await request.json();
-    const { tier, successUrl, cancelUrl, promoCode } = body;
+    const { tier, successUrl, cancelUrl, promoCode, billingPeriod } = body;
     
     // Validate tier
-    if (!tier || !['regular', 'practitioner', 'white_label'].includes(tier)) {
-      return Response.json({ error: 'Invalid tier. Must be regular, practitioner, or white_label' }, { status: 400 });
+    const VALID_TIERS = ['individual', 'practitioner', 'agency'];
+    if (!tier || !VALID_TIERS.includes(tier)) {
+      return Response.json({ error: 'Invalid tier. Must be individual, practitioner, or agency' }, { status: 400 });
     }
+
+    // Validate billing period
+    const period = billingPeriod === 'annual' ? 'annual' : 'monthly';
 
     // Validate redirect URLs — must be valid https URLs on the same origin to prevent open-redirect
     const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
@@ -76,6 +83,15 @@ export async function handleCheckout(request, env, ctx) {
     
     // Get tier configuration
     const tierConfig = getTier(tier, env);
+
+    // Resolve price ID — annual if requested and available
+    const priceId = period === 'annual' && tierConfig.annualPriceId
+      ? tierConfig.annualPriceId
+      : tierConfig.priceId;
+    
+    if (!priceId || priceId.startsWith('price_placeholder')) {
+      return Response.json({ error: 'Pricing not yet configured for this tier/period' }, { status: 400 });
+    }
     
     // Create Stripe client
     const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
@@ -115,20 +131,98 @@ export async function handleCheckout(request, env, ctx) {
     // Create checkout session
     const session = await createCheckoutSession(stripe, {
       customerId,
-      priceId: tierConfig.priceId,
+      priceId,
       successUrl: successUrl || `${env.FRONTEND_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: cancelUrl || `${env.FRONTEND_URL}/billing/cancel`,
       discounts,
       metadata: {
         user_id: user.id,
-        tier: tier
+        tier: tier,
+        billing_period: period
       }
     });
     
+    trackEvent(env, EVENTS.CHECKOUT_START, { userId: user.id, tier, period }).catch(e => console.error('[billing] trackEvent checkout_start failed:', e.message));
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
     
   } catch (error) {
     console.error('Checkout error:', error);
+    return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
+  }
+}
+
+// ─── One-Time Purchase Checkout (HD_UPDATES3) ─────────────────
+
+/**
+ * POST /api/billing/checkout-one-time
+ * Create Stripe checkout session for one-time product purchase
+ *
+ * Body:
+ * {
+ *   "product": "single_synthesis" | "composite_reading" | "transit_pass" | "lifetime_individual",
+ *   "successUrl": "https://primeself.app/success",
+ *   "cancelUrl": "https://primeself.app/cancel"
+ * }
+ */
+export async function handleOneTimeCheckout(request, env, ctx) {
+  try {
+    const user = await getUserFromRequest(request, env);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { product, successUrl, cancelUrl } = body;
+
+    const products = getOneTimeProducts(env);
+
+    if (!product || !products[product]) {
+      return Response.json({
+        error: 'Invalid product',
+        valid: Object.keys(products)
+      }, { status: 400 });
+    }
+
+    // Validate redirect URLs
+    const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
+    function isSafeUrl(url) {
+      if (!url || typeof url !== 'string') return true;
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:') return false;
+        if (frontendOrigin && !url.startsWith(frontendOrigin)) return false;
+        return true;
+      } catch { return false; }
+    }
+    if (!isSafeUrl(successUrl) || !isSafeUrl(cancelUrl)) {
+      return Response.json({ error: 'Invalid redirect URL' }, { status: 400 });
+    }
+
+    const productConfig = products[product];
+    const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
+    const customerId = await ensureCustomer(stripe, user, user.stripe_customer_id);
+
+    if (!user.stripe_customer_id) {
+      const query = createQueryFn(env.NEON_CONNECTION_STRING);
+      await query(QUERIES.updateUserStripeCustomerId, [customerId, user.id]);
+    }
+
+    const session = await createOneTimeCheckoutSession(stripe, {
+      customerId,
+      priceId: productConfig.priceId,
+      successUrl: successUrl || `${env.FRONTEND_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: cancelUrl || `${env.FRONTEND_URL}/billing/cancel`,
+      metadata: {
+        user_id: user.id,
+        product,
+        grants: JSON.stringify(productConfig.grants),
+      }
+    });
+
+    return Response.json({ ok: true, sessionId: session.id, url: session.url });
+
+  } catch (error) {
+    console.error('One-time checkout error:', error);
     return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }
@@ -157,6 +251,19 @@ export async function handlePortal(request, env, ctx) {
     
     const body = await request.json();
     const { returnUrl } = body;
+    
+    // P2-SEC-009: Validate returnUrl the same way checkout validates successUrl/cancelUrl
+    const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
+    if (returnUrl && typeof returnUrl === 'string') {
+      try {
+        const parsed = new URL(returnUrl);
+        if (parsed.protocol !== 'https:' || (frontendOrigin && !returnUrl.startsWith(frontendOrigin))) {
+          return Response.json({ error: 'Invalid returnUrl' }, { status: 400 });
+        }
+      } catch {
+        return Response.json({ error: 'Invalid returnUrl' }, { status: 400 });
+      }
+    }
     
     const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
     
@@ -285,6 +392,7 @@ export async function handleCancelSubscription(request, env, ctx) {
       }
     });
     
+    trackEvent(env, EVENTS.CANCEL, { userId: user.id, immediately: !!immediately }).catch(e => console.error('[billing] trackEvent cancel failed:', e.message));
     return Response.json({
       ok: true,
       message: immediately ? 'Subscription canceled immediately' : 'Subscription will cancel at period end',
@@ -306,7 +414,7 @@ export async function handleCancelSubscription(request, env, ctx) {
  * 
  * Body:
  * {
- *   "tier": "regular" | "practitioner" | "white_label"
+ *   "tier": "individual" | "practitioner" | "agency"
  * }
  */
 export async function handleUpgradeSubscription(request, env, ctx) {
@@ -328,8 +436,8 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     const body = await request.json();
     const { tier } = body;
     
-    if (!tier || !['regular', 'practitioner', 'white_label'].includes(tier)) {
-      return Response.json({ error: 'Invalid tier. Must be regular, practitioner, or white_label' }, { status: 400 });
+    if (!tier || !['individual', 'practitioner', 'agency'].includes(tier)) {
+      return Response.json({ error: 'Invalid tier. Must be individual, practitioner, or agency' }, { status: 400 });
     }
     
     if (tier === subscription.tier) {
@@ -351,6 +459,7 @@ export async function handleUpgradeSubscription(request, env, ctx) {
       await q(QUERIES.updateUserTier, [tier, user.id]);
     });
     
+    trackEvent(env, EVENTS.UPGRADE, { userId: user.id, tier, previousTier: subscription.tier }).catch(e => console.error('[billing] trackEvent upgrade failed:', e.message));
     return Response.json({
       ok: true,
       message: `Subscription updated to ${tier}`,
@@ -367,9 +476,3 @@ export async function handleUpgradeSubscription(request, env, ctx) {
   }
 }
 
-// ─── DEAD CODE REMOVED ──────────────────────────────────────
-// BL-FIX: The handleWebhook function and its local handlers
-// (handleCheckoutCompleted, handleSubscriptionUpdated, handleSubscriptionDeleted,
-//  handleInvoicePaid, handleInvoicePaymentFailed) were dead code.
-// The active webhook handler lives in webhook.js with proper idempotency
-// and transaction support. Removed to prevent accidental re-enablement.

@@ -93,14 +93,15 @@ function jdnToCalendar(jdn) {
   const month = E < 14 ? E - 1 : E - 13;
   const year = month > 2 ? C - 4716 : C - 4715;
 
-  // Extract time from fractional day
+  // Extract time from fractional day — P2-ENGINE-005: include seconds
   const timeFraction = dayDecimal - day;
-  let totalMinutes = Math.round(timeFraction * 24 * 60);
-  if (totalMinutes >= 1440) totalMinutes -= 1440;  // BL-R-M2: clamp midnight overflow
-  const hour = Math.floor(totalMinutes / 60);
-  const minute = totalMinutes % 60;
+  const totalSeconds = Math.round(timeFraction * 86400);
+  const clamped = totalSeconds >= 86400 ? totalSeconds - 86400 : totalSeconds;
+  const hour = Math.floor(clamped / 3600);
+  const minute = Math.floor((clamped % 3600) / 60);
+  const second = clamped % 60;
 
-  return { year, month, day, hour, minute };
+  return { year, month, day, hour, minute, second };
 }
 
 /**

@@ -1,9 +1,11 @@
 # PRIME SELF ENGINE — LAUNCH READINESS REPORT
 
+> Historical launch-readiness snapshot. Findings, pricing references, and test counts below reflect the audit state at the time of writing and are not the live canonical baseline.
+
 **Date:** 2026-07-27  
 **Protocol:** PrimeSelf C-Suite Launch Certification v1.0  
 **Auditor:** GitHub Copilot (Claude Opus 4.6)  
-**Test Suite Status:** 263 / 263 PASSING (Vitest 3.2.4)  
+**Test Suite Status:** Then-current local Vitest suite passing at audit time  
 **Stack:** Cloudflare Workers · Neon PostgreSQL · Anthropic/Grok/Groq LLM · Stripe · Telnyx · Resend · R2 · KV
 
 ---
@@ -22,7 +24,7 @@
 |----|----------|--------|---------|--------|
 | IP-001 | **CRITICAL** | Legal/IP | "Human Design" trademark appears 20+ times in user-facing code: emails, share cards, meta tags, frontend JS, social templates | **Existential legal risk.** IHDS/Jovian Archive holds the trademark. Cease-and-desist or injunction on day one of any marketing. |
 | IP-002 | **CRITICAL** | Legal/IP | Gene Keys terminology used without attribution or license | Richard Rudd's IP system — usage without license agreement creates copyright/trademark liability |
-| IP-003 | **CRITICAL** | Legal/IP | Studio tier ($500/mo) advertises unbuilt features: "white-label removal," "custom themes," "dedicated account manager," "priority chart processing" | False advertising / consumer protection violation. Charging $500/mo for features that don't exist. |
+| IP-003 | **CRITICAL** | Legal/IP | Studio tier ($149/mo) advertises unbuilt features: "white-label removal," "custom themes," "dedicated account manager," "priority chart processing" | False advertising / consumer protection violation. Charging $149/mo for features that don't exist. |
 | TXN-016 | **CRITICAL** | Payment | No handler for `charge.refunded` webhook event — refunded users retain paid tier permanently | Direct revenue loss. Refunded users keep all paid features indefinitely. |
 | TXN-025 | **CRITICAL** | Payment | No handler for `charge.dispute` webhook event — chargebacks don't trigger tier downgrade | Revenue loss + chargeback ratio risk. Stripe terminates accounts exceeding 1% dispute rate. |
 | TXN-012 | **CRITICAL** | Payment | `getActiveSubscription()` filters `status='active'` only — ignores `trialing` and `past_due` | Trial users invisible to the system. Past-due users appear as free tier. |
@@ -104,7 +106,7 @@
 | **404 Page** | ✅ PASS | Branded, dark-themed, with CTA back to app |
 | **Favicon** | ✅ PASS | 32px + 16px PNG + SVG with v1/v2 variant randomization |
 | **PWA** | ✅ PASS | manifest.json, service-worker.js v6, 8 icon sizes + maskable |
-| **Test Suite** | ✅ PASS | 263/263 tests passing (Vitest 3.2.4) |
+| **Test Suite** | ✅ PASS | Then-current local Vitest suite passing at audit time |
 | **GDPR Export** | ✅ PASS | Data export endpoint implemented |
 | **Privacy/Terms** | ✅ PASS | Updated March 10, 2026. Third-party data sharing disclosed. |
 
@@ -137,7 +139,7 @@ Once all Section 1 blockers are resolved:
 ### Phase 1: Legal Remediation (IMMEDIATE)
 1. **Search-and-replace "Human Design" globally** — replace with "Prime Self Blueprint" or equivalent original terminology
 2. **Remove all Gene Keys references** or obtain written license from Richard Rudd / Gene Keys Publishing
-3. **Remove Studio tier ($500/mo) from pricing** until all advertised features are built, OR rewrite description to match actual delivered features
+3. **Remove Studio tier ($149/mo) from pricing** until all advertised features are built, OR rewrite description to match actual delivered features
 4. **Update meta tags, OG descriptions, email templates, share card SVGs** to remove all trademark references
 
 ### Phase 2: Payment Critical Fixes
@@ -180,7 +182,7 @@ Once all Section 1 blockers are resolved:
 
 5. **Integration layer is clean.** All six external services (Neon, LLM, Stripe, Telnyx, Resend, Nominatim) use proper SDKs/APIs with correct error handling. No custom crypto, no raw HTTP where SDKs exist.
 
-6. **The codebase is testable and tested.** 263/263 tests passing is unusually good for a project at this stage. The test infrastructure is a genuine asset.
+6. **The codebase is testable and tested.** A passing local Vitest baseline at audit time was a meaningful asset for the project at that stage.
 
 ---
 

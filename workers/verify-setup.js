@@ -74,10 +74,19 @@ async function verify() {
   // 2. Check worker deployment
   console.log('\n🚀 Checking worker deployment...');
   try {
-    const response = await fetch('https://prime-self-api.adrper79.workers.dev/api/health');
+    const response = await fetch('https://prime-self-api.adrper79.workers.dev/api/health?full=1');
     if (response.ok) {
       const data = await response.json();
-      console.log(`   ✅ Worker is live (${data.endpoints} endpoints, v${data.version})`);
+      if (data.status !== 'ok') {
+        console.log(`   ❌ Worker health returned unexpected status: ${data.status}`);
+        allGood = false;
+      } else {
+        console.log(`   ✅ Worker is live (v${data.version})`);
+      }
+      if (data.db && data.db.ok === false) {
+        console.log(`   ❌ Worker DB health failed: ${data.db.error || 'unknown error'}`);
+        allGood = false;
+      }
     } else {
       console.log(`   ❌ Worker returned status ${response.status}`);
       allGood = false;
@@ -97,7 +106,7 @@ async function verify() {
   console.log('\n⏳ Manual Configuration Required:');
   console.log('   1. Webhook endpoint created in Stripe Dashboard');
   console.log('   2. STRIPE_WEBHOOK_SECRET set in Cloudflare Workers');
-  console.log('   3. Products created (Seeker $15, Guide $97, Practitioner $500)');
+  console.log('   3. Products created (Explorer $12, Guide $60, Studio $149)');
   console.log('   4. Price IDs updated in wrangler.toml');
   console.log('   5. Worker redeployed with price IDs');
 

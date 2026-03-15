@@ -103,18 +103,18 @@ Create `src/engine/constants.js` exporting shared `ASPECT_TYPES` and import in b
 
 **Finding:**
 ```javascript
-const seekerRevenue = Number(m.seeker_count || 0) * 1500;        // $15.00
-const guideRevenue = Number(m.guide_count || 0) * 9700;          // $97.00  
-const practitionerRevenue = Number(m.practitioner_count || 0) * 50000; // $500.00
+const regularRevenue = Number(m.regular_count || 0) * 1200;          // $12.00
+const practitionerRevenue = Number(m.practitioner_count || 0) * 6000; // $60.00  
+const whiteLabelRevenue = Number(m.white_label_count || 0) * 14900;   // $149.00
 ```
 
-Price values in cents (1500, 9700, 50000) are hardcoded rather than pulled from `stripe.js` tier config.
+Price values in cents (1200, 6000, 14900) are hardcoded rather than pulled from `stripe.js` tier config.
 
 **Recommended Fix:**
 ```javascript
 import { getTierConfig } from '../lib/stripe.js';
 const tiers = getTierConfig(env);
-const seekerRevenue = Number(m.seeker_count || 0) * tiers.seeker.priceCents;
+const regularRevenue = Number(m.regular_count || 0) * tiers.regular.priceCents;
 ```
 
 ---

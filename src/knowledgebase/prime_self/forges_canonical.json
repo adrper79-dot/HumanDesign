@@ -2,8 +2,8 @@
   "_meta": {
     "version": "2.0-canonical",
     "source": "Prime Self Sacred Texts & Canonical Philosophy",
-    "description": "The Five Forges — primary dimensions of human experience through which the Prime Self is accessed",
-    "note": "Each Forge must be fueled with knowledge. Each confers specific abilities, perceptions, and modes of action."
+    "description": "The Six Forges — primary dimensions of human experience through which the Prime Self is accessed",
+    "note": "Five scored Forges (modes of doing) plus the 6th Forge: Self (the encounter with being). Each Forge must be fueled with knowledge. Each confers specific abilities, perceptions, and modes of action."
   },
   "chronos": {
     "forge": "Chronos",
@@ -142,6 +142,35 @@
     "recommendedReading": {
       "fiction": ["The Count of Monte Cristo by Alexandre Dumas", "Shantaram by Gregory David Roberts", "Circe by Madeline Miller"],
       "nonFiction": ["Man's Search for Meaning by Viktor Frankl", "When Things Fall Apart by Pema Chödrön", "The Body Keeps the Score by Bessel van der Kolk"]
+    }
+  },
+  "self": {
+    "forge": "Self",
+    "name": "The Forge of Self",
+    "number": 6,
+    "essence": "The mirror in which the Prime Self is recognized — not constructed.",
+    "domain": ["Integration", "Recognition", "Self-awareness", "Synthesis"],
+    "mysticalForm": "A still pool that reflects the viewer with perfect clarity, but the reflection contains all five prior Forges in motion",
+    "description": "The Self-Forge is not a mode of doing — it is the encounter with being. The five existing Forges are modes of operation: Chronos begins and opens, Eros deepens and embodies, Aether orients and transmits, Lux observes and discerns, Phoenix dissolves and reconfigures. The 6th Forge is where the practitioner recognizes themselves across all five modes. It is not scored algorithmically from chart data. It is not a relative strength. It is the container of the system, always present, expressed differently depending on which of the other five Forges dominate. The synthesis IS the 6th Forge in operation — the person reading their synthesis is in the act of recognizing themselves.",
+    "disciplines": {
+      "selfReflection": "Recognizing one's own patterns without judgment or inflation",
+      "integration": "Holding all five Forge expressions as aspects of a single being",
+      "nativeEpistemology": "Knowing how one knows — recognizing the body/mind/field mechanism through which truth registers",
+      "generativeWitnessing": "Seeing oneself clearly because one has become oneself fully — not the passive witness of the Quaternity but the activated witness of the Heptad"
+    },
+    "weapons": ["Self-recognition that dissolves pretense", "Integration that resolves inner contradiction", "Presence that makes mirrors unnecessary"],
+    "defenses": ["Presence", "Self-knowledge as immunity to manipulation", "Recognition that cannot be taken away"],
+    "hdTriggers": ["All defined centers (the full energetic signature)", "Complete channels (ring topology active)", "The G Center (identity and direction)", "Profile (the life role as self-expression)"],
+    "astroTriggers": ["Sun (core identity)", "Ascendant (self-presentation)", "North Node (becoming)", "Saturn Return (self-mastery)"],
+    "shadowForm": "The Performer — constructing a self-image rather than recognizing the self. Using self-knowledge as performance rather than integration. Narcissistic self-absorption masquerading as self-awareness.",
+    "masterForm": "Generative witness: the capacity to see oneself clearly because one has become oneself fully. Not the Quaternity's still witness (zero-dimensional, passive, equidistant) but the activated quinta essentia returned to itself after traversing all five Forge expressions — witnessing from completion, not from neutrality.",
+    "primeQuestion": "Who am I when all the Forges are at rest and only being remains?",
+    "convergence": "The 6th Forge (Self as mode of operation) and the 7th Knowledge (Self as domain of intelligence) converge. There is no difference between the forge of recognizing yourself and the knowledge of how you work. They are the same moment viewed from two angles — the Major Seventh resolving to the octave.",
+    "harmonicPosition": "Self is the 12th chromatic position — the return Do. 5 Forges (pentatonic) + 6 Knowledges (hexatonic) + 1 Self = 12 (chromatic). Self completes the scale.",
+    "historicalExemplars": ["Socrates (Know Thyself)", "Ramana Maharshi (Self-inquiry)", "Marcus Aurelius (Meditations)", "Virginia Woolf (stream of consciousness)", "Carl Jung (individuation)"],
+    "recommendedReading": {
+      "fiction": ["Siddhartha by Hermann Hesse", "The Unbearable Lightness of Being by Milan Kundera", "Steppenwolf by Hermann Hesse"],
+      "nonFiction": ["Meditations by Marcus Aurelius", "I Am That by Nisargadatta Maharaj", "The Untethered Soul by Michael Singer"]
     }
   }
 }

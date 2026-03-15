@@ -55,11 +55,13 @@ npx wrangler secret list
 
 Set in `workers/wrangler.toml` under `[vars]`:
 
+Legacy variable names are still used in config for compatibility, but they map to the current plan names below.
+
 | Variable | Used In | Description |
 |----------|---------|-------------|
-| `STRIPE_PRICE_REGULAR` | `lib/stripe.js`, `handlers/webhook.js` | Price ID for Explorer tier ($12/mo) |
-| `STRIPE_PRICE_PRACTITIONER` | `lib/stripe.js`, `handlers/webhook.js` | Price ID for Guide tier ($60/mo) |
-| `STRIPE_PRICE_WHITE_LABEL` | `lib/stripe.js`, `handlers/webhook.js` | Price ID for White Label tier ($500/mo) |
+| `STRIPE_PRICE_REGULAR` | `lib/stripe.js`, `handlers/webhook.js` | Legacy variable name retained for the current Individual tier price ID ($19/mo) |
+| `STRIPE_PRICE_PRACTITIONER` | `lib/stripe.js`, `handlers/webhook.js` | Current Practitioner tier price ID ($97/mo) |
+| `STRIPE_PRICE_WHITE_LABEL` | `lib/stripe.js`, `handlers/webhook.js` | Legacy variable name retained for the current Agency tier price ID ($349/mo) |
 
 ### SMS — Telnyx (Required for SMS digests)
 
@@ -74,8 +76,8 @@ Set in `workers/wrangler.toml` under `[vars]`:
 
 | Secret | Used In | Description |
 |--------|---------|-------------|
-| `GROK_API_KEY` | `lib/llm.js` | xAI Grok API key — LLM fallback provider |
-| `GROQ_API_KEY` | `lib/llm.js` | Groq API key — LLM fallback provider |
+| `GROK_API_KEY` | `lib/llm.js` | xAI Grok 4 Fast API key — LLM fallback provider 2 |
+| `GROQ_API_KEY` | `lib/llm.js` | Groq API key — LLM fallback provider 3 |
 | `AI_GATEWAY_URL` | `lib/llm.js` | Cloudflare AI Gateway URL — optional proxy for LLM calls |
 
 ### Push Notifications — VAPID (Required for web push)
@@ -85,6 +87,28 @@ Set in `workers/wrangler.toml` under `[vars]`:
 | `VAPID_PUBLIC_KEY` | `handlers/push.js` | Generate with `npx web-push generate-vapid-keys` |
 | `VAPID_PRIVATE_KEY` | `handlers/push.js` | Same command as above |
 | `VAPID_SUBJECT` | `handlers/push.js` | e.g. `mailto:admin@primeself.app` |
+
+### Social OAuth — Google & Apple (Required for OAuth login)
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `GOOGLE_CLIENT_ID` | `handlers/oauthSocial.js` | [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials → OAuth 2.0 Client |
+| `GOOGLE_CLIENT_SECRET` | `handlers/oauthSocial.js` | Same page as above |
+| `APPLE_CLIENT_ID` | `handlers/oauthSocial.js` | [Apple Developer](https://developer.apple.com) → Certificates → Services IDs |
+| `APPLE_TEAM_ID` | `handlers/oauthSocial.js` | Apple Developer membership page (10-char ID) |
+| `APPLE_KEY_ID` | `handlers/oauthSocial.js` | Apple Developer → Keys → Key ID from the `.p8` filename |
+| `APPLE_PRIVATE_KEY` | `handlers/oauthSocial.js` | Full contents of the `.p8` file — newlines as `\n` |
+
+> Without these secrets, OAuth endpoints return 503. Email/password auth is unaffected.
+
+### Error Tracking — Sentry (Optional but recommended)
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `SENTRY_DSN` | `lib/sentry.js`, `index.js` | [sentry.io](https://sentry.io) → New Project → JavaScript → Copy DSN |
+| `SENTRY_RELEASE` | `lib/sentry.js` | Optional — set to a git SHA or date stamp for error grouping |
+
+> Without `SENTRY_DSN`, all errors are silently no-op (no crash, no tracking). See `docs/OPERATION.md` → Sentry Error Tracking for daily workflow.
 
 ### Notion Integration (Required for Notion export)
 
@@ -141,6 +165,7 @@ npx wrangler deploy
 | Binding | Type | Used In | Description |
 |---------|------|---------|-------------|
 | `CACHE` | KV Namespace | `lib/cache.js`, `middleware/rateLimit.js`, `handlers/auth.js` | Rate limiting, brute force tracking, general caching |
+| `RATE_LIMIT_KV` | KV Namespace | `middleware/tierEnforcement.js` | Daily ceiling counters per user/action. Key format: `daily:{userId}:{YYYY-MM-DD}:{action}`, TTL 48h. |
 | `R2` | R2 Bucket | `handlers/pdf.js` | PDF export storage |
 
 ---
@@ -176,6 +201,20 @@ npx wrangler secret put NOTION_CLIENT_ID
 npx wrangler secret put NOTION_CLIENT_SECRET
 npx wrangler secret put NOTION_TOKEN_ENCRYPTION_KEY
 
+# Social OAuth — Google
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+
+# Social OAuth — Apple
+npx wrangler secret put APPLE_CLIENT_ID
+npx wrangler secret put APPLE_TEAM_ID
+npx wrangler secret put APPLE_KEY_ID
+npx wrangler secret put APPLE_PRIVATE_KEY
+
+# Error tracking
+npx wrangler secret put SENTRY_DSN
+npx wrangler secret put SENTRY_RELEASE
+
 # LLM fallbacks (optional)
 npx wrangler secret put GROK_API_KEY
 npx wrangler secret put GROQ_API_KEY
@@ -203,6 +242,10 @@ STRIPE_PRICE_WHITE_LABEL = "price_..."
 binding = "CACHE"
 id = "your-kv-namespace-id"
 
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "your-rate-limit-kv-namespace-id"
+
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "your-r2-bucket-name"
@@ -227,7 +270,7 @@ Before deploying, verify:
 **Payments (Stripe):**
 - [ ] `STRIPE_SECRET_KEY`
 - [ ] `STRIPE_WEBHOOK_SECRET`
-- [ ] `STRIPE_PRICE_REGULAR`, `STRIPE_PRICE_PRACTITIONER`, `STRIPE_PRICE_WHITE_LABEL` in wrangler.toml
+- [ ] `STRIPE_PRICE_REGULAR`, `STRIPE_PRICE_PRACTITIONER`, `STRIPE_PRICE_WHITE_LABEL` in wrangler.toml with current Individual / Practitioner / Agency mappings
 
 **SMS (Telnyx):**
 - [ ] `TELNYX_API_KEY`
@@ -240,6 +283,13 @@ Before deploying, verify:
 
 **Notion Export:**
 - [ ] `NOTION_CLIENT_ID`, `NOTION_CLIENT_SECRET`, `NOTION_TOKEN_ENCRYPTION_KEY`
+
+**Social OAuth (Google & Apple login):**
+- [ ] `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- [ ] `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`
+
+**Error Tracking:**
+- [ ] `SENTRY_DSN` — without this, all errors are silently discarded
 
 **Optional:**
 - [ ] `GROK_API_KEY`, `GROQ_API_KEY` — LLM fallback providers

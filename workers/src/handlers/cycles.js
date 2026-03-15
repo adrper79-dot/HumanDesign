@@ -41,8 +41,12 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { calculateLifeCycles } from '../../../src/engine/transits.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { toJulianDay } from '../../../src/engine/julian.js';
+import { getUserFromRequest } from '../middleware/auth.js';
 
 export async function handleCycles(request, env) {
+  const user = await getUserFromRequest(request, env);
+  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+
   const url = new URL(request.url);
   const birthDate = url.searchParams.get('birthDate');
   const birthTime = url.searchParams.get('birthTime');

@@ -112,7 +112,7 @@ Located in frontend/index.html at lines: 1574, 1803, 1847, 1871, 2152-2173, 3948
       "fiction": { "title": "Siddhartha", "author": "Hermann Hesse", "relevance": "..." },
       "nonFiction": { "title": "Deep Work", "author": "Cal Newport", "relevance": "..." }
     },
-    "currentKnowledgeFocus": "Knowledge of Self"
+    "currentKnowledgeFocus": "Knowledge of Sciences"
   }
 }
 ```

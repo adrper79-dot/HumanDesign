@@ -1763,6 +1763,102 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 
 ---
 
+## Sprint 20 — Reliability Truth & Observability (2026-03-15)
+
+**Policy anchor:** `process/RELIABILITY_POLICY.md`  
+**Objective:** Make testing, simulation, verification, monitoring, and reporting truthful, deterministic, and release-grade.
+
+### BL-S20-C1 | Coverage gate is broken and gives false confidence
+- [x] **Status:** Complete
+- **Severity:** Critical (Release Integrity)
+- **Files:** `package.json`, `package-lock.json`, `vitest.config.js`
+- **Problem:** The repo advertises coverage enforcement, but the coverage provider was not installed. `npm run test:coverage` could not produce a report or enforce thresholds.
+- **Fix:** Install and lock the V8 coverage provider so coverage runs non-interactively and thresholds can actually execute.
+- **Verify:** `npm run test:coverage` completes without prompts and exits non-zero on threshold failure.
+
+### BL-S20-C2 | Production verifier is observational, not assertive
+- [x] **Status:** Complete
+- **Severity:** Critical (Operational Truth)
+- **Files:** `workers/verify-production.js`
+- **Problem:** The production verifier printed responses but did not assert contracts or fail on drift. That makes it unsuitable as a release gate.
+- **Fix:** Convert it into an assertive verifier with explicit expected statuses, payload checks, and non-zero exit on failure.
+- **Verify:** A healthy deployment exits 0. A broken endpoint or changed payload exits non-zero.
+
+### BL-S20-C3 | Error pipeline and alert path are not proven end to end
+- [ ] **Status:** Open
+- **Severity:** Critical (Hands-off Operations)
+- **Files:** `workers/src/index.js`, `workers/src/lib/sentry.js`, new tests for error capture
+- **Problem:** Sentry capture and analytics error tracking exist, but there is no automated proof that thrown worker errors become durable operator-visible incidents.
+- **Fix:** Add automated tests for top-level exception capture, Sentry delivery behavior, no-op behavior when Sentry is absent, and degraded-path event capture.
+- **Verify:** Dedicated tests prove that critical exceptions are captured, classified, and non-blocking.
+
+### BL-S20-H1 | Load simulation script is stale and allows false passes
+- [x] **Status:** Complete
+- **Severity:** High (Simulation Accuracy)
+- **Files:** `tests/load-test.k6.js`
+- **Problem:** The k6 script hit the wrong health path, used the wrong chart endpoint, declared an unused profile threshold, and allowed permissive rate-limit assertions that could pass even when the contract was wrong.
+- **Fix:** Align the script to current routes and payloads, remove unexercised metrics, and remove permissive assertions from the throughput scenario.
+- **Verify:** The script exercises real live routes and only reports on metrics it actually measures.
+
+### BL-S20-H2 | Critical degrade paths are log-only or fail-open without durable signals
+- [ ] **Status:** Open
+- **Severity:** High (Observability)
+- **Files:** `workers/src/middleware/tierEnforcement.js`, `workers/src/handlers/webhook.js`, `workers/src/lib/analytics.js`
+- **Problem:** Important degraded states are often logged with `console.warn` or `console.error` but not promoted into structured, queryable operational events.
+- **Fix:** Emit structured degradation events with severity, dependency, route, release, and retryability for approved fail-open paths and business-critical partial failures.
+- **Verify:** Triggered degraded paths appear in durable error/event streams and can be alerted on.
+
+### BL-S20-H3 | No external synthetic monitoring for core practitioner journeys
+- [ ] **Status:** Open
+- **Severity:** High (Operations)
+- **Files:** deployment workflow, synthetic monitor configuration, new journey verifier assets
+- **Problem:** There is no independent synthetic monitor continuously proving that auth, chart generation, profile generation, billing start, and embed validation still work in production.
+- **Fix:** Add scheduled synthetic probes for critical journeys and wire alerts on failure.
+- **Verify:** A broken critical path is detected by external synthetic monitoring within minutes.
+
+### BL-S20-M1 | Setup verifier has drifted from the live health contract
+- [x] **Status:** Complete
+- **Severity:** Medium (Verification Accuracy)
+- **Files:** `workers/verify-setup.js`
+- **Problem:** The setup verifier expected stale health fields and could report misleading success messages.
+- **Fix:** Align it to the current `/api/health?full=1` payload and fail when worker or DB health is degraded.
+- **Verify:** The script reports only current health fields and flags DB health failures.
+
+### BL-S20-M2 | Missing structured logging contract and correlation IDs
+- [ ] **Status:** Open
+- **Severity:** Medium (Operability)
+- **Files:** `workers/src/index.js`, shared logging utilities, critical handlers/middleware
+- **Problem:** Production-significant events are not consistently emitted as structured logs with correlation data.
+- **Fix:** Define and enforce a log schema with request ID, user ID, route, severity, dependency, release, and error class.
+- **Verify:** Critical logs are machine-queryable and traceable across async paths.
+
+### BL-S20-M3 | Release gates do not yet combine tests, coverage, and canary verification
+- [ ] **Status:** Open
+- **Severity:** Medium (Release Management)
+- **Files:** CI workflow, deployment workflow, verification scripts
+- **Problem:** The repo does not yet enforce a truth-based release gate that combines unit tests, coverage, contract verification, and post-deploy checks.
+- **Fix:** Add deployment gating that blocks release on failed tests, broken coverage, failed production verification, or failed canaries.
+- **Verify:** A bad build cannot be promoted without bypassing an explicit gate.
+
+### Sprint 20 Execution Plan
+
+**Phase 1 — Truthful Local Gates:**
+- BL-S20-C1: Restore working coverage enforcement
+- BL-S20-C2: Make production verification assertive
+- BL-S20-H1: Align load simulation with live contracts
+- BL-S20-M1: Update setup verification to match live health schema
+
+**Phase 2 — Error Truth:**
+- BL-S20-C3: Prove error capture and monitoring paths
+- BL-S20-H2: Convert critical log-only degradations into durable events
+- BL-S20-M2: Standardize structured log schema and correlation IDs
+
+**Phase 3 — World-Class Ops:**
+- BL-S20-H3: Add external synthetic journey monitoring
+- BL-S20-M3: Enforce release gates in deployment workflows
+
+---
+
 ## Practitioner Dashboard — Shipped (2026-03-10)
 
 Full practitioner dashboard built and wired. Replaced the broken stub (wrong API fields, wrong data keys, no actions).

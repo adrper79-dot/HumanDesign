@@ -1,21 +1,29 @@
+// Debug logging: auto-enabled on localhost; set window.DEBUG=true in DevTools to enable on production
+window.DEBUG = /localhost|127\.0\.0\.1/.test(location.hostname);
+
 const API = 'https://prime-self-api.adrper79.workers.dev';
 // Access token is stored in memory only — never in localStorage.
 // The refresh token lives in an HttpOnly cookie set by the API.
 // On page reload, silentRefresh() exchanges the cookie for a new access token.
 let token = null;
-let userEmail = localStorage.getItem('ps_email');
+let _tokenExpiresAt = 0; // P2-FE-005: epoch ms when access token expires
+let _refreshTimer = null; // P2-FE-005: proactive refresh timer
+let userEmail = sessionStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
-window.currentUser = null; // populated by fetchUserProfile()
+let _pendingResetToken = null; // SEC-001: closure-scoped, never on window
+window.currentUser = null; // populated by fetchUserProfile() — frozen on set (P2-FE-013)
 
-// Tier display configuration
+// Tier display configuration — HD_UPDATES3 naming
 const TIER_DISPLAY = {
-  free:         { label: 'FREE',        badge: 'tier-free',         canUpgrade: true,  isPro: false },
-  regular:      { label: 'EXPLORER',    badge: 'tier-seeker',       canUpgrade: true,  isPro: false },
-  practitioner: { label: 'GUIDE',       badge: 'tier-guide',        canUpgrade: true,  isPro: true  },
-  white_label:  { label: 'STUDIO',      badge: 'tier-practitioner', canUpgrade: false, isPro: true  },
+  free:         { label: 'FREE',          badge: 'tier-free',         canUpgrade: true,  isPro: false },
+  individual:   { label: 'INDIVIDUAL',    badge: 'tier-individual',   canUpgrade: true,  isPro: false },
+  practitioner: { label: 'PRACTITIONER',  badge: 'tier-practitioner', canUpgrade: true,  isPro: true  },
+  agency:       { label: 'AGENCY',        badge: 'tier-agency',       canUpgrade: false, isPro: true  },
   // legacy aliases
-  seeker:       { label: 'EXPLORER',    badge: 'tier-seeker',       canUpgrade: true,  isPro: false },
-  guide:        { label: 'GUIDE PRO',   badge: 'tier-guide',        canUpgrade: true,  isPro: true  },
+  regular:      { label: 'INDIVIDUAL',    badge: 'tier-individual',   canUpgrade: true,  isPro: false },
+  seeker:       { label: 'INDIVIDUAL',    badge: 'tier-individual',   canUpgrade: true,  isPro: false },
+  white_label:  { label: 'AGENCY',        badge: 'tier-agency',       canUpgrade: false, isPro: true  },
+  guide:        { label: 'PRACTITIONER',  badge: 'tier-practitioner', canUpgrade: true,  isPro: true  },
 };
 
 // ── Auth Helpers ──────────────────────────────────────────────
@@ -25,9 +33,11 @@ function updateAuthUI() {
   const logoutEl = document.getElementById('logoutBtn');
   const deleteAcctEl = document.getElementById('deleteAccountBtn');
   const exportDataEl = document.getElementById('exportDataBtn');
+  const securityBtnEl = document.getElementById('securitySettingsBtn');
   const badgeEl  = document.getElementById('tierBadge');
   const upgradeEl  = document.getElementById('upgradeBtn');
   const billingEl  = document.getElementById('billingBtn');
+  const notifBellEl = document.getElementById('notifBellBtn');
 
   if (token && userEmail) {
     statusEl.textContent = userEmail;
@@ -36,6 +46,8 @@ function updateAuthUI() {
     logoutEl.style.display = '';
     if (deleteAcctEl) deleteAcctEl.style.display = '';
     if (exportDataEl) exportDataEl.style.display = '';
+    if (securityBtnEl) securityBtnEl.style.display = '';
+    if (notifBellEl) notifBellEl.style.display = '';
 
     // Update tier badge and billing/upgrade buttons from cached profile
     const user = window.currentUser;
@@ -67,6 +79,8 @@ function updateAuthUI() {
     logoutEl.style.display = 'none';
     if (deleteAcctEl) deleteAcctEl.style.display = 'none';
     if (exportDataEl) exportDataEl.style.display = 'none';
+    if (securityBtnEl) securityBtnEl.style.display = 'none';
+    if (notifBellEl) notifBellEl.style.display = 'none';
     badgeEl.style.display  = 'none';
     upgradeEl.style.display  = 'none';
     billingEl.style.display  = 'none';
@@ -85,8 +99,11 @@ async function fetchUserProfile() {
     const data = await res.json();
     const user = data?.user || data;
     if (user && user.id) {
-      window.currentUser = user;
+      window.currentUser = Object.freeze({ ...user });
       updateAuthUI();
+      // AUDIT-SEC-003: Show/hide verification banner based on email_verified status
+      if (user.email_verified === false) showEmailVerificationBanner();
+      else hideEmailVerificationBanner();
     }
   } catch (e) {
     // network error — non-fatal
@@ -99,6 +116,21 @@ async function fetchUserProfile() {
  * Returns true if a new token was obtained, false otherwise.
  */
 let _refreshInProgress = null;
+
+// P2-FE-005: Parse JWT exp claim and schedule proactive refresh
+function _scheduleTokenRefresh(jwt) {
+  if (_refreshTimer) clearTimeout(_refreshTimer);
+  _refreshTimer = null;
+  try {
+    const payload = JSON.parse(atob(jwt.split('.')[1]));
+    if (payload.exp) {
+      _tokenExpiresAt = payload.exp * 1000;
+      const refreshIn = Math.max((_tokenExpiresAt - Date.now()) - 60000, 5000); // 60s before expiry, min 5s
+      _refreshTimer = setTimeout(() => { silentRefresh(); }, refreshIn);
+    }
+  } catch { /* malformed token — reactive refresh will handle it */ }
+}
+
 async function silentRefresh() {
   // Deduplicate concurrent refresh attempts
   if (_refreshInProgress) return _refreshInProgress;
@@ -114,6 +146,7 @@ async function silentRefresh() {
       const data = await res.json();
       if (data.accessToken) {
         token = data.accessToken;
+        _scheduleTokenRefresh(token);
         return true;
       }
       return false;
@@ -128,6 +161,157 @@ async function silentRefresh() {
 
 let authBackdropClickHandler = null;
 
+// ── TOTP helpers ─────────────────────────────────────────────────────────────
+function _resetTOTPStep() {
+  const step = document.getElementById('authTOTPStep');
+  if (!step) return;
+  step.style.display = 'none';
+  window._totpPendingToken = null;
+  const form = document.querySelector('#authOverlay form[data-action="submitAuth"]');
+  if (form) form.style.display = '';
+  const fpl = document.getElementById('forgotPasswordLink');
+  if (fpl) fpl.style.display = '';
+  const divider = document.querySelector('.auth-divider');
+  if (divider) divider.style.display = '';
+  const social = document.querySelector('.auth-social-list');
+  if (social) social.style.display = '';
+  const toggle = document.querySelector('.auth-toggle');
+  if (toggle) toggle.style.display = '';
+}
+
+async function submitTOTP() {
+  const code = document.getElementById('authTOTPCode').value.trim();
+  const errEl = document.getElementById('authTOTPError');
+  const btn = document.querySelector('#authTOTPStep button[type="submit"]');
+  errEl.textContent = '';
+  if (!code) { errEl.textContent = 'Enter your 6-digit code.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+  try {
+    const res = await apiFetch('/api/auth/2fa/verify', {
+      method: 'POST',
+      body: JSON.stringify({ pending_token: window._totpPendingToken, totp_code: code })
+    });
+    if (res.error) { errEl.textContent = res.error; return; }
+    // SUCCESS — same flow as normal login completion
+    token = res.accessToken;
+    localStorage.setItem('accessToken', token);
+    closeAuthOverlay();
+    await fetchUserProfile();
+    updateAuthUI();
+    document.dispatchEvent(new CustomEvent('authSuccess'));
+  } catch (e) {
+    errEl.textContent = 'Verification failed. Try again.';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Verify'; }
+  }
+}
+
+function cancel2FA() {
+  _resetTOTPStep();
+}
+
+// ── Security / 2FA management modal ─────────────────────────────────────────
+function openSecuritySettings() {
+  const modal = document.getElementById('securityModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  _renderSecurityModal();
+}
+
+function closeSecurityModal() {
+  const modal = document.getElementById('securityModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function _renderSecurityModal() {
+  const body = document.getElementById('securityModalBody');
+  body.innerHTML = '<p>Loading…</p>';
+  try {
+    const me = await apiFetch('/api/auth/me');
+    if (me.totp_enabled) {
+      body.innerHTML = `
+        <p>Two-factor authentication is <strong>enabled</strong>.</p>
+        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-secondary)">
+          You need your authenticator app each time you sign in.
+        </p>
+        <div id="disable2FAForm" style="margin-top:1.5rem">
+          <label class="auth-label" for="dis2FAPass">Password</label>
+          <input id="dis2FAPass" type="password" class="auth-input" autocomplete="current-password" placeholder="Current password">
+          <label class="auth-label" for="dis2FACode" style="margin-top:0.75rem">Authenticator code</label>
+          <input id="dis2FACode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" class="auth-input" placeholder="123456">
+          <p id="dis2FAError" style="color:var(--color-error);font-size:0.8rem;min-height:1.1em"></p>
+          <button class="btn btn-primary" style="width:100%;margin-top:0.5rem" data-action="disable2FA">Disable 2FA</button>
+        </div>`;
+    } else {
+      body.innerHTML = `
+        <p>Two-factor authentication is <strong>disabled</strong>.</p>
+        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-secondary)">
+          Add an extra layer of security with any TOTP app (Google Authenticator, Authy, etc.).
+        </p>
+        <button class="btn btn-primary" style="width:100%;margin-top:1.5rem" data-action="begin2FASetup">Enable 2FA</button>`;
+    }
+  } catch {
+    body.innerHTML = '<p style="color:var(--color-error)">Could not load security settings.</p>';
+  }
+}
+
+async function begin2FASetup() {
+  const body = document.getElementById('securityModalBody');
+  body.innerHTML = '<p>Generating secret…</p>';
+  try {
+    const res = await apiFetch('/api/auth/2fa/setup');
+    if (res.error) { body.innerHTML = `<p style="color:var(--color-error)">${res.error}</p>`; return; }
+    body.innerHTML = `
+      <p>Scan this QR code with your authenticator app, or enter the secret manually.</p>
+      <div style="text-align:center;margin:1rem 0">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(res.otpauth_url)}" alt="QR code" width="180" height="180" style="border-radius:6px">
+      </div>
+      <p style="font-size:0.8rem;word-break:break-all;background:var(--surface-2);padding:0.5rem 0.75rem;border-radius:4px;margin-bottom:1rem"><strong>Manual key:</strong> ${res.secret}</p>
+      <label class="auth-label" for="setup2FACode">Enter the 6-digit code to confirm</label>
+      <input id="setup2FACode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" class="auth-input" placeholder="123456">
+      <p id="setup2FAError" style="color:var(--color-error);font-size:0.8rem;min-height:1.1em"></p>
+      <button class="btn btn-primary" style="width:100%;margin-top:0.5rem" data-action="confirm2FASetup">Activate 2FA</button>`;
+  } catch {
+    body.innerHTML = '<p style="color:var(--color-error)">Setup failed. Try again.</p>';
+  }
+}
+
+async function confirm2FASetup(btn) {
+  const code = document.getElementById('setup2FACode').value.trim();
+  const errEl = document.getElementById('setup2FAError');
+  errEl.textContent = '';
+  if (!code) { errEl.textContent = 'Enter the 6-digit code.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Activating…'; }
+  try {
+    const res = await apiFetch('/api/auth/2fa/enable', { method: 'POST', body: JSON.stringify({ totp_code: code }) });
+    if (res.error) { errEl.textContent = res.error; return; }
+    _renderSecurityModal(); // refresh to "enabled" view
+  } catch {
+    errEl.textContent = 'Activation failed. Try again.';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Activate 2FA'; }
+  }
+}
+
+async function disable2FA(btn) {
+  const password = document.getElementById('dis2FAPass').value;
+  const code = document.getElementById('dis2FACode').value.trim();
+  const errEl = document.getElementById('dis2FAError');
+  errEl.textContent = '';
+  if (!password || !code) { errEl.textContent = 'Password and code are required.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Disabling…'; }
+  try {
+    const res = await apiFetch('/api/auth/2fa/disable', { method: 'POST', body: JSON.stringify({ password, totp_code: code }) });
+    if (res.error) { errEl.textContent = res.error; return; }
+    _renderSecurityModal(); // refresh to "disabled" view
+  } catch {
+    errEl.textContent = 'Failed. Try again.';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Disable 2FA'; }
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function openAuthOverlay() {
   // Always reset to login mode when opening
   if (authMode !== 'login') {
@@ -139,6 +323,9 @@ function openAuthOverlay() {
     document.getElementById('authToggleLink').textContent  = typeof window.t === 'function' ? window.t('auth.createOne') : 'Create one';
     document.getElementById('authError').textContent = '';
   }
+
+  // Reset any lingering 2FA challenge state
+  _resetTOTPStep();
 
   document.getElementById('authOverlay').classList.remove('hidden');
   document.getElementById('authEmail').focus();
@@ -181,6 +368,7 @@ function closeAuthOverlay() {
   const modal = document.getElementById('authOverlay');
   modal.classList.add('hidden');
   document.getElementById('authError').textContent = '';
+  _resetTOTPStep();
   if (authModalKeydownHandler) {
     modal.removeEventListener('keydown', authModalKeydownHandler);
     authModalKeydownHandler = null;
@@ -204,6 +392,9 @@ function toggleAuthMode() {
   // Show password field and forgot link in login/register mode
   document.getElementById('authPassword').parentElement.style.display = '';
   document.getElementById('forgotPasswordLink').style.display = '';
+  // Show ToS / Privacy consent notice only during registration
+  const termsNotice = document.getElementById('authTermsNotice');
+  if (termsNotice) termsNotice.classList.toggle('hidden', !isReg);
 }
 
 function showForgotPassword() {
@@ -256,7 +447,7 @@ async function submitForgotPassword() {
 // Called on page load — picks up tokens issued by social login callback
 let _sessionRestoredByOauth = false;
 
-function checkOAuthCallback() {
+async function checkOAuthCallback() {
   const params = new URLSearchParams(window.location.search);
   const oauthStatus = params.get('oauth');
   if (!oauthStatus) return;
@@ -272,33 +463,70 @@ function checkOAuthCallback() {
   }
 
   if (oauthStatus === 'success') {
-    const accessToken  = params.get('token');
-    const refreshToken = params.get('refresh');
+    const oauthCode    = params.get('code');
     const isNewUser    = params.get('new_user') === '1';
 
-    if (!accessToken) {
-      showNotification('Login failed — no token received. Please try again.', 'error');
+    if (!oauthCode) {
+      showNotification('Login failed — no authorization code received. Please try again.', 'error');
       return;
     }
 
-    // Store tokens — access token in memory only; refresh token in HttpOnly cookie (set by server)
-    token = accessToken;
-    _sessionRestoredByOauth = true; // prevent boot IIFE from calling fetchUserProfile again
-    localStorage.setItem('ps_email', userEmail || '');
-    localStorage.removeItem('ps_token'); // legacy cleanup
-    localStorage.removeItem('ps_refresh_token'); // SEC-001: remove any stale refresh token from localStorage
+    // P2-SEC-011: Exchange one-time code for tokens via secure POST
+    // Tokens are never exposed in URL — code is single-use (60s TTL)
+    try {
+      const res = await fetch(API + '/api/auth/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code: oauthCode })
+      });
+      const data = await res.json();
 
-    // Fetch user profile and update UI
-    fetchUserProfile().then(() => {
-      if (isNewUser) {
+      if (!res.ok || !data.token) {
+        showNotification(data.error || 'Login failed — please try again.', 'error');
+        return;
+      }
+
+      // Store access token in memory only; refresh token set as HttpOnly cookie by server
+      token = data.token;
+      _scheduleTokenRefresh(token);
+      _sessionRestoredByOauth = true;
+      localStorage.setItem('ps_session', '1');
+      localStorage.removeItem('ps_token');
+      localStorage.removeItem('ps_refresh_token');
+
+      await fetchUserProfile();
+      if (data.new_user) {
         showNotification('Welcome to Prime Self! Enter your birth details below to generate your blueprint.', 'success');
       } else {
         showNotification('Signed in successfully.', 'success');
       }
-    }).catch(() => {
-      showNotification('Signed in. Loading your profile…', 'success');
-    });
+    } catch (e) {
+      showNotification('Login failed — connection error. Please try again.', 'error');
+    }
   }
+}
+
+// Handle email unsubscribe from URL (?action=email-unsubscribe&email=...)
+// AUDIT-SEC-005: CAN-SPAM compliance — working unsubscribe link in all marketing emails
+function checkEmailUnsubscribeAction() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('action') !== 'email-unsubscribe') return;
+  const email = params.get('email');
+  window.history.replaceState({}, '', window.location.pathname);
+  if (!email) { showNotification('Invalid unsubscribe link.', 'error'); return; }
+  if (!confirm(`Unsubscribe ${email} from marketing emails?\n\nYou will still receive transactional emails (password resets, receipts).`)) return;
+  fetch(API + '/api/email/unsubscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) showNotification('You have been unsubscribed from marketing emails.', 'success');
+    else showNotification(data.error || 'Unsubscribe failed. Please try again.', 'error');
+  })
+  .catch(() => showNotification('Network error. Please try again.', 'error'));
 }
 
 // Handle password reset from URL (?action=reset-password&token=...&email=...)
@@ -324,7 +552,7 @@ function showResetPasswordForm(resetToken, email) {
   document.querySelector('.auth-toggle').style.display = 'none';
   document.getElementById('authError').textContent = '';
   authMode = 'reset';
-  window._resetToken = resetToken;
+  _pendingResetToken = resetToken;
 }
 
 async function submitResetPassword() {
@@ -345,7 +573,7 @@ async function submitResetPassword() {
     const res = await fetch(API + '/api/auth/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: window._resetToken, password })
+      body: JSON.stringify({ token: _pendingResetToken, password })
     });
     const data = await res.json();
     if (!res.ok || data.error) {
@@ -357,7 +585,7 @@ async function submitResetPassword() {
     errorEl.style.color = 'var(--color-success, #30d158)';
     errorEl.textContent = 'Password reset! Redirecting to sign in...';
     btn.textContent = 'Done ✓';
-    delete window._resetToken;
+    _pendingResetToken = null;
     setTimeout(() => {
       // Restore auth form to login mode
       document.getElementById('authEmail').parentElement.style.display = '';
@@ -373,6 +601,75 @@ async function submitResetPassword() {
     errorEl.textContent = 'Connection error. Please try again.';
     btn.disabled = false;
     btn.textContent = 'Reset Password';
+  }
+}
+
+// ─── Email Verification (AUDIT-SEC-003) ────────────────────────────────
+
+// Handle email verification from URL (?action=verify-email&token=...)
+function checkEmailVerificationAction() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('action') !== 'verify-email') return;
+  const verifyToken = params.get('token');
+  window.history.replaceState({}, '', window.location.pathname);
+  if (!verifyToken) { showNotification('Invalid verification link.', 'error'); return; }
+
+  showNotification('Verifying your email…', 'info');
+  fetch(API + '/api/auth/verify-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: verifyToken })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      showNotification('Email verified! You now have full access to AI features.', 'success');
+      hideEmailVerificationBanner();
+      // Refresh user data to pick up email_verified = true
+      fetchUserProfile();
+    } else {
+      showNotification(data.error || 'Verification failed. Please request a new link.', 'error');
+    }
+  })
+  .catch(() => showNotification('Network error. Please try again.', 'error'));
+}
+
+// Persistent banner shown when email is not verified
+function showEmailVerificationBanner() {
+  if (document.getElementById('emailVerifyBanner')) return; // already showing
+  const banner = document.createElement('div');
+  banner.id = 'emailVerifyBanner';
+  banner.setAttribute('role', 'alert');
+  banner.style.cssText = 'background:#2a1f00;color:#c9a84c;padding:12px 16px;text-align:center;font-size:14px;border-bottom:1px solid #c9a84c33;position:sticky;top:0;z-index:9999;';
+  banner.innerHTML = '✉️ Please verify your email to unlock AI features. Check your inbox or <button id="resendVerifyBtn" style="background:none;border:none;color:#c9a84c;text-decoration:underline;cursor:pointer;font-size:14px;padding:0">resend verification email</button>.';
+  document.body.prepend(banner);
+  document.getElementById('resendVerifyBtn').addEventListener('click', resendVerificationEmail);
+}
+
+function hideEmailVerificationBanner() {
+  const banner = document.getElementById('emailVerifyBanner');
+  if (banner) banner.remove();
+}
+
+async function resendVerificationEmail() {
+  const btn = document.getElementById('resendVerifyBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    const res = await fetch(API + '/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showNotification(data.message || 'Verification email sent!', 'success');
+    } else {
+      showNotification(data.error || 'Failed to resend. Please try again.', 'error');
+    }
+  } catch {
+    showNotification('Network error. Please try again.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'resend verification email'; }
   }
 }
 
@@ -442,10 +739,29 @@ async function submitAuth() {
       errorEl.textContent = res.error || 'Login failed';
       return;
     }
+
+    // ── 2FA challenge: password valid but TOTP required ──────────
+    if (res.requires_2fa && res.pending_token) {
+      window._totpPendingToken = res.pending_token;
+      // Hide standard login elements, show TOTP step
+      document.getElementById('authTOTPStep').style.display = 'block';
+      document.querySelector('#authOverlay form[data-action="submitAuth"]').style.display = 'none';
+      document.getElementById('forgotPasswordLink').style.display = 'none';
+      document.querySelector('.auth-divider') && (document.querySelector('.auth-divider').style.display = 'none');
+      document.querySelector('.auth-social-list') && (document.querySelector('.auth-social-list').style.display = 'none');
+      document.querySelector('.auth-toggle') && (document.querySelector('.auth-toggle').style.display = 'none');
+      document.getElementById('authTOTPCode').value = '';
+      document.getElementById('authTOTPError').textContent = '';
+      document.getElementById('authTOTPCode').focus();
+      return;
+    }
+    // ────────────────────────────────────────────────────────────
     // Store tokens — access token in memory only; refresh token is an HttpOnly cookie set by API
     token = res.accessToken;
+    _scheduleTokenRefresh(token);
     userEmail = email;
-    localStorage.setItem('ps_email', email);
+    sessionStorage.setItem('ps_email', email);
+    localStorage.setItem('ps_session', '1');
     // Legacy cleanup: remove any old token that was previously stored in localStorage
     localStorage.removeItem('ps_token');
     // Apply pending referral code (if user arrived via a ?ref= link)
@@ -457,13 +773,20 @@ async function submitAuth() {
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           credentials: 'include',
           body: JSON.stringify({ code: pendingRef })
-        }).catch(() => {}).finally(() => localStorage.removeItem('ps_pending_ref'));
+        }).then(res => {
+          if (res.ok) localStorage.removeItem('ps_pending_ref');
+          else console.warn('Referral apply failed, will retry next login');
+        }).catch(() => console.warn('Referral apply network error, will retry next login'));
       }
     }
     updateAuthUI();
     closeAuthOverlay();
     // Fetch subscription/tier info now that we have a valid token
     fetchUserProfile();
+    // AUDIT-SEC-003: Show verification banner after registration
+    if (authMode === 'register') {
+      showEmailVerificationBanner();
+    }
   } catch (e) {
     errorEl.textContent = _t('auth.connectionError', { message: e.message });
   } finally {
@@ -477,8 +800,24 @@ function logout() {
   const oldToken = token;
   token = null; userEmail = null;
   window.currentUser = null;
+  // P2-FE-009: Clear in-memory caches to prevent stale data on re-login
+  _allCelebrityMatches = [];
+  currentCluster = null;
+  currentDiaryEdit = null;
+  activePromoCode = null;
+  window._lastChart = null;
+  window._lastForge = null;
+  // Clear rendered DOM so a second login on the same tab never sees a prior user's data
+  const _chartEl = document.getElementById('chartResult');
+  if (_chartEl) _chartEl.innerHTML = '';
+  const _profileEl = document.getElementById('profileResult');
+  if (_profileEl) _profileEl.innerHTML = '';
+  _tokenExpiresAt = 0;
+  if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
   localStorage.removeItem('ps_token');    // legacy
-  localStorage.removeItem('ps_email');
+  localStorage.removeItem('ps_session');
+  localStorage.removeItem('ps_email');   // legacy cleanup
+  sessionStorage.removeItem('ps_email');
   localStorage.removeItem('primeSelf_birthData');
   localStorage.removeItem('chartGenerated');
   localStorage.removeItem('profileGenerated');
@@ -500,7 +839,27 @@ function logout() {
 
 async function deleteAccount() {
   if (!confirm('⚠️ This will permanently delete your account and ALL your data (charts, check-ins, diary entries). This action CANNOT be undone.\n\nAre you sure?')) return;
-  const password = prompt('Enter your password to confirm account deletion:');
+  // P2-FE-010: Use masked password input instead of prompt()
+  const password = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `<div style="background:var(--bg-card,#1a1a2e);padding:var(--space-6,24px);border-radius:12px;max-width:360px;width:90%;">
+      <h3 style="margin:0 0 12px;color:var(--text-primary,#fff);">Confirm Deletion</h3>
+      <p style="margin:0 0 12px;color:var(--text-secondary,#ccc);font-size:var(--font-size-sm,14px);">Enter your password to permanently delete your account:</p>
+      <input id="_delPwInput" type="password" placeholder="Password" style="width:100%;padding:8px 12px;border:1px solid var(--border-color,#333);border-radius:6px;background:var(--bg-input,#0f0f1a);color:var(--text-primary,#fff);margin-bottom:12px;box-sizing:border-box;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button id="_delCancel" class="btn-secondary" style="padding:6px 16px;">Cancel</button>
+        <button id="_delConfirm" class="btn-danger" style="padding:6px 16px;">Delete</button>
+      </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    const inp = document.getElementById('_delPwInput');
+    inp.focus();
+    const cleanup = v => { document.body.removeChild(overlay); resolve(v); };
+    document.getElementById('_delCancel').onclick = () => cleanup(null);
+    document.getElementById('_delConfirm').onclick = () => cleanup(inp.value);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') cleanup(inp.value); if (e.key === 'Escape') cleanup(null); });
+  });
   if (!password) return;
   try {
     const result = await apiFetch('/api/auth/account', {
@@ -558,7 +917,7 @@ function openPricingModal(suggestedTier = null) {
   }
   // Route professional tiers to the practitioner modal
   const tier = window.currentUser?.tier || 'free';
-  if (tier === 'practitioner' || tier === 'white_label' || tier === 'guide') {
+  if (tier === 'practitioner' || tier === 'white_label' || tier === 'guide' || tier === 'agency') {
     openPractitionerPricingModal();
     return;
   }
@@ -569,6 +928,12 @@ function openPricingModal(suggestedTier = null) {
 
 function closePricingModal() {
   document.getElementById('pricingOverlay').classList.add('hidden');
+  // P2-FE-001: Clear stale promo code when modal closes
+  activePromoCode = null;
+  const promoInput = document.getElementById('promoCodeInput');
+  const promoResult = document.getElementById('promoCodeResult');
+  if (promoInput) promoInput.value = '';
+  if (promoResult) promoResult.textContent = '';
 }
 
 // Sync consumer pricing card button states to match current user tier
@@ -577,8 +942,8 @@ function _syncConsumerPricingCards(tier) {
   const regularBtn = document.getElementById('priceBtn-regular');
   if (!freeBtn || !regularBtn) return;
 
-  if (tier === 'regular' || tier === 'seeker') {
-    // Already on Explorer
+  if (tier === 'individual' || tier === 'regular' || tier === 'seeker') {
+    // Already on Individual
     freeBtn.disabled    = false;
     freeBtn.textContent = 'Downgrade';
     freeBtn.className   = 'btn-secondary tier-cta';
@@ -591,7 +956,7 @@ function _syncConsumerPricingCards(tier) {
     freeBtn.textContent = 'Current Plan';
     freeBtn.className   = 'btn-secondary tier-cta';
     regularBtn.disabled    = false;
-    regularBtn.textContent = 'Upgrade to Explorer';
+    regularBtn.textContent = 'Upgrade to Individual';
     regularBtn.className   = 'btn-primary tier-cta';
   }
 }
@@ -618,9 +983,9 @@ function _syncPractitionerPricingCards(tier) {
   const studioBtn   = document.getElementById('priceBtn-white_label');
   if (!practBtn || !studioBtn) return;
 
-  if (tier === 'white_label') {
+  if (tier === 'agency' || tier === 'white_label') {
     practBtn.disabled    = false;
-    practBtn.textContent = 'Downgrade to Guide';
+    practBtn.textContent = 'Downgrade to Practitioner';
     practBtn.className   = 'btn-secondary tier-cta';
     studioBtn.disabled   = true;
     studioBtn.textContent = 'Current Plan';
@@ -630,15 +995,15 @@ function _syncPractitionerPricingCards(tier) {
     practBtn.textContent = 'Current Plan';
     practBtn.className   = 'btn-secondary tier-cta';
     studioBtn.disabled   = false;
-    studioBtn.textContent = 'Upgrade to Studio';
+    studioBtn.textContent = 'Upgrade to Agency';
     studioBtn.className  = 'btn-primary tier-cta';
   } else {
-    // Free or regular user arrived here via "For Practitioners" CTA
+    // Free or individual user arrived here via "For Practitioners" CTA
     practBtn.disabled    = false;
-    practBtn.textContent = 'Upgrade to Guide';
+    practBtn.textContent = 'Upgrade to Practitioner';
     practBtn.className   = 'btn-primary tier-cta';
     studioBtn.disabled   = false;
-    studioBtn.textContent = 'Upgrade to Studio';
+    studioBtn.textContent = 'Upgrade to Agency';
     studioBtn.className  = 'btn-primary tier-cta';
   }
 }
@@ -655,6 +1020,35 @@ function togglePromoInput() {
 
 // Applied promo code (stored for checkout)
 let activePromoCode = null;
+let activeBillingPeriod = 'monthly';
+
+function setBillingPeriod(period, audience) {
+  activeBillingPeriod = period;
+
+  // Update toggle button styles
+  const isConsumer = audience === 'consumer';
+  const monthlyBtn = document.getElementById(isConsumer ? 'consumerBillMonthly' : 'proBillMonthly');
+  const annualBtn = document.getElementById(isConsumer ? 'consumerBillAnnual' : 'proBillAnnual');
+
+  if (monthlyBtn && annualBtn) {
+    monthlyBtn.classList.toggle('active', period === 'monthly');
+    annualBtn.classList.toggle('active', period === 'annual');
+  }
+
+  // Update all price amounts in the relevant modal
+  const overlay = isConsumer ? document.getElementById('pricingOverlay') : document.getElementById('practitionerPricingOverlay');
+  if (!overlay) return;
+
+  overlay.querySelectorAll('.tier-price[data-monthly]').forEach(el => {
+    const amount = period === 'annual' ? el.dataset.annual : el.dataset.monthly;
+    const amountEl = el.querySelector('.price-amount');
+    if (amountEl) amountEl.textContent = amount;
+  });
+
+  overlay.querySelectorAll('.billing-label').forEach(el => {
+    el.textContent = period === 'annual' ? 'per year' : 'per month';
+  });
+}
 
 async function applyPromoCode() {
   const input   = document.getElementById('promoCodeInput');
@@ -702,6 +1096,7 @@ async function startCheckout(tier, event) {
 
     const checkoutBody = { tier };
     if (activePromoCode) checkoutBody.promoCode = activePromoCode;
+    if (activeBillingPeriod === 'annual') checkoutBody.billingPeriod = 'annual';
 
     const result = await apiFetch('/api/billing/checkout', {
       method: 'POST',
@@ -753,7 +1148,18 @@ async function openBillingPortal() {
     }
 
     if (result.url) {
-      window.open(result.url, '_blank');
+      // P2-SEC-010: Validate URL comes from Stripe before opening
+      try {
+        const portalUrl = new URL(result.url);
+        if (!portalUrl.hostname.endsWith('.stripe.com')) {
+          showNotification('Invalid billing portal URL', 'error');
+          return;
+        }
+      } catch {
+        showNotification('Invalid billing portal URL', 'error');
+        return;
+      }
+      window.open(result.url, '_blank', 'noopener');
     }
   } catch (e) {
     showNotification('Failed to open billing portal: ' + e.message, 'error');
@@ -799,7 +1205,9 @@ async function apiFetch(path, options = {}) {
     // Refresh failed — force sign-in
     token = null;
     userEmail = null;
-    localStorage.removeItem('ps_email');
+    localStorage.removeItem('ps_session');
+    localStorage.removeItem('ps_email');   // legacy cleanup
+    sessionStorage.removeItem('ps_email');
     window.currentUser = null;
     updateAuthUI();
     openAuthOverlay();
@@ -810,6 +1218,11 @@ async function apiFetch(path, options = {}) {
   // Handle quota exceeded (429) and feature not available (403)
   if (res.status === 429 || res.status === 403) {
     const errorData = await res.json();
+    // AUDIT-SEC-003: Show verification banner if email not verified
+    if (errorData.email_verification_required) {
+      showEmailVerificationBanner();
+      return errorData;
+    }
     // Show upgrade prompt if the error indicates upgrade is needed
     if (errorData.upgrade_required) {
       showUpgradePrompt(errorData.error, errorData.feature);
@@ -820,9 +1233,11 @@ async function apiFetch(path, options = {}) {
   const contentType = res.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     const text = await res.text().catch(() => '');
+    // P2-FE-008: Strip HTML tags to prevent raw HTML rendering in UI
+    const safeText = text ? text.replace(/<[^>]*>/g, '').slice(0, 200) : '';
     return {
       ok: res.ok,
-      error: text || `Unexpected non-JSON response (${res.status})`,
+      error: safeText || `Unexpected non-JSON response (${res.status})`,
       status: res.status
     };
   }
@@ -835,10 +1250,11 @@ async function apiFetch(path, options = {}) {
 const TAB_GROUPS = {
   overview: 'btn-home',
   chart: 'btn-blueprint', profile: 'btn-blueprint',
-  transits: 'btn-today', checkin: 'btn-today',
+  transits: 'btn-today', checkin: 'btn-today', timing: 'btn-today',
   composite: 'btn-connect', clusters: 'btn-connect',
   enhance: 'btn-grow', diary: 'btn-grow',
   practitioner: 'btn-practitioner',
+  celebrity: null, achievements: null,
   // Settings drawer items — no primary tab highlights
   history: null, sms: null, rectify: null, onboarding: null
 };
@@ -846,7 +1262,7 @@ const TAB_GROUPS = {
 // Sidebar parent mapping: which parent nav items expand for sub-tabs
 const SIDEBAR_PARENTS = {
   chart: 'chart', profile: 'chart',
-  transits: 'transits', checkin: 'transits',
+  transits: 'transits', checkin: 'transits', timing: 'transits',
   composite: 'composite', clusters: 'composite',
   enhance: 'enhance', diary: 'enhance'
 };
@@ -872,14 +1288,47 @@ function switchTab(id, btn) {
   // Lazy-load tab content on first activation (BL-OPT-005)
   if (typeof window.onTabActivated === 'function') window.onTabActivated(id);
   
+  // P2-FE-004: Guard auto-loads with a loading-state Set to prevent duplicate fetches
+  if (!switchTab._loading) switchTab._loading = new Set();
+  
   // Auto-load clusters when tab is activated
-  if (id === 'clusters' && token && !document.getElementById('clusterListContainer')?.innerHTML) {
-    loadClusters();
+  if (id === 'clusters' && token && !document.getElementById('clusterListContainer')?.innerHTML && !switchTab._loading.has('clusters')) {
+    switchTab._loading.add('clusters');
+    Promise.resolve(loadClusters()).finally(() => switchTab._loading.delete('clusters'));
   }
 
   // Auto-load practitioner roster when tab is activated
-  if (id === 'practitioner' && token) {
-    loadRoster();
+  if (id === 'practitioner' && token && !switchTab._loading.has('practitioner')) {
+    switchTab._loading.add('practitioner');
+    Promise.resolve(loadRoster()).finally(() => switchTab._loading.delete('practitioner'));
+  }
+
+  // Auto-load celebrity matches on first visit
+  if (id === 'celebrity' && token && !document.getElementById('celebrityGrid')?.innerHTML && !switchTab._loading.has('celebrity')) {
+    switchTab._loading.add('celebrity');
+    Promise.resolve(loadCelebrityMatches()).finally(() => switchTab._loading.delete('celebrity'));
+  }
+
+  // Auto-load achievements on first visit
+  if (id === 'achievements' && token && !document.getElementById('achievementsBadges')?.innerHTML && !switchTab._loading.has('achievements')) {
+    switchTab._loading.add('achievements');
+    Promise.resolve(loadAchievements()).finally(() => switchTab._loading.delete('achievements'));
+  }
+
+  // Auto-load directory on first visit
+  if (id === 'directory' && !document.getElementById('directoryResults')?.querySelector('.session-note-item, [style*="background:var(--bg3)"]')) {
+    searchDirectory();
+  }
+
+  // Pre-fill today's date in timing tool
+  if (id === 'timing') {
+    const startInput = document.getElementById('timing-start');
+    if (startInput && !startInput.value) startInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  // P2-FE-002: Clear diary edit mode when leaving diary tab
+  if (id !== 'diary' && typeof cancelDiaryEdit === 'function') {
+    cancelDiaryEdit();
   }
 
   // Update mobile nav active state
@@ -923,9 +1372,11 @@ function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebarBackdrop');
   const hamburger = document.getElementById('hamburgerBtn');
+  const moreBtn = document.getElementById('mobileMoreBtn');
   const isOpen = sidebar.classList.toggle('open');
   backdrop.classList.toggle('visible', isOpen);
   hamburger.setAttribute('aria-expanded', String(isOpen));
+  if (moreBtn) moreBtn.setAttribute('aria-expanded', String(isOpen));
   document.body.style.overflow = isOpen ? 'hidden' : '';
 }
 
@@ -933,9 +1384,11 @@ function closeSidebar() {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebarBackdrop');
   const hamburger = document.getElementById('hamburgerBtn');
+  const moreBtn = document.getElementById('mobileMoreBtn');
   sidebar.classList.remove('open');
   backdrop.classList.remove('visible');
   if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+  if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
   document.body.style.overflow = '';
 }
 
@@ -1108,11 +1561,20 @@ function renderAstroChart(astro) {
     html += `<div style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--font-size-base)">
               <span style="display:inline-block;width:var(--space-5);height:var(--space-5);background:${color};border-radius:50%;
                           text-align:center;line-height:var(--space-5);font-weight:bold;color:var(--bg1)">${symbol}</span>
-              <span style="color:var(--text-dim)">${name} ${data.degrees?.toFixed(1)}° ${data.sign}</span>
+              <span style="color:var(--text-dim)">${name} ${data.degrees?.toFixed(1)}° ${escapeHtml(data.sign || '')}</span>
             </div>`;
   });
   
-  html += `</div></div>`;
+  html += `</div>`;
+
+  // PRA-ENGINE-004: Show user-facing notice when polar fallback triggers
+  if (astro.polarWarning) {
+    html += `<div style="margin-top:var(--space-3);padding:var(--space-3);background:var(--warning-bg,rgba(255,193,7,0.12));border:1px solid var(--warning,#ffc107);border-radius:var(--space-2);font-size:var(--font-size-sm);color:var(--text-dim)">
+      ⚠ Your birth latitude is above the polar circle (${Math.abs(astro.ascendant?.latitude || 67).toFixed(0)}°N/S). Placidus houses are mathematically undefined at this latitude — Equal House system has been used instead.
+    </div>`;
+  }
+
+  html += `</div>`;
   return html;
 }
 
@@ -1125,7 +1587,7 @@ function prefillExample() {
   document.getElementById('c-lng').value = '-82.4572';
   setTimezone('c-tz', 'America/New_York');
   const s = document.getElementById('c-geo-status');
-  s.textContent = '<span class="icon-check"></span> Tampa, Florida, United States · 27.9506°N, 82.4572°W · America/New_York';
+  s.innerHTML = '<span class="icon-check"></span> Tampa, Florida, United States · 27.9506°N, 82.4572°W · America/New_York';
   s.style.color = '#48c774';
 }
 
@@ -1155,7 +1617,7 @@ async function geocodeLocation(prefix) {
     const latDir = data.lat >= 0 ? 'N' : 'S';
     const lngDir = data.lng >= 0 ? 'E' : 'W';
     statusEl.style.color = '#48c774';
-    statusEl.textContent = `<span class="icon-check"></span> ${data.displayName} · ${Math.abs(data.lat).toFixed(4)}°${latDir}, ${Math.abs(data.lng).toFixed(4)}°${lngDir} · ${data.timezone}`;
+    statusEl.innerHTML = `<span class="icon-check"></span> ${escapeHtml(data.displayName)} · ${Math.abs(data.lat).toFixed(4)}°${latDir}, ${Math.abs(data.lng).toFixed(4)}°${lngDir} · ${escapeHtml(data.timezone)}`;
   } catch (e) {
     statusEl.style.color = '#f56565';
     statusEl.textContent = '✗ Error: ' + e.message;
@@ -1210,6 +1672,7 @@ async function calculateChart() {
 
     const data = await apiFetch('/api/chart/calculate', { method: 'POST', body: JSON.stringify(payload) });
     resultEl.innerHTML = renderChart(data);
+    _applyChartHeadings(resultEl);
     // Save birth data to localStorage after successful chart calculation
     saveBirthData();
     // Update overview tab with fresh data
@@ -1221,6 +1684,8 @@ async function calculateChart() {
     if (homeBtn && typeof switchTab === 'function') switchTab('overview', homeBtn);
     // Collapse the chart form now that a chart has been generated
     collapseChartForm();
+    // Load chart history for versioning (AUDIT-UX-003)
+    if (token) loadChartHistory();
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
@@ -1380,6 +1845,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } catch(e) {}
 });
+
+function _applyChartHeadings(container) {
+  container.querySelectorAll('.card-title').forEach(el => {
+    el.setAttribute('role', 'heading');
+    el.setAttribute('aria-level', '2');
+  });
+  container.querySelectorAll('.section-header').forEach(el => {
+    el.setAttribute('role', 'heading');
+    el.setAttribute('aria-level', '3');
+  });
+}
 
 function renderChart(data) {
   if (window.DEBUG) console.log('[Chart] renderChart called with data:', data);
@@ -1689,6 +2165,60 @@ function renderChart(data) {
   return html;
 }
 
+// ── Chart History (AUDIT-UX-003) ──────────────────────────────
+async function loadChartHistory() {
+  if (!token) return;
+  const section = document.getElementById('chartHistorySection');
+  const list = document.getElementById('chartHistoryList');
+  if (!section || !list) return;
+
+  list.innerHTML = '<span class="spinner"></span> Loading…';
+  section.style.display = '';
+
+  try {
+    const data = await apiFetch('/api/chart/history');
+    if (!data.charts?.length) {
+      list.innerHTML = '<p style="color:var(--text-dim)">No previous charts found.</p>';
+      return;
+    }
+    list.innerHTML = data.charts.map(c => {
+      const date = new Date(c.calculatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const typeBadge = c.type ? `<span style="color:var(--gold);font-weight:600">${escapeHtml(c.type)}</span> · ` : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div>${typeBadge}<span style="color:var(--text-dim)">${date}</span></div>
+        <button class="btn-secondary btn-sm" data-action="loadChartById" data-arg0="${escapeAttr(c.id)}">View</button>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<p style="color:var(--text-dim)">Could not load chart history.</p>';
+  }
+}
+
+async function loadChartById(chartId) {
+  if (!token || !chartId) return;
+  const resultEl = document.getElementById('chartResult');
+  if (!resultEl) return;
+
+  resultEl.innerHTML = '<div style="text-align:center;padding:var(--space-6)"><span class="spinner"></span> Loading chart…</div>';
+
+  try {
+    const resp = await apiFetch('/api/chart/' + encodeURIComponent(chartId));
+    if (!resp?.data) {
+      resultEl.innerHTML = '<div class="alert alert-warn">Could not load chart.</div>';
+      return;
+    }
+    const d = resp.data;
+    const combined = Object.assign({}, d.hdChart, { astro: d.astroChart, meta: { chartId: d.id } });
+    resultEl.innerHTML = renderChart(combined);
+    _applyChartHeadings(resultEl);
+    const chart = d.hdChart?.chart || d.hdChart;
+    if (typeof renderBodygraph === 'function' && chart) renderBodygraph(chart);
+    window._lastChart = chart;
+  } catch (e) {
+    resultEl.innerHTML = '<div class="alert alert-warn">Failed to load chart: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
 // ── Profile Generator ─────────────────────────────────────────
 async function generateProfile() {
   if (!token) {
@@ -1796,11 +2326,11 @@ function renderProfile(data) {
   html += `<div class="card">
     <div class="card-title"><span class="icon-profile"></span> Prime Self Profile</div>
     <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4)">`;
-  if (chartSummary.type) html += `<span class="pill gold">${chartSummary.type}</span>`;
-  if (chartSummary.authority) html += `<span class="pill">${chartSummary.authority}</span>`;
-  if (chartSummary.profile) html += `<span class="pill">${chartSummary.profile} Archetype</span>`;
-  if (chartSummary.definition) html += `<span class="pill">${chartSummary.definition}</span>`;
-  if (chartSummary.cross) html += `<span class="pill" style="font-size:var(--font-size-sm)">${chartSummary.cross}</span>`;
+  if (chartSummary.type) html += `<span class="pill gold">${escapeHtml(chartSummary.type)}</span>`;
+  if (chartSummary.authority) html += `<span class="pill">${escapeHtml(chartSummary.authority)}</span>`;
+  if (chartSummary.profile) html += `<span class="pill">${escapeHtml(chartSummary.profile)} Archetype</span>`;
+  if (chartSummary.definition) html += `<span class="pill">${escapeHtml(chartSummary.definition)}</span>`;
+  if (chartSummary.cross) html += `<span class="pill" style="font-size:var(--font-size-sm)">${escapeHtml(chartSummary.cross)}</span>`;
   html += `</div>`;
   html += `</div>`; // close card
 
@@ -2035,6 +2565,7 @@ function renderProfile(data) {
     // Forge Identification
     if (ti.forgeIdentification) {
       const forge = ti.forgeIdentification;
+      window._lastForge = forge;
       html += `<div class="card">
         <div class="card-title"><span class="icon-fire"></span> Forge Identification</div>
         <div class="forge-badge">
@@ -2073,6 +2604,7 @@ function renderProfile(data) {
         });
         html += `</ul>`;
       }
+      html += `<div style="margin-top:var(--space-4)"><button class="btn-primary" style="font-size:var(--font-size-sm);padding:8px 18px" data-action="openBlueprintCard">📸 Share Blueprint Card</button></div>`;
       html += `</div>`;
     }
     
@@ -2353,6 +2885,30 @@ async function loadSingleProfile(id) {
   }
 }
 
+// ── Profile Search ────────────────────────────────────────────
+async function searchProfiles() {
+  const input = document.getElementById('profileSearchInput');
+  const resultEl = document.getElementById('historyResult');
+  const term = (input?.value || '').trim();
+  if (term.length < 2) { loadHistory(); return; }
+  if (!token) { openAuthOverlay(); return; }
+
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Searching…</div></div>';
+  try {
+    const data = await apiFetch('/api/profile/search?q=' + encodeURIComponent(term));
+    resultEl.innerHTML = renderHistory(data);
+  } catch (e) {
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// debounced search on input
+(function () {
+  let _t;
+  const el = document.getElementById('profileSearchInput');
+  if (el) el.addEventListener('input', () => { clearTimeout(_t); _t = setTimeout(searchProfiles, 400); });
+})();
+
 // ── Composite Chart ───────────────────────────────────────────
 async function generateComposite() {
   const btn = document.getElementById('compBtn');
@@ -2522,13 +3078,14 @@ function togglePracAddForm() {
   const form = document.getElementById('pracAddForm');
   const isHidden = form.style.display === 'none';
   form.style.display = isHidden ? 'block' : 'none';
-  document.getElementById('pracAddToggle').textContent = isHidden ? '✕ Cancel' : '+ Add Client';
-  if (isHidden) document.getElementById('prac-email').focus();
+  document.getElementById('pracAddToggle').textContent = isHidden ? '✕ Cancel' : '+ Invite Client';
+  if (isHidden) document.getElementById('prac-client-name').focus();
 }
 
 async function addClient() {
   if (!token) { openAuthOverlay(); return; }
 
+  const clientName = document.getElementById('prac-client-name').value.trim();
   const email = document.getElementById('prac-email').value.trim();
   if (!email) { showNotification('Client email is required', 'warning'); return; }
 
@@ -2541,19 +3098,91 @@ async function addClient() {
   statusEl.innerHTML = '';
 
   try {
-    const data = await apiFetch('/api/practitioner/clients/add', {
+    const data = await apiFetch('/api/practitioner/clients/invite', {
       method: 'POST',
-      body: JSON.stringify({ clientEmail: email })
+      body: JSON.stringify({ clientName, clientEmail: email })
     });
-    showNotification(data.message || 'Client added to roster', 'success');
+
+    if (data?.error) {
+      statusEl.innerHTML = `<div class="alert alert-error">${escapeHtml(data.message || data.error)}</div>`;
+      return;
+    }
+
+    if (data?.mode === 'added') {
+      showNotification(data.message || 'Client added to roster', 'success');
+    } else {
+      showNotification(data.message || 'Invitation sent', 'success');
+    }
+
+    if (data?.inviteUrl && !data?.emailSent) {
+      statusEl.innerHTML = `<div class="alert alert-warn">Email delivery unavailable. Share this link manually:<br><a href="${escapeAttr(data.inviteUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.inviteUrl)}</a></div>`;
+    }
+
+    document.getElementById('prac-client-name').value = '';
     document.getElementById('prac-email').value = '';
     togglePracAddForm();
-    loadRoster(); // refresh roster after adding
+    loadRoster();
+    loadPractitionerInvitations();
   } catch (e) {
     statusEl.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
+  }
+}
+
+async function loadPractitionerInvitations() {
+  if (!token) return;
+
+  const el = document.getElementById('pracInvitesResult');
+  if (!el) return;
+  el.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading invitations…</div></div>';
+
+  try {
+    const data = await apiFetch('/api/practitioner/clients/invitations');
+    el.innerHTML = renderPractitionerInvitations(data);
+  } catch (e) {
+    el.innerHTML = `<div class="alert alert-error">Error loading invitations: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderPractitionerInvitations(data) {
+  if (data?.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
+
+  const invitations = Array.isArray(data?.invitations) ? data.invitations : [];
+  if (!invitations.length) {
+    return '<div class="empty-state" style="padding:var(--space-4)"><p style="margin:0">No pending invitations.</p></div>';
+  }
+
+  let html = '<div style="display:flex;flex-direction:column;gap:var(--space-2)">';
+  invitations.forEach((invite) => {
+    const inviteId = escapeAttr(invite.id);
+    const email = escapeHtml(invite.client_email || '');
+    const name = invite.client_name ? escapeHtml(invite.client_name) : '';
+    const expiresAt = invite.expires_at ? new Date(invite.expires_at).toLocaleDateString() : '—';
+    html += `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2)">
+        <div>
+          <div style="font-weight:600;color:var(--text)">${name || email}</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text-dim)">${name ? email + ' · ' : ''}Expires ${expiresAt}</div>
+        </div>
+        <button class="btn-danger btn-sm" data-action="revokePractitionerInvitation" data-arg0="${inviteId}" data-arg1="${email}">Revoke</button>
+      </div>
+    `;
+  });
+  html += '</div>';
+  return html;
+}
+
+async function revokePractitionerInvitation(invitationId, emailLabel) {
+  if (!confirm(`Revoke invitation for ${emailLabel}?`)) return;
+
+  try {
+    await apiFetch(`/api/practitioner/clients/invitations/${invitationId}`, { method: 'DELETE' });
+    showNotification(`Invitation revoked for ${emailLabel}`, 'success');
+    loadPractitionerInvitations();
+  } catch (e) {
+    showNotification('Error revoking invitation: ' + e.message, 'error');
   }
 }
 
@@ -2585,13 +3214,105 @@ async function loadRoster() {
     }
 
     resultEl.innerHTML = renderRoster(rosterData);
+    loadPractitionerInvitations();
+    loadDirectoryProfile();
+
+    // Show and populate Agency Seats card for Agency-tier users
+    const tier = window.currentUser?.tier || 'free';
+    const agencyCard = document.getElementById('agencySeatsCard');
+    if (agencyCard) {
+      agencyCard.style.display = (tier === 'agency' || tier === 'white_label') ? '' : 'none';
+      if (tier === 'agency' || tier === 'white_label') loadAgencySeats();
+    }
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error loading roster: ${escapeHtml(e.message)}</div>`;
   }
 }
 
+// ── Agency Seat Management ────────────────────────────────────
+
+async function loadAgencySeats() {
+  if (!token) return;
+  const resultEl = document.getElementById('agencySeatsResult');
+  if (!resultEl) return;
+  resultEl.innerHTML = '<div style="color:var(--text-dim);font-size:var(--font-size-sm)">Loading seats…</div>';
+  try {
+    const data = await apiFetch('/api/agency/seats');
+    resultEl.innerHTML = renderAgencySeats(data);
+  } catch (e) {
+    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderAgencySeats(data) {
+  const seats = data.seats || [];
+  const limit = data.limit || 5;
+  const count = seats.length;
+
+  let html = `<div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-3)">${count} of ${limit} seats used</div>`;
+
+  if (!seats.length) {
+    return html + `<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No seat members yet. Add a practitioner by email above.</div>`;
+  }
+
+  seats.forEach(seat => {
+    const email    = escapeHtml(seat.member_email || seat.invited_email || '');
+    const accepted = seat.accepted_at
+      ? `<span style="color:var(--success,#27ae60);font-size:var(--font-size-sm)">Active</span>`
+      : `<span style="color:var(--text-dim);font-size:var(--font-size-sm)">Pending</span>`;
+    const memberId = escapeAttr(seat.member_user_id || seat.id);
+
+    html += `<div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:var(--border-width-thin) solid var(--border);flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div style="font-weight:600;color:var(--text)">${email}</div>
+        <div>${accepted}</div>
+      </div>
+      <button class="btn-danger btn-sm" data-action="removeAgencySeat" data-arg0="${memberId}" data-arg1="${email}">Remove</button>
+    </div>`;
+  });
+
+  return html;
+}
+
+async function inviteAgencySeat() {
+  const emailInput = document.getElementById('agencySeatEmail');
+  const statusEl   = document.getElementById('agencySeatStatus');
+  const email = (emailInput?.value || '').trim();
+
+  if (!email) {
+    if (statusEl) statusEl.innerHTML = `<div class="alert alert-warn">Please enter an email address.</div>`;
+    return;
+  }
+  if (!token) { openAuthOverlay(); return; }
+
+  try {
+    const data = await apiFetch('/api/agency/seats/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+    if (statusEl) statusEl.innerHTML = `<div class="alert alert-success">${escapeHtml(data.message || 'Seat added!')}</div>`;
+    if (emailInput) emailInput.value = '';
+    loadAgencySeats();
+    setTimeout(() => { if (statusEl) statusEl.innerHTML = ''; }, 4000);
+  } catch (e) {
+    if (statusEl) statusEl.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function removeAgencySeat(memberId, emailLabel) {
+  if (!confirm(`Remove ${emailLabel || 'this seat member'} from your agency?`)) return;
+  if (!token) { openAuthOverlay(); return; }
+
+  try {
+    await apiFetch(`/api/agency/seats/${memberId}`, { method: 'DELETE' });
+    showNotification('Seat member removed.', 'success');
+    loadAgencySeats();
+  } catch (e) {
+    showNotification(e.message || 'Failed to remove seat', 'error');
+  }
+}
+
 function renderRoster(data) {
-  if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   const clients = data.clients || [];
 
   if (!clients.length) {
@@ -2638,16 +3359,24 @@ async function viewClientDetail(clientId, emailLabel) {
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   try {
-    const data = await apiFetch(`/api/practitioner/clients/${clientId}`);
-    panel.innerHTML = renderClientDetail(data, emailLabel);
+    const [data, notesData] = await Promise.all([
+      apiFetch(`/api/practitioner/clients/${clientId}`),
+      apiFetch(`/api/practitioner/clients/${clientId}/notes`).catch(() => ({ notes: [] }))
+    ]);
+    panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData);
   } catch (e) {
     panel.innerHTML = `<div class="alert alert-error">Error loading client: ${escapeHtml(e.message)}</div>`;
   }
 }
 
-function renderClientDetail(data, emailLabel) {
+function renderClientDetail(data, emailLabel, clientId, notesData) {
+  if (!data || data.error) {
+    return `<div class="alert alert-error">${escapeHtml(data?.error || 'Failed to load client detail')}</div>`;
+  }
+
   const { client, chart, profile } = data;
   const email = escapeHtml(emailLabel || client?.email || '');
+  const safeClientId = escapeAttr(clientId || client?.id || '');
 
   let html = `<div class="card" style="border-top:3px solid var(--gold)">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-4)">
@@ -2716,6 +3445,7 @@ function renderClientDetail(data, emailLabel) {
 
     if (profileId) {
       html += `<button class="btn-secondary btn-sm" data-action="exportPDF" data-arg0="${profileId}">Download PDF</button>`;
+      html += `<button class="btn-secondary btn-sm" data-action="exportBrandedPDF" data-arg0="${safeClientId}" title="PDF with your name and branding in the header">Download Branded PDF</button>`;
     }
 
     html += `</div>`;
@@ -2723,8 +3453,293 @@ function renderClientDetail(data, emailLabel) {
     html += `<div class="alert alert-warn" style="margin-top:var(--space-3)">This client has not generated a profile synthesis yet.</div>`;
   }
 
+  // ── Session Notes Section ──
+  html += `
+  <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)">
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0">Session Notes</h4>
+      <button class="btn-primary btn-sm" data-action="showNewNoteForm" data-arg0="${safeClientId}">+ New Note</button>
+    </div>
+    <div id="newNoteForm-${safeClientId}" style="display:none;margin-bottom:var(--space-4)">
+      <div style="margin-bottom:var(--space-2)">
+        <input type="date" id="noteDate-${safeClientId}" style="width:auto" class="form-input">
+      </div>
+      <textarea id="noteContent-${safeClientId}" placeholder="Write your session notes here…" rows="4"
+        style="width:100%;resize:vertical;margin-bottom:var(--space-2)" class="form-input" maxlength="5000"></textarea>
+      <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:var(--space-1);font-size:var(--font-size-sm);color:var(--text-dim);cursor:pointer">
+          <input type="checkbox" id="noteShareAi-${safeClientId}"> Share with AI synthesis
+        </label>
+        <div style="margin-left:auto;display:flex;gap:var(--space-2)">
+          <button class="btn-secondary btn-sm" data-action="hideNewNoteForm" data-arg0="${safeClientId}">Cancel</button>
+          <button class="btn-primary btn-sm" data-action="saveSessionNote" data-arg0="${safeClientId}">Save Note</button>
+        </div>
+      </div>
+    </div>
+    <div id="notesList-${safeClientId}">`;
+
+  const notes = notesData?.notes || [];
+  if (notes.length === 0) {
+    html += `<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No session notes yet. Add your first note to start building a record.</div>`;
+  } else {
+    notes.forEach(note => {
+      html += renderSessionNote(note, safeClientId);
+    });
+  }
+
+  html += `</div></div>`;
+
   html += `</div>`;
   return html;
+}
+
+// ── Session Notes helpers ────────────────────────────────────
+
+function renderSessionNote(note, clientId) {
+  const noteId = escapeAttr(note.id);
+  const dateStr = note.session_date ? new Date(note.session_date).toLocaleDateString() : 'No date';
+  const createdStr = note.created_at ? new Date(note.created_at).toLocaleDateString() : '';
+  const content = escapeHtml(note.content || '');
+  const shared = note.share_with_ai ? '<span style="color:var(--gold);font-size:var(--font-size-sm)" title="Shared with AI synthesis">✦ AI</span>' : '';
+
+  return `
+  <div class="session-note-item" id="note-${noteId}" style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3);margin-bottom:var(--space-2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1)">
+      <div style="display:flex;align-items:center;gap:var(--space-2)">
+        <span style="font-weight:600;font-size:var(--font-size-sm);color:var(--text)">${dateStr}</span>
+        ${shared}
+      </div>
+      <div style="display:flex;gap:var(--space-1)">
+        <button class="btn-secondary btn-sm" data-action="editSessionNote" data-arg0="${noteId}" data-arg1="${escapeAttr(clientId)}" style="padding:2px 8px;font-size:var(--font-size-sm)">Edit</button>
+        <button class="btn-danger btn-sm" data-action="deleteSessionNote" data-arg0="${noteId}" data-arg1="${escapeAttr(clientId)}" style="padding:2px 8px;font-size:var(--font-size-sm)">Delete</button>
+      </div>
+    </div>
+    <div style="font-size:var(--font-size-base);color:var(--text);white-space:pre-wrap;line-height:1.5">${content}</div>
+    ${createdStr ? `<div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-top:var(--space-1)">Added ${createdStr}</div>` : ''}
+  </div>`;
+}
+
+function showNewNoteForm(clientId) {
+  const form = document.getElementById('newNoteForm-' + clientId);
+  if (form) {
+    form.style.display = 'block';
+    // Default date to today
+    const dateInput = document.getElementById('noteDate-' + clientId);
+    if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+    document.getElementById('noteContent-' + clientId)?.focus();
+  }
+}
+
+function hideNewNoteForm(clientId) {
+  const form = document.getElementById('newNoteForm-' + clientId);
+  if (form) {
+    form.style.display = 'none';
+    const content = document.getElementById('noteContent-' + clientId);
+    if (content) content.value = '';
+  }
+}
+
+async function saveSessionNote(clientId) {
+  const content = document.getElementById('noteContent-' + clientId)?.value?.trim();
+  const sessionDate = document.getElementById('noteDate-' + clientId)?.value || null;
+  const shareWithAi = document.getElementById('noteShareAi-' + clientId)?.checked || false;
+
+  if (!content) {
+    showNotification('Please enter note content.', 'error');
+    return;
+  }
+
+  try {
+    const result = await apiFetch(`/api/practitioner/clients/${clientId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ content, session_date: sessionDate, share_with_ai: shareWithAi })
+    });
+
+    if (result.error) {
+      showNotification('Error saving note: ' + result.error, 'error');
+      return;
+    }
+
+    showNotification('Note saved', 'success');
+    hideNewNoteForm(clientId);
+    await refreshSessionNotes(clientId);
+  } catch (e) {
+    showNotification('Error saving note: ' + e.message, 'error');
+  }
+}
+
+async function editSessionNote(noteId, clientId) {
+  const noteEl = document.getElementById('note-' + noteId);
+  if (!noteEl) return;
+
+  // Get existing content from the rendered text
+  const contentEl = noteEl.querySelector('[style*="white-space:pre-wrap"]');
+  const existingContent = contentEl ? contentEl.textContent : '';
+
+  noteEl.innerHTML = `
+    <textarea id="editNoteContent-${escapeAttr(noteId)}" rows="4" class="form-input"
+      style="width:100%;resize:vertical;margin-bottom:var(--space-2)" maxlength="5000">${escapeHtml(existingContent)}</textarea>
+    <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:var(--space-1);font-size:var(--font-size-sm);color:var(--text-dim);cursor:pointer">
+        <input type="checkbox" id="editNoteShareAi-${escapeAttr(noteId)}"> Share with AI
+      </label>
+      <div style="margin-left:auto;display:flex;gap:var(--space-2)">
+        <button class="btn-secondary btn-sm" data-action="cancelEditNote" data-arg0="${escapeAttr(noteId)}" data-arg1="${escapeAttr(clientId)}">Cancel</button>
+        <button class="btn-primary btn-sm" data-action="updateSessionNote" data-arg0="${escapeAttr(noteId)}" data-arg1="${escapeAttr(clientId)}">Update</button>
+      </div>
+    </div>`;
+
+  document.getElementById('editNoteContent-' + noteId)?.focus();
+}
+
+async function cancelEditNote(noteId, clientId) {
+  // Reload the notes to restore original rendering
+  await refreshSessionNotes(clientId);
+}
+
+async function updateSessionNote(noteId, clientId) {
+  const content = document.getElementById('editNoteContent-' + noteId)?.value?.trim();
+  const shareWithAi = document.getElementById('editNoteShareAi-' + noteId)?.checked || false;
+
+  if (!content) {
+    showNotification('Note content cannot be empty.', 'error');
+    return;
+  }
+
+  try {
+    const result = await apiFetch(`/api/practitioner/notes/${noteId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content, share_with_ai: shareWithAi })
+    });
+
+    if (result.error) {
+      showNotification('Error updating note: ' + result.error, 'error');
+      return;
+    }
+
+    showNotification('Note updated', 'success');
+    await refreshSessionNotes(clientId);
+  } catch (e) {
+    showNotification('Error updating note: ' + e.message, 'error');
+  }
+}
+
+async function deleteSessionNote(noteId, clientId) {
+  if (!confirm('Delete this session note?')) return;
+
+  try {
+    const result = await apiFetch(`/api/practitioner/notes/${noteId}`, { method: 'DELETE' });
+
+    if (result.error) {
+      showNotification('Error deleting note: ' + result.error, 'error');
+      return;
+    }
+
+    showNotification('Note deleted', 'success');
+    await refreshSessionNotes(clientId);
+  } catch (e) {
+    showNotification('Error deleting note: ' + e.message, 'error');
+  }
+}
+
+async function refreshSessionNotes(clientId) {
+  const listEl = document.getElementById('notesList-' + clientId);
+  if (!listEl) return;
+
+  try {
+    const notesData = await apiFetch(`/api/practitioner/clients/${clientId}/notes`);
+    const notes = notesData?.notes || [];
+
+    if (notes.length === 0) {
+      listEl.innerHTML = `<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No session notes yet. Add your first note to start building a record.</div>`;
+    } else {
+      listEl.innerHTML = notes.map(n => renderSessionNote(n, clientId)).join('');
+    }
+  } catch (e) {
+    listEl.innerHTML = `<div class="alert alert-error">Error loading notes: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ── Practitioner Directory Profile editing ──────────────────
+
+function toggleDirectoryForm() {
+  const form = document.getElementById('dirProfileForm');
+  if (!form) return;
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function loadDirectoryProfile() {
+  const summaryEl = document.getElementById('dirProfileSummary');
+  if (!summaryEl) return;
+
+  try {
+    const data = await apiFetch('/api/practitioner/directory-profile');
+    if (data.error) {
+      summaryEl.innerHTML = `<span style="color:var(--text-dim)">Not yet set up — click Edit Profile to get started.</span>`;
+      return;
+    }
+
+    const p = data.profile || {};
+    const publicLabel = p.is_public ? '<span style="color:var(--accent2)">✓ Public</span>' : '<span style="color:var(--text-dim)">Hidden</span>';
+    const name = escapeHtml(p.display_name || 'Not set');
+    summaryEl.innerHTML = `<strong>${name}</strong> · ${publicLabel}${p.bio ? ' · ' + escapeHtml(p.bio.substring(0, 60)) + (p.bio.length > 60 ? '…' : '') : ''}`;
+
+    // Pre-fill form fields
+    const el = id => document.getElementById(id);
+    if (el('dir-display-name')) el('dir-display-name').value = p.display_name || '';
+    if (el('dir-bio')) el('dir-bio').value = p.bio || '';
+    if (el('dir-certification')) el('dir-certification').value = p.certification || '';
+    if (el('dir-session-format')) el('dir-session-format').value = p.session_format || 'Remote';
+    if (el('dir-session-info')) el('dir-session-info').value = p.session_info || '';
+    if (el('dir-booking-url')) el('dir-booking-url').value = p.booking_url || '';
+    if (el('dir-is-public')) el('dir-is-public').checked = !!p.is_public;
+
+    // Pre-fill specializations checkboxes
+    const specs = Array.isArray(p.specializations) ? p.specializations : [];
+    document.querySelectorAll('#dir-specializations input[type="checkbox"]').forEach(cb => {
+      cb.checked = specs.includes(cb.value);
+    });
+  } catch {
+    summaryEl.innerHTML = `<span style="color:var(--text-dim)">Could not load directory profile.</span>`;
+  }
+}
+
+async function saveDirectoryProfile() {
+  const el = id => document.getElementById(id);
+
+  const specializations = [];
+  document.querySelectorAll('#dir-specializations input[type="checkbox"]:checked').forEach(cb => {
+    specializations.push(cb.value);
+  });
+
+  const body = {
+    display_name: el('dir-display-name')?.value?.trim() || '',
+    bio: el('dir-bio')?.value?.trim() || '',
+    certification: el('dir-certification')?.value || '',
+    session_format: el('dir-session-format')?.value || 'Remote',
+    session_info: el('dir-session-info')?.value?.trim() || '',
+    booking_url: el('dir-booking-url')?.value?.trim() || '',
+    is_public: el('dir-is-public')?.checked || false,
+    specializations,
+  };
+
+  try {
+    const result = await apiFetch('/api/practitioner/directory-profile', {
+      method: 'PUT',
+      body: JSON.stringify(body)
+    });
+
+    if (result.error) {
+      showNotification('Error saving profile: ' + result.error, 'error');
+      return;
+    }
+
+    showNotification('Directory profile saved', 'success');
+    toggleDirectoryForm();
+    await loadDirectoryProfile();
+  } catch (e) {
+    showNotification('Error saving profile: ' + e.message, 'error');
+  }
 }
 
 async function removeClient(clientId, emailLabel) {
@@ -3129,9 +4144,7 @@ function showAlert(containerId, message, type = 'info') {
 }
 
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 /** Sanitize a value for use inside an HTML attribute (quotes, angle brackets). */
@@ -3264,6 +4277,33 @@ async function exportPDF(profileId) {
     const url = `${API}/api/profile/${profileId}/pdf`;
     // Open in new window to trigger download
     window.open(url, '_blank');
+  } catch (e) {
+    showNotification('Error: ' + e.message, 'error');
+  }
+}
+
+async function exportBrandedPDF(clientId) {
+  if (!clientId) { showNotification('No client ID provided', 'warning'); return; }
+  if (!token) { openAuthOverlay(); return; }
+
+  try {
+    showNotification('Generating branded PDF…', 'info');
+    const res = await fetch(`${API}/api/practitioner/clients/${clientId}/pdf`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showNotification(err.error || 'Failed to generate branded PDF', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `profile-${clientId.slice(0, 8)}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
   } catch (e) {
     showNotification('Error: ' + e.message, 'error');
   }
@@ -4003,9 +5043,12 @@ async function updateTierUI() {
     const tier = userData.user.tier || 'free';
     const tierLimits = {
       free: { profileGenerations: 1, practitionerTools: false },
-      seeker: { profileGenerations: 10, practitionerTools: false },
-      guide: { profileGenerations: Infinity, practitionerTools: true },
-      practitioner: { profileGenerations: Infinity, practitionerTools: true }
+      regular: { profileGenerations: 30, practitionerTools: false },
+      practitioner: { profileGenerations: 200, practitionerTools: true },
+      white_label: { profileGenerations: 1000, practitionerTools: true },
+      // Legacy aliases
+      seeker: { profileGenerations: 30, practitionerTools: false },
+      guide: { profileGenerations: 200, practitionerTools: true }
     };
     
     const limits = tierLimits[tier];
@@ -4224,10 +5267,10 @@ function showNotification(message, type = 'info') {
  */
 function trackEvent(category, action, label) {
   if (window.DEBUG) console.log(`📊 Event: ${category} / ${action} / ${label}`);
-  // Future: Send to Google Analytics, Mixpanel, etc.
-  // if (window.gtag) {
-  //   gtag('event', action, { event_category: category, event_label: label });
-  // }
+  // Plausible Analytics — fires when plausible.io/js/script.js is loaded
+  if (typeof window.plausible === 'function') {
+    window.plausible(`${category}:${action}`, { props: { label: label || '' } });
+  }
 }
 
 /**
@@ -4352,22 +5395,24 @@ if (!document.getElementById('notificationStyles')) {
 
 // Restore session from HttpOnly refresh cookie, then boot UI
 (async () => {
-  checkOAuthCallback();
+  await checkOAuthCallback();
   checkResetPasswordAction();
+  checkEmailUnsubscribeAction();
+  checkEmailVerificationAction();
   if (_sessionRestoredByOauth) {
     // OAuth callback already set token and called fetchUserProfile — skip silentRefresh
-    userEmail = localStorage.getItem('ps_email');
+    userEmail = sessionStorage.getItem('ps_email');
     return;
   }
   // Avoid noisy /auth/refresh 400s for users who have never signed in on this device.
-  const hasSessionHint = !!localStorage.getItem('ps_email');
+  const hasSessionHint = !!localStorage.getItem('ps_session');
   if (!hasSessionHint) {
     updateAuthUI();
     return;
   }
   const restored = await silentRefresh();
   if (restored) {
-    userEmail = localStorage.getItem('ps_email');
+    userEmail = sessionStorage.getItem('ps_email');
     await fetchUserProfile();
   } else {
     updateAuthUI();
@@ -4378,17 +5423,53 @@ if (!document.getElementById('notificationStyles')) {
 function hideMemberForm() { const el = document.getElementById('addMemberFormCard'); if (el) el.style.display = 'none'; }
 function hidePracDetail()  { const el = document.getElementById('pracDetailPanel');  if (el) el.style.display = 'none'; }
 function openLastShareCard() { if (typeof showShareCard === 'function') showShareCard(window._lastChart); }
+function openBlueprintCard() { if (typeof showBlueprintCard === 'function') showBlueprintCard(window._lastChart, window._lastForge); }
 function switchToPricingModal()    { closePractitionerPricingModal(); openPricingModal(); }
 function switchToPracPricingModal() { openPractitionerPricingModal(); closePricingModal(); }
+
+// ── Notification Drawer (AUDIT-UX-002) ──────────────────────────────────────
+function toggleNotifDrawer() {
+  const drawer = document.getElementById('notifDrawer');
+  if (!drawer) return;
+  const visible = drawer.style.display !== 'none';
+  drawer.style.display = visible ? 'none' : '';
+  if (!visible && token) loadNotificationHistory();
+}
+
+async function loadNotificationHistory() {
+  if (!token) return;
+  const list = document.getElementById('notifDrawerList');
+  if (!list) return;
+  list.innerHTML = '<p style="text-align:center;padding:16px"><span class="spinner"></span></p>';
+
+  try {
+    const data = await apiFetch('/api/push/history?limit=30');
+    if (!data.notifications?.length) {
+      list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:24px 0">No notifications yet.</p>';
+      return;
+    }
+    list.innerHTML = data.notifications.map(n => {
+      const date = new Date(n.sentAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return `<div class="notif-item">
+        <div class="notif-item-title">${escapeHtml(n.title || '')}</div>
+        <div class="notif-item-body">${escapeHtml(n.body || '')}</div>
+        <div class="notif-item-time">${date}</div>
+      </div>`;
+    }).join('');
+  } catch {
+    list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:24px 0">Could not load notifications.</p>';
+  }
+}
 // ── First-Run Onboarding Modal ─────────────────────────────────────────────
 let _frmCurrentStep = 1;
-const FRM_TOTAL_STEPS = 3;
+const FRM_TOTAL_STEPS = 4;
 
 function frmShow() {
   const modal = document.getElementById('first-run-modal');
   if (modal) modal.style.display = '';
   _frmCurrentStep = 1;
-  _frmRender();
+  // Prefer first-run.js's frmGoto if available (loads after this file)
+  if (typeof frmGoto === 'function') { frmGoto(1); } else { _frmRender(); }
 }
 
 function frmClose() {
@@ -4448,6 +5529,8 @@ function toggleDetails(toggleId, btn) {
     if (el.dataset.arg1 !== undefined && el.dataset.arg1 !== '') args.push(el.dataset.arg1);
     if (EVENT_AS_ARG.has(action)) args.push(event);
     if (action === 'toggleDetails') args.push(el); // btn reference
+    var BTN_ARG_ACTIONS = new Set(['confirm2FASetup', 'disable2FA']);
+    if (BTN_ARG_ACTIONS.has(action)) args.push(el); // btn reference for disabling
     fn.apply(null, args);
   }
 
@@ -4494,19 +5577,87 @@ window.toggleAuthMode = toggleAuthMode;
 window.showForgotPassword = showForgotPassword;
 window.openPricingModal = openPricingModal;
 window.openBillingPortal = openBillingPortal;
+window.setBillingPeriod = setBillingPeriod;
 window.exportMyData = exportMyData;
 window.deleteAccount = deleteAccount;
 window.switchTab = switchTab;
 window.geocodeLocation = geocodeLocation;
 window.calculateChart = calculateChart;
 window.generateProfile = generateProfile;
+window.submitTOTP = submitTOTP;
+window.cancel2FA = cancel2FA;
+window.openSecuritySettings = openSecuritySettings;
+window.closeSecurityModal = closeSecurityModal;
+window.begin2FASetup = begin2FASetup;
+window.confirm2FASetup = confirm2FASetup;
+window.disable2FA = disable2FA;
+
+// ── UX-QUICKPICK: Evaluation type + preset question buttons ──────────────────
+const EVAL_QUICKPICKS = {
+  'full-blueprint': [
+    'What is my core decision strategy?',
+    "What's my life purpose pattern?",
+  ],
+  'daily-focus': [
+    'Where should I focus my energy today?',
+    'What should I be aware of energetically?',
+  ],
+  'relationships': [
+    'How do I best connect with others?',
+    'What conditioning do I receive from others?',
+  ],
+  'career': [
+    'What work aligns with my design?',
+    'How do I find purpose in my career?',
+  ],
+};
+
+function setEvalType(type) {
+  document.querySelectorAll('.eval-type-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.arg0 === type);
+  });
+  const picks = EVAL_QUICKPICKS[type];
+  const row = document.getElementById('quickpickRow');
+  if (picks && row) {
+    const btn1 = document.getElementById('quickpick1');
+    const btn2 = document.getElementById('quickpick2');
+    btn1.textContent = picks[0];
+    btn1.dataset.arg0 = picks[0];
+    btn2.textContent = picks[1];
+    btn2.dataset.arg0 = picks[1];
+    row.style.display = '';
+  }
+}
+
+function setQuickPick(question) {
+  const input = document.getElementById('p-question');
+  if (input) input.value = question;
+}
+window.setEvalType = setEvalType;
+window.setQuickPick = setQuickPick;
 window.prefillExample = prefillExample;
 window.expandChartForm = expandChartForm;
 window.openLastShareCard = openLastShareCard;
+window.openBlueprintCard = openBlueprintCard;
+window.loadChartHistory = loadChartHistory;
+window.loadChartById = loadChartById;
+window.toggleNotifDrawer = toggleNotifDrawer;
+window.searchProfiles = searchProfiles;
 window.toggleRaw = toggleRaw;
 window.toggleDetails = toggleDetails;
 window.hideMemberForm = hideMemberForm;
 window.hidePracDetail = hidePracDetail;
+window.loadPractitionerInvitations = loadPractitionerInvitations;
+window.revokePractitionerInvitation = revokePractitionerInvitation;
+window.showNewNoteForm = showNewNoteForm;
+window.hideNewNoteForm = hideNewNoteForm;
+window.saveSessionNote = saveSessionNote;
+window.editSessionNote = editSessionNote;
+window.cancelEditNote = cancelEditNote;
+window.updateSessionNote = updateSessionNote;
+window.deleteSessionNote = deleteSessionNote;
+window.toggleDirectoryForm = toggleDirectoryForm;
+window.saveDirectoryProfile = saveDirectoryProfile;
 window.switchToPricingModal = switchToPricingModal;
 window.switchToPracPricingModal = switchToPracPricingModal;
 window.logout = logout;
@@ -4523,3 +5674,423 @@ window.frmClose = frmClose;
 window.frmNext = frmNext;
 window.frmBack = frmBack;
 window.frmCloseChart = frmCloseChart;
+// frmComplete, frmSetEvalType, frmSelectQuickpick are declared in first-run.js (loads after)
+// They are plain global functions so window[action] delegation reaches them automatically.
+window.loadCelebrityMatches = loadCelebrityMatches;
+window.filterCelebrities = filterCelebrities;
+window.loadAchievements = loadAchievements;
+window.loadLeaderboard = loadLeaderboard;
+window.findBestDates = findBestDates;
+window.searchDirectory = searchDirectory;
+window.loadDirectoryPage = loadDirectoryPage;
+window.startOneTimePurchase = startOneTimePurchase;
+
+// ─── One-Time Purchases ──────────────────────────────────────
+
+async function startOneTimePurchase(product) {
+  if (!token) {
+    closePricingModal();
+    openAuthOverlay();
+    return;
+  }
+
+  try {
+    const result = await apiFetch('/api/billing/checkout-one-time', {
+      method: 'POST',
+      body: JSON.stringify({ product })
+    });
+
+    if (result.error) {
+      showNotification('Checkout failed: ' + result.error, 'error');
+      return;
+    }
+
+    if (result.url) {
+      try {
+        const redirectUrl = new URL(result.url);
+        if (redirectUrl.hostname.endsWith('.stripe.com')) {
+          window.location.href = result.url;
+        } else {
+          showNotification('Invalid checkout redirect. Please try again.', 'error');
+        }
+      } catch {
+        showNotification('Invalid checkout URL received.', 'error');
+      }
+    }
+  } catch (e) {
+    showNotification('Failed to start checkout: ' + e.message, 'error');
+  }
+}
+
+// ─── Practitioner Directory Browsing ─────────────────────────
+
+let _directoryOffset = 0;
+const _directoryLimit = 20;
+
+async function searchDirectory() {
+  _directoryOffset = 0;
+  await loadDirectoryPage();
+}
+
+async function loadDirectoryPage(offset) {
+  if (offset !== undefined) _directoryOffset = offset;
+
+  const resultsEl = document.getElementById('directoryResults');
+  const paginationEl = document.getElementById('directoryPagination');
+  if (!resultsEl) return;
+
+  resultsEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Searching practitioners…</div></div>';
+  if (paginationEl) paginationEl.innerHTML = '';
+
+  const specialty = document.getElementById('dirFilterSpecialty')?.value || '';
+  const certification = document.getElementById('dirFilterCert')?.value || '';
+  const format = document.getElementById('dirFilterFormat')?.value || '';
+
+  let qs = `?limit=${_directoryLimit}&offset=${_directoryOffset}`;
+  if (specialty) qs += `&specialty=${encodeURIComponent(specialty)}`;
+  if (certification) qs += `&certification=${encodeURIComponent(certification)}`;
+  if (format) qs += `&format=${encodeURIComponent(format)}`;
+
+  try {
+    const data = await apiFetch('/api/directory' + qs);
+    const practitioners = data.practitioners || [];
+
+    if (practitioners.length === 0) {
+      resultsEl.innerHTML = `<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-4) 0;text-align:center">
+        No practitioners found matching your filters. Try broadening your search.
+      </div>`;
+      return;
+    }
+
+    resultsEl.innerHTML = practitioners.map(renderDirectoryCard).join('');
+
+    // Pagination
+    if (paginationEl) {
+      let pagHtml = '';
+      if (_directoryOffset > 0) {
+        pagHtml += `<button class="btn-secondary btn-sm" data-action="loadDirectoryPage" data-arg0="${_directoryOffset - _directoryLimit}">← Previous</button>`;
+      }
+      if (practitioners.length === _directoryLimit) {
+        pagHtml += `<button class="btn-secondary btn-sm" data-action="loadDirectoryPage" data-arg0="${_directoryOffset + _directoryLimit}">Next →</button>`;
+      }
+      paginationEl.innerHTML = pagHtml;
+    }
+  } catch (e) {
+    resultsEl.innerHTML = `<div class="alert alert-error">Error loading directory: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderDirectoryCard(p) {
+  const name = escapeHtml(p.display_name || 'Practitioner');
+  const bio = escapeHtml(p.bio || '');
+  const cert = escapeHtml(p.certification || '');
+  const format = escapeHtml(p.session_format || '');
+  const clients = parseInt(p.client_count || '0', 10);
+  const specs = Array.isArray(p.specializations) ? p.specializations.map(escapeHtml) : [];
+  const languages = Array.isArray(p.languages) ? p.languages.map(escapeHtml) : [];
+  const sessionInfo = escapeHtml(p.session_info || '');
+
+  let html = `
+  <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-4);margin-bottom:var(--space-3)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-2)">
+      <div>
+        <div style="font-weight:600;font-size:var(--font-size-md);color:var(--text)">${name}</div>
+        ${cert ? `<div style="font-size:var(--font-size-sm);color:var(--gold)">${cert}</div>` : ''}
+      </div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim)">${clients} client${clients !== 1 ? 's' : ''}</div>
+    </div>`;
+
+  if (bio) {
+    html += `<p style="font-size:var(--font-size-base);color:var(--text);line-height:1.5;margin:0 0 var(--space-2)">${bio}</p>`;
+  }
+
+  if (specs.length > 0) {
+    html += `<div style="display:flex;flex-wrap:wrap;gap:var(--space-1);margin-bottom:var(--space-2)">
+      ${specs.map(s => `<span style="background:var(--bg2);color:var(--gold);padding:2px 8px;border-radius:var(--space-2);font-size:var(--font-size-sm)">${s}</span>`).join('')}
+    </div>`;
+  }
+
+  const details = [];
+  if (format) details.push(format);
+  if (languages.length > 0) details.push(languages.join(', '));
+  if (sessionInfo) details.push(sessionInfo);
+  if (details.length > 0) {
+    html += `<div style="font-size:var(--font-size-sm);color:var(--text-dim)">${details.map(escapeHtml).join(' · ')}</div>`;
+  }
+
+  if (p.booking_url) {
+    // P2-SEC-015: Block javascript: protocol in booking URLs
+    const safeBookingUrl = /^https?:\/\//i.test(p.booking_url) ? escapeAttr(p.booking_url) : '';
+    if (safeBookingUrl) {
+    html += `<div style="margin-top:var(--space-2)">
+      <a href="${safeBookingUrl}" target="_blank" rel="noopener noreferrer"
+         class="btn-primary btn-sm" style="display:inline-block;text-decoration:none">Book a Session</a>
+    </div>`;
+    }
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+// ─── Celebrity / Famous Matches ──────────────────────────────
+
+let _allCelebrityMatches = [];
+
+async function loadCelebrityMatches() {
+  const btn = document.getElementById('celebLoadBtn');
+  const spinner = document.getElementById('celebSpinner');
+  const status = document.getElementById('celebrityStatus');
+  const grid = document.getElementById('celebrityGrid');
+
+  if (!token) { openAuthOverlay(); return; }
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
+  if (status) status.textContent = 'Finding your famous matches...';
+
+  try {
+    const data = await apiFetch('/api/compare/celebrities');
+    _allCelebrityMatches = data.matches || [];
+    if (status) status.textContent = '';
+    renderCelebrityGrid(_allCelebrityMatches);
+  } catch (e) {
+    if (status) status.textContent = 'Error: ' + e.message;
+  } finally {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+function renderCelebrityGrid(matches) {
+  const grid = document.getElementById('celebrityGrid');
+  if (!grid) return;
+  if (!matches.length) {
+    grid.innerHTML = '<p style="color:var(--text-dim)">No matches found. Calculate your chart first.</p>';
+    return;
+  }
+  grid.innerHTML = matches.map(m => {
+    const pct = m.similarity?.percentage ?? 0;
+    const celeb = m.celebrity || {};
+    // P2-SEC-001: Escape all API-sourced data to prevent stored XSS
+    const name = escapeHtml(String(celeb.name || 'Unknown'));
+    const field = escapeHtml(String(celeb.field || ''));
+    const type = escapeHtml(String(celeb.type || ''));
+    const authority = celeb.authority ? escapeHtml(String(celeb.authority)) : '';
+    const desc = celeb.description ? escapeHtml(String(celeb.description)) : '';
+    const category = escapeAttr(celeb.category || 'other');
+    // P2-SEC-002: Use data-action + data attribute instead of inline onclick
+    const celebId = escapeAttr(celeb.id || '');
+    return `
+      <div class="card" style="margin-bottom:var(--space-4);display:flex;gap:var(--space-4);align-items:flex-start;flex-wrap:wrap" data-category="${category}">
+        <div style="min-width:60px;text-align:center">
+          <div style="font-size:2rem;font-weight:700;color:var(--gold)">${pct}%</div>
+          <div style="font-size:var(--font-size-xs);color:var(--text-dim)">match</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:var(--font-size-lg);color:var(--text)">${name}</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-2)">${field} &middot; ${type} ${authority ? '&middot; ' + authority + ' Authority' : ''}</div>
+          ${desc ? `<p style="font-size:var(--font-size-sm);color:var(--text-dim);margin:0 0 var(--space-3)">${desc}</p>` : ''}
+          <button class="btn-secondary" style="font-size:var(--font-size-sm)" data-action="shareCelebrityMatch" data-arg0="${celebId}">Share Match</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterCelebrities(category) {
+  document.querySelectorAll('.celebrity-filter').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.arg0 === category);
+  });
+  const filtered = category === 'all' ? _allCelebrityMatches
+    : _allCelebrityMatches.filter(m => (m.celebrity?.category || '') === category);
+  renderCelebrityGrid(filtered);
+}
+
+async function shareCelebrityMatch(celebrityId) {
+  if (!token) { openAuthOverlay(); return; }
+  try {
+    const data = await apiFetch('/api/share/celebrity', {
+      method: 'POST',
+      body: JSON.stringify({ celebrityId, platform: 'twitter' })
+    });
+    if (data.shareUrls?.twitter) {
+      try {
+        const shareUrl = new URL(data.shareUrls.twitter);
+        if (shareUrl.protocol === 'https:' || shareUrl.protocol === 'http:') {
+          window.open(shareUrl.href, '_blank', 'noopener');
+        }
+      } catch { /* invalid URL — ignore */ }
+    }
+  } catch (e) {
+    alert('Could not generate share: ' + e.message);
+  }
+}
+
+// ─── Achievements & Leaderboard ──────────────────────────────
+
+async function loadAchievements() {
+  const btn = document.getElementById('achieveLoadBtn');
+  const spinner = document.getElementById('achieveSpinner');
+  const status = document.getElementById('achievementsStatus');
+  const badges = document.getElementById('achievementsBadges');
+  const statsCard = document.getElementById('achievementsStatsCard');
+  const statsEl = document.getElementById('achievementsStats');
+
+  if (!token) { openAuthOverlay(); return; }
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
+  if (status) status.textContent = 'Loading achievements...';
+
+  try {
+    const [achData, progData] = await Promise.all([
+      apiFetch('/api/achievements'),
+      apiFetch('/api/achievements/progress')
+    ]);
+
+    // Stats bar
+    if (progData && statsCard && statsEl) {
+      statsCard.style.display = '';
+      statsEl.innerHTML = [
+        { label: 'Points', value: progData.totalPoints ?? 0 },
+        { label: 'Badges', value: (progData.totalAchievements ?? 0) + ' / ' + (progData.possibleAchievements ?? '?') },
+        { label: 'Rank', value: progData.rank ? '#' + progData.rank : '—' }
+      ].map(s => `<div style="text-align:center"><div style="font-size:1.8rem;font-weight:700;color:var(--gold)">${s.value}</div><div style="font-size:var(--font-size-xs);color:var(--text-dim)">${s.label}</div></div>`).join('');
+    }
+
+    // Badge grid
+    const achievements = achData.achievements || [];
+    if (status) status.textContent = '';
+    if (badges) badges.innerHTML = achievements.length
+      ? achievements.map(a => `
+          <div style="display:flex;gap:var(--space-3);align-items:flex-start;padding:var(--space-3) 0;border-bottom:var(--border-width-thin) solid var(--border);opacity:${a.unlocked ? 1 : 0.45}">
+            <div style="font-size:2rem;min-width:40px;text-align:center">${escapeHtml(a.icon || '🏅')}</div>
+            <div style="flex:1">
+              <div style="font-weight:600;color:var(--text)">${escapeHtml(a.name)}</div>
+              <div style="font-size:var(--font-size-sm);color:var(--text-dim)">${escapeHtml(a.description || '')}</div>
+              ${a.unlocked ? `<div style="font-size:var(--font-size-xs);color:var(--gold);margin-top:var(--space-1)">Earned ${a.unlockedAt ? new Date(a.unlockedAt).toLocaleDateString() : ''} &middot; +${a.points || 0} pts</div>` : '<div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-top:var(--space-1)">Locked</div>'}
+            </div>
+          </div>`).join('')
+      : '<p style="color:var(--text-dim)">Complete actions to earn your first badge.</p>';
+
+  } catch (e) {
+    if (status) status.textContent = 'Error: ' + e.message;
+  } finally {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+async function loadLeaderboard() {
+  const btn = document.getElementById('leaderboardLoadBtn');
+  const spinner = document.getElementById('leaderboardSpinner');
+  const list = document.getElementById('leaderboardList');
+
+  if (!token) { openAuthOverlay(); return; }
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
+
+  try {
+    const data = await apiFetch('/api/achievements/leaderboard');
+    const entries = data.leaderboard || [];
+    if (list) list.innerHTML = entries.length
+      ? `<table style="width:100%;border-collapse:collapse;font-size:var(--font-size-sm)">
+          <thead><tr style="color:var(--text-dim);text-align:left">
+            <th style="padding:var(--space-2) var(--space-3)">#</th>
+            <th style="padding:var(--space-2) var(--space-3)">User</th>
+            <th style="padding:var(--space-2) var(--space-3)">Points</th>
+            <th style="padding:var(--space-2) var(--space-3)">Badges</th>
+          </tr></thead>
+          <tbody>
+            ${entries.map((e, i) => `
+              <tr style="border-top:var(--border-width-thin) solid var(--border)">
+                <td style="padding:var(--space-2) var(--space-3);color:var(--gold);font-weight:700">${i + 1}</td>
+                <td style="padding:var(--space-2) var(--space-3);color:var(--text)">${escapeHtml(e.displayName || e.email?.split('@')[0] || 'Anonymous')}</td>
+                <td style="padding:var(--space-2) var(--space-3);color:var(--gold);font-weight:600">${e.totalPoints ?? 0}</td>
+                <td style="padding:var(--space-2) var(--space-3);color:var(--text-dim)">${e.totalAchievements ?? 0}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`
+      : '<p style="color:var(--text-dim)">No leaderboard data yet.</p>';
+  } catch (e) {
+    if (list) list.textContent = 'Error: ' + e.message;
+  } finally {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+// ─── Optimal Timing / Electional Astrology ───────────────────
+
+async function findBestDates() {
+  const btn = document.getElementById('timingBtn');
+  const spinner = document.getElementById('timingSpinner');
+  const status = document.getElementById('timingStatus');
+  const resultsCard = document.getElementById('timingResultsCard');
+  const results = document.getElementById('timingResults');
+
+  if (!token) { openAuthOverlay(); return; }
+
+  const intention = document.getElementById('timing-intention')?.value;
+  const startDate = document.getElementById('timing-start')?.value;
+  const windowDays = parseInt(document.getElementById('timing-window')?.value || '30');
+
+  if (!intention) { if (status) status.textContent = 'Please select what you are planning.'; return; }
+  if (!startDate) { if (status) status.textContent = 'Please select a start date.'; return; }
+
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
+  if (status) status.textContent = 'Calculating optimal dates...';
+  if (resultsCard) resultsCard.style.display = 'none';
+
+  try {
+    const data = await apiFetch('/api/timing/find-dates', {
+      method: 'POST',
+      body: JSON.stringify({ intention, startDate, windowDays })
+    });
+
+    const dates = data.optimalDates || data.dates || [];
+    if (status) status.textContent = '';
+    if (resultsCard) resultsCard.style.display = '';
+    if (results) results.innerHTML = dates.length
+      ? dates.map(d => `
+          <div style="padding:var(--space-4) 0;border-bottom:var(--border-width-thin) solid var(--border)">
+            <div style="font-weight:600;color:var(--gold);font-size:var(--font-size-lg)">${new Date(d.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">${d.score !== undefined ? 'Score: ' + d.score + '/10 &middot; ' : ''}${escapeHtml(d.moonPhase || '')}</div>
+            <p style="font-size:var(--font-size-sm);color:var(--text);margin:var(--space-2) 0 0">${escapeHtml(d.explanation || d.reason || '')}</p>
+          </div>`).join('')
+      : '<p style="color:var(--text-dim)">No strongly favorable dates found in this window. Try extending the search range.</p>';
+  } catch (e) {
+    if (status) status.textContent = 'Error: ' + e.message;
+    if (resultsCard) resultsCard.style.display = 'none';
+  } finally {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
+  }
+}
+
+// ─── Theme Toggle ─────────────────────────────────────────────────────────
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggleBtn');
+  const isLight = root.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    root.removeAttribute('data-theme');
+    localStorage.setItem('ps-theme', 'dark');
+    if (btn) { btn.textContent = '☀'; btn.setAttribute('aria-label', 'Switch to light mode'); }
+  } else {
+    root.setAttribute('data-theme', 'light');
+    localStorage.setItem('ps-theme', 'light');
+    if (btn) { btn.textContent = '☽'; btn.setAttribute('aria-label', 'Switch to dark mode'); }
+  }
+}
+window.toggleTheme = toggleTheme;
+
+// Sync button icon to match applied theme on initial load
+document.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn && document.documentElement.getAttribute('data-theme') === 'light') {
+    btn.textContent = '☽';
+    btn.setAttribute('aria-label', 'Switch to dark mode');
+  }
+});
