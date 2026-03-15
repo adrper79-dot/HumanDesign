@@ -229,6 +229,8 @@ These are infrastructure bindings, not secrets.
 □ Set NOTION_CLIENT_ID:            npx wrangler secret put NOTION_CLIENT_ID
 □ Set NOTION_CLIENT_SECRET:        npx wrangler secret put NOTION_CLIENT_SECRET
 □ Set RESEND_API_KEY:              npx wrangler secret put RESEND_API_KEY
+□ Set AUDIT_SECRET (Worker):       npx wrangler secret put AUDIT_SECRET
+□ Set AUDIT_SECRET (GitHub):       repo → Settings → Secrets → Actions → AUDIT_SECRET
 □ Deploy:                          npx wrangler deploy
 □ Test: auth, checkout, SMS, profile generation, Notion sync
 □ DELETE Secrets.txt:              git rm Secrets.txt && git commit -m "chore: remove plaintext secrets"
@@ -274,6 +276,34 @@ These are infrastructure bindings, not secrets.
 | | `npx wrangler secret put APPLE_KEY_ID` |
 | | `npx wrangler secret put APPLE_PRIVATE_KEY` |
 | **Note** | Apple Sign In callback is a `POST` (not GET). The handler supports both. Apple only sends the user's name on first authorization — it's captured and stored immediately. |
+
+---
+
+### 14. `AUDIT_SECRET`
+
+| Field | Value |
+|-------|-------|
+| **Service** | Internal — no external provider |
+| **Used by** | `workers/src/handlers/analytics.js` · `scripts/collectors/app-metrics.js` · `.github/workflows/audit-cron.yml` |
+| **Purpose** | Allows the GH Actions automated audit runner to call `/api/analytics/audit` without a user JWT. Must be a long random string (≥ 32 bytes). |
+| **Format** | Random hex or base64 string — generate with `openssl rand -hex 32` |
+| **Where to set (Worker)** | `npx wrangler secret put AUDIT_SECRET` |
+| **Where to set (GitHub)** | Repository → Settings → Secrets → Actions → New secret → `AUDIT_SECRET` |
+| **Rotation** | Rotate both the Worker secret and the GitHub secret together |
+
+**Generate a value:**
+```bash
+openssl rand -hex 32
+```
+
+**Set in both places:**
+```bash
+# Worker (Cloudflare)
+cd workers && npx wrangler secret put AUDIT_SECRET
+
+# GitHub Actions — via GitHub UI:
+# Repository → Settings → Secrets and variables → Actions → New repository secret
+```
 
 ---
 

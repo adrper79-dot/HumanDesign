@@ -1,0 +1,88 @@
+name: Automated Audit Loop
+
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: false  # Never cancel an in-progress audit
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'   # Every Monday 7am UTC
+  workflow_dispatch:
+    inputs:
+      full_audit:
+        description: 'Force full AI audit (bypasses mode schedule)'
+        required: false
+        default: 'false'
+        type: boolean
+      vitals_only:
+        description: 'Run vitals only (no AI audit, no cost)'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write  # Required to commit audit output
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    name: Run Audit
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for delta comparison
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run audit
+        id: audit
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.vitals_only }}" = "true" ]; then
+            ARGS="--vitals-only"
+          elif [ "${{ github.event.inputs.full_audit }}" = "true" ]; then
+            ARGS="--force-full"
+          fi
+          node scripts/run-audit.js $ARGS
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AUDIT_SECRET: ${{ secrets.AUDIT_SECRET }}
+          PROD_API: https://prime-self-api.adrper79.workers.dev
+          FRONTEND_BASE: https://selfprime.net
+          AUDIT_DATE: ${{ github.run_id }}
+
+      - name: Check P0 launch gate
+        run: |
+          P0_COUNT=$(node scripts/count-issues.js --severity P0 --status open)
+          echo "Open P0 issues: $P0_COUNT"
+          if [ "$P0_COUNT" -gt "0" ]; then
+            echo "::warning::$P0_COUNT open P0 issue(s) detected. Review audits/issue-registry.json."
+          fi
+
+      - name: Commit audit output
+        run: |
+          git config user.email "audit-bot@selfprime.net"
+          git config user.name "Prime Self Audit Bot"
+          git add audits/
+          # Only commit if there are changes
+          git diff --staged --quiet || git commit -m "audit: $(date +%Y-%m-%d) automated run [skip ci]"
+          git push || echo "Nothing to push"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload audit artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-report-${{ github.run_id }}
+          path: audits/
+          retention-days: 90
