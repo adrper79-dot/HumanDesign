@@ -805,7 +805,11 @@ async function handleVerifyEmail(request, env) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     const tokenHash = await sha256(token);
 
-    const result = await query(QUERIES.getEmailVerificationToken, [tokenHash]);
+    // AUDIT-SEC-001: Use atomic DELETE...RETURNING to consume the token in a
+    // single statement. This eliminates the SELECT-then-DELETE race condition
+    // where two concurrent requests could both read the token before either
+    // deletes it, allowing the same link to verify twice.
+    const result = await query(QUERIES.atomicVerifyEmailToken, [tokenHash]);
     const record = result.rows?.[0];
 
     if (!record) {
@@ -815,11 +819,8 @@ async function handleVerifyEmail(request, env) {
       );
     }
 
-    // Mark user as verified
+    // Mark user as verified (token is already consumed above)
     await query(QUERIES.markEmailVerified, [record.user_id]);
-
-    // Delete all verification tokens for this user (cleanup)
-    await query(QUERIES.deleteEmailVerificationTokens, [record.user_id]);
 
     return Response.json({
       ok: true,

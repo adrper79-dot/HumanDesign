@@ -1,40 +1,42 @@
 {
   "version": "2026-03-15",
-  "mode": "MAINTENANCE",
-  "consecutiveCleanRuns": 2,
+  "mode": "ACTIVE",
+  "consecutiveCleanRuns": 0,
   "issues": [
     {
       "id": "CTO-001",
       "persona": "CTO",
       "severity": "P0",
       "area": "logging",
-      "title": "No request correlation IDs (X-Request-ID) — production incidents are undebuggable",
+      "title": "No request correlation IDs (X-Request-ID) \u2014 production incidents are undebuggable",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "generateRequestId() + createLogger() in logger.js; index.js threads X-Request-ID through every request and response"
     },
     {
       "id": "CTO-002",
       "persona": "CTO",
       "severity": "P0",
       "area": "logging",
-      "title": "317 unstructured console.log/error calls — no structured JSON logging across 72 files",
-      "status": "resolved",
+      "title": "317 unstructured console.log/error calls \u2014 no structured JSON logging across 72 files",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "logger.js with structured JSON implemented; 268 console.log/error calls across 49 files not yet migrated. Index.js, auth.js, and cron.js use structured logger; most handlers do not."
     },
     {
       "id": "CTO-003",
       "persona": "CTO",
       "severity": "P0",
       "area": "error-handling",
-      "title": "No retry wrapper on DB calls — Neon cold-start spikes cause silent failures",
+      "title": "No retry wrapper on DB calls \u2014 Neon cold-start spikes cause silent failures",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "createQueryFn() in queries.js has 3-attempt retry with exponential backoff and Neon cold-start detection"
     },
     {
       "id": "CTO-004",
@@ -42,43 +44,43 @@
       "severity": "P0",
       "area": "observability",
       "title": "13.33% production error rate (828/6212 requests) with no error tracking tooling to diagnose root cause",
-      "status": "resolved",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "13.33% error rate is a production operational metric. Code fixes (retry logic, error tracking, structured logs) deployed; actual error rate requires production monitoring to verify improvement."
     },
     {
       "id": "CTO-005",
       "persona": "CTO",
       "severity": "P0",
       "area": "error-handling",
-      "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) — cascading failures unmitigated",
-      "status": "resolved",
+      "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) \u2014 cascading failures unmitigated",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Stripe calls have 10s timeout (createStripeClient). No circuit breaker pattern implemented for external calls (Stripe, SMS/Telnyx, push). Cascading failure on sustained external outage unmitigated."
     },
     {
       "id": "CTO-006",
       "persona": "CTO",
       "severity": "P1",
       "area": "handler-complexity",
-      "title": "auth.js exceeds 977 lines — monolithic handler resists safe refactoring and testing",
-      "status": "resolved",
+      "title": "auth.js exceeds 977 lines \u2014 monolithic handler resists safe refactoring and testing",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "auth.js is 1084 lines. Modularization deferred \u2014 safe refactoring requires additional test coverage first."
     },
     {
       "id": "CTO-007",
       "persona": "CTO",
       "severity": "P1",
       "area": "handler-complexity",
-      "title": "billing.js exceeds 474 lines — single-responsibility principle violated across multiple billing concerns",
-      "status": "resolved",
+      "title": "billing.js exceeds 474 lines \u2014 single-responsibility principle violated across multiple billing concerns",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "billing.js is ~530 lines. Grew slightly due to agency gate and idempotency fix. Decomposition into checkout.js/portal.js/subscription.js deferred."
     },
     {
       "id": "CTO-008",
@@ -86,43 +88,46 @@
       "severity": "P1",
       "area": "testing",
       "title": "273/273 passing tests with 13.33% prod error rate indicates test suite does not cover failing production paths",
-      "status": "resolved",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "291 tests run; 5 fail due to missing dev packages. error-paths.test.js and security-fixes.test.js added for coverage but missing @neondatabase/serverless mock in CI."
     },
     {
       "id": "CTO-009",
       "persona": "CTO",
       "severity": "P1",
       "area": "cron",
-      "title": "Cron handler runs 8+ sequential tasks without independent error boundaries — one failure may cascade to block downstream tasks",
+      "title": "Cron handler runs 8+ sequential tasks without independent error boundaries \u2014 one failure may cascade to block downstream tasks",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "cron.js wraps each step in withTimeout() + independent try-catch blocks; failures logged but don't cascade"
     },
     {
       "id": "CTO-010",
       "persona": "CTO",
       "severity": "P1",
       "area": "logging",
-      "title": "No durationMs logging on DB queries — cannot identify slow queries contributing to error rate",
+      "title": "No durationMs logging on DB queries \u2014 cannot identify slow queries contributing to error rate",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "queries.js logs durationMs on slow queries (>1000ms) and on every error via structured JSON"
     },
     {
       "id": "CTO-011",
       "persona": "CTO",
       "severity": "P1",
       "area": "error-handling",
-      "title": "ROLLBACK failures swallowed via console.error — failed transaction rollbacks are silent in production",
+      "title": "ROLLBACK failures swallowed via console.error \u2014 failed transaction rollbacks are silent in production",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "transaction() in queries.js logs rollback failures as {event:'txn_rollback_failed', code, message} structured JSON"
     },
     {
       "id": "CTO-012",
@@ -130,98 +135,104 @@
       "severity": "P2",
       "area": "logging",
       "title": "PII-adjacent data (user IDs, subscription IDs) interpolated into flat log strings without sanitization policy",
-      "status": "resolved",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "sanitizeId() in logger.js provides truncation helper; most handlers still use raw console.log with user IDs in strings. Full PII sweep required."
     },
     {
       "id": "CTO-013",
       "persona": "CTO",
       "severity": "P2",
       "area": "deployment",
-      "title": "No confirmed CI/CD pipeline — staging-to-production promotion discipline unverified",
+      "title": "No confirmed CI/CD pipeline \u2014 staging-to-production promotion discipline unverified",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": ".github/workflows CI pipeline present; Wrangler deploy gated on passing tests"
     },
     {
       "id": "CISO-001",
       "persona": "CISO",
       "severity": "P0",
       "area": "auth",
-      "title": "JWT stored in localStorage — XSS on any page = full account takeover; HttpOnly cookie migration required",
-      "status": "resolved",
+      "title": "JWT stored in localStorage \u2014 XSS on any page = full account takeover; HttpOnly cookie migration required",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Refresh tokens use HttpOnly cookie (ps_refresh). Access tokens (15 min TTL) returned in JSON body \u2014 still readable by JS. Full mitigation requires BFF session endpoint."
     },
     {
       "id": "CISO-002",
       "persona": "CISO",
       "severity": "P0",
       "area": "data-isolation",
-      "title": "No confirmed row-level security or tenant scoping on practitioner/client data — cross-user data access via ID enumeration unmitigated",
-      "status": "resolved",
+      "title": "No confirmed row-level security or tenant scoping on practitioner/client data \u2014 cross-user data access via ID enumeration unmitigated",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Application-level scoping is correct (all queries use WHERE practitioner_id=$1). DB-level PostgreSQL RLS policies not confirmed in migrations."
     },
     {
       "id": "CISO-003",
       "persona": "CISO",
       "severity": "P0",
       "area": "csp",
-      "title": "CSP unsafe-inline likely present on vanilla JS PWA — XSS mitigation effectively disabled",
+      "title": "CSP unsafe-inline likely present on vanilla JS PWA \u2014 XSS mitigation effectively disabled",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "security.js applySecurityHeaders() adds Content-Security-Policy: default-src 'none' to all API responses"
     },
     {
       "id": "CISO-004",
       "persona": "CISO",
       "severity": "P0",
       "area": "rate-limiting",
-      "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) — credential stuffing and email enumeration unmitigated",
+      "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) \u2014 credential stuffing and email enumeration unmitigated",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "rateLimit.js covers /api/auth/login, /api/auth/register, /api/auth/forgot-password, /api/auth/resend-verification"
     },
     {
       "id": "CISO-005",
       "persona": "CISO",
       "severity": "P1",
       "area": "webhooks",
-      "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed — unsigned webhook processing risk",
+      "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed \u2014 unsigned webhook processing risk",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "webhook.js verifies stripe-signature via verifyWebhook() before processing any event; missing signature returns 400"
     },
     {
       "id": "CISO-006",
       "persona": "CISO",
       "severity": "P1",
       "area": "auth",
-      "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed — CSRF on OAuth callback unverified",
+      "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed \u2014 CSRF on OAuth callback unverified",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "FIXED 2026-03-15: oauthSocial.js now fails-closed \u2014 if CACHE is bound but state key is missing/mismatched, OAuth callback is rejected. Previously passed through on missing state."
     },
     {
       "id": "CISO-007",
       "persona": "CISO",
       "severity": "P1",
       "area": "data-isolation",
-      "title": "Agency handler data scoping not auditable — practitioner accessing other practitioner's client roster not ruled out",
+      "title": "Agency handler data scoping not auditable \u2014 practitioner accessing other practitioner's client roster not ruled out",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "All practitioner/agency queries use WHERE practitioner_id=$1 or WHERE owner_user_id=$1 scoped to the authenticated user"
     },
     {
       "id": "CISO-008",
@@ -229,54 +240,57 @@
       "severity": "P2",
       "area": "logging",
       "title": "User IDs in unstructured logs create GDPR-adjacent audit trail exposure in Cloudflare log retention",
-      "status": "resolved",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "sanitizeId() exists in logger.js but 268 raw console.log/error calls remain across 49 files that may log user IDs without sanitization."
     },
     {
       "id": "CFO-001",
       "persona": "CFO",
       "severity": "P0",
       "area": "billing",
-      "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness — collecting revenue for undelivered product",
+      "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness \u2014 collecting revenue for undelivered product",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "billing.js handleCheckout() returns contactRequired:true for agency tier; no Stripe session created until features are delivered"
     },
     {
       "id": "CFO-002",
       "persona": "CFO",
       "severity": "P0",
       "area": "billing",
-      "title": "No Stripe webhook idempotency handling — duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge",
+      "title": "No Stripe webhook idempotency handling \u2014 duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "webhook.js checks QUERIES.checkEventProcessed before processing; marks processed via QUERIES.markEventProcessed after"
     },
     {
       "id": "CFO-003",
       "persona": "CFO",
       "severity": "P0",
       "area": "quota",
-      "title": "No confirmed pre-flight quota enforcement before AI calls — free-tier users can exhaust AI budget without cost gate",
+      "title": "No confirmed pre-flight quota enforcement before AI calls \u2014 free-tier users can exhaust AI budget without cost gate",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "enforceUsageQuota() in tierEnforcement.js gates all profile_generation endpoints; uses QUERIES.atomicQuotaCheckAndInsert"
     },
     {
       "id": "CFO-004",
       "persona": "CFO",
       "severity": "P0",
       "area": "analytics",
-      "title": "App analytics returning HTTP 401 — conversion funnel, ARPU, and churn metrics are completely blind",
-      "status": "resolved",
+      "title": "App analytics returning HTTP 401 \u2014 conversion funnel, ARPU, and churn metrics are completely blind",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Analytics endpoint correctly requires X-Audit-Token or practitioner JWT. 401 in audit run indicates AUDIT_SECRET secret not set in production Worker environment."
     },
     {
       "id": "CFO-005",
@@ -284,10 +298,10 @@
       "severity": "P1",
       "area": "billing",
       "title": "Webhook-driven and cron-driven subscription downgrade paths can double-fire without explicit deduplication",
-      "status": "resolved",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Webhook idempotency (checkEventProcessed) prevents double-processing. Cron downgrade checks subscription status before acting. However, simultaneous webhook+cron execution window not fully eliminated by DB-level locking."
     },
     {
       "id": "CFO-006",
@@ -298,260 +312,270 @@
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "enforceUsageQuota() in tierEnforcement.js checks email_verified via QUERIES.getEmailVerifiedStatus; returns 403 if unverified"
     },
     {
       "id": "CFO-007",
       "persona": "CFO",
       "severity": "P1",
       "area": "billing",
-      "title": "Proration logic on mid-cycle upgrades not confirmed — risk of revenue under- or over-collection",
-      "status": "resolved",
+      "title": "Proration logic on mid-cycle upgrades not confirmed \u2014 risk of revenue under- or over-collection",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Proration is handled by Stripe (proration_behavior on subscription update). Not confirmed in Stripe dashboard configuration. Code correctly passes billing_period to checkout metadata."
     },
     {
       "id": "CFO-008",
       "persona": "CFO",
       "severity": "P2",
       "area": "billing",
-      "title": "No cancellation save/deflection flow — churn prevention revenue opportunity not captured",
-      "status": "resolved",
+      "title": "No cancellation save/deflection flow \u2014 churn prevention revenue opportunity not captured",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Billing portal (Stripe Customer Portal) handles cancellation. No custom save/deflection flow (pause, downgrade offer) before cancellation. Stripe portal config would need cancellation reason + offer flow."
     },
     {
       "id": "CMO-001",
       "persona": "CMO",
       "severity": "P0",
       "area": "retention",
-      "title": "Human Design labels displayed without 'why it matters' life-implication copy — #1 confirmed churn driver in category",
-      "status": "resolved",
+      "title": "Human Design labels displayed without 'why it matters' life-implication copy \u2014 #1 confirmed churn driver in category",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Frontend content \u2014 'why it matters' copy for Human Design labels is a product/content decision. API returns raw gate/channel/authority data; interpretation layer is frontend responsibility."
     },
     {
       "id": "CMO-002",
       "persona": "CMO",
       "severity": "P0",
       "area": "practitioner-value",
-      "title": "Practitioner directory profiles not confirmed indexable by search engines — core $97 tier acquisition value prop undelivered",
-      "status": "resolved",
+      "title": "Practitioner directory profiles not confirmed indexable by search engines \u2014 core $97 tier acquisition value prop undelivered",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "practitioner-directory.js handler exists. SEO indexability depends on frontend SSR/static generation for /practitioner/:id pages. Vanilla JS PWA without SSR means profile pages are not crawlable by default."
     },
     {
       "id": "CMO-003",
       "persona": "CMO",
       "severity": "P0",
       "area": "referral",
-      "title": "No referral mechanics built — highest-leverage growth channel for Human Design (practitioner→client→friend) untouched",
+      "title": "No referral mechanics built \u2014 highest-leverage growth channel for Human Design (practitioner\u2192client\u2192friend) untouched",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "workers/src/handlers/referrals.js exists (589 lines) with invite links, tracking, and conversion attribution"
     },
     {
       "id": "CMO-004",
       "persona": "CMO",
       "severity": "P1",
       "area": "onboarding",
-      "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point — no mitigation confirmed",
-      "status": "resolved",
+      "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point \u2014 no mitigation confirmed",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "geocode.js handler exists with city/timezone lookup. Birth data entry UX friction (autocomplete latency, timezone edge cases) is a frontend optimization concern. No funnel analytics to measure drop rate (CFO-004)."
     },
     {
       "id": "CMO-005",
       "persona": "CMO",
       "severity": "P1",
       "area": "onboarding",
-      "title": "Empty practitioner dashboard on first login — no empty-state guidance or 'add first client' CTA confirmed",
-      "status": "resolved",
+      "title": "Empty practitioner dashboard on first login \u2014 no empty-state guidance or 'add first client' CTA confirmed",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Frontend UX concern \u2014 practitioner dashboard empty-state guidance on first login is a frontend implementation detail not visible in worker code."
     },
     {
       "id": "CMO-006",
       "persona": "CMO",
       "severity": "P1",
       "area": "social",
-      "title": "Shareable chart cards / social share hooks not confirmed — organic acquisition from existing users not captured",
+      "title": "Shareable chart cards / social share hooks not confirmed \u2014 organic acquisition from existing users not captured",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "workers/src/handlers/share.js exists with shareable chart card generation"
     },
     {
       "id": "CMO-007",
       "persona": "CMO",
       "severity": "P1",
       "area": "conversion",
-      "title": "No trial or freemium-to-Guide upgrade path confirmed — cold conversion to $97/mo from landing page will be sub-1%",
-      "status": "resolved",
+      "title": "No trial or freemium-to-Guide upgrade path confirmed \u2014 cold conversion to $97/mo from landing page will be sub-1%",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "No trial period or freemium-to-paid upgrade path visible in billing.js. Stripe supports trial_period_days on subscriptions; not implemented. Cold conversion to $97/mo without trial will limit acquisition."
     },
     {
       "id": "CMO-008",
       "persona": "CMO",
       "severity": "P2",
       "area": "onboarding",
-      "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed — risks feeling generic",
-      "status": "resolved",
+      "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed \u2014 risks feeling generic",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "onboarding.js handler exists. Personalization depth per type/authority combination depends on prompt engineering in LLM calls \u2014 not auditable from worker code alone."
     },
     {
       "id": "CIO-001",
       "persona": "CIO",
       "severity": "P0",
       "area": "observability",
-      "title": "No Sentry or equivalent error tracking — 828 production errors in 7 days have no grouping, stack traces, or affected-user counts",
+      "title": "No Sentry or equivalent error tracking \u2014 828 production errors in 7 days have no grouping, stack traces, or affected-user counts",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "sentry.js fully implements Sentry envelope API; initSentry() used in index.js for all unhandled errors"
     },
     {
       "id": "CIO-002",
       "persona": "CIO",
       "severity": "P0",
       "area": "logging",
-      "title": "Zero structured log lines — Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure",
-      "status": "resolved",
+      "title": "Zero structured log lines \u2014 Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Same as CTO-002: logger.js implemented; bulk of codebase (49 files) still uses console.log."
     },
     {
       "id": "CIO-003",
       "persona": "CIO",
       "severity": "P0",
       "area": "logging",
-      "title": "No X-Request-ID generated or threaded through handlers — cross-service request tracing impossible",
+      "title": "No X-Request-ID generated or threaded through handlers \u2014 cross-service request tracing impossible",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "Same as CTO-001: X-Request-ID generated in index.js fetch handler and threaded through responses"
     },
     {
       "id": "CIO-004",
       "persona": "CIO",
       "severity": "P1",
       "area": "health",
-      "title": "Health endpoint depth unconfirmed — /api/health?full=1 with DB, KV, Stripe reachability checks not verified",
+      "title": "Health endpoint depth unconfirmed \u2014 /api/health?full=1 with DB, KV, Stripe reachability checks not verified",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "/api/health?full=1 in index.js runs concurrent DB ping, KV put/get, and Stripe balance.retrieve(); returns 503 if any fail"
     },
     {
       "id": "CIO-005",
       "persona": "CIO",
       "severity": "P1",
       "area": "cron",
-      "title": "Cron tasks lack independent timeouts — a hung DB call in transit snapshot can starve SMS digest delivery",
+      "title": "Cron tasks lack independent timeouts \u2014 a hung DB call in transit snapshot can starve SMS digest delivery",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "cron.js wraps every step in withTimeout(promise, ms, label); hung steps are aborted, not allowed to starve downstream steps"
     },
     {
       "id": "CIO-006",
       "persona": "CIO",
       "severity": "P1",
       "area": "analytics",
-      "title": "App analytics endpoint returning HTTP 401 — operational metrics dashboard is broken",
-      "status": "resolved",
+      "title": "App analytics endpoint returning HTTP 401 \u2014 operational metrics dashboard is broken",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Same as CFO-004: AUDIT_SECRET not configured in production environment."
     },
     {
       "id": "CIO-007",
       "persona": "CIO",
       "severity": "P2",
       "area": "cache",
-      "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable — stale data risk on high-read paths",
-      "status": "resolved",
+      "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable \u2014 stale data risk on high-read paths",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "KV used for rate limiting (CACHE binding) and OAuth state. cache.js has TTL on all put() calls. Transit snapshot KV TTL strategy not explicitly documented; stale data risk on high-read paths not fully audited."
     },
     {
       "id": "CIO-008",
       "persona": "CIO",
       "severity": "P2",
       "area": "deployment",
-      "title": "No confirmed staging environment or Wrangler promotion workflow — production deployments risk untested regressions",
-      "status": "resolved",
+      "title": "No confirmed staging environment or Wrangler promotion workflow \u2014 production deployments risk untested regressions",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Wrangler environments (staging/production) not confirmed in wrangler.toml. Production deployments may not be gated on staging validation."
     },
     {
       "id": "PRAC-001",
       "persona": "Practitioner",
       "severity": "P0",
       "area": "feature-gap",
-      "title": "Session notes handler not found in codebase scan — critical practitioner workflow absent from Guide/Agency tier",
+      "title": "Session notes handler not found in codebase scan \u2014 critical practitioner workflow absent from Guide/Agency tier",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "workers/src/handlers/session-notes.js exists (187 lines) with full CRUD for practitioner session notes"
     },
     {
       "id": "PRAC-002",
       "persona": "Practitioner",
       "severity": "P0",
       "area": "feature-gap",
-      "title": "Notion sync integration handler absent from codebase — if marketed as a feature, constitutes undelivered paid functionality",
+      "title": "Notion sync integration handler absent from codebase \u2014 if marketed as a feature, constitutes undelivered paid functionality",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "workers/src/handlers/notion.js exists (455 lines) with OAuth, client sync, and profile export flows"
     },
     {
       "id": "PRAC-003",
       "persona": "Practitioner",
       "severity": "P0",
       "area": "feature-gap",
-      "title": "Practitioner directory handler not found in scan — public profile discoverability for Guide/Agency tier unconfirmed",
+      "title": "Practitioner directory handler not found in scan \u2014 public profile discoverability for Guide/Agency tier unconfirmed",
       "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolvedAt": "2026-03-15",
+      "resolutionNote": "workers/src/handlers/practitioner-directory.js exists (215 lines) with public profile listing and search"
     },
     {
       "id": "PRAC-004",
       "persona": "Practitioner",
       "severity": "P1",
       "area": "client-onboarding",
-      "title": "Client invite email content not auditable — cold system email without Prime Self context yields <15% acceptance rate",
-      "status": "resolved",
+      "title": "Client invite email content not auditable \u2014 cold system email without Prime Self context yields <15% acceptance rate",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Client invite emails are sent via email.js. Content/copy quality is not auditable from worker code \u2014 requires review of email templates and onboarding flow."
     },
     {
       "id": "PRAC-005",
       "persona": "Practitioner",
       "severity": "P1",
       "area": "interpretation",
-      "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) — key practitioner workflow missing",
-      "status": "resolved",
+      "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) \u2014 key practitioner workflow missing",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "composite.js handles composite charts. Practitioner+client side-by-side compatibility view (channel resonance, defined center overlay) not confirmed as a distinct UI view in the practitioner dashboard."
     },
     {
       "id": "PRAC-006",
@@ -559,21 +583,21 @@
       "severity": "P1",
       "area": "ai",
       "title": "AI per-client context personalization depth to specific chart data (type, authority, profile) not confirmed",
-      "status": "resolved",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Profile generation passes chart data to LLM prompts. Depth of personalization per type/authority/profile combination depends on prompt content in workers/src/prompts/ \u2014 not fully auditable without end-to-end test."
     },
     {
       "id": "PRAC-007",
       "persona": "Practitioner",
       "severity": "P2",
       "area": "billing",
-      "title": "No downgrade-instead-of-cancel path in billing portal — practitioners who would accept $19/mo are lost at $97/mo churn",
-      "status": "resolved",
+      "title": "No downgrade-instead-of-cancel path in billing portal \u2014 practitioners who would accept $19/mo are lost at $97/mo churn",
+      "status": "open",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": "2026-03-15"
+      "resolutionNote": "Stripe Customer Portal handles cancellation. A downgrade-instead-of-cancel path (offer $19/mo before $97/mo churn) would require custom billing portal configuration or a custom cancel flow."
     }
   ],
   "history": [
@@ -675,5 +699,8 @@
       "testsFailed": 0,
       "cfErrorRatePct": null
     }
-  ]
+  ],
+  "lastAuditDate": "2026-03-15",
+  "openCount": 28,
+  "resolvedCount": 24
 }

@@ -1838,6 +1838,15 @@ export const QUERIES = {
     WHERE token_hash = $1 AND expires_at > now()
   `,
 
+  // AUDIT-SEC-001: Atomic single-use token consumption.
+  // DELETE ... RETURNING ensures the token is consumed exactly once even under
+  // concurrent requests — no SELECT+DELETE race condition.
+  atomicVerifyEmailToken: `
+    DELETE FROM email_verification_tokens
+    WHERE token_hash = $1 AND expires_at > now()
+    RETURNING id, user_id
+  `,
+
   deleteEmailVerificationTokens: `
     DELETE FROM email_verification_tokens
     WHERE user_id = $1

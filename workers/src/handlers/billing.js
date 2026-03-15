@@ -123,6 +123,26 @@ export async function handleCheckout(request, env, ctx) {
       );
     }
     
+    // CFO-002-BL: Idempotency check — if this customer already has an open
+    // (unpaid) Stripe Checkout session for the same price, return it instead of
+    // creating a second one. This prevents duplicate sessions when the user
+    // double-clicks or retries before the first session expires.
+    if (customerId) {
+      const existingSessions = await stripe.checkout.sessions.list({
+        customer: customerId,
+        status: 'open',
+        limit: 5,
+      });
+      const dupe = existingSessions.data.find(s =>
+        s.line_items?.data?.some?.(li => li.price?.id === priceId) ||
+        s.metadata?.user_id === user.id && s.metadata?.tier === tier
+      );
+      if (dupe) {
+        log.info('checkout_session_reused', { userId: user.id, tier, sessionId: dupe.id });
+        return Response.json({ ok: true, sessionId: dupe.id, url: dupe.url });
+      }
+    }
+
     let discounts;
     if (promoCode) {
       const normalizedPromoCode = String(promoCode).trim().toUpperCase();

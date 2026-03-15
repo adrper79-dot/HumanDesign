@@ -14,6 +14,7 @@ import { NotionClient } from '../lib/notion.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { importEncryptionKey, encryptToken, readToken } from '../lib/tokenCrypto.js'; // BL-R-H3
+import { normalizeTierName } from '../lib/stripe.js';
 
 /**
  * GET /api/notion/auth
@@ -240,8 +241,10 @@ export async function handleSyncClients(request, env, ctx) {
     if (!user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
-    // Verify user is practitioner
-    if (user.tier !== 'practitioner' && user.tier !== 'white_label' && user.tier !== 'agency') {
+    // Verify user is practitioner — normalize tier to handle legacy aliases
+    // (e.g. 'guide' → 'practitioner', 'studio' / 'white_label' → 'agency')
+    const effectiveTier = normalizeTierName(user.tier);
+    if (effectiveTier !== 'practitioner' && effectiveTier !== 'agency') {
       return Response.json({
         ok: false,
         error: 'Guide or Studio tier required'
