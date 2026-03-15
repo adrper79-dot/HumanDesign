@@ -86,10 +86,10 @@
       "severity": "P1",
       "area": "testing",
       "title": "273/273 passing tests with 13.33% prod error rate indicates test suite does not cover failing production paths",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-009",
@@ -306,10 +306,10 @@
       "severity": "P1",
       "area": "billing",
       "title": "Proration logic on mid-cycle upgrades not confirmed — risk of revenue under- or over-collection",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-008",
@@ -471,10 +471,10 @@
       "severity": "P1",
       "area": "analytics",
       "title": "App analytics endpoint returning HTTP 401 — operational metrics dashboard is broken",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-007",
@@ -537,10 +537,10 @@
       "severity": "P1",
       "area": "client-onboarding",
       "title": "Client invite email content not auditable — cold system email without Prime Self context yields <15% acceptance rate",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "PRAC-005",
@@ -559,10 +559,10 @@
       "severity": "P1",
       "area": "ai",
       "title": "AI per-client context personalization depth to specific chart data (type, authority, profile) not confirmed",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "PRAC-007",
