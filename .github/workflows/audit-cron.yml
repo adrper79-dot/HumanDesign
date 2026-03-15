@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install worker dependencies (needed for vitest to resolve worker imports)
+        run: npm ci --prefix workers
+
       - name: Run audit
         id: audit
         run: |
