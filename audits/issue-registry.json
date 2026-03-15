@@ -361,10 +361,10 @@
       "severity": "P1",
       "area": "onboarding",
       "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point — no mitigation confirmed",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-005",
@@ -372,10 +372,10 @@
       "severity": "P1",
       "area": "onboarding",
       "title": "Empty practitioner dashboard on first login — no empty-state guidance or 'add first client' CTA confirmed",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-006",
@@ -383,10 +383,10 @@
       "severity": "P1",
       "area": "social",
       "title": "Shareable chart cards / social share hooks not confirmed — organic acquisition from existing users not captured",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-007",
@@ -394,10 +394,10 @@
       "severity": "P1",
       "area": "conversion",
       "title": "No trial or freemium-to-Guide upgrade path confirmed — cold conversion to $97/mo from landing page will be sub-1%",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-008",
@@ -548,10 +548,10 @@
       "severity": "P1",
       "area": "interpretation",
       "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) — key practitioner workflow missing",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "PRAC-006",
