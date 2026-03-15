@@ -394,11 +394,34 @@ export async function handleCancelSubscription(request, env, ctx) {
     });
     
     trackEvent(env, EVENTS.CANCEL, { userId: user.id, immediately: !!immediately }).catch(e => log.error('track_cancel_failed', { error: e.message }));
+
+    // CFO-008/PRAC-007: Retention offer — surfaces a downgrade-instead-of-cancel option.
+    // The frontend / any API consumer can present this offer before the user fully churns.
+    let retentionOffer = null;
+    if (subscription.tier === 'practitioner') {
+      retentionOffer = {
+        type: 'downgrade',
+        targetTier: 'individual',
+        targetPrice: 19,
+        message: 'Consider downgrading to Individual ($19/mo) instead — you keep all your charts, AI history, and full transit access at 80% less.',
+        upgradeEndpoint: '/api/billing/upgrade',
+      };
+    } else if (subscription.tier === 'individual') {
+      retentionOffer = {
+        type: 'downgrade',
+        targetTier: 'free',
+        targetPrice: 0,
+        message: 'Downgrade to Free to keep your chart data and 1 AI synthesis per month at no cost.',
+        upgradeEndpoint: '/api/billing/upgrade',
+      };
+    }
+
     return Response.json({
       ok: true,
       message: immediately ? 'Subscription canceled immediately' : 'Subscription will cancel at period end',
       cancelAtPeriodEnd: canceledSubscription.cancel_at_period_end,
-      periodEnd: new Date(canceledSubscription.current_period_end * 1000).toISOString()
+      periodEnd: new Date(canceledSubscription.current_period_end * 1000).toISOString(),
+      retentionOffer,
     });
     
   } catch (error) {

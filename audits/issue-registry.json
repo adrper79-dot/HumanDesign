@@ -130,10 +130,10 @@
       "severity": "P2",
       "area": "logging",
       "title": "PII-adjacent data (user IDs, subscription IDs) interpolated into flat log strings without sanitization policy",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-013",
@@ -141,10 +141,10 @@
       "severity": "P2",
       "area": "deployment",
       "title": "No confirmed CI/CD pipeline — staging-to-production promotion discipline unverified",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-001",
@@ -229,10 +229,10 @@
       "severity": "P2",
       "area": "logging",
       "title": "User IDs in unstructured logs create GDPR-adjacent audit trail exposure in Cloudflare log retention",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-001",
@@ -317,10 +317,10 @@
       "severity": "P2",
       "area": "billing",
       "title": "No cancellation save/deflection flow — churn prevention revenue opportunity not captured",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-001",
@@ -405,10 +405,10 @@
       "severity": "P2",
       "area": "onboarding",
       "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed — risks feeling generic",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-001",
@@ -482,10 +482,10 @@
       "severity": "P2",
       "area": "cache",
       "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable — stale data risk on high-read paths",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-008",
@@ -493,10 +493,10 @@
       "severity": "P2",
       "area": "deployment",
       "title": "No confirmed staging environment or Wrangler promotion workflow — production deployments risk untested regressions",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "PRAC-001",
@@ -570,10 +570,10 @@
       "severity": "P2",
       "area": "billing",
       "title": "No downgrade-instead-of-cancel path in billing portal — practitioners who would accept $19/mo are lost at $97/mo churn",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     }
   ],
   "history": [

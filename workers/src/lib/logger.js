@@ -24,6 +24,24 @@
  * In production, only info/warn/error are typically captured by Logpush.
  */
 
+/**
+ * Truncate a UUID or Stripe/Neon ID for inclusion in log fields.
+ *
+ * Policy (CTO-012/CISO-008): User IDs and subscription IDs must NOT appear
+ * in full in Cloudflare Tail Workers / Logpush output, as log retention
+ * creates a GDPR-adjacent audit trail. The first 8 characters of a UUID are
+ * sufficient for log correlation without enabling PII re-identification.
+ *
+ * Full IDs remain in the DB, never in log lines.
+ *
+ * @param {string|null|undefined} id
+ * @returns {string} — first 8 chars + "…", e.g. "a3b4c5d6…"
+ */
+export function sanitizeId(id) {
+  if (!id || typeof id !== 'string') return id;
+  return id.length > 8 ? id.slice(0, 8) + '\u2026' : id;
+}
+
 const LOG_LEVELS = { debug: 0, info: 1, warn: 2, error: 3 };
 
 /**

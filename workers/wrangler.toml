@@ -102,3 +102,46 @@ crons = ["0 6 * * *"]
 # APPLE_TEAM_ID        (OAuth — wrangler secret put APPLE_TEAM_ID)
 # APPLE_KEY_ID         (OAuth — wrangler secret put APPLE_KEY_ID)
 # APPLE_PRIVATE_KEY    (OAuth — wrangler secret put APPLE_PRIVATE_KEY)
+
+# ─── Staging Environment (CTO-013/CIO-008) ───────────────────────────────────
+# Deploy to staging with: wrangler deploy --env staging
+# Staging secrets are independent — set them via: wrangler secret put <NAME> --env staging
+# Promotion workflow:
+#   1. wrangler deploy --env staging   (deploys prime-self-api-staging)
+#   2. Run smoke tests against staging API
+#   3. wrangler deploy                 (promotes to production)
+[env.staging]
+name = "prime-self-api-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+# JWT claims are scoped to staging to prevent token replay into production
+JWT_ISSUER   = "primeself-staging"
+JWT_AUDIENCE = "primeself-api-staging"
+# Use Stripe test-mode price IDs for staging
+# (set these to your Stripe test-mode price IDs)
+STRIPE_PRICE_INDIVIDUAL          = "price_test_individual"
+STRIPE_PRICE_INDIVIDUAL_ANNUAL   = "price_test_individual_annual"
+STRIPE_PRICE_PRACTITIONER        = "price_test_practitioner"
+STRIPE_PRICE_PRACTITIONER_ANNUAL = "price_test_practitioner_annual"
+STRIPE_PRICE_AGENCY              = "price_test_agency"
+STRIPE_PRICE_AGENCY_ANNUAL       = "price_test_agency_annual"
+STRIPE_PRICE_SINGLE_SYNTHESIS    = "price_test_single_synthesis"
+STRIPE_PRICE_COMPOSITE_READING   = "price_test_composite_reading"
+STRIPE_PRICE_TRANSIT_PASS        = "price_test_transit_pass"
+STRIPE_PRICE_LIFETIME_INDIVIDUAL = "price_test_lifetime_individual"
+
+# Staging uses its own KV namespaces — create with:
+#   wrangler kv namespace create CACHE --env staging
+#   wrangler kv namespace create RATE_LIMIT_KV --env staging
+[[env.staging.kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_STAGING_CACHE_KV_ID"
+
+[[env.staging.kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "REPLACE_WITH_STAGING_RATE_LIMIT_KV_ID"
+
+[[env.staging.r2_buckets]]
+binding = "R2"
+bucket_name = "prime-self-exports-staging"
