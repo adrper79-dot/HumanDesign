@@ -126,10 +126,10 @@ async function main() {
   console.log(`[Audit] Delta: +${delta.new} new, ✓${delta.resolved} resolved, ↩${delta.regressions} regressions`);
   console.log(`[Audit] Mode: ${updatedRegistry.mode} | Consecutive clean runs: ${updatedRegistry.consecutiveCleanRuns}`);
 
-  // Exit 1 if P0s open — blocks deploy in GH Actions
+  // Log P0 summary — exit 0 so the commit step always runs.
+  // Deploy gating uses count-issues.js in deploy-workers.yml separately.
   if (counts.P0 > 0) {
     console.error(`\n[Audit] ⚠ ${counts.P0} P0 issue(s) open. Review issue-registry.json.`);
-    process.exit(1);
   }
 
   process.exit(0);
