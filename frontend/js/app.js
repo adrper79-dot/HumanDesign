@@ -194,7 +194,7 @@ async function submitTOTP() {
     if (res.error) { errEl.textContent = res.error; return; }
     // SUCCESS — same flow as normal login completion
     token = res.accessToken;
-    localStorage.setItem('accessToken', token);
+    // CISO-001: Access token stored in memory only — do NOT write to localStorage
     closeAuthOverlay();
     await fetchUserProfile();
     updateAuthUI();
@@ -817,6 +817,7 @@ function logout() {
   localStorage.removeItem('ps_token');    // legacy
   localStorage.removeItem('ps_session');
   localStorage.removeItem('ps_email');   // legacy cleanup
+  localStorage.removeItem('accessToken'); // CISO-001: scrub any previously-leaked token
   sessionStorage.removeItem('ps_email');
   localStorage.removeItem('primeSelf_birthData');
   localStorage.removeItem('chartGenerated');

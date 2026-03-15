@@ -152,10 +152,10 @@
       "severity": "P0",
       "area": "auth",
       "title": "JWT stored in localStorage — XSS on any page = full account takeover; HttpOnly cookie migration required",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-002",
@@ -163,10 +163,10 @@
       "severity": "P0",
       "area": "data-isolation",
       "title": "No confirmed row-level security or tenant scoping on practitioner/client data — cross-user data access via ID enumeration unmitigated",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-003",
@@ -174,10 +174,10 @@
       "severity": "P0",
       "area": "csp",
       "title": "CSP unsafe-inline likely present on vanilla JS PWA — XSS mitigation effectively disabled",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-004",
@@ -328,10 +328,10 @@
       "severity": "P0",
       "area": "retention",
       "title": "Human Design labels displayed without 'why it matters' life-implication copy — #1 confirmed churn driver in category",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-002",
@@ -339,10 +339,10 @@
       "severity": "P0",
       "area": "practitioner-value",
       "title": "Practitioner directory profiles not confirmed indexable by search engines — core $97 tier acquisition value prop undelivered",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-003",
@@ -350,10 +350,10 @@
       "severity": "P0",
       "area": "referral",
       "title": "No referral mechanics built — highest-leverage growth channel for Human Design (practitioner→client→friend) untouched",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CMO-004",
@@ -504,10 +504,10 @@
       "severity": "P0",
       "area": "feature-gap",
       "title": "Session notes handler not found in codebase scan — critical practitioner workflow absent from Guide/Agency tier",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "PRAC-002",
@@ -515,10 +515,10 @@
       "severity": "P0",
       "area": "feature-gap",
       "title": "Notion sync integration handler absent from codebase — if marketed as a feature, constitutes undelivered paid functionality",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "PRAC-003",
@@ -526,10 +526,10 @@
       "severity": "P0",
       "area": "feature-gap",
       "title": "Practitioner directory handler not found in scan — public profile discoverability for Guide/Agency tier unconfirmed",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "PRAC-004",
