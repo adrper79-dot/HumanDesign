@@ -1,5 +1,9 @@
 # Stripe Integration - Next Steps
 
+> Historical Stripe setup snapshot. Product names, tier names, price IDs, and DB-key references below include obsolete pricing vocabulary.
+> For current billing semantics use `workers/src/lib/stripe.js`, `docs/TIER_ENFORCEMENT.md`, and `audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md`.
+> Current canonical pricing: Free / Individual $19 / Practitioner $97 / Agency $349.
+
 ## ✅ What's Been Completed
 
 1. **Worker Deployed**: Updated Stripe configuration and deployed to Cloudflare
@@ -52,25 +56,25 @@ Go to: https://dashboard.stripe.com/webhooks
 
 Go to: https://dashboard.stripe.com/products
 
-**Product 1: Prime Self - Seeker**
+**Product 1: Prime Self - Explorer**
 - Click **"Add product"**
-- Name: `Prime Self - Seeker`
-- Description: `∞ charts, 10 profiles/month, SMS digests`
+- Name: `Prime Self - Explorer`
+- Description: `30 profiles/month, 30 AI questions, daily limits enforced`
 - Pricing model: **Recurring**
-- Price: `$15.00` per month
+- Price: `$12.00` per month
 - Click **"Save product"**
 - **Copy the Price ID** (looks like `price_1ABC123XYZ...`)
 
 **Product 2: Prime Self - Guide**
 - Name: `Prime Self - Guide`
-- Description: `∞ charts, ∞ profiles, practitioner tools, 1K API calls/month`
-- Price: `$97.00` per month
+- Description: `200 profiles/month, 200 AI questions, practitioner tools`
+- Price: `$60.00` per month
 - **Copy the Price ID**
 
-**Product 3: Prime Self - Practitioner**
-- Name: `Prime Self - Practitioner`
-- Description: `Everything unlimited, white-label, 10K API calls/month`
-- Price: `$500.00` per month
+**Product 3: Prime Self - Studio**
+- Name: `Prime Self - Studio`
+- Description: `White-label, 10K API calls/month, 1000 profiles, custom webhooks`
+- Price: `$149.00` per month
 - **Copy the Price ID**
 
 ---
@@ -82,9 +86,9 @@ Edit `workers/wrangler.toml` and replace the price ID placeholders:
 ```toml
 [vars]
 ENVIRONMENT = "production"
-STRIPE_PRICE_SEEKER = "price_1ABC123..."        # <- Your Seeker Price ID
-STRIPE_PRICE_GUIDE = "price_1DEF456..."         # <- Your Guide Price ID
-STRIPE_PRICE_PRACTITIONER = "price_1GHI789..." # <- Your Practitioner Price ID
+STRIPE_PRICE_REGULAR = "price_1ABC123..."        # <- Your Explorer Price ID
+STRIPE_PRICE_PRACTITIONER = "price_1DEF456..."    # <- Your Guide Price ID
+STRIPE_PRICE_WHITE_LABEL = "price_1GHI789..."     # <- Your Studio Price ID
 ```
 
 Then redeploy:
@@ -111,7 +115,7 @@ brew install postgresql
 Run migration:
 ```bash
 cd workers
-psql "postgresql://neondb_owner:***REMOVED***@ep-rapid-bird-aicgk9v2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require" -f src/db/migrate.sql
+psql "$DATABASE_URL" -f src/db/migrate.sql
 ```
 
 **Option B: Using Neon Console**
@@ -171,7 +175,7 @@ curl https://prime-self-api.adrper79.workers.dev/api/health
 
 Follow the test scenarios in `docs/UPGRADE_FLOW_TESTING.md`:
 
-**Quick Test (T-001: Free → Seeker):**
+**Quick Test (T-001: Free → Explorer):**
 
 1. Register a new user:
    ```bash
@@ -196,7 +200,7 @@ Follow the test scenarios in `docs/UPGRADE_FLOW_TESTING.md`:
      -H "Authorization: Bearer YOUR_TOKEN_HERE" \
      -H "Content-Type: application/json" \
      -d '{
-       "tier": "seeker",
+       "tier": "regular",
        "successUrl": "https://primeself.app/success",
        "cancelUrl": "https://primeself.app/pricing"
      }'
@@ -216,7 +220,7 @@ Follow the test scenarios in `docs/UPGRADE_FLOW_TESTING.md`:
      -H "Authorization: Bearer YOUR_TOKEN_HERE"
    ```
    
-   Should show `"tier": "seeker"`
+   Should show `"tier": "regular"`
 
 ---
 
@@ -257,9 +261,9 @@ SELECT
   tier,
   COUNT(*) as subscribers,
   CASE 
-    WHEN tier = 'seeker' THEN COUNT(*) * 15
-    WHEN tier = 'guide' THEN COUNT(*) * 97
-    WHEN tier = 'practitioner' THEN COUNT(*) * 500
+    WHEN tier = 'regular' THEN COUNT(*) * 12
+    WHEN tier = 'practitioner' THEN COUNT(*) * 60
+    WHEN tier = 'white_label' THEN COUNT(*) * 149
   END as monthly_revenue
 FROM subscriptions
 WHERE status = 'active'
@@ -309,11 +313,11 @@ To use test mode:
 
 - [ ] Webhook endpoint created in Stripe
 - [ ] Webhook secret set in Cloudflare Workers
-- [ ] 3 products created in Stripe (Seeker, Guide, Practitioner)
+- [ ] 3 products created in Stripe (Explorer, Guide, Studio)
 - [ ] Price IDs updated in wrangler.toml
 - [ ] Worker redeployed with new price IDs
 - [ ] Database migration run (subscriptions, payment_events, usage_records tables created)
-- [ ] Test upgrade flow completed (Free → Seeker)
+- [ ] Test upgrade flow completed (Free → Explorer)
 - [ ] Webhook delivery verified in Stripe Dashboard
 - [ ] Tier update verified in database
 - [ ] Health endpoint returns 200 OK

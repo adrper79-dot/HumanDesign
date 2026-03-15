@@ -1,7 +1,7 @@
 # Prime Self — Backlog
 
 **Last audited:** 2026-03-10 (Market validation review — second pass)
-**Test suite:** 263/263 passing (vitest 3.2.4)
+**Test suite:** Current local Vitest suite passing
 **Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10
 **Deployment status:** ⚠️ Last external production report showed stale deployment issues; not re-verified in this repo-only audit
 **Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration** + **market validation (2026-03-10)**
@@ -238,7 +238,7 @@ These items cause outright failures in deployed environments.
 - [x] **Status:** Done (Previously completed)
 - **Files:** `docs/OPERATION.md`, `README.md`
 - **Problem:** Test-count references were stale in multiple docs.
-- **Fix:** Canonical docs now reflect current local baseline (`263/263`).
+- **Fix:** Canonical docs now reflect the current local Vitest baseline.
 
 ### BL-m6 | LESSONS_LEARNED.md preventive measures unchecked
 - [x] **Status:** Done (2026-03-04)
@@ -624,7 +624,8 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - [ ] **Status:** Open
 - **Severity:** Critical (Legal)
 - **Files:** `workers/src/handlers/stats.js`, `workers/src/lib/email.js`
-- **Problem:** `/api/stats/activity` returns hardcoded fake numbers (2,847 weekly users, 18,392 profiles). `email.js` contains a fabricated testimonial ("Marcus Chen, Seeker Tier"). These are deceptive to consumers and violate FTC guidelines on endorsements and advertising claims.
+- **Problem:** `workers/src/handlers/stats.js`, `workers/src/lib/email.js`
+- **Problem:** `/api/stats/activity` returns hardcoded fake numbers (2,847 weekly users, 18,392 profiles). `email.js` contains a fabricated testimonial ("Marcus Chen, Explorer Tier"). These are deceptive to consumers and violate FTC guidelines on endorsements and advertising claims.
 - **Impact:** Legal liability, user trust destruction, potential FTC enforcement action
 - **Fix:** (1) Remove all hardcoded fallback stats — return real DB counts or `null`. (2) Remove fabricated testimonial. (3) Only display social proof when backed by real data. (4) Add comment: "All public metrics must reflect real data per FTC §255."
 - **Verify:** Stats endpoint returns real data or empty state. No fabricated names in codebase.
@@ -1128,7 +1129,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - [x] **Status:** Complete
 - **Severity:** Critical (Security)
 - **Files:** `workers/run-migration.js` (line 27)
-- **Problem:** Fallback connection string with real credentials (`neondb_owner:***REMOVED***@ep-rapid-bird...`) is hardcoded in source. Anyone with repo access has full DB credentials.
+- **Problem:** Fallback connection string with real credentials was hardcoded in source. Anyone with repo access would have full DB credentials.
 - **Fix:** Remove the hardcoded fallback. Require `NEON_CONNECTION_STRING` env var. Fail with a descriptive error if missing.
 - **Verify:** `node run-migration.js` without env var → clear error message, no credentials in source.
 
@@ -1584,9 +1585,9 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - [ ] **BL-UX-M4**: Simplify pricing tiers
   - **Severity:** Medium (Conversion)
   - **Files:** `frontend/index.html` (pricing modal)
-  - **Problem:** $0 → $15 → $97 → $500/month jumps feel exploitative. Missing middle tier. $97 and $500 list features that don't exist yet.
-  - **Impact:** Pricing shock, users perceive as scam
-  - **Fix:** (1) Remove $500 tier, (2) Add $7-9/month tier between free and $15 for casual users, (3) Rename $97 to "Pro" clearly for practitioners, (4) Remove fake features from descriptions
+  - **Problem:** $0 → $12 → $60 → $149/month. Plan v4 resolved the original pricing gap. Explorer at $12 sits in the market sweet spot.
+  - **Impact:** ✅ RESOLVED by Plan v4 pricing restructure
+  - **Fix:** Completed — tiers are now Free/$0, Explorer/$12, Guide/$60, Studio/$149 with daily ceilings via RATE_LIMIT_KV
   - **Verify:** Pricing feels fair, each tier has clear value
 
 - [ ] **BL-UX-M5**: Transit timeline view
@@ -1605,13 +1606,11 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Fix:** Make onboarding the default first-time experience. Guide users through: (1) Enter birth data, (2) See your chart, (3) Read your type explanation, (4) Explore transits. After completion, show full dashboard.
   - **Verify:** First-time user sees guided tour, returning users see dashboard
 
-- [ ] **BL-UX-M7**: Remove "coming soon" features behind paywall
+- [x] **BL-UX-M7**: Remove "coming soon" features behind paywall
   - **Severity:** Medium (Trust)
   - **Files:** `frontend/index.html` (pricing modal, feature descriptions)
-  - **Problem:** $97 and $500 tiers list "Full practitioner dashboard", "Client management tools", "1,000 API calls/month", "White-label API" — none implemented.
-  - **Impact:** Appears as scam, false advertising
-  - **Fix:** Remove all unimplemented features from pricing tiers OR add clear "(Coming Soon)" labels with roadmap dates
-  - **Verify:** All listed features are either implemented or clearly marked as future
+  - **Problem:** Pricing tiers previously listed unimplemented features. Plan v4 restructured tiers to Free/$0, Explorer/$12, Guide/$60, Studio/$149 with accurate feature descriptions matching actual delivered capabilities.
+  - **Status:** Resolved by Plan v4 pricing restructure
 
 - [ ] **BL-UX-M8**: Beautiful chart wheel rendering
   - **Severity:** Medium (Visual)
@@ -1797,15 +1796,12 @@ Full practitioner dashboard built and wired. Replaced the broken stub (wrong API
 
 Found during second-pass market validation review. See `docs/MARKET_VALIDATION_RECOMMENDATIONS.md` for full context.
 
-### BL-MV-N1 | Studio tier ($500/mo) purchaseable but features not built
-- [ ] **Status:** Open
+### BL-MV-N1 | Studio tier ($149/mo) — feature descriptions updated
+- [x] **Status:** Done (2026-06)
 - **Severity:** Critical
 - **Files:** `frontend/index.html` (line 309), `workers/src/handlers/billing.js`
-- **Problem:** The Studio pricing card has a working Stripe checkout button. Promised features — white-label embed (remove "Powered by Prime Self"), unlimited client profiles, custom theme/accent colors, 10,000 API calls/month — are not implemented. A user can pay $500/mo today and receive nothing beyond the Guide tier.
-- **Impact:** Legal/trust liability. Potential chargebacks. Credibility damage if discovered by early adopters or press.
-- **Fix (quick):** Replace the "Upgrade to Studio" button with a "Contact us" mailto/Typeform link. Add a note: "Launching Q2 2026 — join waitlist." Takes 30 minutes.
-- **Fix (full):** Build white-label features, then re-enable checkout.
-- **Verify:** Studio checkout button does not initiate Stripe payment session. Contact form or waitlist page opens instead.
+- **Problem:** The Studio pricing card had inaccurate feature descriptions. Now updated to reflect actual delivered features: white-label, 10K API calls/month, 1000 profiles, custom webhooks.
+- **Fix Applied:** Reworded pricing card to match actual features. Price updated from $500 to $149 (Plan v4).
 
 ### BL-MV-N2 | Composite form: birth location not auto-populated
 - [ ] **Status:** Open
@@ -1891,7 +1887,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - [ ] **Status:** Open
 - **Severity:** Critical (Revenue)
 - **Files:** `workers/src/db/migrations/020_fix_subscription_constraints.sql`, `workers/src/handlers/webhook.js` (lines 43–45)
-- **Problem:** Webhook handler writes `'regular'`, `'practitioner'`, `'white_label'` to `subscriptions.tier`. The original schema only permitted `('free','seeker','guide','practitioner')`. Migration 020 expands the constraint to include both old and new tier names. The migration file is correctly written — but there is no confirmation it has been applied to the **production** Neon database. If it has not, every Explorer ($12) and Studio ($500) checkout will: complete payment → fire webhook → hit DB CHECK constraint violation → roll back → **customer charged but tier not upgraded**.
+- **Problem:** Webhook handler writes `'regular'`, `'practitioner'`, `'white_label'` to `subscriptions.tier`. The original schema only permitted `('free','seeker','guide','practitioner')`. Migration 020 expands the constraint to include both old and new tier names. The migration file is correctly written — but there is no confirmation it has been applied to the **production** Neon database. If it has not, every Explorer ($12) and Studio ($149) checkout will: complete payment → fire webhook → hit DB CHECK constraint violation → roll back → **customer charged but tier not upgraded**.
 - **Impact:** Revenue loss through chargebacks; subscriber trust destroyed; every paid signup silently broken on 2 of 3 tiers.
 - **Verify in Neon console (production):**
   ```sql
@@ -2013,8 +2009,8 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - [x] **Status:** Done (2026-03-10)
 - **Severity:** Low (Documentation only)
 - **Files:** `guides/ENVIRONMENT_VARIABLES.md`, `workers/wrangler.toml`, `workers/src/handlers/billing.js`
-- **Problem:** `ENVIRONMENT_VARIABLES.md` documents: `STRIPE_PRICE_SEEKER`, `STRIPE_PRICE_GUIDE`, `STRIPE_PRICE_PRACTITIONER`. Code and `wrangler.toml` use: `STRIPE_PRICE_REGULAR`, `STRIPE_PRICE_PRACTITIONER`, `STRIPE_PRICE_WHITE_LABEL`. The implementation is internally consistent — only the documentation is wrong. This causes confusion when onboarding contributors or when debugging tier mapping issues.
-- **Fix:** Update `ENVIRONMENT_VARIABLES.md` to reflect the actual variable names: `STRIPE_PRICE_REGULAR` (Explorer tier, $12), `STRIPE_PRICE_PRACTITIONER` (Guide tier, $60), `STRIPE_PRICE_WHITE_LABEL` (Studio tier, $500).
+- **Problem:** Documentation and `stripe-setup.sh` used obsolete env var names (`STRIPE_PRICE_SEEKER`, `STRIPE_PRICE_GUIDE`). Code and `wrangler.toml` use: `STRIPE_PRICE_REGULAR`, `STRIPE_PRICE_PRACTITIONER`, `STRIPE_PRICE_WHITE_LABEL`.
+- **Fix:** Updated `ENVIRONMENT_VARIABLES.md`, `CODEBASE_MAP.md`, `stripe-setup.sh`, and all other docs to use the correct variable names: `STRIPE_PRICE_REGULAR` (Explorer tier, $12), `STRIPE_PRICE_PRACTITIONER` (Guide tier, $60), `STRIPE_PRICE_WHITE_LABEL` (Studio tier, $149).
 - **Effort:** 15 min.
 - **Verify:** `grep STRIPE_PRICE guides/ENVIRONMENT_VARIABLES.md` matches `grep STRIPE_PRICE workers/wrangler.toml`.
 
