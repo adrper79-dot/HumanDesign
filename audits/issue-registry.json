@@ -31,10 +31,10 @@
       "severity": "P0",
       "area": "error-handling",
       "title": "No retry wrapper on DB calls — Neon cold-start spikes cause silent failures",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-004",
@@ -53,10 +53,10 @@
       "severity": "P0",
       "area": "error-handling",
       "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) — cascading failures unmitigated",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-006",

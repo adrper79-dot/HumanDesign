@@ -61,14 +61,42 @@ export function createQueryFn(connectionString) {
   }
   const pool = getPool(connectionString);
 
+  // CTO-003: Classify errors as retriable (cold-start, transient network) vs
+  // non-retriable (schema errors, constraint violations, auth failures).
+  function isRetriable(error) {
+    if (!error) return false;
+    // Neon "endpoint is in idle state" — cold-start wake-up; first query always fails
+    if (error.message?.includes('endpoint is in idle state')) return true;
+    // Network-level transient codes
+    const TRANSIENT = new Set([
+      'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'EPIPE', 'EAI_AGAIN',
+      '57P01', // admin_shutdown
+      '57P03', // cannot_connect_now (server starting up)
+      '08006', '08001', '08004', // connection_failure variants
+    ]);
+    if (TRANSIENT.has(error.code)) return true;
+    // Neon HTTP responses: 503 Service Unavailable, 504 Gateway Timeout
+    if (error.status === 503 || error.status === 504) return true;
+    return false;
+  }
+
   async function query(sqlText, params = []) {
-    try {
-      const result = await pool.query(sqlText, params);
-      return result;
-    } catch (error) {
-      console.error('Database query error:', error);
-      throw error;
+    const MAX_RETRIES = 3;
+    let lastError;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        return await pool.query(sqlText, params);
+      } catch (error) {
+        lastError = error;
+        if (!isRetriable(error) || attempt === MAX_RETRIES - 1) {
+          console.error('Database query error:', error);
+          throw error;
+        }
+        // Exponential backoff: 100ms, 200ms, 400ms
+        await new Promise(r => setTimeout(r, 100 * Math.pow(2, attempt)));
+      }
     }
+    throw lastError;
   }
 
   /**
