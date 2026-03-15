@@ -16,6 +16,7 @@
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { FUNNELS } from '../lib/analytics.js';
 import { getTier, normalizeTierName } from '../lib/stripe.js';
+import { getUserTier } from '../middleware/tierEnforcement.js';
 
 /**
  * Main analytics router.
@@ -25,14 +26,20 @@ export async function handleAnalytics(request, env, subpath) {
   const url = new URL(request.url);
 
   // Audit token auth — allows GH Actions audit runner to pull metrics without a user JWT.
-  // AUDIT_SECRET must be set via: npx wrangler secret put AUDIT_SECRET
+  // /api/analytics/audit is in PUBLIC_ROUTES so this fires before auth middleware blocks it.
   const auditToken = request.headers.get('X-Audit-Token');
   if (auditToken && env.AUDIT_SECRET && auditToken === env.AUDIT_SECRET) {
     return handleAuditMetrics(env);
   }
 
-  // Only practitioner/agency/admin users can access analytics
-  const userTier = normalizeTierName(request._user?.tier);
+  // CIO-006: JWT payload only contains sub/email/type — tier is in DB.
+  // Resolve the user's effective tier from the subscriptions table.
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  const userTier = await getUserTier(env, userId);
   if (!['practitioner', 'agency', 'admin'].includes(userTier)) {
     return Response.json(
       { error: 'Analytics access requires Practitioner tier or above', upgrade_required: true },

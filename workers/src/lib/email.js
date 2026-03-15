@@ -658,26 +658,37 @@ export async function sendVerificationEmail(userEmail, verifyUrl, apiKey, fromEm
  * @param {string} fromEmail - From email address
  */
 export async function sendPractitionerInvitationEmail(clientEmail, practitionerName, inviteUrl, apiKey, fromEmail) {
-  const subject = `${practitionerName} invited you to Prime Self`;
+  const subject = `${practitionerName} wants to explore your energy blueprint`;
 
   const html = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
-      <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px 24px;text-align:center;border-bottom:1px solid #2a2a3a">
-        <div style="font-size:28px;margin-bottom:8px">✦</div>
-        <h1 style="color:#c9a84c;font-size:22px;margin:0">Practitioner Invitation</h1>
+      <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:40px 32px;text-align:center;border-bottom:1px solid #2a2a3a">
+        <div style="font-size:32px;margin-bottom:12px">✦</div>
+        <h1 style="color:#c9a84c;font-size:24px;margin:0 0 8px">You've been invited</h1>
+        <p style="margin:0;color:#8882a0;font-size:15px">by ${practitionerName}</p>
       </div>
-      <div style="padding:24px">
-        <p style="margin:0 0 16px;line-height:1.6"><strong>${practitionerName}</strong> invited you to Prime Self to start your chart and profile journey.</p>
-        <div style="text-align:center;margin:24px 0">
-          <a href="${inviteUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:16px">Accept Invitation</a>
+      <div style="padding:32px">
+        <p style="margin:0 0 20px;line-height:1.7;font-size:16px"><strong>${practitionerName}</strong> is inviting you to Prime Self — a personal growth platform that maps your unique energy blueprint using your birth data.</p>
+        <div style="background:#1a1a24;border-radius:10px;padding:20px 24px;margin:0 0 24px;border-left:3px solid #c9a84c">
+          <p style="margin:0 0 12px;font-weight:600;color:#c9a84c;font-size:14px;text-transform:uppercase;letter-spacing:0.5px">What you'll discover</p>
+          <ul style="margin:0;padding:0 0 0 18px;color:#c4c0d8;line-height:1.9;font-size:15px">
+            <li>Your Human Design chart — energy type, strategy &amp; authority</li>
+            <li>Astrology birth chart with houses &amp; aspects</li>
+            <li>Numerology life path &amp; expression numbers</li>
+            <li>AI-generated synthesis connecting all three systems</li>
+          </ul>
         </div>
-        <p style="margin:0 0 16px;line-height:1.6;color:#8882a0;font-size:14px">This link expires in 14 days.</p>
-        <p style="margin:0;line-height:1.6;color:#8882a0;font-size:14px">If the button doesn't work, copy and paste this URL into your browser:</p>
-        <p style="margin:8px 0 0;word-break:break-all;font-size:13px;color:#6a6580">${inviteUrl}</p>
+        <p style="margin:0 0 24px;line-height:1.6;color:#c4c0d8;font-size:15px">Your practitioner will use these insights to guide your sessions with deeper, more personalised support.</p>
+        <div style="text-align:center;margin:28px 0">
+          <a href="${inviteUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:16px;letter-spacing:0.3px">View My Blueprint →</a>
+        </div>
+        <p style="margin:0 0 8px;text-align:center;line-height:1.6;color:#6a6580;font-size:13px">Free to use · No credit card needed · Link expires in 14 days</p>
+        <p style="margin:16px 0 0;line-height:1.6;color:#6a6580;font-size:13px">Can't click the button? Copy this link into your browser:</p>
+        <p style="margin:4px 0 0;word-break:break-all;font-size:12px;color:#4a4560">${inviteUrl}</p>
       </div>
       <div style="padding:16px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
-        <p style="margin:0">Prime Self — Discover your unique energy blueprint</p>
-        <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+        <p style="margin:0">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</p>
+        <p style="margin:4px 0 0">You received this because ${practitionerName} invited you. <a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
       </div>
     </div>
   `;

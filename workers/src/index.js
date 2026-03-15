@@ -288,6 +288,7 @@ const PUBLIC_ROUTES = new Set([
   '/api/embed/validate',               // Embed widget feature-flag check (cross-origin, no PII)
   '/api/promo/validate',               // Promo code validation (public, no redemption)
   '/api/directory',                    // Public practitioner directory listing
+  '/api/analytics/audit',             // CIO-006: Audit runner uses X-Audit-Token — no user JWT
 ]);
 
 function requiresAuth(path) {
