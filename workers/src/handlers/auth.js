@@ -23,6 +23,7 @@ import { createStripeClient } from '../lib/stripe.js';  // P2-BIZ-004: cancel su
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { generateSecret, buildOTPAuthURL, verifyTOTP } from '../lib/totp.js';
 import { createLogger } from '../lib/logger.js';
+import { hashPassword, verifyPassword } from '../lib/password.js';
 
 // JWT expiry durations
 // Access token is short-lived so that a stolen in-memory token has a small
@@ -54,6 +55,34 @@ function getRefreshCookie(request) {
   const cookieHeader = request.headers.get('Cookie') || '';
   const match = cookieHeader.match(/(?:^|;\s*)ps_refresh=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * Issue a new JWT access + refresh token pair, store the refresh token hash in DB,
+ * and return both tokens. Pass existingFamilyId to continue an existing family
+ * (token rotation), or omit to create a new family (new login/register).
+ */
+async function issueTokenPair(env, query, userId, email, existingFamilyId) {
+  const accessToken = await signJWT(
+    { sub: userId, email, type: 'access' },
+    env.JWT_SECRET,
+    ACCESS_TOKEN_TTL,
+    jwtClaims(env)
+  );
+
+  const familyId = existingFamilyId || crypto.randomUUID();
+  const refreshToken = await signJWT(
+    { sub: userId, type: 'refresh', fid: familyId },
+    env.JWT_SECRET,
+    REFRESH_TOKEN_TTL,
+    jwtClaims(env)
+  );
+
+  const tokenHash = await sha256(refreshToken);
+  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
+  await query(QUERIES.insertRefreshToken, [userId, tokenHash, familyId, expiresAtEpoch]);
+
+  return { accessToken, refreshToken };
 }
 
 // ─── Route Dispatcher ────────────────────────────────────────
@@ -216,25 +245,7 @@ async function handleRegister(request, env) {
     }
 
     // Issue tokens
-    const accessToken = await signJWT(
-      { sub: userId, email: email.toLowerCase(), type: 'access' },
-      env.JWT_SECRET,
-      ACCESS_TOKEN_TTL,
-      jwtClaims(env)
-    );
-
-    const familyId = crypto.randomUUID();
-    const refreshToken = await signJWT(
-      { sub: userId, type: 'refresh', fid: familyId },
-      env.JWT_SECRET,
-      REFRESH_TOKEN_TTL,
-      jwtClaims(env)
-    );
-
-    // Store hashed refresh token in DB
-    const tokenHash = await sha256(refreshToken);
-    const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
-    await query(QUERIES.insertRefreshToken, [userId, tokenHash, familyId, expiresAtEpoch]);
+    const { accessToken, refreshToken } = await issueTokenPair(env, query, userId, email.toLowerCase());
 
     // Send welcome email (BL-ENG-007)
     // Fire and forget - don't block registration on email send
@@ -377,25 +388,7 @@ async function handleLogin(request, env) {
     }
 
     // Issue tokens
-    const accessToken = await signJWT(
-      { sub: user.id, email: user.email, type: 'access' },
-      env.JWT_SECRET,
-      ACCESS_TOKEN_TTL,
-      jwtClaims(env)
-    );
-
-    const familyId = crypto.randomUUID();
-    const refreshToken = await signJWT(
-      { sub: user.id, type: 'refresh', fid: familyId },
-      env.JWT_SECRET,
-      REFRESH_TOKEN_TTL,
-      jwtClaims(env)
-    );
-
-    // Store hashed refresh token in DB
-    const tokenHash = await sha256(refreshToken);
-    const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
-    await query(QUERIES.insertRefreshToken, [user.id, tokenHash, familyId, expiresAtEpoch]);
+    const { accessToken, refreshToken } = await issueTokenPair(env, query, user.id, user.email);
 
     // BL-FIX: Update last_login_at for re-engagement tracking and cron accuracy
     await query(QUERIES.updateLastLogin, [user.id]).catch(err => {
@@ -493,24 +486,9 @@ async function handleRefresh(request, env) {
   }
 
   // Issue new token pair — same family
-  const accessToken = await signJWT(
-    { sub: user.id, email: user.email, type: 'access' },
-    env.JWT_SECRET,
-    ACCESS_TOKEN_TTL,
-    jwtClaims(env)
+  const { accessToken, refreshToken: newRefreshToken } = await issueTokenPair(
+    env, query, user.id, user.email, row.family_id
   );
-
-  const newRefreshToken = await signJWT(
-    { sub: user.id, type: 'refresh', fid: row.family_id },
-    env.JWT_SECRET,
-    REFRESH_TOKEN_TTL,
-    jwtClaims(env)
-  );
-
-  // Store new refresh token
-  const newHash = await sha256(newRefreshToken);
-  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
-  await query(QUERIES.insertRefreshToken, [user.id, newHash, row.family_id, expiresAtEpoch]);
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', buildRefreshCookie(newRefreshToken));
@@ -547,81 +525,6 @@ async function handleLogout(request, env) {
   headers.append('Set-Cookie', clearRefreshCookie());
 
   return new Response(JSON.stringify({ ok: true, message: 'All sessions revoked' }), { headers });
-}
-
-// ─── Password Hashing (PBKDF2 via Web Crypto) ───────────────
-
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  );
-
-  const hash = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt,
-      iterations: 100000,
-      hash: 'SHA-256'
-    },
-    keyMaterial,
-    256
-  );
-
-  // Store as: salt:hash (both base64)
-  const saltB64 = btoa(String.fromCharCode(...salt));
-  const hashB64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
-  return `${saltB64}:${hashB64}`;
-}
-
-async function verifyPassword(password, stored) {
-  const [saltB64, expectedHashB64] = stored.split(':');
-  const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
-
-  const encoder = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  );
-
-  const hash = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt,
-      iterations: 100000,
-      hash: 'SHA-256'
-    },
-    keyMaterial,
-    256
-  );
-
-  const hashB64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
-  
-  // Use constant-time comparison to prevent timing attacks
-  const hashBytes = encoder.encode(hashB64);
-  const expectedBytes = encoder.encode(expectedHashB64);
-  
-  // If lengths differ, still compare to avoid timing leak
-  if (hashBytes.length !== expectedBytes.length) {
-    return false;
-  }
-  
-  // Constant-time byte-by-byte comparison
-  let result = 0;
-  for (let i = 0; i < hashBytes.length; i++) {
-    result |= hashBytes[i] ^ expectedBytes[i];
-  }
-  
-  return result === 0;
 }
 
 // ─── Forgot Password ─────────────────────────────────────────
@@ -1164,24 +1067,7 @@ async function handle2FAVerify(request, env) {
   }
 
   // TOTP verified — issue full token pair
-  const accessToken = await signJWT(
-    { sub: user.id, email: user.email, type: 'access' },
-    env.JWT_SECRET,
-    ACCESS_TOKEN_TTL,
-    jwtClaims(env)
-  );
-
-  const familyId = crypto.randomUUID();
-  const refreshToken = await signJWT(
-    { sub: user.id, type: 'refresh', fid: familyId },
-    env.JWT_SECRET,
-    REFRESH_TOKEN_TTL,
-    jwtClaims(env)
-  );
-
-  const tokenHash = await sha256(refreshToken);
-  const expiresAtEpoch = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL;
-  await query(QUERIES.insertRefreshToken, [user.id, tokenHash, familyId, expiresAtEpoch]);
+  const { accessToken, refreshToken } = await issueTokenPair(env, query, user.id, user.email);
 
   // Update last login
   await query(QUERIES.updateLastLogin, [user.id]).catch(() => {});

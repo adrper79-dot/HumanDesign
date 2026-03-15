@@ -30,6 +30,21 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
 import { createLogger } from '../lib/logger.js';
 
+// Validate Stripe redirect URLs — must be https and on the same frontend origin.
+// Prevents open-redirect attacks on checkout/portal return URLs.
+function isSafeRedirectUrl(url, env) {
+  if (!url || typeof url !== 'string') return true; // undefined falls through to default
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return false;
+    const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
+    if (frontendOrigin && !url.startsWith(frontendOrigin)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Checkout Session ────────────────────────────────────────
 
 /**
@@ -74,22 +89,10 @@ export async function handleCheckout(request, env, ctx) {
     const period = billingPeriod === 'annual' ? 'annual' : 'monthly';
 
     // Validate redirect URLs — must be valid https URLs on the same origin to prevent open-redirect
-    const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
-    function isSafeUrl(url) {
-      if (!url || typeof url !== 'string') return true; // undefined falls through to default
-      try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== 'https:') return false;
-        if (frontendOrigin && !url.startsWith(frontendOrigin)) return false;
-        return true;
-      } catch {
-        return false;
-      }
-    }
-    if (!isSafeUrl(successUrl)) {
+    if (!isSafeRedirectUrl(successUrl, env)) {
       return Response.json({ error: 'Invalid successUrl' }, { status: 400 });
     }
-    if (!isSafeUrl(cancelUrl)) {
+    if (!isSafeRedirectUrl(cancelUrl, env)) {
       return Response.json({ error: 'Invalid cancelUrl' }, { status: 400 });
     }
     
@@ -197,17 +200,7 @@ export async function handleOneTimeCheckout(request, env, ctx) {
     }
 
     // Validate redirect URLs
-    const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
-    function isSafeUrl(url) {
-      if (!url || typeof url !== 'string') return true;
-      try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== 'https:') return false;
-        if (frontendOrigin && !url.startsWith(frontendOrigin)) return false;
-        return true;
-      } catch { return false; }
-    }
-    if (!isSafeUrl(successUrl) || !isSafeUrl(cancelUrl)) {
+    if (!isSafeRedirectUrl(successUrl, env) || !isSafeRedirectUrl(cancelUrl, env)) {
       return Response.json({ error: 'Invalid redirect URL' }, { status: 400 });
     }
 
@@ -267,16 +260,8 @@ export async function handlePortal(request, env, ctx) {
     const { returnUrl } = body;
     
     // P2-SEC-009: Validate returnUrl the same way checkout validates successUrl/cancelUrl
-    const frontendOrigin = env.FRONTEND_URL ? new URL(env.FRONTEND_URL).origin : null;
-    if (returnUrl && typeof returnUrl === 'string') {
-      try {
-        const parsed = new URL(returnUrl);
-        if (parsed.protocol !== 'https:' || (frontendOrigin && !returnUrl.startsWith(frontendOrigin))) {
-          return Response.json({ error: 'Invalid returnUrl' }, { status: 400 });
-        }
-      } catch {
-        return Response.json({ error: 'Invalid returnUrl' }, { status: 400 });
-      }
+    if (!isSafeRedirectUrl(returnUrl, env)) {
+      return Response.json({ error: 'Invalid returnUrl' }, { status: 400 });
     }
     
     const stripe = createStripeClient(env.STRIPE_SECRET_KEY);

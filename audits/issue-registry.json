@@ -64,10 +64,10 @@
       "severity": "P1",
       "area": "handler-complexity",
       "title": "auth.js exceeds 977 lines — monolithic handler resists safe refactoring and testing",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-007",
@@ -75,10 +75,10 @@
       "severity": "P1",
       "area": "handler-complexity",
       "title": "billing.js exceeds 474 lines — single-responsibility principle violated across multiple billing concerns",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-008",
