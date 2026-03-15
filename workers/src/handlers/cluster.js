@@ -99,6 +99,12 @@ export async function handleCluster(request, env, path) {
     return handleLeave(request, env, leaveMatch[1]);
   }
 
+  // POST /api/cluster/:id/regenerate-invite
+  const regenMatch = path.match(/^\/api\/cluster\/([^/]+)\/regenerate-invite$/);
+  if (regenMatch && request.method === 'POST') {
+    return handleRegenerateInvite(request, env, regenMatch[1]);
+  }
+
   // GET /api/cluster/:id
   const getMatch = path.match(/^\/api\/cluster\/([^/]+)$/);
   if (getMatch && request.method === 'GET') {
@@ -155,12 +161,25 @@ async function handleCreate(request, env) {
 
   const result = await query(QUERIES.createCluster, [name, createdBy, challenge]);
 
+  const clusterId = result.rows?.[0]?.id;
+  const inviteCode = result.rows?.[0]?.invite_code;
+
+  // Auto-join the creator as the first member
+  if (clusterId) {
+    // Try to add creator — if they provide birth data later via join, it updates via ON CONFLICT
+    await query(QUERIES.addClusterMember, [
+      clusterId, createdBy, 'Creator',
+      null, null, null, null, null
+    ]).catch(err => console.error('[cluster] Auto-join creator failed:', err.message));
+  }
+
   return Response.json({
     ok: true,
     cluster: {
-      id: result.rows?.[0]?.id,
+      id: clusterId,
       name,
       challenge,
+      inviteCode,
       createdAt: result.rows?.[0]?.created_at
     }
   }, { status: 201 });
@@ -196,7 +215,9 @@ async function handleList(request, env) {
       name: row.name,
       challenge: row.challenge,
       createdAt: row.created_at,
-      joinedAt: row.joined_at
+      joinedAt: row.joined_at,
+      inviteCode: row.created_by === userId ? row.invite_code : undefined,
+      isOwner: row.created_by === userId
     })) || [];
 
     return Response.json({
@@ -260,8 +281,9 @@ async function handleLeave(request, env, clusterId) {
 /**
  * POST /api/cluster/:id/join
  *
- * Body: { userId, birthDate, birthTime, birthTimezone?, lat, lng }
+ * Body: { inviteCode, birthDate, birthTime, birthTimezone?, lat, lng }
  *
+ * P2-SEC-013: Requires a valid invite code to join.
  * Calculates the member's chart, determines their Forge role,
  * and adds them to the cluster.
  */
@@ -277,10 +299,14 @@ async function handleJoin(request, env, clusterId) {
   }
   
   const userId = request._user?.sub; // Always use JWT identity, never body
-  const { birthDate, birthTime, birthTimezone, lat, lng } = body;
+  const { inviteCode, birthDate, birthTime, birthTimezone, lat, lng } = body;
 
   if (!userId) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  if (!inviteCode || typeof inviteCode !== 'string') {
+    return Response.json({ error: 'Invite code is required to join a cluster' }, { status: 400 });
   }
 
   if (!birthDate || !birthTime || lat === undefined || lng === undefined) {
@@ -288,6 +314,14 @@ async function handleJoin(request, env, clusterId) {
       { error: 'Missing required fields: birthDate, birthTime, lat, lng' },
       { status: 400 }
     );
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  // P2-SEC-013: Verify invite code matches the cluster
+  const clusterResult = await query(QUERIES.getClusterByInviteCode, [inviteCode.toUpperCase()]);
+  if (!clusterResult.rows?.length || clusterResult.rows[0].id !== clusterId) {
+    return Response.json({ error: 'Invalid invite code' }, { status: 403 });
   }
 
   // Calculate chart to determine Forge role
@@ -300,8 +334,6 @@ async function handleJoin(request, env, clusterId) {
   });
 
   const forgeRole = getForgeRole(chart.chart.type);
-
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   await query(QUERIES.addClusterMember, [
     clusterId, userId, forgeRole.role,
@@ -327,6 +359,31 @@ async function handleJoin(request, env, clusterId) {
 }
 
 /**
+ * POST /api/cluster/:id/regenerate-invite
+ *
+ * P2-SEC-013: Regenerate the invite code for a cluster.
+ * Only the cluster creator can do this.
+ */
+async function handleRegenerateInvite(request, env, clusterId) {
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const result = await query(QUERIES.regenerateClusterInviteCode, [clusterId, userId]);
+
+  if (!result.rows?.length) {
+    return Response.json({ error: 'Only the cluster creator can regenerate the invite code' }, { status: 403 });
+  }
+
+  return Response.json({
+    ok: true,
+    inviteCode: result.rows[0].invite_code
+  });
+}
+
+/**
  * GET /api/cluster/:id
  *
  * Returns cluster details, members, and composition analysis.
@@ -336,7 +393,7 @@ async function handleGet(request, env, clusterId) {
   const userId = request._user?.sub;
 
   const memberCheck = await query(
-    'SELECT 1 FROM cluster_members WHERE cluster_id = $1 AND user_id = $2 LIMIT 1',
+    QUERIES.checkClusterMembership,
     [clusterId, userId]
   );
   if (!memberCheck.rows?.length) {
@@ -347,7 +404,7 @@ async function handleGet(request, env, clusterId) {
   const membersResult = await query(QUERIES.getClusterMembers, [clusterId]);
   const members = (membersResult.rows || []).map(row => ({
     userId: row.id,
-    email: row.email,
+    displayName: row.email ? row.email.split('@')[0] : 'Member',
     forgeRole: FORGE_ROLES[Object.keys(FORGE_ROLES).find(
       t => FORGE_ROLES[t].role === row.forge_role
     )] || { forge: 'Unknown', role: row.forge_role, brings: '' }
@@ -393,7 +450,7 @@ async function handleSynthesize(request, env, clusterId) {
   if (tierBlock) return tierBlock;
 
   const memberCheck = await query(
-    'SELECT 1 FROM cluster_members WHERE cluster_id = $1 AND user_id = $2 LIMIT 1',
+    QUERIES.checkClusterMembership,
     [clusterId, userId]
   );
   if (!memberCheck.rows?.length) {

@@ -1,18 +1,14 @@
 /**
- * GET /api/profile/:id/pdf
+ * PDF Export Handlers
  *
- * Generates a downloadable PDF of a Prime Self profile.
- * Uses a minimal PDF builder (no external deps) — Workers-compatible.
+ * GET  /api/profile/:id/pdf                   – User's own profile PDF
+ * POST /api/practitioner/clients/:id/pdf      – Practitioner-branded PDF for a client
  *
- * The PDF contains:
- *   - Header with Prime Self branding
- *   - Chart summary (Type, Authority, Profile, Cross, Definition)
- *   - Forge assignment
- *   - Full profile synthesis text
- *   - Grounding audit summary
+ * Both use the same minimal PDF builder (no external deps — Workers-compatible).
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 
 export async function handlePdfExport(request, env, profileId) {
   if (!profileId) {
@@ -34,6 +30,10 @@ export async function handlePdfExport(request, env, profileId) {
   if (!userId) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
   }
+  // Tier gate: PDF export requires Explorer tier or above
+  const pdfFeatureCheck = await enforceFeatureAccess(request, env, 'pdfExport');
+  if (pdfFeatureCheck) return pdfFeatureCheck;
+
   if (profile.user_id !== userId) {
     // Check if user is a practitioner with access to this client
     const practCheck = await query(QUERIES.checkPractitionerAccess, [userId, profile.user_id]);
@@ -101,19 +101,134 @@ export async function handlePdfExport(request, env, profileId) {
   });
 }
 
+/**
+ * POST /api/practitioner/clients/:clientId/pdf
+ *
+ * Generates a practitioner-branded PDF for a client's latest profile.
+ * The PDF header shows the practitioner's name/website instead of "PRIME SELF PROFILE",
+ * and the footer reads "Prepared by {name} | Powered by Prime Self".
+ *
+ * @param {Request} request
+ * @param {Object}  env       - Cloudflare Worker env bindings
+ * @param {string}  clientId  - The client's user_id (from URL)
+ */
+export async function handleBrandedPdfExport(request, env, clientId) {
+  if (!clientId) {
+    return Response.json({ error: 'Client ID is required' }, { status: 400 });
+  }
+
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  // Gate: practitioner tier required
+  const accessCheck = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (accessCheck) return accessCheck;
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  // Verify current user is a practitioner with this client on their roster
+  const practCheck = await query(QUERIES.checkPractitionerAccess, [userId, clientId]);
+  if (!practCheck.rows?.length) {
+    return Response.json({ error: 'Forbidden — client not on your roster' }, { status: 403 });
+  }
+
+  // Fetch client's latest profile
+  const profileResult = await query(QUERIES.getLatestProfile, [clientId]);
+  const profile = profileResult.rows?.[0];
+  if (!profile) {
+    return Response.json({ error: 'No profile found for this client' }, { status: 404 });
+  }
+
+  // Fetch practitioner branding
+  const brandResult = await query(QUERIES.getPractitionerBranding, [userId]);
+  const branding = brandResult.rows?.[0] || null;
+
+  const profileData = typeof profile.profile_json === 'string'
+    ? JSON.parse(profile.profile_json)
+    : profile.profile_json;
+
+  let chartData = null;
+  if (profile.chart_id) {
+    const chartResult = await query(QUERIES.getChartById, [profile.chart_id]);
+    const chart = chartResult.rows?.[0];
+    if (chart) {
+      chartData = typeof chart.hd_json === 'string'
+        ? JSON.parse(chart.hd_json)
+        : chart.hd_json;
+    }
+  }
+
+  // R2 cache key for branded PDF (separate from user's own PDF)
+  const practitionerId = userId;
+  const r2Key = `pdfs/branded/${practitionerId}/${profile.id}.pdf`;
+
+  if (env.R2) {
+    try {
+      const existing = await env.R2.head(r2Key);
+      if (existing) {
+        const obj = await env.R2.get(r2Key);
+        if (obj) {
+          return new Response(obj.body, {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/pdf',
+              'Content-Disposition': `attachment; filename="profile-${clientId.slice(0, 8)}.pdf"`,
+              'X-Cache': 'HIT'
+            }
+          });
+        }
+      }
+    } catch { /* not in cache */ }
+  }
+
+  const pdfBytes = generatePDF(profileData, chartData, profile.created_at, branding);
+
+  if (env.R2) {
+    env.R2.put(r2Key, pdfBytes, {
+      httpMetadata: { contentType: 'application/pdf' },
+      customMetadata: { profileId: profile.id, practitionerId, clientId }
+    }).catch(() => { /* non-fatal */ });
+  }
+
+  return new Response(pdfBytes, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="profile-${clientId.slice(0, 8)}.pdf"`,
+      'Content-Length': pdfBytes.byteLength.toString()
+    }
+  });
+}
+
 // ─── Minimal PDF Generator ───────────────────────────────────
 // Builds a valid PDF 1.4 document with text content.
 // No images or fancy layout — pure text with basic formatting.
 
-function generatePDF(profileData, chartData, createdAt) {
+/**
+ * @param {Object|null} branding  - Optional practitioner branding
+ *   { display_name, website_url, booking_url, brand_color, logo_url }
+ */
+function generatePDF(profileData, chartData, createdAt, branding = null) {
   const lines = [];
   const date = new Date(createdAt).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric'
   });
 
   // Title
-  lines.push({ text: 'PRIME SELF PROFILE', size: 24, bold: true, y: 750 });
-  lines.push({ text: `Generated: ${date}`, size: 10, y: 730 });
+  if (branding?.display_name) {
+    lines.push({ text: branding.display_name, size: 24, bold: true, y: 750 });
+    if (branding.website_url) {
+      lines.push({ text: branding.website_url, size: 10, y: 732 });
+      lines.push({ text: `Client Report  •  Generated: ${date}`, size: 10, y: 720 });
+    } else {
+      lines.push({ text: `Client Report  •  Generated: ${date}`, size: 10, y: 730 });
+    }
+  } else {
+    lines.push({ text: 'PRIME SELF PROFILE', size: 24, bold: true, y: 750 });
+    lines.push({ text: `Generated: ${date}`, size: 10, y: 730 });
+  }
   lines.push({ text: '─'.repeat(60), size: 10, y: 718 });
 
   // Chart summary
@@ -192,7 +307,13 @@ function generatePDF(profileData, chartData, createdAt) {
 
   // Footer
   lines.push({ text: '─'.repeat(60), size: 10, y: 35 });
-  lines.push({ text: 'Prime Self \u2022 Movement-First Personal Development', size: 8, y: 22 });
+  if (branding?.display_name) {
+    const footerName = branding.display_name;
+    const footerSite = branding.website_url ? ` \u2022 ${branding.website_url}` : '';
+    lines.push({ text: `Prepared by ${footerName}${footerSite} \u2022 Powered by Prime Self`, size: 8, y: 22 });
+  } else {
+    lines.push({ text: 'Prime Self \u2022 Movement-First Personal Development', size: 8, y: 22 });
+  }
 
   return buildPDFBytes(lines);
 }

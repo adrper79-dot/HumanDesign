@@ -8,7 +8,7 @@ This Zapier integration enables users to automate Human Design workflows by conn
 
 **Platform Version**: Zapier Platform v15.0.0  
 **Status**: Code Complete - Pending Deployment  
-**Tier Requirement**: Practitioner tier for client-related triggers
+**Tier Requirement**: Practitioner-capable account for client-related triggers; keep terminology aligned with the canonical `practitioner` / `agency` tier model.
 
 ## Features
 
@@ -16,7 +16,7 @@ This Zapier integration enables users to automate Human Design workflows by conn
 
 - **New Chart Created** - Fires when a Human Design chart is calculated
 - **Transit Alert Triggered** - Fires when a transit alert occurs (gate activation, aspect, cycle)
-- **Client Added** - Fires when a practitioner adds a new client (Practitioner tier only)
+- **Client Added** - Fires when a practitioner-capable account adds a new client
 - **Life Cycle Approaching** - Fires when a significant cycle is approaching (Saturn return, etc.)
 
 ### Actions (Operations Zapier Can Perform)

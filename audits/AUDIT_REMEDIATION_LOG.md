@@ -39,7 +39,7 @@ Defects prioritized by severity → impact → fix complexity.
 | C1 | Critical | `workers/src/handlers/transits.js` | Transit cache key was date-only; first user's natal aspects served to all | Appended natal data hash to cache key |
 | C2 | Critical | `workers/src/handlers/profile.js` | Non-streaming profile endpoint bypassed usage recording → unlimited generations | Added `recordUsage()` call after DB save |
 | C3 | Critical | `workers/src/handlers/webhooks.js` | `enforceFeatureAccess()` called with wrong arity + missing `await` → webhook registration 100% broken | Fixed to `await enforceFeatureAccess(request, env, 'practitionerTools')` |
-| H1 | High | `workers/src/handlers/practitioner.js` | TIER_LIMITS used `standard/professional/enterprise` vs billing's `seeker/guide/practitioner` | Aligned to canonical tier names |
+| H1 | High | `workers/src/handlers/practitioner.js` | TIER_LIMITS used `standard/professional/enterprise` vs billing's `regular/practitioner/white_label` | Aligned to canonical tier names |
 | H2 | High | `workers/src/handlers/alerts.js` | Guide tier missing from `tierLimits` → guide users got free-tier limit of 3 | Added `guide: 25` to tierLimits |
 | H3 | High | `workers/src/handlers/billing.js` | Non-atomic tier update in `handleUpgradeSubscription` — crash between queries leaves inconsistent state | Wrapped in `query.transaction()` |
 | H4 | High | `workers/src/handlers/billing.js` | Non-atomic cancel + downgrade in `handleCancelSubscription` | Wrapped in `query.transaction()` |

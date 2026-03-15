@@ -42,7 +42,7 @@ const DEV_ORIGINS = [
  * @returns {string[]}
  */
 function getAllowedOrigins(environment) {
-  if (environment === 'production') {
+  if (!environment || environment === 'production') {
     return PRODUCTION_ORIGINS;
   }
   return [...PRODUCTION_ORIGINS, ...DEV_ORIGINS];
@@ -77,8 +77,8 @@ export function getCorsHeaders(request, environment) {
   };
 }
 
-// Legacy export for backward compatibility (uses production origin)
-export const corsHeaders = {
+// Legacy constant (not exported — unused externally)
+const corsHeaders = {
   'Access-Control-Allow-Origin': PRODUCTION_ORIGINS[0],
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',

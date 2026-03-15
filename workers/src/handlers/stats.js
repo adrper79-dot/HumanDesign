@@ -46,7 +46,7 @@ export async function handleGetActivityStats(request, env, ctx) {
     // If no data exists yet, return zeros — the frontend should handle the empty state.
 
     return Response.json({
-      success: true,
+      ok: true,
       stats: {
         weeklyUsers,
         totalProfiles,
@@ -57,9 +57,9 @@ export async function handleGetActivityStats(request, env, ctx) {
   } catch (error) {
     console.error('Get activity stats error:', error);
     
-    // BL-FIX: Return success: false so monitoring can detect DB outages
+    // BL-FIX: Return ok: false so monitoring can detect DB outages
     return Response.json({
-      success: false,
+      ok: false,
       stats: {
         weeklyUsers: 0,
         totalProfiles: 0,
@@ -85,7 +85,7 @@ export async function handleGetLeaderboard(request, env, ctx) {
     );
 
     return Response.json({
-      success: true,
+      ok: true,
       leaderboard: result.rows.map(row => ({
         email: row.email.split('@')[0] + '@***', // Anonymize
         points: row.total_points,
@@ -96,7 +96,7 @@ export async function handleGetLeaderboard(request, env, ctx) {
   } catch (error) {
     console.error('Get leaderboard error:', error);
     return Response.json({
-      success: false,
+      ok: false,
       error: 'Failed to retrieve leaderboard'
     }, { status: 500 });
   }

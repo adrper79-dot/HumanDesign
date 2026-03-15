@@ -143,10 +143,10 @@ Executed comprehensive code verification of all UI defect backlog items followin
 ### Phase 5: Content Integrity Pass ✅
 
 **Pricing Audit:**
-- ✅ Free tier features match built functionality (1 chart/month, 1 profile/month)
-- ✅ Seeker tier features match (unlimited charts, 10 profiles, SMS digests)
-- ✅ Guide tier features match (unlimited, practitioner tools, API calls)
-- ✅ Practitioner tier properly commented out (unbuilt features)
+- ✅ Free tier features match built functionality (1 profile, 5 AI questions, 1 daily synthesis)
+- ✅ Explorer tier (regular) features match (30 profiles, 30 AI questions, daily limits)
+- ✅ Guide tier (practitioner) features match (200 profiles, practitioner tools)
+- ✅ Studio tier (white_label) features updated to match actual delivered capabilities ($149/mo)
 - ✅ No false claims or vaporware
 
 **Social Proof Validation:**

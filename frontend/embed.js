@@ -9,7 +9,7 @@
  *     elementId: 'primeself-widget',
  *     theme: 'dark', // or 'light'
  *     accentColor: '#c9a84c',
- *     hideAttribution: false, // Set to true for Practitioner tier+
+ *     hideAttribution: false, // Set to true for Agency / white-label capability
  *     width: '100%',
  *     apiEndpoint: 'https://primeself.app/api'
  *   });
@@ -33,7 +33,7 @@
         theme: options.theme || 'dark',
         accentColor: options.accentColor || '#c9a84c',
         hideAttribution: options.hideAttribution || false,
-        apiKey: options.apiKey || null,  // Required for hideAttribution; must be a white_label-tier API key
+        apiKey: options.apiKey || null,  // Required for hideAttribution; must belong to an Agency-capable account
         width: options.width || '100%',
         height: options.height || '600px',
         apiEndpoint: options.apiEndpoint || 'https://primeself.app/api',
@@ -102,7 +102,7 @@
      */
     _setupMessageListener: function(instance) {
       // BL-R-M18: Strict origin validation — only accept from exact primeself.app or localhost origins
-      const ALLOWED_ORIGINS = new Set(['https://primeself.app', 'http://localhost:3000', 'http://localhost:8787']);
+      const ALLOWED_ORIGINS = new Set(['https://selfprime.net', 'https://www.selfprime.net', 'https://prime-self-ui.pages.dev']);
 
       // BL-R-L1: Store handler reference so destroy() can remove it and avoid listener leak
       instance._messageHandler = function(event) {

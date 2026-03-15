@@ -232,8 +232,8 @@ Astro: Neptune in Sagittarius 17.9° House 11; Jupiter Trine Neptune (0.52° orb
       Moon in 12th house
 
 ◇ Knowledge Profile
-Natural Access: Knowledge of Self, Knowledge of Destructive Behaviors
-Cultivate: Knowledge of Ancestors, Knowledge of the One
+Natural Access: Knowledge of Sciences, Knowledge of Defenses
+Cultivate: Knowledge of Arts, Knowledge of Heresies
 
 ⊡ Decision Architecture
 HD Authority: Emotional - Solar Plexus

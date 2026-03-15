@@ -31,6 +31,8 @@
  *   POST /api/auth/refresh             – Rotate refresh token, get new JWT pair
  *   POST /api/auth/logout              – Revoke all refresh tokens
  *   GET  /api/auth/me                  – Get current user info
+ *   POST /api/auth/verify-email        – Verify email with token (AUDIT-SEC-003)
+ *   POST /api/auth/resend-verification – Resend verification email (auth required)
  *   GET  /api/geocode                  – City → lat/lng + timezone
  *   GET  /api/health                   – Health check
  *   POST /api/practitioner/register       – Register as practitioner
@@ -123,9 +125,10 @@
 import './engine-compat.js';
 
 import { handleCalculate, handleGetChart } from './handlers/calculate.js';
+import { createQueryFn, QUERIES } from './db/queries.js';
 import { handleSaveChart, handleChartHistory } from './handlers/chart-save.js';
 import { handleGeocode } from './handlers/geocode.js';
-import { handleProfile, handleGetProfile, handleListProfiles } from './handlers/profile.js';
+import { handleProfile, handleGetProfile, handleListProfiles, handleSearchProfiles } from './handlers/profile.js';
 import { handleProfileStream } from './handlers/profile-stream.js';
 import { handleTransits } from './handlers/transits.js';
 import { handleForecast } from './handlers/forecast.js';
@@ -135,9 +138,24 @@ import { handleRectify } from './handlers/rectify.js';
 import { handleCluster } from './handlers/cluster.js';
 import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
-import { handleOAuthSocial } from './handlers/oauthSocial.js';
-import { handlePdfExport } from './handlers/pdf.js';
+import { handleOAuthSocial, handleOAuthExchange } from './handlers/oauthSocial.js';
+import { handlePdfExport, handleBrandedPdfExport } from './handlers/pdf.js';
 import { handlePractitioner } from './handlers/practitioner.js';
+import { handleAgency } from './handlers/agency.js';
+import {
+  handleListDirectory,
+  handleGetPublicProfile,
+  handleGetDirectoryProfile,
+  handleUpdateDirectoryProfile
+} from './handlers/practitioner-directory.js';
+import {
+  handleListNotes,
+  handleCreateNote,
+  handleUpdateNote,
+  handleDeleteNote,
+  handleGetAIContext,
+  handleUpdateAIContext
+} from './handlers/session-notes.js';
 import { handleOnboarding } from './handlers/onboarding.js';
 import { handleValidation } from './handlers/validation.js';
 import { handlePsychometric } from './handlers/psychometric.js';
@@ -146,6 +164,7 @@ import { handleStripeWebhook } from './handlers/webhook.js';
 import { handleWebhooks } from './handlers/webhooks.js';
 import {
   handleCheckout,
+  handleOneTimeCheckout,
   handlePortal,
   handleGetSubscription,
   handleCancelSubscription,
@@ -208,11 +227,12 @@ import { handleApiKeys } from './handlers/keys.js';
 import { handleTiming, listIntentionTemplates } from './handlers/timing.js';
 import { handleEmbedValidate } from './handlers/embed.js';
 import { handleValidatePromo, handleApplyPromo, handleCreatePromo, handleListPromos } from './handlers/promo.js';
+import { handleAdmin } from './handlers/admin.js';
 import { handleAnalytics } from './handlers/analytics.js';
 import { handleExperiments } from './handlers/experiments.js';
-import { trackEvent, trackError, trackFunnel, aggregateDaily, EVENTS } from './lib/analytics.js';
+import { trackEvent, trackError, aggregateDaily, EVENTS } from './lib/analytics.js';
 import { initSentry } from './lib/sentry.js';
-import { corsHeaders, getCorsHeaders, handleOptions } from './middleware/cors.js';
+import { getCorsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
 import { errorResponse } from './lib/errorMessages.js';
@@ -225,12 +245,14 @@ import { runDailyTransitCron } from './cron.js';
 const AUTH_ROUTES = new Set([
   '/api/auth/me',
   '/api/auth/logout',
+  '/api/auth/resend-verification',
   '/api/profile/generate',
-  '/api/sms/send-digest'
+  '/api/sms/send-digest',
+  '/api/composite',          // HD_UPDATES3: composites gated to practitioner+ tier
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/agency/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -251,6 +273,7 @@ const PUBLIC_ROUTES = new Set([
   '/api/auth/refresh',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/verify-email',
   '/api/health',
   '/api/referrals/validate',  // Public for signup flow
   '/api/compare/list',  // Browse celebrities (public)
@@ -260,8 +283,10 @@ const PUBLIC_ROUTES = new Set([
   '/api/notion/callback',              // Notion OAuth callback (public)
   '/api/auth/oauth/google/callback',   // Google OAuth callback (public)
   '/api/auth/oauth/apple/callback',    // Apple Sign In callback (public, POSTs)
+  '/api/auth/oauth/exchange',           // P2-SEC-011: OAuth code exchange (public, POST)
   '/api/embed/validate',               // Embed widget feature-flag check (cross-origin, no PII)
   '/api/promo/validate',               // Promo code validation (public, no redemption)
+  '/api/directory',                    // Public practitioner directory listing
 ]);
 
 function requiresAuth(path) {
@@ -289,6 +314,7 @@ const EXACT_ROUTES = new Map([
   ['POST /api/profile/generate',       handleProfile],
   ['POST /api/profile/generate/stream', handleProfileStream],
   ['GET /api/profile/list',            handleListProfiles],
+  ['GET /api/profile/search',          handleSearchProfiles],
   // Transits & Cycles
   ['GET /api/transits/today',          handleTransits],
   ['GET /api/transits/forecast',       handleForecast],
@@ -302,6 +328,7 @@ const EXACT_ROUTES = new Map([
   // Billing
   ['POST /api/webhook/stripe',        handleStripeWebhook],
   ['POST /api/billing/checkout',      handleCheckout],
+  ['POST /api/billing/checkout-one-time', handleOneTimeCheckout],
   ['POST /api/billing/portal',        handlePortal],
   ['GET /api/billing/subscription',   handleGetSubscription],
   ['POST /api/billing/cancel',        handleCancelSubscription],
@@ -335,6 +362,7 @@ const EXACT_ROUTES = new Map([
   ['GET /api/auth/oauth/apple',              (req, env) => handleOAuthSocial(req, env, '/apple')],
   ['GET /api/auth/oauth/apple/callback',     (req, env) => handleOAuthSocial(req, env, '/apple/callback')],
   ['POST /api/auth/oauth/apple/callback',    (req, env) => handleOAuthSocial(req, env, '/apple/callback')],
+  ['POST /api/auth/oauth/exchange',           handleOAuthExchange],
   // Notion
   ['GET /api/notion/auth',            handleNotionAuth],
   ['GET /api/notion/callback',        handleNotionCallback],
@@ -363,6 +391,22 @@ const EXACT_ROUTES = new Map([
   // Promo admin (guarded internally by X-Admin-Token)
   ['POST /api/admin/promo',           handleCreatePromo],
   ['GET /api/admin/promo',            handleListPromos],
+  // Practitioner Directory (public)
+  ['GET /api/directory',              handleListDirectory],
+  // Practitioner Directory Profile (auth)
+  ['GET /api/practitioner/directory-profile',  handleGetDirectoryProfile],
+  ['PUT /api/practitioner/directory-profile',  handleUpdateDirectoryProfile],
+  // Email marketing unsubscribe (public, CAN-SPAM compliance — AUDIT-SEC-005)
+  ['POST /api/email/unsubscribe',     async (request, env) => {
+    const body = await request.json().catch(() => null);
+    const email = body?.email;
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return Response.json({ error: 'Valid email required' }, { status: 400 });
+    }
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const { rows } = await query(QUERIES.emailMarketingOptOut, [email.toLowerCase().trim()]);
+    return Response.json({ ok: true, message: 'You have been unsubscribed from marketing emails.' });
+  }],
 ]);
 
 /**
@@ -372,11 +416,13 @@ const EXACT_ROUTES = new Map([
  *   - Otherwise, prefix is stripped and the remainder (or '/') is passed.
  */
 const PREFIX_ROUTES = [
+  ['/api/admin/',       handleAdmin,        '/api/admin'],
   ['/api/cluster/',     handleCluster,      null],
   ['/api/sms/',         handleSMS,          null],
   ['/api/auth/',        handleAuth,         null],
   ['/api/onboarding',   handleOnboarding,   '/api/onboarding'],
   ['/api/practitioner',  handlePractitioner, '/api/practitioner'],
+  ['/api/agency',        handleAgency,       '/api/agency'],
   ['/api/validation',   handleValidation,   '/api/validation'],
   ['/api/psychometric',  handlePsychometric, '/api/psychometric'],
   ['/api/diary',        handleDiary,        '/api/diary'],
@@ -398,8 +444,20 @@ const PATTERN_ROUTES = [
   [/^\/api\/compare\/celebrities\/([a-z0-9-]+)$/,      'GET',  1, handleGetCelebrityMatchById],
   [/^\/api\/compare\/category\/([a-z]+)$/,              'GET',  1, handleGetCelebritiesByCategory],
   [/^\/api\/notion\/export\/profile\/([^/]+)$/,        'POST', 1, handleExportProfile],
+  // Branded PDF for practitioner clients
+  [/^\/api\/practitioner\/clients\/([^/]+)\/pdf$/, 'POST', 1, (req, env, id) => handleBrandedPdfExport(req, env, id)],
   [/^\/api\/profile\/([^/]+)\/pdf$/,                    null,  1, handlePdfExport],
   [/^\/api\/profile\/([^/]+)$/,                         'GET',  1, handleGetProfile],
+  // Practitioner Directory — public profile by slug
+  [/^\/api\/directory\/([a-z0-9-]+)$/,                  'GET',  1, handleGetPublicProfile],
+  // Session Notes — CRUD (authenticated, practitioner tier)
+  [/^\/api\/practitioner\/clients\/([^/]+)\/notes$/,    'GET',  1, (req, env, id) => handleListNotes(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/notes$/,    'POST', 1, (req, env, id) => handleCreateNote(req, env, id)],
+  [/^\/api\/practitioner\/notes\/([^/]+)$/,             'PUT',  1, (req, env, id) => handleUpdateNote(req, env, id)],
+  [/^\/api\/practitioner\/notes\/([^/]+)$/,             'DELETE', 1, (req, env, id) => handleDeleteNote(req, env, id)],
+  // Per-client AI context
+  [/^\/api\/practitioner\/clients\/([^/]+)\/ai-context$/, 'GET',  1, (req, env, id) => handleGetAIContext(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/ai-context$/, 'PUT',  1, (req, env, id) => handleUpdateAIContext(req, env, id)],
 ];
 
 /**
@@ -490,6 +548,7 @@ export default {
             hasStripe: !!env?.STRIPE_SECRET_KEY,
             hasTelnyx: !!env?.TELNYX_API_KEY,
             hasResend: !!env?.RESEND_API_KEY,
+            hasSentry: !!env?.SENTRY_DSN,
           };
           // DB connectivity check
           let db = { ok: false, latencyMs: null, error: null };

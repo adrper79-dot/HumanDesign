@@ -103,6 +103,7 @@
   --border-default: var(--color-neutral-800);
   --border-emphasis: var(--color-gold-700);
   --border-focus: var(--color-gold-500);
+  --border: var(--border-subtle);           /* alias — prefer --border-subtle for new code */
   
   /* Text */
   --text-primary: var(--color-neutral-100);
@@ -326,15 +327,73 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   DARK MODE OVERRIDES (if implementing light mode later)
+   LIGHT THEME — warm celestial parchment
+   Activated by: data-theme="light" on <html> (JS toggle + localStorage)
+   OR: system prefers-color-scheme: light (when no manual override)
    ══════════════════════════════════════════════════════════ */
 
+html[data-theme="light"] {
+  color-scheme: light;
+  /* Semantic tokens */
+  --bg-primary:   #f6f0e8;
+  --bg-secondary: #ede4d6;
+  --bg-tertiary:  #e4d8c8;
+  --bg-elevated:  #ede4d6;
+  --bg-overlay:   rgba(0,0,0,0.55);
+  --border-subtle:   #c8b898;
+  --border-default:  #c8b898;
+  --border-emphasis: var(--color-gold-600);
+  --text-primary:   #1c1409;
+  --text-secondary: #5a4528;
+  --text-tertiary:  #7a6845;
+  --text-inverse:   #f6f0e8;
+  --text-link:      var(--color-gold-700);
+  --text-link-hover: var(--color-gold-600);
+  --interactive-secondary:        #ede4d6;
+  --interactive-secondary-hover:  #ddd0be;
+  --interactive-secondary-active: #cdc0ae;
+  /* Shorthand aliases */
+  --bg:        #f6f0e8;
+  --bg2:       #ede4d6;
+  --bg3:       #e4d8c8;
+  --border:    #c8b898;
+  --text:      #1c1409;
+  --text-dim:  #4a3a24;
+  --text-muted:#7a6845;
+  --accent:    #1a50c0;
+  --shadow:    0 4px 24px rgba(0,0,0,0.12);
+}
+
+/* System preference — respected when user hasn't manually toggled */
 @media (prefers-color-scheme: light) {
-  :root {
-    /* Placeholder: uncomment when implementing light mode */
-    /* --bg-primary: var(--color-neutral-50); */
-    /* --text-primary: var(--color-neutral-950); */
+  :root:not([data-theme]) {
     color-scheme: light;
+    --bg-primary:   #f6f0e8;
+    --bg-secondary: #ede4d6;
+    --bg-tertiary:  #e4d8c8;
+    --bg-elevated:  #ede4d6;
+    --bg-overlay:   rgba(0,0,0,0.55);
+    --border-subtle:   #c8b898;
+    --border-default:  #c8b898;
+    --border-emphasis: var(--color-gold-600);
+    --text-primary:   #1c1409;
+    --text-secondary: #5a4528;
+    --text-tertiary:  #7a6845;
+    --text-inverse:   #f6f0e8;
+    --text-link:      var(--color-gold-700);
+    --text-link-hover: var(--color-gold-600);
+    --interactive-secondary:        #ede4d6;
+    --interactive-secondary-hover:  #ddd0be;
+    --interactive-secondary-active: #cdc0ae;
+    --bg:        #f6f0e8;
+    --bg2:       #ede4d6;
+    --bg3:       #e4d8c8;
+    --border:    #c8b898;
+    --text:      #1c1409;
+    --text-dim:  #4a3a24;
+    --text-muted:#7a6845;
+    --accent:    #1a50c0;
+    --shadow:    0 4px 24px rgba(0,0,0,0.12);
   }
 }
 

@@ -1,5 +1,8 @@
 # Upgrade Flow Testing & Documentation
 
+> Historical upgrade-flow test plan. Tier names, expected DB values, and upgrade paths below refer to an older pricing model.
+> Keep for audit history only. Current tier semantics are `free`, `individual`, `practitioner`, and `agency`.
+
 **Created**: March 6, 2026  
 **Task**: BL-REV-008  
 **Status**: Comprehensive test scenarios and operational documentation  
@@ -32,22 +35,22 @@ This document provides comprehensive testing procedures, operational guidelines,
 
 | Scenario | User State | Action | Expected Outcome | Verification |
 |----------|------------|--------|------------------|--------------|
-| **T-001** | Free tier | Upgrade to Seeker | Stripe checkout → Payment → Tier updated | DB: tier='seeker', UI: tier badge shows "SEEKER" |
-| **T-002** | Seeker tier | Upgrade to Guide | Prorated charge → Tier updated | DB: tier='guide', Usage: unlimited profiles |
-| **T-003** | Guide tier | Upgrade to Practitioner | Prorated charge → Tier updated | DB: tier='practitioner', Feature: whiteLabel=true |
-| **T-004** | Practitioner | Downgrade to Guide | Immediate access retained | DB: cancel_at_period_end=true, Access: retained until period_end |
+| **T-001** | Free tier | Upgrade to Explorer | Stripe checkout → Payment → Tier updated | DB: tier='regular', UI: tier badge shows "EXPLORER" |
+| **T-002** | Explorer tier | Upgrade to Guide | Prorated charge → Tier updated | DB: tier='practitioner', Usage: 200 profiles |
+| **T-003** | Guide tier | Upgrade to Studio | Prorated charge → Tier updated | DB: tier='white_label', Feature: whiteLabel=true |
+| **T-004** | Studio | Downgrade to Guide | Immediate access retained | DB: cancel_at_period_end=true, Access: retained until period_end |
 | **T-005** | Any paid tier | Cancel subscription | Access retained until period end | DB: cancel_at_period_end=true, status='active' |
-| **T-006** | Seeker tier | Payment fails (3x) | Email notifications → Auto-cancel | DB: status='past_due' → 'cancelled', tier='free' |
+| **T-006** | Explorer tier | Payment fails (3x) | Email notifications → Auto-cancel | DB: status='past_due' → 'cancelled', tier='free' |
 | **T-007** | Free tier | Access practitioner tools | 403 error with upgrade prompt | UI: Pricing modal opens, Error: "Feature not available" |
 | **T-008** | Free tier | Generate 2nd profile | 429 quota exceeded | UI: Upgrade modal, Error: "Usage quota exceeded" |
-| **T-009** | Seeker tier | Generate 11th profile | 429 quota exceeded | Usage: 10/10, Response: upgrade_required=true |
+| **T-009** | Explorer tier | Generate 31st profile | 429 quota exceeded | Usage: 30/30, Response: upgrade_required=true |
 | **T-010** | Guide tier | Update payment method | Billing portal → Card updated | Stripe: payment_method updated, No service interruption |
 
 ---
 
 ## Upgrade Flow Testing
 
-### Test 1: Free → Seeker Upgrade
+### Test 1: Free → Explorer Upgrade
 
 **Prerequisites**:
 - User registered with email/password
@@ -79,11 +82,11 @@ curl https://prime-self-api.adrper79.workers.dev/api/auth/me \
 
 # Expected: { "user": { "tier": "free", ... } }
 
-# 3. Create checkout session for Seeker tier
+# 3. Create checkout session for Explorer tier
 curl -X POST https://prime-self-api.adrper79.workers.dev/api/stripe/checkout \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"tier": "seeker"}'
+  -d '{"tier": "regular"}'
 
 # Expected: { "url": "https://checkout.stripe.com/c/pay/cs_test_..." }
 
@@ -107,7 +110,7 @@ psql "$NEON_CONNECTION_STRING" -c "
   WHERE u.email = 'test-upgrade-001@example.com';
 "
 
-# Expected: tier='seeker', status='active', stripe_subscription_id populated
+# Expected: tier='regular', status='active', stripe_subscription_id populated
 
 # 7. Verify tier enforcement
 curl -X POST https://prime-self-api.adrper79.workers.dev/api/profile/generate \
@@ -145,16 +148,16 @@ done
 - ✅ Payment processed in Stripe test mode
 - ✅ Webhooks delivered successfully (all 3 events)
 - ✅ Database subscription record created with correct tier
-- ✅ User tier updated from 'free' to 'seeker'
-- ✅ Tier enforcement respects new quota (10 profiles/month)
-- ✅ 11th profile generation blocked with 429 error
+- ✅ User tier updated from 'free' to 'regular'
+- ✅ Tier enforcement respects new quota (30 profiles/month)
+- ✅ 31st profile generation blocked with 429 error
 
 ---
 
-### Test 2: Seeker → Guide Upgrade (Mid-Cycle)
+### Test 2: Explorer → Guide Upgrade (Mid-Cycle)
 
 **Prerequisites**:
-- User currently on Seeker tier ($15/month)
+- User currently on Explorer tier ($12/month)
 - Subscription 15 days into billing cycle
 
 **Test Steps**:
@@ -164,17 +167,17 @@ done
 curl -X POST https://prime-self-api.adrper79.workers.dev/api/stripe/checkout \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"tier": "guide"}'
+  -d '{"tier": "practitioner"}'
 
 # 2. Complete payment
-# Expected proration: (97 - 15) * (15/30) = $41 for remaining 15 days
-# Next invoice: Full $97
+# Expected proration: (60 - 12) * (15/30) = $24 for remaining 15 days
+# Next invoice: Full $60
 
 # 3. Verify immediate tier update
 curl https://prime-self-api.adrper79.workers.dev/api/auth/me \
   -H "Authorization: Bearer $TOKEN"
 
-# Expected: { "user": { "tier": "guide", ... } }
+# Expected: { "user": { "tier": "practitioner", ... } }
 
 # 4. Verify practitioner tools now accessible
 curl https://prime-self-api.adrper79.workers.dev/api/practitioner/clients \
@@ -197,7 +200,7 @@ for i in {1..20}; do
     }'
 done
 
-# Expected: All 20 succeed (tier: 'guide' has unlimited profileGenerations)
+# Expected: All 20 succeed (tier: 'practitioner' has 200 profileGenerations)
 ```
 
 **Success Criteria**:
@@ -205,29 +208,29 @@ done
 - ✅ Tier updated immediately after payment
 - ✅ Practitioner tools unlocked
 - ✅ Profile generation quota now unlimited
-- ✅ API call quota updated to 1,000/month
+- ✅ API call quota updated to 200/month
 
 ---
 
-### Test 3: Guide → Practitioner Upgrade
+### Test 3: Guide → Studio Upgrade
 
 **Test Steps**:
 
 ```bash
-# 1. Create checkout for Practitioner tier
+# 1. Create checkout for Studio tier
 curl -X POST https://prime-self-api.adrper79.workers.dev/api/stripe/checkout \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"tier": "practitioner"}'
+  -d '{"tier": "white_label"}'
 
 # 2. Complete payment in browser
-# Expected charge: Prorated upgrade from $97 to $500
+# Expected charge: Prorated upgrade from $60 to $149
 
 # 3. Verify white-label features unlocked
 curl https://prime-self-api.adrper79.workers.dev/api/auth/me \
   -H "Authorization: Bearer $TOKEN"
 
-# Expected: tier='practitioner', features.whiteLabel=true
+# Expected: tier='white_label', features.whiteLabel=true
 
 # 4. Verify API call quota increased to 10,000/month
 # Make 2,000 API calls (should succeed - no quota error)
@@ -235,7 +238,7 @@ curl https://prime-self-api.adrper79.workers.dev/api/auth/me \
 
 **Success Criteria**:
 - ✅ Upgrade completes successfully
-- ✅ Tier updated to 'practitioner'
+- ✅ Tier updated to 'white_label'
 - ✅ API quota increased to 10K calls/month
 - ✅ White-label features enabled
 
@@ -243,7 +246,7 @@ curl https://prime-self-api.adrper79.workers.dev/api/auth/me \
 
 ## Downgrade & Cancellation Testing
 
-### Test 4: Practitioner → Guide Downgrade
+### Test 4: Studio → Guide Downgrade
 
 **Test Steps**:
 
@@ -257,7 +260,7 @@ curl -X POST https://prime-self-api.adrper79.workers.dev/api/stripe/portal \
 # 2. In browser:
 # - Open portal URL
 # - Click "Update plan"
-# - Select "Guide ($97/month)"
+# - Select "Guide ($60/month)"
 # - Confirm change
 
 # 3. Verify access retained until end of billing period
@@ -267,13 +270,13 @@ psql "$NEON_CONNECTION_STRING" -c "
   WHERE user_id = '...';
 "
 
-# Expected: tier='practitioner', cancel_at_period_end=true
+# Expected: tier='white_label', cancel_at_period_end=true
 # Access continues until current_period_end
 
 # 4. Wait for billing period end (or manually trigger webhook: customer.subscription.updated)
 
 # 5. Verify downgrade applied at period end
-# Expected: tier='guide', status='active'
+# Expected: tier='practitioner', status='active'
 ```
 
 **Success Criteria**:
@@ -509,12 +512,12 @@ Stripe automatically retries failed webhooks with exponential backoff:
 # 1. Create first checkout session
 curl -X POST https://prime-self-api.adrper79.workers.dev/api/stripe/checkout \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"tier": "seeker"}'
+  -d '{"tier": "regular"}'
 
 # 2. Immediately create second checkout session (before completing first)
 curl -X POST https://prime-self-api.adrper79.workers.dev/api/stripe/checkout \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"tier": "seeker"}'
+  -d '{"tier": "regular"}'
 
 # Expected: Second request returns error
 # { "error": "Active subscription already exists" }
@@ -727,9 +730,9 @@ Daily checks:
 Before marking BL-REV-008 complete:
 
 - [ ] All test scenarios T-001 through T-010 pass
-- [ ] Free → Seeker upgrade works end-to-end
-- [ ] Seeker → Guide upgrade with proration works
-- [ ] Guide → Practitioner upgrade works
+- [ ] Free → Explorer upgrade works end-to-end
+- [ ] Explorer → Guide upgrade with proration works
+- [ ] Guide → Studio upgrade works
 - [ ] Downgrade retains access until period end
 - [ ] Cancellation processed correctly
 - [ ] Failed payment handling with grace period works

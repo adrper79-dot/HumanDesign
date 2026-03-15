@@ -81,34 +81,39 @@ export async function handleOnboarding(request, env, subpath) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const kv = env.CACHE; // reuse KV namespace for progress tracking
 
-  // GET /api/onboarding/forge — personalized forge arc from user's latest profile
-  if (subpath === '/forge' && method === 'GET') {
-    return handlePersonalizedForge(userId, query);
-  }
+  try {
+    // GET /api/onboarding/forge — personalized forge arc from user's latest profile
+    if (subpath === '/forge' && method === 'GET') {
+      return handlePersonalizedForge(userId, query);
+    }
 
-  // GET /api/onboarding/progress
-  if (subpath === '/progress' && method === 'GET') {
-    return handleProgress(userId, kv);
-  }
+    // GET /api/onboarding/progress
+    if (subpath === '/progress' && method === 'GET') {
+      return handleProgress(userId, kv);
+    }
 
-  // POST /api/onboarding/advance
-  if (subpath === '/advance' && method === 'POST') {
-    return handleAdvance(request, userId, kv);
-  }
+    // POST /api/onboarding/advance
+    if (subpath === '/advance' && method === 'POST') {
+      return handleAdvance(request, userId, kv);
+    }
 
-  // GET /api/onboarding/forge/:key
-  const forgeMatch = subpath.match(/^\/forge\/([A-Za-z]+)$/);
-  if (forgeMatch && method === 'GET') {
-    return handleForgeArc(forgeMatch[1], userId, query);
-  }
+    // GET /api/onboarding/forge/:key
+    const forgeMatch = subpath.match(/^\/forge\/([A-Za-z]+)$/);
+    if (forgeMatch && method === 'GET') {
+      return handleForgeArc(forgeMatch[1], userId, query);
+    }
 
-  // GET /api/onboarding/chapter/:key/:n
-  const chapterMatch = subpath.match(/^\/chapter\/([A-Za-z]+)\/(\d+)$/);
-  if (chapterMatch && method === 'GET') {
-    return handleChapter(chapterMatch[1], parseInt(chapterMatch[2], 10), userId, query);
-  }
+    // GET /api/onboarding/chapter/:key/:n
+    const chapterMatch = subpath.match(/^\/chapter\/([A-Za-z]+)\/(\d+)$/);
+    if (chapterMatch && method === 'GET') {
+      return handleChapter(chapterMatch[1], parseInt(chapterMatch[2], 10), userId, query);
+    }
 
-  return Response.json({ error: 'Not Found' }, { status: 404 });
+    return Response.json({ error: 'Not Found' }, { status: 404 });
+  } catch (err) {
+    console.error('[Onboarding] Unhandled error:', err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // ─── Public: Intro ───────────────────────────────────────────────

@@ -14,7 +14,9 @@ const RATE_LIMITS = {
   '/api/auth/me':           { max: 10,  windowSec: 60  },  // 10/min
   '/api/auth/forgot-password': { max: 3, windowSec: 60 },  // 3/min (prevent abuse)
   '/api/chart/calculate':   { max: 60,  windowSec: 60  },  // 60/min
-  '/api/profile/generate':  { max: 5,   windowSec: 60  },  // 5/min (LLM calls)
+  '/api/profile/generate':  { max: 3,   windowSec: 60  },  // 3/min (LLM calls — cost control)
+  '/api/profile/generate/stream': { max: 3, windowSec: 60 }, // 3/min (streaming LLM calls)
+  '/api/promo/validate':     { max: 10,  windowSec: 60  },  // MED-PROMO-RATE: prevent code enumeration
   '/api/geocode':           { max: 30,  windowSec: 60  },  // 30/min
   '/api/transits/today':    { max: 60,  windowSec: 60  },  // 60/min
   '/api/transits/forecast': { max: 60,  windowSec: 60  },  // 60/min
@@ -22,8 +24,30 @@ const RATE_LIMITS = {
   '/api/sms/send-digest':   { max: 5,   windowSec: 60  },  // 5/min (SMS cost control)
   '/api/sms/subscribe':     { max: 5,   windowSec: 60  },  // 5/min
   '/api/sms/unsubscribe':   { max: 5,   windowSec: 60  },  // 5/min
+  '/api/email/unsubscribe': { max: 5,   windowSec: 60  },  // AUDIT-SEC-005: CAN-SPAM
+  '/api/composite':         { max: 10,  windowSec: 60  },  // 10/min (LLM-powered)
+  '/api/diary':             { max: 20,  windowSec: 60  },  // P2-BIZ-017: 20/min diary creation
+  '/api/timing/find-dates': { max: 10,  windowSec: 60  },  // P2-BIZ-015: 10/min (CPU-intensive)
   default:                  { max: 60,  windowSec: 60  }
 };
+
+// P2-BIZ-014/015: Pattern-based rate limits for parameterized routes
+const PATTERN_RATE_LIMITS = [
+  { pattern: /^\/api\/cluster\/[^/]+\/synthesize$/, config: { max: 3, windowSec: 60 }, key: '/api/cluster/*/synthesize' },
+  { pattern: /^\/api\/share\//, config: { max: 10, windowSec: 60 }, key: '/api/share/*' },
+];
+
+/**
+ * Resolve rate limit config for a given path.
+ * Checks exact match first, then pattern-based rules, then default.
+ */
+function resolveRateLimit(path) {
+  if (RATE_LIMITS[path]) return { config: RATE_LIMITS[path], key: path };
+  for (const rule of PATTERN_RATE_LIMITS) {
+    if (rule.pattern.test(path)) return { config: rule.config, key: rule.key };
+  }
+  return { config: RATE_LIMITS.default, key: path };
+}
 
 /**
  * Check rate limit. Returns null if within limits,
@@ -35,9 +59,13 @@ const RATE_LIMITS = {
 export async function rateLimit(request, env) {
   const kv = env.CACHE;
   if (!kv) {
-    // BL-S-MW1: Log warning so operators notice missing KV binding in production
-    console.warn('[rateLimit] CACHE KV not bound — rate limiting disabled. Bind CACHE in wrangler.toml for production.');
-    return null; // KV not bound — skip rate limiting
+    // BL-RATELIMIT-001: Fail closed — missing KV means no rate limiting is possible.
+    // Return 503 instead of silently disabling all rate limits.
+    console.error('[rateLimit] CACHE KV not bound — blocking request. Bind CACHE in wrangler.toml.');
+    return new Response(
+      JSON.stringify({ error: 'Service temporarily unavailable' }),
+      { status: 503, headers: { 'Content-Type': 'application/json', 'Retry-After': '30' } }
+    );
   }
 
   const url = new URL(request.url);
@@ -48,8 +76,9 @@ export async function rateLimit(request, env) {
     || request.headers.get('CF-Connecting-IP')
     || 'unknown';
 
-  const config = RATE_LIMITS[path] || RATE_LIMITS.default;
-  const key = `rl:${clientId}:${path}`;
+  const resolved = resolveRateLimit(path);
+  const config = resolved.config;
+  const key = `rl:${clientId}:${resolved.key}`;
   const now = Math.floor(Date.now() / 1000);
   const windowStart = now - (now % config.windowSec); // Fixed window boundary
 
@@ -64,6 +93,9 @@ export async function rateLimit(request, env) {
 
   if (count >= config.max) {
     const retryAfter = (windowStart + config.windowSec) - now;
+    console.warn(JSON.stringify({
+      event: 'rate_limited', clientId, path, count, max: config.max
+    }));
     return new Response(
       JSON.stringify({
         error: 'Rate limit exceeded',

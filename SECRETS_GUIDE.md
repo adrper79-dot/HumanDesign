@@ -186,9 +186,9 @@ These are **not secrets** — they are public config baked into the Worker:
 | Variable | Purpose | File |
 |----------|---------|------|
 | `ENVIRONMENT` | `"production"` or `"staging"` | `wrangler.toml` |
-| `STRIPE_PRICE_SEEKER` | Stripe Price ID for Seeker tier ($15/mo) | `wrangler.toml` |
-| `STRIPE_PRICE_GUIDE` | Stripe Price ID for Guide tier ($97/mo) | `wrangler.toml` |
-| `STRIPE_PRICE_PRACTITIONER` | Stripe Price ID for Practitioner tier ($500/mo) | `wrangler.toml` |
+| `STRIPE_PRICE_REGULAR` | Stripe Price ID for Explorer tier ($12/mo) | `wrangler.toml` |
+| `STRIPE_PRICE_PRACTITIONER` | Stripe Price ID for Guide tier ($60/mo) | `wrangler.toml` |
+| `STRIPE_PRICE_WHITE_LABEL` | Stripe Price ID for Studio tier ($149/mo) | `wrangler.toml` |
 
 These are set in `workers/wrangler.toml` under `[vars]` and are safe to commit.
 

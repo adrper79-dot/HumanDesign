@@ -30,7 +30,7 @@ import {
 export async function handleExperiments(request, env, subpath) {
   // Tier gate: Guide+ only
   const tier = request._user?.tier;
-  if (!tier || tier === 'free' || tier === 'seeker') {
+  if (!tier || tier === 'free' || tier === 'regular' || tier === 'individual') {
     return Response.json(
       { error: 'Analytics requires Guide tier or above' },
       { status: 403 }

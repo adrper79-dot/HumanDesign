@@ -101,9 +101,9 @@
 
 ### 🟢 ENHANCEMENT — Pricing
 
-- [ ] **Add $7/mo tier** ("Explorer") between Free and $15: 3 charts/month, basic transit alerts, no AI profile
+- [x] **Add $7/mo tier** ("Explorer") between Free and $15: 3 charts/month, basic transit alerts, no AI profile — **RESOLVED by Plan v4**: Explorer $12/mo, Guide $60/mo, Studio $149/mo
 - [x] **Remove $500/mo tier** — removed 2026-03-09 (Practitioner pricing card removed from pricing modal)
-- [ ] **Rename $97 tier** to "Practitioner Pro" and list only features that currently work
+- [x] **Rename $97 tier** to "Practitioner Pro" and list only features that currently work — **RESOLVED by Plan v4**: Guide tier ($60/mo) with practitioner features
 - [ ] **Move pricing to its own page/tab** — not a modal overlay on landing
 
 ---
@@ -252,7 +252,7 @@ Collapsed 14 navigable destinations to 5 primary tabs + ⚙ overflow. Added pers
 - [ ] **BL-UX-M1: Interactive bodygraph** — Click centers/gates/channels to see explanations, highlight connections
 - [ ] **BL-UX-M2: Share-ready images** — Generate 1080x1080 PNG: bodygraph + name + type + profile + tagline
 - [ ] **BL-UX-M3: Real social proof** — API endpoint for live stats (users who generated charts this week, total profiles)
-- [ ] **BL-UX-M4: Simplify pricing** — Remove $500 tier, add $7-9/mo tier, rename $97 to "Pro" (practitioners only)
+- [x] **BL-UX-M4: Simplify pricing** — **RESOLVED by Plan v4**: Free $0 / Explorer $12 / Guide $60 / Studio $149. Daily ceilings via KV.
 - [ ] **BL-UX-M5: Transit timeline** — 30-day forward view with intensity curves, "Peaks March 15, fades March 22"
 - [ ] **BL-UX-M6: Progressive onboarding** — Make onboarding default for new users, guided tour: birth data → chart → type explanation → transits
 - [ ] **BL-UX-M7: Remove fake features** — Delete "coming soon" features from pricing OR add "(Coming Soon)" with roadmap dates

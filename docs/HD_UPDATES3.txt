@@ -1,0 +1,185 @@
+Pricing Sweet Spots — The Practitioner-First Revenue Architecture
+THE CORE PROBLEM WITH CURRENT PRICING
+The current structure has two fatal flaws:
+
+1. Explorer at $12/mo positions the product as a commodity.
+$12 says "cheap utility app." It is less than Netflix. It is less than Spotify. Users don't take cheap tools seriously, and cheap tools don't generate word of mouth. Worse — practitioners see a $12/mo app and assume their clients will use it instead of booking a reading. That makes them hostile, not evangelists.
+
+2. Guide at $60/mo is a 10% cost on one client session.
+A practitioner doing four sessions per week at $150 earns $2,400/month. Their tool budget at 3% of revenue is $72/mo. You are priced below what they'd spend on a decent coffee habit. Low price signals low quality signals low trust. And you're getting almost nothing for the most valuable customer segment you have.
+
+3. There is no financial reason for practitioners to grow their client base on Prime Self specifically.
+Right now a practitioner inviting clients to Prime Self does you a favor for free. There is no mechanism that makes them financially better off for doing so. That is the flywheel mechanism missing entirely.
+
+THE STRATEGIC PRINCIPLE
+Practitioners are not your competition. They are your sales force. Price and structure everything to make that true.
+
+What this means in practice:
+
+The individual tier must be positioned as a daily living tool, not a reading. "Take your practitioner's reading deeper every day" — explicitly complementary.
+The AI synthesis on the individual tier should handle daily-practice questions, not replace a practitioner reading. The synthesis itself should, where appropriate, say: "For decisions of this weight, this is exactly the kind of thing to bring to a session with your practitioner."
+Composite/relationship synthesis, life decision guidance, deep gate/channel work — these belong to the practitioner tier or one-time purchases, not the individual subscription.
+Practitioners should actively earn money from referring their clients to Prime Self. This is the flywheel.
+THE NEW PRICING ARCHITECTURE
+Free — "Discover Your Design"
+$0 forever
+
+The hook. Must be genuinely better than MyBodyGraph's free tier.
+
+What's included	Why
+Full chart generation (unlimited)	Table stakes — everyone gives this free
+One AI synthesis/month	The hook moment — must be the best free reading they've ever gotten
+Daily transit brief (stripped down)	Creates daily habit, drives return visits
+Check-ins (unlimited)	Engagement, streak gamification
+Diary entries (unlimited)	Retention — they own their data here
+Celebrity matching	Viral / shareability hook
+Achievements	Engagement loop
+What's NOT free:
+
+Saved profiles (they get the read but it doesn't persist — forces upgrade or losing their synthesis)
+Full transit detail and timing tool
+SMS
+Composite charts
+PDF export
+Practitioner tools
+Why daily transits are free (partial): It creates daily active usage. DAU drives word of mouth and app store ranking. The full transit experience — interaction with natal chart, timing tool, personalized alerts — is paid.
+
+Individual — "Live Your Design Daily"
+$19/month | $190/year
+
+Up from $12. Positioned explicitly as a daily companion, not a reading service.
+
+What changes from current $12	Rationale
+Price: $12 → $19	Signals quality. Still an obvious value.
+Profile generations: 30 → 10/month	Fewer is fine — this tier is about daily practice, not synthesis volume
+AI questions: 30 → unlimited	Daily-use tool. Questions are cheap to serve and drive engagement
+Composite charts: removed	This is practitioner / reading territory
+Transit tool: full access	Core daily-companion feature
+Saved profiles: 20 → unlimited	Removed friction
+PDF export: included	Shareability, professional feel
+Positioning copy: "Your chart was read once. Your design is lived every day. Prime Self helps you track, understand, and apply your Human Design in real time — transits, journal, check-ins, and AI guidance built around your actual life."
+
+What this tier deliberately does NOT do:
+
+Deep synthesis of how your chart applies to a major life decision → "This is exactly what a practitioner session is for. [Find a practitioner →]"
+Composite/relationship readings → "Book a reading with a certified practitioner for your relationship chart."
+Monthly chart re-synthesis to track change → that's practitioner territory, not a daily tool
+Practitioner — "Build Your Practice"
+$97/month | $970/year
+
+Up from $60. Plus revenue share (below). This is the critical tier to get right.
+
+At $97/mo, a practitioner doing one single session per week at $150 pays for this tool in 43 minutes of work per month. It should feel that cheap.
+
+Feature	Value to practitioner
+Full client invitation system (unlimited invites)	Zero friction client onboarding
+Client detail workspace (chart + notes + activity)	Replaces Notion/Google Docs
+Session prep AI	Saves 20-30 min per session in prep
+Branded client portal	Professional, shareable, no DIY needed
+Branded PDF reports (their name/logo)	Deliverable for every client
+Composite synthesis	Core service — saves hours of manual interpretation
+Client transit alerts	Proactive, differentiating client touchpoints
+Session notes (full CRUD with transit snapshot)	Longitudinal client record
+Client activity view (with consent)	Evidence-based session prep
+Public practitioner profile	Discoverability on Prime Self directory
+500 AI syntheses/month	Enough for 25 clients × 20 interactions/month
+Unlimited saved profiles	Practice history
+Cluster analysis	Group sessions, training programs
+Transit watches for clients	Automated client care
+Profile generation quota raised to 500/month (from 200). A practitioner with 25 active clients doing session prep + client readings needs room to breathe. At Claude's pricing, 500 syntheses costs roughly $15-$50/month in API costs depending on model. That is comfortable margin at $97.
+
+The Revenue Share Mechanism — The Flywheel
+This is the single most important structural change.
+
+How it works:
+Every practitioner gets a unique referral link: selfprime.net/ref/[practitioner-slug]
+
+When a client signs up through that link and upgrades to Individual ($19/mo):
+
+Prime Self pays the practitioner 25% recurring as a credit against their own subscription bill
+The credit accumulates monthly, applied automatically
+No cap. No expiry.
+The math:
+
+Practitioner's active paid clients	Credit earned/month	Effective practitioner cost
+0	$0	$97/mo
+5	$24	$73/mo
+10	$48	$49/mo
+15	$71	$26/mo
+20	$95	$2/mo (effectively free)
+25+	$119+	$0 + surplus credit toward next month
+What this does:
+
+Practitioners are actively incentivized to encourage clients to subscribe
+A practitioner with 20+ paying clients uses Prime Self essentially for free
+Prime Self earns $19 × 25 = $475/mo from those clients + $97 - $119 = net $453/mo from one practitioner relationship
+Practitioners talk about their credit to other practitioners → referral loops
+No CAC on practitioner-sourced individual subscribers
+Implementation: Tracked via the existing referral system. The referral_code on the practitioner's user record becomes their share link. The referrals table already has reward_granted and reward_value fields. Add a credit_type: 'recurring_subscription' path in the reward handler and apply it as a Stripe coupon on the practitioner's next invoice.
+
+Agency / Studio — "Scale Your School"
+$349/month | $3,490/year
+
+Up from $149. White-label is a premium product. $149 was absurd.
+
+Who is this? HD schools, training programs, large practitioners with 50+ clients, corporate wellness providers using HD, coaches building their own HD brand.
+
+Feature added vs Practitioner	Rationale
+Up to 5 practitioner seats (sub-accounts)	Schools need multiple analysts
+White-label client portal (custom domain)	Their brand, not Prime Self's
+API access (10K calls/month)	Embed in their own website/tools
+Custom webhooks	CRM integration, automation
+2,000 AI syntheses/month	School with multiple practitioners
+Priority support	Enterprise expectation
+Custom branding on PDFs	Their name, their colors, their logo
+The seat model matters. A school with 5 analysts, each with 30 clients = 150 clients on Prime Self. At 20% credit, the credit would overflow — cap credits at 50% of subscription cost for Agency tier, rest is pure Prime Self revenue.
+
+ONE-TIME REVENUE LAYERS
+These capture people who don't want subscriptions. Currently $0 LTV on this segment. Low effort to implement — just add Stripe one-time price objects.
+
+Product	Price	Who buys
+Single deep synthesis (PDF delivered)	$19	Free users who want one good reading
+Relationship / composite reading	$29	Anyone — couples, colleagues, friends
+30-day transit journal + AI synthesis	$12	"Try before subscribe" one-month pass
+Lifetime Individual access	$299	"I don't do subscriptions" buyers
+The composite one-time purchase is important. Relationship HD is the single most-searched topic in the space. Charging $29 for a one-time composite synthesis is a no-brainer impulse purchase. It also funnels people into the practitioner booking flow: "Want to go deeper on your relationship chart? A certified practitioner can walk you through this together. [Find a practitioner →]"
+
+WHAT "NOT UNDERCUTTING PRACTITIONERS" LOOKS LIKE IN THE PRODUCT
+This is not just pricing philosophy — it needs to be built into the product behavior.
+
+1. AI response design. When a free or individual user asks something that is genuinely a practitioner-session question (major life decision, relationship dynamics, career pivot, "what should I do about X"), the AI should say: "This is a rich question that touches on [specific gates/channels]. For something this significant, I'd recommend working through it with a practitioner who can hold the full context with you. [Find a certified practitioner →]" — then still give a helpful framing, but explicitly positions the practitioner as the expert.
+
+2. Composite gating. Full composite synthesis lives at Practitioner tier (for practitioners) and as a one-time purchase ($29) for individuals. Individual subscribers don't get unlimited composite synthesis. This keeps the "I want to understand my relationship with X" use case moving toward practitioners.
+
+3. The practitioner directory. Every public practitioner profile is reachable from within the app whenever the AI defers to a practitioner. "Find a practitioner in your area" is a genuine feature, not just a page.
+
+4. Client portal positioning. From the client side, the portal is branded with their practitioner's name first. "Prepared by [Practitioner Name] through Prime Self." The practitioner is front and center in every client touchpoint.
+
+REVISED REVENUE MODEL
+Tier	Price	Target users	12mo target	ARR
+Individual	$19/mo	Self-directed students, HD enthusiasts	2,000	$456K
+Practitioner (base)	$97/mo	Solo practitioners, coaches	400	$466K
+Agency	$349/mo	Schools, multi-practitioner orgs	30	$126K
+One-time purchases	$12–$299	Free users, gift buyers	500 txns	$15K
+Total				~$1.06M ARR
+Excludes practitioner revenue share credits (reduces practitioner ARR by ~$80-120K but is earned by practitioners driving ~$190K in additional individual subscriptions — net positive.)
+
+Compared to current model (same user counts, current prices):
+
+Individual 2,000 × $12 = $288K
+Practitioner 400 × $60 = $288K
+Studio 30 × $149 = $54K
+Total: $630K
+New model generates ~68% more ARR from the same user base — purely from pricing alignment, with no new features required.
+
+IMPLEMENTATION ORDER
+Update stripe.js tier config — change prices in code (30 min)
+Create new Stripe Price objects — $19, $97, $349, one-time prices (30 min in Stripe dashboard)
+Add revenue share credit logic — referral webhook → apply recurring Stripe coupon (1 day)
+Add practitioner referral link generation — use existing referral_code field, new UI in practitioner settings (2 hrs)
+Add composite one-time purchase — new Stripe payment_intent flow, one-time price (1 day)
+Update frontend pricing page — new tier names, prices, feature comparison (2 hrs)
+Add "Find a practitioner" CTA — wired to practitioner directory, inserted in AI response flow (1 hr)
+Grandfather existing subscribers — give existing Guide ($60) a 90-day grace period before migration to $97
+THE ONE-SENTENCE ANSWER TO YOUR QUESTION
+The sweet spot is $97/mo for practitioners with 25% recurring revenue share on every client they convert — making the tool practically free for high-volume practitioners while Prime Self earns compounding revenue from every client they bring in.

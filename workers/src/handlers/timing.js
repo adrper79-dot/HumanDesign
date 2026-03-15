@@ -109,104 +109,106 @@ export async function handleTiming(request, env) {
     });
   }
 
-  // Tier enforcement: Timing engine requires Seeker tier
+  // Tier enforcement: Timing engine requires Explorer tier or above
   if (user.tier === 'free') {
-    return new Response(JSON.stringify({
+    return Response.json({
       error: 'Upgrade required',
-      message: 'Best Timing Engine requires Seeker tier or higher',
+      message: 'Best Timing Engine requires Explorer tier or above',
       upgrade_required: true,
       feature: 'timingEngine',
       upgradeUrl: '/app/pricing'
-    }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json' }
+    }, { status: 403 });
+  }
+
+  try {
+    // Get user's saved chart
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const chartResult = await query(
+      QUERIES.getChartWithBirthDataAndAstro,
+      [user.id]
+    );
+
+    const chartRow = chartResult.rows?.[0];
+    if (!chartRow) {
+      return new Response(JSON.stringify({
+        error: 'No chart found',
+        message: 'Please calculate your chart first at /app/chart'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const natalChart = typeof chartRow.hd_json === 'string'
+      ? JSON.parse(chartRow.hd_json)
+      : chartRow.hd_json;
+
+    // Parse request body
+    const body = await request.json();
+    const { 
+      intention = 'launch_project',
+      includeWeekends = true
+    } = body;
+    // BL-FIX: Clamp windowDays and minScore to prevent DoS via massive iteration
+    const windowDays = Math.min(365, Math.max(1, parseInt(body.windowDays || '90', 10) || 90));
+    const minScore = Math.min(100, Math.max(0, parseInt(body.minScore || '60', 10) || 60));
+
+    // Validate intention template
+    const template = INTENTION_TEMPLATES[intention];
+    if (!template) {
+      return new Response(JSON.stringify({
+        error: 'Invalid intention',
+        message: `Intention must be one of: ${Object.keys(INTENTION_TEMPLATES).join(', ')}`,
+        available: Object.keys(INTENTION_TEMPLATES).map(key => ({
+          id: key,
+          name: INTENTION_TEMPLATES[key].name,
+          category: INTENTION_TEMPLATES[key].category
+        }))
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Calculate optimal dates
+    const optimalDates = await findOptimalDates(
+      natalChart,
+      template,
+      windowDays,
+      minScore,
+      includeWeekends
+    );
+
+    // Track achievement event
+    if (user?.id) {
+      await trackEvent(env, user.id, 'timing_calculated', { intention }, user.tier || 'free');
+    }
+
+    return Response.json({
+      ok: true,
+      intention: {
+        id: intention,
+        name: template.name,
+        category: template.category,
+        description: template.description
+      },
+      natalChart: {
+        type: natalChart.chart.type,
+        strategy: natalChart.chart.strategy,
+        authority: natalChart.chart.authority
+      },
+      searchWindow: {
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + windowDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        days: windowDays
+      },
+      optimalDates: optimalDates.slice(0, 10),  // Top 10
+      totalCandidates: optimalDates.length
     });
+  } catch (err) {
+    console.error('[Timing] Unhandled error:', err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  // Get user's saved chart
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const chartResult = await query(
-    QUERIES.getChartWithBirthDataAndAstro,
-    [user.id]
-  );
-
-  const chartRow = chartResult.rows?.[0];
-  if (!chartRow) {
-    return new Response(JSON.stringify({
-      error: 'No chart found',
-      message: 'Please calculate your chart first at /app/chart'
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  const natalChart = typeof chartRow.hd_json === 'string'
-    ? JSON.parse(chartRow.hd_json)
-    : chartRow.hd_json;
-
-  // Parse request body
-  const body = await request.json();
-  const { 
-    intention = 'launch_project',
-    includeWeekends = true
-  } = body;
-  // BL-FIX: Clamp windowDays and minScore to prevent DoS via massive iteration
-  const windowDays = Math.min(365, Math.max(1, parseInt(body.windowDays || '90', 10) || 90));
-  const minScore = Math.min(100, Math.max(0, parseInt(body.minScore || '60', 10) || 60));
-
-  // Validate intention template
-  const template = INTENTION_TEMPLATES[intention];
-  if (!template) {
-    return new Response(JSON.stringify({
-      error: 'Invalid intention',
-      message: `Intention must be one of: ${Object.keys(INTENTION_TEMPLATES).join(', ')}`,
-      available: Object.keys(INTENTION_TEMPLATES).map(key => ({
-        id: key,
-        name: INTENTION_TEMPLATES[key].name,
-        category: INTENTION_TEMPLATES[key].category
-      }))
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  // Calculate optimal dates
-  const optimalDates = await findOptimalDates(
-    natalChart,
-    template,
-    windowDays,
-    minScore,
-    includeWeekends
-  );
-
-  // Track achievement event
-  if (user?.id) {
-    await trackEvent(env, user.id, 'timing_calculated', { intention }, user.tier || 'free');
-  }
-
-  return Response.json({
-    success: true,
-    intention: {
-      id: intention,
-      name: template.name,
-      category: template.category,
-      description: template.description
-    },
-    natalChart: {
-      type: natalChart.chart.type,
-      strategy: natalChart.chart.strategy,
-      authority: natalChart.chart.authority
-    },
-    searchWindow: {
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + windowDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      days: windowDays
-    },
-    optimalDates: optimalDates.slice(0, 10),  // Top 10
-    totalCandidates: optimalDates.length
-  });
 }
 
 /**
@@ -526,7 +528,7 @@ function scoreChallengingTransits(transits, natalChart, template) {
  */
 export async function listIntentionTemplates() {
   return Response.json({
-    success: true,
+    ok: true,
     templates: Object.keys(INTENTION_TEMPLATES).map(key => ({
       id: key,
       name: INTENTION_TEMPLATES[key].name,

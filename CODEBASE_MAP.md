@@ -31,7 +31,7 @@
 │                    Cloudflare Workers Edge                       │
 │  ┌──────────┐  ┌────────────┐  ┌──────────┐  ┌──────────────┐ │
 │  │  Router   │→│ Middleware  │→│ Handlers  │→│   Libraries   │ │
-│  │ index.js  │  │ auth/cors/ │  │ 37 route │  │ llm/stripe/  │ │
+│  │ index.js  │  │ auth/cors/ │  │ 41 route │  │ llm/stripe/  │ │
 │  │ (3-tier   │  │ rate/tier/ │  │ handlers │  │ cache/email/ │ │
 │  │  routing) │  │ cache/apiKey│  │          │  │ analytics/   │ │
 │  └──────────┘  └────────────┘  └──────────┘  └──────────────┘ │
@@ -93,6 +93,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
   6. Evaluate all active user transit alerts
   7. Email drip campaigns (welcome series, re-engagement, upgrade nudges)
   8. Purge expired/revoked refresh tokens
+  9. Downgrade expired cancel-at-period-end subscriptions
 - **DB tables:** transit_snapshots, users, push_subscriptions, notification_preferences, transit_alerts, alert_deliveries, refresh_tokens
 - **Env vars:** NEON_CONNECTION_STRING, RESEND_API_KEY, FROM_EMAIL
 - **Imports from:** engine (julian, planets, gates), handlers (sms, push, alerts), lib (webhookDispatcher, email)
@@ -205,7 +206,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 | `experiments.js` | A/B testing framework (BL-ANA-005) | `getVariant`, `trackConversion`, `getResults` | None (DB only) |
 | `i18n.js` | Server-side internationalization (BL-OPT-006) | `detectLocale`, `t`, `formatDate`, `formatNumber`, `SUPPORTED_LOCALES` | Cloudflare KV |
 | `jwt.js` | HS256 JWT sign/verify | `signJWT`, `verifyHS256` | None (Web Crypto API) |
-| `llm.js` | Multi-provider LLM with failover | `callLLM(promptPayload, env)` — Anthropic → Grok (xAI) → Groq chain | Anthropic API, xAI API, Groq API |
+| `llm.js` | Multi-provider LLM with failover | `callLLM(promptPayload, env)` — Anthropic (2-retry) → Grok 4 Fast (xAI) → Groq chain | Anthropic API, xAI API, Groq API |
 | `notion.js` | Notion API v1 client wrapper | `NotionClient` class (request, createDatabase, createPage, etc.) | Notion API |
 | `queryPerf.js` | Query timing + slow query logging (BL-OPT-002) | `createMonitoredQueryFn(env)` | None |
 | `sentry.js` | Lightweight Sentry error tracking (BL-ANA-004) | `initSentry(env)` → `{ captureException, addBreadcrumb }` | Sentry envelope API |
@@ -311,7 +312,7 @@ All files are pure JS with zero external dependencies — designed for both Node
 | `astro/` | planets.json, signs.json, houses.json, aspects.json | Astrological meanings for 12 planets, 12 signs, 12 houses, 6 aspect types |
 | `genekeys/` | keys.json, generate-missing.js | Gene Keys interpretations for 64 keys (shadow → gift → siddhi) |
 | `numerology/` | lifePaths.json, personalYears.json, tarotCards.json | Numerology life path meanings (1-9, 11, 22, 33), personal year themes, Tarot birth cards |
-| `prime_self/` | forges_canonical.json, knowledges_canonical.json, sciences_canonical.json, arts_canonical.json, defenses_canonical.json, heresies_canonical.json, historical_figures.json, book_recommendations.json | Canonical Prime Self philosophy — Five Forges (Chronos, Eros, Aether, Lux, Phoenix), Six Knowledges (Self, Ancestors, The One, Constructive, Destructive, Healing), plus historical figure & book recommendation libraries |
+| `prime_self/` | forges_canonical.json, knowledges_canonical.json, sciences_canonical.json, arts_canonical.json, defenses_canonical.json, heresies_canonical.json, historical_figures.json, book_recommendations.json | Canonical Prime Self philosophy — Five Forges (Initiation, Mastery, Guidance, Perception, Transformation; aliases: Chronos, Eros, Aether, Lux, Phoenix), Six Knowledges (Sciences, Arts, Defenses, Heresies, Connections, Mysteries), plus historical figure & book recommendation libraries |
 | `assessments/` | bigfive.json, via_strengths.json | Big Five personality assessment + VIA character strengths rubrics |
 | `combined/` | verified_correlations.json | Cross-system verified correlations (HD×Astro×Numerology) |
 
@@ -334,7 +335,7 @@ All files are pure JS with zero external dependencies — designed for both Node
 | `engine.test.js` | ~500 | **Comprehensive engine test** — Layers 1-7+synthesis. AP test vector (Aug 5, 1979). Tests: JDN calculation, Sun longitude, all planetary positions, design calculation, gate/line mapping, chart determination (Type, Authority, Profile, Definition, Cross), astrology (signs, houses, aspects), transits, numerology, synthesis prompt building |
 | `handlers.test.js` | ~300 | **Handler integration tests** — Tests compute-only handlers (calculate, composite, rectify) with mock Request/env, validates request parsing, error paths, missing fields |
 | `numerology.test.js` | ~200 | **Numerology test suite** — Tests reduceToDigit, lifePathNumber (with master numbers 11/22/33), birthdayNumber, personalYear/Month/Day, tarotBirthCard. Test vectors: AP, Steve Jobs, master number cases |
-| `canonical.test.js` | ~550 | **Canonical philosophy test suite** — 56 tests validating alignment with Sacred Texts. Tests: Five Forges (Chronos, Eros, Aether, Lux, Phoenix), Six Knowledges, Six Sciences, Six Arts, Six Defenses, Six Heresies, Historical Figures library, Book Recommendations library, Synthesis prompt integration, Cross-reference validation |
+| `canonical.test.js` | ~550 | **Canonical philosophy test suite** — 56 tests validating alignment with Sacred Texts. Tests: Five Forges (Initiation, Mastery, Guidance, Perception, Transformation), Six Knowledges (Sciences, Arts, Defenses, Heresies, Connections, Mysteries), Six Sciences, Six Arts, Six Defenses, Six Heresies, Historical Figures library, Book Recommendations library, Synthesis prompt integration, Cross-reference validation |
 | `api-smoke.js` | ~200 | **Production smoke test** — Node.js script (not Vitest) that calls live API endpoints sequentially. Tests auth, chart, profile, transits, geocode endpoints against production URL |
 
 ---
@@ -436,7 +437,7 @@ All files are pure JS with zero external dependencies — designed for both Node
 - **KV namespace:** CACHE (binding for rate limiting + chart cache)
 - **R2 bucket:** R2 → prime-self-exports (PDF exports + KB corpus)
 - **Cron:** `0 6 * * *` (daily 6 AM UTC)
-- **Vars:** ENVIRONMENT=production, STRIPE_PRICE_SEEKER/GUIDE/PRACTITIONER (placeholder)
+- **Vars:** ENVIRONMENT=production, STRIPE_PRICE_INDIVIDUAL/PRACTITIONER/AGENCY (legacy aliases still supported in code where needed)
 - **Secrets:** NEON_CONNECTION_STRING, ANTHROPIC_API_KEY, TELNYX_API_KEY, TELNYX_PHONE_NUMBER, JWT_SECRET, AI_GATEWAY_URL, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 
 ### `vitest.config.js`
@@ -457,7 +458,7 @@ All files are pure JS with zero external dependencies — designed for both Node
 - **UUIDs everywhere:** `gen_random_uuid()` (Postgres 13+ built-in)
 - **JSONB for complex data:** hd_json, astro_json, profile_json, transit_snapshot, config, properties
 - **Stripe integration:** stripe_customer_id, stripe_subscription_id on subscriptions
-- **4-tier subscription model:** free, seeker ($15), guide, practitioner
+- **4-tier subscription model:** free, individual, practitioner, agency — each with daily ceilings via RATE_LIMIT_KV and legacy alias compatibility where required
 - **Cascade deletes:** Most child tables ON DELETE CASCADE from users
 - **Indexes:** Composite indexes on (user_id, date DESC) patterns, GIN indexes on JSONB where needed
 
@@ -473,7 +474,7 @@ All files are pure JS with zero external dependencies — designed for both Node
 | `AI_GATEWAY_URL` | llm.js | Cloudflare AI Gateway URL (optional proxy) |
 | `STRIPE_SECRET_KEY` | stripe.js, billing handlers | Stripe API secret key |
 | `STRIPE_WEBHOOK_SECRET` | webhook.js | Stripe webhook signature verification |
-| `STRIPE_PRICE_SEEKER/GUIDE/PRACTITIONER` | wrangler.toml vars, stripe.js | Stripe Price IDs per tier |
+| `STRIPE_PRICE_REGULAR/PRACTITIONER/WHITE_LABEL` | wrangler.toml vars, stripe.js | Stripe Price IDs per tier |
 | `TELNYX_API_KEY` | sms.js | Telnyx SMS API key |
 | `TELNYX_PHONE_NUMBER` | sms.js | Outbound SMS sender number |
 | `RESEND_API_KEY` | email.js | Resend transactional email API key |
@@ -510,7 +511,7 @@ Eight deterministic calculation layers (L1-L8) process birth data through astron
 Profile generation uses Retrieval-Augmented Generation: the RAG module pulls personalized knowledgebase entries for the specific chart data, injects them as grounding material into the synthesis prompt. Includes IP protection (forbidden Human Design terms → Gene Keys alternatives).
 
 ### 6. **Multi-Provider LLM Failover**
-LLM calls chain through Anthropic → Grok (xAI) → Groq with automatic model mapping. Each provider failure transparently falls through to the next.
+LLM calls chain through Anthropic (2-retry with exponential backoff) → Grok 4 Fast (xAI) → Groq with automatic model mapping via MODEL_MAP. Opus-tier uses `grok-4-fast`, Sonnet-tier uses `grok-3-mini-latest`. Each provider failure transparently falls through to the next.
 
 ### 7. **Fire-and-Forget Analytics**
 All analytics tracking uses `ctx.waitUntil()` (Cloudflare) for non-blocking capture. Failures never impact user requests. Separate aggregation in the daily cron job.
@@ -525,7 +526,7 @@ Two-tier caching: per-isolate in-memory LRU for ultra-hot data, Cloudflare KV fo
 Six middleware layers: CORS (origin whitelisting), Auth (JWT/API key), Rate Limiting (KV fixed-window), Tier Enforcement (feature gating by subscription), Cache Control (HTTP headers), and API Key auth (for external integrations).
 
 ### 11. **Subscription Tier Model**
-Four tiers (free → seeker → guide → practitioner) with Stripe integration, feature gating, usage quotas, and webhook-based lifecycle management.
+Four canonical tiers (free → individual → practitioner → agency) with Stripe integration, feature gating, daily ceilings (RATE_LIMIT_KV), usage quotas, and webhook-based lifecycle management. Legacy aliases still exist in compatibility paths and historical migrations.
 
 ### 12. **Event-Driven Engagement**
 Achievement system with ~20 badges, streak tracking, leaderboards. Daily cron sends transit digests (SMS/push/email), evaluates custom transit alerts, runs email drip campaigns.
@@ -549,7 +550,7 @@ Achievement system with ~20 badges, streak tracking, leaderboards. Daily cron se
 
 7. **No automated migration for new columns:** The base schema and migrations create core tables, but columns referenced in handler code (like `referral_code`, `tier`, `email_verified`, `last_login_at`, `stripe_customer_id` on users) may require additional migrations not yet present.
 
-8. **LLM failover model mapping:** `llm.js` maps Anthropic models to Grok/Groq equivalents, but the quality difference between Claude Opus and llama-3.3-70b is significant. Profile quality could degrade substantially during failover.
+8. **LLM failover model mapping:** `llm.js` maps Anthropic models to Grok 4 Fast / Groq equivalents via MODEL_MAP. Grok 4 Fast is closer in quality to Claude Opus than the previous Grok 3. The Groq Llama fallback still represents a quality drop. Anthropic gets 2 retries before failover.
 
 9. **Missing test coverage:** No tests for billing/payment flows, webhook handlers, push notifications, alerts, diary, check-in system, achievements, or any DB-dependent handlers.
 

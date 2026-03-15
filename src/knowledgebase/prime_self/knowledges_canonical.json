@@ -2,8 +2,8 @@
   "_meta": {
     "version": "2.0-canonical",
     "source": "Prime Self Sacred Texts & Canonical Philosophy",
-    "description": "The Six Knowledges — intellectual and spiritual foundations upon which all Prime practice rests",
-    "note": "These are not subjects to be studied once — they are ongoing disciplines to be lived. Together they form a complete map of self, relationship, and world."
+    "description": "The Seven Knowledges — intellectual and spiritual foundations upon which all Prime practice rests",
+    "note": "Six domain Knowledges (outward-pointing disciplines) plus the 7th Knowledge: Self (the meta-knowledge that makes all others coherent). These are not subjects to be studied once — they are ongoing disciplines to be lived. Together they form a complete map of self, relationship, and world."
   },
   "self": {
     "knowledge": "Self",
@@ -256,6 +256,44 @@
     "recommendedReading": {
       "fiction": ["A Little Life by Hanya Yanagihara", "The Kite Runner by Khaled Hosseini", "The Color Purple by Alice Walker"],
       "nonFiction": ["The Body Keeps the Score by Bessel van der Kolk", "When Things Fall Apart by Pema Chödrön", "Radical Acceptance by Tara Brach"]
+    }
+  },
+  "selfMeta": {
+    "knowledge": "Self (Meta-Knowledge)",
+    "number": 7,
+    "essence": "The awareness that recognizes all other Knowledges — the Heptad's overflow into self-awareness.",
+    "description": "Distinct from Knowledge #1 (Self as the study of one's own identity — a discipline directed at the self as object). The 7th Knowledge is Self at the meta-level: the awareness that recognizes HOW you know, not just WHAT you know. It is the Knowledge of knowing itself — the person who knows their native epistemology, how their Authority shapes the way they receive and act on information, how their body/mind/field registers truth before it can be argued with. Without the 7th Knowledge, all other Knowledges are ungrounded: Sciences without Self produces brilliant blind spots. Arts without Self produces beautiful noise. Connections without Self produces codependence.",
+    "distinctionFromKnowledge1": "Knowledge #1 (Self) is a discipline: study your identity, strengths, limitations. Knowledge #7 (Self Meta) is the structural completion: the awareness that makes all six disciplines coherent by knowing how you know. #1 looks AT the self. #7 looks THROUGH the self to the point where inside and outside cease to be the relevant distinction.",
+    "domains": [
+      "Native epistemology — how your Authority registers truth",
+      "Cognitive architecture — how your Design processes information",
+      "Meta-awareness — the capacity to witness your own knowing",
+      "Integration — holding all six Knowledges as aspects of one intelligence",
+      "Self-referential completion — the system recognizing itself as a system"
+    ],
+    "hdMapping": {
+      "primaryIndicators": ["Authority type (native epistemology)", "Profile (cognitive style)", "Definition type (information flow pattern)", "All centers (complete energetic architecture)"],
+      "relevantGates": ["Gate 61 (Inner Truth — self-referential knowing)", "Gate 43 (Breakthrough/Insight — knowing you know)", "Gate 64 (Before Completion — holding the whole before it resolves)", "Gate 1 (Self-Expression — the creative act of being)"],
+      "centers": ["G Center (identity as structural completion)", "Head Center (self-referential pressure)", "Ajna Center (how you conceptualize your own knowing)"]
+    },
+    "astroMapping": {
+      "primaryIndicators": ["Sun (core identity recognized)", "North Node (becoming what you already are)", "Saturn (mastery through self-knowledge)"],
+      "houses": ["1st House (self as arising)", "12th House (self as dissolution back to source)", "9th House (self as philosophical understanding)"]
+    },
+    "practicalApplication": [
+      "Name your Authority type as your native epistemology — the specific way truth registers in your body/mind/field before it can be argued with",
+      "Observe which Knowledge domains (Sciences, Arts, Defenses, Heresies, Connections, Mysteries) you default to — and which you avoid",
+      "Notice the difference between knowing something and knowing that you know it",
+      "Practice recognizing when you are IN a Knowledge domain vs. observing FROM the 7th Knowledge",
+      "The synthesis itself is a 7th Knowledge exercise — reading it with recognition rather than judgment"
+    ],
+    "primeQuestion": "How do I know what I know — and what does my way of knowing reveal about who I am?",
+    "convergence": "The 7th Knowledge (Self as domain of intelligence) and the 6th Forge (Self as mode of operation) converge. They are the same moment viewed from two angles: the knowledge of how you work IS the forge of recognizing yourself. The Major Seventh resolving to the octave.",
+    "harmonicPosition": "The Heptad position — the completed cycle that overflows its own container. The 7th Knowledge is the point at which the system of Knowledges becomes aware of itself as a system. Ti resolving to Do.",
+    "historicalExemplars": ["Socrates (the examined life)", "Ramana Maharshi (Who am I?)", "Gödel (self-referential systems)", "Douglas Hofstadter (strange loops)", "Francisco Varela (autopoiesis)"],
+    "recommendedReading": {
+      "fiction": ["Gödel, Escher, Bach by Douglas Hofstadter", "The Glass Bead Game by Hermann Hesse", "Solaris by Stanislaw Lem"],
+      "nonFiction": ["I Am a Strange Loop by Douglas Hofstadter", "The Tree of Knowledge by Maturana & Varela", "Who Am I? by Ramana Maharshi"]
     }
   }
 }

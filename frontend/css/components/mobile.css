@@ -709,6 +709,51 @@
   }
 }
 
+/* ── DEF-10: Back-to-top floating button ──────────────────────── */
+.back-to-top {
+  position: fixed;
+  bottom: calc(var(--mobile-nav-height, 64px) + 16px);
+  right: 16px;
+  z-index: 200;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary, #c9a84c);
+  color: #000;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 44px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@media (min-width: 769px) {
+  .back-to-top {
+    bottom: 24px;
+    right: 24px;
+  }
+}
+
+.back-to-top:hover {
+  background: var(--color-primary-light, #d4b46a);
+}
+
+.back-to-top:focus-visible {
+  outline: 2px solid var(--color-primary, #c9a84c);
+  outline-offset: 3px;
+}
+
 /* ═════════════════════════════════════════════════════════════
    END MOBILE OPTIMIZATIONS
    ═════════════════════════════════════════════════════════════ */

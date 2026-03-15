@@ -1,6 +1,8 @@
 # Process & Standards Documentation
 
-Team processes, development standards, and historical logs for Prime Self project.
+Team processes, development standards, and historical execution logs for Prime Self.
+
+This directory contains useful engineering history, but it is not the default source of truth for current product status, pricing, or launch posture.
 
 ## 📋 Process Documentation
 
@@ -11,7 +13,7 @@ Team processes, development standards, and historical logs for Prime Self projec
   - Architecture patterns and standards
   - Status: Comprehensive documentation
 
-- **[BUILD_LOG.md](BUILD_LOG.md)** — Complete implementation history (7,424+ lines)
+- **[BUILD_LOG.md](BUILD_LOG.md)** — Complete implementation history
   - Task tracking (40/41 tasks, 97% complete)
   - Build identifiers (BL-R-M9, BL-MOB-001, etc.)
   - Sprints 1-14 detailed activity log
@@ -19,8 +21,14 @@ Team processes, development standards, and historical logs for Prime Self projec
 
 ### Testing & Quality Assurance
 
+- **[RELIABILITY_POLICY.md](RELIABILITY_POLICY.md)** — reliability, verification, simulation, and monitoring policy
+  - Truth-first testing and verification standards
+  - Deterministic release-gate requirements
+  - Structured observability and reporting expectations
+  - Status: Active policy
+
 - **[TEST_PLAN.md](TEST_PLAN.md)** — Comprehensive test strategy
-  - Unit test coverage baseline (263/263 tests passing locally)
+  - Current test strategy and verification guidance
   - Integration test recommendations
   - End-to-end test scenarios
   - Performance benchmarks
@@ -105,7 +113,7 @@ Team processes, development standards, and historical logs for Prime Self projec
 | Document | Type | Lines | Status |
 |----------|------|-------|--------|
 | BUILD_BIBLE.md | Reference | 1,200+ | Complete |
-| BUILD_LOG.md | Historical Log | 7,424+ | Complete (97%) |
+| BUILD_LOG.md | Historical Log | large | Historical reference |
 | TEST_PLAN.md | Strategy | 800+ | Complete |
 | CHANGELOG_UX.md | Tracking | 200+ | Active |
 | UI_CHANGELOG_2026-03-08.md | Reference | 173 | Current |
@@ -114,7 +122,7 @@ Team processes, development standards, and historical logs for Prime Self projec
 | LESSONS_LEARNED.md | Knowledge Base | 300+ | Reference |
 | UPGRADE_FLOW_TESTING.md | Reference | 200+ | Reference |
 
-**Total**: 9 documents, 11,000+ lines of process documentation
+**Total**: 9 documents of mixed current standards and historical execution records
 
 ---
 
@@ -150,6 +158,8 @@ LESSONS_LEARNED (future improvements)
 - **Audits**: See [../audits/](../audits/) for analysis and findings
 - **Guides**: See [../guides/](../guides/) for implementation how-to guides
 - **Architecture**: See [../ARCHITECTURE.md](../ARCHITECTURE.md)
+
+For current documentation navigation, use [../DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md).
 
 ---
 

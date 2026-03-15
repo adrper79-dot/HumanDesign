@@ -6,9 +6,9 @@
 <!-- Content Security Policy -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com;
+  script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io;
   style-src 'self' 'unsafe-inline';
-  connect-src 'self' https://prime-self-api.adrper79.workers.dev https://api.stripe.com https://cloudflareinsights.com;
+  connect-src 'self' https://prime-self-api.adrper79.workers.dev https://api.stripe.com https://cloudflareinsights.com https://plausible.io;
   img-src 'self' data: blob:;
   media-src 'self';
   font-src 'self' data:;
@@ -21,11 +21,16 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
 <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<!-- Apply saved theme immediately to prevent FOUC -->
+<script src="js/theme-init.js"></script>
 <!-- ─── Asset Randomizer (v1/v2 brand variants per session) ─── -->
-<script src="js/asset-randomizer.js"></script>
+<script src="js/asset-randomizer.js" defer></script>
 <!-- ─── Resource Hints (BL-OPT-001) ─── -->
 <link rel="preconnect" href="https://prime-self-api.adrper79.workers.dev" crossorigin>
 <link rel="dns-prefetch" href="https://prime-self-api.adrper79.workers.dev">
+<!-- Plausible Analytics — privacy-first, no cookies, GDPR-compliant -->
+<!-- To activate: replace YOUR_DOMAIN with e.g. primeself.app -->
+<script defer data-domain="selfprime.net" src="https://plausible.io/js/script.js"></script>
 <link rel="dns-prefetch" href="https://js.stripe.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <!-- Preload critical CSS -->
@@ -35,10 +40,10 @@
 <!-- i18n preload must match fetch() credentials mode to avoid browser mismatch warnings -->
 <link rel="preload" href="locales/en.json" as="fetch" crossorigin="use-credentials">
 <!-- Explanations data module (must load before renderChart) -->
-<script src="js/explanations.js"></script>
-<script src="js/hd-data.js"></script>
-<script src="js/bodygraph.js"></script>
-<script src="js/share-card.js"></script>
+<script src="js/explanations.js" defer></script>
+<script src="js/hd-data.js" defer></script>
+<script src="js/bodygraph.js" defer></script>
+<script src="js/share-card.js" defer></script>
 <!-- Foundation CSS (parallel loading, replaces @import chain in prime-self-premium.css) -->
 <link rel="stylesheet" href="css/design-tokens.css">
 <link rel="stylesheet" href="css/design-tokens-premium.css">
@@ -151,38 +156,54 @@
 <div class="auth-overlay hidden" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="auth-box">
     <!-- Logo Animation (randomized v1/v2) -->
-    <div style="text-align:center;margin-bottom:var(--space-4)">
-      <img src="/icons/icon-192.png" alt="Prime Self" style="width:80px;height:80px;border-radius:16px">
+    <div class="auth-logo-wrap">
+      <img src="/icons/icon-192.png" alt="Prime Self" class="auth-logo">
     </div>
     <h2 id="authTitle" data-i18n="auth.signIn">Sign In</h2>
     <p id="authSubtitle" data-i18n="auth.accessProfile">Access your Prime Self profile and saved charts.</p>
     <form data-action="submitAuth">
-    <div class="form-group" style="margin-bottom:var(--space-3)">
+    <div class="form-group">
       <label for="authEmail" data-i18n="auth.email">Email</label>
       <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required aria-required="true" aria-describedby="authError">
     </div>
-    <div class="form-group" style="margin-bottom:var(--space-4)">
+    <div class="form-group">
       <label for="authPassword" data-i18n="auth.password">Password</label>
       <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required aria-required="true" minlength="8" aria-describedby="authError">
     </div>
     <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>
-    <button type="submit" class="btn-primary" id="authSubmit" style="width:100%;justify-content:center;padding:var(--space-3)" data-i18n="auth.signIn">Sign In</button>
+    <button type="submit" class="btn-primary btn-full" id="authSubmit" data-i18n="auth.signIn">Sign In</button>
     </form>
-    <div id="forgotPasswordLink" style="text-align:right;margin-top:var(--space-2)">
-      <a style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)" data-action="showForgotPassword">Forgot password?</a>
+    <div id="forgotPasswordLink" class="auth-forgot">
+      <a class="link-dim" data-action="showForgotPassword">Forgot password?</a>
+    </div>
+
+    <!-- ── TOTP Challenge (shown after password verified when 2FA is enabled) ── -->
+    <div id="authTOTPStep" style="display:none" aria-live="polite">
+      <p style="margin-bottom:12px;color:var(--text-dim);font-size:0.875rem">Enter the 6-digit code from your authenticator app.</p>
+      <form data-action="submitTOTP">
+        <div class="form-group">
+          <label for="authTOTPCode">Authenticator Code</label>
+          <input type="text" id="authTOTPCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" style="letter-spacing:0.3em;font-size:1.25rem;text-align:center">
+        </div>
+        <div class="auth-error" id="authTOTPError" role="alert" aria-live="polite"></div>
+        <button type="submit" class="btn-primary btn-full" id="authTOTPSubmit">Verify Code</button>
+      </form>
+      <div class="auth-alt-action" style="margin-top:12px">
+        <a class="link-dim" data-action="cancel2FA">← Back to sign in</a>
+      </div>
     </div>
 
     <!-- Social login divider -->
-    <div style="display:flex;align-items:center;gap:var(--space-3);margin:var(--space-4) 0 var(--space-3)">
-      <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:var(--font-size-sm);color:var(--text-dim);white-space:nowrap">or continue with</span>
-      <div style="flex:1;height:1px;background:var(--border)"></div>
+    <div class="auth-divider">
+      <div class="auth-divider-line"></div>
+      <span class="auth-divider-text">or continue with</span>
+      <div class="auth-divider-line"></div>
     </div>
 
     <!-- Social login buttons -->
-    <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+    <div class="auth-social-list">
       <a href="https://prime-self-api.adrper79.workers.dev/api/auth/oauth/google" id="oauthGoogleBtn"
-         style="display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:10px var(--space-4);background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:var(--space-1);font-size:var(--font-size-base);font-weight:500;text-decoration:none;cursor:pointer;transition:box-shadow 0.15s"
+         class="btn-social btn-social-google"
     >
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
           <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -194,7 +215,7 @@
       </a>
 
       <a href="https://prime-self-api.adrper79.workers.dev/api/auth/oauth/apple" id="oauthAppleBtn"
-         style="display:flex;align-items:center;justify-content:center;gap:var(--space-2);padding:10px var(--space-4);background:#000;color:#fff;border:1px solid #000;border-radius:var(--space-1);font-size:var(--font-size-base);font-weight:500;text-decoration:none;cursor:pointer;transition:opacity 0.15s"
+         class="btn-social btn-social-apple"
     >
         <svg width="18" height="18" viewBox="0 0 814 1000" aria-hidden="true" fill="currentColor">
           <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 376.7 0 248.3 0 168.4c0-127.2 82.9-194.4 164.3-194.4 83.3 0 135.1 54.8 179.8 54.8 42.8 0 102.9-57.8 194.9-57.8 31 0 108.2 2.6 163.7 94.3zm-234-181.5c39.5-46.8 70.1-112.1 70.1-177.4 0-9-1.3-18.7-3.2-26.7-66.7 2.6-146.1 44.5-191.6 98.7-37.4 41.5-72 106.8-72 173.4 0 10.3 1.3 20.7 2.6 23.8 3.2.6 8.4 1.3 13.6 1.3 60.9 0 134.2-40.2 180.5-92.9z"/>
@@ -208,8 +229,26 @@
       <span id="authToggleText" data-i18n="auth.noAccount">Don't have an account?</span>
       <a data-action="toggleAuthMode" id="authToggleLink" data-i18n="auth.createOne">Create one</a>
     </div>
-    <div style="text-align:center;margin-top:var(--space-3)">
-      <a style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)" data-action="closeAuthOverlay" data-i18n="auth.continueWithout">Continue without signing in</a>
+    <p id="authTermsNotice" class="auth-terms-notice hidden">
+      By creating an account you agree to our
+      <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a>
+      and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
+    </p>
+    <div class="auth-alt-action">
+      <a class="link-dim" data-action="closeAuthOverlay" data-i18n="auth.continueWithout">Continue without signing in</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Security Settings Modal (2FA / TOTP) ══════════════════════ -->
+<div class="auth-overlay hidden" id="securityModal" role="dialog" aria-modal="true" aria-labelledby="securityModalTitle" style="z-index:1100">
+  <div class="auth-box" style="max-width:400px">
+    <h2 id="securityModalTitle">🔐 Security</h2>
+    <div id="securityModalBody" style="font-size:0.9rem">
+      <!-- Populated by JS -->
+    </div>
+    <div class="auth-alt-action" style="margin-top:16px">
+      <a class="link-dim" data-action="closeSecurityModal">Close</a>
     </div>
   </div>
 </div>
@@ -224,6 +263,15 @@
   <div class="pricing-modal">
     <h2 id="pricingTitle">Deepen Your Journey</h2>
     <p class="subtitle">Choose the plan that matches where you are right now.</p>
+
+    <!-- Billing period toggle -->
+    <div class="billing-toggle-wrap">
+      <div class="billing-toggle">
+        <button class="billing-toggle-btn active" id="consumerBillMonthly" data-action="setBillingPeriod" data-arg0="monthly" data-arg1="consumer">Monthly</button>
+        <button class="billing-toggle-btn" id="consumerBillAnnual" data-action="setBillingPeriod" data-arg0="annual" data-arg1="consumer">Annual <span class="billing-save-badge">Save 17%</span></button>
+      </div>
+    </div>
+
     <div class="pricing-grid pricing-grid--2col">
 
       <!-- Free Tier — always shown, CTA disabled if already on free -->
@@ -232,59 +280,84 @@
         <div class="tier-price"><span class="currency">$</span>0</div>
         <div class="tier-billing">forever</div>
         <ul class="tier-features">
-          <li>1 chart calculation / month</li>
-          <li>1 AI profile generation / month</li>
-          <li>Basic transit snapshots</li>
-          <li class="disabled">Unlimited transits &amp; composites</li>
-          <li class="disabled">SMS energy digests</li>
-          <li class="disabled">Save &amp; revisit profiles</li>
+          <li>Unlimited chart calculations</li>
+          <li>1 AI synthesis / month</li>
+          <li>Daily transit brief (basic)</li>
+          <li>Unlimited check-ins &amp; diary</li>
+          <li class="disabled">Full transit &amp; timing tools</li>
+          <li class="disabled">PDF export</li>
         </ul>
         <button class="btn-secondary tier-cta" id="priceBtn-free" disabled>Current Plan</button>
       </div>
 
-      <!-- Explorer Tier ($12/mo) — featured -->
+      <!-- Individual Tier ($19/mo) — featured -->
       <div class="pricing-card featured" id="priceCard-regular">
         <div class="tier-badge-label">Most Popular</div>
-        <div class="tier-name">Explorer ✦</div>
-        <div class="tier-price"><span class="currency">$</span>12</div>
-        <div class="tier-billing">per month</div>
+        <div class="tier-name">Individual ✦</div>
+        <div class="tier-price" data-monthly="19" data-annual="190"><span class="currency">$</span><span class="price-amount">19</span></div>
+        <div class="tier-billing"><span class="billing-label">per month</span></div>
         <ul class="tier-features">
-          <li>Unlimited chart calculations</li>
           <li>10 AI profile generations / month</li>
-          <li>Unlimited transits &amp; composites</li>
+          <li>Unlimited AI questions</li>
+          <li>Full transit &amp; timing tools</li>
           <li>SMS energy digest subscriptions</li>
-          <li>Save &amp; revisit up to 20 profiles</li>
-          <li>Birth time rectification tool</li>
+          <li>Unlimited saved profiles</li>
+          <li>PDF export &amp; sharing</li>
         </ul>
         <button class="btn-primary tier-cta" id="priceBtn-regular"
-                data-action="startCheckout" data-arg0="regular">Upgrade to Explorer</button>
+                data-action="startCheckout" data-arg0="individual">Upgrade to Individual</button>
       </div>
 
     </div>
 
     <!-- Promo code field -->
-    <div class="promo-code-section" id="promoSection" style="margin-top:var(--space-4);text-align:center">
-      <a class="promo-toggle-link" data-action="togglePromoInput" style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)">Have a promo code?</a>
-      <div id="promoInputArea" style="display:none;margin-top:var(--space-2)">
-        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;max-width:min(280px,90vw);margin:0 auto">
+    <div class="promo-code-section" id="promoSection">
+      <a class="link-dim promo-toggle-link" data-action="togglePromoInput">Have a promo code?</a>
+      <div id="promoInputArea" style="display:none">
+        <div class="promo-input-row">
           <input type="text" id="promoCodeInput" placeholder="PROMO-CODE" autocomplete="off"
-                 style="text-transform:uppercase;letter-spacing:0.05em;flex:1"
-                 class="js-uppercase">
+                 class="js-uppercase" aria-label="Promo code">
           <button class="btn-secondary btn-sm" data-action="applyPromoCode">Apply</button>
         </div>
-        <div id="promoCodeResult" style="font-size:var(--font-size-sm);margin-top:var(--space-1)"></div>
+        <div id="promoCodeResult" class="promo-result"></div>
       </div>
     </div>
 
     <!-- Practitioner CTA -->
-    <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border);text-align:center">
-      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-2)">
-        Are you a guide, coach, or energy blueprint practitioner?
+    <div class="pricing-section-sep">
+      <p>
+        Are you a practitioner, coach, or running an HD practice?
       </p>
-      <a data-action="switchToPracPricingModal"
-         style="font-size:var(--font-size-sm);cursor:pointer;color:var(--gold);text-decoration:underline">
+      <a data-action="switchToPracPricingModal" class="link-gold">
         See professional plans →
       </a>
+    </div>
+
+    <!-- One-Time Purchases -->
+    <div class="pricing-addons">
+      <p>Or try individual features without a subscription:</p>
+      <div class="addon-grid">
+        <div class="addon-card">
+          <div class="addon-name">Single Synthesis</div>
+          <div class="addon-desc">1 AI profile</div>
+          <button class="btn-secondary btn-sm btn-full" data-action="startOneTimePurchase" data-arg0="single_synthesis">$19</button>
+        </div>
+        <div class="addon-card">
+          <div class="addon-name">Composite Reading</div>
+          <div class="addon-desc">1 relationship chart</div>
+          <button class="btn-secondary btn-sm btn-full" data-action="startOneTimePurchase" data-arg0="composite_reading">$29</button>
+        </div>
+        <div class="addon-card">
+          <div class="addon-name">Transit Pass</div>
+          <div class="addon-desc">30-day full access</div>
+          <button class="btn-secondary btn-sm btn-full" data-action="startOneTimePurchase" data-arg0="transit_pass">$12</button>
+        </div>
+        <div class="addon-card">
+          <div class="addon-name">Lifetime Access</div>
+          <div class="addon-desc">Individual forever</div>
+          <button class="btn-primary btn-sm btn-full" data-action="startOneTimePurchase" data-arg0="lifetime_individual">$299</button>
+        </div>
+      </div>
     </div>
 
     <div class="pricing-close">
@@ -301,60 +374,63 @@
 ═════════════════════════════════════════════════════════════════════ -->
 <div class="pricing-overlay hidden" id="practitionerPricingOverlay" role="dialog" aria-modal="true" aria-labelledby="practitionerPricingTitle">
   <div class="pricing-modal pricing-modal--pro">
-    <div style="text-align:center;margin-bottom:var(--space-1)">
-      <span style="font-size:var(--font-size-sm);text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);opacity:0.8">
-        Professional Plans
-      </span>
+    <div class="pricing-pro-label-wrap">
+      <span class="pricing-pro-label">Professional Plans</span>
     </div>
-    <h2 id="practitionerPricingTitle">Serve Your Clients with Precision</h2>
-    <p class="subtitle">Built for energy coaches, guides, and practitioner platforms.</p>
+    <h2 id="practitionerPricingTitle">Build Your Practice</h2>
+    <p class="subtitle">Built for HD practitioners, coaches, and training organizations.</p>
+
+    <!-- Billing period toggle -->
+    <div class="billing-toggle-wrap">
+      <div class="billing-toggle">
+        <button class="billing-toggle-btn active" id="proBillMonthly" data-action="setBillingPeriod" data-arg0="monthly" data-arg1="pro">Monthly</button>
+        <button class="billing-toggle-btn" id="proBillAnnual" data-action="setBillingPeriod" data-arg0="annual" data-arg1="pro">Annual <span class="billing-save-badge">Save 17%</span></button>
+      </div>
+    </div>
 
     <div class="pricing-grid pricing-grid--2col">
 
-      <!-- Guide Tier ($60/mo) -->
+      <!-- Practitioner Tier ($97/mo) -->
       <div class="pricing-card featured" id="priceCard-practitioner">
         <div class="tier-badge-label">Most Popular</div>
-        <div class="tier-name">Guide ⭐</div>
-        <div class="tier-price"><span class="currency">$</span>60</div>
-        <div class="tier-billing">per month</div>
+        <div class="tier-name">Practitioner ⭐</div>
+        <div class="tier-price" data-monthly="97" data-annual="970"><span class="currency">$</span><span class="price-amount">97</span></div>
+        <div class="tier-billing"><span class="billing-label">per month</span></div>
         <ul class="tier-features">
-          <li>Everything in Explorer</li>
-          <li>Unlimited AI profile generations</li>
-          <li>Client management dashboard</li>
-          <li>Up to 50 client profiles</li>
-          <li>1,000 API calls / month</li>
-          <li>Email support</li>
+          <li>Everything in Individual</li>
+          <li>500 AI syntheses / month</li>
+          <li>Full client management &amp; invitations</li>
+          <li>Session prep AI &amp; notes</li>
+          <li>Composite / relationship charts</li>
+          <li>Branded PDF reports</li>
+          <li>Public practitioner profile</li>
+          <li>25% revenue share on referrals</li>
         </ul>
         <button class="btn-primary tier-cta" id="priceBtn-practitioner"
-                data-action="startCheckout" data-arg0="practitioner">Upgrade to Guide</button>
+                data-action="startCheckout" data-arg0="practitioner">Upgrade to Practitioner</button>
       </div>
 
-      <!-- Studio Tier — White Label (Contact Us) -->
+      <!-- Agency Tier ($349/mo) -->
       <div class="pricing-card" id="priceCard-white_label">
-        <div class="tier-name">Studio 🌐</div>
-        <div class="tier-price">Custom</div>
-        <div class="tier-billing">pricing</div>
+        <div class="tier-name">Agency 🌐</div>
+        <div class="tier-price" data-monthly="349" data-annual="3490"><span class="currency">$</span><span class="price-amount">349</span></div>
+        <div class="tier-billing"><span class="billing-label">per month</span></div>
         <ul class="tier-features">
-          <li>Everything in Guide</li>
-          <li>Unlimited client profiles</li>
-          <li>White-label embed widget</li>
+          <li>Everything in Practitioner</li>
+          <li>Up to 5 practitioner seats</li>
+          <li>2,000 AI syntheses / month</li>
+          <li>White-label client portal</li>
           <li>10,000 API calls / month</li>
-          <li>Onboarding &amp; integration support</li>
+          <li>Custom webhooks &amp; integrations</li>
         </ul>
-        <p style="font-size:0.75rem;opacity:0.65;margin:0.25rem 0 0.75rem;line-height:1.4">For enterprise teams — reach out to discuss scope, capabilities, and custom pricing.</p>
-        <a href="mailto:hello@selfprime.net?subject=Studio%20Plan%20Inquiry"
-           id="priceBtn-white_label"
-           class="btn btn-secondary tier-cta"
-           style="width:100%;text-align:center;display:block;text-decoration:none;box-sizing:border-box">
-          Contact us
-        </a>
+        <button class="btn-primary tier-cta" id="priceBtn-white_label"
+                data-action="startCheckout" data-arg0="agency">Upgrade to Agency</button>
       </div>
 
     </div>
 
-    <div style="margin-top:var(--space-4);text-align:center">
-      <a data-action="switchToPricingModal"
-         style="font-size:var(--font-size-sm);cursor:pointer;color:var(--text-dim)">
+    <div class="pricing-back-row">
+      <a data-action="switchToPricingModal" class="link-dim">
         ← Back to personal plans
       </a>
     </div>
@@ -372,7 +448,7 @@
   <div class="logo-lockup">
     <div class="logo-lockup-icon">
       <img data-logo-poster src="/icons/icon-72.png" alt="Prime Self"
-           width="28" height="28" style="border-radius:var(--space-2)">
+           width="28" height="28">
     </div>
     <div class="logo-lockup-text">
       <div class="logo-lockup-primary">Prime Self</div>
@@ -381,18 +457,33 @@
   </div>
   <div class="auth-bar">
     <div id="lang-switcher" class="lang-switcher"></div>
+    <button class="btn-icon" id="themeToggleBtn" data-action="toggleTheme" aria-label="Switch to light mode" title="Toggle light/dark theme">☀</button>
     <span class="tier-badge tier-free" id="tierBadge" style="display:none">FREE</span>
+    <!-- Notification Bell (AUDIT-UX-002) -->
+    <button class="btn-icon notif-bell" id="notifBellBtn" style="display:none" data-action="toggleNotifDrawer" aria-label="Notifications" title="Notification history">
+      🔔<span class="notif-badge" id="notifBadge" style="display:none"></span>
+    </button>
     <div class="auth-status" id="authStatusText" data-i18n="auth.notSignedIn">Not signed in</div>
     <button class="btn-secondary btn-sm" id="upgradeBtn" style="display:none" data-action="openPricingModal">⚡ Upgrade</button>
     <button class="btn-secondary btn-sm" id="billingBtn" style="display:none" data-action="openBillingPortal" data-i18n="auth.billing">Billing</button>
     <button class="btn-secondary btn-sm" id="authBtn" data-action="openAuthOverlay" data-i18n="auth.signIn">Sign In</button>
     <button class="btn-danger btn-sm" id="logoutBtn" style="display:none" data-action="logout" data-i18n="auth.signOut">Sign Out</button>
-    <button class="btn-secondary btn-sm" id="exportDataBtn" style="display:none;margin-left:4px;font-size:0.75rem" data-action="exportMyData">Export Data</button>
-    <button class="btn-danger btn-sm" id="deleteAccountBtn" style="display:none;margin-left:4px;opacity:0.7;font-size:0.75rem" data-action="deleteAccount">Delete Account</button>
+    <button class="btn-secondary btn-sm" id="exportDataBtn" style="display:none" data-action="exportMyData">Export Data</button>
+    <button class="btn-secondary btn-sm" id="securitySettingsBtn" style="display:none" data-action="openSecuritySettings" title="Security settings (2FA)">🔐 Security</button>
+    <button class="btn-danger btn-sm" id="deleteAccountBtn" style="display:none" data-action="deleteAccount">Delete Account</button>
   </div>
 </header>
 
-
+<!-- Notification Drawer (AUDIT-UX-002) -->
+<div id="notifDrawer" class="notif-drawer" style="display:none">
+  <div class="notif-drawer-header">
+    <span style="font-weight:700;color:var(--gold)">🔔 Notifications</span>
+    <button class="btn-icon" data-action="toggleNotifDrawer" aria-label="Close notifications" style="font-size:1rem">✕</button>
+  </div>
+  <div id="notifDrawerList" class="notif-drawer-list">
+    <p style="color:var(--text-dim);text-align:center;padding:24px 0">No notifications yet.</p>
+  </div>
+</div>
 
 <!-- ── First-Run Onboarding Modal ── -->
 <div id="first-run-modal" class="first-run-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="frm-title">
@@ -411,26 +502,89 @@
         <button class="btn-primary frm-btn-next" data-action="frmNext">I have that info →</button>
         <button class="frm-skip-btn" data-action="frmClose">Skip for now</button>
       </div>
-      <!-- Step 2 -->
+      <!-- Step 2 — Birth Data -->
       <div class="frm-step" id="frm-step-2">
-        <div class="frm-step-icon" aria-hidden="true">⬡</div>
-        <h2 class="frm-step-title">What You'll Unlock</h2>
-        <div class="frm-unlock-grid">
-          <div class="frm-unlock-item"><div class="frm-unlock-icon">◉</div><div><strong>Home Dashboard</strong><br><span>Your archetype, strategy &amp; today's energy at a glance</span></div></div>
-          <div class="frm-unlock-item"><div class="frm-unlock-icon">☽</div><div><strong>Daily Transits</strong><br><span>Planetary influences on your gates — updated every day</span></div></div>
-          <div class="frm-unlock-item"><div class="frm-unlock-icon">⊕</div><div><strong>Relationship Insights</strong><br><span>Compare energy fields with partners, family &amp; colleagues</span></div></div>
-          <div class="frm-unlock-item"><div class="frm-unlock-icon">★</div><div><strong>AI Profile</strong><br><span>Synthesized report with real-life guidance for decisions &amp; energy management</span></div></div>
+        <div class="frm-step-icon" aria-hidden="true">📅</div>
+        <h2 class="frm-step-title">Your Birth Details</h2>
+        <p class="frm-step-body">Enter as precisely as you can — birth time accuracy matters.</p>
+        <div class="frm-form-grid">
+          <div class="form-group">
+            <label for="w-date">Birth Date</label>
+            <input type="date" id="w-date" required>
+          </div>
+          <div class="form-group">
+            <label for="w-time">Birth Time <span class="frm-label-hint">(24 h — optional)</span></label>
+            <input type="time" id="w-time">
+          </div>
+          <div class="form-group frm-full">
+            <label for="w-location">Birth City</label>
+            <div class="frm-geo-row">
+              <input type="text" id="w-location" placeholder="Tampa, FL, USA" data-geocode-target="w">
+              <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="w" id="w-geoBtn">Look Up</button>
+            </div>
+            <div id="w-geo-status" class="frm-geo-status"></div>
+            <input type="hidden" id="w-lat">
+            <input type="hidden" id="w-lng">
+          </div>
+          <div class="form-group frm-full">
+            <label for="w-tz">Timezone <span class="frm-label-hint">(auto-filled by Look Up)</span></label>
+            <select id="w-tz">
+              <option value="America/New_York">America/New_York (EST/EDT)</option>
+              <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+              <option value="America/Denver">America/Denver (MST/MDT)</option>
+              <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+              <option value="America/Phoenix">America/Phoenix (MST)</option>
+              <option value="America/Anchorage">America/Anchorage</option>
+              <option value="Pacific/Honolulu">Pacific/Honolulu</option>
+              <option value="Europe/London">Europe/London (GMT/BST)</option>
+              <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+              <option value="Europe/Berlin">Europe/Berlin</option>
+              <option value="Europe/Moscow">Europe/Moscow</option>
+              <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+              <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+              <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+              <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+              <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
         </div>
-        <button class="btn-primary frm-btn-next" data-action="frmNext">Let's generate my chart →</button>
+        <button class="btn-primary frm-btn-next" data-action="frmNext">Continue →</button>
         <button class="frm-back-btn" data-action="frmBack">← Back</button>
       </div>
-      <!-- Step 3 -->
+
+      <!-- Step 3 — Evaluation Type -->
       <div class="frm-step" id="frm-step-3">
+        <div class="frm-step-icon" aria-hidden="true">⊙</div>
+        <h2 class="frm-step-title">What would you like?</h2>
+        <p class="frm-step-body">Choose your focus — you can run either anytime after setup.</p>
+        <div class="frm-eval-choices">
+          <button class="frm-eval-card active" id="frm-eval-blueprint" data-action="frmSetEvalType" data-arg0="blueprint">
+            <div class="frm-eval-icon">◉</div>
+            <div class="frm-eval-label">Full Blueprint</div>
+            <div class="frm-eval-desc">Deep AI synthesis across all 64 gates, Gene Keys, astrology &amp; numerology</div>
+          </button>
+          <button class="frm-eval-card" id="frm-eval-daily" data-action="frmSetEvalType" data-arg0="daily">
+            <div class="frm-eval-icon">☽</div>
+            <div class="frm-eval-label">Daily Focus</div>
+            <div class="frm-eval-desc">Today's planetary transits and how they activate your specific gates</div>
+          </button>
+        </div>
+        <button class="btn-primary frm-btn-next" data-action="frmNext">Continue →</button>
+        <button class="frm-back-btn" data-action="frmBack">← Back</button>
+      </div>
+
+      <!-- Step 4 — Question -->
+      <div class="frm-step" id="frm-step-4">
         <div class="frm-step-icon" aria-hidden="true">✦</div>
-        <h2 class="frm-step-title">You're Ready</h2>
-        <p class="frm-step-body">Start with your birth data on the <strong>My Chart</strong> tab. Once generated, your Home dashboard will update automatically with your personalized insights.</p>
-        <p class="frm-step-body" style="color:var(--text-muted);font-size:var(--font-size-sm)">Tip: Save your profile to revisit it anytime and unlock AI synthesis.</p>
-        <button class="btn-primary frm-btn-next" data-action="frmCloseChart">Open My Chart →</button>
+        <h2 class="frm-step-title">Any specific question?</h2>
+        <p class="frm-step-body">Focus the AI on what matters most — or leave blank for a full reading.</p>
+        <div id="frm-quickpicks" class="frm-quickpick-grid"></div>
+        <textarea id="frm-question" class="frm-question-input" placeholder="Or type your own question…" rows="3"></textarea>
+        <button class="btn-primary frm-btn-next" data-action="frmComplete">
+          <span id="frm-gen-spinner" class="spinner" style="display:none"></span>
+          Generate My Blueprint →
+        </button>
         <button class="frm-back-btn" data-action="frmBack">← Back</button>
       </div>
     </div>
@@ -438,6 +592,7 @@
       <div class="frm-dot active" id="frm-dot-1"></div>
       <div class="frm-dot" id="frm-dot-2"></div>
       <div class="frm-dot" id="frm-dot-3"></div>
+      <div class="frm-dot" id="frm-dot-4"></div>
     </div>
   </div>
 </div>
@@ -461,17 +616,18 @@
       <button class="nav-item" data-tab="overview" data-action="sidebarNav" data-arg0="overview">
         <span class="nav-icon">✦</span><span class="nav-label" data-i18n="nav.home">Home</span>
       </button>
-      <button class="nav-item nav-parent active" data-tab="chart" data-action="sidebarNav" data-arg0="chart">
-        <span class="nav-icon">◉</span><span class="nav-label" data-i18n="nav.myChart">My Chart</span><span class="nav-expand">▸</span>
+      <button class="nav-item active" data-tab="chart" data-action="sidebarNav" data-arg0="chart">
+        <span class="nav-icon">◉</span><span class="nav-label">My Blueprint</span>
       </button>
-      <div class="nav-sub-items">
-        <button class="nav-item active" data-tab="chart" data-action="sidebarNav" data-arg0="chart">
-          <span class="nav-label" data-i18n="nav.bodygraph">Bodygraph</span>
-        </button>
-        <button class="nav-item" data-tab="profile" data-action="sidebarNav" data-arg0="profile">
-          <span class="nav-label" data-i18n="nav.aiProfile">AI Profile</span>
-        </button>
-      </div>
+      <button class="nav-item" data-tab="celebrity" data-action="sidebarNav" data-arg0="celebrity">
+        <span class="nav-icon">⭐</span><span class="nav-label" data-i18n="nav.celebrity">Famous Matches</span>
+      </button>
+      <button class="nav-item" data-tab="achievements" data-action="sidebarNav" data-arg0="achievements">
+        <span class="nav-icon">🏆</span><span class="nav-label" data-i18n="nav.achievements">Achievements</span>
+      </button>
+      <button class="nav-item" data-tab="directory" data-action="sidebarNav" data-arg0="directory">
+        <span class="nav-icon">🔍</span><span class="nav-label">Find a Practitioner</span>
+      </button>
     </div>
 
     <!-- DAILY -->
@@ -486,6 +642,9 @@
         </button>
         <button class="nav-item" data-tab="checkin" data-action="sidebarNav" data-arg0="checkin">
           <span class="nav-label" data-i18n="nav.checkin">Check-In</span>
+        </button>
+        <button class="nav-item" data-tab="timing" data-action="sidebarNav" data-arg0="timing">
+          <span class="nav-label" data-i18n="nav.timing">Optimal Timing</span>
         </button>
       </div>
     </div>
@@ -553,7 +712,7 @@
   </div>
 
   <div class="sidebar-footer">
-    <div class="nav-item" style="cursor:default;opacity:0.6">
+    <div class="nav-item nav-item-disabled">
       <span class="nav-icon">⊙</span>
       <span class="nav-label sidebar-footer-text" id="sidebarTierText">Free Tier</span>
     </div>
@@ -599,10 +758,10 @@
   <!-- ═══ OVERVIEW / HOME TAB ═══ -->
   <div class="tab-content" id="tab-overview" role="tabpanel" aria-labelledby="btn-home">
     <div id="overviewContent">
-      <div class="card" style="text-align:center;padding:var(--space-8)">
-        <div style="font-size:var(--font-size-2xl);margin-bottom:var(--space-3)">✦</div>
-        <h3 style="color:var(--gold);margin:0 0 8px;font-size:var(--font-size-md)">Welcome to Prime Self</h3>
-        <p style="color:var(--text-dim);font-size:var(--font-size-base);max-width:min(450px, 90vw);margin:0 auto var(--space-5);line-height:1.6">Generate your chart to unlock your personalized dashboard — energy type, decision strategy, active transits, and daily insights in one place.</p>
+      <div class="card card-welcome">
+        <div class="welcome-icon">✦</div>
+        <h3 class="welcome-title">Welcome to Prime Self</h3>
+        <p class="welcome-text">Generate your chart to unlock your personalized dashboard — energy type, decision strategy, active transits, and daily insights in one place.</p>
         <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
       </div>
     </div>
@@ -658,18 +817,18 @@
         </div>
         <div class="form-group full">
           <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
-          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
-            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1;min-width:160px" required aria-required="true"
+          <div class="input-row">
+            <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
               data-geocode-target="c">
-            <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="c" id="c-geoBtn"
-              style="white-space:nowrap;padding:0 16px;font-size:var(--font-size-base)" data-i18n="chart.lookupLocation">Look Up</button>
+            <button type="button" class="btn-secondary btn-lookup" data-action="geocodeLocation" data-arg0="c" id="c-geoBtn"
+              data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="c-geo-status" style="margin-top:var(--space-2);font-size:var(--font-size-sm);color:var(--text-dim)"></div>
+          <div id="c-geo-status" class="geo-status"></div>
           <input type="hidden" id="c-lat">
           <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
-          <label><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span style="font-weight:400;color:var(--text-dim);font-size:var(--font-size-sm)">(auto-filled by Look Up)</span></label>
+          <label for="c-tz"><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span class="label-hint">(auto-filled by Look Up)</span></label>
           <select id="c-tz">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -691,7 +850,7 @@
           </select>
         </div>
       </div>
-      <div id="chartBtnRow" style="margin-top:var(--space-5);display:flex;gap:var(--space-3);flex-wrap:wrap">
+      <div id="chartBtnRow">
         <button class="btn-primary" data-action="calculateChart" id="calcBtn">
           <span class="spinner" id="calcSpinner" style="display:none"></span>
           <span data-i18n="chart.generateMyChart">Generate My Chart</span>
@@ -712,6 +871,15 @@
         <p class="empty-title">Your blueprint awaits</p>
         <p>Enter your birth details above and tap <strong>Generate My Chart</strong> to see your Energy Blueprint &amp; astrology data.</p>
       </div>
+    </div>
+
+    <!-- Chart History (AUDIT-UX-003) -->
+    <div id="chartHistorySection" class="card" style="display:none;margin-top:var(--space-5)">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span><span class="icon-chart"></span> Previous Charts</span>
+        <button class="btn-secondary btn-sm" data-action="loadChartHistory">Refresh</button>
+      </div>
+      <div id="chartHistoryList" style="font-size:var(--font-size-sm)"></div>
     </div>
 
     <!-- Mobile Sticky CTA (Sprint 19.3) - Shows when form scrolls out of viewport -->
@@ -739,7 +907,7 @@
     <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
       <strong>⚡ Usage Limit</strong><br>
       <span id="profileQuotaText"></span>
-      <a href="#" data-action="openPricingModal" data-prevent style="color:var(--gold);text-decoration:underline;margin-left:var(--space-2)">Upgrade to unlock more</a>
+      <a href="#" data-action="openPricingModal" data-prevent class="link-gold ml-2">Upgrade to unlock more</a>
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-profile"></span> <span data-i18n="profile.generateTitle">Generate Prime Self Profile</span></div>
@@ -754,39 +922,77 @@
         </div>
         <div class="form-group full">
           <label data-i18n="chart.birthLocation">Birth Location</label>
-          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
-            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" style="flex:1;min-width:160px" required aria-required="true"
+          <div class="input-row">
+            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
               data-geocode-target="p">
-            <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="p" id="p-geoBtn"
-              style="white-space:nowrap;padding:0 16px;font-size:var(--font-size-base)" data-i18n="chart.lookupLocation">Look Up</button>
+            <button type="button" class="btn-secondary btn-lookup" data-action="geocodeLocation" data-arg0="p" id="p-geoBtn"
+              data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="p-geo-status" style="margin-top:var(--space-2);font-size:var(--font-size-sm);color:var(--text-dim)"></div>
+          <div id="p-geo-status" class="geo-status"></div>
           <input type="hidden" id="p-lat">
           <input type="hidden" id="p-lng">
         </div>
         <div class="form-group full">
-          <label><span data-i18n="chart.timezone">Timezone</span> <span style="font-weight:400;color:var(--text-dim);font-size:var(--font-size-sm)">(auto-filled by Look Up)</span></label>
+          <label for="p-tz"><span data-i18n="chart.timezone">Timezone</span> <span class="label-hint">(auto-filled by Look Up)</span></label>
           <select id="p-tz">
-            <option value="America/New_York">America/New_York</option>
-            <option value="America/Los_Angeles">America/Los_Angeles</option>
-            <option value="America/Chicago">America/Chicago</option>
-            <option value="Europe/London">Europe/London</option>
-            <option value="Europe/Paris">Europe/Paris</option>
-            <option value="Asia/Tokyo">Asia/Tokyo</option>
+            <option value="America/New_York">America/New_York (EST/EDT)</option>
+            <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+            <option value="America/Denver">America/Denver (MST/MDT)</option>
+            <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+            <option value="America/Phoenix">America/Phoenix (MST no DST)</option>
+            <option value="America/Anchorage">America/Anchorage</option>
+            <option value="Pacific/Honolulu">Pacific/Honolulu</option>
+            <option value="America/Toronto">America/Toronto</option>
+            <option value="America/Vancouver">America/Vancouver</option>
+            <option value="America/Mexico_City">America/Mexico_City</option>
+            <option value="America/Sao_Paulo">America/Sao_Paulo</option>
+            <option value="America/Buenos_Aires">America/Buenos_Aires</option>
+            <option value="Europe/London">Europe/London (GMT/BST)</option>
+            <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+            <option value="Europe/Berlin">Europe/Berlin</option>
+            <option value="Europe/Moscow">Europe/Moscow</option>
+            <option value="Europe/Istanbul">Europe/Istanbul</option>
+            <option value="Africa/Cairo">Africa/Cairo</option>
+            <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+            <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+            <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+            <option value="Asia/Dhaka">Asia/Dhaka</option>
+            <option value="Asia/Bangkok">Asia/Bangkok</option>
+            <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+            <option value="Asia/Shanghai">Asia/Shanghai</option>
+            <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+            <option value="Asia/Seoul">Asia/Seoul</option>
+            <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+            <option value="Australia/Melbourne">Australia/Melbourne</option>
+            <option value="Pacific/Auckland">Pacific/Auckland</option>
             <option value="UTC">UTC</option>
           </select>
         </div>
         <div class="form-group full">
-          <label data-i18n="profile.questionLabel">Specific Question (optional — leave blank for full profile)</label>
+          <label>Evaluation Type</label>
+          <div class="eval-type-tabs" role="group" aria-label="Evaluation type">
+            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="full-blueprint">⬡ Full Blueprint</button>
+            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="daily-focus">☀ Daily Focus</button>
+            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="relationships">⬡ Relationships</button>
+            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="career">✦ Career &amp; Purpose</button>
+          </div>
+          <div class="quickpick-row" id="quickpickRow" style="display:none">
+            <span class="quickpick-label">Quick pick:</span>
+            <button type="button" class="quickpick-btn" id="quickpick1" data-action="setQuickPick"></button>
+            <button type="button" class="quickpick-btn" id="quickpick2" data-action="setQuickPick"></button>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label for="p-question">Specific Question <span class="label-hint">(optional — leave blank for full profile)</span></label>
           <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder">
         </div>
       </div>
-      <div style="margin-top:var(--space-5)">
-        <button class="btn-primary" data-action="generateProfile" id="profileBtn" style="padding:var(--space-3) 24px">
+      <div class="form-actions">
+        <button class="btn-primary" data-action="generateProfile" id="profileBtn">
           <span class="spinner" id="profileSpinner" style="display:none"></span>
           <span data-i18n="profile.generate">Create My Full Profile</span>
         </button>
-        <button class="btn-secondary" data-action="shareProfile" id="shareProfileBtn" style="padding:var(--space-3) 24px;display:none">
+        <button class="btn-secondary" data-action="shareProfile" id="shareProfileBtn" style="display:none">
           📤 Share My Profile
         </button>
       </div>
@@ -796,67 +1002,64 @@
     <!-- Share Modal Overlay -->
     <div class="share-modal-overlay hidden" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
       <div class="share-modal">
-        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-4);border-bottom:var(--border-width-thin) solid var(--border)">
-          <h3 id="shareModalTitle" style="margin:0;font-size:var(--font-size-lg);color:var(--gold)" data-i18n="share.shareProfile">Share Your Profile</h3>
-          <button class="modal-close" data-action="closeShareModal" style="background:none;border:none;color:var(--text-dim);font-size:var(--font-size-xl);cursor:pointer">&times;</button>
+        <div class="modal-header">
+          <h3 id="shareModalTitle" data-i18n="share.shareProfile">Share Your Profile</h3>
+          <button class="modal-close" data-action="closeShareModal" aria-label="Close">&times;</button>
         </div>
-        <div style="padding:var(--space-6)">
+        <div class="share-modal-body">
+          <!-- Blueprint Card -->
+          <div class="share-section" style="text-align:center">
+            <label class="section-label-lg">📸 Share Your Blueprint</label>
+            <p style="font-size:var(--font-size-sm);color:var(--text-muted);margin:var(--space-2) 0 var(--space-4)">Download a stunning card with your Forge, energy type, and design — perfect for Instagram, Twitter, and more.</p>
+            <button class="btn-primary btn-full" data-action="openBlueprintCard">📸 Generate Blueprint Card</button>
+          </div>
+
           <!-- Share Link -->
-          <div style="margin-bottom:var(--space-6)">
-            <label style="display:block;margin-bottom:var(--space-2);font-weight:600;color:var(--text)" data-i18n="share.referralLink">Your Referral Link</label>
-            <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
-              <input type="text" id="shareLinkInput" readonly style="flex:1;min-width:160px;background:var(--bg3);border:var(--border-width-thin) solid var(--border);padding:var(--space-3);border-radius:var(--space-2);color:var(--text);font-size:var(--font-size-base)">
-              <button class="btn-secondary" data-action="copyShareLink" style="white-space:nowrap">
+          <div class="share-section">
+            <label class="section-label" data-i18n="share.referralLink">Your Referral Link</label>
+            <div class="input-row">
+              <input type="text" id="shareLinkInput" readonly class="share-link-input">
+              <button class="btn-secondary btn-copy" data-action="copyShareLink">
                 📋 Copy
               </button>
             </div>
-            <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-2)" data-i18n="share.earnRewards">Share this link and earn rewards when friends sign up!</p>
+            <p class="share-reward-text" data-i18n="share.earnRewards">Share this link and earn rewards when friends sign up!</p>
           </div>
-          
+
           <!-- Social Share Buttons -->
-          <div style="margin-bottom:var(--space-5)">
-            <label style="display:block;margin-bottom:var(--space-3);font-weight:600;color:var(--text)" data-i18n="share.shareOn">Share On</label>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--space-3)">
-              <button class="btn-social" data-action="shareToSocial" data-arg0="facebook" style="background:#1877f2;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
-                Facebook
-              </button>
-              <button class="btn-social" data-action="shareToSocial" data-arg0="twitter" style="background:#1da1f2;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
-                Twitter
-              </button>
-              <button class="btn-social" data-action="shareToSocial" data-arg0="linkedin" style="background:#0077b5;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
-                LinkedIn
-              </button>
-              <button class="btn-social" data-action="shareToSocial" data-arg0="whatsapp" style="background:#25d366;color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
-                WhatsApp
-              </button>
-              <button class="btn-social" data-action="shareToSocial" data-arg0="email" style="background:var(--accent);color:white;border:none;padding:var(--space-3);border-radius:var(--space-2);cursor:pointer;font-weight:600;font-size:var(--font-size-base)">
-                Email
-              </button>
+          <div class="share-section-sm">
+            <label class="section-label-lg" data-i18n="share.shareOn">Share On</label>
+            <div class="social-share-grid">
+              <button class="btn-social" data-action="shareToSocial" data-arg0="facebook">Facebook</button>
+              <button class="btn-social" data-action="shareToSocial" data-arg0="twitter">Twitter</button>
+              <button class="btn-social" data-action="shareToSocial" data-arg0="linkedin">LinkedIn</button>
+              <button class="btn-social" data-action="shareToSocial" data-arg0="whatsapp">WhatsApp</button>
+              <button class="btn-social" data-action="shareToSocial" data-arg0="email">Email</button>
             </div>
           </div>
-          
+
           <!-- Native Share Button (Mobile) -->
           <div class="mobile-only">
-            <button class="btn-primary" data-action="shareProfileAndClose" style="width:100%;justify-content:center">
+            <button class="btn-primary btn-full" data-action="shareProfileAndClose">
               📱 Share via Mobile
             </button>
           </div>
 
           <!-- Referral Stats (shown when logged in) -->
           <div id="referralStats" style="display:none;margin-top:var(--space-5);padding-top:var(--space-5);border-top:var(--border-width-thin) solid var(--border)">
-            <label style="display:block;margin-bottom:var(--space-3);font-weight:600;color:var(--text)">🎁 Your Referral Stats</label>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);text-align:center">
-              <div style="background:var(--bg3);padding:var(--space-3);border-radius:var(--space-2)">
-                <div id="refStatTotal" style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">0</div>
-                <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Referrals</div>
+            <label class="section-label-lg">🎁 Your Referral Stats</label>
+            <div class="referral-stats-grid">
+              <div class="stat-card">
+                <div id="refStatTotal" class="stat-number stat-number-gold">0</div>
+                <div class="stat-label">Referrals</div>
               </div>
-              <div style="background:var(--bg3);padding:var(--space-3);border-radius:var(--space-2)">
-                <div id="refStatConverted" style="font-size:var(--font-size-xl);font-weight:700;color:var(--accent2)">0</div>
-                <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Converted</div>
+              <div class="stat-card">
+                <div id="refStatConverted" class="stat-number stat-number-green">0</div>
+                <div class="stat-label">Converted</div>
               </div>
-              <div style="background:var(--bg3);padding:var(--space-3);border-radius:var(--space-2)">
-                <div id="refStatRewards" style="font-size:var(--font-size-xl);font-weight:700;color:var(--accent)">$0</div>
-                <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Rewards</div>
+              <div class="stat-card">
+                <div id="refStatRewards" class="stat-number stat-number-blue">$0</div>
+                <div class="stat-label">Rewards</div>
               </div>
             </div>
           </div>
@@ -889,11 +1092,11 @@
     <!-- Behavioral Validation -->
     <div class="card">
       <div class="card-title"><span class="icon-check"></span> <span data-i18n="enhance.behavioral">Behavioral Validation</span> (2 min)</div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Answer these questions to validate your chart through actual behavior patterns.</p>
+      <p class="card-intro">Answer these questions to validate your chart through actual behavior patterns.</p>
       
-      <div class="form-group" style="margin-bottom:var(--space-4)">
+      <div class="form-group">
         <label>How do you make your best decisions?</label>
-        <select id="enhance-decision" style="margin-top:var(--space-1)">
+        <select id="enhance-decision">
           <option value="">-- Select pattern --</option>
           <option value="gut_impulse">Immediate gut impulse (yes/no, can't explain why)</option>
           <option value="sleep_on_it">Sleep on it and reassess in the morning</option>
@@ -904,9 +1107,9 @@
         </select>
       </div>
 
-      <div class="form-group" style="margin-bottom:var(--space-4)">
+      <div class="form-group">
         <label>Which energy pattern feels most like you?</label>
-        <select id="enhance-energy" style="margin-top:var(--space-1)">
+        <select id="enhance-energy">
           <option value="">-- Select pattern --</option>
           <option value="steady_renewing">Steady & self-renewing throughout the day</option>
           <option value="bursts_rest">Bursts of power, then need to rest</option>
@@ -917,44 +1120,44 @@
         </select>
       </div>
 
-      <div class="form-group full" style="margin-bottom:var(--space-4)">
+      <div class="form-group full">
         <label>What's your current focus or challenge? (Optional but helpful for personalization)</label>
-        <textarea id="enhance-focus" rows="3" placeholder="e.g., Deciding whether to leave stable job to start consulting practice..." style="margin-top:var(--space-1)"></textarea>
+        <textarea id="enhance-focus" rows="3" placeholder="e.g., Deciding whether to leave stable job to start consulting practice..."></textarea>
       </div>
 
       <button class="btn-primary" data-action="saveValidation" id="enhanceBtn1">
         <span class="spinner" id="enhanceSpinner1" style="display:none"></span>
         Save Behavioral Data
       </button>
-      <div id="enhanceStatus1" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
+      <div id="enhanceStatus1" class="status-output" aria-live="polite" role="status"></div>
     </div>
 
     <!-- Big Five Assessment -->
     <div class="card">
       <div class="card-title"><span class="icon-brain"></span> <span data-i18n="enhance.bigFive">Big Five Personality</span> (3 min)</div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">20 questions. Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
+      <p class="card-intro">20 questions. Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).</p>
       
       <div id="bigfive-questions"></div>
 
-      <button class="btn-primary" data-action="saveBigFive" id="bigfiveBtn" style="margin-top:var(--space-4)">
+      <button class="btn-primary" data-action="saveBigFive" id="bigfiveBtn">
         <span class="spinner" id="bigfiveSpinner" style="display:none"></span>
         Save Big Five Assessment
       </button>
-      <div id="bigfiveStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
+      <div id="bigfiveStatus" class="status-output" aria-live="polite" role="status"></div>
     </div>
 
     <!-- VIA Character Strengths -->
     <div class="card">
       <div class="card-title"><span class="icon-star"></span> <span data-i18n="enhance.via">Character Strengths</span> (4 min)</div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">24 questions. Rate how much each strength describes you from 1 (Not like me) to 5 (Very much like me).</p>
+      <p class="card-intro">24 questions. Rate how much each strength describes you from 1 (Not like me) to 5 (Very much like me).</p>
       
       <div id="via-questions"></div>
 
-      <button class="btn-primary" data-action="saveVIA" id="viaBtn" style="margin-top:var(--space-4)">
+      <button class="btn-primary" data-action="saveVIA" id="viaBtn">
         <span class="spinner" id="viaSpinner" style="display:none"></span>
         <span data-i18n="enhance.save">Save Character Strengths</span>
       </button>
-      <div id="viaStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
+      <div id="viaStatus" class="status-output" aria-live="polite" role="status"></div>
     </div>
   </div>
 
@@ -978,11 +1181,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label data-i18n="diary.eventDate">Event Date</label>
-          <input type="date" id="diary-date" style="margin-top:var(--space-1)">
+          <input type="date" id="diary-date">
         </div>
         <div class="form-group">
           <label data-i18n="diary.eventType">Event Type</label>
-          <select id="diary-type" style="margin-top:var(--space-1)">
+          <select id="diary-type">
             <option value="career">Career</option>
             <option value="relationship">Relationship</option>
             <option value="health">Health</option>
@@ -994,7 +1197,7 @@
         </div>
         <div class="form-group">
           <label data-i18n="diary.significance">Significance</label>
-          <select id="diary-significance" style="margin-top:var(--space-1)">
+          <select id="diary-significance">
             <option value="major">Major (life-changing)</option>
             <option value="moderate" selected>Moderate (notable)</option>
             <option value="minor">Minor (worth noting)</option>
@@ -1002,27 +1205,27 @@
         </div>
         <div class="form-group full">
           <label data-i18n="diary.eventTitle">Event Title</label>
-          <input type="text" id="diary-title" placeholder="e.g., Got promoted to Director" style="margin-top:var(--space-1)">
+          <input type="text" id="diary-title" placeholder="e.g., Got promoted to Director">
         </div>
         <div class="form-group full">
           <label data-i18n="diary.eventDescription">Description (Optional)</label>
-          <textarea id="diary-description" rows="3" placeholder="Add context, what happened, how you felt..." style="margin-top:var(--space-1)"></textarea>
+          <textarea id="diary-description" rows="3" placeholder="Add context, what happened, how you felt..."></textarea>
         </div>
       </div>
 
-      <div style="margin-top:var(--space-4);display:flex;gap:var(--space-3)">
+      <div class="form-actions-row">
         <button class="btn-primary" data-action="saveDiaryEntry" id="diaryBtn">
           <span class="spinner" id="diarySpinner" style="display:none"></span>
           <span class="icon-plus"></span> Add Event
         </button>
         <button class="btn-secondary" data-action="cancelDiaryEdit" id="diaryCancelBtn" style="display:none" data-i18n="common.cancel">Cancel</button>
       </div>
-      <div id="diaryStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
+      <div id="diaryStatus" class="status-output" aria-live="polite" role="status"></div>
     </div>
 
     <div class="card">
       <div class="card-title"><span class="icon-archive"></span> <span data-i18n="diary.yourEvents">Your Life Events</span></div>
-      <button class="btn-secondary" data-action="loadDiaryEntries" id="diaryLoadBtn" style="margin-bottom:var(--space-4)">
+      <button class="btn-secondary" data-action="loadDiaryEntries" id="diaryLoadBtn">
         <span class="spinner" id="diaryLoadSpinner" style="display:none"></span>
         Load Events
       </button>
@@ -1058,7 +1261,7 @@
       <div class="form-grid">
         <div class="form-group full">
           <label><span data-i18n="checkin.howAligned">How aligned did you feel today?</span> (1-10)<span class="icon-info help-icon" title="1 = Completely off track, not following your design at all. 10 = Perfectly aligned, honoring your strategy and authority all day. Be honest - patterns only emerge with genuine data."></span></label>
-          <div style="display:flex;gap:var(--space-2);margin-top:var(--space-2);flex-wrap:wrap">
+          <div class="alignment-row">
             <button class="alignment-btn" data-score="1" data-action="selectAlignment" data-arg0="1" aria-label="Alignment level 1 out of 10">1</button>
             <button class="alignment-btn" data-score="2" data-action="selectAlignment" data-arg0="2" aria-label="Alignment level 2 out of 10">2</button>
             <button class="alignment-btn" data-score="3" data-action="selectAlignment" data-arg0="3" aria-label="Alignment level 3 out of 10">3</button>
@@ -1074,22 +1277,22 @@
         </div>
 
         <div class="form-group">
-          <label style="margin-bottom:var(--space-2)">
-            <input type="checkbox" id="checkin-followed-strategy" style="width:auto;margin-right:var(--space-2)">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="checkin-followed-strategy" class="form-checkbox">
             Followed my strategy today<span class="icon-info help-icon" title="Did you honor your type&apos;s strategy? Builder: Respond. Initiator: Inform. Guide Pattern: Wait for invitation. Mirror: Wait 28 days for clarity."></span>
           </label>
         </div>
 
         <div class="form-group">
-          <label style="margin-bottom:var(--space-2)">
-            <input type="checkbox" id="checkin-followed-authority" style="width:auto;margin-right:var(--space-2)">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="checkin-followed-authority" class="form-checkbox">
             Followed my authority today<span class="icon-info help-icon" title="Did you use your decision-making authority? Emotional: Wait through the wave. Sacral: Follow gut response. Splenic: Trust immediate knowing. Ego: Commit from willpower. Self-Projected: Talk it out."></span>
           </label>
         </div>
 
         <div class="form-group">
           <label>How was your mood today?</label>
-          <select id="checkin-mood" style="margin-top:var(--space-1)">
+          <select id="checkin-mood">
             <option value="">— Select —</option>
             <option value="great">😊 Great (energized, joyful)</option>
             <option value="good">🙂 Good (positive, content)</option>
@@ -1101,47 +1304,47 @@
 
         <div class="form-group">
           <label>Energy Level (1-10)<span class="icon-info help-icon" title="Optional. 1 = Completely exhausted. 10 = Fully energized and vital. Helps track energy patterns relative to alignment."></span></label>
-          <input type="number" id="checkin-energy-level" min="1" max="10" placeholder="Optional" style="margin-top:var(--space-1)">
+          <input type="number" id="checkin-energy-level" min="1" max="10" placeholder="Optional">
         </div>
 
         <div class="form-group full">
           <label>Notes (Optional)</label>
-          <textarea id="checkin-notes" rows="3" placeholder="What happened today? Any insights, challenges, or wins?" style="margin-top:var(--space-1)"></textarea>
+          <textarea id="checkin-notes" rows="3" placeholder="What happened today? Any insights, challenges, or wins?"></textarea>
         </div>
       </div>
 
-      <div style="margin-top:var(--space-4);display:flex;gap:var(--space-3)">
+      <div class="form-actions-row">
         <button class="btn-primary" data-action="saveCheckin" id="checkinBtn">
           <span class="spinner" id="checkinSpinner" style="display:none"></span>
           <span class="icon-heart"></span> <span id="checkinBtnText" data-i18n="checkin.saveCheckin">Save Check-In</span>
         </button>
       </div>
-      <div id="checkinStatus" style="margin-top:var(--space-3);font-size:var(--font-size-base);min-height:var(--space-5)"></div>
+      <div id="checkinStatus" class="status-output" aria-live="polite" role="status"></div>
     </div>
 
     <!-- Alignment Stats Card -->
     <div class="card">
       <div class="card-title"><span class="icon-chart"></span> <span data-i18n="checkin.trends">Alignment Trends</span></div>
-      <button class="btn-secondary" data-action="loadCheckinStats" id="checkinStatsBtn" style="margin-bottom:var(--space-4)">
+      <button class="btn-secondary" data-action="loadCheckinStats" id="checkinStatsBtn">
         <span class="spinner" id="checkinStatsSpinner" style="display:none"></span>
         Load Stats
       </button>
       
       <div id="checkinStatsContainer" style="display:none">
         <!-- Stats Summary -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-3);margin-bottom:var(--space-5)" id="checkinStatsSummary">
+        <div id="checkinStatsSummary">
           <!-- Populated by loadCheckinStats() -->
         </div>
 
         <!-- Alignment Chart -->
-        <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-4);margin-bottom:var(--space-4)">
-          <h3 style="font-size:var(--font-size-base);color:var(--gold);margin-bottom:var(--space-3)">30-Day Alignment Score</h3>
+        <div class="card-inset">
+          <h3 class="card-section-heading">30-Day Alignment Score</h3>
           <canvas id="alignmentChart" width="400" height="200"></canvas>
         </div>
 
         <!-- Check-In History -->
-        <div style="margin-top:var(--space-5)">
-          <h3 style="font-size:var(--font-size-base);color:var(--gold);margin-bottom:var(--space-3)">Recent Check-Ins</h3>
+        <div class="history-section">
+          <h3 class="history-section-heading">Recent Check-Ins</h3>
           <div id="checkinHistoryList"></div>
         </div>
       </div>
@@ -1163,22 +1366,22 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-transit"></span> Today's Planetary Energy</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">
-        <div style="background:rgba(201,168,76,0.06);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3)">
-          <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:var(--space-1)">Fast Planets</div>
-          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.5">Moon, Sun, Mercury — shift <strong>daily</strong>. Short-term mood and communication themes.</div>
+      <div class="planet-speed-grid">
+        <div class="planet-card">
+          <div class="planet-card-name">Fast Planets</div>
+          <div class="planet-card-desc">Moon, Sun, Mercury — shift <strong>daily</strong>. Short-term mood and communication themes.</div>
         </div>
-        <div style="background:rgba(201,168,76,0.06);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3)">
-          <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:var(--space-1)">Medium Planets</div>
-          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.5">Mars, Jupiter — shift <strong>weeks to months</strong>. Drive, ambition, and opportunity cycles.</div>
+        <div class="planet-card">
+          <div class="planet-card-name">Medium Planets</div>
+          <div class="planet-card-desc">Mars, Jupiter — shift <strong>weeks to months</strong>. Drive, ambition, and opportunity cycles.</div>
         </div>
-        <div style="background:rgba(201,168,76,0.06);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-3)">
-          <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:var(--space-1)">Slow Planets</div>
-          <div style="font-size:var(--font-size-sm);color:var(--text);line-height:1.5">Saturn, Neptune, Pluto — shift <strong>years</strong>. Major life chapters and deep transformation.</div>
+        <div class="planet-card">
+          <div class="planet-card-name">Slow Planets</div>
+          <div class="planet-card-desc">Saturn, Neptune, Pluto — shift <strong>years</strong>. Major life chapters and deep transformation.</div>
         </div>
       </div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4);line-height:1.6">
-        <strong style="color:var(--gold)">✦ Natal hits</strong> — when a transiting planet lands on one of YOUR birth gates, that theme is amplified in your life right now. These are highlighted in gold below.
+      <p class="card-intro">
+        <strong class="text-gold">✦ Natal hits</strong> — when a transiting planet lands on one of YOUR birth gates, that theme is amplified in your life right now. These are highlighted in gold below.
       </p>
       <button class="btn-primary" data-action="loadTransits" id="transitBtn">
         <span class="spinner" id="transitSpinner" style="display:none"></span>
@@ -1198,11 +1401,15 @@
   <div class="tab-content" id="tab-history" role="tabpanel" aria-labelledby="btn-history">
     <div class="card">
       <div class="card-title"><span class="icon-archive"></span> <span data-i18n="profile.savedProfiles">Saved Profiles</span></div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)" data-i18n="profile.signInToView">Sign in to view your saved Prime Self Profiles.</p>
+      <p class="card-intro" data-i18n="profile.signInToView">Sign in to view your saved Prime Self Profiles.</p>
       <button class="btn-primary" data-action="loadHistory" id="historyBtn">
         <span class="spinner" id="historySpinner" style="display:none"></span>
         View Saved Charts
       </button>
+      <div class="input-group" style="margin-top:var(--space-3)">
+        <input type="search" id="profileSearchInput" class="input" placeholder="Search profiles…" aria-label="Search saved profiles" maxlength="100" style="flex:1">
+        <button class="btn-secondary btn-sm" id="profileSearchBtn" data-action="searchProfiles" aria-label="Search">🔍</button>
+      </div>
     </div>
     <div id="historyResult">
       <div class="empty-state">
@@ -1238,9 +1445,9 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-partnership"></span> <span data-i18n="composite.title">Composite Chart</span></div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Analyze relationship dynamics between two people.</p>
+      <p class="card-intro">Analyze relationship dynamics between two people.</p>
       
-      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-4) 0 8px" data-i18n="composite.personA">Person A</h4>
+      <h4 class="card-subheading" data-i18n="composite.personA">Person A</h4>
       <div class="form-grid">
         <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" value="1990-06-15" required aria-required="true"></div>
         <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" value="14:30" required aria-required="true"></div>
@@ -1248,20 +1455,20 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap">
+          <div class="input-row">
             <input type="text" id="comp-A-location" placeholder="New York, NY"
-              style="flex:1;min-width:160px" required aria-required="true"
+              class="input-flex" required aria-required="true"
               data-geocode-target="comp-A">
             <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="comp-A" id="comp-A-geoBtn"
-              style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
+              class="btn-lookup-tall" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="comp-A-geo-status" style="font-size:var(--font-size-sm);margin-top:var(--space-1);min-height:1rem"></div>
+          <div id="comp-A-geo-status" class="geo-status-sm"></div>
         </div>
         <input type="hidden" id="comp-A-lat" value="40.7128">
         <input type="hidden" id="comp-A-lng" value="-74.0060">
       </div>
 
-      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:var(--space-5) 0 8px" data-i18n="composite.personB">Person B</h4>
+      <h4 class="card-subheading-lg" data-i18n="composite.personB">Person B</h4>
       <div class="form-grid">
         <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" value="1988-03-22" required aria-required="true"></div>
         <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" value="09:15" required aria-required="true"></div>
@@ -1269,20 +1476,20 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap">
+          <div class="input-row">
             <input type="text" id="comp-B-location" placeholder="Los Angeles, CA"
-              style="flex:1;min-width:160px" required aria-required="true"
+              class="input-flex" required aria-required="true"
               data-geocode-target="comp-B">
             <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="comp-B" id="comp-B-geoBtn"
-              style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
+              class="btn-lookup-tall" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="comp-B-geo-status" style="font-size:var(--font-size-sm);margin-top:var(--space-1);min-height:1rem"></div>
+          <div id="comp-B-geo-status" class="geo-status-sm"></div>
         </div>
         <input type="hidden" id="comp-B-lat" value="40.7128">
         <input type="hidden" id="comp-B-lng" value="-74.0060">
       </div>
 
-      <button class="btn-primary" data-action="generateComposite" id="compBtn" style="margin-top:var(--space-4)">
+      <button class="btn-primary" data-action="generateComposite" id="compBtn">
         <span class="spinner" id="compSpinner" style="display:none"></span>
         <span data-i18n="composite.generate">Check Our Compatibility</span>
       </button>
@@ -1300,7 +1507,7 @@
   <div class="tab-content" id="tab-rectify" role="tabpanel" aria-labelledby="btn-rectify">
     <div class="card">
       <div class="card-title"><span class="icon-time"></span> <span data-i18n="rectify.title">Birth Time Rectification</span></div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Analyze how chart changes within a time window to find the most accurate birth time.</p>
+      <p class="card-intro">Analyze how chart changes within a time window to find the most accurate birth time.</p>
       
       <div class="form-grid">
         <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="rect-date" value="1990-06-15"></div>
@@ -1309,14 +1516,14 @@
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
           </label>
-          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:flex-start">
+          <div class="input-row">
             <input type="text" id="rect-location" placeholder="New York, NY"
-              style="flex:1;min-width:160px"
+              class="input-flex"
               data-geocode-target="rect">
             <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="rect" id="rect-geoBtn"
-              style="height:var(--space-10);padding:0 16px;white-space:nowrap" data-i18n="chart.lookupLocation">Look Up</button>
+              class="btn-lookup-tall" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
-          <div id="rect-geo-status" style="font-size:var(--font-size-sm);margin-top:var(--space-1);min-height:1rem"></div>
+          <div id="rect-geo-status" class="geo-status-sm"></div>
         </div>
         <input type="hidden" id="rect-lat" value="40.7128">
         <input type="hidden" id="rect-lng" value="-74.0060">
@@ -1334,7 +1541,7 @@
         </div>
       </div>
 
-      <button class="btn-primary" data-action="runRectification" id="rectBtn" style="margin-top:var(--space-4)">
+      <button class="btn-primary" data-action="runRectification" id="rectBtn">
         <span class="spinner" id="rectSpinner" style="display:none"></span>
         <span data-i18n="rectify.analyze">Find My Birth Time</span>
       </button>
@@ -1349,42 +1556,144 @@
     <div id="practitionerUpgradeNotice" class="alert alert-warn" style="display:none">
       <strong>Practitioner Tools Locked</strong><br>
       Client management requires a Guide tier subscription.
-      <a href="#" data-action="openPractitionerPricingModal" data-prevent style="color:var(--gold);text-decoration:underline;margin-left:var(--space-2)">Upgrade to Guide →</a>
+      <a href="#" data-action="openPractitionerPricingModal" data-prevent class="link-gold ml-2">Upgrade to Guide →</a>
     </div>
 
     <!-- Header card: status + add client -->
     <div class="card" id="pracHeaderCard">
       <div class="card-title"><span class="icon-star"></span> Practitioner Portal</div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Manage your client roster. View their charts and profiles, export PDFs, and keep your session work organized.</p>
+      <p class="card-intro">Manage your client roster. View their charts and profiles, export PDFs, and keep your session work organized.</p>
 
       <!-- Client limit progress bar -->
       <div id="pracLimitBar" style="display:none;margin-bottom:var(--space-5)">
-        <div style="display:flex;justify-content:space-between;font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-1)">
+        <div class="progress-bar-row">
           <span>Clients on roster</span>
           <span id="pracLimitLabel">0 / 50</span>
         </div>
-        <div style="background:var(--bg3);border-radius:999px;height:6px;overflow:hidden">
-          <div id="pracLimitFill" style="background:var(--gold);height:100%;width:0%;transition:width 0.4s ease"></div>
+        <div class="progress-bar-track">
+          <div id="pracLimitFill" style="width:0%"></div>
         </div>
       </div>
 
       <!-- Add client form (collapsible) -->
-      <button class="btn-secondary btn-sm" data-action="togglePracAddForm" id="pracAddToggle" style="margin-bottom:var(--space-3)">+ Add Client</button>
+      <button class="btn-secondary btn-sm" data-action="togglePracAddForm" id="pracAddToggle">+ Invite Client</button>
       <div id="pracAddForm" style="display:none;background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-4);margin-bottom:var(--space-4)">
-        <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-3)">The client must already have a Prime Self account. Enter the email address they registered with.</p>
-        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:flex-end">
-          <div class="form-group" style="flex:1;min-width:200px;margin:0">
+        <p class="card-hint">If the email already has an account, they are added immediately. Otherwise, an invitation email is sent.</p>
+        <div class="invite-row">
+          <div class="form-group form-group-flex-180">
+            <label for="prac-client-name">Client Name (optional)</label>
+            <input type="text" id="prac-client-name" placeholder="Client name">
+          </div>
+          <div class="form-group form-group-flex-200">
             <label for="prac-email">Client Email</label>
             <input type="email" id="prac-email" placeholder="client@email.com" required aria-required="true">
           </div>
-          <button class="btn-primary" data-action="addClient" id="pracAddBtn" style="white-space:nowrap;height:40px">
+          <button class="btn-primary" data-action="addClient" id="pracAddBtn" class="btn-row-item">
             <span class="spinner" id="pracAddSpinner" style="display:none"></span>
-            Add to Roster
+            Send Invite
           </button>
-          <button class="btn-secondary" data-action="togglePracAddForm" style="height:40px">Cancel</button>
+          <button class="btn-secondary" data-action="togglePracAddForm" class="btn-row-item">Cancel</button>
         </div>
-        <div id="pracAddStatus" style="margin-top:var(--space-3)"></div>
+        <div id="pracAddStatus"></div>
       </div>
+    </div>
+
+    <!-- Agency Seats (only shown to Agency-tier users) -->
+    <div class="card" id="agencySeatsCard" style="display:none">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">👥</span> Agency Seats</div>
+        <button class="btn-secondary btn-sm" data-action="loadAgencySeats">Refresh</button>
+      </div>
+      <p class="card-hint">Invite up to <strong>5 practitioners</strong> as sub-account members. They'll get Practitioner-level access under your Agency plan.</p>
+      <div class="invite-row">
+        <div class="form-group form-group-flex-200">
+          <label for="agencySeatEmail">Practitioner email</label>
+          <input type="email" id="agencySeatEmail" placeholder="analyst@firm.com" class="form-input">
+        </div>
+        <button class="btn-primary btn-sm" data-action="inviteAgencySeat" class="btn-row-item">Add Seat</button>
+      </div>
+      <div id="agencySeatStatus"></div>
+      <div id="agencySeatsResult"></div>
+    </div>
+
+    <!-- Directory Profile (edit your public listing) -->
+    <div class="card" id="pracDirectoryCard">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">🔍</span> Directory Profile</div>
+        <button class="btn-secondary btn-sm" data-action="toggleDirectoryForm" id="dirProfileToggle">Edit Profile</button>
+      </div>
+      <p class="card-hint">Control how you appear in the public practitioner directory. Toggle visibility, add your bio, and set booking info.</p>
+      <div id="dirProfileSummary" class="geo-status">Loading…</div>
+      <div id="dirProfileForm" style="display:none;margin-top:var(--space-4);background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-4)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="dir-display-name">Display Name</label>
+            <input type="text" id="dir-display-name" placeholder="Your public name" maxlength="150" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="dir-certification">Certification</label>
+            <select id="dir-certification" class="form-input">
+              <option value="">Select…</option>
+              <option value="IHDS">IHDS</option>
+              <option value="Jovian Archive">Jovian Archive</option>
+              <option value="Self-Certified">Self-Certified</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label for="dir-bio">Bio <span class="label-hint">(250 chars max)</span></label>
+            <textarea id="dir-bio" rows="3" maxlength="250" class="form-input" placeholder="Tell potential clients about your practice…"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="dir-session-format">Session Format</label>
+            <select id="dir-session-format" class="form-input">
+              <option value="Remote">Remote</option>
+              <option value="In-person">In-person</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dir-session-info">Session Info <span class="label-hint">(e.g. "60 min / $150")</span></label>
+            <input type="text" id="dir-session-info" maxlength="200" class="form-input" placeholder="60 min / $150">
+          </div>
+          <div class="form-group full">
+            <label for="dir-booking-url">Booking URL <span class="label-hint">(https only)</span></label>
+            <input type="url" id="dir-booking-url" class="form-input" placeholder="https://calendly.com/you">
+          </div>
+          <div class="form-group full">
+            <label>Specializations</label>
+            <div id="dir-specializations" class="checkbox-grid">
+              <label class="checkbox-label"><input type="checkbox" value="Generators"> Generators</label>
+              <label class="checkbox-label"><input type="checkbox" value="Manifesting Generators"> MG</label>
+              <label class="checkbox-label"><input type="checkbox" value="Projectors"> Projectors</label>
+              <label class="checkbox-label"><input type="checkbox" value="Manifestors"> Manifestors</label>
+              <label class="checkbox-label"><input type="checkbox" value="Reflectors"> Reflectors</label>
+              <label class="checkbox-label"><input type="checkbox" value="Relationships"> Relationships</label>
+              <label class="checkbox-label"><input type="checkbox" value="Business"> Business</label>
+              <label class="checkbox-label"><input type="checkbox" value="Parenting"> Parenting</label>
+              <label class="checkbox-label"><input type="checkbox" value="Career"> Career</label>
+              <label class="checkbox-label"><input type="checkbox" value="Health"> Health</label>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label class="checkbox-label-lg">
+              <input type="checkbox" id="dir-is-public"> <strong>Show me in the public directory</strong>
+            </label>
+          </div>
+        </div>
+        <div class="form-submit-row">
+          <button class="btn-secondary btn-sm" data-action="toggleDirectoryForm">Cancel</button>
+          <button class="btn-primary btn-sm" data-action="saveDirectoryProfile">Save Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="pracInvitesCard">
+      <div class="card-header-row mb-0">
+        <div class="card-title mb-0"><span class="icon-time"></span> Pending Invitations</div>
+        <button class="btn-secondary btn-sm" data-action="loadPractitionerInvitations">Refresh</button>
+      </div>
+      <div id="pracInvitesResult"></div>
     </div>
 
     <!-- Roster (auto-loads on tab open) -->
@@ -1403,9 +1712,9 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Energy Blueprint analysis and Prime Self Forge philosophy"></span></div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-5)">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
+      <p class="card-intro">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
       
-      <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-5)">
+      <div class="input-row">
         <button class="btn-primary" data-action="showCreateClusterForm" id="showCreateBtn">+ New Cluster</button>
         <button class="btn-secondary" data-action="loadClusters" id="clusterListRefreshBtn">
           <span class="spinner" id="clusterListSpinner" style="display:none"></span>
@@ -1415,7 +1724,7 @@
 
       <!-- Create Cluster Form (initially hidden) -->
       <div id="createClusterForm" style="display:none;background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-5);margin-bottom:var(--space-5)">
-        <h4 style="color:var(--gold);font-size:var(--font-size-md);margin-bottom:var(--space-4)">Create New Cluster</h4>
+        <h4 class="card-subheading-xl">Create New Cluster</h4>
         <div class="form-grid">
           <div class="form-group">
             <label><span data-i18n="clusters.name">Cluster Name</span><span class="icon-info help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'"></span></label>
@@ -1426,7 +1735,7 @@
             <textarea id="cluster-challenge" placeholder="e.g., Launching our new product by Q2" rows="2"></textarea>
           </div>
         </div>
-        <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4)">
+        <div class="form-actions-row">
           <button class="btn-primary" data-action="createCluster" id="clusterCreateBtn">
             <span class="spinner" id="clusterCreateSpinner" style="display:none"></span>
             <span data-i18n="clusters.create">Create Cluster</span>
@@ -1447,7 +1756,7 @@
   <div class="tab-content" id="tab-sms" role="tabpanel" aria-labelledby="btn-sms">
     <div class="card">
       <div class="card-title"><span class="icon-sms"></span> SMS Digest</div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Subscribe to receive daily transit digests via SMS.</p>
+      <p class="card-intro">Subscribe to receive daily transit digests via SMS.</p>
       
       <div class="form-grid">
         <div class="form-group">
@@ -1458,7 +1767,7 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4)">
+      <div class="form-actions-row">
         <button class="btn-primary" data-action="subscribeSMS" id="smsSubBtn">
           <span class="spinner" id="smsSubSpinner" style="display:none"></span>
           <span data-i18n="sms.subscribe">Subscribe</span>
@@ -1469,7 +1778,7 @@
         </button>
       </div>
 
-      <div id="smsResult" style="margin-top:var(--space-4)"></div>
+      <div id="smsResult"></div>
     </div>
   </div>
 
@@ -1477,7 +1786,7 @@
   <div class="tab-content" id="tab-onboarding" role="tabpanel" aria-labelledby="btn-onboarding">
     <div class="card">
       <div class="card-title"><span class="icon-compass"></span> <span data-i18n="onboarding.title">Onboarding Story</span></div>
-      <p style="font-size:var(--font-size-base);color:var(--text-dim);margin-bottom:var(--space-4)">Interactive guided journey through your Prime Self profile discovery.</p>
+      <p class="card-intro">Interactive guided journey through your Prime Self profile discovery.</p>
       
       <button class="btn-primary" data-action="startOnboarding" id="onboardBtn">
         <span class="spinner" id="onboardSpinner" style="display:none"></span>
@@ -1485,11 +1794,173 @@
       </button>
 
       <div id="onboardProgress" style="margin-top:var(--space-5);display:none">
-        <div style="background:var(--bg3);height:var(--space-2);border-radius:var(--space-1);overflow:hidden;margin-bottom:var(--space-3)">
-          <div id="onboardBar" style="background:var(--gold);height:100%;width:0%;transition:width 0.3s"></div>
+        <div class="onboard-progress-bar">
+          <div id="onboardBar" style="width:0%"></div>
         </div>
         <div id="onboardContent"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══ CELEBRITY MATCHES TAB ═══ -->
+  <div class="tab-content" id="tab-celebrity" role="tabpanel" aria-labelledby="btn-celebrity">
+    <div class="feature-callout">
+      <span class="feature-callout-icon">⭐</span>
+      <div class="feature-callout-body">
+        <p class="feature-callout-title">Famous People Who Share Your Blueprint</p>
+        <p class="feature-callout-text">See which historical figures, celebrities, and innovators share your energy type, authority, and activated gates. Share your match to grow your community.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="nav-icon">⭐</span> Famous Matches</div>
+      <div id="celebrityFilterBar">
+        <button class="btn-secondary celebrity-filter active" data-category="all" data-action="filterCelebrities" data-arg0="all">All</button>
+        <button class="btn-secondary celebrity-filter" data-category="tech" data-action="filterCelebrities" data-arg0="tech">Tech</button>
+        <button class="btn-secondary celebrity-filter" data-category="media" data-action="filterCelebrities" data-arg0="media">Media</button>
+        <button class="btn-secondary celebrity-filter" data-category="music" data-action="filterCelebrities" data-arg0="music">Music</button>
+        <button class="btn-secondary celebrity-filter" data-category="sports" data-action="filterCelebrities" data-arg0="sports">Sports</button>
+        <button class="btn-secondary celebrity-filter" data-category="science" data-action="filterCelebrities" data-arg0="science">Science</button>
+        <button class="btn-secondary celebrity-filter" data-category="arts" data-action="filterCelebrities" data-arg0="arts">Arts</button>
+        <button class="btn-secondary celebrity-filter" data-category="politics" data-action="filterCelebrities" data-arg0="politics">Politics</button>
+      </div>
+      <button class="btn-primary" data-action="loadCelebrityMatches" id="celebLoadBtn">
+        <span class="spinner" id="celebSpinner" style="display:none"></span>
+        Find My Famous Matches
+      </button>
+      <div id="celebrityStatus" class="status-output" aria-live="polite" role="status"></div>
+      <div id="celebrityGrid"></div>
+    </div>
+  </div>
+
+  <!-- ═══ ACHIEVEMENTS TAB ═══ -->
+  <div class="tab-content" id="tab-achievements" role="tabpanel" aria-labelledby="btn-achievements">
+    <div class="feature-callout">
+      <span class="feature-callout-icon">🏆</span>
+      <div class="feature-callout-body">
+        <p class="feature-callout-title">Milestones &amp; Leaderboard</p>
+        <p class="feature-callout-text">Earn badges as you explore your blueprint, complete check-ins, and generate insights. Climb the global leaderboard.</p>
+      </div>
+    </div>
+    <div class="card" id="achievementsStatsCard" style="display:none">
+      <div class="card-title">Your Progress</div>
+      <div id="achievementsStats"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🏅 Badges</div>
+      <button class="btn-primary" data-action="loadAchievements" id="achieveLoadBtn">
+        <span class="spinner" id="achieveSpinner" style="display:none"></span>
+        Load My Achievements
+      </button>
+      <div id="achievementsStatus" class="status-output" aria-live="polite" role="status"></div>
+      <div id="achievementsBadges"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🌐 Global Leaderboard</div>
+      <button class="btn-secondary" data-action="loadLeaderboard" id="leaderboardLoadBtn">
+        <span class="spinner" id="leaderboardSpinner" style="display:none"></span>
+        Load Leaderboard
+      </button>
+      <div id="leaderboardList"></div>
+    </div>
+  </div>
+
+  <!-- ═══ PRACTITIONER DIRECTORY TAB ═══ -->
+  <div class="tab-content" id="tab-directory" role="tabpanel" aria-labelledby="btn-directory">
+    <div class="feature-callout">
+      <span class="feature-callout-icon">🔍</span>
+      <div class="feature-callout-body">
+        <p class="feature-callout-title">Find a Certified Practitioner</p>
+        <p class="feature-callout-text">Browse verified practitioners who use Prime Self. Filter by specialty, certification, or session format to find the right guide for your journey.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="nav-icon">🔍</span> Browse Practitioners</div>
+      <div class="dir-filter-row">
+        <select id="dirFilterSpecialty" class="form-input">
+          <option value="">All Specialties</option>
+          <option value="Generators">Generators</option>
+          <option value="Manifesting Generators">MG</option>
+          <option value="Projectors">Projectors</option>
+          <option value="Manifestors">Manifestors</option>
+          <option value="Reflectors">Reflectors</option>
+          <option value="Relationships">Relationships</option>
+          <option value="Business">Business</option>
+          <option value="Parenting">Parenting</option>
+          <option value="Career">Career</option>
+          <option value="Health">Health</option>
+        </select>
+        <select id="dirFilterCert" class="form-input">
+          <option value="">All Certifications</option>
+          <option value="IHDS">IHDS</option>
+          <option value="Jovian Archive">Jovian Archive</option>
+          <option value="Self-Certified">Self-Certified</option>
+        </select>
+        <select id="dirFilterFormat" class="form-input">
+          <option value="">Any Format</option>
+          <option value="Remote">Remote</option>
+          <option value="In-person">In-person</option>
+          <option value="Both">Both</option>
+        </select>
+        <button class="btn-primary btn-sm" data-action="searchDirectory">Search</button>
+      </div>
+      <div id="directoryResults" aria-live="polite">
+        <div class="dir-results-empty">
+          Click Search or adjust filters to find practitioners.
+        </div>
+      </div>
+      <div id="directoryPagination"></div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTIMAL TIMING TAB ═══ -->
+  <div class="tab-content" id="tab-timing" role="tabpanel" aria-labelledby="btn-timing">
+    <div class="feature-callout">
+      <span class="feature-callout-icon">🗓</span>
+      <div class="feature-callout-body">
+        <p class="feature-callout-title">Electional Astrology — Find Your Best Dates</p>
+        <p class="feature-callout-text">Use planetary timing and your personal authority to find the most favorable dates for major life decisions. Available for Explorer and Guide subscribers.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="nav-icon">🗓</span> Find Optimal Dates</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>What are you planning?</label>
+          <select id="timing-intention">
+            <option value="">-- Select your intention --</option>
+            <option value="launch_project">🚀 Launch Project / Business</option>
+            <option value="start_relationship">💕 Start Relationship</option>
+            <option value="sign_contract">📝 Sign Contract / Agreement</option>
+            <option value="relocate">🏠 Move / Relocate</option>
+            <option value="start_healing">💊 Start Healing / Treatment</option>
+            <option value="travel">✈️ Travel / Journey</option>
+            <option value="financial_investment">💰 Financial Investment</option>
+            <option value="creative_project">🎨 Creative Project</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Search from</label>
+          <input type="date" id="timing-start">
+        </div>
+        <div class="form-group">
+          <label>Search window</label>
+          <select id="timing-window">
+            <option value="14">2 weeks</option>
+            <option value="30" selected>1 month</option>
+            <option value="60">2 months</option>
+            <option value="90">3 months</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" data-action="findBestDates" id="timingBtn">
+        <span class="spinner" id="timingSpinner" style="display:none"></span>
+        Find Best Dates
+      </button>
+      <div id="timingStatus" class="status-output" aria-live="polite" role="status"></div>
+    </div>
+    <div class="card" id="timingResultsCard" style="display:none">
+      <div class="card-title">✨ Recommended Dates</div>
+      <div id="timingResults"></div>
     </div>
   </div>
 
@@ -1497,7 +1968,7 @@
 </div><!-- /app-main -->
 </div><!-- /app-layout -->
 
-<script src="js/app.js"></script>
+<script src="js/app.js" defer></script>
 
 <!-- Mobile Bottom Navigation -->
 <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Main navigation">
@@ -1524,16 +1995,19 @@
 </nav>
 
 <!-- Mobile Navigation Script -->
-<script src="js/ui-nav.js"></script>
+<script src="js/ui-nav.js" defer></script>
+
+<!-- DEF-10: Back-to-top floating button -->
+<button id="backToTopBtn" class="back-to-top" aria-label="Back to top" style="display:none" data-action="scrollToTop">↑</button>
 
 <!-- PWA Service Worker Registration -->
-<script src="js/pwa.js"></script>
+<script src="js/pwa.js" defer></script>
 
 <!-- First-Run Modal Controller -->
-<script src="js/first-run.js"></script>
+<script src="js/first-run.js" defer></script>
 
 <!-- Tooltip Viewport Collision Detection -->
-<script src="js/tooltip.js"></script>
+<script src="js/tooltip.js" defer></script>
 
 <!-- i18n Multi-Language Support (BL-OPT-006) -->
 <script src="js/i18n.js" defer></script>
@@ -1545,14 +2019,14 @@
 <script src="js/lazy.js" defer></script>
 
 <!-- Background Video Loader (seamless fade-in once playing) -->
-<script src="js/bg-video.js"></script>
+<script src="js/bg-video.js" defer></script>
 
 <!-- Legal Footer -->
-<footer style="text-align:center;padding:var(--space-4) var(--space-3);font-size:var(--font-size-sm);color:var(--text-muted);border-top:1px solid var(--border-color, #2a2a3a);margin-top:var(--space-6)">
-  <p style="margin:0">
+<footer>
+  <p>
     &copy; 2026 Prime Self. All rights reserved.
-    &nbsp;·&nbsp; <a href="/privacy.html" style="color:var(--text-dim)">Privacy Policy</a>
-    &nbsp;·&nbsp; <a href="/terms.html" style="color:var(--text-dim)">Terms of Service</a>
+    &nbsp;·&nbsp; <a href="/privacy.html">Privacy Policy</a>
+    &nbsp;·&nbsp; <a href="/terms.html">Terms of Service</a>
   </p>
 </footer>
 

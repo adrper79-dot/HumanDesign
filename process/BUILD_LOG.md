@@ -4,6 +4,8 @@
 **Purpose**: Track implementation of identified opportunities and coordinate agent-based development workflow  
 **Status**: Active Development
 
+> **NOTE (2026-06):** This log contains historical entries that reference pre-Plan v4 tier names and prices (Seeker/$15, Guide/$97, Practitioner/$500). Current tiers: Free/$0, Explorer(regular)/$12, Guide(practitioner)/$60, Studio(white_label)/$149. LLM failover upgraded to Anthropic → Grok 4 Fast → Groq. Forge/Knowledge systems now use deterministic scoring with canonical names (Initiation/Mastery/Guidance/Perception/Transformation for Forges; Sciences/Arts/Defenses/Heresies/Connections/Mysteries for Knowledges).
+
 ---
 
 ## 📊 Implementation Status Dashboard

@@ -8,18 +8,19 @@
  * any rate-limit credits — it only validates tier eligibility.
  *
  * Response shape:
- *   { valid: true,  tier: "white_label", features: { hideAttribution: true } }
+ *   { valid: true,  tier: "agency", features: { hideAttribution: true } }
  *   { valid: false, reason: "..." }
  *
  * Security notes:
  * - API key is hashed (SHA-256) before the DB lookup, never stored plain.
- * - Only white_label users may set hideAttribution; all other tiers return valid:false.
+ * - Only Agency / white-label-capable users may hide attribution.
  * - Failure mode is safe: embed.html shows attribution on any error or false response.
  * - CORS is wide-open on this endpoint intentionally — it only exposes boolean flags,
  *   no PII, and requires a valid key to return any useful data.
  */
 
 import { createQueryFn } from '../db/queries.js';
+import { hasFeatureAccess, normalizeTierName } from '../lib/stripe.js';
 
 /** Re-implement the same SHA-256 hash used in middleware/apiKey.js */
 async function hashApiKey(apiKey) {
@@ -93,14 +94,14 @@ export async function handleEmbedValidate(request, env) {
       return json({ valid: false, reason: 'API key has expired' });
     }
 
-    const tier = result.user_tier;
-    const isWhiteLabel = tier === 'white_label';
+    const tier = normalizeTierName(result.user_tier);
+    const canHideAttribution = hasFeatureAccess(tier, 'whiteLabel');
 
     return json({
-      valid: isWhiteLabel,
+      valid: true,
       tier,
       features: {
-        hideAttribution: isWhiteLabel,
+        hideAttribution: canHideAttribution,
       },
     });
 

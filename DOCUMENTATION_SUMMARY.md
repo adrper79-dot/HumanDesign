@@ -1,20 +1,20 @@
 # Prime Self — Documentation Summary
 
-**Last Verified**: March 9, 2026  
-**Scope**: Current repository state, not point-in-time historical audits
+**Last Verified**: March 14, 2026  
+**Scope**: Current canonical documentation set, not point-in-time historical audits or sprint logs
 
 ---
 
 ## Executive Summary
 
-Prime Self is a stronger application than the old documentation suggested. The calculation engine, handler suite, and canonical framework tests are healthy, the frontend is materially more capable than the top-level docs claimed, and the main organizational problem was documentation drift rather than missing core product work.
+Prime Self is materially broader than the older documentation implied. The calculation engine, practitioner tooling, agency/white-label surfaces, and integration layer are all real. The main documentation problem was drift: too many old pricing labels, stale status claims, and historical records that looked canonical.
 
-Current repo baseline:
+Current documentation baseline:
 
-- **263/263 tests passing locally**
-- **Cloudflare Workers + Neon + vanilla frontend** architecture is intact
-- **Frontend feature surface** already includes grouped sidebar navigation, mobile bottom nav, chart/profile/transit flows, composite charts, clusters, practitioner tools, onboarding, PDF export, offline transit helpers, and share-card export
-- **Documentation drift** was severe in the canonical index and organization docs, with multiple references to files that do not exist
+- **Canonical docs** now prioritize current product, deployment, pricing, and architecture references.
+- **Historical docs** remain in place, but they are explicitly treated as point-in-time records.
+- **Practitioner-first positioning** is now reflected in the roadmap and audit set.
+- **Documentation drift** remains something to manage continuously, especially around tiers, pricing, analytics, and white-label language.
 
 ---
 
@@ -41,23 +41,24 @@ Current repo baseline:
 
 ## Documentation State After Cleanup
 
-The following canonical docs were updated in this pass:
+The following canonical docs are the current starting points:
 
 - [README.md](README.md)
 - [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 - [DOCUMENTATION_ORGANIZATION.md](DOCUMENTATION_ORGANIZATION.md)
+- [docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md)
+- [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md)
 - [BACKLOG.md](BACKLOG.md)
-- [process/BUILD_LOG.md](process/BUILD_LOG.md)
 - [ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/OPERATION.md](docs/OPERATION.md)
-- [guides/SETUP_DEVELOPMENT.md](guides/SETUP_DEVELOPMENT.md)
 - [process/README.md](process/README.md)
+- [audits/README.md](audits/README.md)
 
 Primary cleanup themes:
 
 - Broken links to non-existent files removed from the documentation map.
-- Stale test-count claims updated from `190` or `207` to `263` where the document is meant to reflect current state.
-- Sprint 18 notes reconciled with code that has already landed.
+- Fragile hardcoded counts and stale tier names removed from canonical navigation docs.
+- Historical material is now distinguished from current-state documentation.
 - The design-system location corrected to `frontend/DESIGN_SYSTEM.md`.
 
 ---
@@ -66,10 +67,10 @@ Primary cleanup themes:
 
 These are the most important unresolved gaps after the documentation cleanup:
 
-1. **Canonical API documentation is still split.** `docs/API.md` is a useful quick reference, but `docs/API_SPEC.md` contains historical drift notes and neither fully replaces the router as source of truth.
-2. **Production verification is not current.** The repo contains historical reports about stale deployment, but this review did not validate live infra.
-3. **Frontend maintainability remains the biggest product-engineering debt.** The app is powerful, but `frontend/index.html` still carries too much inline structure and behavior.
-4. **Backlog hygiene needs discipline.** Implementation work landed without backlog/build-log reconciliation, which made the project look less complete than it is.
+1. **Canonical API documentation is still split.** `docs/API.md` is useful, but the router remains the true source of truth.
+2. **Production verification is still separate work.** Documentation cleanup does not replace live deployment validation.
+3. **Historical docs still exist by design.** They should remain available, but they must not be mistaken for current state.
+4. **Commercial language drifts easily.** Tiers, pricing, white-label, and distribution wording need periodic review.
 
 ---
 

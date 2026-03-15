@@ -21,6 +21,7 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { trackEvent } from './achievements.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
+import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 
 // ─── Channel definitions: [gateA, gateB, centerA, centerB] ──────
 const CHANNELS = [
@@ -336,25 +337,9 @@ function typeInteraction(typeA, typeB) {
 }
 
 export async function handleComposite(request, env) {
-  // BL-FIX: Add rate limiting for anonymous users to prevent CPU abuse
-  // This is a compute-heavy endpoint (2 full chart calculations)
-  if (env.CACHE && !request._user?.sub) {
-    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-    const rateLimitKey = `composite-rate:${clientIP}`;
-    const current = await env.CACHE.get(rateLimitKey);
-    const count = current ? parseInt(current, 10) : 0;
-    
-    // Allow 10 composite calculations per hour for anonymous users
-    if (count >= 10) {
-      return Response.json(
-        { error: 'Rate limit exceeded. Please try again later or sign in for higher limits.' },
-        { status: 429 }
-      );
-    }
-    
-    // Increment count with 1-hour TTL
-    await env.CACHE.put(rateLimitKey, String(count + 1), { expirationTtl: 3600 });
-  }
+  // HD_UPDATES3: Composites gated to practitioner+ tier (or future one-time $29 purchase)
+  const denied = await enforceFeatureAccess(request, env, 'compositeCharts');
+  if (denied) return denied;
 
   let body;
   try {

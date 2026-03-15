@@ -1,7 +1,7 @@
 # Documentation Organization
 
-**Last Verified:** 2026-03-09  
-**Purpose:** Describe the current documentation layout and identify the canonical files to trust first
+**Last Verified:** 2026-03-14  
+**Purpose:** Describe the current documentation layout, define the canonical set, and distinguish it from historical records
 
 ---
 
@@ -35,6 +35,8 @@ HumanDesign/
 | Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | Core system and engine overview |
 | Code inventory | [CODEBASE_MAP.md](CODEBASE_MAP.md) | Most complete map of handlers and modules |
 | Backlog | [BACKLOG.md](BACKLOG.md) | Includes repo-audit status delta |
+| Product strategy | [docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md) | Current practitioner-first roadmap |
+| Commercial consistency | [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md) | Tier, billing, analytics, and white-label audit |
 | Ops / deployment | [DEPLOY.md](DEPLOY.md), [docs/OPERATION.md](docs/OPERATION.md) | Deployment plus runbook |
 | API docs | [docs/API.md](docs/API.md) and [docs/API_SPEC.md](docs/API_SPEC.md) | Router remains the source of truth for newer routes |
 | Design system | [frontend/DESIGN_SYSTEM.md](frontend/DESIGN_SYSTEM.md) | Canonical location is under `frontend/` |
@@ -64,6 +66,7 @@ HumanDesign/
 
 - Point-in-time audits and remediation logs.
 - Useful for history and risk tracking, but not always the best source for current status.
+- Treat individual audit grades, test counts, and tactical recommendations as historical unless explicitly re-verified.
 
 ### `process/`
 
@@ -94,3 +97,4 @@ When updating docs:
 2. Keep links pointed only at files that actually exist.
 3. Treat audit reports and sprint logs as historical unless they are explicitly re-verified.
 4. Prefer one canonical file per topic instead of adding new overlapping summaries.
+5. Avoid hardcoded counts or pricing details in navigation docs unless they are routinely maintained.

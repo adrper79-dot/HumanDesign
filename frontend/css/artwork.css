@@ -259,6 +259,18 @@ body::before {
   background-size: contain;
 }
 
+/* Interactive bodygraph: gate badge hover */
+.bg-gate rect {
+  transition: opacity 0.15s;
+}
+.bg-gate:hover rect {
+  opacity: 1 !important;
+  filter: brightness(1.3);
+}
+.bg-gate:active rect {
+  filter: brightness(1.6);
+}
+
 /* ─── Astrological Wheel Background ─────────────── */
 
 .zodiac-wheel {

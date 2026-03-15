@@ -37,7 +37,7 @@ import {
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { callLLM } from '../lib/llm.js';
-import { enforceUsageQuota, recordUsage } from '../middleware/tierEnforcement.js';
+import { enforceUsageQuota, recordUsage, enforceDailyCeiling, incrementDailyCounter } from '../middleware/tierEnforcement.js';
 import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 
@@ -63,9 +63,13 @@ function sseEvent(event, data) {
  * Handle streaming profile generation with SSE progress updates.
  */
 export async function handleProfileStream(request, env, ctx) {
-  // Enforce usage quota
+  // Enforce usage quota (BL-RACE-001: atomic check+insert)
   const quotaCheck = await enforceUsageQuota(request, env, 'profile_generation', 'profileGenerations');
   if (quotaCheck) return quotaCheck;
+
+  // BL-DAILY-001: Enforce daily ceiling to prevent burning entire monthly quota in one session
+  const dailyCheck = await enforceDailyCeiling(request, env, 'synthesis');
+  if (dailyCheck) return dailyCheck;
 
   let body;
   try {
@@ -142,18 +146,33 @@ export async function handleProfileStream(request, env, ctx) {
       await sendProgress('knowledge');
 
       let validationData = null, psychometricData = null, diaryEntries = null;
+      let practitionerContext = null;
 
       if (userId && env.NEON_CONNECTION_STRING) {
         const query = createQueryFn(env.NEON_CONNECTION_STRING);
-        const [valRes, psychRes, diaryRes] = await Promise.all([
+        const [valRes, psychRes, diaryRes, practCtxRes, sharedNotesRes] = await Promise.all([
           query(QUERIES.getValidationData, [userId]).catch(() => ({ rows: [] })),
           query(QUERIES.getPsychometricData, [userId]).catch(() => ({ rows: [] })),
           // BL-FIX: getDiaryEntries requires 3 params: user_id, limit, offset
           query(QUERIES.getDiaryEntries, [userId, 50, 0]).catch(() => ({ rows: [] })),
+          // HD_UPDATES4: Fetch practitioner context if this user is a client
+          query(QUERIES.getPractitionerAIContext, [userId]).catch(() => ({ rows: [] })),
+          query(QUERIES.getAISharedNotes, [userId]).catch(() => ({ rows: [] })),
         ]);
         validationData = valRes.rows[0] || null;
         psychometricData = psychRes.rows[0] || null;
         diaryEntries = diaryRes.rows.length > 0 ? diaryRes.rows : null;
+
+        // Build practitioner context from HD_UPDATES4 vectors
+        const practRow = practCtxRes.rows[0] || null;
+        const sharedNotes = sharedNotesRes.rows || [];
+        if (practRow || sharedNotes.length > 0) {
+          practitionerContext = {
+            synthesisStyle: practRow?.synthesis_style || null,
+            clientAiContext: practRow?.ai_context || null,
+            sharedNotes,
+          };
+        }
       }
 
       const promptPayload = buildSynthesisPrompt({
@@ -169,7 +188,7 @@ export async function handleProfileStream(request, env, ctx) {
         validationData,
         psychometricData,
         diaryEntries,
-      }, question);
+      }, question, practitionerContext, request._tier || 'free');
 
       // ── Stage 3: LLM Synthesis ─────────────────────────
       await sendProgress('synthesis');
@@ -243,10 +262,10 @@ export async function handleProfileStream(request, env, ctx) {
         }
       }
 
-      // Record usage after successful generation
-      // BL-FIX-C3: Correct signature is (env, userId, action, endpoint)
+      // BL-DAILY-001: Increment daily counter after successful generation
+      // Note: Monthly usage is now recorded atomically inside enforceUsageQuota (BL-RACE-001)
       if (userId) {
-        await recordUsage(env, userId, 'profile_generation', '/api/profile/generate/stream').catch(() => {});
+        await incrementDailyCounter(env, userId, 'synthesis').catch(err => console.error('[profile-stream] Daily counter increment failed:', err.message));
       }
 
       // Track analytics
@@ -259,10 +278,10 @@ export async function handleProfileStream(request, env, ctx) {
           partialGrounding: validation.partialGrounding || false,
         },
         request,
-      }).catch(() => {});
+      }).catch(e => console.error('[profile-stream] trackEvent failed:', e.message));
 
       if (userId) {
-        await trackFunnel(env, userId, 'onboarding', 'first_profile').catch(() => {});
+        await trackFunnel(env, userId, 'onboarding', 'first_profile').catch(e => console.error('[profile-stream] trackFunnel failed:', e.message));
       }
 
       // ── Stage 6: Complete ──────────────────────────────

@@ -22,7 +22,7 @@ import { importEncryptionKey, encryptToken, readToken } from '../lib/tokenCrypto
 export async function handleNotionAuth(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
-    if (!user) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
     // Generate OAuth state token for CSRF protection
@@ -44,14 +44,14 @@ const REDIRECT_URI = `${env.BASE_URL || 'https://primeself.app'}/api/notion/call
     authUrl.searchParams.set('state', state);
     
     return Response.json({
-      success: true,
+      ok: true,
       authUrl: authUrl.toString()
     });
     
   } catch (error) {
     console.error('Error initiating Notion auth:', error);
     return Response.json({
-      success: false,
+      ok: false,
       error: 'Failed to initiate Notion authorization'
     }, { status: 500 });
   }
@@ -141,10 +141,9 @@ export async function handleNotionCallback(request, env, ctx) {
       const encKey = await importEncryptionKey(env.NOTION_TOKEN_ENCRYPTION_KEY);
       storedToken = await encryptToken(tokenData.access_token, encKey);
     } else {
-      // If key not yet configured, log warning and store plaintext
-      // (readToken() handles legacy plaintext transparently)
-      console.warn('[Notion] NOTION_TOKEN_ENCRYPTION_KEY not set — storing token unencrypted. Add secret via: wrangler secret put NOTION_TOKEN_ENCRYPTION_KEY');
-      storedToken = tokenData.access_token;
+      // P2-SEC-018: Refuse to store plaintext tokens — require encryption key
+      console.error('[Notion] NOTION_TOKEN_ENCRYPTION_KEY not set — refusing to store unencrypted token. Add secret via: wrangler secret put NOTION_TOKEN_ENCRYPTION_KEY');
+      return new Response('Notion integration is temporarily unavailable. Please contact support.', { status: 503 });
     }
 
     // Store encrypted token and workspace info
@@ -196,7 +195,7 @@ export async function handleNotionCallback(request, env, ctx) {
 export async function handleNotionStatus(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
-    if (!user) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
     // Check if user has Notion connection
@@ -204,7 +203,7 @@ export async function handleNotionStatus(request, env, ctx) {
     
     if (!connections || connections.length === 0) {
       return Response.json({
-        success: true,
+        ok: true,
         connected: false
       });
     }
@@ -212,7 +211,7 @@ export async function handleNotionStatus(request, env, ctx) {
     const connection = connections[0];
     
     return Response.json({
-      success: true,
+      ok: true,
       connected: true,
       workspace: {
         id: connection.workspace_id,
@@ -225,7 +224,7 @@ export async function handleNotionStatus(request, env, ctx) {
   } catch (error) {
     console.error('Error getting Notion status:', error);
     return Response.json({
-      success: false,
+      ok: false,
       error: 'Failed to get Notion status'
     }, { status: 500 });
   }
@@ -238,14 +237,14 @@ export async function handleNotionStatus(request, env, ctx) {
 export async function handleSyncClients(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
-    if (!user) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
     // Verify user is practitioner
-    if (user.tier !== 'practitioner' && user.tier !== 'guide') {
+    if (user.tier !== 'practitioner' && user.tier !== 'white_label' && user.tier !== 'agency') {
       return Response.json({
-        success: false,
-        error: 'Practitioner or Guide tier required'
+        ok: false,
+        error: 'Guide or Studio tier required'
       }, { status: 403 });
     }
     
@@ -254,7 +253,7 @@ export async function handleSyncClients(request, env, ctx) {
     
     if (!connections || connections.length === 0) {
       return Response.json({
-        success: false,
+        ok: false,
         error: 'Notion not connected. Please connect Notion first.'
       }, { status: 400 });
     }
@@ -292,7 +291,7 @@ export async function handleSyncClients(request, env, ctx) {
     
     if (!practitioners || practitioners.length === 0) {
       return Response.json({
-        success: false,
+        ok: false,
         error: 'Practitioner record not found'
       }, { status: 404 });
     }
@@ -332,7 +331,7 @@ export async function handleSyncClients(request, env, ctx) {
     await query(QUERIES.updateNotionSyncTime, [user.id]);
     
     return Response.json({
-      success: true,
+      ok: true,
       synced: syncedCount,
       errors: errorCount,
       total: clients.length,
@@ -342,7 +341,7 @@ export async function handleSyncClients(request, env, ctx) {
   } catch (error) {
     console.error('Error syncing clients to Notion:', error);
     return Response.json({
-      success: false,
+      ok: false,
       error: 'Failed to sync clients to Notion'
     }, { status: 500 });
   }
@@ -355,7 +354,7 @@ export async function handleSyncClients(request, env, ctx) {
 export async function handleExportProfile(request, env, ctx, profileId) {
   try {
     const user = await getUserFromRequest(request, env);
-    if (!user) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
     // Get Notion connection
@@ -363,7 +362,7 @@ export async function handleExportProfile(request, env, ctx, profileId) {
     
     if (!connections || connections.length === 0) {
       return Response.json({
-        success: false,
+        ok: false,
         error: 'Notion not connected. Please connect Notion first.'
       }, { status: 400 });
     }
@@ -381,7 +380,7 @@ export async function handleExportProfile(request, env, ctx, profileId) {
     
     if (!profiles || profiles.length === 0) {
       return Response.json({
-        success: false,
+        ok: false,
         error: 'Profile not found'
       }, { status: 404 });
     }
@@ -408,7 +407,7 @@ export async function handleExportProfile(request, env, ctx, profileId) {
     });
     
     return Response.json({
-      success: true,
+      ok: true,
       pageId: page.id,
       pageUrl: page.url
     });
@@ -416,7 +415,7 @@ export async function handleExportProfile(request, env, ctx, profileId) {
   } catch (error) {
     console.error('Error exporting profile to Notion:', error);
     return Response.json({
-      success: false,
+      ok: false,
       error: 'Failed to export profile to Notion'
     }, { status: 500 });
   }
@@ -429,7 +428,7 @@ export async function handleExportProfile(request, env, ctx, profileId) {
 export async function handleNotionDisconnect(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
-    if (!user) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     
     // Delete connection
@@ -439,14 +438,14 @@ export async function handleNotionDisconnect(request, env, ctx) {
     await query(QUERIES.deleteNotionSyncs, [user.id]);
     
     return Response.json({
-      success: true,
+      ok: true,
       message: 'Notion integration disconnected'
     });
     
   } catch (error) {
     console.error('Error disconnecting Notion:', error);
     return Response.json({
-      success: false,
+      ok: false,
       error: 'Failed to disconnect Notion'
     }, { status: 500 });
   }

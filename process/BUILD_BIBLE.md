@@ -883,7 +883,7 @@ OUTPUT SCHEMA (strict, additionalProperties: false at ALL levels):
 {
   "primeProfile": {
     "primaryForge": {
-      "forge": "string (Chronos|Eros|Aether|Lux|Phoenix)",
+      "forge": "string (Initiation|Mastery|Guidance|Perception|Transformation)",
       "confidence": "string (high|medium|low)",
       "indicators": [
         { "system": "HD|Astro", "dataPoint": "string", "correlation": "string" }
@@ -951,8 +951,9 @@ IMPLEMENTATION:
 CONSTRAINTS:
 - LLM calls go through Cloudflare AI Gateway for rate limiting + caching
 - Temperature: 0
-- Max tokens: 4096
+- Max tokens: 6000
 - Model: Claude Opus 4.6 for full profiles, Sonnet 4.6 for quick queries
+- Failover: Anthropic (2-retry) → Grok 4 Fast (xAI) → Groq
 ```
 
 ---

@@ -6,13 +6,49 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
-# Stripe Price IDs (live mode — created 2026-03-09 via Stripe CLI)
-# Product: "Explorer"  (prod_U7S6QoQciOZeDI) → $12/mo
-STRIPE_PRICE_REGULAR = "price_1T9DC4AW1229TZteG7b195zw"
-# Product: "Guide"  (prod_U7S68j3ccRjldx) → $60/mo
+# PRA-SEC-002: JWT claims are env-scoped to prevent cross-environment token replay.
+# Override these in a staging wrangler.toml with "staging" values.
+JWT_ISSUER   = "primeself"
+JWT_AUDIENCE = "primeself-api"
+# ─── Stripe Price IDs ───────────────────────────────────────────
+# HD_UPDATES3 pricing (March 2026). Create new Price objects in Stripe dashboard
+# at the new amounts, then update these values and deploy.
+#
+# Individual tier — $19/mo  (was Explorer $12/mo)
+STRIPE_PRICE_INDIVIDUAL = "price_1T9DC4AW1229TZteG7b195zw"
+# Individual annual — $190/yr
+STRIPE_PRICE_INDIVIDUAL_ANNUAL = "price_1TAdhpAW1229TZtesPw8ybqa"
+#
+# Practitioner tier — $97/mo  (was Guide $60/mo)
 STRIPE_PRICE_PRACTITIONER = "price_1T9DCKAW1229TZtevvfdcPN9"
-# Product: "Studio"  (prod_U7S6RHsh8m9O6k) → $500/mo
+# Practitioner annual — $970/yr
+STRIPE_PRICE_PRACTITIONER_ANNUAL = "price_1TAdhqAW1229TZteTfsr8Gba"
+#
+# Agency tier — $349/mo  (was Studio $149/mo)
+STRIPE_PRICE_AGENCY = "price_1T9DCRAW1229TZteIIPY6CXF"
+# Agency annual — $3,490/yr
+STRIPE_PRICE_AGENCY_ANNUAL = "price_1TAdhqAW1229TZtevt3cZJV2"
+#
+# One-time add-on products
+STRIPE_PRICE_SINGLE_SYNTHESIS = "price_1TAdiJAW1229TZteivqs350O"
+STRIPE_PRICE_COMPOSITE_READING = "price_1TAdiKAW1229TZte9GzTx7VX"
+STRIPE_PRICE_TRANSIT_PASS = "price_1TAdiKAW1229TZteU0aiPEo1"
+STRIPE_PRICE_LIFETIME_INDIVIDUAL = "price_1TAdiLAW1229TZte5Fteep0Y"
+#
+# Legacy aliases (still referenced by getTierConfig fallback)
+STRIPE_PRICE_REGULAR = "price_1T9DC4AW1229TZteG7b195zw"
 STRIPE_PRICE_WHITE_LABEL = "price_1T9DCRAW1229TZteIIPY6CXF"
+
+# ─── Secrets (set via: npx wrangler secret put <NAME>) ────────────────────────
+# The following vars are NOT stored here — add them as encrypted Worker secrets:
+#   SENTRY_DSN              - Sentry error tracking DSN (sentry.io project)
+#   SENTRY_RELEASE          - Optional release tag for Sentry error grouping
+#   GOOGLE_CLIENT_ID        - Google OAuth client ID
+#   GOOGLE_CLIENT_SECRET    - Google OAuth client secret
+#   APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY
+#   NOTION_CLIENT_ID, NOTION_CLIENT_SECRET, NOTION_TOKEN_ENCRYPTION_KEY
+#   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT  (push notifications)
+# Full list + setup commands: guides/ENVIRONMENT_VARIABLES.md
 
 # KV namespace for rate limiting + chart cache
 # Create with: wrangler kv namespace create CACHE
@@ -20,6 +56,13 @@ STRIPE_PRICE_WHITE_LABEL = "price_1T9DCRAW1229TZteIIPY6CXF"
 [[kv_namespaces]]
 binding = "CACHE"
 id = "a4869245e0ac49c0af1d0c5a9d6266d2"
+
+# KV namespace for daily ceiling counters (auto-expires via TTL)
+# Create with: wrangler kv namespace create RATE_LIMIT_KV
+# Then paste the generated id below
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "926659f6f1b34d83b7d8edc7515939c0"
 
 # R2 bucket for PDF exports and knowledgebase corpus
 [[r2_buckets]]
@@ -53,3 +96,9 @@ crons = ["0 6 * * *"]
 # VAPID_SUBJECT
 # ADMIN_TOKEN          (used by POST /api/admin/promo — set via: wrangler secret put ADMIN_TOKEN)
 # PRIME_SELF_API_SECRET (used by the discord/ Worker to auth internal API calls — set on both workers)
+# GOOGLE_CLIENT_ID     (OAuth — wrangler secret put GOOGLE_CLIENT_ID)
+# GOOGLE_CLIENT_SECRET (OAuth — wrangler secret put GOOGLE_CLIENT_SECRET)
+# APPLE_CLIENT_ID      (OAuth — wrangler secret put APPLE_CLIENT_ID)
+# APPLE_TEAM_ID        (OAuth — wrangler secret put APPLE_TEAM_ID)
+# APPLE_KEY_ID         (OAuth — wrangler secret put APPLE_KEY_ID)
+# APPLE_PRIVATE_KEY    (OAuth — wrangler secret put APPLE_PRIVATE_KEY)

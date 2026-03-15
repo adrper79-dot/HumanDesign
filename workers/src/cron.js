@@ -1,5 +1,5 @@
 /**
- * Scheduled Cron — Daily Transit Snapshot + Digest Delivery + Webhook Retries + Push Notifications + Alert Evaluation + Email Drip Campaigns + Token Cleanup
+ * Scheduled Cron — Daily Transit Snapshot + Digest Delivery + Webhook Retries + Push Notifications + Alert Evaluation + Email Drip Campaigns + Token Cleanup + Subscription Downgrade
  *
  * Runs via Cloudflare Workers Cron Triggers.
  * Configured in wrangler.toml: crons = ["0 6 * * *"] (6 AM UTC daily)
@@ -9,9 +9,12 @@
  *   2. Store snapshot in transit_snapshots table
  *   3. For each opted-in user with a phone, generate + send SMS digest
  *   4. Process failed webhook deliveries (retry queue)
+ *   4b. Refresh check-in streaks materialized view
  *   5. Send push notifications for daily transit digest
  *   6. Evaluate all active user transit alerts
  *   7. Send email drip campaigns (welcome series, re-engagement, upgrade nudges)
+ *   8. Purge expired/revoked refresh tokens
+ *   9. Downgrade expired cancel-at-period-end subscriptions
  */
 
 import { toJulianDay } from '../../src/engine/julian.js';
@@ -198,7 +201,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`Failed to send welcome email #2 to ${user.email}:`, err);
+          console.error(`[CRON] Failed to send welcome email #2 for user ${user.id}:`, err.message);
           emailsFailed++;
         }
       }
@@ -217,7 +220,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`Failed to send welcome email #3 to ${user.email}:`, err);
+          console.error(`[CRON] Failed to send welcome email #3 for user ${user.id}:`, err.message);
           emailsFailed++;
         }
       }
@@ -235,7 +238,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`Failed to send welcome email #4 to ${user.email}:`, err);
+          console.error(`[CRON] Failed to send welcome email #4 for user ${user.id}:`, err.message);
           emailsFailed++;
         }
       }
@@ -254,7 +257,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`Failed to send re-engagement email to ${user.email}:`, err);
+          console.error(`[CRON] Failed to send re-engagement email for user ${user.id}:`, err.message);
           emailsFailed++;
         }
       }
@@ -272,7 +275,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`Failed to send upgrade nudge to ${user.email}:`, err);
+          console.error(`[CRON] Failed to send upgrade nudge for user ${user.id}:`, err.message);
           emailsFailed++;
         }
       }
@@ -289,6 +292,31 @@ export async function runDailyTransitCron(env) {
       console.log('[CRON] Expired refresh tokens purged');
     } catch (purgeErr) {
       console.error('[CRON] Refresh token purge error:', purgeErr);
+    }
+
+    // ─── Step 9: Downgrade expired cancel-at-period-end subscriptions (TXN-014) ─
+    try {
+      const { rows: expiredSubs } = await query(QUERIES.getExpiredCancelledSubscriptions);
+      console.log(`[CRON] ${expiredSubs.length} expired cancelled subscriptions to downgrade`);
+
+      let downgraded = 0;
+      for (const sub of expiredSubs) {
+        try {
+          // P2-BIZ-009: Wrap in transaction so subscription status + user tier stay in sync
+          await query.transaction(async (q) => {
+            await q(QUERIES.updateSubscriptionStatus2, ['canceled', sub.id]);
+            await q(QUERIES.updateUserTier, ['free', sub.user_id]);
+          });
+          downgraded++;
+          console.log(`[CRON] Downgraded user ${sub.user_id} from ${sub.tier} to free (subscription ${sub.stripe_subscription_id} expired)`);
+        } catch (downErr) {
+          console.error(`[CRON] Failed to downgrade subscription ${sub.id} for user ${sub.user_id}:`, downErr.message);
+        }
+      }
+
+      console.log(`[CRON] Subscription expiry downgrade complete: ${downgraded}/${expiredSubs.length} processed`);
+    } catch (expErr) {
+      console.error('[CRON] Subscription expiry processing error:', expErr);
     }
 
     return { snapshotDate, userCount: users.length, sent, failed };

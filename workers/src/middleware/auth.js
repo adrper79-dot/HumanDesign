@@ -5,7 +5,7 @@
  * verifyHS256 now checks signature, exp, iss, and aud in one call.
  */
 
-import { verifyHS256 } from '../lib/jwt.js';
+import { verifyHS256, jwtClaims } from '../lib/jwt.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 
 /**
@@ -42,7 +42,7 @@ export async function authenticate(request, env) {
   }
 
   try {
-    const payload = await verifyHS256(token, env.JWT_SECRET);
+    const payload = await verifyHS256(token, env.JWT_SECRET, jwtClaims(env));
 
     if (!payload) {
       return Response.json(

@@ -41,7 +41,19 @@ export function initSentry(env) {
     };
   }
 
-  const { projectId, publicKey, host } = parseDSN(dsn);
+  let parsed;
+  try {
+    parsed = parseDSN(dsn);
+  } catch {
+    // DSN is present but malformed (e.g. auth token used instead of DSN URL)
+    console.error('[Sentry] Invalid SENTRY_DSN format — expected https://<key>@<host>/<projectId>. Error tracking disabled.');
+    return {
+      captureException: () => Promise.resolve(),
+      captureMessage: () => Promise.resolve(),
+      addBreadcrumb: () => {},
+    };
+  }
+  const { projectId, publicKey, host } = parsed;
 
   return {
     /**

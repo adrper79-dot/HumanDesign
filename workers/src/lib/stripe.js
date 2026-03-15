@@ -11,6 +11,15 @@
 
 import Stripe from 'stripe';
 
+const LEGACY_TIER_MAP = {
+  regular: 'individual',
+  explorer: 'individual',
+  seeker: 'individual',
+  guide: 'practitioner',
+  white_label: 'agency',
+  studio: 'agency',
+};
+
 // ─── Tier Configuration ──────────────────────────────────────
 
 /**
@@ -24,58 +33,146 @@ export function getTierConfig(env) {
       name: 'Free',
       price: 0,
       priceId: null,
+      annualPriceId: null,
       features: {
-        chartCalculations: 1,
-        profileGenerations: 1,
+        chartCalculations: Infinity,   // HD_UPDATES3: unlimited chart gen free
+        profileGenerations: 1,         // 1 synthesis/month (the hook)
+        aiQuestions: 5,                // 5 AI questions/month
+        dailySynthesisLimit: 1,
+        dailyQuestionLimit: 5,
         transitSnapshots: 1,
         apiCallsPerMonth: 0,
         smsDigests: false,
+        smsMonthlyLimit: 0,
         practitionerTools: false,
-        whiteLabel: false
+        clientManagement: false,
+        pdfExport: false,
+        compositeCharts: false,        // Gated: practitioner+ or $29 one-time
+        diaryEntriesPerMonth: Infinity,
+        savedProfilesMax: 0,
+        whiteLabel: false,
+        agencySeats: false,
+        customWebhooks: false
       }
     },
-    regular: {
-      name: 'Explorer',
-      price: 1200,  // $12.00 in cents
-      priceId: env.STRIPE_PRICE_REGULAR || 'price_placeholder_regular',
+    individual: {
+      name: 'Individual',
+      price: 1900,  // $19.00/mo — HD_UPDATES3 pricing
+      priceId: env.STRIPE_PRICE_INDIVIDUAL || env.STRIPE_PRICE_REGULAR || 'price_placeholder_individual',
+      annualPriceId: env.STRIPE_PRICE_INDIVIDUAL_ANNUAL || null,
       features: {
         chartCalculations: Infinity,
-        profileGenerations: 10,
+        profileGenerations: 10,        // HD_UPDATES3: 10/month (daily-practice tier)
+        aiQuestions: Infinity,         // HD_UPDATES3: unlimited (drives engagement)
+        dailySynthesisLimit: 5,
+        dailyQuestionLimit: Infinity,
         transitSnapshots: Infinity,
         apiCallsPerMonth: 0,
         smsDigests: true,
+        smsMonthlyLimit: 30,
         practitionerTools: false,
-        whiteLabel: false
+        clientManagement: false,
+        pdfExport: true,
+        compositeCharts: false,        // Composites removed from individual tier
+        diaryEntriesPerMonth: Infinity,
+        savedProfilesMax: Infinity,    // HD_UPDATES3: unlimited saved profiles
+        whiteLabel: false,
+        agencySeats: false,
+        customWebhooks: false
       }
     },
     practitioner: {
-      name: 'Guide',
-      price: 6000,  // $60.00 in cents
+      name: 'Practitioner',
+      price: 9700,  // $97.00/mo — HD_UPDATES3 pricing
       priceId: env.STRIPE_PRICE_PRACTITIONER || 'price_placeholder_practitioner',
+      annualPriceId: env.STRIPE_PRICE_PRACTITIONER_ANNUAL || null,
       features: {
         chartCalculations: Infinity,
-        profileGenerations: Infinity,
+        profileGenerations: 500,       // HD_UPDATES3: 500/month (25 clients × 20)
+        aiQuestions: 500,              // Matching synth quota
+        dailySynthesisLimit: 30,
+        dailyQuestionLimit: 100,
         transitSnapshots: Infinity,
-        apiCallsPerMonth: 1000,
+        apiCallsPerMonth: 0,
         smsDigests: true,
+        smsMonthlyLimit: Infinity,
         practitionerTools: true,
-        whiteLabel: false
+        clientManagement: true,
+        pdfExport: true,
+        compositeCharts: true,         // Full composite access
+        diaryEntriesPerMonth: Infinity,
+        savedProfilesMax: Infinity,
+        whiteLabel: false,
+        agencySeats: false,
+        customWebhooks: false
       }
     },
-    white_label: {
-      name: 'Studio',
-      price: 50000,  // $500.00 in cents
-      priceId: env.STRIPE_PRICE_WHITE_LABEL || 'price_placeholder_white_label',
+    agency: {
+      name: 'Agency',
+      price: 34900,  // $349.00/mo — HD_UPDATES3 pricing
+      priceId: env.STRIPE_PRICE_AGENCY || env.STRIPE_PRICE_WHITE_LABEL || 'price_placeholder_agency',
+      annualPriceId: env.STRIPE_PRICE_AGENCY_ANNUAL || null,
       features: {
         chartCalculations: Infinity,
-        profileGenerations: Infinity,
+        profileGenerations: 2000,      // HD_UPDATES3: 2,000/month
+        aiQuestions: 2000,             // Matching synth quota
+        dailySynthesisLimit: 100,
+        dailyQuestionLimit: 200,
         transitSnapshots: Infinity,
-        apiCallsPerMonth: 10000,
+        apiCallsPerMonth: 10000,       // 10K API calls/month
         smsDigests: true,
+        smsMonthlyLimit: Infinity,
         practitionerTools: true,
-        whiteLabel: true
+        clientManagement: true,
+        pdfExport: true,
+        compositeCharts: true,         // Full composite access
+        diaryEntriesPerMonth: Infinity,
+        savedProfilesMax: Infinity,
+        whiteLabel: true,
+        agencySeats: true,             // HD_UPDATES3: up to 5 sub-account seats
+        customWebhooks: true
       }
     }
+  };
+}
+
+// ─── One-Time Product Configuration (HD_UPDATES3) ────────────
+
+/**
+ * Get one-time purchase product configuration
+ * @param {Object} env - Cloudflare Worker environment
+ * @returns {Object} Product configuration keyed by product slug
+ */
+export function getOneTimeProducts(env) {
+  return {
+    single_synthesis: {
+      name: 'Single Synthesis',
+      price: 1900,  // $19
+      priceId: env.STRIPE_PRICE_SINGLE_SYNTHESIS || 'price_placeholder_single_synthesis',
+      description: 'One AI-powered Prime Self synthesis',
+      grants: { profileGenerations: 1 },
+    },
+    composite_reading: {
+      name: 'Composite Reading',
+      price: 2900,  // $29
+      priceId: env.STRIPE_PRICE_COMPOSITE_READING || 'price_placeholder_composite_reading',
+      description: 'One relationship composite chart synthesis',
+      grants: { compositeCharts: 1 },
+    },
+    transit_pass: {
+      name: '30-Day Transit Pass',
+      price: 1200,  // $12 — HD_UPDATES3: "30-day transit journal + AI synthesis"
+      priceId: env.STRIPE_PRICE_TRANSIT_PASS || 'price_placeholder_transit_pass',
+      description: '30 days of full transit insights + AI synthesis (try before you subscribe)',
+      grants: { transitPassDays: 30 },
+    },
+    lifetime_individual: {
+      name: 'Lifetime Individual',
+      price: 29900,  // $299
+      priceId: env.STRIPE_PRICE_LIFETIME_INDIVIDUAL || 'price_placeholder_lifetime',
+      description: 'Lifetime access to Individual tier features',
+      grants: { lifetimeTier: 'individual' },
+    },
   };
 }
 
@@ -165,6 +262,38 @@ export async function createCheckoutSession(stripe, {
     allow_promotion_codes: true,
     billing_address_collection: 'auto',
     subscription_data: {
+      metadata
+    }
+  });
+}
+
+/**
+ * Create a checkout session for one-time purchase (HD_UPDATES3)
+ * @param {Stripe} stripe - Stripe client
+ * @param {Object} params - Checkout parameters
+ * @returns {Promise<Object>} Checkout session
+ */
+export async function createOneTimeCheckoutSession(stripe, {
+  customerId,
+  priceId,
+  successUrl,
+  cancelUrl,
+  metadata = {}
+}) {
+  return await stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: 'payment',
+    line_items: [
+      {
+        price: priceId,
+        quantity: 1
+      }
+    ],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata,
+    billing_address_collection: 'auto',
+    payment_intent_data: {
       metadata
     }
   });
@@ -263,10 +392,7 @@ export async function verifyWebhook(payload, signature, webhookSecret, stripe) {
  */
 export function getTier(tierName, env = {}) {
   const tiers = getTierConfig(env);
-  const normalized = tierName ? tierName.toLowerCase() : 'free';
-  // Support legacy tier names for backwards compatibility with existing DB rows
-  const LEGACY_MAP = { seeker: 'regular', guide: 'practitioner' };
-  const resolvedName = LEGACY_MAP[normalized] || normalized;
+  const resolvedName = normalizeTierName(tierName);
   const tier = tiers[resolvedName];
   if (!tier) {
     throw new Error(`Invalid tier: ${tierName}`);
@@ -275,14 +401,29 @@ export function getTier(tierName, env = {}) {
 }
 
 /**
+ * Normalize a tier or legacy alias to the canonical commercial tier name.
+ * @param {string|null|undefined} tierName
+ * @returns {string}
+ */
+export function normalizeTierName(tierName) {
+  const normalized = tierName ? String(tierName).toLowerCase() : 'free';
+  return LEGACY_TIER_MAP[normalized] || normalized;
+}
+
+/**
  * Check if user has access to feature based on tier
+ * Numeric values (quotas) mean access is granted but rate-limited.
  * @param {string} tierName - User's tier
  * @param {string} feature - Feature name
  * @returns {boolean} Whether user has access
  */
 export function hasFeatureAccess(tierName, feature) {
   const tier = getTier(tierName);
-  return tier.features[feature] === true || tier.features[feature] === Infinity;
+  const value = tier.features[feature];
+  // Access granted if feature is true, Infinity, or a positive number (quota-limited)
+  if (value === true || value === Infinity) return true;
+  if (typeof value === 'number' && value > 0) return true;
+  return false;
 }
 
 /**
@@ -308,7 +449,7 @@ export function isQuotaExceeded(tierName, feature, currentUsage) {
  * @param {string} tierName - Tier name
  * @returns {string|null} Stripe price ID
  */
-export function getPriceId(tierName) {
+function getPriceId(tierName) {
   const tier = getTier(tierName);
   return tier.priceId;
 }

@@ -29,6 +29,7 @@
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
+import { getUserFromRequest } from '../middleware/auth.js';
 
 /**
  * Extract key chart fingerprint for comparison.
@@ -90,6 +91,9 @@ function diffFingerprints(base, test, offsetLabel) {
 }
 
 export async function handleRectify(request, env) {
+  const user = await getUserFromRequest(request, env);
+  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+
   let body;
   try {
     body = await request.json();

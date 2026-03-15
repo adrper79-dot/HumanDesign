@@ -34,39 +34,44 @@ export async function handleForecast(request, env) {
   const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get('days') || '30', 10)));
   const startDateStr = url.searchParams.get('startDate');
 
-  // Start date
-  const startDate = startDateStr ? new Date(startDateStr + 'T00:00:00Z') : new Date();
-  const endDate = new Date(startDate);
-  endDate.setUTCDate(endDate.getUTCDate() + days);
+  try {
+    // Start date
+    const startDate = startDateStr ? new Date(startDateStr + 'T00:00:00Z') : new Date();
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(endDate.getUTCDate() + days);
 
-  // Calculate natal chart
-  const utc = parseToUTC(birthDate, birthTime, birthTimezone || undefined);
+    // Calculate natal chart
+    const utc = parseToUTC(birthDate, birthTime, birthTimezone || undefined);
 
-  const chart = calculateFullChart({
-    ...utc,
-    lat, lng
-  });
+    const chart = calculateFullChart({
+      ...utc,
+      lat, lng
+    });
 
-  // Generate forecast
-  const forecast = getTransitForecast(
-    chart.chart,
-    chart.astrology,
-    startDate,
-    endDate
-  );
+    // Generate forecast
+    const forecast = getTransitForecast(
+      chart.chart,
+      chart.astrology,
+      startDate,
+      endDate
+    );
 
-  return Response.json({
-    ok: true,
-    range: {
-      start: startDate.toISOString().slice(0, 10),
-      end: endDate.toISOString().slice(0, 10),
-      days
-    },
-    events: forecast.events,
-    summary: {
-      totalEvents: forecast.events.length,
-      ingresses: forecast.events.filter(e => e.type === 'gate_ingress').length,
-      aspects: forecast.events.filter(e => e.type === 'exact_aspect').length
-    }
-  });
+    return Response.json({
+      ok: true,
+      range: {
+        start: startDate.toISOString().slice(0, 10),
+        end: endDate.toISOString().slice(0, 10),
+        days
+      },
+      events: forecast.events,
+      summary: {
+        totalEvents: forecast.events.length,
+        ingresses: forecast.events.filter(e => e.type === 'gate_ingress').length,
+        aspects: forecast.events.filter(e => e.type === 'exact_aspect').length
+      }
+    });
+  } catch (err) {
+    console.error('[Forecast] Unhandled error:', err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

@@ -1,5 +1,8 @@
 # ✅ Stripe Integration - Setup Complete!
 
+> Historical setup record. This file documents an earlier Stripe rollout with obsolete pricing and tier labels.
+> Treat it as an audit artifact, not current setup guidance. For current billing configuration use `workers/src/lib/stripe.js` and the current docs index.
+
 **Date**: March 6, 2026  
 **Status**: Automated setup complete - Ready for manual Stripe configuration
 
@@ -60,9 +63,9 @@ Follow **[QUICK_START_STRIPE.md](QUICK_START_STRIPE.md)** for complete instructi
 **Step 2: Create Products** (5 minutes)
 - Go to: https://dashboard.stripe.com/products
 - Create 3 products:
-  - Prime Self - Seeker: $15/month
-  - Prime Self - Guide: $97/month
-  - Prime Self - Practitioner: $500/month
+  - Prime Self - Explorer: $12/month
+  - Prime Self - Guide: $60/month
+  - Prime Self - Studio: $149/month
 - Copy all 3 Price IDs
 
 **Step 3: Update Config** (2 minutes)
@@ -74,7 +77,7 @@ Follow **[QUICK_START_STRIPE.md](QUICK_START_STRIPE.md)** for complete instructi
 - Register test user
 - Create checkout session
 - Complete payment with test card: `4242 4242 4242 4242`
-- Verify tier updated to "seeker"
+- Verify tier updated to "regular"
 
 ---
 
@@ -147,22 +150,22 @@ Your current setup uses **LIVE MODE** keys - real payments will be charged!
 ## 📈 Expected Behavior After Setup
 
 ### User Upgrade Flow
-1. User clicks "Upgrade to Seeker" in frontend
+1. User clicks "Upgrade to Explorer" in frontend
 2. Frontend calls `/api/checkout/create` with tier + URLs
 3. Backend creates Stripe checkout session
 4. User redirected to Stripe checkout page
 5. User enters card details and confirms
 6. Stripe processes payment
 7. Stripe sends webhook: `checkout.session.completed`
-8. Webhook handler updates `subscriptions` table with tier='seeker'
+8. Webhook handler updates `subscriptions` table with tier='regular'
 9. User redirected to success URL
-10. Frontend refreshes, tier badge shows "SEEKER"
+10. Frontend refreshes, tier badge shows "EXPLORER"
 
 ### Tier Enforcement
 - Free tier trying to generate 2nd profile → 429 error + upgrade modal
 - Free tier accessing practitioner tools → 403 error + upgrade prompt
-- Seeker tier generating 11th profile → 429 error + prompt to upgrade to Guide
-- All quota checks reset monthly (first of month)
+- Explorer tier generating 31st profile → 429 error + prompt to upgrade to Guide
+- All quota checks enforced via daily ceilings (RATE_LIMIT_KV)
 
 ### Payment Failures
 1. Card declined → `invoice.payment_failed` webhook
@@ -239,10 +242,10 @@ You'll know everything is working when:
 - [ ] 3 products created in Stripe Dashboard
 - [ ] Price IDs added to wrangler.toml
 - [ ] Worker redeployed with price IDs
-- [ ] Test user successfully upgraded from free → seeker
+- [ ] Test user successfully upgraded from free → regular (Explorer)
 - [ ] Webhook events delivered successfully
 - [ ] Tier updated in database
-- [ ] Tier badge shows "SEEKER" in frontend
+- [ ] Tier badge shows "EXPLORER" in frontend
 
 ---
 

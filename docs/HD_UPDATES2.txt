@@ -1,0 +1,574 @@
+Prime Self Practitioner Platform — Full Build Plan
+From Current State → #1 Stop Shop for HD Practitioners
+March 12, 2026
+
+IMPLEMENTATION DELTA — MARCH 13, 2026
+This plan is directionally correct but required baseline corrections against the current code:
+
+Baseline corrections:
+- `GET /api/practitioner/clients/:id` exists and routes correctly.
+- Primary risk is resilience (JSON parse safety + frontend error handling), not route absence.
+- "Add client" still blocks on pre-existing account (true friction point).
+
+Commenced work (already implemented):
+1. Backend client-detail hardening:
+  - Added safe JSON parsing in `workers/src/handlers/practitioner.js` for chart/profile payloads.
+  - Prevents parse-related 500s from malformed stored JSON.
+2. Add-client UX hardening:
+  - Backend now returns clearer guidance + `signupUrl` when client account is missing.
+  - Frontend `addClient()` now correctly handles API error payloads instead of showing false success.
+3. Client-detail render protection:
+  - Frontend now displays explicit error state when detail API returns an error.
+
+Updated Phase 0 (immediate)
+1. Keep current hardening changes deployed.
+2. Add structured invitation workflow (pending invites table + token acceptance flow) as next milestone.
+3. Add practitioner observability logs on client detail and invite acceptance paths.
+
+Updated Phase 1 gate
+Do not proceed to advanced features (session prep AI, composite synthesis, portal) until invitation onboarding is live and client detail has end-to-end reliability checks in production logs.
+
+WHAT EXISTS TODAY
+Before the plan, the honest baseline:
+
+Backend (workers/src/handlers/practitioner.js):
+
+Register as practitioner ✅
+List clients ✅
+Add client by email only (client must already have an account) — friction problem
+Get client detail (chart + latest profile) — returns 500, broken
+Remove client ✅
+Database (practitioners + practitioner_clients tables):
+
+Basic roster storage ✅
+No session notes table
+No client invitations table
+No intake forms table
+No consent tracking
+Frontend: A tab exists. A client list renders. Clicking into a client crashes.
+
+What practitioners actually need (from competitive gap analysis):
+
+Invite clients who don't have an account yet
+Write session notes per client
+Session prep AI before each session
+Composite chart with synthesis (relationship dynamics)
+Branded client-facing reports and portal
+Track client check-ins / diary over time (with consent)
+Transit alerts when key transits hit a client's chart
+Public practitioner profile page for discoverability
+Bulk profile generation
+Simple business metrics (active clients, sessions logged)
+No product in the market does this end-to-end. Building it creates a defensible moat.
+
+THE ACQUISITION FLYWHEEL (Why This Is the Growth Engine)
+
+Practitioner pays $60/mo
+         ↓
+Invites 20-50 clients via branded link
+         ↓
+Each client gets a free Prime Self account
+         ↓
+Clients use the app daily (transits, diary, check-ins)
+         ↓
+10-20% convert to Explorer ($12/mo)
+         ↓
+Each practitioner = $60 + $24-$120 in client MRR
+         ↓
+Practitioners refer other practitioners
+This is the only mechanic in the HD market that creates compounding growth. No competitor has it. The client invitation system is the keystone — everything else is built on top of it.
+
+PHASE 0 — STOP THE BLEEDING (Week 1)
+These are fires. Do these before anything else.
+
+Fix 1: Client Chart 500 (PROD-P0-001)
+Root cause: handleGetClientDetail calls QUERIES.getLatestChart and QUERIES.getLatestProfile. The queries likely work. The 500 is probably in the router — GET /api/chart/:id in workers/src/index.js calls handleGetProfile from profile.js which checks profile.user_id !== userId and returns 403/404 when a practitioner tries to load a client's chart. The practitioner is not the chart owner.
+
+Fix: In workers/src/handlers/practitioner.js handleGetClientDetail — it already has its own chart retrieval logic using getLatestChart directly. The bug is either:
+
+The QUERIES.getLatestChart query doesn't exist or has wrong column name
+The chart JSON parsing throws
+Action: Add a console.error catch in handleGetClientDetail wrapping the chart fetch, surface the actual error, fix the underlying query mismatch.
+
+Fix 2: Add Client — Remove "Must Have Account" Requirement
+Current: handleAddClient looks up client by email → if not found, returns 404: "Client must register first."
+Problem: This kills the flow. A practitioner has a client who has never heard of Prime Self. They can't add them at all.
+Fix: Change the flow so adding an email that doesn't exist creates a pending invitation instead. The invitation is stored and fulfilled when the client registers. (Full system in Phase 1.)
+
+Fix 3: Firefox Checkout Crash
+Already covered in the fires list — fix startCheckout(tier, event) in frontend/index.html.
+
+PHASE 1 — CORE PRACTITIONER WORKFLOW (Weeks 2–4)
+1.1 Client Invitation System
+The mechanic: Practitioner enters a client's name + email (no account required). System sends an invitation email with a magic link. Client clicks link → lands on Prime Self with:
+
+Their practitioner's name shown ("John Smith invited you")
+Pre-filled intro explaining what Prime Self is
+Birth data entry form
+On submit → account created, client added to practitioner's roster automatically
+DB Migration (024_practitioner_invitations.sql):
+
+
+CREATE TABLE practitioner_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  practitioner_id UUID NOT NULL REFERENCES practitioners(id) ON DELETE CASCADE,
+  client_email TEXT NOT NULL,
+  client_name TEXT,
+  token TEXT UNIQUE NOT NULL,         -- secure random token
+  status TEXT DEFAULT 'pending'       -- pending | accepted | expired
+    CHECK (status IN ('pending','accepted','expired')),
+  message TEXT,                        -- optional personal message from practitioner
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '14 days'),
+  accepted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_invitations_token ON practitioner_invitations(token);
+CREATE INDEX idx_invitations_practitioner ON practitioner_invitations(practitioner_id);
+CREATE UNIQUE INDEX idx_invitations_pract_email 
+  ON practitioner_invitations(practitioner_id, client_email) 
+  WHERE status = 'pending';
+New API endpoints (add to practitioner.js):
+
+
+POST /api/practitioner/clients/invite     — send invitation email
+GET  /api/practitioner/clients/invitations — list pending invitations
+DELETE /api/practitioner/clients/invitations/:id — revoke invitation
+GET  /api/invite/:token                   — public, validate token (frontend landing)
+POST /api/invite/:token/accept            — complete registration + link to practitioner
+Email (via Resend): "Your practitioner [Name] has invited you to Prime Self. Click to create your chart." Branded with practitioner's display name.
+
+Frontend:
+
+Replace "Add by email" input with two fields: Name + Email
+Show pending invitations in a separate section below active clients
+Invitation status badges: Pending / Accepted / Expired
+"Resend" button on pending invitations
+1.2 Session Notes
+Every practitioner's core workflow is: session → notes → follow-up. No HD tool supports this.
+
+DB Migration (025_session_notes.sql):
+
+
+CREATE TABLE practitioner_session_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  practitioner_id UUID NOT NULL REFERENCES practitioners(id) ON DELETE CASCADE,
+  client_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  session_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  title TEXT,
+  notes TEXT NOT NULL,
+  transit_snapshot JSONB,             -- transits active during session (auto-captured)
+  tags TEXT[],                         -- practitioner-defined tags
+  is_private BOOLEAN DEFAULT TRUE,    -- visible to client? starts private
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_session_notes_practitioner ON practitioner_session_notes(practitioner_id);
+CREATE INDEX idx_session_notes_client ON practitioner_session_notes(client_user_id);
+CREATE INDEX idx_session_notes_date ON practitioner_session_notes(session_date DESC);
+New API endpoints:
+
+
+GET    /api/practitioner/clients/:id/notes         — list notes for client
+POST   /api/practitioner/clients/:id/notes         — create note
+PATCH  /api/practitioner/clients/:id/notes/:noteId — update note
+DELETE /api/practitioner/clients/:id/notes/:noteId — delete note
+Frontend — Client Detail View (new panel, replaces bare chart display):
+
+Tabbed layout within client view: Overview | Session Notes | Chart | Check-ins
+Notes tab: chronological list, markdown-supported text editor, date picker, tag input
+Auto-captures current transits when note is created (stored in transit_snapshot)
+"Add Note" button → inline editor (no modal, no page nav)
+Notes marked is_private: false appear in the client's own app as "Your practitioner shared a note"
+1.3 Client Detail View (Full Rebuild)
+The current client detail view shows raw JSON. Replace it with a usable practitioner workspace.
+
+Layout:
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ ← Back to Roster   [Client Name]   [Type · Authority · Profile]│
+├─────────────────────────────────────────────────────────────┤
+│ Overview │ Session Notes │ Chart │ Client Activity │ Reports │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  OVERVIEW TAB:                                              │
+│  Birth data  |  Chart summary  |  Last session date         │
+│  Key gates   |  Undefined centers (conditioning)            │
+│  Active transits affecting this client RIGHT NOW            │
+│  "Generate Session Brief" → AI button                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+Data loaded on client open:
+
+Client user info (name, email, birth date)
+Latest chart (natal data + current transits overlaid on their chart)
+Latest AI profile summary
+Last 5 session notes
+Check-in trend (last 30 days, if consent given)
+Upcoming transits hitting this client's chart in next 14 days
+1.4 Session Prep AI
+The single highest-value practitioner feature. One button. One click. Brief delivered in 15 seconds.
+
+Endpoint: POST /api/practitioner/clients/:id/session-brief
+
+What it does:
+
+Loads client's full chart
+Loads current + upcoming transits (next 7 days) affecting their chart
+Loads practitioner's last 3 session notes for this client
+Builds a focused prompt:
+
+You are briefing a Human Design practitioner for an upcoming session.
+
+CLIENT CHART: [full chart data]
+
+ACTIVE TRANSITS RIGHT NOW: [transits hitting their gates/channels]
+
+COMING IN NEXT 7 DAYS: [transit calendar for client's chart]
+
+PRACTITIONER'S LAST SESSION NOTES (most recent first):
+- [date]: [notes excerpt]
+- [date]: [notes excerpt]
+
+Produce a practitioner session brief with:
+1. CURRENT ENERGY (2-3 sentences on what transits are active in their chart)
+2. THEMES TO EXPLORE (3-5 bullet points, tied to actual gate/channel activations)
+3. QUESTIONS TO OPEN WITH (3 specific questions based on their design + current conditioning)
+4. WATCH FOR (conditioning patterns — what undefined centers are lit up, what to ask about)
+5. SINCE LAST SESSION (based on practitioner notes — what threads to pick up)
+
+Be specific to this chart. No generic HD advice.
+Frontend: "Prepare for Session" button on client overview tab → streaming response renders in a modal → "Copy to clipboard" + "Save as note" actions.
+
+Quota: Counts against practitioner's profileGenerations quota (same pool, costs 1 synthesis unit). Reasonable — a practitioner with 200/month can prep for 200 sessions.
+
+PHASE 2 — CLIENT PORTAL & REPORTS (Weeks 4–7)
+2.1 Client Portal (Shareable Link)
+A practitioner sends a client a link. Client clicks it and sees their own chart, their AI profile, and any notes the practitioner has shared — without navigating the full Prime Self app.
+
+Architecture:
+
+New frontend route: /portal/:practitionerId/:clientToken
+Token generated per client relationship, stored in practitioner_clients table
+Add portal_token TEXT UNIQUE and portal_enabled BOOLEAN DEFAULT FALSE to practitioner_clients
+Migration (026_client_portal_tokens.sql):
+
+
+ALTER TABLE practitioner_clients
+  ADD COLUMN portal_token TEXT UNIQUE DEFAULT NULL,
+  ADD COLUMN portal_enabled BOOLEAN DEFAULT FALSE,
+  ADD COLUMN portal_last_viewed TIMESTAMPTZ;
+
+CREATE INDEX idx_pc_portal_token ON practitioner_clients(portal_token);
+New endpoint:
+
+
+POST /api/practitioner/clients/:id/portal/enable   — generate token, enable portal
+POST /api/practitioner/clients/:id/portal/disable  — revoke access
+GET  /api/portal/:token                            — public, returns client chart + shared notes
+Portal page (frontend/portal/index.html — standalone page):
+
+Practitioner's name + optional logo at top
+Client's chart (bodygraph SVG — same renderer)
+Their AI profile (read-only)
+Session notes marked is_private: false listed below
+"Create your account" CTA at bottom (conversion opportunity)
+No Prime Self branding competing with practitioner brand (it's their client relationship)
+Practitioner controls:
+
+Toggle per client: "Enable client portal" → generates shareable URL
+Preview the portal as the client would see it
+Toggle which notes are shared vs private
+2.2 Branded PDF Reports
+The current PDF export generates a profile. Practitioners need a PDF they can send clients that has their name on it, not just Prime Self's.
+
+Current state: workers/src/handlers/pdf.js generates and caches to R2.
+
+Add:
+
+Practitioner profile record: display_name, website_url, logo_r2_key (logo uploaded to R2), brand_color (hex)
+When generating PDF for a client from practitioner's dashboard → include practitioner header: name, logo, website
+Footer: "Prepared by [Practitioner Name] | Powered by Prime Self"
+New endpoint: POST /api/practitioner/clients/:id/pdf — same as regular PDF but pulls practitioner branding from their profile record.
+
+Migration (027_practitioner_branding.sql):
+
+
+ALTER TABLE practitioners
+  ADD COLUMN display_name TEXT,
+  ADD COLUMN bio TEXT,
+  ADD COLUMN website_url TEXT,
+  ADD COLUMN logo_r2_key TEXT,
+  ADD COLUMN brand_color CHAR(7),         -- #RRGGBB
+  ADD COLUMN public_profile_enabled BOOLEAN DEFAULT FALSE,
+  ADD COLUMN public_profile_slug TEXT UNIQUE;  -- selfprime.net/p/jane-doe
+Frontend — Practitioner Settings tab (new tab in practitioner section):
+
+Display name, bio, website URL
+Logo upload (crop to square, store to R2)
+Brand color picker
+Public profile toggle + slug input
+Preview button
+2.3 Composite Chart with Synthesis
+The most-requested HD feature across all communities: "Me and my partner."
+
+Current state: Composite calculation exists (/api/composite/calculate). No synthesis. No practitioner integration.
+
+Add synthesis: POST /api/practitioner/clients/:id/composite — body: { practitionerBirthData } (the practitioner's own chart) or { personBBirthData } (any second person). Returns:
+
+Combined composite chart (existing engine)
+AI synthesis of the relationship dynamic
+Composite synthesis prompt additions:
+
+
+PERSON A (Client): [Type, Authority, Profile, Definition, key gates/channels]
+PERSON B: [Type, Authority, Profile, Definition, key gates/channels]
+
+COMPOSITE CHART ELEMENTS:
+- Channels formed between them: [list]
+- Electromagnetic connections: [gate pairs across charts]
+- Undefined centers each person defines for the other: [list]
+- Potential conditioning patterns: [which undefined centers each person lights up]
+
+Synthesize the relationship dynamics in these sections:
+1. CORE DYNAMIC (2-3 sentences — what is the fundamental nature of this connection)
+2. HOW THEY MAKE DECISIONS TOGETHER (authority types + how they interact)
+3. WHAT THEY ACTIVATE IN EACH OTHER (electromagnetic channels, defined/undefined interplay)
+4. CONDITIONING PATTERNS TO WATCH (where each person's undefined centers are lit up)
+5. GROWTH EDGE (one honest observation about where friction will arise and why)
+Frontend: Add "Composite Reading" button on client detail view. Second person = enter birth data or select another client from roster.
+
+PHASE 3 — CLIENT ENGAGEMENT TOOLS (Weeks 7–10)
+3.1 Client Activity View (With Consent)
+Practitioners want to see how clients are living their design between sessions. No tool offers this.
+
+Consent model (critical — privacy first):
+
+When a practitioner sends an invitation, they can optionally include "Share activity" permission request
+Client explicitly opts in during account creation (checkbox: "Allow [Practitioner] to see my check-in trends")
+Practitioner can only see aggregate trends (alignment scores, mood/energy averages) — not raw diary text
+Client can revoke at any time from their own settings
+DB Migration (028_practitioner_consent.sql):
+
+
+ALTER TABLE practitioner_clients
+  ADD COLUMN client_consented_activity BOOLEAN DEFAULT FALSE,
+  ADD COLUMN consent_given_at TIMESTAMPTZ,
+  ADD COLUMN consent_scope TEXT[] DEFAULT '{}';
+  -- scope values: 'checkins', 'diary_summary', 'alignment_trend'
+New endpoint: GET /api/practitioner/clients/:id/activity — returns:
+
+
+{
+  "checkinTrend": [{ "week": "2026-03-01", "avgAlignment": 3.4, "avgMood": 3.8 }],
+  "streakData": { "currentStreak": 12, "longestStreak": 24 },
+  "authorityAlignment": { "followedAuthority": 0.68 },  // 68% of check-ins marked as following authority
+  "keyThemes": ["low energy Mon-Wed", "high alignment on weekends"]
+}
+Frontend: "Client Activity" tab on client detail view:
+
+30-day alignment trend chart
+Mood/energy heatmap by day of week
+Authority alignment % badge
+"Last check-in: X days ago" freshness indicator
+3.2 Transit Alerts for Clients
+A practitioner can set "watch" on specific transits for specific clients. When the transit hits, an email goes to the practitioner: "Transit alert: Jupiter is activating Gate 10 (Behaviour of the Self) in [Client Name]'s chart today — this may be worth exploring in your next session."
+
+This is unique in the market. No competitor offers it.
+
+DB Migration (029_client_transit_watches.sql):
+
+
+CREATE TABLE client_transit_watches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  practitioner_id UUID NOT NULL REFERENCES practitioners(id) ON DELETE CASCADE,
+  client_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  gate_number INT,              -- specific gate to watch (null = watch all personal gates)
+  planet TEXT,                  -- specific planet (null = all planets)
+  notify_email BOOLEAN DEFAULT TRUE,
+  notify_push BOOLEAN DEFAULT FALSE,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+Worker cron (daily at 6am): Query all active watches → compute today's transits for each watched client → if match → send Resend email to practitioner.
+
+Frontend: "Transit Watches" tab on client detail — add watches per gate or per planet. Simple toggle list.
+
+3.3 Client Self-Onboarding Flow (Invitation Landing Page)
+When a client receives an invitation and clicks the magic link, the experience must be frictionless and branded.
+
+Landing page (/invite/:token):
+
+
+┌────────────────────────────────────────────────────┐
+│  [Practitioner Logo/Name]                          │
+│                                                    │
+│  "[Practitioner] has prepared your                 │
+│   Human Design chart through Prime Self."          │
+│                                                    │
+│  To access your reading, create your free account: │
+│                                                    │
+│  [Name]  [Email: pre-filled from invitation]       │
+│  [Birth Date] [Birth Time] [Location]              │
+│  [Password]                                        │
+│                                                    │
+│  [Create Account & See My Chart]                   │
+│                                                    │
+│  No credit card. Free forever.                     │
+└────────────────────────────────────────────────────┘
+On submit: create account → calculate chart → link to practitioner → redirect to their chart with a "Welcome, [Name]! [Practitioner] has prepared a reading for you" banner.
+
+This is the flywheel moment. Clients who come through a practitioner's invitation are higher-intent than cold sign-ups. They already have context, trust, and a relationship. Conversion to paid is 2-3x higher.
+
+3.4 Cluster Analysis UI
+The backend already supports cluster analysis (group chart patterns). The frontend tab is missing a nav entry. This is a 2-hour task:
+
+Add "Clusters" tab to practitioner section (after "Clients")
+Load /api/cluster/list → display clusters with member counts and shared chart patterns
+"Create cluster from selection" → select clients from roster → create cluster → analyze shared gates/channels
+Use case: "All 8 of my clients are Generators — what do they have in common? What can I teach them as a group?"
+PHASE 4 — BUSINESS TOOLS (Weeks 10–14)
+4.1 Public Practitioner Profile
+A public page at selfprime.net/p/[slug] — practitioners listed, findable, bookable.
+
+What it shows:
+
+Practitioner name, photo, bio, specializations
+Certification badge (if certified with IHDS/Jovian)
+"Book a reading" button → links to their Calendly/Acuity (practitioner provides URL)
+Types they specialize in (Generators, Projectors, etc.)
+Recent testimonials (optional, practitioner-curated)
+Backend: GET /api/p/:slug → public endpoint, no auth → returns practitioner public profile.
+
+Directory: selfprime.net/practitioners → grid of all practitioners with public profiles enabled, filterable by specialty/type/location.
+
+Why this matters: Practitioners get discoverability. Prime Self gets backlinks and SEO from practitioner profiles. It creates a network effect — more practitioners = more findability = more client sign-ups = more practitioner revenue.
+
+4.2 Practitioner Business Dashboard
+A simple metrics view for practitioners. Not full analytics — just what they need.
+
+Metrics shown:
+
+Active clients: X / [tier limit]
+Sessions logged this month: X
+Client portal views this month: X (how many clients accessed their portal)
+Invitations sent / accepted / pending: X / X / X
+Transit alerts triggered this month: X
+PDF reports generated: X
+No revenue tracking needed — they handle their own billing outside Prime Self. Just usage metrics so they can see the value of the tool.
+
+4.3 Bulk Profile Generation
+A practitioner has 30 clients and wants to run fresh AI profiles for all of them before a group session.
+
+Endpoint: POST /api/practitioner/clients/bulk-profiles — body: { clientIds: [uuid, uuid, ...] }
+
+Processing: Sequential with 500ms gap (to avoid LLM rate limits). Returns streaming progress: { processed: 3, total: 10, currentClient: "Jane" }.
+
+Quota handling: Each generation counts against practitioner's profileGenerations quota (200/month on Guide tier). The UI shows remaining quota before bulk operation.
+
+Frontend: Select multiple clients in roster (checkbox select) → "Generate Profiles" action button → progress modal with per-client status indicators.
+
+4.4 Client Offboarding
+When a practitioner removes a client from their roster:
+
+Client's data stays (it's theirs)
+Client portal link is revoked
+Session notes are archived (practitioner retains read-only access to their own notes)
+Client is notified by email: "[Practitioner] has removed you from their client roster. Your Prime Self account and chart are not affected."
+This is professional. No HD tool handles this gracefully — practitioners currently just stop responding, which is an awful experience for clients.
+
+COMPLETE FEATURE INVENTORY (POST-BUILD)
+Feature	Phase	New?	Est. Effort
+Client invitation (non-account)	1	New	1.5 days
+Invitation landing page	1	New	1 day
+Session notes (full CRUD)	1	New	1 day
+Client detail view rebuild	1	Rebuild	1 day
+Session prep AI	1	New	0.5 day
+Client portal (shareable link)	2	New	1.5 days
+Branded PDF reports	2	Enhancement	0.5 day
+Practitioner settings / branding	2	New	0.5 day
+Composite chart with synthesis	2	Enhancement	1 day
+Client activity view (with consent)	3	New	1 day
+Transit alerts for clients	3	New	1 day
+Invitation landing page (branded)	3	New	Already in Phase 1
+Cluster analysis UI	3	Frontend only	0.5 day
+Client transit watches	3	New	0.5 day
+Public practitioner profile	4	New	1.5 days
+Practitioner directory	4	New	0.5 day
+Business metrics dashboard	4	New	0.5 day
+Bulk profile generation	4	New	0.5 day
+Client offboarding flow	4	New	0.5 day
+Total estimate: ~14–16 working days of focused build across 10–14 calendar weeks.
+
+DATABASE MIGRATIONS REQUIRED
+
+024_practitioner_invitations.sql    ← client invitation system
+025_session_notes.sql               ← per-client session notes  
+026_client_portal_tokens.sql        ← portal link tokens + enable flag
+027_practitioner_branding.sql       ← display_name, logo, slug, public profile
+028_practitioner_consent.sql        ← client consent for activity sharing
+029_client_transit_watches.sql      ← per-client transit watch config
+API SURFACE (COMPLETE — POST-BUILD)
+
+Existing (fix first):
+PATCH  /api/practitioner/clients/:id                     ← fix 500
+
+New — Phase 1:
+POST   /api/practitioner/clients/invite
+GET    /api/practitioner/clients/invitations
+DELETE /api/practitioner/clients/invitations/:id
+GET    /api/invite/:token                                 (public)
+POST   /api/invite/:token/accept                          (public)
+GET    /api/practitioner/clients/:id/notes
+POST   /api/practitioner/clients/:id/notes
+PATCH  /api/practitioner/clients/:id/notes/:noteId
+DELETE /api/practitioner/clients/:id/notes/:noteId
+POST   /api/practitioner/clients/:id/session-brief
+
+New — Phase 2:
+POST   /api/practitioner/clients/:id/portal/enable
+POST   /api/practitioner/clients/:id/portal/disable
+GET    /api/portal/:token                                 (public)
+POST   /api/practitioner/clients/:id/pdf
+POST   /api/practitioner/clients/:id/composite
+PATCH  /api/practitioner/profile                          (branding update)
+
+New — Phase 3:
+GET    /api/practitioner/clients/:id/activity
+GET    /api/practitioner/clients/:id/watches
+POST   /api/practitioner/clients/:id/watches
+DELETE /api/practitioner/clients/:id/watches/:watchId
+
+New — Phase 4:
+GET    /api/p/:slug                                       (public)
+GET    /api/practitioners                                  (public directory)
+POST   /api/practitioner/clients/bulk-profiles
+PATCH  /api/practitioner/clients/:id/offboard
+GET    /api/practitioner/metrics
+TIER POSITIONING POST-BUILD
+With these features built, the tier value becomes undeniable:
+
+Tier	Price	Practitioner Value
+Explorer $12/mo	Individual	Charts, AI profiles, PDF, timing — for self-directed students
+Guide $60/mo	Practitioner	Everything above + full practitioner platform: invitations, session notes, prep AI, client portal, branded PDFs, composite synthesis, activity views, transit watches, public profile
+Studio $149/mo	Agency / White-label	Everything + API access, custom webhooks, multiple practitioners under one account, white-label client portal (their domain, not Prime Self's)
+Guide tier at $60/mo is under-priced for what it delivers. A practitioner who does 4 readings/week at $150/session earns $2,400/month. The tools that help them prepare better, retain clients longer, and find new clients through the directory are worth $200+/mo. Consider raising to $79–$99 post-launch once the full feature set is in place.
+
+ORDER OF EXECUTION
+
+Week 1:   Phase 0 — Fix the 500, fix Firefox checkout, fix password reset
+Week 2:   Phase 1 — Invitation system (backend + email + landing page)
+Week 3:   Phase 1 — Session notes + client detail view rebuild
+Week 4:   Phase 1 — Session prep AI + composite synthesis
+Week 5:   Phase 2 — Client portal (backend token + public endpoint)
+Week 6:   Phase 2 — Portal frontend + practitioner branding/settings
+Week 7:   Phase 2 — Branded PDF + practitioner settings UI
+Week 8:   Phase 3 — Client activity view + consent model
+Week 9:   Phase 3 — Transit watches + cluster analysis UI
+Week 10:  Phase 3 — Invitation landing page polish + referral flow
+Week 11:  Phase 4 — Public practitioner profile
+Week 12:  Phase 4 — Practitioner directory
+Week 13:  Phase 4 — Bulk profiles + business metrics
+Week 14:  Phase 4 — Client offboarding + QA pass
+THE BUSINESS CASE IN ONE PARAGRAPH
+No HD tool has a practitioner platform. Every HD practitioner is duct-taping together Google Docs, Notion, MyBodyGraph, and WhatsApp to manage their practice. The first platform that gives them an integrated workflow — invite clients, prep sessions, write notes, share branded reports, track client progress — will capture the entire practitioner market by default. There are 5,000–15,000 paying practitioners globally. At $60/month, that is a $3.6M–$10.8M ARR segment with zero competitors. Each practitioner brings 20–50 clients onto the platform as free users. Even 15% conversion to Explorer ($12/mo) doubles the revenue from each practitioner relationship. This is the growth engine. Everything else is marketing. Build this first.

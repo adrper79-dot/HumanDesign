@@ -1,0 +1,131 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "source": "The Library Canonical Philosophy — Structural Vocabulary",
+    "description": "Compressed expression tables for Library structural concepts. The synthesis can look up any term by name to apply precise Library-language rather than impressionistic references.",
+    "usage": "Loaded by RAG pipeline. When synthesis needs to use a Library term, it references these definitions for precision."
+  },
+  "polarity": {
+    "overtone": 1,
+    "interval": "Octave (2:1)",
+    "formalStatement": "The first necessary structure of manifestation: differentiation of any ground into two mutually defining, mutually requiring aspects that cannot exist independently and cannot collapse into identity.",
+    "threeConditions": [
+      "Mutual definition: each pole is what it is only in relation to the other",
+      "Mutual requirement: neither pole can exist without the other",
+      "Non-collapsibility: the poles cannot merge without dissolving the structure"
+    ],
+    "expressions": {
+      "P1_Wave": { "name": "Wave Polarity", "definition": "Any continuous process alternates between two states", "synthesisUse": "Explain emotional waves, sacral on/off cycles, splenic alert/rest patterns" },
+      "P2_Charge": { "name": "Charge Polarity", "definition": "Polarity in a field generates attraction/repulsion", "synthesisUse": "Explain what charge a defined center holds and what the undefined center amplifies from environment" },
+      "P3_Phase": { "name": "Phase Polarity", "definition": "Wave polarity extended across time — constructive/destructive interference", "synthesisUse": "Explain constructive alignment or destructive conflict between two chart activations across a time period" },
+      "P4_Field": { "name": "Field Polarity", "definition": "Every context has a field structured between poles", "synthesisUse": "Explain what field a defined center generates and how it structures the person's relational space" },
+      "P5_Threshold": { "name": "Threshold Polarity", "definition": "The membrane between poles where exchange occurs", "synthesisUse": "Explain the boundary between consistent self and absorbed environment — the most dynamically active zone" }
+    },
+    "shadow": [
+      "Identification with one pole (shadow accumulation)",
+      "Premature resolution (forcing synthesis before the Third emerges)",
+      "Polarity imperialism (applying polarity to arbitrary domains)",
+      "Static mapping (treating polarity as fixed rather than dynamic)"
+    ],
+    "falsification": "If physical domains were consistently found where no structural differentiation into mutually defining complementary pairs appears — even at wave-mechanical level."
+  },
+  "trinity": {
+    "overtone": 2,
+    "interval": "Perfect Fifth (3:2)",
+    "formalStatement": "The minimum structure of dynamic stability and generative process: three terms whose mutual interaction sustains activity that two terms cannot sustain, and generates emergence that neither term possesses alone.",
+    "keyPrinciple": "Name the Third — the emergent behavior that neither of the two primary terms predicts alone.",
+    "expressions": {
+      "T1_DynamicStability": { "name": "Dynamic Stability", "definition": "Minimum terms for self-sustaining dynamic systems", "synthesisUse": "Explain why Type+Strategy+Authority is the minimum stable decision system — remove any one and it destabilizes" },
+      "T2_ProcessTrinity": { "name": "Process Trinity", "definition": "Generation / sustaining / dissolution — the complete cycle", "synthesisUse": "Explain decision cycles: impulse → execution → release. Every complete decision follows this trinity" },
+      "T3_MediatingTrinity": { "name": "Mediating Trinity", "definition": "A Third enables exchange without collapsing poles", "synthesisUse": "Explain Authority as the mediator between Type and Strategy — enabling exchange without collapsing either" },
+      "T4_HierarchicalTrinity": { "name": "Hierarchical Trinity", "definition": "Stratified levels, each emergent from the previous", "synthesisUse": "Explain Type→Strategy→Authority as increasing interiority: what you are → how you move → how you know" },
+      "T5_TemporalTrinity": { "name": "Temporal Trinity", "definition": "Past/present/future as three active principles", "synthesisUse": "Explain Design (inherited past) + Personality (conscious present) + Synthesis (integrated future)" }
+    },
+    "shadow": [
+      "Premature synthesis (forced Third before genuine emergence)",
+      "Trinity imperialism (forcing three-term structure where two or four applies)",
+      "Identifying with the synthesis (mistaking achieved Third for rest)",
+      "The Missing Shiva Problem (rejecting dissolution)"
+    ],
+    "falsification": "If consistently stable two-body dynamic systems were found requiring no third mediating term for stability or generativity."
+  },
+  "quaternity": {
+    "overtone": 3,
+    "interval": "Perfect Fourth (4:3)",
+    "formalStatement": "The minimum structure with genuine interior: four non-coplanar points define a tetrahedron, the first arrangement that can contain.",
+    "keyPrinciple": "Four creates containment. The centroid (quinta essentia) is present as witness — zero-dimensional, passive, equidistant from all four.",
+    "chartElements": [
+      "4 motor centers (Root, Sacral, Heart/Ego, Solar Plexus)",
+      "4 awareness centers (Ajna, Spleen, Solar Plexus, G)",
+      "4 types (Manifestor, Generator, Projector, Reflector)",
+      "Circuit groupings as internal containers"
+    ],
+    "quintaEssentia": "The centroid of any four-element structure: structurally necessary, always present, zero-dimensional. Not yet a full participant — that transition happens at the Pentad.",
+    "shadow": [
+      "Rigid elemental typing (treating four as fixed categories not functional modes)",
+      "Missing the center (operating from four without accessing the quinta essentia)",
+      "False completeness (treating four as exhaustive when five is already implied)"
+    ],
+    "falsification": "If the minimum 3D containing structure required fewer or more than four vertices."
+  },
+  "pentad": {
+    "overtone": 4,
+    "interval": "Major Third (5:4)",
+    "formalStatement": "Five elements in ring topology (C₅) where Phi (1.618) governs proportional growth. Self-similar, self-replicating living form.",
+    "keyPrinciple": "The categorical topological transition from K₁,₄ (acyclic star) to C₅ (cyclic ring). Phi becomes possible only when the center activates as a full element.",
+    "channelCompletionRule": "Channel completion is categorical, not gradual. Before: star graph (K₁,₄), no cycles, no Phi. After: ring (C₅), cycles emerge, Phi-governed growth becomes structurally necessary. This is a topological shift, not accumulation.",
+    "fiveForges": ["Initiation (Chronos)", "Mastery (Eros)", "Guidance (Aether)", "Perception (Lux)", "Transformation (Phoenix)"],
+    "phiNote": "Phi in biological systems (phyllotaxis, Fibonacci spirals) is Tier 1 evidence. Phi in facial proportions is Tier 3 contested (Green 1995, Devlin & Devlin 2007). The Pentad does not require the contested claims.",
+    "shadow": [
+      "Confusing growth with expansion (Phi-governed growth maintains proportion; mere expansion does not)",
+      "Mistaking the pattern for the process (the Pentad is dynamic, not static)"
+    ],
+    "falsification": "If biological growth systems optimizing for packing efficiency consistently failed to produce Fibonacci/Phi proportions."
+  },
+  "hexad": {
+    "overtone": 5,
+    "interval": "Minor Third (6:5)",
+    "formalStatement": "Efficient community: maximum equal-sized living individuals in simultaneous contact (six). Hexagonal packing as the uniquely optimal 2D arrangement.",
+    "keyPrinciple": "Complementarity, not self-similarity. Six distinct individuals, each with Pentadic integrity, arranged so their differences are efficiently complementary.",
+    "sixKnowledges": ["Sciences", "Arts", "Defenses", "Heresies", "Connections", "Mysteries"],
+    "circuitClosureRule": "Circuit completion is harmonic closure — the same principle as the perfect fifth (3:2). When a circuit closes, it generates a frequency the open circuit cannot. Name what closes, not just what connects.",
+    "perfectNumber": "Six is the first perfect number: 6 = 1 + 2 + 3. The parts equal the whole. This encodes the Hexad's quality: a structure in which each component's contribution exactly equals the total.",
+    "shadow": [
+      "Enforced uniformity (requires approximately equal size, not identity)",
+      "Mistaking community structure for community harmony",
+      "Closing the lattice against what doesn't fit"
+    ],
+    "falsification": "If equal-sized living units in optimal arrangement consistently organized into non-hexagonal patterns."
+  },
+  "heptad": {
+    "overtone": 6,
+    "interval": "Major Seventh (15:8)",
+    "formalStatement": "The completed cycle: seven elements constituting a self-sufficient totality that, at completion, becomes aware of its own ground and resolves into a new cycle at higher integration.",
+    "keyPrinciple": "First overflow. The 7th harmonic cannot be represented in the diatonic system (prime 7 lies outside 2,3,5). The system exceeds its own container. Resolution: Ti → Do (return at higher octave) or expansion (diatonic → chromatic).",
+    "ratioProof": "15 = 3×5 (Trinity × Pentad). 8 = 2³ (Polarity-cubed). The Major Seventh arithmetically encodes: product of the most generative principles over the cube of foundational differentiation. One minimum half-step (16:15) from the octave — maximum proximity to return.",
+    "synthesisAsHeptad": "The synthesis is the Heptad in operation. All chart data processed through all levels produces something no subsystem predicts: the person's recognition of their own pattern. The chart becoming aware of itself as a system.",
+    "shadow": [
+      "Mistaking completion for terminus (the Heptad is not an ending but the beginning of a new cycle)",
+      "Failing to hear the return (not recognizing that the complexity resolves back to the same ground, higher)"
+    ],
+    "falsification": "If a seven-note diatonic system could exist without directional tension pointing toward resolution (i.e., a leading tone)."
+  },
+  "fundamentalPrinciples": {
+    "description": "Seven principles constituting the foundational level. Each survived philosophical and scientific challenge.",
+    "principles": {
+      "F1_Experience": "Experience is occurring. The single irreducible datum prior to all metaphysical commitments.",
+      "F2_DualMode": "Two modes of being: temporal process (change) and atemporal pattern (mathematical/logical truths independent of time).",
+      "F3_LawfulIndeterminacy": "Process follows discoverable patterns while individual events may be fundamentally indeterminate. Structured freedom.",
+      "F4_CoArising": "Nothing has existence prior to or independent of relation. Things and their relations co-arise mutually. Identity is constituted by difference.",
+      "F5_StructuralIsomorphism": "The same logical and mathematical patterns appear across different substrates and scales — pervasively but not universally.",
+      "F6_FunctionalEmergence": "Complex systems exhibit properties not predictable from their components. Functional emergence is undeniable.",
+      "F7_RecursiveTranscendence": "Systems of sufficient complexity necessarily become self-referential, and self-referential systems point structurally beyond themselves."
+    },
+    "metaPrinciple": "Reality is a self-exploring relational field, structured by necessary patterns that permit genuine freedom, oriented asymmetrically toward depth.",
+    "commonalities": [
+      "Primacy of relation over substance",
+      "Structured freedom as universal mode",
+      "Asymmetry of depth (directional toward increasing interiority)"
+    ]
+  }
+}

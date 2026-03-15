@@ -1,213 +1,127 @@
 # API Marketplace Guide
 
-**Prime Self API** provides programmatic access to Human Design chart calculations, profile generation, transit forecasts, and more. Perfect for developers, researchers, and businesses building HD-powered applications.
+**Last Reviewed**: 2026-03-14
 
-## 🚀 Quick Start
+Prime Self exposes programmatic access for integrations, embeds, practitioner workflows, and agency distribution surfaces.
 
-### Option 1: RapidAPI Marketplace (Recommended)
+This document is intentionally practical. It explains how to think about API access in the current product model without freezing pricing or channel details that may change.
 
-1. Visit [Prime Self API on RapidAPI](https://rapidapi.com/primeself/api/primeself-human-design)
-2. Subscribe to a plan (Free, Basic, Pro, or Enterprise)
-3. Copy your RapidAPI key from the dashboard
-4. Make your first request:
+---
 
-```bash
-curl --request POST \
-  --url https://primeself-human-design.p.rapidapi.com/api/chart/calculate \
-  --header 'Content-Type: application/json' \
-  --header 'X-RapidAPI-Key: YOUR_RAPIDAPI_KEY' \
-  --header 'X-RapidAPI-Host: primeself-human-design.p.rapidapi.com' \
-  --data '{
-    "birthDate": "1990-01-15",
-    "birthTime": "14:30",
-    "birthLocation": {
-      "city": "Los Angeles",
-      "country": "USA",
-      "latitude": 34.0522,
-      "longitude": -118.2437,
-      "timezone": "America/Los_Angeles"
-    }
-  }'
-```
+## Positioning
 
-### Option 2: Direct API Access
+Prime Self is practitioner-first B2B2C software. The API supports that model in three ways:
 
-1. Sign up at [primeself.app](https://primeself.app)
-2. Navigate to **Settings > API Keys**
-3. Generate a new API key
-4. Make requests directly to `https://api.primeself.app`:
+1. Raw chart and related data for external integrations
+2. Direct integration with practitioner and agency workflows
+3. Distribution surfaces such as embeds, API keys, and white-label-adjacent capabilities
 
-```bash
-curl --request POST \
-  --url https://api.primeself.app/api/chart/calculate \
-  --header 'Content-Type: application/json' \
-  --header 'X-API-Key: YOUR_API_KEY' \
-  --data '{
-    "birthDate": "1990-01-15",
-    "birthTime": "14:30",
-    "birthLocation": {
-      "city": "Los Angeles",
-      "country": "USA",
-      "latitude": 34.0522,
-      "longitude": -118.2437,
-      "timezone": "America/Los_Angeles"
-    }
-  }'
-```
+The API is a product surface, not the whole product story.
 
-## 📊 Pricing Tiers
+---
 
-| Tier | Price | Requests/Hour | Requests/Day | Best For |
-|------|-------|---------------|--------------|----------|
-| **Free** | $0 | 10 | 100 | Testing, personal projects |
-| **Basic** | $9/mo | 100 | 1,000 | Small apps, prototypes |
-| **Pro** | $29/mo | 1,000 | 10,000 | Production apps, businesses |
-| **Enterprise** | Custom | 10,000+ | 100,000+ | High-volume, custom SLAs |
+## Access Paths
 
-All tiers include:
-- ✅ Chart calculation (Human Design, astrology, numerology)
-- ✅ Profile generation with AI narratives
-- ✅ Transit forecasts and alerts
-- ✅ Gene Keys integration
-- ✅ CORS support for browser apps
-- ✅ JSON/REST API with OpenAPI spec
-- ✅ 99.9% uptime SLA (Pro and above)
+### Marketplace / Developer Access
 
-## 🔑 Authentication
+Best for:
 
-All API requests require authentication via API key:
+- raw chart data access
+- experimentation
+- simple third-party integrations
+
+### Direct Prime Self Access
+
+Best for:
+
+- practitioner workflows
+- agency integrations
+- API key management
+- embed and distribution use cases
+
+For current commercial packaging, validate against:
+
+- [../frontend/pricing.html](../frontend/pricing.html)
+- [../workers/src/lib/stripe.js](../workers/src/lib/stripe.js)
+- [../audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](../audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md)
+
+---
+
+## Authentication
+
+API requests use API keys.
+
+Header:
 
 ```http
-X-API-Key: ps_your_64_character_api_key_here
+X-API-Key: ps_your_api_key_here
 ```
 
-**Security best practices:**
-- Never commit API keys to version control
-- Use environment variables: `process.env.PRIMESELF_API_KEY`
-- Rotate keys periodically (Settings > API Keys)
-- Use different keys for development and production
+Security guidance:
 
-## 📚 Core Endpoints
+- never commit API keys
+- keep separate keys for development and production
+- rotate keys periodically
+- scope or revoke unused keys quickly
 
-### 1. Calculate Chart
+---
 
-Generate a complete Human Design chart from birth data.
+## Core Use Cases
 
-**Endpoint:** `POST /api/chart/calculate`
+### Chart Calculation
 
-**Request:**
-```json
-{
-  "birthDate": "1990-01-15",
-  "birthTime": "14:30",
-  "birthLocation": {
-    "city": "Los Angeles",
-    "country": "USA",
-    "latitude": 34.0522,
-    "longitude": -118.2437,
-    "timezone": "America/Los_Angeles"
-  },
-  "name": "John Doe" // optional
-}
-```
+Use `POST /api/chart/calculate` to generate structured chart output from birth data.
 
-**Response:**
-```json
-{
-  "success": true,
-  "chart": {
-    "id": "chart_abc123",
-    "name": "John Doe",
-    "birthData": { ... },
-    "design": {
-      "type": "Manifestor",
-      "profile": "3/5",
-      "authority": "Emotional",
-      "strategy": "Inform before acting",
-      "definition": "Split",
-      "centers": {
-        "head": { "defined": true, "gates": [64] },
-        "ajna": { "defined": true, "gates": [47, 24] },
-        "throat": { "defined": false, "gates": [] },
-        "g": { "defined": true, "gates": [7, 13] },
-        "ego": { "defined": false, "gates": [] },
-        "sacral": { "defined": false, "gates": [] },
-        "emotionalSolar": { "defined": true, "gates": [36, 22] },
-        "spleen": { "defined": false, "gates": [] },
-        "root": { "defined": true, "gates": [53] }
-      },
-      "gates": [
-        { "number": 64, "line": 3, "planet": "Sun", "type": "personality" },
-        { "number": 47, "line": 4, "planet": "Earth", "type": "personality" },
-        // ...all 26 gates
-      ],
-      "channels": [
-        { "number": "64-47", "name": "Abstraction", "design": "mental circuit" }
-      ]
-    },
-    "astrology": {
-      "sun": { "sign": "Capricorn", "degree": 24.5, "house": 10 },
-      "moon": { "sign": "Pisces", "degree": 12.3, "house": 12 },
-      // ...all planets
-      "ascendant": { "sign": "Aries", "degree": 5.2 },
-      "aspects": [
-        { "planet1": "Sun", "planet2": "Moon", "aspect": "sextile", "orb": 2.1 }
-      ]
-    },
-    "numerology": {
-      "lifePath": 7,
-      "expression": 5,
-      "soulUrge": 11,
-      "personality": 3,
-      "birthday": 6
-    },
-    "geneKeys": {
-      "lifeWork": { "gate": 7, "geneKey": 7, "shadow": "Division", "gift": "Guidance", "siddhi": "Virtue" },
-      "evolution": { "gate": 13, "geneKey": 13, "shadow": "Discord", "gift": "Discernment", "siddhi": "Empathy" },
-      // ...all 4 prime keys
-    }
-  }
-}
-```
+### Profile Generation
 
-### 2. Generate Profile
+Use `POST /api/profile/generate` for AI-assisted narrative output tied to chart data and user context.
 
-Create an AI-powered narrative profile from a chart.
+### Transits and Forecasting
 
-**Endpoint:** `POST /api/profile/generate`
+Use transit endpoints for current or forecast overlays on chart data.
 
-**Request:**
-```json
-{
-  "chartId": "chart_abc123",
-  "sections": ["overview", "type", "authority", "profile", "gates"],
-  "audience": "self", // "self" | "practitioner" | "simple"
-  "length": "medium" // "brief" | "medium" | "comprehensive"
-}
-```
+### Practitioner and Agency Workflows
 
-**Response:**
-```json
-{
-  "success": true,
-  "profile": {
-    "id": "profile_xyz789",
-    "chartId": "chart_abc123",
-    "narrative": "You are a Manifestor with a 3/5 profile...",
-    "sections": {
-      "overview": "Your Human Design chart reveals...",
-      "type": "As a Manifestor, you are here to initiate...",
-      "authority": "Your Emotional Authority means...",
-      "profile": "The 3/5 profile is known as the Martyr/Heretic...",
-      "gates": "Your defined gates create unique patterns..."
-    },
-    "wordCount": 2847,
-    "generatedAt": "2024-01-15T10:30:00Z"
-  }
-}
-```
+Use authenticated API access where the integration needs to connect with:
 
-### 3. Transit Forecast
+- client rosters
+- practitioner profiles
+- embeds
+- agency seats
+- API key lifecycle
+- white-label or distribution capabilities
+
+---
+
+## Channel Guidance
+
+| Channel | Best Use |
+|---|---|
+| Marketplace / external developer access | Raw chart data and lightweight experimentation |
+| Direct Prime Self API access | Practitioner and agency workflows with authenticated product context |
+
+Keep the channel split simple: marketplace access is for external consumption, while direct Prime Self access is for product-connected commercial workflows.
+
+---
+
+## Recommended References
+
+- API overview: [API.md](API.md)
+- Detailed spec: [API_SPEC.md](API_SPEC.md)
+- Embed guide: [../EMBED_WIDGET_GUIDE.md](../EMBED_WIDGET_GUIDE.md)
+- Tier enforcement: [TIER_ENFORCEMENT.md](TIER_ENFORCEMENT.md)
+- Practitioner roadmap: [PRACTITIONER_FIRST_90_DAY_ROADMAP.md](PRACTITIONER_FIRST_90_DAY_ROADMAP.md)
+
+---
+
+## Documentation Rule
+
+Do not treat this file as a frozen pricing or packaging contract. If channel strategy, pricing, or white-label semantics change, update this file together with:
+
+- [../frontend/pricing.html](../frontend/pricing.html)
+- [TIER_ENFORCEMENT.md](TIER_ENFORCEMENT.md)
+- [../EMBED_WIDGET_GUIDE.md](../EMBED_WIDGET_GUIDE.md)
+- [../audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](../audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md)
 
 Get current and upcoming transits affecting a chart.
 
@@ -272,7 +186,7 @@ Get current and upcoming transits affecting a chart.
   }
 }
 ```
-
+      
 ### 4. Gate Information
 
 Retrieve detailed information about a specific gate.

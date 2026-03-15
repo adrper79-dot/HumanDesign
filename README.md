@@ -1,17 +1,16 @@
 # Prime Self
 
-> **Discover your unique energy blueprint.**  
-> Combine ancient wisdom (Energy Blueprint + Astrology + Numerology) with modern AI to reveal your decision-making style, life purpose, and optimal strategies for success.
+> **Practitioner-first software for client insight, delivery, and distribution.**
 
-**What is Prime Self?** A personal insight platform that analyzes your exact birth time and location to create a detailed map of your energy patterns. Get clear, actionable guidance about how you're designed to make decisions, interact with others, and fulfill your purpose—all in plain language, powered by AI.
+**What is Prime Self?** Prime Self is a practitioner-first B2B2C platform for generating structured chart data, AI-assisted interpretations, client deliverables, and practitioner-facing workflows. Client-facing experiences such as the web app, public profiles, and embed surfaces exist primarily to help practitioners acquire, serve, and retain clients.
 
 ---
 
-## 🚨 Current Status (Updated March 9, 2026)
+## 🚨 Current Status (Updated March 14, 2026)
 
-**Code Quality**: ✅ Excellent (263/263 tests passing locally)  
+**Code Quality**: ✅ Strong local baseline; re-run the current Vitest suite for up-to-date counts  
 **Production Deployment**: ⚠️ Not re-verified in this repo-only audit  
-**UX Status**: 🔄 Sprint 18 partially shipped; backlog and build docs were reconciled with the current frontend
+**Product Positioning**: ✅ Practitioner-first B2B2C clarified in current roadmap and audit docs
 
 **Repository Audit Highlights**:
 - Table-driven Workers API with a broad handler surface and 100+ route registrations
@@ -22,7 +21,7 @@
 
 ---
 
-## ✨ Try It Now
+## ✨ Surfaces
 
 **Live Demo:** [https://selfprime.net](https://selfprime.net)  
 **API Status:** [Health Check](https://prime-self-api.adrper79.workers.dev/api/health)
@@ -31,42 +30,42 @@
 
 ---
 
-## What You Get
+## What Prime Self Supports
 
-### 🎯 Personal Energy Blueprint
-Discover your **Pattern** (how you operate), **Decision Style** (how to make aligned choices), **Life Role** (your personality archetype), and **Purpose Vector** (your unique life theme). Understand why certain strategies work for you and others don't.
+### 👥 Practitioner Workflows
+Manage client rosters, prepare sessions faster, generate deliverables, and publish practitioner-facing distribution surfaces.
 
-### 🌟 AI-Powered Full Profile
-Get a comprehensive 8-layer synthesis combining:
+### 🌟 AI-Assisted Interpretation
+Generate comprehensive multi-system syntheses combining:
 - Energy Blueprint core design
 - Western Astrology placements
 - Gene Keys wisdom
 - Numerology life path
-- Your Forge archetype (Artisan, Scientist, Councilor, or Oracle)
+- Your Forge archetype (Initiation, Mastery, Guidance, Perception, or Transformation)
 - Current planetary activations
 - Personalized practice recommendations
 - Relatable narrative context
 
-### 🌙 Daily Transit Insights
-See how today's planetary positions interact with your birth chart. Know when to initiate, when to wait, and when key opportunities or challenges are emerging.
+### 🌙 Client and Personal Insight Surfaces
+Deliver chart, transit, composite, and narrative insight through the app, exports, and follow-up workflows.
 
-### 📱 Social Sharing
-Share your energy blueprint beautifully across all major platforms:
+### 📱 Distribution and Delivery Layers
+Support practitioner growth and client experience through:
 - **Instagram-ready images** — 1080x1080 bodygraph cards with your key insights
 - **Twitter/X** — Pre-filled tweets with chart highlights and referral link
 - **Facebook** — Rich Open Graph previews for engaging shares
 - **TikTok** — Vertical format exports optimized for mobile video
 - **Threads & Bluesky** — Text-optimized posts for emerging platforms
 - **Share analytics** — Track which platforms drive the most conversions
+- **Public practitioner profiles** — Publish directory-ready presence
+- **Embeddable widgets** — Capture leads and chart activity on practitioner-owned sites
+- **API and integration hooks** — Extend Prime Self into practitioner workflows
 
 ### 💑 Relationship Compatibility
 Generate composite charts to understand the energy dynamics between you and anyone else. See where you complement each other and where challenges might arise.
 
-### 📱 SMS Daily Digest
-Subscribe to receive your daily transit brief via text message. Stay aligned with the cosmic weather without checking apps.
-
-### 👥 Professional Tools
-For practitioners: manage client rosters, run batch calculations, generate detailed synthesis reports, and export professional-quality PDFs.
+### 📱 Messaging and Follow-Up
+Use SMS and other delivery layers to keep practitioners and clients engaged between sessions.
 
 ---
 
@@ -84,7 +83,7 @@ New to Energy Blueprints? Here are the core terms explained simply:
 | **Centers** | Nine bio-energy hubs. **Defined** (colored) = consistent energy. **Open** (white) = flexible, amplifies others. |
 | **Purpose Vector** | Your life's thematic purpose (e.g., "Cross of Refinement"). Formed by your four main gene key activations. |
 | **Transits** | Current planetary positions and how they activate your chart today. Your "cosmic weather forecast." |
-| **Forge** | Your Prime Self archetype: **Artisan** (hands-on creator), **Scientist** (systematic researcher), **Councilor** (community weaver), or **Oracle** (pattern seer). |
+| **Forge** | Your Prime Self archetype: **Initiation/Chronos** (mastering time), **Mastery/Eros** (mastering passion), **Guidance/Aether** (mastering connection), **Perception/Lux** (mastering illumination), or **Transformation/Phoenix** (mastering rebirth). Determined by deterministic scoring, not LLM guessing. |
 
 📖 **See full glossary:** [docs/GLOSSARY.md](docs/GLOSSARY.md)
 
@@ -128,7 +127,7 @@ npm install
 
 ```bash
 npx vitest run
-# Expected: 263 tests passing (4 test files)
+# Expect the current suite to pass; avoid relying on hardcoded counts in docs.
 ```
 
 ### Serve the Frontend Locally
@@ -188,7 +187,7 @@ Set via `npx wrangler secret put <NAME>` from inside the `workers/` directory.
 | `NEON_CONNECTION_STRING` | Neon PostgreSQL connection string (pooled) |
 | `JWT_SECRET` | Random 32+ byte string for signing JWTs |
 | `ANTHROPIC_API_KEY` | Primary LLM provider (Claude) |
-| `GROK_API_KEY` | Failover LLM provider 2 (xAI Grok) |
+| `GROK_API_KEY` | Failover LLM provider 2 (xAI Grok 4 Fast) |
 | `GROQ_API_KEY` | Failover LLM provider 3 (Groq) |
 | `TELNYX_API_KEY` | SMS delivery via Telnyx |
 | `TELNYX_PHONE_NUMBER` | Outbound SMS number |
@@ -227,7 +226,7 @@ HumanDesign/
 │       │   ├── queries.js    # All SQL queries
 │       │   └── migrate.js    # Schema migrations
 │       ├── lib/
-│       │   └── llm.js        # Multi-provider LLM failover (Anthropic→Grok→Groq)
+│       │   └── llm.js        # Multi-provider LLM failover (Anthropic 2-retry→Grok 4 Fast→Groq)
 │       ├── middleware/
 │       │   ├── auth.js       # JWT verification
 │       │   ├── cors.js       # CORS headers
@@ -276,10 +275,10 @@ All chart calculations verified against two reference charts:
 | Database | Neon PostgreSQL (serverless, pooled) |
 | Cache | Workers KV (chart cache, geocode cache — 30-day TTL) |
 | File storage | Cloudflare R2 (PDF exports) |
-| LLM | Anthropic Claude → xAI Grok → Groq (automatic failover) |
+| LLM | Anthropic Claude (2-retry) → xAI Grok 4 Fast → Groq (automatic failover) |
 | Auth | PBKDF2-SHA256 passwords, HS256 JWT |
 | SMS | Telnyx |
-| Tests | Vitest (263 tests across 4 test files) |
+| Tests | Vitest (278 tests across 4 test files) |
 | Frontend | Vanilla HTML/CSS/JS (no build step) |
 | Geocoding | OpenStreetMap Nominatim + BigDataCloud (free, no API keys) |
 

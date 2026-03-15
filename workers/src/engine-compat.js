@@ -60,6 +60,12 @@ import knowledgesCanonicalData from '../../src/knowledgebase/prime_self/knowledg
 import artsCanonicalData from '../../src/knowledgebase/prime_self/arts_canonical.json';
 import sciencesCanonicalData from '../../src/knowledgebase/prime_self/sciences_canonical.json';
 import defensesCanonicalData from '../../src/knowledgebase/prime_self/defenses_canonical.json';
+import heresiesCanonicalData from '../../src/knowledgebase/prime_self/heresies_canonical.json';
+
+// Library knowledgebase (Sprint 19.2 — structural philosophy integration)
+import chartBridgeData from '../../src/knowledgebase/library/chart_bridge.json';
+import vocabularyData from '../../src/knowledgebase/library/vocabulary.json';
+import derivationChainData from '../../src/knowledgebase/library/derivation_chain.json';
 
 globalThis.__PRIME_DATA = {
   crosses: crossesData,
@@ -107,6 +113,12 @@ globalThis.__PRIME_DATA = {
     'prime_self/knowledges_canonical.json': knowledgesCanonicalData,
     'prime_self/arts_canonical.json': artsCanonicalData,
     'prime_self/sciences_canonical.json': sciencesCanonicalData,
-    'prime_self/defenses_canonical.json': defensesCanonicalData
+    'prime_self/defenses_canonical.json': defensesCanonicalData,
+    'prime_self/heresies_canonical.json': heresiesCanonicalData,
+
+    // Library
+    'library/chart_bridge.json': chartBridgeData,
+    'library/vocabulary.json': vocabularyData,
+    'library/derivation_chain.json': derivationChainData
   }
 };

@@ -2,11 +2,70 @@
  * Tier Enforcement Middleware
  * 
  * Checks user's subscription tier and enforces feature access and usage quotas.
+ * Supports both monthly quotas (via DB) and daily ceilings (via KV).
  * Used in conjunction with auth middleware to gate features by tier.
+ * 
+ * Tier resolution priority:
+ * 1. lifetime_access === true → at least 'individual' tier
+ * 2. Active subscription tier from subscriptions table
+ * 3. Active transit pass → transient feature grants (transit snapshots)
+ * 4. Default: 'free'
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
-import { getTier, hasFeatureAccess, isQuotaExceeded } from '../lib/stripe.js';
+import { getTier, hasFeatureAccess, isQuotaExceeded, normalizeTierName } from '../lib/stripe.js';
+
+/**
+ * Resolve effective tier considering lifetime access + subscription status.
+ * Also checks active transit pass for transient feature grants.
+ *
+ * @param {Function} query - DB query function
+ * @param {string} userId - User ID (from JWT sub)
+ * @returns {Promise<{tier: string, hasActiveTransitPass: boolean}>}
+ */
+async function resolveEffectiveTier(query, userId) {
+  // Get user's lifetime/transit status
+  const userResult = await query(
+    `SELECT lifetime_access, transit_pass_expires FROM users WHERE id = $1`,
+    [userId]
+  );
+
+  const user = userResult.rows[0];
+  const hasActiveTransitPass = user?.transit_pass_expires
+    ? new Date(user.transit_pass_expires) > new Date()
+    : false;
+
+  // Lifetime access overrides everything — minimum individual tier
+  if (user?.lifetime_access) {
+    return { tier: 'individual', hasActiveTransitPass };
+  }
+
+  // Use the same active/grace-period lookup as billing so entitlement follows
+  // the current billable subscription record.
+  const subscription = await query(QUERIES.getActiveSubscription, [userId]);
+
+  let tier = 'free';
+  if (subscription.rows.length > 0) {
+    const sub = subscription.rows[0];
+    tier = normalizeTierName(sub.tier);
+  }
+
+  // Agency seat propagation: if this user is a member of an Agency plan,
+  // they inherit at least 'practitioner' tier capabilities from the owner.
+  if (tier === 'free' || tier === 'individual') {
+    const seatResult = await query(QUERIES.getAgencyOwnerForMember, [userId]);
+    if (seatResult.rows?.length) {
+      const ownerTier = normalizeTierName(seatResult.rows[0].owner_tier);
+      // Seat members get practitioner access regardless of owner tier,
+      // as long as the owner has an active agency subscription.
+      if (ownerTier === 'agency') {
+        tier = 'practitioner';
+      }
+    }
+  }
+
+  return { tier, hasActiveTransitPass };
+}
 
 /**
  * Check if user has access to a feature based on their subscription tier
@@ -27,17 +86,15 @@ export async function enforceFeatureAccess(request, env, feature) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   try {
-    // Get user's subscription
-    const subscription = await query(QUERIES.getSubscriptionByUserId, [user.sub]);
-    
-    let tier = 'free';
-    if (subscription.rows.length > 0) {
-      tier = subscription.rows[0].tier;
+    const { tier, hasActiveTransitPass } = await resolveEffectiveTier(query, user.sub);
+
+    // Transit pass grants transitSnapshots access even for free users
+    let effectiveAccess = hasFeatureAccess(tier, feature);
+    if (!effectiveAccess && hasActiveTransitPass && feature === 'transitSnapshots') {
+      effectiveAccess = true;
     }
 
-    // Check if user has access to this feature
-    if (!hasFeatureAccess(tier, feature)) {
-      const tierConfig = getTier(tier);
+    if (!effectiveAccess) {
       return Response.json({
         error: 'Feature not available in your current tier',
         current_tier: tier,
@@ -48,6 +105,7 @@ export async function enforceFeatureAccess(request, env, feature) {
 
     // Attach tier info to request for downstream handlers
     request._tier = tier;
+    request._hasActiveTransitPass = hasActiveTransitPass;
     return null; // Authorized
 
   } catch (error) {
@@ -78,54 +136,72 @@ export async function enforceUsageQuota(request, env, action, feature) {
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
+  // AUDIT-SEC-003: Gate LLM-consuming actions behind email verification.
+  // Users can browse the app but cannot use quota-limited features until verified.
   try {
-    // Get user's subscription
-    const subscription = await query(QUERIES.getSubscriptionByUserId, [user.sub]);
-    
-    let tier = 'free';
-    if (subscription.rows.length > 0) {
-      tier = subscription.rows[0].tier;
-      
-      // If subscription is not active, treat as free tier
-      if (subscription.rows[0].status !== 'active' && subscription.rows[0].status !== 'trialing') {
-        tier = 'free';
-      }
+    const verifiedResult = await query(QUERIES.getEmailVerifiedStatus, [user.sub]);
+    const verified = verifiedResult.rows?.[0]?.email_verified;
+    if (!verified) {
+      return Response.json({
+        error: 'Please verify your email address to use this feature.',
+        email_verification_required: true
+      }, { status: 403 });
+    }
+  } catch (err) {
+    // If the column doesn't exist yet (pre-migration), fail open to avoid
+    // breaking existing users. Log for monitoring.
+    console.warn('[enforceUsageQuota] email_verified check failed, failing open:', err.message);
+  }
+
+  try {
+    const { tier, hasActiveTransitPass } = await resolveEffectiveTier(query, user.sub);
+
+    const tierConfig = getTier(tier);
+    const limit = tierConfig.features[feature];
+
+    // Unlimited features skip quota check entirely
+    if (limit === Infinity || limit === true) {
+      request._tier = tier;
+      request._usage = 0;
+      return null;
     }
 
-    // Get current period start (beginning of current month)
+    // BL-RACE-001: Atomic quota enforcement — single query that checks + inserts
+    // in one statement, eliminating the TOCTOU race between read and write.
     const periodStart = new Date();
     periodStart.setDate(1);
     periodStart.setHours(0, 0, 0, 0);
 
-    // Get usage for this action in current period
-    const usageResult = await query(QUERIES.getUsageByUserAndAction, [
+    const result = await query(QUERIES.atomicQuotaCheckAndInsert, [
       user.sub,
       action,
-      periodStart.toISOString()
+      periodStart.toISOString(),
+      `${action}_bonus`,
+      limit
     ]);
 
-    const currentUsage = usageResult.rows.length > 0 ? parseInt(usageResult.rows[0].count) : 0;
+    const { net_usage, quota_exceeded } = result.rows[0];
+    const netUsage = parseInt(net_usage);
 
-    // Check if quota exceeded
-    if (isQuotaExceeded(tier, feature, currentUsage)) {
-      const tierConfig = getTier(tier);
-      const limit = tierConfig.features[feature];
-      
+    if (quota_exceeded) {
+      console.warn(JSON.stringify({
+        event: 'quota_exceeded', userId: user.sub, tier, feature, limit, current_usage: netUsage
+      }));
       return Response.json({
         error: 'Usage quota exceeded',
         current_tier: tier,
         feature: feature,
         limit: limit,
-        current_usage: currentUsage,
+        current_usage: netUsage,
         upgrade_required: true
       }, { status: 429 });
     }
 
     // Attach tier and usage info to request
     request._tier = tier;
-    request._usage = currentUsage;
+    request._usage = netUsage;
     
-    return null; // Within quota
+    return null; // Within quota — usage already recorded atomically
 
   } catch (error) {
     console.error('Usage quota enforcement error:', error);
@@ -161,6 +237,95 @@ export async function recordUsage(env, userId, action, endpoint = null, quotaCos
   }
 }
 
+// ─── Daily Ceiling Enforcement ───────────────────────────────
+
+/**
+ * Get today's date as YYYY-MM-DD string for KV key construction.
+ * @returns {string}
+ */
+function getTodayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Check if user has exceeded their daily ceiling for an action.
+ * Uses Cloudflare KV for fast, atomic daily counters.
+ * 
+ * @param {Request} request - Request object (should have _user from auth middleware)
+ * @param {Object} env - Environment bindings (must include RATE_LIMIT_KV)
+ * @param {string} action - 'synthesis' or 'question'
+ * @returns {Promise<Response|null>} Error response or null if within ceiling
+ */
+export async function enforceDailyCeiling(request, env, action) {
+  const user = request._user;
+  if (!user) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  // KV binding is optional — skip if not configured
+  if (!env.RATE_LIMIT_KV) {
+    return null;
+  }
+
+  const tier = request._tier || 'free';
+  const tierConfig = getTier(tier);
+
+  // Map action to the daily limit feature key
+  const limitKey = action === 'synthesis' ? 'dailySynthesisLimit' : 'dailyQuestionLimit';
+  const dailyLimit = tierConfig.features[limitKey];
+
+  // No daily limit configured for this tier/action
+  if (!dailyLimit || dailyLimit === Infinity) {
+    return null;
+  }
+
+  const kvKey = `daily:${user.sub}:${getTodayKey()}:${action}`;
+
+  try {
+    const current = parseInt(await env.RATE_LIMIT_KV.get(kvKey) || '0', 10);
+
+    if (current >= dailyLimit) {
+      return Response.json({
+        error: 'Daily limit reached',
+        current_tier: tier,
+        action: action,
+        daily_limit: dailyLimit,
+        daily_usage: current,
+        resets_at: `${getTodayKey()}T00:00:00Z (next day)`,
+        upgrade_required: tier !== 'white_label' && tier !== 'agency'
+      }, { status: 429 });
+    }
+
+    // P2-BIZ-012: Increment immediately after check to narrow TOCTOU race window.
+    // KV doesn't support atomic increment, but co-locating read+write minimizes the gap.
+    await env.RATE_LIMIT_KV.put(kvKey, String(current + 1), { expirationTtl: 172800 });
+
+    return null; // Within daily ceiling
+  } catch (error) {
+    // KV read failure — fail open to avoid blocking legitimate requests
+    console.error('Daily ceiling check failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Increment the daily counter for an action (call after successful operation).
+ * Sets TTL to 48 hours so keys auto-expire.
+ *
+ * @param {Object} env - Environment bindings
+ * @param {string} userId - User ID
+ * @param {string} action - 'synthesis' or 'question'
+ */
+export async function incrementDailyCounter(env, userId, action) {
+  // P2-BIZ-012: Increment is now done inside enforceDailyCeiling to narrow the
+  // TOCTOU race window. This function is kept for backward compatibility but is
+  // a no-op when enforceDailyCeiling was already called for this request.
+  // Only increment if enforceDailyCeiling was NOT called (e.g., unlimited tier).
+  if (!env.RATE_LIMIT_KV) return;
+
+  // No-op: increment already happened in enforceDailyCeiling
+}
+
 /**
  * Get user's current subscription tier
  * 
@@ -172,20 +337,8 @@ export async function getUserTier(env, userId) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   try {
-    const subscription = await query(QUERIES.getSubscriptionByUserId, [userId]);
-    
-    if (subscription.rows.length === 0) {
-      return 'free';
-    }
-
-    const sub = subscription.rows[0];
-    
-    // If subscription is not active, treat as free tier
-    if (sub.status !== 'active' && sub.status !== 'trialing') {
-      return 'free';
-    }
-
-    return sub.tier;
+    const { tier } = await resolveEffectiveTier(query, userId);
+    return tier;
   } catch (error) {
     console.error('Failed to get user tier:', error);
     return 'free'; // Default to free on error

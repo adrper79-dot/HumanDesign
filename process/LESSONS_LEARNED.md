@@ -8,6 +8,30 @@ This document catalogs key learnings from development, debugging, and production
 
 ## Incident Log
 
+### 2026-06-27 | Tier Rename Fallout: 16 Logic Bugs from Incomplete Code Sweep
+
+**Context**
+Plan v4 renamed database tier values (`seeker`→`regular`, `guide`→`practitioner`, added `white_label`) and updated `stripe.js`, `tierEnforcement.js`, and 40+ documentation files. A subsequent audit of all `.js` and `.sql` source files revealed that 10 files still hardcoded the old tier name strings — causing 16 logic bugs (broken MRR dashboard, wrong access control, achievements never firing) and 20 display bugs (wrong tier names and prices shown to users).
+
+**Root Cause**
+Tier rename was treated as a configuration/documentation task. No one grepped the full codebase for all old tier string values. Files like `analytics.js`, `alerts.js`, `achievements.js`, `experiments.js`, `notion.js`, `referrals.js`, `email.js`, `queries.js`, `migrate.sql`, and `frontend/js/app.js` all contained hardcoded string comparisons or map keys that silently broke when the DB started returning new tier values.
+
+**Resolution**
+Fixed all 10 files. Added legacy alias entries (e.g., `seeker: 10, guide: 25` alongside `regular: 10, practitioner: 25`) in lookup maps for backward compatibility with pre-migration DB records. 278 tests pass.
+
+**Key Learnings**
+1. **Enum renames require a full-codebase grep** — Every old value must be searched as a string literal across ALL source files, not just the files "known" to use it.
+2. **Hardcoded tier strings across 10+ files are a rename landmine** — A shared `TIER_VALUES` constant would prevent this class of bug entirely.
+3. **Silent failures are the worst failures** — MRR showed $0, achievements never fired, alert limits defaulted to free-tier — none of these produced errors, they just silently returned wrong data.
+4. **Legacy alias pattern is effective** — Keeping old keys alongside new keys in lookup maps prevents breakage for any DB records that haven't been migrated yet.
+
+**Preventive Measures**
+- [ ] Adopt shared tier constants instead of hardcoded strings across source files.
+- [ ] Add integration tests for MRR calculation, achievement triggering, and alert limit enforcement.
+- [ ] When renaming any enum/key used across the codebase, add a mandatory "full grep sweep" step to the process checklist.
+
+---
+
 ### 2026-03-10 | Launch Certification Drift: Stale Report Fragments and Spec Path Mismatch
 
 **Context**
@@ -521,16 +545,16 @@ The platform has production-ready calculation accuracy (190 passing tests, dual 
 - **Distribution**: No mobile app, no PWA, no integrations ecosystem
 - **Engagement loops**: No viral sharing, no push notifications, no retention mechanics
 
-**Impact**: $500/mo practitioner product exists but cannot be purchased. Sophisticated tech with zero GTM execution.
+**Impact**: $149/mo Studio product exists and is purchaseable. Sophisticated tech with zero GTM execution.
 
 ---
 
 ### Discovery: Three Products, No Primary Focus
 
 Documentation reveals three distinct product visions:
-1. **Consumer SaaS** (Prime Self philosophy, $15/mo Seeker tier)
-2. **Practitioner B2B** ($500/mo, client roster management)
-3. **API/Infrastructure** (white-label for developers)
+1. **Consumer SaaS** (Prime Self philosophy, $12/mo Explorer tier)
+2. **Practitioner B2B** ($60/mo Guide, client roster management)
+3. **API/Infrastructure** ($149/mo Studio, white-label for developers)
 
 **Problem**: Trying to serve all three dilutes execution. Each requires different acquisition, messaging, and feature priorities.
 

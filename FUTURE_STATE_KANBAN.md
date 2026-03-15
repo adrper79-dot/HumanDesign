@@ -4,6 +4,9 @@
 **Purpose:** Track canonical philosophy features that have DATA created but need INTEGRATION  
 **Reference:** Sacred Texts alignment session — several "nuggets" were documented but not fully wired up
 
+> Historical working kanban. This file preserves earlier feature ideation and pricing context.
+> Use `BACKLOG.md` for active prioritization and `DOCUMENTATION_INDEX.md` for the current documentation path.
+
 ---
 
 ### KANBAN-008 | Enhanced At-A-Glance Dashboard Cards
@@ -321,7 +324,7 @@ During session planning, discussion of "contextual recommendations" for next ste
 │ 📘 Non-Fiction: "Deep Work" by Cal Newport              │
 │    → Sustained focus and Generator energy management    │
 ├─────────────────────────────────────────────────────────┤
-│ CURRENT FOCUS: Knowledge of Self                        │
+│ CURRENT FOCUS: Knowledge of Sciences                    │
 │ → Right now, prioritize understanding your own design   │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -378,12 +381,12 @@ During session planning, discussion of "contextual recommendations" for next ste
 **What was done:**
 - ✅ Complete data in `src/knowledgebase/prime_self/knowledges_canonical.json`
 - ✅ Six Knowledges documented:
-  1. Knowledge of Self
-  2. Knowledge of Ancestors  
-  3. Knowledge of The One
-  4. Constructive Knowledge
-  5. Destructive Knowledge
-  6. Knowledge of Healing
+  1. Knowledge of Sciences
+  2. Knowledge of Arts  
+  3. Knowledge of Defenses
+  4. Knowledge of Heresies
+  5. Knowledge of Connections
+  6. Knowledge of Mysteries
 
 **What's missing:**
 - ❌ Educational content in profile explaining what the Six Knowledges are
@@ -725,11 +728,10 @@ document.getElementById('totalProfiles').textContent = stats.profilesGenerated;
 **Status:** Missing pricing tier  
 **Source:** UX_DEEP_REVIEW.md Part 2.3, Reddit pricing research
 
-**Current pricing:**
-- Free → $15 (Seeker) → $97 (Guide) → $500 (Oracle)
+**Current pricing (Plan v4):**
+- Free ($0) → Explorer ($12) → Guide ($60) → Studio ($149)
 
-**Reddit consensus:**
-> "The jump from free to $97 feels like a scam. Every r/astrology thread says: '$5-15/mo is the sweet spot.'"
+**Note:** This kanban item is now RESOLVED. Plan v4 implemented $12/$60/$149 tiers with daily ceilings via RATE_LIMIT_KV. The pricing gap from free→$12 is within the $7-15 sweet spot identified by Reddit research.
 
 **Competitor pricing:**
 - Co-Star: Free + $3/mo
@@ -737,23 +739,7 @@ document.getElementById('totalProfiles').textContent = stats.profilesGenerated;
 - The Pattern: Free + $5/mo
 - TimePassages: $60/year (~$5/mo)
 
-**Proposed new structure:**
-```
-Free:     2 charts/month, transits, basic synthesis
-Curious:  $7/mo — Unlimited charts, full synthesis, alerts
-Seeker:   $15/mo — Above + check-ins, diary, composite
-Guide:    $49/mo — Practitioner roster (when impl.)
-Oracle:   $97/mo — API access 500 calls/mo (when impl.)
-```
-
-**Files to modify:**
-- `frontend/index.html` — Pricing modal (~line 210)
-- `workers/src/handlers/billing.js` — Add Stripe price ID
-- `workers/src/middleware/tier.js` — Add tier logic
-
-**Also required:** Remove "White-label API" and other unimplemented features from $500 tier (false advertising)
-
-**Related:** BL-UX-M4 (Simplify pricing) in Sprint 18
+**Status: ✅ RESOLVED** — Plan v4 pricing addresses the core feedback. Current $12 Explorer tier sits squarely in the market sweet spot.
 
 ---
 

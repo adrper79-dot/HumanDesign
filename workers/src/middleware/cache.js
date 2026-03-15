@@ -93,7 +93,7 @@ function isHashedAsset(path) {
  * @param {Request} request - Original request (for path detection)
  * @returns {Response} Response with Cache-Control header
  */
-export function applyCacheHeaders(response, request) {
+function applyCacheHeaders(response, request) {
   const url = new URL(request.url);
   const path = url.pathname;
 
@@ -168,7 +168,7 @@ export function applyCacheForPublicAPI(response, path) {
  * @param {number} [opts.staleWhileRevalidate] - Serve stale while refreshing
  * @returns {Response}
  */
-export function cacheControl(response, opts = {}) {
+function cacheControl(response, opts = {}) {
   const parts = [];
 
   if (opts.noStore) {

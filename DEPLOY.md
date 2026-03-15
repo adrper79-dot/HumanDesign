@@ -2,7 +2,7 @@
 
 **Purpose**: Step-by-step deployment procedures with verification  
 **Audience**: Developers deploying to production  
-**Last Updated**: March 8, 2026
+**Last Updated**: March 14, 2026
 
 ---
 
@@ -10,7 +10,7 @@
 
 Before deploying, verify:
 
-- [ ] All tests passing: `npm test` (expect 263/263 ✅)
+- [ ] Current Vitest suite passes locally: `npm test`
 - [ ] No TypeScript/lint errors: Review with Copilot or run linter
 - [ ] Database migration planned (if schema changes)
 - [ ] Environment secrets configured (see "Required Secrets" below)

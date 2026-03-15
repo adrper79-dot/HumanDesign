@@ -1,5 +1,8 @@
 # Prime Self — UX Deep Review & Findings
 
+> Historical UX review. This document captures an earlier interface state and includes outdated pricing examples and product-language references.
+> Use it as design research input, not as current product truth.
+
 **Date:** March 8, 2026  
 **Reviewer:** Deep Research Audit (Codebase + Reddit Sentiment + Steve Jobs Principles)  
 **Scope:** Full frontend UI review — `index.html` (4,885 lines), 8 CSS files, 3 JS modules  
@@ -143,7 +146,7 @@ Users must enter birth data **3 separate times** across tabs:
 
 The testimonials section (lines 869-1014) contains 6 testimonials that are clearly fabricated:
 - "Sarah Mitchell, HD Practitioner · 450+ Client Readings"
-- "Marcus Chen, Projector 5/1 · Seeker Tier"
+- \"Marcus Chen, Projector 5/1 · Explorer Tier\"
 - "Dr. Amanda Reyes, Relationship Coach · Guide Tier"
 
 **Reddit sentiment:** Fake testimonials are the #1 trust-killer. r/astrology users specifically call out "those fake review carousels."
@@ -162,7 +165,9 @@ document.getElementById('totalProfiles').textContent = '18,392';
 
 ### 2.3 PRICING SHOCK
 
-The pricing grid jumps from $0 → $15 → $97 → $500/month.
+> **UPDATE (Plan v4):** This section documents the original pricing feedback. Pricing has since been restructured to Free/$0, Explorer/$12, Guide/$60, Studio/$149 with daily ceilings via RATE_LIMIT_KV. The $12 Explorer tier addresses the Reddit feedback below.
+
+The original pricing grid jumped from $0 → $15 → $97 → $500/month.
 
 **Reddit consensus:** The jump from free to $97 feels like a scam. Every r/astrology thread about paid apps says: "$5-15/mo for an astrology app is the sweet spot."
 

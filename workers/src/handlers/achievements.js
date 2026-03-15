@@ -88,7 +88,7 @@ export async function handleGetAchievements(request, env, ctx) {
     }
     
     return Response.json({
-      success: true,
+      ok: true,
       achievements: achievementsList,
       byCategory,
       categories: CATEGORIES,
@@ -147,7 +147,7 @@ export async function handleGetProgress(request, env, ctx) {
     }));
     
     return Response.json({
-      success: true,
+      ok: true,
       progress: {
         totalAchievements: progress.totalAchievements,
         unlockedCount: progress.unlockedCount,
@@ -204,7 +204,6 @@ export async function handleGetLeaderboard(request, env, ctx) {
       email: entry.user_id === user.id
         ? entry.email  // Show full email for current user
         : maskEmail(entry.email),
-      tier: entry.tier,
       totalPoints: entry.total_points,
       totalAchievements: entry.total_achievements,
       percentage: entry.achievement_percentage,
@@ -213,7 +212,7 @@ export async function handleGetLeaderboard(request, env, ctx) {
     }));
     
     return Response.json({
-      success: true,
+      ok: true,
       leaderboard: maskedLeaderboard,
       userRank: userRank ? {
         rank: userRank.rank,
@@ -254,7 +253,7 @@ export async function handleTrackEvent(request, env, ctx) {
     const newlyUnlocked = await trackEvent(env, user.id, eventType, eventData, user.tier);
     
     return Response.json({
-      success: true,
+      ok: true,
       eventType,
       newlyUnlocked: newlyUnlocked.map(a => ({
         id: a.id,

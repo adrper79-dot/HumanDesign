@@ -1,0 +1,101 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "source": "The Library Canonical Philosophy — Derivation Chain",
+    "description": "The 7-step formal derivation from axiom through six overtones. Each step has a proof from a specific domain of mathematics or formal logic. These are not philosophical arguments — they are formal necessities.",
+    "usage": "Enables 'why' answers in synthesis. When the user asks WHY a chart element behaves as it does, the derivation chain provides the structural reasoning."
+  },
+  "axiom": {
+    "statement": "Awareness is.",
+    "nature": "Not 'I think therefore I am' (imports assumptions about the thinker). The irreducible datum: something is aware. Science cannot disprove it because science requires it as a precondition.",
+    "structure": "Contains two terms: awareness (experiential pole) and is (ontological pole). These two terms do not meet and do not need to. They need to be held. 'Awareness is' IS the first polarity — the irreducible charge between experiencing and existing.",
+    "harmonicBasis": "The rapid reflection between these two poles — awareness registering its own is-ness, existence registering its own awareness — is itself a vibration. Each cycle of reflection raises the frequency. This is the harmonic series at its most primitive: the fundamental tone vibrating against its own existence, generating overtones."
+  },
+  "derivationChain": [
+    {
+      "step": 1,
+      "from": "F1 (Experience)",
+      "to": "First Overtone: Polarity",
+      "interval": "Octave (2:1)",
+      "proofDomain": "Information Theory",
+      "proofSketch": "Shannon (1948): information content requires at minimum two distinguishable states. H=0 with one state — no information, no experience possible. Bateson (1972): information is 'a difference that makes a difference.' Any system capable of experience requires at minimum two mutually distinguishable states = the formal definition of polarity.",
+      "status": "Formally proven. Information theory (Shannon 1948, Bateson 1972).",
+      "intervalProof": "2:1 = 'two ones.' Same pitch class, double frequency. Identical in nature, different in magnitude. This IS polarity by mathematical definition.",
+      "whyItMatters": "Every defined/undefined center pair in a chart is a polarity. Understanding this structurally means neither state is 'better' — they are two poles of a charge relationship."
+    },
+    {
+      "step": 2,
+      "from": "First Overtone: Polarity",
+      "to": "Second Overtone: Trinity",
+      "interval": "Perfect Fifth (3:2)",
+      "proofDomain": "Russell's Type Theory + Nash Equilibrium",
+      "proofSketch": "Russell (1908): any system containing P and ¬P generates self-referential paradoxes unless a metalevel is introduced. Any polaric system (A and ¬A) creates recursive self-reference producing paradox without a Third term. Nash (1950): any two-player system requires an equilibrium condition — a third term — for stability.",
+      "status": "Formally proven. Russell's type theory (1908); Nash (1950) — convergent multi-domain proof.",
+      "intervalProof": "Numerator 3 = Trinity. The Pythagorean comma proves Trinity exceeds Polarity: (3/2)^12 ≠ 2^7 — the three-body system cannot close on the two-body container.",
+      "whyItMatters": "Type + Strategy + Authority is a trinity. Explaining any two without the third produces paradox. The emergent 'Third' is the person's unique behavioral quality."
+    },
+    {
+      "step": 3,
+      "from": "Second Overtone: Trinity",
+      "to": "Third Overtone: Quaternity",
+      "interval": "Perfect Fourth (4:3)",
+      "proofDomain": "Euclidean Topology",
+      "proofSketch": "Three non-collinear points define a plane (2D interior, no depth). In 3D Euclidean space, four non-coplanar points are the minimum required to enclose a volume. The tetrahedron (4 vertices, 6 edges, 4 faces) is the first structure with genuine interior: containment.",
+      "status": "Formally proven. Euclidean geometry (tetrahedron as minimum 3D container).",
+      "intervalProof": "Numerator 4 = Quaternity. The Fourth is the octave complement of the Fifth (4/3 × 3/2 = 2/1) — the containing interval.",
+      "whyItMatters": "Four motors, four awareness centers, four types — these quaternary structures create the chart's containment. They hold the person's energy configuration inside a genuine interior."
+    },
+    {
+      "step": 4,
+      "from": "Third Overtone: Quaternity",
+      "to": "Fourth Overtone: Pentad",
+      "interval": "Major Third (5:4)",
+      "proofDomain": "Graph Topology + Fibonacci/Phi",
+      "proofSketch": "Quaternity's centroid is K₁,₄ (star graph: hub + 4 leaves, acyclic). Phi requires graph cycles (Fibonacci self-reference). K₁,₄ is acyclic — Phi impossible. C₅ (pentagon: 5 vertices in closed ring) has cycles — Phi necessary. The categorical topological transition K₁,₄ → C₅ makes Phi possible for the first time.",
+      "status": "Formally proven. Graph topology + Fibonacci limit theorem.",
+      "intervalProof": "Numerator 5 = Pentad.",
+      "whyItMatters": "Channel completion is this exact topological shift: from star (hanging gates reaching outward) to ring (completed channel cycling energy). The shift is categorical, not gradual."
+    },
+    {
+      "step": 5,
+      "from": "Fourth Overtone: Pentad",
+      "to": "Fifth Overtone: Hexad",
+      "interval": "Minor Third (6:5)",
+      "proofDomain": "Apollonius + Hales (Kepler's Conjecture)",
+      "proofSketch": "In 2D Euclidean space, maximum circles of equal size touching a central circle = exactly 6 (6 × 60° = 360°). Hales (1998, verified 2017): hexagonal arrangement is the uniquely optimal packing. Pentadic entities in optimal community → hexagonal packing is the necessary consequence.",
+      "status": "Formally proven. Apollonius (kissing number in 2D); Hales 1998/2017.",
+      "intervalProof": "Numerator 6 = Hexad.",
+      "whyItMatters": "Circuit groups organize individuals into maximally efficient communities. When a circuit closes, it achieves hexagonal closure — a community frequency that open circuits cannot generate."
+    },
+    {
+      "step": 6,
+      "from": "Fifth Overtone: Hexad",
+      "to": "Sixth Overtone: Heptad",
+      "interval": "Major Seventh (15:8)",
+      "proofDomain": "Harmonic Series Mathematics",
+      "proofSketch": "The 7th harmonic (7:4) is the first overtone unrepresentable in the diatonic system. Prime 7 appears nowhere in diatonic ratios (only 2, 3, 5). The harmonic series overflows the diatonic container at 7. The system must either return to fundamental at higher octave (Ti → Do) or develop a new containing system (diatonic → chromatic).",
+      "status": "Formally proven. Harmonic series mathematics (7th prime as first non-diatonic overflow).",
+      "intervalProof": "15 = 3×5 (Trinity × Pentad). 8 = 2³ (Polarity-cubed). Product of most generative principles over cube of foundational differentiation. Plus: 15:8 × 16:15 = 2:1 — one minimum half-step from octave.",
+      "whyItMatters": "The full chart as a unified system generates a truth (the person's total pattern) that no subsystem can contain. This overflow IS self-awareness. The synthesis is the Heptad moment — Ti resolving to Do."
+    }
+  ],
+  "intervalSummary": {
+    "method": "All six use ratio-numerator correspondence (Method A). The Major Seventh's proof is algebraically richer — 15=3×5, 8=2³ — but it is still arithmetic encoding, not qualitative analogy.",
+    "assignments": [
+      { "interval": "Octave (2:1)", "overtone": "Polarity", "proof": "2:1 = two ones = polarity by mathematical definition" },
+      { "interval": "Perfect Fifth (3:2)", "overtone": "Trinity", "proof": "Numerator 3 = Trinity. Pythagorean comma: (3/2)^12 ≠ 2^7" },
+      { "interval": "Perfect Fourth (4:3)", "overtone": "Quaternity", "proof": "Numerator 4 = Quaternity. Octave complement of Fifth" },
+      { "interval": "Major Third (5:4)", "overtone": "Pentad", "proof": "Numerator 5 = Pentad" },
+      { "interval": "Minor Third (6:5)", "overtone": "Hexad", "proof": "Numerator 6 = Hexad" },
+      { "interval": "Major Seventh (15:8)", "overtone": "Heptad", "proof": "15=3×5 (Trinity×Pentad), 8=2³ (Polarity³). One half-step from octave" }
+    ]
+  },
+  "chromaticCompletion": {
+    "formula": "5 (Forges/pentatonic) + 7 (Library/diatonic) = 12 (chromatic)",
+    "pianoAnalogy": "5 black keys (pentatonic) + 7 white keys (diatonic) = 12 keys (chromatic). The pentatonic and diatonic are each other's chromatic complement.",
+    "librarySelection": "The Library's 7 levels = diatonic: minimum selection including all five primary interval relationships AND a leading tone for directed return.",
+    "primeSelfSelection": "Prime Self's 5 Forges = pentatonic: the globally most universal scale, appearing independently across all cultures. The five patterns arising naturally from the logic of living form.",
+    "knowledgesSelection": "Prime Self's 6 Knowledges = whole-tone (hexatonic): six equal divisions of the octave, maximum symmetry, minimum tension.",
+    "selfAs12th": "Self (6th Forge / 7th Knowledge) = the 12th position, the return Do completing the chromatic scale."
+  }
+}

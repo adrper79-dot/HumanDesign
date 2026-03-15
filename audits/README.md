@@ -1,8 +1,22 @@
 # Audit Reports & Analysis
 
-Comprehensive audits, findings, and analysis of Prime Self's codebase and user experience.
+Point-in-time audits, findings, and remediation history for Prime Self.
 
-## 📊 Latest Audits (Current Status)
+Use these documents for historical context, risk tracking, and validation history. Do not assume any single audit is the current source of truth unless it explicitly says so.
+
+## 📊 Current Starting Points
+
+For the most useful current audit entry points, start with:
+
+- [REPOSITORY_ASSESSMENT_2026-03-09.md](REPOSITORY_ASSESSMENT_2026-03-09.md)
+- [TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md)
+- [AUDIT_REMEDIATION_LOG.md](AUDIT_REMEDIATION_LOG.md)
+
+Everything else below should be treated as historical analysis unless re-verified.
+
+---
+
+## 📊 Audit Catalog
 
 ### 2026-03-08 Comprehensive Audits
 
@@ -166,11 +180,11 @@ See [FRONTEND_COMPREHENSIVE_AUDIT.md](FRONTEND_COMPREHENSIVE_AUDIT.md).
 
 ---
 
-## 📈 Audit Metrics
+## 📈 Historical Metrics
 
-| Metric | Current | Target |
+| Metric | Historical Snapshot | Target |
 |--------|---------|--------|
-| Test Coverage | 100% (unit) | 80% (unit + integration) |
+| Test Coverage | point-in-time only | 80% (unit + integration) |
 | Design System Adherence | 52/100 | 80/100 |
 | Frontend Code Grade | C+ | A- |
 | Accessibility Grade | C | AA (WCAG) |
@@ -180,6 +194,8 @@ See [FRONTEND_COMPREHENSIVE_AUDIT.md](FRONTEND_COMPREHENSIVE_AUDIT.md).
 ---
 
 ## Actions & Remediation
+
+Use [../BACKLOG.md](../BACKLOG.md) for the active prioritized backlog and [AUDIT_REMEDIATION_LOG.md](AUDIT_REMEDIATION_LOG.md) for resolved audit items.
 
 ### Critical (Do First)
 - JWT → HttpOnly cookies (security)

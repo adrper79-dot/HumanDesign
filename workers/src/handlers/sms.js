@@ -13,7 +13,8 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { callLLM } from '../lib/llm.js';
-import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+import { enforceFeatureAccess, recordUsage } from '../middleware/tierEnforcement.js';
+import { getTier } from '../lib/stripe.js';
 
 // ─── Telnyx Webhook Signature Verification ───────────────────
 
@@ -281,10 +282,32 @@ async function handleSendDigest(request, env) {
     const users = usersResult.rows || [];
     let sent = 0, failed = 0;
 
+    // MED-N+1-001: Pre-fetch all SMS usage counts in one batch query
+    // instead of querying per-user inside the loop.
+    const periodStart = new Date();
+    periodStart.setDate(1);
+    periodStart.setHours(0, 0, 0, 0);
+    const userIds = users.map(u => u.id);
+    const usageMap = new Map();
+    if (userIds.length > 0) {
+      const batchResult = await query(QUERIES.getBatchSmsUsageCounts, [userIds, periodStart.toISOString()]);
+      for (const row of batchResult.rows) {
+        usageMap.set(row.user_id, parseInt(row.count));
+      }
+    }
+
     for (const user of users) {
       try {
+        // Skip if user has hit their monthly SMS limit
+        const tierCfg = getTier(user.tier || 'free');
+        const monthLimit = tierCfg.features.smsMonthlyLimit;
+        if (monthLimit !== Infinity) {
+          const currentUsage = usageMap.get(user.id) || 0;
+          if (currentUsage >= monthLimit) { failed++; continue; }
+        }
         const digest = await generateDigestForUser(user, env);
         await sendSMS(user.phone, digest, env);
+        await recordUsage(env, user.id, 'sms_digest', '/api/sms/scheduled').catch(err => console.error('[SMS] Usage record failed:', err.message));
         sent++;
       } catch (err) {
         console.error(`Digest send failed for ${user.phone}:`, err);
@@ -314,6 +337,17 @@ async function handleSendDigest(request, env) {
     const userTier = request._user?.tier || 'free';
     const targetId = body.userId || null;
     
+    // P2-SEC-003: Reject body.phone — only allow userId-based targeting
+    // Phone-based targeting allows any authenticated user to trigger SMS to arbitrary numbers
+    if (body.phone && !body.userId) {
+      if (!['practitioner', 'admin'].includes(userTier)) {
+        return Response.json(
+          { error: 'Phone-based digest requires practitioner tier' },
+          { status: 403 }
+        );
+      }
+    }
+    
     // If specifying userId, and it's not the authenticated user, require elevated permissions
     if (targetId && targetId !== request._user.sub) {
       if (!['practitioner', 'admin'].includes(userTier)) {
@@ -324,10 +358,11 @@ async function handleSendDigest(request, env) {
       }
     }
     
-    // Single user
-    const sql = body.userId ? QUERIES.getUserById : QUERIES.getUserByPhone;
-    const param = body.userId || body.phone;
-    const userResult = await query(sql, [param]);
+    // If no targetId and no elevated permissions, default to sending to self
+    const effectiveId = targetId || request._user.sub;
+    
+    // Single user — always look up by user ID for safety
+    const userResult = await query(QUERIES.getUserById, [effectiveId]);
     const user = userResult.rows?.[0];
 
     if (!user) {
@@ -338,8 +373,23 @@ async function handleSendDigest(request, env) {
       return Response.json({ error: 'User has no phone number' }, { status: 400 });
     }
 
+    // SMS monthly quota check
+    const tierCfg = getTier(user.tier || 'free');
+    const monthLimit = tierCfg.features.smsMonthlyLimit;
+    if (monthLimit !== Infinity) {
+      const periodStart = new Date();
+      periodStart.setDate(1);
+      periodStart.setHours(0, 0, 0, 0);
+      const usageResult = await query(QUERIES.getUsageByUserAndAction, [user.id, 'sms_digest', periodStart.toISOString()]);
+      const currentUsage = parseInt(usageResult.rows[0]?.count || 0);
+      if (currentUsage >= monthLimit) {
+        return Response.json({ error: 'SMS monthly limit reached', limit: monthLimit, current: currentUsage, upgrade_required: true }, { status: 429 });
+      }
+    }
+
     const digest = await generateDigestForUser(user, env);
     await sendSMS(user.phone, digest, env);
+    await recordUsage(env, user.id, 'sms_digest', '/api/sms/send-digest').catch(err => console.error('[SMS] Usage record failed:', err.message));
 
     return Response.json({
       ok: true,
@@ -377,9 +427,11 @@ async function generateDigestForUser(user, env) {
   // Call Haiku
   let digestText = await callDigestLLM(prompt, env);
 
-  // Enforce character limit
+  // Enforce character limit — truncate at last sentence boundary
   if (digestText.length > 320) {
-    digestText = digestText.substring(0, 317) + '...';
+    const truncated = digestText.substring(0, 317);
+    const lastSentence = truncated.search(/[.!?][^.!?]*$/);
+    digestText = lastSentence > 200 ? truncated.substring(0, lastSentence + 1) : truncated + '...';
   }
 
   return digestText;

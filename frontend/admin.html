@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Prime Self — Admin</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3a; --accent: #7c6aff;
+    --accent2: #4fd1c5; --danger: #f56565; --warn: #ed8936; --ok: #48bb78;
+    --text: #e2e8f0; --muted: #718096; --radius: 8px; --font: system-ui, sans-serif;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Layout */
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px;
+           display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 16px; font-weight: 600; }
+  header .token-area { display: flex; gap: 8px; align-items: center; }
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px;
+        display: flex; gap: 0; }
+  nav button { background: none; border: none; color: var(--muted); padding: 12px 16px;
+               cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent;
+               transition: color .15s; white-space: nowrap; }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  main { padding: 24px; max-width: 1100px; width: 100%; margin: 0 auto; flex: 1; }
+  section { display: none; }
+  section.active { display: block; }
+
+  /* Components */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 16px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+          padding: 16px; text-align: center; }
+  .stat .value { font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .stat .label { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* Forms */
+  .form-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 16px; flex-wrap: wrap; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input, select, textarea {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  .form-group { flex: 1; min-width: 160px; }
+  button {
+    background: var(--accent); color: #fff; border: none; padding: 8px 16px;
+    border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .85; }
+  button.secondary { background: var(--border); color: var(--text); }
+  button.danger { background: var(--danger); }
+  button.sm { padding: 4px 10px; font-size: 12px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 500;
+       border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge.free { background: #2d3748; color: var(--muted); }
+  .badge.individual { background: #2b4c7e; color: #63b3ed; }
+  .badge.practitioner { background: #2c4a22; color: #68d391; }
+  .badge.agency { background: #4a2c22; color: #fc8181; }
+  .badge.yes { background: #1a3a2a; color: var(--ok); }
+  .badge.no { background: #3a1a1a; color: var(--danger); }
+
+  /* Pagination */
+  .pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--muted); }
+
+  /* Alert / Toast */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface);
+           border: 1px solid var(--border); padding: 12px 20px; border-radius: var(--radius);
+           font-size: 13px; display: none; max-width: 360px; word-break: break-word; z-index: 999; }
+  #toast.ok { border-color: var(--ok); color: var(--ok); }
+  #toast.err { border-color: var(--danger); color: var(--danger); }
+
+  /* Login overlay */
+  #login { position: fixed; inset: 0; background: var(--bg); display: flex;
+           align-items: center; justify-content: center; z-index: 100; }
+  #login .box { background: var(--surface); border: 1px solid var(--border);
+                border-radius: 12px; padding: 40px; width: 380px; text-align: center; }
+  #login h1 { font-size: 20px; margin-bottom: 8px; }
+  #login p { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  #login input { margin-bottom: 12px; }
+  #login button { width: 100%; padding: 10px; font-size: 14px; }
+
+  /* Tier select inline */
+  .tier-select { background: var(--bg); border: 1px solid var(--border); color: var(--text);
+                 padding: 4px 6px; border-radius: 4px; font-size: 12px; }
+
+  /* Spinner */
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border);
+          border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite;
+          vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="box">
+    <h1>Prime Self Admin</h1>
+    <p>Enter your Admin Token to continue</p>
+    <input type="password" id="login-token" placeholder="Admin Token" autocomplete="off">
+    <button onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>⚙️ Prime Self Admin</h1>
+    <div class="token-area">
+      <span id="header-api" style="font-size:12px;color:var(--muted)"></span>
+      <button class="secondary sm" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+  <nav>
+    <button class="active" onclick="showTab('stats',this)">Overview</button>
+    <button onclick="showTab('users',this)">Users</button>
+    <button onclick="showTab('promos',this)">Promo Codes</button>
+  </nav>
+  <main>
+    <!-- Overview -->
+    <section id="tab-stats" class="active">
+      <h2 style="font-size:18px;margin-bottom:16px">Overview</h2>
+      <div id="stats-grid" class="stats-grid">
+        <div class="stat"><div class="value"><span class="spin"></span></div><div class="label">Loading&hellip;</div></div>
+      </div>
+      <div class="card">
+        <h2>Quick Actions</h2>
+        <div class="form-row">
+          <button onclick="loadStats()">↻ Refresh Stats</button>
+          <button class="secondary" onclick="showTab('users',document.querySelector('nav button:nth-child(2)'))">Manage Users</button>
+          <button class="secondary" onclick="showTab('promos',document.querySelector('nav button:nth-child(3)'))">Manage Promos</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users -->
+    <section id="tab-users">
+      <h2 style="font-size:18px;margin-bottom:16px">Users</h2>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Search by email</label>
+            <input type="text" id="user-search" placeholder="name@example.com" oninput="debounceUserSearch()">
+          </div>
+          <button onclick="loadUsers(0)">Search</button>
+        </div>
+        <div class="table-wrap">
+          <table id="users-table">
+            <thead><tr>
+              <th>Email</th><th>Tier</th><th>Verified</th><th>Created</th><th>Last Login</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="6" style="color:var(--muted);text-align:center">Search for users</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <button class="secondary sm" id="btn-prev" onclick="loadUsers(usersOffset-usersLimit)" disabled>← Prev</button>
+          <span id="users-page-info"></span>
+          <button class="secondary sm" id="btn-next" onclick="loadUsers(usersOffset+usersLimit)" disabled>Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Promos -->
+    <section id="tab-promos">
+      <h2 style="font-size:18px;margin-bottom:16px">Promo Codes</h2>
+      <div class="card">
+        <h2>Create Promo Code</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Code</label>
+            <input type="text" id="promo-code" placeholder="LAUNCH20" style="text-transform:uppercase">
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="promo-type">
+              <option value="percentage">Percentage</option>
+              <option value="fixed_amount">Fixed Amount (cents)</option>
+            </select>
+          </div>
+          <div class="form-group" style="max-width:120px">
+            <label>Value</label>
+            <input type="number" id="promo-value" placeholder="20" min="1">
+          </div>
+          <div class="form-group" style="max-width:140px">
+            <label>Max Uses (blank=∞)</label>
+            <input type="number" id="promo-max" placeholder="">
+          </div>
+          <div class="form-group">
+            <label>Expires (blank=never)</label>
+            <input type="date" id="promo-expires">
+          </div>
+          <div style="align-self:flex-end">
+            <button onclick="createPromo()">Create</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h2 style="margin:0">All Codes</h2>
+          <button class="secondary sm" onclick="loadPromos()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Code</th><th>Type</th><th>Value</th><th>Used/Max</th><th>Expires</th><th>Active</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="promos-tbody"><tr><td colspan="7" style="color:var(--muted);text-align:center"><span class="spin"></span> Loading&hellip;</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ─── Config ────────────────────────────────────────────────
+  const API = 'https://prime-self-api.adrper79.workers.dev';
+  let ADMIN_TOKEN = '';
+  let usersOffset = 0;
+  let usersLimit = 50;
+  let usersTotal = 0;
+  let userSearchTimer = null;
+
+  // ─── Auth ──────────────────────────────────────────────────
+  function doLogin() {
+    const t = document.getElementById('login-token').value.trim();
+    if (!t) return toast('Enter your admin token', 'err');
+    ADMIN_TOKEN = t;
+    localStorage.setItem('ps_admin_token', t);
+    init();
+  }
+  function signOut() {
+    localStorage.removeItem('ps_admin_token');
+    ADMIN_TOKEN = '';
+    document.getElementById('login').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+  function init() {
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('header-api').textContent = API.replace('https://', '');
+    loadStats();
+    loadPromos();
+  }
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('ps_admin_token');
+    if (saved) { ADMIN_TOKEN = saved; init(); }
+    document.getElementById('login-token').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  });
+
+  // ─── API fetch wrapper ─────────────────────────────────────
+  async function api(path, opts = {}) {
+    const res = await fetch(API + path, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Token': ADMIN_TOKEN,
+        ...(opts.headers || {}),
+      },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    return json;
+  }
+
+  // ─── Toast ─────────────────────────────────────────────────
+  let _toastTimer;
+  function toast(msg, type = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = type;
+    el.style.display = 'block';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+
+  // ─── Tab navigation ────────────────────────────────────────
+  function showTab(id, btn) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  // ─── Stats ─────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const { stats } = await api('/api/admin/stats');
+      const grid = document.getElementById('stats-grid');
+      grid.innerHTML = [
+        ['Total Users', stats.total_users],
+        ['New (24h)', stats.new_users_24h],
+        ['New (7d)', stats.new_users_7d],
+        ['Verified', stats.verified_users],
+        ['Individual', stats.individual_users],
+        ['Practitioner', stats.practitioner_users],
+        ['Agency', stats.agency_users],
+        ['Active Subs', stats.active_subscriptions],
+        ['Charts (24h)', stats.charts_24h],
+        ['Profiles (24h)', stats.profiles_24h],
+      ].map(([label, value]) =>
+        `<div class="stat"><div class="value">${Number(value).toLocaleString()}</div><div class="label">${label}</div></div>`
+      ).join('');
+    } catch (e) {
+      toast('Stats load failed: ' + e.message, 'err');
+    }
+  }
+
+  // ─── Users ─────────────────────────────────────────────────
+  function debounceUserSearch() {
+    clearTimeout(userSearchTimer);
+    userSearchTimer = setTimeout(() => loadUsers(0), 400);
+  }
+
+  async function loadUsers(offset = 0) {
+    const email = document.getElementById('user-search').value.trim() || '';
+    usersOffset = Math.max(0, offset);
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center"><span class="spin"></span> Loading&hellip;</td></tr>';
+    try {
+      const params = new URLSearchParams({ limit: usersLimit, offset: usersOffset });
+      if (email) params.set('email', email);
+      const { users, total } = await api('/api/admin/users?' + params);
+      usersTotal = total;
+      document.getElementById('users-page-info').textContent =
+        `${usersOffset + 1}–${Math.min(usersOffset + users.length, total)} of ${total}`;
+      document.getElementById('btn-prev').disabled = usersOffset === 0;
+      document.getElementById('btn-next').disabled = usersOffset + usersLimit >= total;
+
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center">No users found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td title="${esc(u.email)}">${esc(u.email)}</td>
+          <td><span class="badge ${u.tier}">${u.tier}</span></td>
+          <td><span class="badge ${u.email_verified ? 'yes' : 'no'}">${u.email_verified ? 'yes' : 'no'}</span></td>
+          <td>${fmtDate(u.created_at)}</td>
+          <td>${u.last_login_at ? fmtDate(u.last_login_at) : '—'}</td>
+          <td>
+            <select class="tier-select" id="tier-${u.id}" onchange="">
+              <option value="free" ${u.tier==='free'?'selected':''}>free</option>
+              <option value="individual" ${u.tier==='individual'?'selected':''}>individual</option>
+              <option value="practitioner" ${u.tier==='practitioner'?'selected':''}>practitioner</option>
+              <option value="agency" ${u.tier==='agency'?'selected':''}>agency</option>
+            </select>
+            <button class="sm" style="margin-left:4px" onclick="setTier('${u.id}')">Set</button>
+            ${!u.email_verified ? `<button class="sm secondary" style="margin-left:4px" onclick="verifyUser('${u.id}')">Verify</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger)">${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  async function setTier(userId) {
+    const tier = document.getElementById('tier-' + userId).value;
+    try {
+      const { user } = await api(`/api/admin/users/${userId}/tier`, {
+        method: 'PATCH',
+        body: JSON.stringify({ tier }),
+      });
+      toast(`${user.email} → ${user.tier}`, 'ok');
+    } catch (e) {
+      toast('Set tier failed: ' + e.message, 'err');
+    }
+  }
+
+  async function verifyUser(userId) {
+    try {
+      const { user } = await api(`/api/admin/users/${userId}/verify`, {
+        method: 'PATCH',
+        body: JSON.stringify({ verified: true }),
+      });
+      toast(`${user.email} email verified`, 'ok');
+      loadUsers(usersOffset);
+    } catch (e) {
+      toast('Verify failed: ' + e.message, 'err');
+    }
+  }
+
+  // ─── Promos ────────────────────────────────────────────────
+  async function loadPromos() {
+    const tbody = document.getElementById('promos-tbody');
+    tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center"><span class="spin"></span> Loading&hellip;</td></tr>';
+    try {
+      const data = await api('/api/admin/promo');
+      const promos = data.promos || data;
+      if (!promos.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center">No promo codes</td></tr>';
+        return;
+      }
+      tbody.innerHTML = promos.map(p => `
+        <tr>
+          <td><strong>${esc(p.code)}</strong></td>
+          <td>${p.discount_type === 'percentage' ? '%' : '$'}</td>
+          <td>${p.discount_type === 'percentage' ? p.discount_value + '%' : '$' + (p.discount_value/100).toFixed(2)}</td>
+          <td>${p.redemptions}${p.max_redemptions ? '/'+p.max_redemptions : '/∞'}</td>
+          <td>${p.valid_until ? fmtDate(p.valid_until) : 'Never'}</td>
+          <td><span class="badge ${p.active ? 'yes' : 'no'}">${p.active ? 'active' : 'off'}</span></td>
+          <td>${p.active ? `<button class="sm danger" onclick="deactivatePromo('${p.id}')">Deactivate</button>` : ''}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger)">${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  async function createPromo() {
+    const code = document.getElementById('promo-code').value.trim().toUpperCase();
+    const discount_type = document.getElementById('promo-type').value;
+    const discount_value = parseFloat(document.getElementById('promo-value').value);
+    const max_r = document.getElementById('promo-max').value;
+    const expires = document.getElementById('promo-expires').value;
+
+    if (!code || isNaN(discount_value)) return toast('Code and value are required', 'err');
+    try {
+      await api('/api/admin/promo', {
+        method: 'POST',
+        body: JSON.stringify({
+          code,
+          discount_type,
+          discount_value,
+          max_redemptions: max_r ? parseInt(max_r) : null,
+          valid_until: expires || null,
+        }),
+      });
+      toast(`Promo ${code} created`, 'ok');
+      document.getElementById('promo-code').value = '';
+      document.getElementById('promo-value').value = '';
+      document.getElementById('promo-max').value = '';
+      document.getElementById('promo-expires').value = '';
+      loadPromos();
+    } catch (e) {
+      toast('Create failed: ' + e.message, 'err');
+    }
+  }
+
+  async function deactivatePromo(id) {
+    if (!confirm('Deactivate this promo code?')) return;
+    try {
+      await api(`/api/admin/promo/${id}/deactivate`, { method: 'PATCH' });
+      toast('Promo deactivated', 'ok');
+      loadPromos();
+    } catch (e) {
+      toast('Deactivate failed: ' + e.message, 'err');
+    }
+  }
+
+  // ─── Helpers ───────────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+</script>
+</body>
+</html>

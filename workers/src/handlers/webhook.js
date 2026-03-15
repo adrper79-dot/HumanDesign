@@ -16,6 +16,7 @@ import { createStripeClient, verifyWebhook } from '../lib/stripe.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { markReferralAsConverted } from './referrals.js';
 import { sendEmail, sendSubscriptionConfirmationEmail } from '../lib/email.js';
+import { trackEvent, EVENTS } from '../lib/analytics.js';
 
 /**
  * Map Stripe subscription status to our internal status
@@ -39,13 +40,19 @@ function mapStripeStatus(stripeStatus) {
  * Determine tier from Stripe price ID
  */
 function getTierFromPriceId(priceId, env) {
+  // Accept both new canonical names and legacy env var aliases so existing
+  // subscribers and new subscribers both resolve correctly.
   const priceIdMap = {
-    [env.STRIPE_PRICE_REGULAR]:      'regular',
+    [env.STRIPE_PRICE_INDIVIDUAL]:   'individual',   // canonical new name
+    [env.STRIPE_PRICE_REGULAR]:      'individual',   // legacy alias → individual
     [env.STRIPE_PRICE_PRACTITIONER]: 'practitioner',
-    [env.STRIPE_PRICE_WHITE_LABEL]:  'white_label',
+    [env.STRIPE_PRICE_AGENCY]:       'agency',        // canonical new name
+    [env.STRIPE_PRICE_WHITE_LABEL]:  'agency',        // legacy alias → agency
   };
 
-  return priceIdMap[priceId] || 'free';
+  // Filter out undefined keys (unset env vars) before lookup
+  const tier = priceIdMap[priceId];
+  return tier || 'free';
 }
 
 /**
@@ -104,7 +111,7 @@ export async function handleStripeWebhook(request, env) {
         break;
 
       case 'invoice.paid':
-        await handleInvoicePaid(event, query);
+        await handleInvoicePaid(event, query, env);
         break;
 
       case 'invoice.payment_failed':
@@ -116,7 +123,7 @@ export async function handleStripeWebhook(request, env) {
         break;
 
       case 'charge.dispute.created':
-        await handleChargeDispute(event, query);
+        await handleChargeDispute(event, query, stripe);
         break;
 
       default:
@@ -140,13 +147,21 @@ export async function handleStripeWebhook(request, env) {
 async function handleCheckoutCompleted(event, query, stripe, env) {
   const session = event.data.object;
   const customerId = session.customer;
-  const subscriptionId = session.subscription;
   const userId = session.metadata?.user_id;
 
   if (!userId) {
     console.error('No user_id in checkout session metadata');
     return;
   }
+
+  // HD_UPDATES3: Handle one-time purchases (mode: 'payment')
+  if (session.mode === 'payment') {
+    await handleOneTimePurchaseCompleted(session, query, userId);
+    return;
+  }
+
+  // Subscription checkout flow (existing logic)
+  const subscriptionId = session.subscription;
 
   // Fetch full subscription details
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -177,7 +192,11 @@ async function handleCheckoutCompleted(event, query, stripe, env) {
 
   // Send subscription confirmation email (fire and forget)
   if (env.RESEND_API_KEY) {
-    const TIER_LABELS = { regular: 'Explorer', practitioner: 'Practitioner', white_label: 'Studio' };
+    const TIER_LABELS = {
+      individual: 'Explorer', regular: 'Explorer',
+      practitioner: 'Practitioner',
+      agency: 'Studio', white_label: 'Studio'
+    };
     const tierLabel = TIER_LABELS[tier] || tier;
     // Look up user email
     try {
@@ -193,6 +212,60 @@ async function handleCheckoutCompleted(event, query, stripe, env) {
   }
 
   console.log(`Checkout completed for user ${userId}, tier: ${tier}`);
+  trackEvent(env, EVENTS.CHECKOUT_COMPLETE, { userId, tier }).catch(e => console.error('[webhook] trackEvent checkout_complete failed:', e.message));
+}
+
+/**
+ * HD_UPDATES3: Handle one-time purchase checkout completion
+ * Grants credits/access based on product metadata
+ */
+async function handleOneTimePurchaseCompleted(session, query, userId) {
+  const product = session.metadata?.product;
+  const grantsRaw = session.metadata?.grants;
+
+  if (!product || !grantsRaw) {
+    console.error('One-time purchase missing product/grants metadata:', session.id);
+    return;
+  }
+
+  let grants;
+  try { grants = JSON.parse(grantsRaw); } catch {
+    console.error('Invalid grants JSON in one-time purchase metadata:', grantsRaw);
+    return;
+  }
+
+  // Grant credits based on product type
+  if (grants.profileGenerations) {
+    // Single synthesis — add negative usage record as bonus credits
+    await query(QUERIES.createUsageRecord, [
+      userId, 'profile_generation_bonus', 'one-time-purchase', -grants.profileGenerations
+    ]);
+  }
+
+  if (grants.compositeCharts) {
+    await query(QUERIES.createUsageRecord, [
+      userId, 'composite_chart_bonus', 'one-time-purchase', -grants.compositeCharts
+    ]);
+  }
+
+  if (grants.transitPassDays) {
+    // Store transit pass expiry (7 days from now)
+    const expiresAt = new Date(Date.now() + grants.transitPassDays * 86400000).toISOString();
+    await query(QUERIES.createUsageRecord, [
+      userId, 'transit_pass', 'one-time-purchase', -1
+    ]);
+    // MED-INLINE-SQL: Use registered query instead of inline SQL
+    await query(QUERIES.updateTransitPassExpiry, [expiresAt, userId]);
+  }
+
+  if (grants.lifetimeTier) {
+    // MED-INLINE-SQL: Use registered query instead of inline SQL
+    await query(QUERIES.grantLifetimeAccess, [
+      grants.lifetimeTier, userId
+    ]);
+  }
+
+  console.log(`One-time purchase '${product}' fulfilled for user ${userId}:`, grants);
 }
 
 /**
@@ -236,7 +309,7 @@ async function handleSubscriptionUpdated(event, query, env) {
     // Ensure a practitioners row exists + keep practitioners.tier in sync.
     // createPractitioner uses ON CONFLICT DO NOTHING, so we follow it with an
     // explicit UPDATE to ensure the tier is current for existing practitioners.
-    if (tier === 'practitioner' || tier === 'white_label') {
+    if (tier === 'practitioner' || tier === 'agency' || tier === 'white_label') {
       await q(QUERIES.createPractitioner, [userId, false, tier]);
       await q(QUERIES.updatePractitionerTier, [userId, tier]);
     }
@@ -388,8 +461,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
 
 /**
  * Handle invoice.paid — BL-R-C4: Consolidated from billing.js
+ * HD_UPDATES3: Now includes 25% recurring revenue share for referrers
  */
-async function handleInvoicePaid(event, query) {
+async function handleInvoicePaid(event, query, env) {
   const invoice = event.data.object;
   const subscriptionId = invoice.subscription;
   const amountPaid = invoice.amount_paid;
@@ -402,6 +476,7 @@ async function handleInvoicePaid(event, query) {
   }
 
   const subscriptionDbId = result.rows[0].id;
+  const userId = result.rows[0].user_id;
 
   // Record payment event
   await query(QUERIES.createPaymentEvent, [
@@ -416,11 +491,41 @@ async function handleInvoicePaid(event, query) {
   ]);
 
   console.log(`Invoice paid for subscription ${subscriptionId}: ${amountPaid} ${invoice.currency}`);
+
+  // HD_UPDATES3: 25% recurring revenue share — credit referrer on each renewal
+  // Agency tier: cap credit at 50% of subscription cost (per HD_UPDATES3 spec)
+  if (amountPaid > 0 && userId && env.STRIPE_SECRET_KEY) {
+    try {
+      const refResult = await query(QUERIES.getReferrerForUser, [userId]);
+      const referrer = refResult.rows[0];
+
+      if (referrer?.referrer_stripe_id) {
+        const shareRate = 0.25;
+        const creditAmount = Math.floor(amountPaid * shareRate);
+
+        if (creditAmount > 0) {
+          const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
+          await stripe.customers.createBalanceTransaction(referrer.referrer_stripe_id, {
+            amount: -creditAmount,  // Negative = credit
+            currency: invoice.currency || 'usd',
+            description: `Referral revenue share (25% of $${(amountPaid / 100).toFixed(2)} payment)`,
+          }, {
+            idempotencyKey: `referral-credit-${event.id}`,
+          });
+          console.log(`Applied $${(creditAmount / 100).toFixed(2)} referral credit to ${referrer.referrer_stripe_id}`);
+        }
+      }
+    } catch (refErr) {
+      // Don't fail the invoice handler for referral credit errors
+      console.error('Referral revenue share error:', refErr);
+    }
+  }
 }
 
 /**
- * Handle charge.refunded — TXN-016 FIX
- * Downgrade user to free tier when a charge is refunded.
+ * Handle charge.refunded — TXN-016 FIX + P2-BIZ-003 FIX
+ * Only downgrade to free tier on FULL refund. Partial refunds log
+ * the event but preserve the user's current tier.
  */
 async function handleChargeRefunded(event, query) {
   const charge = event.data.object;
@@ -441,7 +546,7 @@ async function handleChargeRefunded(event, query) {
   const userId = result.rows[0].user_id;
   const subscriptionDbId = result.rows[0].id;
 
-  // Record the refund event
+  // Record the refund event regardless of full/partial
   await query(QUERIES.createPaymentEvent, [
     subscriptionDbId,
     event.id,
@@ -453,25 +558,36 @@ async function handleChargeRefunded(event, query) {
     JSON.stringify(charge)
   ]);
 
-  // Downgrade user to free tier
-  await query(QUERIES.updateUserTier, ['free', userId]);
-
-  console.log(`Charge refunded for user ${userId}, downgraded to free tier. Amount: ${charge.amount_refunded} ${charge.currency}`);
+  // P2-BIZ-003: Only downgrade on FULL refund — partial refund preserves tier
+  const isFullRefund = charge.refunded === true;
+  if (isFullRefund) {
+    await query(QUERIES.updateUserTier, ['free', userId]);
+    console.log(`Full refund for user ${userId}, downgraded to free tier. Amount: ${charge.amount_refunded} ${charge.currency}`);
+  } else {
+    console.log(`Partial refund for user ${userId} — tier preserved. Refunded: ${charge.amount_refunded}/${charge.amount} ${charge.currency}`);
+  }
 }
 
 /**
  * Handle charge.dispute.created — TXN-025 FIX
  * Downgrade user to free tier when a chargeback/dispute is opened.
  */
-async function handleChargeDispute(event, query) {
+async function handleChargeDispute(event, query, stripe) {
   const dispute = event.data.object;
   const chargeId = dispute.charge;
 
-  // Dispute object has charge ID, which contains customer ID
-  const customerId = dispute.customer || dispute.payment_intent;
+  let customerId = dispute.customer;
 
-  // Try to find via the evidence.customer field or payment_intent metadata
-  // The dispute object should have a 'customer' field at the top level (Stripe API 2024-12)
+  // If customer not on dispute object, look it up from the charge
+  if (!customerId && chargeId) {
+    try {
+      const charge = await stripe.charges.retrieve(chargeId);
+      customerId = charge.customer;
+    } catch (err) {
+      console.error('charge.dispute.created: Failed to retrieve charge:', chargeId, err.message);
+    }
+  }
+
   if (!customerId) {
     console.error('charge.dispute.created: No customer ID on dispute:', dispute.id);
     return;

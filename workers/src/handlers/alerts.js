@@ -137,7 +137,7 @@ async function createAlert(request, env, user) {
     const { rows: countRows } = await query(QUERIES.countUserAlerts, [user.id]);
     const existingCount = countRows[0];
 
-    const tierLimits = { free: 3, seeker: 10, guide: 25, practitioner: Infinity };
+    const tierLimits = { free: 3, individual: 10, regular: 10, practitioner: 25, agency: Infinity, white_label: Infinity, seeker: 10, guide: 25 };
     const limit = tierLimits[user.tier] || 3;
 
     if (existingCount.count >= limit) {
@@ -393,7 +393,7 @@ async function createAlertFromTemplate(request, env, user, templateId) {
     }
 
     // Check tier requirement
-    const tierHierarchy = { free: 0, seeker: 1, practitioner: 2 };
+    const tierHierarchy = { free: 0, regular: 1, practitioner: 2, white_label: 3, seeker: 1, guide: 2 };
     const requiredTier = tierHierarchy[template.tier_required] || 0;
     const userTier = tierHierarchy[user.tier] || 0;
 

@@ -88,6 +88,14 @@ export async function handleDiaryCreate(request, env) {
     );
   }
 
+  // P2-BIZ-016: Validate date format (YYYY-MM-DD)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || isNaN(Date.parse(eventDate))) {
+    return Response.json(
+      { error: 'eventDate must be a valid date in YYYY-MM-DD format' },
+      { status: 400 }
+    );
+  }
+
   // Validate field lengths
   if (eventTitle.length > 500 || (eventDescription && eventDescription.length > 10000)) {
     return Response.json({ error: 'Field too long' }, { status: 422 });
@@ -119,7 +127,9 @@ export async function handleDiaryCreate(request, env) {
     const userResult = await query(QUERIES.getUserById, [userId]);
     if (userResult.rows.length > 0) {
       const user = userResult.rows[0];
-      if (user.birth_date && user.birth_lat && user.birth_lng) {
+      const userTier = user.tier || 'free';
+      // Transit snapshots on diary entries are an Explorer+ feature (free diary is ungated)
+      if (userTier !== 'free' && user.birth_date && user.birth_lat && user.birth_lng) {
         transitSnapshot = await getTransitsForEventDate(eventDate, {
           birthDate: user.birth_date,
           birthLat: user.birth_lat,
@@ -241,6 +251,14 @@ export async function handleDiaryUpdate(request, env, entryId) {
   if (!eventDate || !eventTitle) {
     return Response.json(
       { error: 'eventDate and eventTitle are required' },
+      { status: 400 }
+    );
+  }
+
+  // P2-BIZ-016: Validate date format (YYYY-MM-DD)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || isNaN(Date.parse(eventDate))) {
+    return Response.json(
+      { error: 'eventDate must be a valid date in YYYY-MM-DD format' },
       { status: 400 }
     );
   }

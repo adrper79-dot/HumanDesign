@@ -141,7 +141,7 @@ export async function handleGetStats(request, env, ctx) {
       },
       recentReferrals: recentReferrals.map(ref => ({
         id: ref.id,
-        email: ref.referred_email.replace(/(.{3}).*(@.*)/, '$1***$2'),  // Mask email for privacy
+        email: ref.referred_email.replace(/^(.{1,3}).*(@.*)$/, (m, p1, p2) => p1.length < 3 ? '***' + p2 : p1 + '***' + p2),
         converted: !!ref.converted,
         conversionDate: ref.conversion_date,
         rewardGranted: !!ref.reward_granted,
@@ -254,11 +254,11 @@ export async function handleValidateCode(request, env, ctx) {
     return Response.json({
       valid: true,
       code: referrer.referral_code,
-      referrerEmail: referrer.email.replace(/(.{3}).*(@.*)/, '$1***$2'),  // Masked
+      referrerEmail: referrer.email.replace(/^(.{1,3}).*(@.*)$/, (m, p1, p2) => p1.length < 3 ? '***' + p2 : p1 + '***' + p2),
       discount: {
         type: 'first_month_free',
-        description: 'First month free on Seeker tier',
-        value: 1500  // $15 in cents
+        description: 'First month free on Individual tier',
+        value: 1900  // $19 in cents (HD_UPDATES3 pricing)
       }
     });
     
@@ -328,9 +328,54 @@ export async function handleApplyCode(request, env, ctx) {
       }, { status: 400 });
     }
     
+    // P2-BIZ-002: Anti-Sybil — account must be ≥72 hours old
+    const { rows: ageRows } = await query(
+      `SELECT created_at FROM users WHERE id = $1`, [user.id]
+    );
+    const accountAge = Date.now() - new Date(ageRows[0]?.created_at).getTime();
+    if (accountAge < 72 * 60 * 60 * 1000) {
+      return Response.json({
+        error: 'Account too new',
+        message: 'Your account must be at least 3 days old to apply a referral code'
+      }, { status: 400 });
+    }
+
+    // P2-BIZ-002: Anti-Sybil — cap referrals from same email domain (max 3)
+    const userDomain = (user.email || '').split('@')[1] || '';
+    if (userDomain) {
+      const { rows: domainRows } = await query(QUERIES.countReferralsByDomain, [referrer.id, userDomain]);
+      if ((domainRows[0]?.count || 0) >= 3) {
+        return Response.json({
+          error: 'Domain limit reached',
+          message: 'Too many referrals from the same email domain'
+        }, { status: 400 });
+      }
+    }
+
+    // P2-BIZ-002: Anti-Sybil — per-referrer lifetime cap (max 10 claimed rewards = $50)
+    const { rows: capRows } = await query(QUERIES.countReferrerLifetimeCredits, [referrer.id]);
+    if ((capRows[0]?.count || 0) >= 10) {
+      return Response.json({
+        error: 'Referrer limit reached',
+        message: 'This referral code has reached its maximum number of rewards'
+      }, { status: 400 });
+    }
+
     // Create referral record
     await query(QUERIES.insertReferral, [referrer.id, user.id, code.toUpperCase()]);
-    
+
+    // Award +5 AI question bonus to free-tier referrers who bring in new signups
+    const { rows: referrerTierRows } = await query(QUERIES.getUserById, [referrer.id]);
+    const referrerTier = referrerTierRows[0]?.tier || 'free';
+    if (referrerTier === 'free') {
+      await query(QUERIES.createUsageRecord, [
+        referrer.id,
+        'profile_generation_bonus',
+        '/api/referrals/bonus',
+        5
+      ]);
+    }
+
     // Track achievement event for the referrer (they got a new referral)
     await trackEvent(env, referrer.id, 'referral_signup', { referredUserId: user.id }, 'free');
     
@@ -339,8 +384,8 @@ export async function handleApplyCode(request, env, ctx) {
       message: 'Referral code applied successfully',
       discount: {
         type: 'first_month_free',
-        description: 'First month free on Seeker tier',
-        value: 1500
+        description: 'First month free on Individual tier',
+        value: 1900  // $19 in cents (HD_UPDATES3 pricing)
       }
     });
     
@@ -380,7 +425,7 @@ export async function handleGetRewards(request, env, ctx) {
         conversionDate: r.conversion_date,
         rewardType: r.reward_type,
         rewardValue: r.reward_value,
-        rewardDescription: 'One month free Seeker subscription'
+        rewardDescription: '25% recurring subscription credit (Individual tier = $4.75/mo per active referral)'
       })),
       totalPending: pendingRewards.length,
       totalValue: totalPendingValue
@@ -440,16 +485,29 @@ export async function handleClaimReward(request, env, ctx) {
       }, { status: 400 });
     }
     
-    if (referral.reward_granted) {
+    // P2-BIZ-001: Atomic claim — UPDATE ... WHERE reward_granted = false RETURNING *
+    // If another request already claimed, this returns 0 rows, preventing double-spend
+    const { rows: claimedRows } = await query(QUERIES.claimReferralReward, [referralId]);
+    
+    if (!claimedRows.length) {
       return Response.json({
         error: 'Reward already claimed'
       }, { status: 400 });
     }
+
+    // P2-BIZ-002: Double-check lifetime cap after claiming (defense in depth)
+    const { rows: capRows } = await query(QUERIES.countReferrerLifetimeCredits, [user.id]);
+    if ((capRows[0]?.count || 0) > 10) {
+      // Revert the claim — user exceeded cap
+      await query(`UPDATE referrals SET reward_granted = false WHERE id = $1`, [referralId]);
+      return Response.json({
+        error: 'Reward limit reached',
+        message: 'Maximum referral rewards reached ($50 lifetime cap)'
+      }, { status: 400 });
+    }
     
-    // Mark reward as granted
-    await query(QUERIES.claimReferralReward, [referralId]);
-    
-    // Apply $15 credit to referrer's Stripe account (covers one month of Seeker)
+    // HD_UPDATES3: Revenue share is now 25% recurring (applied automatically
+    // via invoice.paid webhook). Initial claim grants a one-time $5 welcome bonus.
     if (env.STRIPE_SECRET_KEY) {
       try {
         const { rows: userRows } = await query(QUERIES.getUserStripeCustomerId, [user.id]);
@@ -458,11 +516,11 @@ export async function handleClaimReward(request, env, ctx) {
         if (stripeCustomerId) {
           const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
           await stripe.customers.createBalanceTransaction(stripeCustomerId, {
-            amount: -1500,  // Negative = credit (in cents)
+            amount: -500,  // Negative = credit (in cents) — welcome bonus
             currency: 'usd',
-            description: 'Referral reward: one month free Seeker subscription'
+            description: 'Referral welcome bonus + 25% recurring revenue share activated'
           });
-          console.log(`Applied $15 credit to customer ${stripeCustomerId} for referral ${referralId}`);
+          console.log(`Applied $5 referral welcome bonus to customer ${stripeCustomerId} for referral ${referralId}`);
         }
       } catch (stripeError) {
         console.error('Stripe credit application error:', stripeError);
@@ -474,9 +532,9 @@ export async function handleClaimReward(request, env, ctx) {
       ok: true,
       message: 'Reward claimed successfully',
       reward: {
-        type: 'free_month',
-        value: 1500,
-        description: 'One month free Seeker subscription applied to your account'
+        type: 'revenue_share',
+        value: 500,
+        description: '$5 welcome bonus applied. You will also receive 25% of each subscription payment as recurring credit.'
       }
     });
     

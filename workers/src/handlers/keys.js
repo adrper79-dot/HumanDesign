@@ -90,7 +90,7 @@ async function generateKey(request, env, user) {
     // Determine tier based on user's subscription
     // Free users get free tier, paid users can only create keys up to their own tier
     // BL-FIX: Normalize null/undefined tier to 'free' to prevent null bypass
-    const TIER_ORDER = ['free', 'regular', 'practitioner', 'white_label'];
+    const TIER_ORDER = ['free', 'regular', 'individual', 'practitioner', 'white_label', 'agency'];
     const effectiveTier = user.tier || 'free';
     let keyTier = tier || 'free';
 
@@ -98,7 +98,7 @@ async function generateKey(request, env, user) {
     if (!TIER_ORDER.includes(keyTier)) {
       return Response.json({
         error: 'Invalid tier',
-        message: 'Key tier must be one of: free, regular, practitioner, white_label'
+        message: 'Key tier must be one of: free, individual, practitioner, agency'
       }, { status: 400 });
     }
 
