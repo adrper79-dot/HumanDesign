@@ -1,5 +1,10 @@
 import { neon } from '@neondatabase/serverless';
-const DB_URL = "postgresql://neondb_owner:npg_FlB3I6JYdboV@ep-rapid-bird-aicgk9v2-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+const DB_URL = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
+
+if (!DB_URL) {
+  throw new Error('Set DATABASE_URL or NEON_DATABASE_URL before running this script.');
+}
+
 const sql = neon(DB_URL);
 
 // Check key tables
