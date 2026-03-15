@@ -97,10 +97,10 @@
       "severity": "P1",
       "area": "cron",
       "title": "Cron handler runs 8+ sequential tasks without independent error boundaries — one failure may cascade to block downstream tasks",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-010",
@@ -108,10 +108,10 @@
       "severity": "P1",
       "area": "logging",
       "title": "No durationMs logging on DB queries — cannot identify slow queries contributing to error rate",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-011",
@@ -119,10 +119,10 @@
       "severity": "P1",
       "area": "error-handling",
       "title": "ROLLBACK failures swallowed via console.error — failed transaction rollbacks are silent in production",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-012",
@@ -196,10 +196,10 @@
       "severity": "P1",
       "area": "webhooks",
       "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed — unsigned webhook processing risk",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-006",
@@ -207,10 +207,10 @@
       "severity": "P1",
       "area": "auth",
       "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed — CSRF on OAuth callback unverified",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-007",
@@ -218,10 +218,10 @@
       "severity": "P1",
       "area": "data-isolation",
       "title": "Agency handler data scoping not auditable — practitioner accessing other practitioner's client roster not ruled out",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-008",
@@ -284,10 +284,10 @@
       "severity": "P1",
       "area": "billing",
       "title": "Webhook-driven and cron-driven subscription downgrade paths can double-fire without explicit deduplication",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-006",
@@ -295,10 +295,10 @@
       "severity": "P1",
       "area": "abuse",
       "title": "Free tier abuse via account-per-email cycling possible without verified email gate on feature access",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-007",
@@ -449,10 +449,10 @@
       "severity": "P1",
       "area": "health",
       "title": "Health endpoint depth unconfirmed — /api/health?full=1 with DB, KV, Stripe reachability checks not verified",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-005",
@@ -460,10 +460,10 @@
       "severity": "P1",
       "area": "cron",
       "title": "Cron tasks lack independent timeouts — a hung DB call in transit snapshot can starve SMS digest delivery",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-006",
