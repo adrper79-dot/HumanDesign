@@ -98,6 +98,7 @@ async function sendSMS(to, body, env) {
 
   const response = await fetch('https://api.telnyx.com/v2/messages', {
     method: 'POST',
+    signal: AbortSignal.timeout(8000),  // CTO-005: 8s — unresponsive Telnyx won't hang Worker
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`

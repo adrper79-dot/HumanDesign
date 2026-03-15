@@ -190,7 +190,8 @@ export function createStripeClient(secretKey) {
   
   return new Stripe(secretKey, {
     apiVersion: '2024-12-18.acacia',
-    httpClient: Stripe.createFetchHttpClient()  // Use fetch for Cloudflare Workers
+    httpClient: Stripe.createFetchHttpClient(),  // Use fetch for Cloudflare Workers
+    timeout: 10000,  // CTO-005: 10s cap — prevents Worker hanging on Stripe latency
   });
 }
 
