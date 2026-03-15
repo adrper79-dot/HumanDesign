@@ -12,7 +12,8 @@ const RATE_LIMITS = {
   '/api/auth/login':        { max: 10,  windowSec: 60  },  // 10/min
   '/api/auth/refresh':      { max: 10,  windowSec: 60  },  // 10/min
   '/api/auth/me':           { max: 10,  windowSec: 60  },  // 10/min
-  '/api/auth/forgot-password': { max: 3, windowSec: 60 },  // 3/min (prevent abuse)
+  '/api/auth/forgot-password':       { max: 3, windowSec: 60 },  // 3/min (prevent abuse)
+  '/api/auth/resend-verification':   { max: 3, windowSec: 60 },  // 3/min (CISO-004: email enumeration)
   '/api/chart/calculate':   { max: 60,  windowSec: 60  },  // 60/min
   '/api/profile/generate':  { max: 3,   windowSec: 60  },  // 3/min (LLM calls — cost control)
   '/api/profile/generate/stream': { max: 3, windowSec: 60 }, // 3/min (streaming LLM calls)

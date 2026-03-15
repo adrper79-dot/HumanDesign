@@ -9,10 +9,10 @@
       "severity": "P0",
       "area": "logging",
       "title": "No request correlation IDs (X-Request-ID) — production incidents are undebuggable",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-002",
@@ -20,10 +20,10 @@
       "severity": "P0",
       "area": "logging",
       "title": "317 unstructured console.log/error calls — no structured JSON logging across 72 files",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-003",
@@ -185,10 +185,10 @@
       "severity": "P0",
       "area": "rate-limiting",
       "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) — credential stuffing and email enumeration unmitigated",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CISO-005",
@@ -416,10 +416,10 @@
       "severity": "P0",
       "area": "observability",
       "title": "No Sentry or equivalent error tracking — 828 production errors in 7 days have no grouping, stack traces, or affected-user counts",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-002",
@@ -427,10 +427,10 @@
       "severity": "P0",
       "area": "logging",
       "title": "Zero structured log lines — Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-003",
@@ -438,10 +438,10 @@
       "severity": "P0",
       "area": "logging",
       "title": "No X-Request-ID generated or threaded through handlers — cross-service request tracing impossible",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CIO-004",
