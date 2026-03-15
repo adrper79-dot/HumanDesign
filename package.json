@@ -14,7 +14,11 @@
     "deploy": "npm run deploy:workers && npm run verify:prod",
     "audit": "node scripts/run-audit.js",
     "audit:vitals": "node scripts/run-audit.js --vitals-only",
-    "audit:full": "node scripts/run-audit.js --force-full"
+    "audit:full": "node scripts/run-audit.js --force-full",
+    "issue:next": "node scripts/next-issue.js",
+    "issue:list": "node scripts/next-issue.js --all",
+    "issue:summary": "node scripts/next-issue.js --summary",
+    "issue:resolve": "node scripts/mark-resolved.js"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",

@@ -1,0 +1,178 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+
+    // ─── Resolution Loop ──────────────────────────────────────────────────────
+
+    {
+      "label": "🔴 Next P0 Issue",
+      "type": "shell",
+      "command": "node scripts/next-issue.js",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "🟡 Next P1 Issue",
+      "type": "shell",
+      "command": "node scripts/next-issue.js --severity P1",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "📋 List All Open Issues",
+      "type": "shell",
+      "command": "node scripts/next-issue.js --all",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "📊 Issue Summary (counts)",
+      "type": "shell",
+      "command": "node scripts/next-issue.js --summary",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": false,
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "✅ Mark Issue Resolved",
+      "type": "shell",
+      "command": "node scripts/mark-resolved.js ${input:issueId}",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": false,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "📝 List Issues (for marking resolved)",
+      "type": "shell",
+      "command": "node scripts/mark-resolved.js --list",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    // ─── Verification ─────────────────────────────────────────────────────────
+
+    {
+      "label": "🧪 Run Tests (deterministic)",
+      "type": "shell",
+      "command": "npm run test:deterministic",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "⚡ Vitals Check (tests + CF metrics)",
+      "type": "shell",
+      "command": "npm run audit:vitals",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "🔍 Full AI Audit",
+      "type": "shell",
+      "command": "npm run audit:full",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    // ─── Deploy ───────────────────────────────────────────────────────────────
+
+    {
+      "label": "🚀 Deploy Workers",
+      "type": "shell",
+      "command": "cd workers && npx wrangler deploy --force",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "🐛 CF Token Check",
+      "type": "shell",
+      "command": "node scripts/test-cf-metrics.js",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "focus": true
+      },
+      "problemMatcher": []
+    }
+
+  ],
+
+  "inputs": [
+    {
+      "id": "issueId",
+      "type": "promptString",
+      "description": "Issue ID to mark resolved (e.g. CTO-001)",
+      "default": ""
+    }
+  ]
+}

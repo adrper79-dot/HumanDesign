@@ -32,18 +32,20 @@ import {
   sendReengagementEmail,
   sendUpgradeNudgeEmail
 } from './lib/email.js';
+import { createCronLogger } from './lib/logger.js';
 
 /**
  * Main cron entry point.
  */
 export async function runDailyTransitCron(env) {
+  const log = createCronLogger('cron');
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth() + 1;
   const day = now.getUTCDate();
   const hour = now.getUTCHours();
 
-  console.log(`[CRON] Starting daily transit snapshot for ${year}-${month}-${day}`);
+  log.info('transit_snapshot_start', { date: `${year}-${month}-${day}` });
 
   try {
     // ─── Step 1: Calculate today's transit positions ─────
@@ -62,7 +64,7 @@ export async function runDailyTransitCron(env) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     await query(QUERIES.saveTransitSnapshot, [snapshotDate, positionsJson]);
-    console.log(`[CRON] Transit snapshot saved for ${snapshotDate}`);
+    log.info('transit_snapshot_saved', { snapshotDate });
 
     // ─── Step 3: Send digests to opted-in users ─────────
     // BL-FIX: Use named query instead of SELECT * to avoid exposing password_hash in memory
@@ -71,7 +73,7 @@ export async function runDailyTransitCron(env) {
     );
 
     const users = usersResult.rows || [];
-    console.log(`[CRON] ${users.length} users opted in for SMS digests`);
+    log.info('sms_digest_users', { count: users.length });
 
     let sent = 0, failed = 0;
 
@@ -84,28 +86,28 @@ export async function runDailyTransitCron(env) {
         // Small delay between sends to avoid rate limiting
         await new Promise(r => setTimeout(r, 200));
       } catch (err) {
-        console.error(`[CRON] Digest send failed for user ${user.id}:`, err.message);
+        log.error('digest_send_failed', { userId: user.id, error: err.message });
         failed++;
       }
     }
 
-    console.log(`[CRON] Digest delivery complete: ${sent} sent, ${failed} failed`);
+    log.info('digest_delivery_complete', { sent, failed });
 
     // ─── Step 4: Process webhook retries ────────────────
     try {
       await processWebhookRetries(env);
-      console.log('[CRON] Webhook retry processing complete');
+      log.info('webhook_retry_complete');
     } catch (webhookErr) {
-      console.error('[CRON] Webhook retry processing error:', webhookErr);
+      log.error('webhook_retry_error', { error: webhookErr?.message });
       // Don't throw - webhook failures shouldn't break the main cron
     }
 
     // ─── Step 4b: Refresh check-in streaks materialized view (BL-S15-H2) ───
     try {
       await query('SELECT refresh_checkin_streaks()');
-      console.log('[CRON] Check-in streaks materialized view refreshed');
+      log.info('streak_refresh_complete');
     } catch (streakErr) {
-      console.error('[CRON] Streak refresh error:', streakErr);
+      log.error('streak_refresh_error', { error: streakErr?.message });
       // Non-critical — streaks will be stale but functional
     }
 
@@ -113,7 +115,7 @@ export async function runDailyTransitCron(env) {
     try {
       // Get users with active push subscriptions and transit_daily preference enabled
       const { rows: pushUsers } = await query(QUERIES.cronGetPushUsers);
-      console.log(`[CRON] ${pushUsers.length} users to receive push notifications`);
+      log.info('push_notification_users', { count: pushUsers.length });
 
       let pushSent = 0, pushFailed = 0;
 
@@ -145,14 +147,14 @@ export async function runDailyTransitCron(env) {
           // Small delay between sends
           await new Promise(r => setTimeout(r, 100));
         } catch (pushErr) {
-          console.error(`[CRON] Push notification failed for user ${user.id}:`, pushErr.message);
+          log.error('push_notification_failed', { userId: user.id, error: pushErr.message });
           pushFailed++;
         }
       }
 
-      console.log(`[CRON] Push notifications sent: ${pushSent} success, ${pushFailed} failed`);
+      log.info('push_notifications_sent', { sent: pushSent, failed: pushFailed });
     } catch (pushErr) {
-      console.error('[CRON] Push notification processing error:', pushErr);
+      log.error('push_processing_error', { error: pushErr?.message });
       // Don't throw - push failures shouldn't break the main cron
     }
 
@@ -160,7 +162,7 @@ export async function runDailyTransitCron(env) {
     try {
       // Get users with active transit alerts
       const { rows: alertUsers } = await query(QUERIES.cronGetAlertUsers);
-      console.log(`[CRON] Evaluating alerts for ${alertUsers.length} users`);
+      log.info('alert_evaluation_start', { count: alertUsers.length });
 
       let alertsTriggered = 0;
 
@@ -172,19 +174,19 @@ export async function runDailyTransitCron(env) {
           // Small delay to avoid overwhelming the system
           await new Promise(r => setTimeout(r, 50));
         } catch (alertErr) {
-          console.error(`[CRON] Alert evaluation failed for user ${user.id}:`, alertErr.message);
+          log.error('alert_evaluation_failed', { userId: user.id, error: alertErr.message });
         }
       }
 
-      console.log(`[CRON] Alert evaluation complete: ${alertsTriggered} users processed`);
+      log.info('alert_evaluation_complete', { alertsTriggered });
     } catch (alertErr) {
-      console.error('[CRON] Alert evaluation processing error:', alertErr);
+      log.error('alert_processing_error', { error: alertErr?.message });
       // Don't throw - alert failures shouldn't break the main cron
     }
 
     // ─── Step 7: Email Drip Campaigns (BL-ENG-007) ─────
     try {
-      console.log('[CRON] Starting email drip campaigns...');
+      log.info('drip_campaigns_start');
       let emailsSent = 0, emailsFailed = 0;
 
       // Welcome Email #2 (24 hours after registration)
@@ -201,7 +203,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`[CRON] Failed to send welcome email #2 for user ${user.id}:`, err.message);
+          log.error('welcome_email_2_failed', { userId: user.id, error: err.message });
           emailsFailed++;
         }
       }
@@ -220,7 +222,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`[CRON] Failed to send welcome email #3 for user ${user.id}:`, err.message);
+          log.error('welcome_email_3_failed', { userId: user.id, error: err.message });
           emailsFailed++;
         }
       }
@@ -238,7 +240,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`[CRON] Failed to send welcome email #4 for user ${user.id}:`, err.message);
+          log.error('welcome_email_4_failed', { userId: user.id, error: err.message });
           emailsFailed++;
         }
       }
@@ -257,7 +259,7 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`[CRON] Failed to send re-engagement email for user ${user.id}:`, err.message);
+          log.error('reengagement_email_failed', { userId: user.id, error: err.message });
           emailsFailed++;
         }
       }
@@ -275,29 +277,29 @@ export async function runDailyTransitCron(env) {
           );
           emailsSent++;
         } catch (err) {
-          console.error(`[CRON] Failed to send upgrade nudge for user ${user.id}:`, err.message);
+          log.error('upgrade_nudge_failed', { userId: user.id, error: err.message });
           emailsFailed++;
         }
       }
 
-      console.log(`[CRON] Email drip campaigns complete: ${emailsSent} sent, ${emailsFailed} failed`);
+      log.info('drip_campaigns_complete', { sent: emailsSent, failed: emailsFailed });
     } catch (emailErr) {
-      console.error('[CRON] Email drip campaign processing error:', emailErr);
+      log.error('drip_campaign_error', { error: emailErr?.message });
       // Don't throw - email failures shouldn't break the main cron
     }
 
     // ─── Step 8: Purge expired / old revoked refresh tokens ─
     try {
       await query(QUERIES.deleteExpiredRefreshTokens, []);
-      console.log('[CRON] Expired refresh tokens purged');
+      log.info('refresh_tokens_purged');
     } catch (purgeErr) {
-      console.error('[CRON] Refresh token purge error:', purgeErr);
+      log.error('refresh_token_purge_error', { error: purgeErr?.message });
     }
 
     // ─── Step 9: Downgrade expired cancel-at-period-end subscriptions (TXN-014) ─
     try {
       const { rows: expiredSubs } = await query(QUERIES.getExpiredCancelledSubscriptions);
-      console.log(`[CRON] ${expiredSubs.length} expired cancelled subscriptions to downgrade`);
+      log.info('subscription_expiry_check', { count: expiredSubs.length });
 
       let downgraded = 0;
       for (const sub of expiredSubs) {
@@ -308,21 +310,21 @@ export async function runDailyTransitCron(env) {
             await q(QUERIES.updateUserTier, ['free', sub.user_id]);
           });
           downgraded++;
-          console.log(`[CRON] Downgraded user ${sub.user_id} from ${sub.tier} to free (subscription ${sub.stripe_subscription_id} expired)`);
+          log.info('subscription_downgraded', { userId: sub.user_id, fromTier: sub.tier, subscriptionId: sub.stripe_subscription_id });
         } catch (downErr) {
-          console.error(`[CRON] Failed to downgrade subscription ${sub.id} for user ${sub.user_id}:`, downErr.message);
+          log.error('subscription_downgrade_failed', { subscriptionId: sub.id, userId: sub.user_id, error: downErr.message });
         }
       }
 
-      console.log(`[CRON] Subscription expiry downgrade complete: ${downgraded}/${expiredSubs.length} processed`);
+      log.info('subscription_expiry_complete', { downgraded, total: expiredSubs.length });
     } catch (expErr) {
-      console.error('[CRON] Subscription expiry processing error:', expErr);
+      log.error('subscription_expiry_error', { error: expErr?.message });
     }
 
     return { snapshotDate, userCount: users.length, sent, failed };
 
   } catch (err) {
-    console.error('[CRON] Fatal error:', err);
+    log.error('cron_fatal_error', { error: err?.message, stack: err?.stack?.split('\n').slice(0,3).join(' | ') });
     throw err;
   }
 }

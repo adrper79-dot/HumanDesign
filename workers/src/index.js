@@ -232,6 +232,7 @@ import { handleAnalytics } from './handlers/analytics.js';
 import { handleExperiments } from './handlers/experiments.js';
 import { trackEvent, trackError, aggregateDaily, EVENTS } from './lib/analytics.js';
 import { initSentry } from './lib/sentry.js';
+import { createLogger, generateRequestId } from './lib/logger.js';
 import { getCorsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
 import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
@@ -501,6 +502,13 @@ export default {
     const path = url.pathname;
     const sentry = initSentry(env);
 
+    // Correlation ID — echo client's if present, otherwise generate one.
+    // Threaded through every log line and response header.
+    const reqId = request.headers.get('X-Request-ID') || generateRequestId();
+    const log   = createLogger(reqId);
+    request._reqId = reqId;
+    request._log   = log;
+
     try {
       // Authentication check (protected routes)
       if (requiresAuth(path)) {
@@ -601,7 +609,12 @@ export default {
       return addCorsHeaders(response, request, env.ENVIRONMENT);
 
     } catch (err) {
-      console.error('Worker error:', err);
+      log.error('unhandled_exception', {
+        error: err.message,
+        path,
+        method: request.method,
+        stack: err.stack?.split('\n').slice(0, 3).join(' | '),
+      });
       // Fire-and-forget: track error for analytics + Sentry
       ctx.waitUntil(Promise.all([
         trackError(env, err, {
@@ -613,7 +626,7 @@ export default {
         sentry.captureException(err, {
           request,
           user: request._user,
-          tags: { path, method: request.method },
+          tags: { path, method: request.method, reqId },
         }),
       ]));
       const errResponse = errorResponse(err, err.status || 500, env);
@@ -634,6 +647,8 @@ export default {
 
 function addCorsHeaders(response, request, environment) {
   const headers = new Headers(response.headers);
+  // Thread X-Request-ID through every response so clients can correlate logs
+  if (request._reqId) headers.set('X-Request-ID', request._reqId);
   // /api/embed/validate is a public, no-PII endpoint called from any origin (third-party embeds).
   // If the handler already set Access-Control-Allow-Origin: *, do not overwrite it.
   if (headers.get('Access-Control-Allow-Origin') === '*') {

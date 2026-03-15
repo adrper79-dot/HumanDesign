@@ -28,6 +28,7 @@ import {
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
+import { createLogger } from '../lib/logger.js';
 
 // ─── Checkout Session ────────────────────────────────────────
 
@@ -43,6 +44,7 @@ import { trackEvent, EVENTS } from '../lib/analytics.js';
  * }
  */
 export async function handleCheckout(request, env, ctx) {
+  const log = request._log || createLogger('billing');
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
@@ -142,11 +144,11 @@ export async function handleCheckout(request, env, ctx) {
       }
     });
     
-    trackEvent(env, EVENTS.CHECKOUT_START, { userId: user.id, tier, period }).catch(e => console.error('[billing] trackEvent checkout_start failed:', e.message));
+    trackEvent(env, EVENTS.CHECKOUT_START, { userId: user.id, tier, period }).catch(e => log.error('track_checkout_start_failed', { error: e.message }));
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
     
   } catch (error) {
-    console.error('Checkout error:', error);
+    log.error('checkout_error', { error: error.message });
     return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }
@@ -165,6 +167,7 @@ export async function handleCheckout(request, env, ctx) {
  * }
  */
 export async function handleOneTimeCheckout(request, env, ctx) {
+  const log = request._log || createLogger('billing');
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
@@ -222,7 +225,7 @@ export async function handleOneTimeCheckout(request, env, ctx) {
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
 
   } catch (error) {
-    console.error('One-time checkout error:', error);
+    log.error('one_time_checkout_error', { error: error.message });
     return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }
@@ -239,6 +242,7 @@ export async function handleOneTimeCheckout(request, env, ctx) {
  * }
  */
 export async function handlePortal(request, env, ctx) {
+  const log = request._log || createLogger('billing');
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
@@ -276,7 +280,7 @@ export async function handlePortal(request, env, ctx) {
     return Response.json({ ok: true, url: session.url });
     
   } catch (error) {
-    console.error('Portal error:', error);
+    log.error('portal_error', { error: error.message });
     return Response.json({ error: 'Failed to create portal session' }, { status: 500 });
   }
 }
@@ -288,6 +292,7 @@ export async function handlePortal(request, env, ctx) {
  * Get current subscription details
  */
 export async function handleGetSubscription(request, env, ctx) {
+  const log = request._log || createLogger('billing');
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
@@ -340,7 +345,7 @@ export async function handleGetSubscription(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Get subscription error:', error);
+    log.error('get_subscription_error', { error: error.message });
     return Response.json({ error: 'Failed to get subscription' }, { status: 500 });
   }
 }
@@ -357,6 +362,7 @@ export async function handleGetSubscription(request, env, ctx) {
  * }
  */
 export async function handleCancelSubscription(request, env, ctx) {
+  const log = request._log || createLogger('billing');
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
@@ -392,7 +398,7 @@ export async function handleCancelSubscription(request, env, ctx) {
       }
     });
     
-    trackEvent(env, EVENTS.CANCEL, { userId: user.id, immediately: !!immediately }).catch(e => console.error('[billing] trackEvent cancel failed:', e.message));
+    trackEvent(env, EVENTS.CANCEL, { userId: user.id, immediately: !!immediately }).catch(e => log.error('track_cancel_failed', { error: e.message }));
     return Response.json({
       ok: true,
       message: immediately ? 'Subscription canceled immediately' : 'Subscription will cancel at period end',
@@ -401,7 +407,7 @@ export async function handleCancelSubscription(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Cancel subscription error:', error);
+    log.error('cancel_subscription_error', { error: error.message });
     return Response.json({ error: 'Failed to cancel subscription' }, { status: 500 });
   }
 }
@@ -418,6 +424,7 @@ export async function handleCancelSubscription(request, env, ctx) {
  * }
  */
 export async function handleUpgradeSubscription(request, env, ctx) {
+  const log = request._log || createLogger('billing');
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) {
@@ -459,7 +466,7 @@ export async function handleUpgradeSubscription(request, env, ctx) {
       await q(QUERIES.updateUserTier, [tier, user.id]);
     });
     
-    trackEvent(env, EVENTS.UPGRADE, { userId: user.id, tier, previousTier: subscription.tier }).catch(e => console.error('[billing] trackEvent upgrade failed:', e.message));
+    trackEvent(env, EVENTS.UPGRADE, { userId: user.id, tier, previousTier: subscription.tier }).catch(e => log.error('track_upgrade_failed', { error: e.message }));
     return Response.json({
       ok: true,
       message: `Subscription updated to ${tier}`,
@@ -471,7 +478,7 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Upgrade subscription error:', error);
+    log.error('upgrade_subscription_error', { error: error.message });
     return Response.json({ error: 'Failed to upgrade subscription' }, { status: 500 });
   }
 }

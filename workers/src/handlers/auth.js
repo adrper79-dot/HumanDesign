@@ -22,6 +22,7 @@ import { sendWelcomeEmail1, sendPasswordResetEmail, sendVerificationEmail } from
 import { createStripeClient } from '../lib/stripe.js';  // P2-BIZ-004: cancel sub on account deletion
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { generateSecret, buildOTPAuthURL, verifyTOTP } from '../lib/totp.js';
+import { createLogger } from '../lib/logger.js';
 
 // JWT expiry durations
 // Access token is short-lived so that a stolen in-memory token has a small
@@ -143,6 +144,7 @@ async function handleGetMe(request, env) {
 // ─── Register ────────────────────────────────────────────────
 
 async function handleRegister(request, env) {
+  const log = request._log || createLogger('auth');
   let body;
   try {
     body = await request.json();
@@ -243,7 +245,7 @@ async function handleRegister(request, env) {
         env.RESEND_API_KEY,
         env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
       ).catch(err => {
-        console.error('Failed to send welcome email:', err);
+        log.error('send_welcome_email_failed', { error: err?.message });
         // Don't fail registration if email fails
       });
 
@@ -261,7 +263,7 @@ async function handleRegister(request, env) {
         env.RESEND_API_KEY,
         env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
       ).catch(err => {
-        console.error('Failed to send verification email:', err);
+        log.error('send_verification_email_failed', { error: err?.message });
       });
     }
 
@@ -275,7 +277,7 @@ async function handleRegister(request, env) {
       expiresIn: ACCESS_TOKEN_TTL
     }), { status: 201, headers });
   } catch (err) {
-    console.error('[register] Error:', err.message);
+    log.error('register_error', { error: err.message });
     return Response.json({ error: 'Registration failed' }, { status: 500 });
   }
 }
@@ -286,6 +288,7 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60; // 15 minutes in seconds
 
 async function handleLogin(request, env) {
+  const log = request._log || createLogger('auth');
   let body;
   try {
     body = await request.json();
@@ -396,7 +399,7 @@ async function handleLogin(request, env) {
 
     // BL-FIX: Update last_login_at for re-engagement tracking and cron accuracy
     await query(QUERIES.updateLastLogin, [user.id]).catch(err => {
-      console.error('[auth] Failed to update last_login_at:', err.message);
+      log.error('update_last_login_failed', { error: err.message });
     });
 
     const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -409,7 +412,7 @@ async function handleLogin(request, env) {
       expiresIn: ACCESS_TOKEN_TTL
     }), { headers });
   } catch (err) {
-    console.error('[login] Error:', err.message);
+    log.error('login_error', { error: err.message });
     return Response.json({ error: 'Login failed' }, { status: 500 });
   }
 }
@@ -522,6 +525,7 @@ async function handleRefresh(request, env) {
 // ─── Logout (Revoke All Tokens) ─────────────────────────────
 
 async function handleLogout(request, env) {
+  const log = request._log || createLogger('auth');
   const userId = request._user?.sub;
 
   if (!userId) {
@@ -535,7 +539,7 @@ async function handleLogout(request, env) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     await query(QUERIES.revokeAllUserRefreshTokens, [userId]);
   } catch (err) {
-    console.error('[logout] DB error (non-fatal):', err.message);
+    log.error('logout_db_error', { error: err.message });
     // Still clear the cookie even if DB revoke fails
   }
 
@@ -629,6 +633,7 @@ const PASSWORD_RESET_TTL = 60 * 60; // 1 hour
  * Sends a password reset email. Always returns 200 to prevent email enumeration.
  */
 async function handleForgotPassword(request, env) {
+  const log = request._log || createLogger('auth');
   let body;
   try {
     body = await request.json();
@@ -676,12 +681,12 @@ async function handleForgotPassword(request, env) {
         env.RESEND_API_KEY,
         env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
       ).catch(err => {
-        console.error('Failed to send password reset email:', err);
+        log.error('send_password_reset_failed', { error: err?.message });
       });
     }
   } catch (err) {
     // Log but always return success — prevents email enumeration and masks DB errors
-    console.error('[forgot-password] Error:', err.message);
+    log.error('forgot_password_error', { error: err.message });
   }
 
   return successResponse;
@@ -692,6 +697,7 @@ async function handleForgotPassword(request, env) {
  * Validates token and updates password.
  */
 async function handleResetPassword(request, env) {
+  const log = request._log || createLogger('auth');
   let body;
   try {
     body = await request.json();
@@ -719,7 +725,7 @@ async function handleResetPassword(request, env) {
     const result = await query(QUERIES.getPasswordResetToken, [tokenHash]);
     resetRow = result.rows?.[0];
   } catch (err) {
-    console.error('[reset-password] DB error on token lookup:', err.message);
+    log.error('reset_password_db_error', { error: err.message });
     return Response.json(
       { error: 'Invalid or expired reset token. Please request a new one.' },
       { status: 400 }
@@ -747,7 +753,7 @@ async function handleResetPassword(request, env) {
       await query(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
       await query('COMMIT');
     } catch (txErr) {
-      await query('ROLLBACK').catch(e => console.error('[auth] ROLLBACK failed:', e.message));
+      await query('ROLLBACK').catch(e => log.error('rollback_failed', { error: e.message }));
       throw txErr;
     }
 
@@ -756,7 +762,7 @@ async function handleResetPassword(request, env) {
       message: 'Password has been reset successfully. Please sign in with your new password.'
     });
   } catch (err) {
-    console.error('[reset-password] Error:', err.message);
+    log.error('reset_password_error', { error: err.message });
     return Response.json({ error: 'Password reset failed. Please try again.' }, { status: 500 });
   }
 }
@@ -764,6 +770,7 @@ async function handleResetPassword(request, env) {
 // ─── Account Deletion ────────────────────────────────────────
 
 async function handleDeleteAccount(request, env) {
+  const log = request._log || createLogger('auth');
   const userId = request._user?.sub;
   if (!userId) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -804,11 +811,11 @@ async function handleDeleteAccount(request, env) {
       if (sub?.stripe_subscription_id) {
         const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
         await stripe.subscriptions.cancel(sub.stripe_subscription_id);
-        console.log(`[delete-account] Cancelled Stripe subscription ${sub.stripe_subscription_id} for user ${userId}`);
+        log.info('stripe_subscription_cancelled', { subscriptionId: sub.stripe_subscription_id, userId });
       }
     } catch (stripeErr) {
       // Log but continue — user wants account deleted regardless
-      console.error(`[delete-account] Stripe cancellation failed for user ${userId}:`, stripeErr.message);
+      log.error('stripe_cancellation_failed', { userId, error: stripeErr.message });
     }
   }
 
@@ -878,6 +885,7 @@ const RESEND_COOLDOWN = 60 * 1000; // 60 seconds
  * Hashes the raw token, looks it up, marks user as verified, deletes all tokens.
  */
 async function handleVerifyEmail(request, env) {
+  const log = request._log || createLogger('auth');
   let body;
   try {
     body = await request.json();
@@ -915,7 +923,7 @@ async function handleVerifyEmail(request, env) {
       message: 'Email verified successfully. You now have full access to AI features.'
     });
   } catch (err) {
-    console.error('[verify-email] Error:', err.message);
+    log.error('verify_email_error', { error: err.message });
     return Response.json({ error: 'Verification failed' }, { status: 500 });
   }
 }
@@ -926,6 +934,7 @@ async function handleVerifyEmail(request, env) {
  * Rate limited to 1 request per 60 seconds.
  */
 async function handleResendVerification(request, env) {
+  const log = request._log || createLogger('auth');
   const userId = request._user?.sub;
   if (!userId) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -974,7 +983,7 @@ async function handleResendVerification(request, env) {
       message: 'Verification email sent. Please check your inbox.'
     });
   } catch (err) {
-    console.error('[resend-verification] Error:', err.message);
+    log.error('resend_verification_error', { error: err.message });
     return Response.json({ error: 'Failed to resend verification email' }, { status: 500 });
   }
 }
