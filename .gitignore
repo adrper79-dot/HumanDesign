@@ -36,3 +36,7 @@ AuthKey_*.p8
 /*.docx
 /*.pdf
 docs/*.docx
+
+# Playwright E2E test artifacts
+playwright-report/
+test-results/
