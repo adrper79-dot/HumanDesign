@@ -35,6 +35,22 @@ import {
 import { createCronLogger } from './lib/logger.js';
 
 /**
+ * CIO-005: Race a promise against a hard timeout so a hung DB call in one
+ * cron step cannot starve all subsequent steps.
+ * @param {Promise} promise
+ * @param {number} ms
+ * @param {string} label — included in the timeout error message for tracing
+ */
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Cron step timed out after ${ms}ms: ${label}`)), ms)
+    ),
+  ]);
+}
+
+/**
  * Main cron entry point.
  */
 export async function runDailyTransitCron(env) {
@@ -63,7 +79,10 @@ export async function runDailyTransitCron(env) {
     // ─── Step 2: Store in database ──────────────────────
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    await query(QUERIES.saveTransitSnapshot, [snapshotDate, positionsJson]);
+    await withTimeout(
+      query(QUERIES.saveTransitSnapshot, [snapshotDate, positionsJson]),
+      8000, 'saveTransitSnapshot'
+    );
     log.info('transit_snapshot_saved', { snapshotDate });
 
     // ─── Step 3: Send digests to opted-in users ─────────
@@ -95,7 +114,7 @@ export async function runDailyTransitCron(env) {
 
     // ─── Step 4: Process webhook retries ────────────────
     try {
-      await processWebhookRetries(env);
+      await withTimeout(processWebhookRetries(env), 20000, 'processWebhookRetries');
       log.info('webhook_retry_complete');
     } catch (webhookErr) {
       log.error('webhook_retry_error', { error: webhookErr?.message });
@@ -104,7 +123,7 @@ export async function runDailyTransitCron(env) {
 
     // ─── Step 4b: Refresh check-in streaks materialized view (BL-S15-H2) ───
     try {
-      await query('SELECT refresh_checkin_streaks()');
+      await withTimeout(query('SELECT refresh_checkin_streaks()'), 12000, 'refresh_checkin_streaks');
       log.info('streak_refresh_complete');
     } catch (streakErr) {
       log.error('streak_refresh_error', { error: streakErr?.message });
@@ -290,7 +309,7 @@ export async function runDailyTransitCron(env) {
 
     // ─── Step 8: Purge expired / old revoked refresh tokens ─
     try {
-      await query(QUERIES.deleteExpiredRefreshTokens, []);
+      await withTimeout(query(QUERIES.deleteExpiredRefreshTokens, []), 10000, 'deleteExpiredRefreshTokens');
       log.info('refresh_tokens_purged');
     } catch (purgeErr) {
       log.error('refresh_token_purge_error', { error: purgeErr?.message });
@@ -298,16 +317,23 @@ export async function runDailyTransitCron(env) {
 
     // ─── Step 9: Downgrade expired cancel-at-period-end subscriptions (TXN-014) ─
     try {
-      const { rows: expiredSubs } = await query(QUERIES.getExpiredCancelledSubscriptions);
+      const { rows: expiredSubs } = await withTimeout(
+        query(QUERIES.getExpiredCancelledSubscriptions),
+        10000, 'getExpiredCancelledSubscriptions'
+      );
       log.info('subscription_expiry_check', { count: expiredSubs.length });
 
       let downgraded = 0;
       for (const sub of expiredSubs) {
         try {
-          // P2-BIZ-009: Wrap in transaction so subscription status + user tier stay in sync
+          // CFO-005: Use conditional UPDATE (only fires if still active) so a
+          // Stripe webhook that already canceled this subscription does not
+          // trigger a redundant user-tier downgrade.
           await query.transaction(async (q) => {
-            await q(QUERIES.updateSubscriptionStatus2, ['canceled', sub.id]);
-            await q(QUERIES.updateUserTier, ['free', sub.user_id]);
+            const { rows } = await q(QUERIES.cancelExpiredSubscription, [sub.id]);
+            if (rows.length > 0) {
+              await q(QUERIES.updateUserTier, ['free', sub.user_id]);
+            }
           });
           downgraded++;
           log.info('subscription_downgraded', { userId: sub.user_id, fromTier: sub.tier, subscriptionId: sub.stripe_subscription_id });

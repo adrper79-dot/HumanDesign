@@ -554,24 +554,56 @@ export default {
             hasNeon: !!env?.NEON_CONNECTION_STRING,
             hasJwt: !!env?.JWT_SECRET,
             hasStripe: !!env?.STRIPE_SECRET_KEY,
+            hasStripeWebhook: !!env?.STRIPE_WEBHOOK_SECRET,
             hasTelnyx: !!env?.TELNYX_API_KEY,
             hasResend: !!env?.RESEND_API_KEY,
             hasSentry: !!env?.SENTRY_DSN,
+            hasAuditSecret: !!env?.AUDIT_SECRET,
           };
-          // DB connectivity check
-          let db = { ok: false, latencyMs: null, error: null };
-          if (env?.NEON_CONNECTION_STRING) {
-            const { createQueryFn } = await import('./db/queries.js');
-            const query = createQueryFn(env.NEON_CONNECTION_STRING);
-            const t0 = Date.now();
-            try {
-              await query('SELECT 1 AS ping');
-              db = { ok: true, latencyMs: Date.now() - t0, error: null };
-            } catch (dbErr) {
-              db = { ok: false, latencyMs: Date.now() - t0, error: dbErr.message };
-            }
-          }
-          response = Response.json(Object.assign(base, { secrets, db }));
+
+          // CIO-004: Run DB, KV, and Stripe reachability checks concurrently.
+          const [db, kv, stripeHealth] = await Promise.all([
+            (async () => {
+              if (!env?.NEON_CONNECTION_STRING) return { ok: false, latencyMs: null, error: 'not configured' };
+              const { createQueryFn } = await import('./db/queries.js');
+              const q = createQueryFn(env.NEON_CONNECTION_STRING);
+              const t0 = Date.now();
+              try {
+                await q('SELECT 1 AS ping');
+                return { ok: true, latencyMs: Date.now() - t0, error: null };
+              } catch (e) {
+                return { ok: false, latencyMs: Date.now() - t0, error: e.message };
+              }
+            })(),
+            (async () => {
+              if (!env?.CACHE) return { ok: false, error: 'not bound' };
+              try {
+                await env.CACHE.put('__health__', '1', { expirationTtl: 60 });
+                const v = await env.CACHE.get('__health__');
+                return { ok: v === '1', error: null };
+              } catch (e) {
+                return { ok: false, error: e.message };
+              }
+            })(),
+            (async () => {
+              if (!env?.STRIPE_SECRET_KEY) return { ok: false, latencyMs: null, error: 'not configured' };
+              const { createStripeClient } = await import('./lib/stripe.js');
+              const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
+              const t0 = Date.now();
+              try {
+                await stripe.balance.retrieve();
+                return { ok: true, latencyMs: Date.now() - t0, error: null };
+              } catch (e) {
+                return { ok: false, latencyMs: Date.now() - t0, error: e.message };
+              }
+            })(),
+          ]);
+
+          const allOk = db.ok && kv.ok && stripeHealth.ok;
+          response = Response.json(
+            Object.assign(base, { status: allOk ? 'ok' : 'degraded', secrets, db, kv, stripe: stripeHealth }),
+            { status: allOk ? 200 : 503 }
+          );
         } else {
           response = Response.json(base);
         }
