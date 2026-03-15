@@ -529,6 +529,14 @@ export const QUERIES = {
     SELECT id FROM payment_events WHERE stripe_event_id = $1
   `,
 
+  // CFO-002: Record processed event for idempotency. ON CONFLICT DO NOTHING so
+  // concurrent duplicate deliveries are silently ignored after the first wins.
+  markEventProcessed: `
+    INSERT INTO payment_events (subscription_id, stripe_event_id, event_type, amount, currency, status)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    ON CONFLICT (stripe_event_id) DO NOTHING
+  `,
+
   // ─── Usage Tracking ───────────────────────────────────────
 
   createUsageRecord: `

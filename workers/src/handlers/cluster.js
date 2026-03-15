@@ -16,7 +16,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { callLLM } from '../lib/llm.js';
 import { trackEvent } from './achievements.js';
-import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+import { enforceFeatureAccess, enforceUsageQuota } from '../middleware/tierEnforcement.js';
 
 // ─── Forge Role Mapping ─────────────────────────────────────────
 const FORGE_ROLES = {
@@ -448,6 +448,10 @@ async function handleSynthesize(request, env, clusterId) {
   // SEC-016: Gate synthesis behind practitioner tier
   const tierBlock = await enforceFeatureAccess(request, env, 'practitionerTools');
   if (tierBlock) return tierBlock;
+
+  // CFO-003: Enforce monthly AI quota so synthesis calls count against profileGenerations budget
+  const quotaBlock = await enforceUsageQuota(request, env, 'profile_generation', 'profileGenerations');
+  if (quotaBlock) return quotaBlock;
 
   const memberCheck = await query(
     QUERIES.checkClusterMembership,

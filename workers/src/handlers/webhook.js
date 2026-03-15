@@ -130,6 +130,14 @@ export async function handleStripeWebhook(request, env) {
         console.log('Unhandled event type:', event.type);
     }
 
+    // CFO-002: Record this event as processed for idempotency.
+    // ON CONFLICT (stripe_event_id) DO NOTHING handles races silently.
+    const obj = event.data?.object;
+    const amount   = obj?.amount_paid ?? obj?.amount ?? null;
+    const currency = obj?.currency ?? 'usd';
+    const status   = obj?.status ?? 'processed';
+    await query(QUERIES.markEventProcessed, [null, event.id, event.type, amount, currency, status]);
+
     return Response.json({ received: true }, { status: 200 });
 
   } catch (error) {

@@ -1112,6 +1112,16 @@ async function startCheckout(tier, event) {
       return;
     }
 
+    // CFO-001: Agency tier requires consultation — redirect to contact email
+    if (result.contactRequired) {
+      if (checkoutBtn) {
+        checkoutBtn.disabled = false;
+        checkoutBtn.innerHTML = originalText;
+      }
+      window.location.href = 'mailto:' + result.contactEmail + '?subject=Agency%20Tier%20Inquiry';
+      return;
+    }
+
     if (result.url) {
       // BL-FIX: Validate redirect URL to prevent open redirect
       try {

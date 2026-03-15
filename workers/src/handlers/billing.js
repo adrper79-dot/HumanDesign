@@ -60,6 +60,16 @@ export async function handleCheckout(request, env, ctx) {
       return Response.json({ error: 'Invalid tier. Must be individual, practitioner, or agency' }, { status: 400 });
     }
 
+    // CFO-001: Agency tier has unbuilt features (white-label portal, API access, sub-seats).
+    // Gate behind "Contact us" until those features ship.
+    if (tier === 'agency') {
+      return Response.json({
+        contactRequired: true,
+        contactEmail: 'hello@selfprime.net',
+        message: 'Agency tier setup requires a short consultation. Email us and we\'ll get you started within 24 hours.',
+      });
+    }
+
     // Validate billing period
     const period = billingPeriod === 'annual' ? 'annual' : 'monthly';
 
@@ -446,7 +456,16 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     if (!tier || !['individual', 'practitioner', 'agency'].includes(tier)) {
       return Response.json({ error: 'Invalid tier. Must be individual, practitioner, or agency' }, { status: 400 });
     }
-    
+
+    // CFO-001: Agency tier features not yet built — gate behind contact
+    if (tier === 'agency') {
+      return Response.json({
+        contactRequired: true,
+        contactEmail: 'hello@selfprime.net',
+        message: 'Agency tier setup requires a short consultation. Email us and we\'ll get you started within 24 hours.',
+      });
+    }
+
     if (tier === subscription.tier) {
       return Response.json({ error: 'You are already on this tier' }, { status: 400 });
     }
