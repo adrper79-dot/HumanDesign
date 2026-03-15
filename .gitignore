@@ -10,6 +10,7 @@ dist/
 *.log
 .vscode/mcp.json
 test-results.txt
+tests/results/latest.json
 nul
 
 # Large video source files (keep frontend/ assets for PWA)

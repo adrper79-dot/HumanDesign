@@ -24,6 +24,13 @@ export async function handleAnalytics(request, env, subpath) {
   const method = request.method;
   const url = new URL(request.url);
 
+  // Audit token auth — allows GH Actions audit runner to pull metrics without a user JWT.
+  // AUDIT_SECRET must be set via: npx wrangler secret put AUDIT_SECRET
+  const auditToken = request.headers.get('X-Audit-Token');
+  if (auditToken && env.AUDIT_SECRET && auditToken === env.AUDIT_SECRET) {
+    return handleAuditMetrics(env);
+  }
+
   // Only practitioner/agency/admin users can access analytics
   const userTier = normalizeTierName(request._user?.tier);
   if (!['practitioner', 'agency', 'admin'].includes(userTier)) {
@@ -292,6 +299,41 @@ async function getErrorAnalytics(env, url) {
       })),
     },
   });
+}
+
+// ─── Audit Metrics (X-Audit-Token auth) ──────────────────────────────
+
+/**
+ * Combined metrics endpoint for the GH Actions audit runner.
+ * Called with X-Audit-Token header — no user JWT required.
+ * Returns overview + error analytics + revenue in one response.
+ */
+async function handleAuditMetrics(env) {
+  const fakeUrl = new URL('https://x/api/analytics/overview?days=7');
+  try {
+    const [overviewRes, errorsRes, revenueRes] = await Promise.all([
+      getOverview(env, fakeUrl),
+      getErrorAnalytics(env, fakeUrl),
+      getRevenueMetrics(env),
+    ]);
+
+    const [overview, errors, revenue] = await Promise.all([
+      overviewRes.json(),
+      errorsRes.json(),
+      revenueRes.json(),
+    ]);
+
+    return Response.json({
+      ok: true,
+      activeUsers:      overview.data?.activeUsers    || {},
+      topErrors:        errors.data?.topErrors        || [],
+      errorRate:        errors.data?.errorRate        || '0%',
+      mrr:              revenue.data?.mrr             || null,
+      tierDistribution: revenue.data?.tierDistribution || [],
+    });
+  } catch (err) {
+    return Response.json({ ok: false, error: err.message }, { status: 500 });
+  }
 }
 
 // ─── Revenue Metrics ─────────────────────────────────────────────────
