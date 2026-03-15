@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockCreateQueryFn } = vi.hoisted(() => ({
+const { mockCreateQueryFn, getUserTierMock } = vi.hoisted(() => ({
   mockCreateQueryFn: vi.fn(),
+  getUserTierMock: vi.fn().mockResolvedValue('agency'), // analytics tests use agency/practitioner tier
 }));
 
 vi.mock('../workers/src/db/queries.js', () => ({
@@ -14,6 +15,12 @@ vi.mock('../workers/src/db/queries.js', () => ({
     getAnalyticsMonthlyChurn: 'getAnalyticsMonthlyChurn',
   },
 }));
+
+// CIO-006 fix: analytics handler now resolves tier via DB, not JWT claim.
+vi.mock('../workers/src/middleware/tierEnforcement.js', async () => {
+  const actual = await vi.importActual('../workers/src/middleware/tierEnforcement.js');
+  return { ...actual, getUserTier: getUserTierMock };
+});
 
 vi.mock('../workers/src/lib/stripe.js', () => ({
   normalizeTierName: (tierName) => {
@@ -128,7 +135,7 @@ describe('tier and billing runtime alignment', () => {
     mockCreateQueryFn.mockReturnValue(query);
 
     const request = new Request('https://api.test/api/analytics/revenue');
-    request._user = { tier: 'white_label' };
+    request._user = { sub: 'admin-test', tier: 'white_label' };
 
     const response = await handleAnalytics(
       request,
