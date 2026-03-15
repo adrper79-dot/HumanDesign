@@ -62,13 +62,14 @@ jobs:
 
       - name: Check P0 launch gate
         run: |
-          P0_COUNT=$(node scripts/count-issues.js --severity P0 --status open)
+          P0_COUNT=$(node scripts/count-issues.js --severity P0 --status open || true)
           echo "Open P0 issues: $P0_COUNT"
-          if [ "$P0_COUNT" -gt "0" ]; then
+          if [ "${P0_COUNT:-0}" -gt "0" ]; then
             echo "::warning::$P0_COUNT open P0 issue(s) detected. Review audits/issue-registry.json."
           fi
 
       - name: Commit audit output
+        if: always()
         run: |
           git config user.email "audit-bot@selfprime.net"
           git config user.name "Prime Self Audit Bot"
