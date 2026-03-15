@@ -42,10 +42,10 @@
       "severity": "P0",
       "area": "observability",
       "title": "13.33% production error rate (828/6212 requests) with no error tracking tooling to diagnose root cause",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CTO-005",
@@ -240,10 +240,10 @@
       "severity": "P0",
       "area": "billing",
       "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness — collecting revenue for undelivered product",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-002",
@@ -251,10 +251,10 @@
       "severity": "P0",
       "area": "billing",
       "title": "No Stripe webhook idempotency handling — duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-003",
@@ -262,10 +262,10 @@
       "severity": "P0",
       "area": "quota",
       "title": "No confirmed pre-flight quota enforcement before AI calls — free-tier users can exhaust AI budget without cost gate",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-004",
@@ -273,10 +273,10 @@
       "severity": "P0",
       "area": "analytics",
       "title": "App analytics returning HTTP 401 — conversion funnel, ARPU, and churn metrics are completely blind",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-15",
       "lastSeen": "2026-03-15",
-      "resolvedAt": null
+      "resolvedAt": "2026-03-15"
     },
     {
       "id": "CFO-005",
