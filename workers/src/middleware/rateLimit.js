@@ -1,8 +1,14 @@
 /**
- * Rate Limiter Middleware (DB-backed, fixed-window counter)
+ * Rate Limiter Middleware — hybrid KV + DB backend (SYS-013)
  *
- * Uses Neon/Postgres for atomic fixed-window rate limiting.
- * Configured per-route with different limits.
+ * Auth endpoints (login, register, 2fa, forgot-password, etc.) use the
+ * DB-backed fixed-window counter for audit trails and cross-edge consistency.
+ *
+ * All other endpoints use Cloudflare KV (RATE_LIMIT_KV binding) for
+ * performance — KV reads/writes are O(1) at the edge and do not add DB load.
+ *
+ * KV key format:  rl:{ip_or_userId}:{endpoint_key}
+ * KV TTL:         windowSec (auto-expires the window)
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
@@ -43,6 +49,21 @@ const PATTERN_RATE_LIMITS = [
 ];
 
 /**
+ * Auth endpoints that must use the DB-backed rate limiter for audit trails.
+ * All other endpoints use KV-based rate limiting (SYS-013).
+ */
+const AUTH_RATE_LIMIT_PATHS = new Set([
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/refresh',
+  '/api/auth/forgot-password',
+  '/api/auth/resend-verification',
+  '/api/auth/2fa/setup',
+  '/api/auth/2fa/verify',
+  '/api/auth/delete-account',
+]);
+
+/**
  * Resolve rate limit config for a given path.
  * Checks exact match first, then pattern-based rules, then default.
  */
@@ -55,13 +76,98 @@ function resolveRateLimit(path) {
 }
 
 /**
- * Check rate limit. Returns null if within limits,
- * or a 429 Response if exceeded.
- *
- * @param {Request} request
- * @param {object} env — must have NEON_CONNECTION_STRING binding
+ * Build a standard 429 Rate Limit Exceeded response.
  */
-export async function rateLimit(request, env) {
+function rateLimitExceededResponse(config, windowStart, now) {
+  const retryAfter = (windowStart + config.windowSec) - now;
+  return new Response(
+    JSON.stringify({
+      error: 'Rate limit exceeded',
+      retryAfter
+    }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfter),
+        'X-RateLimit-Limit': String(config.max),
+        'X-RateLimit-Remaining': '0',
+        'X-RateLimit-Reset': String(windowStart + config.windowSec)
+      }
+    }
+  );
+}
+
+/**
+ * KV-based rate limiter (SYS-013 — KV rate limiting for non-auth endpoints).
+ *
+ * Uses a fixed-window counter stored in Cloudflare KV with TTL-based expiry.
+ * No DB round-trip needed — fast edge reads/writes only.
+ *
+ * Key format: rl:{clientId}:{endpointKey}
+ * Value:      JSON { count, windowStart }
+ * TTL:        windowSec (KV auto-expires the key after one window)
+ */
+async function kvRateLimit(request, env, clientId, resolved) {
+  const kv = env.RATE_LIMIT_KV;
+  if (!kv) {
+    // KV not bound — fail open with a warning (non-auth endpoints are best-effort)
+    console.warn('[rateLimit] RATE_LIMIT_KV not bound — skipping KV rate limit check');
+    return null;
+  }
+
+  const config = resolved.config;
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = now - (now % config.windowSec); // fixed-window boundary
+  const resetEpoch = windowStart + config.windowSec;
+  const kvKey = `rl:${clientId}:${resolved.key}`;
+
+  let count;
+  try {
+    const raw = await kv.get(kvKey, { type: 'json' });
+
+    if (raw && raw.windowStart === windowStart) {
+      // Same window — increment the existing counter
+      count = raw.count + 1;
+    } else {
+      // New window (or first request) — reset to 1
+      count = 1;
+    }
+
+    // Write back with TTL so KV auto-expires after the window closes
+    await kv.put(kvKey, JSON.stringify({ count, windowStart }), {
+      expirationTtl: config.windowSec,
+    });
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: 'kv_rate_limit_error',
+      key: kvKey,
+      error: error.message,
+    }));
+    // Fail open — KV errors should not block legitimate requests
+    return null;
+  }
+
+  if (count > config.max) {
+    console.warn(JSON.stringify({
+      event: 'rate_limited', clientId, path: resolved.key, count, max: config.max, backend: 'kv'
+    }));
+    trackEvent(env, EVENTS.RATE_LIMITED, {
+      properties: { path: resolved.key, clientId, count, max: config.max, backend: 'kv' },
+    }).catch(() => {}); // best-effort
+    return rateLimitExceededResponse(config, windowStart, now);
+  }
+
+  return { count, resetEpoch, config };
+}
+
+/**
+ * DB-backed rate limiter — used for auth endpoints only (audit trail).
+ *
+ * Uses Neon/Postgres atomic upsert for cross-edge consistency on sensitive
+ * auth paths where we want persistent records of rate limit events.
+ */
+async function dbRateLimit(request, env, clientId, resolved) {
   if (!env.NEON_CONNECTION_STRING) {
     console.error('[rateLimit] NEON_CONNECTION_STRING not configured — blocking request.');
     return new Response(
@@ -71,34 +177,23 @@ export async function rateLimit(request, env) {
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
-
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  // Identify client by IP (or user ID if authenticated)
-  const clientId = request._user?.sub
-    || request.headers.get('CF-Connecting-IP')
-    || 'unknown';
-
-  const resolved = resolveRateLimit(path);
   const config = resolved.config;
-  const key = `rl:${clientId}:${resolved.key}`;
   const now = Math.floor(Date.now() / 1000);
-  const windowStart = now - (now % config.windowSec); // Fixed window boundary
+  const windowStart = now - (now % config.windowSec);
   const windowStartIso = new Date(windowStart * 1000).toISOString();
+  const windowEndIso = new Date((windowStart + config.windowSec) * 1000).toISOString();
   const resetEpoch = windowStart + config.windowSec;
-  const windowEndIso = new Date(resetEpoch * 1000).toISOString();
 
   let count;
   try {
     const result = await query(QUERIES.atomicWindowCounterIncrement, [
-      key,
+      `rl:${clientId}:${resolved.key}`,
       windowStartIso,
       windowEndIso,
     ]);
     count = parseInt(result.rows[0]?.count || '0', 10);
   } catch (error) {
-    console.error(JSON.stringify({ event: 'rate_limit_query_failed', path, clientId, error: error.message }));
+    console.error(JSON.stringify({ event: 'rate_limit_query_failed', path: resolved.key, clientId, error: error.message }));
     return new Response(
       JSON.stringify({ error: 'Service temporarily unavailable' }),
       { status: 503, headers: { 'Content-Type': 'application/json', 'Retry-After': '30' } }
@@ -106,36 +201,56 @@ export async function rateLimit(request, env) {
   }
 
   if (count > config.max) {
-    const retryAfter = (windowStart + config.windowSec) - now;
     console.warn(JSON.stringify({
-      event: 'rate_limited', clientId, path, count, max: config.max
+      event: 'rate_limited', clientId, path: resolved.key, count, max: config.max, backend: 'db'
     }));
     trackEvent(env, EVENTS.RATE_LIMITED, {
-      properties: { path, clientId, count, max: config.max },
+      properties: { path: resolved.key, clientId, count, max: config.max, backend: 'db' },
     }).catch(() => {}); // best-effort
-    return new Response(
-      JSON.stringify({
-        error: 'Rate limit exceeded',
-        retryAfter
-      }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': String(retryAfter),
-          'X-RateLimit-Limit': String(config.max),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(windowStart + config.windowSec)
-        }
-      }
-    );
+    return rateLimitExceededResponse(config, windowStart, now);
   }
 
-  // Attach rate limit headers for downstream
+  return { count, resetEpoch, config };
+}
+
+/**
+ * Check rate limit. Returns null if within limits,
+ * or a Response (429 or 503) if the limit is exceeded or the backend fails.
+ *
+ * Auth endpoints use DB-backed limiting (audit trail).
+ * All other endpoints use KV-backed limiting (SYS-013 — performance).
+ *
+ * @param {Request} request
+ * @param {object} env — must have RATE_LIMIT_KV binding; auth paths also need NEON_CONNECTION_STRING
+ */
+export async function rateLimit(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  // Identify client by user ID (if authenticated) or IP
+  const clientId = request._user?.sub
+    || request.headers.get('CF-Connecting-IP')
+    || 'unknown';
+
+  const resolved = resolveRateLimit(path);
+
+  // Route to the appropriate backend
+  const useDb = AUTH_RATE_LIMIT_PATHS.has(path);
+  const result = useDb
+    ? await dbRateLimit(request, env, clientId, resolved)
+    : await kvRateLimit(request, env, clientId, resolved);
+
+  // If result is a Response (429 or 503), return it immediately
+  if (result instanceof Response) return result;
+
+  // null means KV failed open — allow the request
+  if (result === null) return null;
+
+  // Attach rate limit metadata for downstream header injection
   request._rateLimit = {
-    limit: config.max,
-    remaining: Math.max(0, config.max - count),
-    reset: resetEpoch
+    limit: result.config.max,
+    remaining: Math.max(0, result.config.max - result.count),
+    reset: result.resetEpoch
   };
 
   return null; // Within limits

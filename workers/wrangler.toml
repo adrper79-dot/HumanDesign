@@ -133,15 +133,27 @@ STRIPE_PRICE_COMPOSITE_READING   = "price_test_composite_reading"
 STRIPE_PRICE_TRANSIT_PASS        = "price_test_transit_pass"
 STRIPE_PRICE_LIFETIME_INDIVIDUAL = "price_test_lifetime_individual"
 
-# Staging uses its own KV namespaces — create with:
+# Staging uses its own KV namespaces — create them before deploying to staging:
+#
+#   cd workers
 #   wrangler kv namespace create CACHE --env staging
+#   # Copy the "id" from the output and paste it as the CACHE id below
+#
 #   wrangler kv namespace create RATE_LIMIT_KV --env staging
+#   # Copy the "id" from the output and paste it as the RATE_LIMIT_KV id below
+#
+# Then commit the updated wrangler.toml with the real IDs.
+
 [[env.staging.kv_namespaces]]
 binding = "CACHE"
+# TODO (SYS-040): Replace with real staging namespace ID.
+# Run: cd workers && wrangler kv namespace create CACHE --env staging
 id = "REPLACE_WITH_STAGING_CACHE_KV_ID"
 
 [[env.staging.kv_namespaces]]
 binding = "RATE_LIMIT_KV"
+# TODO (SYS-040): Replace with real staging namespace ID.
+# Run: cd workers && wrangler kv namespace create RATE_LIMIT_KV --env staging
 id = "REPLACE_WITH_STAGING_RATE_LIMIT_KV_ID"
 
 [[env.staging.r2_buckets]]

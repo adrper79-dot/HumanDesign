@@ -127,15 +127,21 @@ describe('QUERIES registry — new queries from deep dive audit', () => {
 // ─── Rate Limit Config: Promo endpoint covered ───────────────
 
 describe('rateLimit config — promo endpoint (MED-PROMO-RATE)', () => {
-  it('returns 429 for /api/promo/validate when limit exceeded', async () => {
-    const query = vi.fn().mockResolvedValue({ rows: [{ count: 11, window_end: new Date().toISOString() }] });
-    createQueryFnMock.mockReturnValue(query);
+  it('returns 429 for /api/promo/validate when limit exceeded (SYS-013: KV-backed)', async () => {
+    // /api/promo/validate is a non-auth endpoint — it now uses KV-based rate limiting (SYS-013).
+    // Simulate a KV binding that has already recorded 11 hits (limit is 10/min).
+    const now = Math.floor(Date.now() / 1000);
+    const windowStart = now - (now % 60);
+    const mockKv = {
+      get: vi.fn().mockResolvedValue({ count: 11, windowStart }),
+      put: vi.fn().mockResolvedValue(undefined),
+    };
 
     const request = new Request('https://api.test/api/promo/validate', {
       method: 'POST',
       headers: { 'CF-Connecting-IP': '1.2.3.4' },
     });
-    const env = { NEON_CONNECTION_STRING: 'postgresql://test' };
+    const env = { RATE_LIMIT_KV: mockKv };
     const result = await rateLimit(request, env);
     expect(result).not.toBeNull();
     expect(result.status).toBe(429);
