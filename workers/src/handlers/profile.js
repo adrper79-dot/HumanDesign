@@ -136,7 +136,7 @@ export async function handleProfile(request, env) {
   // Build Layer 8 prompt with all available data
   const promptPayload = buildSynthesisPrompt({
     hdChart: chart.chart,
-    astroChart: chart.astrology,
+    astroChart:        _opt('astrology',  chart.astrology),
     transits:         _opt('transits',      chart.transits),
     personalityGates: chart.personalityGates,
     designGates:      chart.designGates,

@@ -8,6 +8,7 @@
  *   POST /api/practitioner/clients/add     — Add a client by email
  *   POST /api/practitioner/clients/invite  — Invite or add client by email
  *   GET  /api/practitioner/clients/invitations — List pending invitations
+ *   POST /api/practitioner/clients/invitations/:id/resend — Resend invitation
  *   DELETE /api/practitioner/clients/invitations/:id — Revoke invitation
  *   GET  /api/practitioner/clients/:id     — Get a specific client's chart + profiles
  *   DELETE /api/practitioner/clients/:id  — Remove client from roster
@@ -22,6 +23,7 @@
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 import { sendPractitionerInvitationEmail } from '../lib/email.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 // Tier limits aligned with billing tier names (individual/practitioner/agency)
 const TIER_LIMITS = {
@@ -95,56 +97,68 @@ export async function handlePractitioner(request, env, subpath) {
 
     // POST /api/practitioner/register
     if (subpath === '/register' && method === 'POST') {
-      return handleRegister(request, env, userId, query);
+      return await handleRegister(request, env, userId, query);
     }
 
     // GET /api/practitioner/profile
     if (subpath === '/profile' && method === 'GET') {
-      return handleGetProfile(userId, query);
+      return await handleGetProfile(userId, query);
     }
 
     // GET /api/practitioner/clients
     if (subpath === '/clients' && method === 'GET') {
-      return handleListClients(userId, query);
+      return await handleListClients(userId, query);
     }
 
     // POST /api/practitioner/clients/add
     if (subpath === '/clients/add' && method === 'POST') {
-      return handleAddClient(request, env, userId, query);
+      return await handleAddClient(request, env, userId, query);
     }
 
     // POST /api/practitioner/clients/invite
     if (subpath === '/clients/invite' && method === 'POST') {
-      return handleInviteClient(request, env, userId, query);
+      return await handleInviteClient(request, env, userId, query);
     }
 
     // GET /api/practitioner/clients/invitations
     if (subpath === '/clients/invitations' && method === 'GET') {
-      return handleListInvitations(userId, query);
+      return await handleListInvitations(userId, query);
+    }
+
+    // POST /api/practitioner/clients/invitations/:id/resend
+    const invitationResendMatch = subpath.match(/^\/clients\/invitations\/([a-f0-9-]+)\/resend$/i);
+    if (invitationResendMatch && method === 'POST') {
+      return await handleResendInvitation(request, env, userId, invitationResendMatch[1], query);
     }
 
     // DELETE /api/practitioner/clients/invitations/:id
     const invitationDeleteMatch = subpath.match(/^\/clients\/invitations\/([a-f0-9-]+)$/i);
     if (invitationDeleteMatch && method === 'DELETE') {
-      return handleDeleteInvitation(userId, invitationDeleteMatch[1], query);
+      return await handleDeleteInvitation(userId, invitationDeleteMatch[1], query);
     }
 
     // GET /api/practitioner/clients/:id
     const clientDetailMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
     if (clientDetailMatch && method === 'GET') {
-      return handleGetClientDetail(userId, clientDetailMatch[1], query);
+      return await handleGetClientDetail(userId, clientDetailMatch[1], query);
     }
 
     // DELETE /api/practitioner/clients/:id
     const clientDeleteMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
     if (clientDeleteMatch && method === 'DELETE') {
-      return handleRemoveClient(userId, clientDeleteMatch[1], query);
+      return await handleRemoveClient(userId, clientDeleteMatch[1], query);
     }
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
   } catch (err) {
-    console.error('[practitioner] Unhandled error:', err.message);
-    return Response.json({ error: 'Service temporarily unavailable' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error: err,
+      source: 'practitioner',
+      fallbackMessage: 'Service temporarily unavailable',
+      extra: { subpath },
+    });
   }
 }
 
@@ -425,6 +439,63 @@ async function handleDeleteInvitation(userId, invitationId, query) {
   }
 
   return Response.json({ ok: true, message: 'Invitation revoked' });
+}
+
+async function handleResendInvitation(request, env, userId, invitationId, query) {
+  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practResult.rows?.length) {
+    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
+  }
+
+  const practitioner = practResult.rows[0];
+  const invitationResult = await query(QUERIES.getPractitionerInvitationById, [invitationId, practitioner.id]);
+  const invitation = invitationResult.rows?.[0];
+
+  if (!invitation || invitation.status !== 'pending') {
+    return Response.json({ error: 'Invitation not found' }, { status: 404 });
+  }
+
+  await query(QUERIES.expirePendingPractitionerInvitationsByEmail, [practitioner.id, invitation.client_email]);
+
+  const rawToken = makeInviteToken(32);
+  const tokenHash = await sha256Hex(rawToken);
+  const expiresAt = new Date(Date.now() + (14 * 24 * 60 * 60 * 1000)).toISOString();
+  const inviteInsert = await query(QUERIES.createPractitionerInvitation, [
+    practitioner.id,
+    invitation.client_email,
+    invitation.client_name,
+    tokenHash,
+    invitation.message,
+    expiresAt
+  ]);
+  const resentInvitation = inviteInsert.rows?.[0];
+
+  const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
+  const inviteUrl = `${frontendUrl.replace(/\/$/, '')}/?invite=${encodeURIComponent(rawToken)}`;
+  const practitionerName = practitioner.display_name || practitioner.business_name || request._user?.email || 'Your practitioner';
+
+  let emailResult = { success: false, error: 'Email service not configured' };
+  if (env.RESEND_API_KEY) {
+    emailResult = await sendPractitionerInvitationEmail(
+      invitation.client_email,
+      practitionerName,
+      inviteUrl,
+      env.RESEND_API_KEY,
+      env.FROM_EMAIL
+    );
+  }
+
+  return Response.json({
+    ok: true,
+    mode: 'resent',
+    message: emailResult.success
+      ? `Invitation resent to ${invitation.client_email}`
+      : `Fresh invitation created for ${invitation.client_email}. Email delivery unavailable; share invite link manually.`,
+    invitation: resentInvitation,
+    inviteUrl,
+    emailSent: !!emailResult.success,
+    emailError: emailResult.success ? null : emailResult.error
+  });
 }
 
 async function handleGetClientDetail(userId, clientId, query) {

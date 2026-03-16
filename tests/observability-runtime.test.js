@@ -108,7 +108,13 @@ describe('worker top-level error pipeline', () => {
     const request = new Request('https://api.test/api/chart/calculate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birthDate: '1979-08-05' }),
+      body: JSON.stringify({
+        birthDate: '1979-08-05',
+        birthTime: '14:30',
+        birthTimezone: 'America/New_York',
+        lat: 27.9506,
+        lng: -82.4572,
+      }),
     });
 
     const response = await worker.fetch(request, env, ctx);

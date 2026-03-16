@@ -405,6 +405,13 @@ export const QUERIES = {
     ORDER BY created_at DESC
   `,
 
+  getPractitionerInvitationById: `
+    SELECT id, practitioner_id, client_email, client_name, status, message, expires_at, accepted_at, created_at
+    FROM practitioner_invitations
+    WHERE id = $1 AND practitioner_id = $2
+    LIMIT 1
+  `,
+
   getPractitionerInvitationByTokenHash: `
     SELECT pi.id, pi.practitioner_id, pi.client_email, pi.client_name, pi.message,
            pi.status, pi.expires_at, pi.accepted_at,
@@ -1252,7 +1259,17 @@ export const QUERIES = {
     FROM profiles p
     JOIN charts c ON p.chart_id = c.id
     JOIN users u ON p.user_id = u.id
-    WHERE p.id = $1 AND p.user_id = $2
+    WHERE p.id = $1
+      AND (
+        p.user_id = $2
+        OR EXISTS (
+          SELECT 1
+          FROM practitioner_clients pc
+          JOIN practitioners pr ON pr.id = pc.practitioner_id
+          WHERE pr.user_id = $2
+            AND pc.client_user_id = p.user_id
+        )
+      )
   `,
 
   getNotionAccessTokenOnly: `

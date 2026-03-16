@@ -9,6 +9,8 @@ let token = null;
 let _tokenExpiresAt = 0; // P2-FE-005: epoch ms when access token expires
 let _refreshTimer = null; // P2-FE-005: proactive refresh timer
 const PENDING_PRACTITIONER_INVITE_KEY = 'ps_pending_practitioner_invite';
+const POST_CHECKOUT_DESTINATION_KEY = 'ps_post_checkout_destination';
+const POST_CHECKOUT_TIER_KEY = 'ps_post_checkout_tier';
 let userEmail = sessionStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
 let _pendingResetToken = null; // SEC-001: closure-scoped, never on window
@@ -497,6 +499,7 @@ async function checkOAuthCallback() {
 
       await fetchUserProfile();
       await processPendingPractitionerInvite();
+      await applyPendingPostCheckoutIntent();
       if (data.new_user) {
         showNotification('Welcome to Prime Self! Enter your birth details below to generate your blueprint.', 'success');
       } else {
@@ -652,6 +655,66 @@ function getPendingPractitionerInviteToken() {
 
 function clearPendingPractitionerInviteToken() {
   sessionStorage.removeItem(PENDING_PRACTITIONER_INVITE_KEY);
+}
+
+function capturePostCheckoutIntentFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const destination = params.get('post_checkout');
+  if (!destination) return;
+
+  const safeDestinations = new Set(['overview', 'practitioner']);
+  if (safeDestinations.has(destination)) {
+    sessionStorage.setItem(POST_CHECKOUT_DESTINATION_KEY, destination);
+    const tier = params.get('tier');
+    if (tier) sessionStorage.setItem(POST_CHECKOUT_TIER_KEY, tier);
+  }
+
+  params.delete('post_checkout');
+  params.delete('tier');
+  const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}${window.location.hash || ''}`;
+  window.history.replaceState({}, '', next);
+}
+
+function normalizeCurrentTierName(tier) {
+  if (tier === 'guide') return 'practitioner';
+  if (tier === 'white_label') return 'agency';
+  return tier || 'free';
+}
+
+function clearPendingPostCheckoutIntent() {
+  sessionStorage.removeItem(POST_CHECKOUT_DESTINATION_KEY);
+  sessionStorage.removeItem(POST_CHECKOUT_TIER_KEY);
+}
+
+async function applyPendingPostCheckoutIntent() {
+  const destination = sessionStorage.getItem(POST_CHECKOUT_DESTINATION_KEY);
+  if (!destination || !window.currentUser) return false;
+
+  const currentTier = normalizeCurrentTierName(window.currentUser?.tier);
+  const hintedTier = normalizeCurrentTierName(sessionStorage.getItem(POST_CHECKOUT_TIER_KEY));
+  const effectiveTier = currentTier !== 'free' ? currentTier : hintedTier;
+
+  if (destination === 'practitioner') {
+    if (effectiveTier !== 'practitioner' && effectiveTier !== 'agency') return false;
+
+    requestAnimationFrame(() => {
+      switchTab('practitioner');
+      showNotification('Practitioner plan active. Your workspace is ready.', 'success');
+    });
+    clearPendingPostCheckoutIntent();
+    return true;
+  }
+
+  if (destination === 'overview' && effectiveTier !== 'free') {
+    requestAnimationFrame(() => {
+      switchTab('overview', document.getElementById('btn-home'));
+      showNotification('Your plan is active.', 'success');
+    });
+    clearPendingPostCheckoutIntent();
+    return true;
+  }
+
+  return false;
 }
 
 async function processPendingPractitionerInvite(options = {}) {
@@ -841,6 +904,7 @@ async function submitAuth() {
     // Fetch subscription/tier info now that we have a valid token
     await fetchUserProfile();
     await processPendingPractitionerInvite();
+    await applyPendingPostCheckoutIntent();
     // AUDIT-SEC-003: Show verification banner after registration
     if (authMode === 'register') {
       showEmailVerificationBanner();
@@ -855,6 +919,7 @@ async function submitAuth() {
 
 function logout() {
   if (!confirm('Are you sure you want to log out?')) return;
+  const previousScopeId = getJourneyScopeId();
   const oldToken = token;
   token = null; userEmail = null;
   window.currentUser = null;
@@ -878,8 +943,7 @@ function logout() {
   localStorage.removeItem('accessToken'); // CISO-001: scrub any previously-leaked token
   sessionStorage.removeItem('ps_email');
   localStorage.removeItem('primeSelf_birthData');
-  localStorage.removeItem('chartGenerated');
-  localStorage.removeItem('profileGenerated');
+  clearJourneyStateForScope(previousScopeId);
   localStorage.removeItem('user');
   // Revoke all server-side refresh tokens and clear the HttpOnly cookie
   fetch(API + '/api/auth/logout', {
@@ -1330,6 +1394,17 @@ async function apiFetch(path, options = {}) {
     return { ok: false, error: msg };
   }
 
+  const requestId = res.headers.get('X-Request-ID') || res.headers.get('x-request-id') || '';
+
+  function withRequestId(result) {
+    if (!result || typeof result !== 'object' || Array.isArray(result)) return result;
+    if (requestId && !result.requestId) result.requestId = requestId;
+    if (!res.ok && res.status >= 500 && requestId && typeof result.error === 'string' && !result.error.includes(requestId)) {
+      result.error = `${result.error}${formatRequestIdSuffix(requestId)}`;
+    }
+    return result;
+  }
+
   // Auto-handle expired / missing token — try silent refresh once, then force sign-in
   if (res.status === 401) {
     const refreshed = await silentRefresh();
@@ -1338,22 +1413,34 @@ async function apiFetch(path, options = {}) {
       const retryHeaders = { 'Content-Type': 'application/json', ...(options.headers || {}) };
       try {
         const retryRes = await fetch(API + path, { ...options, headers: retryHeaders, credentials: 'include' });
-        if (retryRes.status !== 401) return retryRes.json();
+        if (retryRes.status !== 401) {
+          const retryRequestId = retryRes.headers.get('X-Request-ID') || retryRes.headers.get('x-request-id') || '';
+          const retryPayload = await retryRes.json();
+          if (retryRequestId && retryPayload && typeof retryPayload === 'object' && !Array.isArray(retryPayload)) {
+            retryPayload.requestId = retryPayload.requestId || retryRequestId;
+            if (!retryRes.ok && retryRes.status >= 500 && typeof retryPayload.error === 'string' && !retryPayload.error.includes(retryRequestId)) {
+              retryPayload.error = `${retryPayload.error}${formatRequestIdSuffix(retryRequestId)}`;
+            }
+          }
+          return retryPayload;
+        }
       } catch (retryErr) {
         return { ok: false, error: 'Network/CORS error on retry.' };
       }
     }
     // Refresh failed — force sign-in
+    const previousScopeId = getJourneyScopeId();
     token = null;
     userEmail = null;
     localStorage.removeItem('ps_session');
     localStorage.removeItem('ps_email');   // legacy cleanup
     sessionStorage.removeItem('ps_email');
+    clearJourneyStateForScope(previousScopeId);
     window.currentUser = null;
     updateAuthUI();
     openAuthOverlay();
     document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.sessionExpired') : 'Session expired. Please sign in.';
-    return { error: 'Authentication required. Please sign in.' };
+    return withRequestId({ error: 'Authentication required. Please sign in.' });
   }
 
   // Handle quota exceeded (429) and feature not available (403)
@@ -1368,7 +1455,7 @@ async function apiFetch(path, options = {}) {
     if (errorData.upgrade_required) {
       showUpgradePrompt(errorData.error, errorData.feature);
     }
-    return errorData;
+    return withRequestId(errorData);
   }
 
   const contentType = res.headers.get('content-type') || '';
@@ -1379,11 +1466,16 @@ async function apiFetch(path, options = {}) {
     return {
       ok: res.ok,
       error: safeText || `Unexpected non-JSON response (${res.status})`,
-      status: res.status
+      status: res.status,
+      requestId,
     };
   }
 
-  return res.json();
+  return withRequestId(await res.json());
+}
+
+function formatRequestIdSuffix(requestId) {
+  return requestId ? ` Reference: ${requestId}.` : '';
 }
 
 // ── Tabs ──────────────────────────────────────────────────────
@@ -1408,13 +1500,143 @@ const SIDEBAR_PARENTS = {
   enhance: 'enhance', diary: 'enhance'
 };
 
+const JOURNEY_MILESTONE_KEYS = ['chartGenerated', 'profileGenerated', 'transitsViewed'];
+const JOURNEY_CHECKIN_META_KEY = 'checkinMeta';
 const GUIDED_CORE_TABS = new Set(['overview', 'chart', 'profile', 'transits', 'checkin', 'composite']);
 const GUIDED_UNLOCK_KEYS = ['chartGenerated', 'profileGenerated', 'transitsViewed'];
+
+function getJourneyScopeId() {
+  const userId = window.currentUser?.id;
+  if (userId) return `uid:${String(userId)}`;
+  if (userEmail) return `email:${String(userEmail).trim().toLowerCase()}`;
+  return 'anon';
+}
+
+function getJourneyStorageKey(key, scopeId = getJourneyScopeId()) {
+  return `ps_journey:${scopeId}:${key}`;
+}
+
+function readJourneyFlag(key) {
+  if (!key) return false;
+  try {
+    if (localStorage.getItem(getJourneyStorageKey(key)) === '1') return true;
+    // Backward compatibility for legacy flat keys.
+    return localStorage.getItem(key) === '1';
+  } catch (_error) {
+    return false;
+  }
+}
+
+function writeJourneyFlag(key) {
+  if (!key) return;
+  try {
+    localStorage.setItem(getJourneyStorageKey(key), '1');
+  } catch (_error) {
+    // Storage may be unavailable in strict privacy modes.
+  }
+}
+
+function clearJourneyFlag(key, scopeId = getJourneyScopeId()) {
+  if (!key) return;
+  try {
+    localStorage.removeItem(getJourneyStorageKey(key, scopeId));
+    localStorage.removeItem(key); // legacy cleanup
+  } catch (_error) {
+    // no-op
+  }
+}
+
+function getLocalISODate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getYesterdayLocalISODate() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function readCheckinMeta() {
+  try {
+    const raw = localStorage.getItem(getJourneyStorageKey(JOURNEY_CHECKIN_META_KEY));
+    if (!raw) return { lastCheckinDate: null, streakDays: 0 };
+    const parsed = JSON.parse(raw);
+    return {
+      lastCheckinDate: typeof parsed?.lastCheckinDate === 'string' ? parsed.lastCheckinDate : null,
+      streakDays: Number.isFinite(parsed?.streakDays) ? Math.max(0, Number(parsed.streakDays)) : 0
+    };
+  } catch (_error) {
+    return { lastCheckinDate: null, streakDays: 0 };
+  }
+}
+
+function writeCheckinMeta(meta) {
+  try {
+    localStorage.setItem(getJourneyStorageKey(JOURNEY_CHECKIN_META_KEY), JSON.stringify(meta));
+  } catch (_error) {
+    // no-op
+  }
+}
+
+function hasCheckinToday() {
+  const meta = readCheckinMeta();
+  return meta.lastCheckinDate === getLocalISODate();
+}
+
+function markCheckinMilestone(serverStreakDays = null) {
+  const today = getLocalISODate();
+  const yesterday = getYesterdayLocalISODate();
+  const prev = readCheckinMeta();
+
+  let streakDays = prev.streakDays || 0;
+  if (Number.isFinite(serverStreakDays) && Number(serverStreakDays) > 0) {
+    streakDays = Number(serverStreakDays);
+  } else if (prev.lastCheckinDate === today) {
+    streakDays = Math.max(1, streakDays || 1);
+  } else if (prev.lastCheckinDate === yesterday) {
+    streakDays = Math.max(1, streakDays) + 1;
+  } else {
+    streakDays = 1;
+  }
+
+  writeCheckinMeta({ lastCheckinDate: today, streakDays });
+  const activePanel = document.querySelector('.tab-content.active')?.id || '';
+  const activeTab = activePanel.startsWith('tab-') ? activePanel.slice(4) : 'checkin';
+  updateStepGuide(activeTab);
+  return streakDays;
+}
+
+function clearJourneyStateForScope(scopeId) {
+  if (!scopeId) return;
+  JOURNEY_MILESTONE_KEYS.forEach((key) => clearJourneyFlag(key, scopeId));
+  try {
+    localStorage.removeItem(getJourneyStorageKey(JOURNEY_CHECKIN_META_KEY, scopeId));
+  } catch (_error) {
+    // no-op
+  }
+  clearJourneyFlag('checkinDone', scopeId);
+}
+
+function markJourneyMilestone(key) {
+  if (!key) return;
+  writeJourneyFlag(key);
+  const activePanel = document.querySelector('.tab-content.active')?.id || '';
+  const activeTab = activePanel.startsWith('tab-') ? activePanel.slice(4) : 'chart';
+  updateStepGuide(activeTab);
+  applyGuidedNavigation();
+}
 
 function isGuidedNavigationUnlocked() {
   try {
     if (localStorage.getItem('ps_unlock_all_nav') === '1') return true;
-    return GUIDED_UNLOCK_KEYS.every((key) => !!localStorage.getItem(key));
+    return GUIDED_UNLOCK_KEYS.every((key) => readJourneyFlag(key));
   } catch (_error) {
     // Fail open if storage is unavailable (private mode / browser policy).
     return true;
@@ -1469,6 +1691,10 @@ function switchTab(id, btn) {
 
   // Update step guide progress
   updateStepGuide(id);
+
+  if (id === 'transits' || id === 'checkin') {
+    markJourneyMilestone('transitsViewed');
+  }
 
   // Lazy-load tab content on first activation (BL-OPT-005)
   if (typeof window.onTabActivated === 'function') window.onTabActivated(id);
@@ -1641,20 +1867,20 @@ function updateStepGuide(activeTab) {
     el.classList.remove('active-step');
     if (s.tab === activeTab) el.classList.add('active-step');
   });
-  // Mark steps as done based on localStorage state
-  if (localStorage.getItem('chartGenerated')) {
+  // Mark steps as done based on scoped journey state
+  if (readJourneyFlag('chartGenerated')) {
     const c = document.getElementById('sg-chart');
     if (c) { c.classList.add('done'); c.classList.remove('active-step'); }
   }
-  if (localStorage.getItem('profileGenerated')) {
+  if (readJourneyFlag('profileGenerated')) {
     const p = document.getElementById('sg-profile');
     if (p) { p.classList.add('done'); p.classList.remove('active-step'); }
   }
-  if (localStorage.getItem('transitsViewed')) {
+  if (readJourneyFlag('transitsViewed')) {
     const t = document.getElementById('sg-transits');
     if (t) { t.classList.add('done'); t.classList.remove('active-step'); }
   }
-  if (localStorage.getItem('checkinDone')) {
+  if (hasCheckinToday()) {
     const ch = document.getElementById('sg-checkins');
     if (ch) { ch.classList.add('done'); ch.classList.remove('active-step'); }
   }
@@ -1909,7 +2135,7 @@ async function calculateChart() {
 
 // ── Chart Form Collapse (hide form after generation, show compact summary) ──
 function collapseChartForm() {
-  localStorage.setItem('chartGenerated', '1');
+  markJourneyMilestone('chartGenerated');
   // Hide the generate button row
   const btnRow = document.getElementById('chartBtnRow');
   if (btnRow) btnRow.style.display = 'none';
@@ -2048,12 +2274,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 200);
   // Restore collapsed chart form state if chart was previously generated
-  if (localStorage.getItem('chartGenerated')) {
+  if (readJourneyFlag('chartGenerated')) {
     collapseChartForm();
   }
   // Show first-run welcome modal for new visitors (slight delay so page renders first)
   try {
-    if (!localStorage.getItem('primeself_frm_seen') && !localStorage.getItem('chartGenerated')) {
+    if (!localStorage.getItem('primeself_frm_seen') && !readJourneyFlag('chartGenerated')) {
       setTimeout(frmShow, 800);
     }
   } catch(e) {}
@@ -2704,7 +2930,7 @@ async function generateProfile() {
     // Clear any remaining progress timeouts
     progressTimeouts.forEach(clearTimeout);
     resultEl.innerHTML = renderProfile(data);
-    localStorage.setItem('profileGenerated', '1');
+    markJourneyMilestone('profileGenerated');
     updateStepGuide('profile');
   } catch (e) {
     // Clear progress timeouts on error
@@ -2966,6 +3192,74 @@ function renderProfile(data) {
       html += `</div>`; // close Numerology card
     }
     
+    // Mayan Tzolkin
+    if (ti.mayanTzolkin) {
+      const mayan = ti.mayanTzolkin;
+      html += `<div class="card">
+        <div class="card-title">◎ Mayan Tzolkin</div>
+        <div class="profile-section">
+          <h4>Kin ${mayan.kin || '?'} — ${escapeHtml(mayan.seal || '')} · ${escapeHtml(mayan.tone || '')}</h4>
+          ${mayan.archetype ? `<p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">${escapeHtml(mayan.archetype)}</p>` : ''}
+          ${mayan.gift ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)"><strong style="color:var(--gold)">Gift:</strong> ${escapeHtml(mayan.gift)}</p>` : ''}
+          ${mayan.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(mayan.convergence)}</p>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // BaZi Profile
+    if (ti.baziProfile) {
+      const bazi = ti.baziProfile;
+      html += `<div class="card">
+        <div class="card-title">☯ BaZi Four Pillars</div>
+        <div class="profile-section">
+          ${bazi.dayMaster ? `<h4>Day Master — ${escapeHtml(bazi.dayMaster)}</h4>` : ''}
+          ${bazi.elementBalance ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)">${escapeHtml(bazi.elementBalance)}</p>` : ''}
+          ${bazi.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(bazi.convergence)}</p>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // Sabian Symbols
+    if (ti.sabianHighlights?.length) {
+      html += `<div class="card">
+        <div class="card-title">◉ Sabian Symbols</div>`;
+      ti.sabianHighlights.forEach(s => {
+        html += `<div class="profile-section">
+          <h4>${escapeHtml(s.point || '')} — "${escapeHtml(s.symbol || '')}"</h4>
+          ${s.insight ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)">${escapeHtml(s.insight)}</p>` : ''}
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Chiron Wound & Gift
+    if (ti.chironWound) {
+      const ch = ti.chironWound;
+      html += `<div class="card">
+        <div class="card-title">⚷ Chiron — Wound &amp; Gift</div>
+        <div class="profile-section">
+          <h4>${escapeHtml(ch.archetype || ch.sign || '')}${ch.house ? ` · House ${ch.house}` : ''}</h4>
+          ${ch.wound ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)"><strong style="color:#f56565">Wound:</strong> ${escapeHtml(ch.wound)}</p>` : ''}
+          ${ch.gift ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-1)"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(ch.gift)}</p>` : ''}
+          ${ch.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(ch.convergence)}</p>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // Lilith Placement
+    if (ti.lilithPlacement) {
+      const lil = ti.lilithPlacement;
+      html += `<div class="card">
+        <div class="card-title">🌑 Lilith — Wild Power</div>
+        <div class="profile-section">
+          <h4>${escapeHtml(lil.archetype || lil.sign || '')}${lil.house ? ` · House ${lil.house}` : ''}</h4>
+          ${lil.shadow ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)"><strong style="color:#f56565">Shadow:</strong> ${escapeHtml(lil.shadow)}</p>` : ''}
+          ${lil.gift ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-1)"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(lil.gift)}</p>` : ''}
+          ${lil.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(lil.convergence)}</p>` : ''}
+        </div>
+      </div>`;
+    }
+
     // Astrological Signatures
     if (ti.astrologicalSignatures?.length) {
       html += `<div class="card">
@@ -3616,12 +3910,41 @@ function renderPractitionerInvitations(data) {
           <div style="font-weight:600;color:var(--text)">${name || email}</div>
           <div style="font-size:var(--font-size-sm);color:var(--text-dim)">${name ? email + ' · ' : ''}Expires ${expiresAt}</div>
         </div>
-        <button class="btn-danger btn-sm" data-action="revokePractitionerInvitation" data-arg0="${inviteId}" data-arg1="${email}">Revoke</button>
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+          <button class="btn-secondary btn-sm" data-action="resendPractitionerInvitation" data-arg0="${inviteId}" data-arg1="${email}">Resend</button>
+          <button class="btn-danger btn-sm" data-action="revokePractitionerInvitation" data-arg0="${inviteId}" data-arg1="${email}">Revoke</button>
+        </div>
       </div>
     `;
   });
   html += '</div>';
   return html;
+}
+
+async function resendPractitionerInvitation(invitationId, emailLabel) {
+  try {
+    const result = await apiFetch(`/api/practitioner/clients/invitations/${invitationId}/resend`, { method: 'POST' });
+    if (result?.error) {
+      showNotification(result.error, 'error');
+      return;
+    }
+
+    if (result?.inviteUrl && !result?.emailSent) {
+      const copied = await copyToClipboard(result.inviteUrl);
+      showNotification(
+        copied
+          ? `Fresh invite link copied for ${emailLabel}.`
+          : `Fresh invite link created for ${emailLabel}. Share it manually.`,
+        'success'
+      );
+    } else {
+      showNotification(result?.message || `Invitation resent to ${emailLabel}`, 'success');
+    }
+
+    loadPractitionerInvitations();
+  } catch (e) {
+    showNotification('Error resending invitation: ' + e.message, 'error');
+  }
 }
 
 async function revokePractitionerInvitation(invitationId, emailLabel) {
@@ -3977,6 +4300,54 @@ function renderPractitionerChecklist(items) {
     </div>`).join('');
 }
 
+function buildPractitionerFollowUpBrief({ emailLabel, chart, profile, notes, aiContext }) {
+  const latestNote = Array.isArray(notes) && notes.length ? notes[0] : null;
+  const aiSharedNotes = Array.isArray(notes) ? notes.filter(note => note.share_with_ai) : [];
+  const hd = chart?.hdData || {};
+  const profileData = profile?.profileData || {};
+  const synthesisSummary = (profileData.quickStart || profileData.overview || profileData.summary || '').trim();
+  const notePreview = latestNote?.content ? latestNote.content.trim().replace(/\s+/g, ' ').slice(0, 280) : '';
+  const aiContextPreview = (aiContext || '').trim().replace(/\s+/g, ' ').slice(0, 280);
+
+  const lines = [
+    `Client: ${emailLabel || 'Client'}`,
+    `Session Follow-Up Brief`,
+    '',
+    `Current blueprint: ${hd.type || 'Unknown'} · ${hd.authority || 'Unknown authority'} · ${hd.profile || 'Unknown profile'}`,
+    `Profile synthesis ready: ${profile ? 'Yes' : 'No'}`,
+    `Notes shared with AI: ${aiSharedNotes.length}`,
+    '',
+  ];
+
+  if (synthesisSummary) {
+    lines.push('Profile synthesis highlight:');
+    lines.push(synthesisSummary);
+    lines.push('');
+  }
+
+  if (notePreview) {
+    lines.push('Latest session note:');
+    lines.push(notePreview);
+    lines.push('');
+  }
+
+  if (aiContextPreview) {
+    lines.push('Practitioner AI context:');
+    lines.push(aiContextPreview);
+    lines.push('');
+  }
+
+  lines.push('Recommended next actions:');
+  if (!profile) lines.push('- Have the client generate or refresh their profile synthesis before the next session.');
+  if (!aiSharedNotes.length) lines.push('- Mark at least one relevant session note to share with AI so future synthesis carries session continuity.');
+  if (!aiContextPreview) lines.push('- Save practitioner context describing tone, goals, and guardrails for the next follow-up.');
+  if (profile && aiSharedNotes.length && aiContextPreview) lines.push('- Use this context to prepare the next check-in or send a practitioner-led follow-up summary.');
+
+  lines.push('');
+  lines.push('Prime Self practitioner workspace');
+  return lines.join('\n');
+}
+
 function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData) {
   if (!data || data.error) {
     return `<div class="alert alert-error">${escapeHtml(data?.error || 'Failed to load client detail')}</div>`;
@@ -3990,6 +4361,15 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
   const aiContextStatus = aiContextData?.error
     ? `<div class="alert alert-warn" style="margin-bottom:var(--space-3)">${escapeHtml(aiContextData.error)}</div>`
     : '';
+  const followUpBrief = buildPractitionerFollowUpBrief({
+    emailLabel: emailLabel || client?.email || '',
+    chart,
+    profile,
+    notes,
+    aiContext,
+  });
+  const latestSessionDate = notes[0]?.session_date ? new Date(notes[0].session_date).toLocaleDateString() : null;
+  const aiSharedCount = notes.filter(note => note.share_with_ai).length;
   const workflowChecklist = [
     {
       done: !!chart,
@@ -4101,6 +4481,7 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
     if (profileId) {
       html += `<button class="btn-secondary btn-sm" data-action="exportPDF" data-arg0="${profileId}">Download PDF</button>`;
       html += `<button class="btn-secondary btn-sm" data-action="exportBrandedPDF" data-arg0="${safeClientId}" title="PDF with your name and branding in the header">Download Branded PDF</button>`;
+      html += `<button class="btn-secondary btn-sm" data-action="exportProfileToNotion" data-arg0="${profileId}">Export to Notion</button>`;
     }
 
     html += `</div>`;
@@ -4160,6 +4541,37 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
   }
 
   html += `</div></div>`;
+
+  html += `
+  <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)">
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0">Post-Session Follow-Up</h4>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim)">${latestSessionDate ? `Latest note: ${latestSessionDate}` : 'No session note captured yet'}</div>
+    </div>
+    <p style="font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.6;margin:0 0 var(--space-3)">
+      Use this brief to keep session continuity tight. It composes the latest note, AI context, and synthesis state into a practitioner-ready follow-up draft.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)">
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">AI-shared notes</div>
+        <div style="font-weight:600;color:var(--text)">${aiSharedCount}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">Context tailored</div>
+        <div style="font-weight:600;color:var(--text)">${aiContext.trim().length ? 'Yes' : 'Not yet'}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:4px">Deliverable status</div>
+        <div style="font-weight:600;color:var(--text)">${profile ? 'Ready to send' : 'Needs synthesis'}</div>
+      </div>
+    </div>
+    <textarea id="followUpBrief-${safeClientId}" rows="10" class="form-input" readonly
+      style="width:100%;resize:vertical;margin-bottom:var(--space-2)">${escapeHtml(followUpBrief)}</textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+      <div id="followUpStatus-${safeClientId}" style="font-size:var(--font-size-sm);color:var(--text-dim)">${aiSharedCount ? 'Includes AI-shared note context.' : 'Mark a note as shared with AI to strengthen future syntheses.'}</div>
+      <button class="btn-primary btn-sm" data-action="copyPractitionerFollowUpBrief" data-arg0="${safeClientId}">Copy Follow-Up Brief</button>
+    </div>
+  </div>`;
 
   // ── Cross-Chart Compatibility (PRAC-005) ──
   // Provide a direct path to generate a composite chart between practitioner and this client.
@@ -5094,6 +5506,43 @@ async function exportBrandedPDF(clientId) {
   }
 }
 
+async function exportProfileToNotion(profileId) {
+  if (!profileId) { showNotification('No profile ID provided', 'warning'); return; }
+  if (!token) { openAuthOverlay(); return; }
+
+  try {
+    showNotification('Exporting profile to Notion…', 'info');
+    const result = await apiFetch(`/api/notion/export/profile/${profileId}`, { method: 'POST' });
+
+    if (result?.error) {
+      showNotification(result.error, 'error');
+      return;
+    }
+
+    if (result?.pageUrl) {
+      window.open(result.pageUrl, '_blank', 'noopener');
+    }
+
+    showNotification('Profile exported to Notion.', 'success');
+  } catch (e) {
+    showNotification('Error exporting to Notion: ' + e.message, 'error');
+  }
+}
+
+async function copyPractitionerFollowUpBrief(clientId) {
+  const field = document.getElementById('followUpBrief-' + clientId);
+  const statusEl = document.getElementById('followUpStatus-' + clientId);
+  if (!field) return;
+
+  const copied = await copyToClipboard(field.value);
+  if (statusEl) {
+    statusEl.textContent = copied
+      ? 'Follow-up brief copied. Paste it into your email, CRM, or Notion workflow.'
+      : 'Copy failed. Select the brief manually and paste it where you need it.';
+  }
+  showNotification(copied ? 'Follow-up brief copied.' : 'Could not copy follow-up brief.', copied ? 'success' : 'error');
+}
+
 // ── Skeleton Loading Templates ────────────────────────────────
 function skeletonChart() {
   return `<div class="skeleton-card">
@@ -5236,7 +5685,7 @@ function updateOverview(chartResponse) {
   </div>`;
 
   // Deepen Your Synthesis journey card
-  const _hasProfile = !!localStorage.getItem('profileGenerated');
+  const _hasProfile = readJourneyFlag('profileGenerated');
   const _steps = [
     { done: true,       icon: '⊙', label: 'Chart calculated',           cta: null },
     { done: _hasProfile, icon: '⬡', label: 'AI Profile generated',       cta: ['profile', 'Generate now'] },
@@ -5824,11 +6273,14 @@ async function saveCheckin() {
 
     if (result?.error) throw new Error(result.error);
 
+    const serverStreak = Number.isFinite(result?.streak?.current) ? result.streak.current : null;
+    const localStreak = markCheckinMilestone(serverStreak);
+
     // Show completed banner
     document.getElementById('checkinCompletedMsg').style.display = '';
 
     // Update streak badge
-    const streak = result?.streak?.current;
+    const streak = serverStreak || localStreak;
     if (streak && streak > 0) {
       document.getElementById('streakDays').textContent = streak;
       document.getElementById('checkinStreakBadge').style.display = '';
@@ -5886,6 +6338,11 @@ async function loadCheckinStats() {
     // Recent history list
     const historyEl = document.getElementById('checkinHistoryList');
     const checkins = historyData?.checkins || [];
+    const today = getLocalISODate();
+    const hasTodayCheckin = checkins.some((entry) => String(entry?.checkinDate || '').slice(0, 10) === today);
+    if (hasTodayCheckin) {
+      markCheckinMilestone(streak);
+    }
     if (checkins.length === 0) {
       historyEl.innerHTML = '<div class="alert alert-info">No check-in history yet. Save your first check-in above!</div>';
     } else {
@@ -6319,6 +6776,7 @@ if (!document.getElementById('notificationStyles')) {
 })();
 
 capturePractitionerInviteFromUrl();
+capturePostCheckoutIntentFromUrl();
 
 // Restore session from HttpOnly refresh cookie, then boot UI
 (async () => {
@@ -6330,6 +6788,7 @@ capturePractitionerInviteFromUrl();
     // OAuth callback already set token and called fetchUserProfile — skip silentRefresh
     userEmail = sessionStorage.getItem('ps_email');
     await processPendingPractitionerInvite();
+    await applyPendingPostCheckoutIntent();
     return;
   }
   // Avoid noisy /auth/refresh 400s for users who have never signed in on this device.
@@ -6344,6 +6803,7 @@ capturePractitionerInviteFromUrl();
     userEmail = sessionStorage.getItem('ps_email');
     await fetchUserProfile();
     await processPendingPractitionerInvite();
+    await applyPendingPostCheckoutIntent();
   } else {
     updateAuthUI();
     await processPendingPractitionerInvite({ promptForAuth: true });

@@ -30,6 +30,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
 import { withCircuitBreaker } from '../lib/circuitBreaker.js';
 import { createLogger } from '../lib/logger.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 function buildRetentionOffer(subscriptionTier) {
   if (subscriptionTier === 'practitioner') {
@@ -221,8 +222,13 @@ export async function handleCheckout(request, env, ctx) {
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
     
   } catch (error) {
-    log.error('checkout_error', { error: error.message });
-    return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'billing_checkout',
+      fallbackMessage: 'Failed to create checkout session',
+    });
   }
 }
 
@@ -303,8 +309,13 @@ export async function handleOneTimeCheckout(request, env, ctx) {
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
 
   } catch (error) {
-    log.error('one_time_checkout_error', { error: error.message });
-    return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'billing_one_time_checkout',
+      fallbackMessage: 'Failed to create checkout session',
+    });
   }
 }
 
@@ -350,8 +361,13 @@ export async function handlePortal(request, env, ctx) {
     return Response.json({ ok: true, url: session.url });
     
   } catch (error) {
-    log.error('portal_error', { error: error.message });
-    return Response.json({ error: 'Failed to create portal session' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'billing_portal',
+      fallbackMessage: 'Failed to create portal session',
+    });
   }
 }
 
@@ -415,8 +431,13 @@ export async function handleGetSubscription(request, env, ctx) {
     });
     
   } catch (error) {
-    log.error('get_subscription_error', { error: error.message });
-    return Response.json({ error: 'Failed to get subscription' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'billing_get_subscription',
+      fallbackMessage: 'Failed to get subscription',
+    });
   }
 }
 
@@ -502,8 +523,13 @@ export async function handleCancelSubscription(request, env, ctx) {
     });
     
   } catch (error) {
-    log.error('cancel_subscription_error', { error: error.message });
-    return Response.json({ error: 'Failed to cancel subscription' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'billing_cancel_subscription',
+      fallbackMessage: 'Failed to cancel subscription',
+    });
   }
 }
 
@@ -582,8 +608,13 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     });
     
   } catch (error) {
-    log.error('upgrade_subscription_error', { error: error.message });
-    return Response.json({ error: 'Failed to upgrade subscription' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'billing_upgrade_subscription',
+      fallbackMessage: 'Failed to upgrade subscription',
+    });
   }
 }
 

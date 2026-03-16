@@ -15,6 +15,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { importEncryptionKey, encryptToken, readToken } from '../lib/tokenCrypto.js'; // BL-R-H3
 import { normalizeTierName } from '../lib/stripe.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * GET /api/notion/auth
@@ -50,11 +51,13 @@ const REDIRECT_URI = `${env.BASE_URL || 'https://primeself.app'}/api/notion/call
     });
     
   } catch (error) {
-    console.error('Error initiating Notion auth:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to initiate Notion authorization'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'notion_auth',
+      fallbackMessage: 'Failed to initiate Notion authorization',
+    });
   }
 }
 
@@ -184,8 +187,15 @@ export async function handleNotionCallback(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error handling Notion callback:', error);
-    return new Response('Internal server error', { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'notion_callback',
+      fallbackMessage: 'Internal server error',
+      hint: null,
+      responseFactory: ({ status }) => new Response('Internal server error', { status }),
+    });
   }
 }
 
@@ -223,11 +233,13 @@ export async function handleNotionStatus(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error getting Notion status:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to get Notion status'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'notion_status',
+      fallbackMessage: 'Failed to get Notion status',
+    });
   }
 }
 
@@ -342,11 +354,13 @@ export async function handleSyncClients(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error syncing clients to Notion:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to sync clients to Notion'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'notion_sync_clients',
+      fallbackMessage: 'Failed to sync clients to Notion',
+    });
   }
 }
 
@@ -416,11 +430,13 @@ export async function handleExportProfile(request, env, profileId) {
     });
     
   } catch (error) {
-    console.error('Error exporting profile to Notion:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to export profile to Notion'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'notion_export_profile',
+      fallbackMessage: 'Failed to export profile to Notion',
+    });
   }
 }
 
@@ -446,10 +462,12 @@ export async function handleNotionDisconnect(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error disconnecting Notion:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to disconnect Notion'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'notion_disconnect',
+      fallbackMessage: 'Failed to disconnect Notion',
+    });
   }
 }

@@ -181,7 +181,7 @@ export async function handleProfileStream(request, env, ctx) {
 
       const promptPayload = buildSynthesisPrompt({
         hdChart: chart.chart,
-        astroChart: chart.astrology,
+        astroChart:        _opt('astrology',  chart.astrology),
         transits:         _opt('transits',      chart.transits),
         personalityGates: chart.personalityGates,
         designGates:      chart.designGates,

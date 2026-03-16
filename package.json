@@ -8,7 +8,7 @@
     "test:deterministic": "vitest run --maxWorkers=1",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "deploy:workers": "cd workers && npx wrangler deploy --force",
+    "deploy:workers": "cd workers && npx wrangler deploy --env=\"\" --force",
     "verify:prod": "node workers/verify-production.js",
     "verify:canary": "node workers/verify-canary.js",
     "deploy": "npm run deploy:workers && npm run verify:prod",

@@ -5,6 +5,8 @@ PLan-convo
 .env.*
 node_modules/
 .wrangler/
+workers/.wrangler-tmp-build/
+.wrangler-tmp-build/
 dist/
 .vitest/
 *.log

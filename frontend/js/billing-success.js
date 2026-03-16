@@ -1,5 +1,7 @@
 (async function () {
   const API = '';
+  const POST_CHECKOUT_DESTINATION_KEY = 'ps_post_checkout_destination';
+  const POST_CHECKOUT_TIER_KEY = 'ps_post_checkout_tier';
 
   const TIER_LABELS = {
     pro: 'Pro',
@@ -11,13 +13,41 @@
     free: 'Free',
   };
 
+  const PRACTITIONER_DESTINATION_TIERS = new Set(['practitioner', 'agency', 'white_label', 'guide']);
+
+  function getAppRedirectTarget(tier) {
+    const destination = PRACTITIONER_DESTINATION_TIERS.has(tier) ? 'practitioner' : 'overview';
+    return {
+      destination,
+      href: `/?post_checkout=${encodeURIComponent(destination)}&tier=${encodeURIComponent(tier || 'free')}`,
+      ctaLabel: destination === 'practitioner' ? 'Open Practitioner Workspace →' : 'Open Prime Self →',
+    };
+  }
+
   function showState(name) {
     document.getElementById('stateActivating').style.display = name === 'activating' ? 'block' : 'none';
     document.getElementById('stateSuccess').style.display = name === 'success' ? 'block' : 'none';
     document.getElementById('stateError').style.display = name === 'error' ? 'block' : 'none';
   }
 
-  function startRedirect() {
+  function updateSuccessAction(target) {
+    const actionButton = document.querySelector('#stateSuccess .btn');
+    if (actionButton) {
+      actionButton.href = target.href;
+      actionButton.textContent = target.ctaLabel;
+    }
+  }
+
+  function rememberPostCheckoutDestination(target, tier) {
+    try {
+      sessionStorage.setItem(POST_CHECKOUT_DESTINATION_KEY, target.destination);
+      sessionStorage.setItem(POST_CHECKOUT_TIER_KEY, tier || 'free');
+    } catch (_) {
+      // sessionStorage unavailable — query params on the redirect URL still preserve intent.
+    }
+  }
+
+  function startRedirect(target) {
     let seconds = 5;
     const el = document.getElementById('countdown');
     const timer = setInterval(() => {
@@ -25,7 +55,7 @@
       if (el) el.textContent = seconds;
       if (seconds <= 0) {
         clearInterval(timer);
-        window.location.replace('/');
+        window.location.replace(target.href);
       }
     }, 1000);
   }
@@ -47,9 +77,11 @@
   }
 
   if (!token) {
+    const fallbackTarget = getAppRedirectTarget('free');
     document.getElementById('tierBadge').textContent = 'Plan Active';
+    updateSuccessAction(fallbackTarget);
     showState('success');
-    startRedirect();
+    startRedirect(fallbackTarget);
     return;
   }
 
@@ -78,10 +110,13 @@
   }
 
   if (tier && tier !== 'free') {
+    const target = getAppRedirectTarget(tier);
+    rememberPostCheckoutDestination(target, tier);
+    updateSuccessAction(target);
     document.getElementById('tierBadge').textContent =
       (TIER_LABELS[tier] ?? tier.charAt(0).toUpperCase() + tier.slice(1)) + ' — Active';
     showState('success');
-    startRedirect();
+    startRedirect(target);
   } else {
     document.getElementById('errorTitle').textContent = 'Almost there…';
     document.getElementById('errorMsg').textContent =

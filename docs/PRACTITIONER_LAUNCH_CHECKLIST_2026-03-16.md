@@ -15,9 +15,9 @@ Status key:
 - [x] Practitioner upgrade copy uses current tier naming
 Map: UI_TESTCASES.md Section 6.1, billing language dependencies in roadmap
 Evidence: frontend/index.html practitioner upgrade notice now uses Practitioner tier
-- [ ] Post-checkout practitioner lands in a guided workspace
+- [x] Post-checkout practitioner lands in a guided workspace
 Map: roadmap first-pass activation requirement
-Status: Open
+Evidence: frontend/js/billing-success.js and frontend/js/app.js now preserve a post-checkout destination and route Practitioner/Agency users back into the practitioner workspace with activation guidance
 
 ### 2. Client Add / Invite
 - [x] `POST /api/practitioner/clients/invite` creates invite or links existing account
@@ -26,6 +26,9 @@ Evidence: workers/src/handlers/practitioner.js
 - [x] Invitation link can now be redeemed end to end
 Map: UI_TESTCASES.md Section 6.1, `Invitation tokens expire after acceptance; revocable`
 Evidence: workers/src/handlers/practitioner.js, workers/src/index.js, frontend/js/app.js
+- [x] Pending invite can be resent from practitioner workspace
+Map: roadmap first-pass invite-management requirement
+Evidence: workers/src/handlers/practitioner.js and frontend/js/app.js now support invitation resend with fresh-link rotation
 - [ ] Invitation expiry and revoke behavior fully regression-tested
 Map: UI_TESTCASES.md Section 6.1
 Status: Partial
@@ -43,6 +46,11 @@ Evidence: frontend/js/app.js and branded PDF route in workers/src/index.js
 - [x] Client detail includes AI context editor
 Map: UI_TESTCASES.md Section 6.3, roadmap first-pass client workspace
 Evidence: frontend/js/app.js practitioner client detail now loads and saves per-client AI context
+
+### 3A. Roster Readiness Visibility
+- [x] Practitioner roster exposes lifecycle guidance for client readiness
+Map: roadmap Phase 1 client lifecycle requirement
+Evidence: frontend/js/app.js and workers/src/db/queries.js now render lifecycle badges and next-step guidance from birth-data, chart, and profile readiness signals
 
 ---
 
@@ -63,6 +71,7 @@ Current verified state:
 - AI context get/update enforce roster ownership
 - client detail route rejects non-roster practitioners
 - branded PDF export rejects non-roster practitioners
+- Notion export now allows practitioner export of roster client profiles without widening access outside the roster
 
 ### 5. Public Profile Routing
 - [x] Public practitioner save confirmation uses canonical slug route
@@ -95,6 +104,9 @@ Evidence: QUERIES.listSessionNotes
 - [ ] Share-with-AI behavior is verified all the way into synthesis
 Map: UI_TESTCASES.md Section 6.2 and 6.3
 Status: Partial
+- [x] Client workspace exposes a post-session follow-up action
+Map: roadmap Phase 2 post-session flow requirement
+Evidence: frontend/js/app.js now composes a follow-up brief from notes, AI context, and synthesis state with a copy action for practitioner workflows
 
 ### 7. Per-Client AI Context
 - [x] Backend read/update routes exist
@@ -144,6 +156,9 @@ Evidence: workers/src/handlers/notion.js and workers/src/index.js
 - [x] Basic practitioner UI for Notion exists
 Map: roadmap current-state validation
 Evidence: frontend/js/app.js
+- [x] Practitioner client workspace can export a client profile to Notion
+Map: practitioner workflow integration requirement
+Evidence: frontend/js/app.js now surfaces Notion export from client detail, and workers/src/db/queries.js scopes Notion export to own or roster-client profiles
 - [ ] Real practitioner-grade UX and failure handling need final validation
 Map: UI_TESTCASES.md Section 8.2 and 8.3
 Status: Partial
@@ -169,7 +184,7 @@ Status: Open
 - expired invite preview test added
 - [x] Run deterministic practitioner regression suite successfully in the local environment
 Map: release validation
-Evidence: direct Vitest execution from repo root passes on `tests/practitioner-runtime.test.js` with 9 passing tests
+Evidence: direct Vitest execution from repo root passes on `tests/practitioner-runtime.test.js` with 11 passing tests
 
 ---
 

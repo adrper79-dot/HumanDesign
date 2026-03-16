@@ -206,6 +206,27 @@ These items cause outright failures in deployed environments.
 - **Problem:** No UI exists for: composite charts, birth-time rectification, practitioner tools, clusters, SMS subscription, onboarding story, PDF export.
 - **Fix:** Implement frontend tabs/modals for each feature, prioritized by user impact.
 
+### BL-M15 | Repo-wide observability and handled-error cleanup sweep
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Files:** `workers/src/handlers/*.js`, `workers/src/lib/routeErrors.js`, `workers/src/lib/logger.js`, `workers/src/lib/errorMessages.js`, `frontend/js/app.js`, `tests/handled-route-errors.test.js`, `tests/observability-runtime.test.js`
+- **Problem:** The critical-path error pipeline is now materially stronger, but the repo still has a split-brain observability model. Some routes use structured logging, analytics-backed error capture, Sentry, and request correlation; many other handlers still catch locally with raw `console.error(...)` and return generic failures without durable operator-facing signals. That means debugging quality still depends on which route failed.
+- **Concept:** Finish the cleanup as a deliberate repo-wide standardization pass. The target state is: every customer-facing handled 5xx either rethrows to the top-level worker catch or uses the shared handled-route error path so the system emits structured logs, analytics error events, Sentry exceptions, and an `X-Request-ID` that can be surfaced to support. Browser-visible server failures should preserve the request ID and attach it to user-safe error copy where appropriate.
+- **Scope:**
+  - Migrate remaining high-value handlers away from console-only local catches.
+  - Use `workers/src/lib/routeErrors.js` for handled JSON/browser 5xx responses where local catch blocks are required.
+  - Normalize logger payloads to include source, route, requestId, errorClass, and retryability for handled failures.
+  - Preserve special response contracts, such as HTML/browser callback routes, while still emitting the shared operator-facing signals.
+  - Expand regression coverage so handled-route failures are tested, not assumed.
+- **Acceptance:**
+  - No critical customer-facing handler returns a handled 5xx via console-only logging.
+  - Shared handled-route reporting is used consistently across billing, auth-adjacent, practitioner, Notion, export, webhook/admin, and other support-heavy surfaces.
+  - Frontend API failures preserve backend request IDs on 5xx responses.
+  - Focused tests cover both top-level unhandled failures and representative handled-route failures.
+  - Reliability policy and backlog remain aligned with the shipped behavior.
+- **Implementation prompt:**
+  - "Perform a repo-wide observability cleanup sweep. Replace console-only handled 5xx paths in customer-facing Workers handlers with the shared `reportHandledRouteError()` flow or a rethrow into the top-level worker catch, whichever preserves the route contract best. Do not change successful response shapes or unrelated business logic. Preserve HTML/browser callback responses where needed by using the shared helper with a custom response factory. Ensure every migrated path emits structured logger data, analytics `trackError`, Sentry capture, and returns `X-Request-ID`. On the frontend, preserve request IDs from failed API responses and append them to support-facing error copy only for server-side failures. Add or extend focused Vitest coverage for at least one handled failure in each migrated area. Keep changes minimal, avoid unrelated refactors, and validate with targeted tests."
+
 ---
 
 ## Minor (10) — Polish, consistency, housekeeping

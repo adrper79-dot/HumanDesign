@@ -293,6 +293,132 @@ function generatePDF(profileData, chartData, createdAt, branding = null) {
     y -= 14;
   }
 
+  // New system sections (Mayan, BaZi, Sabian, Chiron, Lilith)
+  const ti2 = profileData.technicalInsights;
+  if (ti2) {
+    if (ti2.mayanTzolkin) {
+      const m = ti2.mayanTzolkin;
+      y -= 10;
+      lines.push({ text: 'MAYAN TZOLKIN', size: 14, bold: true, y });
+      y -= 20;
+      const kinLine = `Kin ${m.kin || '?'} — ${m.seal || ''} · ${m.tone || ''}`;
+      lines.push({ text: kinLine, size: 11, y });
+      y -= 16;
+      if (m.gift) {
+        const giftLines = wrapText(`Gift: ${m.gift}`, 85);
+        for (const line of giftLines) {
+          if (y < 50) y = 750;
+          lines.push({ text: line, size: 10, y });
+          y -= 14;
+        }
+      }
+      if (m.convergence) {
+        const convLines = wrapText(m.convergence, 85);
+        for (const line of convLines) {
+          if (y < 50) y = 750;
+          lines.push({ text: line, size: 9, y });
+          y -= 13;
+        }
+      }
+      y -= 10;
+    }
+
+    if (ti2.baziProfile) {
+      const b = ti2.baziProfile;
+      y -= 10;
+      lines.push({ text: 'BAZI FOUR PILLARS', size: 14, bold: true, y });
+      y -= 20;
+      if (b.dayMaster) {
+        lines.push({ text: `Day Master: ${b.dayMaster}`, size: 11, y });
+        y -= 16;
+      }
+      if (b.elementBalance) {
+        const balLines = wrapText(b.elementBalance, 85);
+        for (const line of balLines) {
+          if (y < 50) y = 750;
+          lines.push({ text: line, size: 10, y });
+          y -= 14;
+        }
+      }
+      y -= 10;
+    }
+
+    if (ti2.sabianHighlights?.length) {
+      y -= 10;
+      lines.push({ text: 'SABIAN SYMBOLS', size: 14, bold: true, y });
+      y -= 20;
+      for (const s of ti2.sabianHighlights) {
+        if (y < 50) y = 750;
+        lines.push({ text: `${s.point || ''}: "${s.symbol || ''}"`, size: 11, y });
+        y -= 16;
+        if (s.insight) {
+          const insLines = wrapText(s.insight, 85);
+          for (const line of insLines) {
+            if (y < 50) y = 750;
+            lines.push({ text: line, size: 10, y });
+            y -= 14;
+          }
+        }
+        y -= 6;
+      }
+      y -= 10;
+    }
+
+    if (ti2.chironWound) {
+      const ch = ti2.chironWound;
+      y -= 10;
+      lines.push({ text: 'CHIRON — WOUND & GIFT', size: 14, bold: true, y });
+      y -= 20;
+      const chHeader = [ch.archetype || ch.sign || '', ch.house ? `House ${ch.house}` : ''].filter(Boolean).join(' · ');
+      lines.push({ text: chHeader, size: 11, y });
+      y -= 16;
+      if (ch.wound) {
+        const wLines = wrapText(`Wound: ${ch.wound}`, 85);
+        for (const line of wLines) {
+          if (y < 50) y = 750;
+          lines.push({ text: line, size: 10, y });
+          y -= 14;
+        }
+      }
+      if (ch.gift) {
+        const gLines = wrapText(`Gift: ${ch.gift}`, 85);
+        for (const line of gLines) {
+          if (y < 50) y = 750;
+          lines.push({ text: line, size: 10, y });
+          y -= 14;
+        }
+      }
+      y -= 10;
+    }
+
+    if (ti2.lilithPlacement) {
+      const lil = ti2.lilithPlacement;
+      y -= 10;
+      lines.push({ text: 'LILITH — WILD POWER', size: 14, bold: true, y });
+      y -= 20;
+      const lilHeader = [lil.archetype || lil.sign || '', lil.house ? `House ${lil.house}` : ''].filter(Boolean).join(' · ');
+      lines.push({ text: lilHeader, size: 11, y });
+      y -= 16;
+      if (lil.shadow) {
+        const sLines = wrapText(`Shadow: ${lil.shadow}`, 85);
+        for (const line of sLines) {
+          if (y < 50) y = 750;
+          lines.push({ text: line, size: 10, y });
+          y -= 14;
+        }
+      }
+      if (lil.gift) {
+        const gLines = wrapText(`Gift: ${lil.gift}`, 85);
+        for (const line of gLines) {
+          if (y < 50) y = 750;
+          lines.push({ text: line, size: 10, y });
+          y -= 14;
+        }
+      }
+      y -= 10;
+    }
+  }
+
   // Grounding audit
   if (profileData.groundingAudit) {
     y -= 10;

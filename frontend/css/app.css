@@ -1701,9 +1701,18 @@ html[data-theme="light"] header {
   border-radius: 100px;
   color: var(--text-dim, #c4c0d8);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.75rem;
   font-weight: 500;
+  line-height: 1.2;
+  min-width: 0;
+  max-width: 100%;
   padding: 4px 11px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
   transition: all 0.15s;
   user-select: none;
 }
