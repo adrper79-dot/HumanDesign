@@ -295,13 +295,15 @@
         <div class="tier-name">Individual ✦</div>
         <div class="tier-price" data-monthly="19" data-annual="190"><span class="currency">$</span><span class="price-amount">19</span></div>
         <div class="tier-billing"><span class="billing-label">per month</span></div>
+        <p style="font-size:0.82em;color:var(--text-dim);margin:0.25rem 0 0.75rem">For individuals working with a practitioner, or beginning their own self-study.</p>
         <ul class="tier-features">
-          <li>10 AI profile generations / month</li>
-          <li>Unlimited AI questions</li>
+          <li>10 AI synthesis sessions / month — arrive at every session with more self-knowledge</li>
+          <li>Ask questions any time — not just when you're with your practitioner</li>
           <li>Full transit &amp; timing tools</li>
           <li>SMS energy digest subscriptions</li>
           <li>Unlimited saved profiles</li>
           <li>PDF export &amp; sharing</li>
+          <li style="margin-top:0.75rem;font-size:0.85em;color:var(--text-dim)">Already working with an HD practitioner? <span style="color:var(--gold)">Connect your account in settings →</span></li>
         </ul>
         <button class="btn-primary tier-cta" id="priceBtn-regular"
                 data-action="startCheckout" data-arg0="individual">Upgrade to Individual</button>
@@ -395,18 +397,20 @@
         <div class="tier-name">Practitioner ⭐</div>
         <div class="tier-price" data-monthly="97" data-annual="970"><span class="currency">$</span><span class="price-amount">97</span></div>
         <div class="tier-billing"><span class="billing-label">per month</span></div>
+        <p style="font-size:0.82em;color:var(--text-dim);margin:0.25rem 0 0.75rem">Replace your chart tool, session notes, and report builder — in one HD-native platform.</p>
         <ul class="tier-features">
           <li>Everything in Individual</li>
           <li>500 AI syntheses / month</li>
           <li>Full client management &amp; invitations</li>
-          <li>Session prep AI &amp; notes</li>
+          <li>Session prep AI: know what each client needs before they walk in</li>
           <li>Composite / relationship charts</li>
           <li>Branded PDF reports</li>
-          <li>Public practitioner profile</li>
-          <li>25% revenue share on referrals</li>
+          <li>Your own profile page — clients find you, book directly, and Prime Self sends you referral commissions</li>
+          <li>25% commission every time a referred client subscribes — for life</li>
         </ul>
         <button class="btn-primary tier-cta" id="priceBtn-practitioner"
                 data-action="startCheckout" data-arg0="practitioner">Upgrade to Practitioner</button>
+        <p style="text-align:center;font-size:0.82em;color:var(--text-dim);margin-top:0.5rem;font-style:italic">Practitioners typically recover their subscription cost with one referred client.</p>
       </div>
 
       <!-- Agency Tier ($349/mo) -->
@@ -492,13 +496,13 @@
       <div class="frm-step active" id="frm-step-1">
         <div class="frm-step-icon" aria-hidden="true">⊙</div>
         <h2 id="frm-title" class="frm-step-title">Welcome to Prime Self</h2>
-        <p class="frm-step-body">Your personalized energy blueprint combines Energy Blueprint analysis, Gene Keys, Western Astrology, and Numerology — all calculated from your birth data and synthesized by AI into plain-English guidance.</p>
+        <p class="frm-step-body">Nine ancient systems. One synthesis. Yours alone.<br><br>In the next 60 seconds, enter your birth details. In the next 30 seconds after that, you'll read something about yourself that finally makes sense.</p>
         <div class="frm-what-you-need">
           <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>exact birth date</strong></span></div>
           <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>birth time</strong> (as precise as possible)</span></div>
           <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>birth city &amp; country</strong></span></div>
         </div>
-        <button class="btn-primary frm-btn-next" data-action="frmNext">I have that info →</button>
+        <button class="btn-primary frm-btn-next" data-action="frmNext">Begin my reading →</button>
         <button class="frm-skip-btn" data-action="frmClose">Skip for now</button>
       </div>
       <!-- Step 2 — Birth Data -->
@@ -986,6 +990,11 @@
           <div class="sys-toggle-group" role="group" aria-label="Systems to synthesize">
             <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">⬡ Energy Blueprint</button>
             <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">✦ Forge</button>
+          </div>
+          <p style="font-size:0.78em;color:var(--text-dim);margin:0.25rem 0 0">Starting with core systems — expand to add astrology, Gene Keys, and more.</p>
+          <details id="sys-expander" style="margin-top:0.5rem">
+            <summary style="cursor:pointer;color:var(--gold);font-size:0.85em;padding:0.25rem 0">Add more depth systems ▾</summary>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem">
             <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="astrology" onclick="toggleSystem(this)" aria-pressed="true">☉ Astrology</button>
             <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="geneKeys" onclick="toggleSystem(this)" aria-pressed="true">🔑 Gene Keys</button>
             <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="numerology" onclick="toggleSystem(this)" aria-pressed="true"># Numerology</button>
@@ -1000,7 +1009,8 @@
             <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="psychometrics" onclick="toggleSystem(this)" aria-pressed="true">⬡ Psychology</button>
             <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="behavioral" onclick="toggleSystem(this)" aria-pressed="true">★ Behavioral</button>
             <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="diary" onclick="toggleSystem(this)" aria-pressed="true">📖 Life Events</button>
-          </div>
+            </div>
+          </details>
           <p class="label-hint" id="sysSummaryHint" style="margin-top:6px">All 13 optional systems active — deepest synthesis.</p>
         </div>
         <div class="form-group full">
@@ -2073,6 +2083,69 @@
     &nbsp;·&nbsp; <a href="/terms.html">Terms of Service</a>
   </p>
 </footer>
+
+<!-- Practitioner Onboarding Modal (shown post-checkout for practitioners) -->
+<div id="practitionerOnboardingOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pract-onb-title">
+  <div class="modal-panel" style="max-width:520px">
+    <div id="pract-onb-steps">
+      <!-- Step 1 -->
+      <div class="pract-onb-step active" id="pract-onb-step-1">
+        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">⭐</div>
+        <h2 id="pract-onb-title" style="text-align:center;margin-bottom:0.5rem">Welcome to your practice</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.5rem">You now have everything you need to run your HD practice in one place — chart engine, client management, session notes, and branded reports.</p>
+        <div style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1.5rem">
+          <div style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:0.75rem"><span style="color:var(--gold);font-size:1.1rem">✓</span><span>Replaces your chart tool and session notes app</span></div>
+          <div style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:0.75rem"><span style="color:var(--gold);font-size:1.1rem">✓</span><span>Clients find you in the directory and book directly</span></div>
+          <div style="display:flex;gap:0.75rem;align-items:flex-start"><span style="color:var(--gold);font-size:1.1rem">✓</span><span>25% commission on every client you refer who subscribes</span></div>
+        </div>
+        <button class="btn-primary" style="width:100%" data-action="practOnbNext">Set Up My Profile →</button>
+      </div>
+      <!-- Step 2 -->
+      <div class="pract-onb-step" id="pract-onb-step-2" style="display:none">
+        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">🔍</div>
+        <h2 style="text-align:center;margin-bottom:0.5rem">Your practitioner profile</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">This is your public page on the Prime Self directory. Practitioners with complete profiles get significantly more client inquiries.</p>
+        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Go to <strong>Practitioner → Directory Profile</strong> in the sidebar to complete your listing. Takes 2 minutes.</p>
+        <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
+      </div>
+      <!-- Step 3 -->
+      <div class="pract-onb-step" id="pract-onb-step-3" style="display:none">
+        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">📎</div>
+        <h2 style="text-align:center;margin-bottom:0.5rem">Invite your first client</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">When clients join via your referral link and subscribe, you earn 25% monthly — for as long as they stay.</p>
+        <div style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1rem">
+          <p style="margin:0 0 0.5rem;font-size:0.85em;color:var(--text-dim)">Your referral link:</p>
+          <div style="display:flex;gap:0.5rem">
+            <input id="pract-onb-reflink" readonly style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:0.4rem 0.6rem;font-size:0.85em;color:var(--text-primary)" value="Loading…">
+            <button class="btn-secondary btn-sm" data-action="practOnbCopyLink">Copy</button>
+          </div>
+        </div>
+        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Or invite directly from your <strong>Client Roster</strong> tab.</p>
+        <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
+        <button class="btn-secondary" style="width:100%;margin-top:0.5rem" data-action="practOnbSkip">I'll do this later</button>
+      </div>
+      <!-- Step 4 -->
+      <div class="pract-onb-step" id="pract-onb-step-4" style="display:none">
+        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">✦</div>
+        <h2 style="text-align:center;margin-bottom:0.5rem">You're ready</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.5rem">Your profile is live. Your referral link is ready. Here's your practice at a glance:</p>
+        <div id="pract-onb-stats" style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1.5rem">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem"><span style="color:var(--text-dim)">Clients on roster</span><strong id="pract-onb-stat-clients">0</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem"><span style="color:var(--text-dim)">Directory profile</span><strong id="pract-onb-stat-profile" style="color:var(--gold)">Incomplete</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Referral commissions</span><strong>$0 this month</strong></div>
+        </div>
+        <button class="btn-primary" style="width:100%" data-action="practOnbFinish">Go to My Dashboard →</button>
+      </div>
+    </div>
+    <!-- Progress dots -->
+    <div style="display:flex;justify-content:center;gap:0.5rem;margin-top:1.5rem">
+      <div class="pract-onb-dot active" id="pract-onb-dot-1" style="width:8px;height:8px;border-radius:50%;background:var(--gold)"></div>
+      <div class="pract-onb-dot" id="pract-onb-dot-2" style="width:8px;height:8px;border-radius:50%;background:var(--border)"></div>
+      <div class="pract-onb-dot" id="pract-onb-dot-3" style="width:8px;height:8px;border-radius:50%;background:var(--border)"></div>
+      <div class="pract-onb-dot" id="pract-onb-dot-4" style="width:8px;height:8px;border-radius:50%;background:var(--border)"></div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
