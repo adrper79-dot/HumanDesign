@@ -38,7 +38,23 @@ const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30;  // 30 days
 function buildRefreshCookie(refreshToken) {
   return `ps_refresh=${refreshToken}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${REFRESH_TOKEN_TTL}`;
 }
-const STATE_TTL_MS      = 10 * 60 * 1000;      // 10 minutes
+
+function buildAccessCookie(accessToken) {
+  return `ps_access=${accessToken}; HttpOnly; Secure; SameSite=None; Path=/api; Max-Age=${ACCESS_TOKEN_TTL}`;
+}
+const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+// ─── PKCE helpers ────────────────────────────────────────────
+
+async function generatePKCE() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  const codeVerifier = Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
+  const codeChallenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return { codeVerifier, codeChallenge };
+}
 
 // ─── Router ──────────────────────────────────────────────────
 
@@ -64,19 +80,19 @@ export async function handleOAuthSocial(request, env, subpath) {
 
 // ─── Step 1: Initiate — redirect to provider ─────────────────
 
-function initiateOAuth(provider, env) {
+async function initiateOAuth(provider, env) {
   const state = crypto.randomUUID();
   const workerBase = env.BASE_URL || 'https://prime-self-api.adrper79.workers.dev';
   const redirectUri = `${workerBase}/api/auth/oauth/${provider}/callback`;
 
-  // Store state in KV (10 min TTL) — lightweight, no DB round-trip needed
-  // Falls back to in-memory check if KV unavailable (single-instance, not suitable for prod scale)
-  // For production, use QUERIES.insertOAuthStatePublic to store in DB
   let authUrl;
+  let codeVerifier;
 
   switch (provider) {
     case 'google': {
       if (!env.GOOGLE_CLIENT_ID) return configError('GOOGLE_CLIENT_ID');
+      const { codeVerifier: cv, codeChallenge } = await generatePKCE();
+      codeVerifier = cv;
       const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       url.searchParams.set('client_id', env.GOOGLE_CLIENT_ID);
       url.searchParams.set('redirect_uri', redirectUri);
@@ -85,11 +101,15 @@ function initiateOAuth(provider, env) {
       url.searchParams.set('state', state);
       url.searchParams.set('access_type', 'online');
       url.searchParams.set('prompt', 'select_account');
+      url.searchParams.set('code_challenge', codeChallenge);
+      url.searchParams.set('code_challenge_method', 'S256');
       authUrl = url.toString();
       break;
     }
     case 'apple': {
       if (!env.APPLE_CLIENT_ID) return configError('APPLE_CLIENT_ID');
+      const { codeVerifier: cv, codeChallenge } = await generatePKCE();
+      codeVerifier = cv;
       const url = new URL('https://appleid.apple.com/auth/authorize');
       url.searchParams.set('client_id', env.APPLE_CLIENT_ID);
       url.searchParams.set('redirect_uri', redirectUri);
@@ -97,6 +117,8 @@ function initiateOAuth(provider, env) {
       url.searchParams.set('scope', 'name email');
       url.searchParams.set('response_mode', 'form_post'); // Apple POSTs the callback
       url.searchParams.set('state', state);
+      url.searchParams.set('code_challenge', codeChallenge);
+      url.searchParams.set('code_challenge_method', 'S256');
       authUrl = url.toString();
       break;
     }
@@ -104,13 +126,15 @@ function initiateOAuth(provider, env) {
       return Response.json({ error: 'Unsupported provider' }, { status: 400 });
   }
 
-  // Store state in KV with 10-min expiry for CSRF protection
-  const storeState = env.CACHE
-    ? env.CACHE.put(`oauth_state:${state}`, provider, { expirationTtl: 600 })
-    : Promise.resolve();
+  // Store state and PKCE verifier in KV with 10-min expiry for CSRF + PKCE protection
+  if (env.CACHE) {
+    await Promise.allSettled([
+      env.CACHE.put(`oauth_state:${state}`, provider, { expirationTtl: 600 }),
+      env.CACHE.put(`oauth_pkce:${state}`, codeVerifier, { expirationTtl: 600 })
+    ]);
+  }
 
-  // Return redirect — browser follows it
-  return storeState.then(() => Response.redirect(authUrl, 302)).catch(() => Response.redirect(authUrl, 302));
+  return Response.redirect(authUrl, 302);
 }
 
 // ─── Step 2: Callback — exchange code, issue JWT ─────────────
@@ -149,6 +173,7 @@ async function handleCallback(provider, request, env) {
     // CISO-006: Verify CSRF state token — fail closed if state cannot be verified.
     // If KV is configured, the state MUST be present and match; missing state
     // (e.g. forged callback or expired token) is treated as an attack.
+    let codeVerifier = null;
     if (env.CACHE) {
       const storedProvider = await env.CACHE.get(`oauth_state:${state}`).catch(() => null);
       if (!storedProvider) {
@@ -158,6 +183,9 @@ async function handleCallback(provider, request, env) {
         return oauthErrorRedirect(frontendUrl, 'State mismatch');
       }
       env.CACHE.delete(`oauth_state:${state}`).catch(e => console.error('[oauth] state cleanup failed:', e.message));
+      // Retrieve and immediately consume the PKCE verifier
+      codeVerifier = await env.CACHE.get(`oauth_pkce:${state}`).catch(() => null);
+      env.CACHE.delete(`oauth_pkce:${state}`).catch(() => {});
     }
     // If KV is not configured (local dev only) we skip the state check.
     // In production, CACHE must always be bound.
@@ -167,7 +195,7 @@ async function handleCallback(provider, request, env) {
 
     switch (provider) {
       case 'google': {
-        const result = await exchangeGoogle(code, redirectUri, env);
+        const result = await exchangeGoogle(code, redirectUri, env, codeVerifier);
         providerUserId = result.sub;
         providerEmail  = result.email;
         displayName    = result.name;
@@ -175,7 +203,7 @@ async function handleCallback(provider, request, env) {
         break;
       }
       case 'apple': {
-        const result = await exchangeApple(code, redirectUri, env);
+        const result = await exchangeApple(code, redirectUri, env, codeVerifier);
         providerUserId = result.sub;
         providerEmail  = result.email;
         // Apple only sends name on first auth
@@ -301,17 +329,19 @@ async function handleCallback(provider, request, env) {
 
 // ─── Google token exchange ────────────────────────────────────
 
-async function exchangeGoogle(code, redirectUri, env) {
+async function exchangeGoogle(code, redirectUri, env, codeVerifier = null) {
+  const params = {
+    code,
+    client_id:     env.GOOGLE_CLIENT_ID,
+    client_secret: env.GOOGLE_CLIENT_SECRET,
+    redirect_uri:  redirectUri,
+    grant_type:    'authorization_code'
+  };
+  if (codeVerifier) params.code_verifier = codeVerifier;
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id:     env.GOOGLE_CLIENT_ID,
-      client_secret: env.GOOGLE_CLIENT_SECRET,
-      redirect_uri:  redirectUri,
-      grant_type:    'authorization_code'
-    })
+    body: new URLSearchParams(params)
   });
   const tokens = await tokenRes.json();
   if (tokens.error) throw new Error(`Google token error: ${tokens.error_description || tokens.error}`);
@@ -324,19 +354,21 @@ async function exchangeGoogle(code, redirectUri, env) {
 
 // ─── Apple token exchange ─────────────────────────────────────
 
-async function exchangeApple(code, redirectUri, env) {
+async function exchangeApple(code, redirectUri, env, codeVerifier = null) {
   const clientSecret = await buildAppleClientSecret(env);
 
+  const params = {
+    code,
+    client_id:     env.APPLE_CLIENT_ID,
+    client_secret: clientSecret,
+    redirect_uri:  redirectUri,
+    grant_type:    'authorization_code'
+  };
+  if (codeVerifier) params.code_verifier = codeVerifier;
   const tokenRes = await fetch('https://appleid.apple.com/auth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id:     env.APPLE_CLIENT_ID,
-      client_secret: clientSecret,
-      redirect_uri:  redirectUri,
-      grant_type:    'authorization_code'
-    })
+    body: new URLSearchParams(params)
   });
   const tokens = await tokenRes.json();
   if (tokens.error) throw new Error(`Apple token error: ${tokens.error_description || tokens.error}`);
@@ -433,9 +465,10 @@ export async function handleOAuthExchange(request, env) {
 
   const { accessToken, refreshToken, isNewUser } = payload;
 
-  // Return tokens securely — refresh token as HttpOnly cookie, access token in response body
+  // Return tokens securely — both tokens as HttpOnly cookies; access token also in body for UI state
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+  headers.append('Set-Cookie', buildAccessCookie(accessToken));
 
   return new Response(JSON.stringify({
     ok: true,

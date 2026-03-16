@@ -1,11 +1,11 @@
 /**
- * Rate Limiter Middleware (KV-backed, fixed-window counter)
+ * Rate Limiter Middleware (DB-backed, fixed-window counter)
  *
- * Uses Cloudflare KV for fixed-window rate limiting.
- * Stores a small { count, windowStart } object instead of
- * an unbounded array of timestamps (prior sliding-window approach).
+ * Uses Neon/Postgres for atomic fixed-window rate limiting.
  * Configured per-route with different limits.
  */
+
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 const RATE_LIMITS = {
   '/api/auth/register':     { max: 10,  windowSec: 60  },  // 10/min (spec: auth endpoints)
@@ -55,19 +55,18 @@ function resolveRateLimit(path) {
  * or a 429 Response if exceeded.
  *
  * @param {Request} request
- * @param {object} env — must have RATE_LIMIT_KV binding
+ * @param {object} env — must have NEON_CONNECTION_STRING binding
  */
 export async function rateLimit(request, env) {
-  const kv = env.CACHE;
-  if (!kv) {
-    // BL-RATELIMIT-001: Fail closed — missing KV means no rate limiting is possible.
-    // Return 503 instead of silently disabling all rate limits.
-    console.error('[rateLimit] CACHE KV not bound — blocking request. Bind CACHE in wrangler.toml.');
+  if (!env.NEON_CONNECTION_STRING) {
+    console.error('[rateLimit] NEON_CONNECTION_STRING not configured — blocking request.');
     return new Response(
       JSON.stringify({ error: 'Service temporarily unavailable' }),
       { status: 503, headers: { 'Content-Type': 'application/json', 'Retry-After': '30' } }
     );
   }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   const url = new URL(request.url);
   const path = url.pathname;
@@ -82,21 +81,27 @@ export async function rateLimit(request, env) {
   const key = `rl:${clientId}:${resolved.key}`;
   const now = Math.floor(Date.now() / 1000);
   const windowStart = now - (now % config.windowSec); // Fixed window boundary
+  const windowStartIso = new Date(windowStart * 1000).toISOString();
+  const resetEpoch = windowStart + config.windowSec;
+  const windowEndIso = new Date(resetEpoch * 1000).toISOString();
 
-  // CISO-004 / CTO-014: Atomic read-increment-write via KV compare-and-swap loop.
-  // KV doesn't natively support CAS, but the single-threaded CF Worker isolate
-  // processes one request at a time per isolate — so a tight get→check→put
-  // within the same synchronous tick is effectively atomic within one isolate.
-  // Cross-isolate races can still over-count by 1 but cannot bypass the limit.
-  const stored = await kv.get(key, { type: 'json' });
-  let count = 0;
-
-  if (stored && stored.window === windowStart) {
-    count = stored.count || 0;
+  let count;
+  try {
+    const result = await query(QUERIES.atomicWindowCounterIncrement, [
+      key,
+      windowStartIso,
+      windowEndIso,
+    ]);
+    count = parseInt(result.rows[0]?.count || '0', 10);
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'rate_limit_query_failed', path, clientId, error: error.message }));
+    return new Response(
+      JSON.stringify({ error: 'Service temporarily unavailable' }),
+      { status: 503, headers: { 'Content-Type': 'application/json', 'Retry-After': '30' } }
+    );
   }
-  // If stored.window differs, the window has rolled over — count resets to 0
 
-  if (count >= config.max) {
+  if (count > config.max) {
     const retryAfter = (windowStart + config.windowSec) - now;
     console.warn(JSON.stringify({
       event: 'rate_limited', clientId, path, count, max: config.max
@@ -119,18 +124,11 @@ export async function rateLimit(request, env) {
     );
   }
 
-  // Increment counter — write immediately after read with no awaits in between
-  // to minimize the race window across isolates
-  const newCount = count + 1;
-  await kv.put(key, JSON.stringify({ count: newCount, window: windowStart }), {
-    expirationTtl: config.windowSec + 10 // Auto-cleanup after window expires
-  });
-
   // Attach rate limit headers for downstream
   request._rateLimit = {
     limit: config.max,
-    remaining: config.max - count,
-    reset: windowStart + config.windowSec
+    remaining: Math.max(0, config.max - count),
+    reset: resetEpoch
   };
 
   return null; // Within limits

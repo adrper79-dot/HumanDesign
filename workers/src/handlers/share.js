@@ -90,7 +90,7 @@ export async function handleShareCelebrity(request, env, ctx) {
       celebrityName: match.celebrity.name,
       percentage: match.similarity.percentage,
       platform: platform || 'unknown'
-    }, user.tier);
+    }, user.tier, request._ctx);
     
     // Record share in database
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -169,7 +169,7 @@ export async function handleShareChart(request, env, ctx) {
       type: fullChart.chart.type,
       profile: fullChart.chart.profile,
       platform: platform || 'unknown'
-    }, user.tier);
+    }, user.tier, request._ctx);
     
     // Record share
     const query = createQueryFn(env.NEON_CONNECTION_STRING);

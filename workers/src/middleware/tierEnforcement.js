@@ -2,7 +2,7 @@
  * Tier Enforcement Middleware
  * 
  * Checks user's subscription tier and enforces feature access and usage quotas.
- * Supports both monthly quotas (via DB) and daily ceilings (via KV).
+ * Supports both monthly quotas and daily ceilings via DB-backed atomic counters.
  * Used in conjunction with auth middleware to gate features by tier.
  * 
  * Tier resolution priority:
@@ -249,10 +249,10 @@ function getTodayKey() {
 
 /**
  * Check if user has exceeded their daily ceiling for an action.
- * Uses Cloudflare KV for fast, atomic daily counters.
+ * Uses a DB-backed atomic counter so cross-isolate requests cannot overshoot.
  * 
  * @param {Request} request - Request object (should have _user from auth middleware)
- * @param {Object} env - Environment bindings (must include RATE_LIMIT_KV)
+ * @param {Object} env - Environment bindings (must include NEON_CONNECTION_STRING)
  * @param {string} action - 'synthesis' or 'question'
  * @returns {Promise<Response|null>} Error response or null if within ceiling
  */
@@ -262,16 +262,18 @@ export async function enforceDailyCeiling(request, env, action) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
   }
 
-  // CFO-003: KV binding is REQUIRED for quota enforcement.
-  // Fail closed — if KV is not available, deny the request rather than
+  // CFO-003: DB access is REQUIRED for quota enforcement.
+  // Fail closed — if DB is not available, deny the request rather than
   // allowing unlimited free access.
-  if (!env.RATE_LIMIT_KV) {
-    console.error('[enforceDailyCeiling] RATE_LIMIT_KV not bound — blocking request');
+  if (!env.NEON_CONNECTION_STRING) {
+    console.error('[enforceDailyCeiling] NEON_CONNECTION_STRING not configured — blocking request');
     return Response.json(
       { error: 'Service temporarily unavailable — please try again shortly' },
       { status: 503, headers: { 'Retry-After': '30' } }
     );
   }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   const tier = request._tier || 'free';
   const tierConfig = getTier(tier);
@@ -285,31 +287,36 @@ export async function enforceDailyCeiling(request, env, action) {
     return null;
   }
 
-  const kvKey = `daily:${user.sub}:${getTodayKey()}:${action}`;
+  const counterKey = `daily:${user.sub}:${getTodayKey()}:${action}`;
+  const windowStart = `${getTodayKey()}T00:00:00.000Z`;
+  const tomorrow = new Date();
+  tomorrow.setUTCHours(24, 0, 0, 0);
+  const windowEnd = tomorrow.toISOString();
 
   try {
-    const current = parseInt(await env.RATE_LIMIT_KV.get(kvKey) || '0', 10);
+    const result = await query(QUERIES.atomicWindowCounterIncrement, [
+      counterKey,
+      windowStart,
+      windowEnd,
+    ]);
+    const current = parseInt(result.rows[0]?.count || '0', 10);
 
-    if (current >= dailyLimit) {
+    if (current > dailyLimit) {
       return Response.json({
         error: 'Daily limit reached',
         current_tier: tier,
         action: action,
         daily_limit: dailyLimit,
-        daily_usage: current,
+        daily_usage: Math.max(0, current - 1),
         resets_at: `${getTodayKey()}T00:00:00Z (next day)`,
         upgrade_required: tier !== 'white_label' && tier !== 'agency'
       }, { status: 429 });
     }
 
-    // P2-BIZ-012: Increment immediately after check to narrow TOCTOU race window.
-    // KV doesn't support atomic increment, but co-locating read+write minimizes the gap.
-    await env.RATE_LIMIT_KV.put(kvKey, String(current + 1), { expirationTtl: 172800 });
-
     return null; // Within daily ceiling
   } catch (error) {
-    // CFO-003: Fail closed — KV read failure should block the request
-    // to prevent unlimited free access during KV outages.
+    // CFO-003: Fail closed — DB failure should block the request
+    // to prevent unlimited free access during storage outages.
     console.error('Daily ceiling check failed:', error);
     return Response.json(
       { error: 'Service temporarily unavailable — please try again shortly' },
@@ -327,13 +334,11 @@ export async function enforceDailyCeiling(request, env, action) {
  * @param {string} action - 'synthesis' or 'question'
  */
 export async function incrementDailyCounter(env, userId, action) {
-  // P2-BIZ-012: Increment is now done inside enforceDailyCeiling to narrow the
-  // TOCTOU race window. This function is kept for backward compatibility but is
-  // a no-op when enforceDailyCeiling was already called for this request.
-  // Only increment if enforceDailyCeiling was NOT called (e.g., unlimited tier).
-  if (!env.RATE_LIMIT_KV) return;
-
-  // No-op: increment already happened in enforceDailyCeiling
+  // Increment now happens atomically inside enforceDailyCeiling.
+  // This remains a compatibility no-op for existing handlers.
+  void env;
+  void userId;
+  void action;
 }
 
 /**

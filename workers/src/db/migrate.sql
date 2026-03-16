@@ -223,6 +223,17 @@ CREATE TABLE IF NOT EXISTS usage_records (
 CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_records (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_usage_action ON usage_records (action, created_at DESC);
 
+-- ─── Atomic Limit Counters ─────────────────────────────────
+CREATE TABLE IF NOT EXISTS rate_limit_counters (
+  counter_key    TEXT PRIMARY KEY,
+  window_start   TIMESTAMPTZ NOT NULL,
+  window_end     TIMESTAMPTZ NOT NULL,
+  count          INTEGER NOT NULL DEFAULT 1,
+  updated_at     TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rate_limit_counters_window_end ON rate_limit_counters (window_end);
+
 -- ─── Share Events ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS share_events (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),

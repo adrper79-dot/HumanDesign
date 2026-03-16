@@ -250,7 +250,7 @@ export async function handleTrackEvent(request, env, ctx) {
   }
   
   try {
-    const newlyUnlocked = await trackEvent(env, user.id, eventType, eventData, user.tier);
+    const newlyUnlocked = await trackEvent(env, user.id, eventType, eventData, user.tier, ctx);
     
     return Response.json({
       ok: true,
@@ -282,9 +282,10 @@ export async function handleTrackEvent(request, env, ctx) {
  * @param {string} eventType - Event type (chart_calculated, profile_generated, etc.)
  * @param {Object} eventData - Optional event data (JSON)
  * @param {string} userTier - User's current tier (free, seeker, guide, practitioner)
+ * @param {ExecutionContext|null} ctx - Worker execution context for waitUntil()
  * @returns {Array} Newly unlocked achievements
  */
-export async function trackEvent(env, userId, eventType, eventData = null, userTier = 'free') {
+export async function trackEvent(env, userId, eventType, eventData = null, userTier = 'free', ctx = null) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
@@ -316,18 +317,25 @@ export async function trackEvent(env, userId, eventType, eventData = null, userT
         points: achievement.points
       });
       
-      // Send push notification (fire-and-forget to avoid blocking)
-      sendNotificationToUser(env, userId, 'achievement', {
+      // P0-RELIABILITY: Use ctx.waitUntil() so the push notification completes
+      // even after the response has been sent. Fall back to awaiting directly
+      // if ctx is unavailable (e.g. called from a cron or test context).
+      const notifPromise = sendNotificationToUser(env, userId, 'achievement', {
         title: 'Achievement Unlocked!',
         body: achievement.unlockMessage,
         icon: achievement.icon,
         data: { type: 'achievement', achievementId: achievement.id }
-      }).catch(err => console.error('Achievement push notification failed:', err));
+      }).catch(err => console.error('Achievement push notification failed:', err.message));
+      if (ctx?.waitUntil) {
+        ctx.waitUntil(notifPromise);
+      } else {
+        await notifPromise;
+      }
     }
     
     // 7. Check for point milestone achievements
     if (newlyUnlocked.length > 0) {
-      await checkPointMilestones(env, userId, userProgress);
+      await checkPointMilestones(env, userId, userProgress, ctx);
     }
     
     return newlyUnlocked;
@@ -416,7 +424,7 @@ async function getUserProgress(env, userId, userTier) {
 /**
  * Check for point milestone achievements (100, 500, 1000, 2500)
  */
-async function checkPointMilestones(env, userId, userProgress) {
+async function checkPointMilestones(env, userId, userProgress, ctx = null) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   const { rows: statsRows } = await query(QUERIES.getUserAchievementStats, [userId]);
@@ -447,13 +455,18 @@ async function checkPointMilestones(env, userId, userProgress) {
           totalPoints
         });
         
-        // Send milestone notification (fire-and-forget)
-        sendNotificationToUser(env, userId, 'achievement', {
+        // Send milestone notification via ctx.waitUntil() to ensure delivery
+        const milestoneNotif = sendNotificationToUser(env, userId, 'achievement', {
           title: 'Milestone Reached!',
           body: achievement.unlockMessage,
           icon: achievement.icon,
           data: { type: 'milestone', milestoneId: milestone.id, totalPoints }
-        }).catch(err => console.error('Milestone push notification failed:', err));
+        }).catch(err => console.error('Milestone push notification failed:', err.message));
+        if (ctx?.waitUntil) {
+          ctx.waitUntil(milestoneNotif);
+        } else {
+          await milestoneNotif;
+        }
       }
     }
   }

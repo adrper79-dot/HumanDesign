@@ -603,6 +603,50 @@ export const QUERIES = {
     ON CONFLICT (stripe_event_id) DO NOTHING
   `,
 
+  atomicWindowCounterIncrement: `
+    INSERT INTO rate_limit_counters (counter_key, window_start, window_end, count)
+    VALUES ($1, $2, $3, 1)
+    ON CONFLICT (counter_key) DO UPDATE SET
+      count = CASE
+        WHEN rate_limit_counters.window_start = EXCLUDED.window_start THEN rate_limit_counters.count + 1
+        ELSE 1
+      END,
+      window_start = EXCLUDED.window_start,
+      window_end = EXCLUDED.window_end,
+      updated_at = NOW()
+    RETURNING count, window_start, window_end
+  `,
+
+  // P1-AUTH-002: Read the current count for a given counter key (non-atomic check).
+  getCounterValue: `
+    SELECT count FROM rate_limit_counters
+    WHERE counter_key = $1 AND window_end > NOW()
+  `,
+
+  // P1-AUTH-002: Delete a counter row (e.g. clear login-failure count on successful login).
+  resetRateLimitCounter: `
+    DELETE FROM rate_limit_counters WHERE counter_key = $1
+  `,
+
+  finalizeProcessedEvent: `
+    UPDATE payment_events
+    SET subscription_id = COALESCE($2, subscription_id),
+        event_type = $3,
+        amount = COALESCE($4, amount),
+        currency = COALESCE($5, currency),
+        status = $6,
+        failure_reason = $7,
+        raw_event = COALESCE($8::jsonb, raw_event)
+    WHERE stripe_event_id = $1
+    RETURNING id, stripe_event_id, status
+  `,
+
+  releaseProcessedEvent: `
+    DELETE FROM payment_events
+    WHERE stripe_event_id = $1 AND status = 'processing'
+    RETURNING id, stripe_event_id
+  `,
+
   // ─── Usage Tracking ───────────────────────────────────────
 
   createUsageRecord: `
@@ -1867,6 +1911,10 @@ export const QUERIES = {
   `,
 
   // ─── Account Deletion ────────────────────────────────────────
+  insertAccountDeletionAudit: `
+    INSERT INTO account_deletions (user_id, email_hash, tier, ip_address)
+    VALUES ($1, $2, $3, $4)
+  `,
   deleteUserAccount: `
     DELETE FROM users WHERE id = $1
   `,

@@ -358,7 +358,7 @@ export async function handleComposite(request, env) {
     );
   }
 
-  // Validate both persons
+  // Validate both persons — presence check
   for (const key of ['personA', 'personB']) {
     const person = body[key];
     for (const field of ['birthDate', 'birthTime', 'lat', 'lng']) {
@@ -368,6 +368,25 @@ export async function handleComposite(request, env) {
           { status: 400 }
         );
       }
+    }
+  }
+
+  // Validate both persons — format and bounds check
+  const DATE_RE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/;
+  const TIME_RE = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
+  for (const key of ['personA', 'personB']) {
+    const p = body[key];
+    if (typeof p.birthDate !== 'string' || !DATE_RE.test(p.birthDate)) {
+      return Response.json({ error: `Invalid ${key}.birthDate — expected YYYY-MM-DD` }, { status: 400 });
+    }
+    if (typeof p.birthTime !== 'string' || !TIME_RE.test(p.birthTime)) {
+      return Response.json({ error: `Invalid ${key}.birthTime — expected HH:MM or HH:MM:SS` }, { status: 400 });
+    }
+    if (typeof p.lat !== 'number' || p.lat < -90 || p.lat > 90) {
+      return Response.json({ error: `Invalid ${key}.lat — must be a number between -90 and 90` }, { status: 400 });
+    }
+    if (typeof p.lng !== 'number' || p.lng < -180 || p.lng > 180) {
+      return Response.json({ error: `Invalid ${key}.lng — must be a number between -180 and 180` }, { status: 400 });
     }
   }
 
@@ -393,7 +412,7 @@ export async function handleComposite(request, env) {
 
   // Track achievement event (only if authenticated)
   if (request._user) {
-    await trackEvent(env, request._user.sub, 'composite_created', null, request._tier || 'free');
+    await trackEvent(env, request._user.sub, 'composite_created', null, request._tier || 'free', request._ctx);
   }
 
   return Response.json({

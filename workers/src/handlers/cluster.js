@@ -343,7 +343,7 @@ async function handleJoin(request, env, clusterId) {
 
   // Track achievement event
   if (request._user) {
-    await trackEvent(env, request._user.sub, 'cluster_joined', { clusterId }, request._tier || 'free');
+    await trackEvent(env, request._user.sub, 'cluster_joined', { clusterId }, request._tier || 'free', request._ctx);
   }
 
   return Response.json({

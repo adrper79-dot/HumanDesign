@@ -24,17 +24,29 @@ function resolveModels(anthropicModel) {
   return MODEL_MAP[anthropicModel] || ['grok-4-fast', 'llama-3.3-70b-versatile'];
 }
 
+/**
+ * Resolve the endpoint URL for a provider, routing through CF AI Gateway when configured.
+ * Gateway URL pattern: https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/{provider}/...
+ * @param {object} env - Worker env bindings
+ * @param {string} providerSlug - CF AI Gateway provider slug (e.g. 'anthropic', 'grok', 'groq')
+ * @param {string} directUrl - Direct API URL to use when gateway is not configured
+ * @returns {string} The resolved endpoint URL
+ */
+function resolveEndpoint(env, providerSlug, directUrl) {
+  const gatewayUrl = env.AI_GATEWAY_URL || '';
+  const isRealGateway = gatewayUrl.startsWith('https://gateway.ai.cloudflare.com/');
+  return isRealGateway
+    ? `${gatewayUrl.replace(/\/$/, '')}/${providerSlug}`
+    : directUrl;
+}
+
 // ── Provider: Anthropic ──────────────────────────────────────
 
 async function callAnthropic(promptPayload, env) {
   const apiKey = env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
 
-  const gatewayUrl = env.AI_GATEWAY_URL || '';
-  const isRealGateway = gatewayUrl.startsWith('https://gateway.ai.cloudflare.com/');
-  const endpoint = isRealGateway
-    ? `${gatewayUrl.replace(/\/$/, '')}/anthropic/v1/messages`
-    : 'https://api.anthropic.com/v1/messages';
+  const endpoint = resolveEndpoint(env, 'anthropic/v1/messages', 'https://api.anthropic.com/v1/messages');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25000);
@@ -88,8 +100,10 @@ async function callGrok(promptPayload, env) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25000);
 
+  const endpoint = resolveEndpoint(env, 'grok/v1/chat/completions', 'https://api.x.ai/v1/chat/completions');
+
   try {
-    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,8 +149,10 @@ async function callGroq(promptPayload, env) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25000);
 
+  const endpoint = resolveEndpoint(env, 'groq/openai/v1/chat/completions', 'https://api.groq.com/openai/v1/chat/completions');
+
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

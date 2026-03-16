@@ -25,13 +25,14 @@ export async function authenticate(request, env) {
   const authHeader = request.headers.get('Authorization');
   let token;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+  // CISO-P0: Prefer the HttpOnly ps_access cookie — it cannot be read or forged by JavaScript.
+  // Fall back to Bearer header for non-browser API clients (curl, Postman, etc.).
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const cookieMatch = cookieHeader.match(/(?:^|;\s*)ps_access=([^;]+)/);
+  if (cookieMatch) {
+    token = decodeURIComponent(cookieMatch[1]);
+  } else if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.slice(7);
-  } else {
-    // Cookie fallback: ps_access (in case future clients use memory + cookie pattern)
-    const cookieHeader = request.headers.get('Cookie') || '';
-    const cookieMatch = cookieHeader.match(/(?:^|;\s*)ps_access=([^;]+)/);
-    token = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
   }
 
   if (!token) {

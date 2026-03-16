@@ -377,7 +377,7 @@ export async function handleApplyCode(request, env, ctx) {
     }
 
     // Track achievement event for the referrer (they got a new referral)
-    await trackEvent(env, referrer.id, 'referral_signup', { referredUserId: user.id }, 'free');
+    await trackEvent(env, referrer.id, 'referral_signup', { referredUserId: user.id }, 'free', null);
     
     return Response.json({
       ok: true,

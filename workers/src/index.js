@@ -190,6 +190,7 @@ import {
   handleGetCelebrityMatches,
   handleGetCelebrityMatchById,
   handleGetCelebritiesByCategory,
+  handleGetCategories,
   handleSearchCelebrities,
   handleGetAllCelebrities
 } from './handlers/famous.js';
@@ -230,8 +231,8 @@ import { handleValidatePromo, handleApplyPromo, handleCreatePromo, handleListPro
 import { handleAdmin } from './handlers/admin.js';
 import { handleAnalytics } from './handlers/analytics.js';
 import { handleExperiments } from './handlers/experiments.js';
-import { trackEvent, trackError, aggregateDaily, EVENTS } from './lib/analytics.js';
-import { initSentry } from './lib/sentry.js';
+import { trackEvent, trackError, aggregateDaily, EVENTS, captureRequestContext } from './lib/analytics.js';
+import { initSentry, captureSentryRequest } from './lib/sentry.js';
 import { createLogger, generateRequestId } from './lib/logger.js';
 import { getCorsHeaders, handleOptions } from './middleware/cors.js';
 import { authenticate } from './middleware/auth.js';
@@ -279,6 +280,7 @@ const PUBLIC_ROUTES = new Set([
   '/api/referrals/validate',  // Public for signup flow
   '/api/compare/list',  // Browse celebrities (public)
   '/api/compare/search',  // Search celebrities (public)
+  '/api/compare/categories',  // List celebrity categories (public)
   '/api/auth/oauth/google',            // Redirect to Google (public)
   '/api/auth/oauth/apple',             // Redirect to Apple (public)
   '/api/notion/callback',              // Notion OAuth callback (public)
@@ -350,6 +352,7 @@ const EXACT_ROUTES = new Map([
   ['POST /api/achievements/track',     handleTrackEvent],
   // Celebrity Compare
   ['GET /api/compare/celebrities',     handleGetCelebrityMatches],
+  ['GET /api/compare/categories',      handleGetCategories],
   ['GET /api/compare/search',          handleSearchCelebrities],
   ['GET /api/compare/list',            handleGetAllCelebrities],
   // Share
@@ -444,7 +447,7 @@ const PREFIX_ROUTES = [
 const PATTERN_ROUTES = [
   [/^\/api\/chart\/([^/]+)$/,                          'GET',  1, handleGetChart],
   [/^\/api\/compare\/celebrities\/([a-z0-9-]+)$/,      'GET',  1, handleGetCelebrityMatchById],
-  [/^\/api\/compare\/category\/([a-z]+)$/,              'GET',  1, handleGetCelebritiesByCategory],
+  [/^\/api\/compare\/category\/([a-z0-9-]+)$/,              'GET',  1, handleGetCelebritiesByCategory],
   [/^\/api\/notion\/export\/profile\/([^/]+)$/,        'POST', 1, handleExportProfile],
   // Branded PDF for practitioner clients
   [/^\/api\/practitioner\/clients\/([^/]+)\/pdf$/, 'POST', 1, (req, env, id) => handleBrandedPdfExport(req, env, id)],
@@ -509,6 +512,9 @@ export default {
     const log   = createLogger(reqId);
     request._reqId = reqId;
     request._log   = log;
+    request._ctx   = ctx; // make ctx available to route handlers via request._ctx
+    const requestContext = captureRequestContext(request);
+    const sentryRequest = captureSentryRequest(request);
 
     try {
       // Authentication check (protected routes)
@@ -635,7 +641,7 @@ export default {
         ctx.waitUntil(trackEvent(env, EVENTS.API_CALL, {
           userId: request._user?.sub,
           properties: { path, method: request.method, status: response.status },
-          request,
+          requestContext,
         }));
       }
 
@@ -654,10 +660,10 @@ export default {
           endpoint: path,
           userId: request._user?.sub,
           severity: (err.status || 500) >= 500 ? 'high' : 'medium',
-          request,
+          requestContext,
         }),
         sentry.captureException(err, {
-          request,
+          request: sentryRequest,
           user: request._user,
           tags: { path, method: request.method, reqId },
         }),

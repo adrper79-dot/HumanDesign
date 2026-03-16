@@ -169,7 +169,7 @@ export async function handleCheckinCreate(request, env, ctx) {
       followedStrategy,
       followedAuthority,
       mood
-    }, user.tier);
+    }, user.tier, request._ctx);
 
     // Get updated streak info (computed in JS — avoids dependency on get_user_streak stored proc)
     const { rows: allStreakDates } = await query(QUERIES.getCheckinDatesOrdered, [user.id]);

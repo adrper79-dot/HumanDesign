@@ -56,6 +56,160 @@ function getTierFromPriceId(priceId, env) {
   return tier || 'free';
 }
 
+async function finalizeEventRecord(query, event, details = {}) {
+  const obj = event.data?.object;
+  await query(QUERIES.finalizeProcessedEvent, [
+    event.id,
+    details.subscriptionId || null,
+    details.eventType || event.type,
+    details.amount ?? obj?.amount_paid ?? obj?.amount ?? null,
+    details.currency ?? obj?.currency ?? 'usd',
+    details.status || obj?.status || 'processed',
+    details.failureReason || null,
+    JSON.stringify(details.rawEvent || obj || null),
+  ]);
+}
+
+async function parkEventForManualReview(query, event, log, failureReason, details = {}) {
+  await finalizeEventRecord(query, event, {
+    ...details,
+    status: 'manual_review',
+    failureReason,
+    rawEvent: details.rawEvent || event.data?.object || null,
+  });
+
+  log.error({
+    action: 'billing_event_manual_review',
+    eventId: event.id,
+    eventType: event.type,
+    failureReason,
+    ...details.logContext,
+  });
+}
+
+async function resolveUserForStripeCustomer(query, stripe, customerId, { customerEmail, eventType, log }) {
+  if (!customerId) {
+    return null;
+  }
+
+  const userLookup = await query(QUERIES.getUserByStripeCustomerId, [customerId]);
+  const directUser = userLookup.rows?.[0] || null;
+  if (directUser) {
+    return directUser;
+  }
+
+  let normalizedEmail = customerEmail?.trim().toLowerCase() || null;
+
+  if (!normalizedEmail) {
+    try {
+      const customer = await stripe.customers.retrieve(customerId);
+      normalizedEmail = customer?.email?.trim().toLowerCase() || null;
+    } catch (error) {
+      log.error({ action: 'billing_event_customer_lookup_failed', customerId, eventType, error: error.message });
+      return null;
+    }
+  }
+
+  if (!normalizedEmail) {
+    log.error({ action: 'billing_event_missing_customer_email', customerId, eventType });
+    return null;
+  }
+
+  const byEmail = await query(QUERIES.getUserByEmail, [normalizedEmail]);
+  const emailUser = byEmail.rows?.[0] || null;
+  if (!emailUser) {
+    log.error({ action: 'billing_event_unrecoverable_user', customerId, customerEmail: normalizedEmail, eventType });
+    return null;
+  }
+
+  if (emailUser.stripe_customer_id && emailUser.stripe_customer_id !== customerId) {
+    log.error({
+      action: 'billing_event_customer_conflict',
+      customerId,
+      customerEmail: normalizedEmail,
+      existingStripeCustomerId: emailUser.stripe_customer_id,
+      userId: emailUser.id,
+      eventType,
+    });
+    return null;
+  }
+
+  await query(QUERIES.updateUserStripeCustomerId, [customerId, emailUser.id]);
+  log.warn({ action: 'billing_event_customer_relinked', customerId, customerEmail: normalizedEmail, userId: emailUser.id, eventType });
+
+  return {
+    id: emailUser.id,
+    email: emailUser.email,
+    tier: emailUser.tier,
+    stripe_customer_id: customerId,
+  };
+}
+
+async function resolveSubscriptionForBillingEvent(query, stripe, env, { customerId, subscriptionId, eventType, log }) {
+  if (subscriptionId) {
+    const bySubscriptionId = await query(QUERIES.getSubscriptionByStripeSubscriptionId, [subscriptionId]);
+    if (bySubscriptionId.rows.length > 0) {
+      return bySubscriptionId.rows[0];
+    }
+  }
+
+  if (customerId) {
+    const byCustomerId = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
+    if (byCustomerId.rows.length > 0) {
+      return byCustomerId.rows[0];
+    }
+  }
+
+  if (!customerId) {
+    log.error({ action: 'billing_event_missing_customer_id', subscriptionId, eventType });
+    return null;
+  }
+
+  const recoveredUser = await resolveUserForStripeCustomer(query, stripe, customerId, { eventType, log });
+  const userId = recoveredUser?.id;
+  if (!userId) {
+    return null;
+  }
+
+  if (!subscriptionId) {
+    log.error({ action: 'billing_event_missing_subscription_id', customerId, eventType, userId });
+    return null;
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const priceId = subscription.items.data[0]?.price.id;
+  const tier = getTierFromPriceId(priceId, env);
+  const status = mapStripeStatus(subscription.status);
+
+  await query.transaction(async (q) => {
+    await q(QUERIES.upsertSubscription, [
+      userId,
+      customerId,
+      subscriptionId,
+      tier,
+      status,
+      new Date(subscription.current_period_start * 1000).toISOString(),
+      new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription.cancel_at_period_end || false,
+    ]);
+    await q(QUERIES.updateUserTierAndStripe, [tier, customerId, userId]);
+
+    if (tier === 'practitioner' || tier === 'agency' || tier === 'white_label') {
+      await q(QUERIES.createPractitioner, [userId, false, tier]);
+      await q(QUERIES.updatePractitionerTier, [userId, tier]);
+    }
+  });
+
+  const recovered = await query(QUERIES.getSubscriptionByStripeSubscriptionId, [subscriptionId]);
+  if (recovered.rows.length > 0) {
+    log.info({ action: 'billing_event_subscription_recovered', customerId, subscriptionId, userId, eventType, tier });
+    return recovered.rows[0];
+  }
+
+  log.error({ action: 'billing_event_recovery_failed', customerId, subscriptionId, userId, eventType });
+  return null;
+}
+
 /**
  * POST /api/webhook/stripe
  * Process Stripe webhook events
@@ -63,6 +217,7 @@ function getTierFromPriceId(priceId, env) {
 export async function handleStripeWebhook(request, env) {
   const log = request._log || createLogger(request._reqId || 'webhook');
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  let claimedEventId = null;
 
   try {
     // Get raw body and signature
@@ -97,12 +252,12 @@ export async function handleStripeWebhook(request, env) {
     const obj = event.data?.object;
     const amount   = obj?.amount_paid ?? obj?.amount ?? null;
     const currency = obj?.currency ?? 'usd';
-    const evtStatus = obj?.status ?? 'processing';
-    const inserted = await query(QUERIES.markEventProcessed, [null, event.id, event.type, amount, currency, evtStatus]);
+    const inserted = await query(QUERIES.markEventProcessed, [null, event.id, event.type, amount, currency, 'processing']);
     if (inserted.rowCount === 0) {
       // Another worker already claimed this event
       return Response.json({ received: true, already_processed: true }, { status: 200 });
     }
+    claimedEventId = event.id;
 
     log.info({ action: 'webhook_event_processing', type: event.type, eventId: event.id });
 
@@ -122,15 +277,15 @@ export async function handleStripeWebhook(request, env) {
         break;
 
       case 'invoice.payment_succeeded':
-        await handlePaymentSucceeded(event, query, log);
+        await handlePaymentSucceeded(event, query, stripe, env, log);
         break;
 
       case 'invoice.paid':
-        await handleInvoicePaid(event, query, env, log);
+        await handleInvoicePaid(event, query, stripe, env, log);
         break;
 
       case 'invoice.payment_failed':
-        await handlePaymentFailed(event, query, env, log);
+        await handlePaymentFailed(event, query, stripe, env, log);
         break;
 
       case 'charge.refunded':
@@ -143,11 +298,19 @@ export async function handleStripeWebhook(request, env) {
 
       default:
         log.info({ action: 'webhook_event_unhandled', type: event.type });
+        await finalizeEventRecord(query, event, { status: 'ignored' });
     }
 
     return Response.json({ received: true }, { status: 200 });
 
   } catch (error) {
+    if (claimedEventId) {
+      try {
+        await query(QUERIES.releaseProcessedEvent, [claimedEventId]);
+      } catch (releaseError) {
+        log.error({ action: 'webhook_release_claim_failed', eventId: claimedEventId, error: releaseError.message });
+      }
+    }
     log.error({ action: 'webhook_processing_error', error: error.message, stack: error.stack });
     return Response.json({ 
       error: 'Webhook processing failed' // BL-R-H2
@@ -172,6 +335,7 @@ async function handleCheckoutCompleted(event, query, stripe, env, log) {
   // HD_UPDATES3: Handle one-time purchases (mode: 'payment')
   if (session.mode === 'payment') {
     await handleOneTimePurchaseCompleted(session, query, userId, log);
+    await finalizeEventRecord(query, event, { status: 'succeeded' });
     return;
   }
 
@@ -228,6 +392,10 @@ async function handleCheckoutCompleted(event, query, stripe, env, log) {
 
   log.info({ action: 'checkout_completed', userId, tier });
   trackEvent(env, EVENTS.CHECKOUT_COMPLETE, { userId, tier }).catch(e => log.warn({ action: 'track_event_failed', event: 'checkout_complete', error: e.message }));
+  await finalizeEventRecord(query, event, {
+    subscriptionId,
+    status: 'succeeded',
+  });
 }
 
 /**
@@ -243,17 +411,6 @@ async function handleOneTimePurchaseCompleted(session, query, userId, log) {
     return;
   }
 
-  // CFO-010: Idempotency — check if this session's grants were already applied.
-  // The checkout session ID is unique per purchase, so we use it as dedup key.
-  const existingGrant = await query(
-    `SELECT 1 FROM usage_records WHERE endpoint = $1 LIMIT 1`,
-    [`one-time:${session.id}`]
-  );
-  if (existingGrant.rows.length > 0) {
-    log.info({ action: 'onetime_dedup_skip', sessionId: session.id });
-    return;
-  }
-
   let grants;
   try { grants = JSON.parse(grantsRaw); } catch {
     log.error({ action: 'onetime_invalid_grants_json', sessionId: session.id });
@@ -263,31 +420,49 @@ async function handleOneTimePurchaseCompleted(session, query, userId, log) {
   // Use the session ID as the endpoint to enable dedup
   const dedupEndpoint = `one-time:${session.id}`;
 
-  // Grant credits based on product type
-  if (grants.profileGenerations) {
-    await query(QUERIES.createUsageRecord, [
-      userId, 'profile_generation_bonus', dedupEndpoint, -grants.profileGenerations
-    ]);
-  }
+  const applied = await query.transaction(async (q) => {
+    // Re-check inside the transaction so partial prior fulfillment cannot
+    // leave a second attempt applying another subset of grants.
+    const existingGrant = await q(
+      `SELECT 1 FROM usage_records WHERE endpoint = $1 LIMIT 1`,
+      [dedupEndpoint]
+    );
+    if (existingGrant.rows.length > 0) {
+      return false;
+    }
 
-  if (grants.compositeCharts) {
-    await query(QUERIES.createUsageRecord, [
-      userId, 'composite_chart_bonus', dedupEndpoint, -grants.compositeCharts
-    ]);
-  }
+    if (grants.profileGenerations) {
+      await q(QUERIES.createUsageRecord, [
+        userId, 'profile_generation_bonus', dedupEndpoint, -grants.profileGenerations
+      ]);
+    }
 
-  if (grants.transitPassDays) {
-    const expiresAt = new Date(Date.now() + grants.transitPassDays * 86400000).toISOString();
-    await query(QUERIES.createUsageRecord, [
-      userId, 'transit_pass', dedupEndpoint, -1
-    ]);
-    await query(QUERIES.updateTransitPassExpiry, [expiresAt, userId]);
-  }
+    if (grants.compositeCharts) {
+      await q(QUERIES.createUsageRecord, [
+        userId, 'composite_chart_bonus', dedupEndpoint, -grants.compositeCharts
+      ]);
+    }
 
-  if (grants.lifetimeTier) {
-    await query(QUERIES.grantLifetimeAccess, [
-      grants.lifetimeTier, userId
-    ]);
+    if (grants.transitPassDays) {
+      const expiresAt = new Date(Date.now() + grants.transitPassDays * 86400000).toISOString();
+      await q(QUERIES.createUsageRecord, [
+        userId, 'transit_pass', dedupEndpoint, -1
+      ]);
+      await q(QUERIES.updateTransitPassExpiry, [expiresAt, userId]);
+    }
+
+    if (grants.lifetimeTier) {
+      await q(QUERIES.grantLifetimeAccess, [
+        grants.lifetimeTier, userId
+      ]);
+    }
+
+    return true;
+  });
+
+  if (!applied) {
+    log.info({ action: 'onetime_dedup_skip', sessionId: session.id });
+    return;
   }
 
   log.info({ action: 'onetime_fulfilled', product, userId, grants });
@@ -312,11 +487,25 @@ async function handleSubscriptionUpdated(event, query, env, log) {
     // but Stripe still created the subscription.
     log.warn({ action: 'ghost_subscription_detected', customerId, subscriptionId, tier });
 
-    // Look up user by stripe_customer_id on users table
-    const userLookup = await query(QUERIES.getUserByStripeCustomerId, [customerId]);
-    const ghostUserId = userLookup.rows?.[0]?.id;
+    const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
+    const recoveredUser = await resolveUserForStripeCustomer(query, stripe, customerId, {
+      customerEmail: subscription.customer_email,
+      eventType: event.type,
+      log,
+    });
+    const ghostUserId = recoveredUser?.id;
     if (!ghostUserId) {
-      log.error({ action: 'ghost_subscription_unresolvable', customerId });
+      await parkEventForManualReview(
+        query,
+        event,
+        log,
+        'unmapped_customer',
+        {
+          eventType: 'subscription_manual_review',
+          rawEvent: subscription,
+          logContext: { customerId, subscriptionId },
+        }
+      );
       return;
     }
 
@@ -332,6 +521,10 @@ async function handleSubscriptionUpdated(event, query, env, log) {
       await q(QUERIES.updateUserTier, [tier, ghostUserId]);
     });
     log.info({ action: 'ghost_subscription_resolved', userId: ghostUserId, tier });
+    await finalizeEventRecord(query, event, {
+      subscriptionId: subscriptionId,
+      status: mapStripeStatus(subscription.status),
+    });
     return;
   }
 
@@ -362,6 +555,10 @@ async function handleSubscriptionUpdated(event, query, env, log) {
   });
 
   log.info({ action: 'subscription_updated', userId, tier, status: subscription.status });
+  await finalizeEventRecord(query, event, {
+    subscriptionId,
+    status: mapStripeStatus(subscription.status),
+  });
 }
 
 /**
@@ -398,39 +595,55 @@ async function handleSubscriptionDeleted(event, query, log) {
   });
 
   log.info({ action: 'subscription_cancelled', userId });
+  await finalizeEventRecord(query, event, {
+    subscriptionId,
+    status: 'canceled',
+  });
 }
 
 /**
  * Handle invoice.payment_succeeded
  */
-async function handlePaymentSucceeded(event, query, log) {
+async function handlePaymentSucceeded(event, query, stripe, env, log) {
   const invoice = event.data.object;
   const customerId = invoice.customer;
   const subscriptionId = invoice.subscription;
   const amount = invoice.amount_paid;
   const currency = invoice.currency;
 
-  // Find subscription
-  const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
-  
-  if (result.rows.length === 0) {
-    log.error({ action: 'payment_succeeded_no_subscription', customerId });
+  const subscriptionRow = await resolveSubscriptionForBillingEvent(query, stripe, env, {
+    customerId,
+    subscriptionId,
+    eventType: 'invoice.payment_succeeded',
+    log,
+  });
+
+  if (!subscriptionRow) {
+    await parkEventForManualReview(
+      query,
+      event,
+      log,
+      'unmapped_customer',
+      {
+        eventType: 'payment_succeeded_manual_review',
+        amount,
+        currency,
+        rawEvent: invoice,
+        logContext: { customerId, subscriptionId },
+      }
+    );
     return;
   }
 
-  const subscriptionDbId = result.rows[0].id;
+  const subscriptionDbId = subscriptionRow.id;
 
-  // Record payment event
-  await query(QUERIES.createPaymentEvent, [
-    subscriptionDbId,
-    event.id,
-    'payment_succeeded',
+  await finalizeEventRecord(query, event, {
+    subscriptionId: subscriptionDbId,
+    eventType: 'payment_succeeded',
     amount,
     currency,
-    'succeeded',
-    null,
-    JSON.stringify(event.data.object)
-  ]);
+    status: 'succeeded',
+  });
 
   log.info({ action: 'payment_succeeded', subscriptionId, amount, currency });
 }
@@ -438,7 +651,7 @@ async function handlePaymentSucceeded(event, query, log) {
 /**
  * Handle invoice.payment_failed
  */
-async function handlePaymentFailed(event, query, env, log) {
+async function handlePaymentFailed(event, query, stripe, env, log) {
   const invoice = event.data.object;
   const customerId = invoice.customer;
   const subscriptionId = invoice.subscription;
@@ -446,28 +659,41 @@ async function handlePaymentFailed(event, query, env, log) {
   const currency = invoice.currency;
   const failureReason = invoice.last_payment_error?.message || 'Unknown error';
 
-  // Find subscription
-  const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);
-  
-  if (result.rows.length === 0) {
-    log.error({ action: 'payment_failed_no_subscription', customerId });
+  const subscriptionRow = await resolveSubscriptionForBillingEvent(query, stripe, env, {
+    customerId,
+    subscriptionId,
+    eventType: 'invoice.payment_failed',
+    log,
+  });
+
+  if (!subscriptionRow) {
+    await parkEventForManualReview(
+      query,
+      event,
+      log,
+      'unmapped_customer',
+      {
+        eventType: 'payment_failed_manual_review',
+        amount,
+        currency,
+        rawEvent: invoice,
+        logContext: { customerId, subscriptionId },
+      }
+    );
     return;
   }
 
-  const subscriptionDbId = result.rows[0].id;
-  const userId = result.rows[0].user_id;
+  const subscriptionDbId = subscriptionRow.id;
+  const userId = subscriptionRow.user_id;
 
-  // Record payment event
-  await query(QUERIES.createPaymentEvent, [
-    subscriptionDbId,
-    event.id,
-    'payment_failed',
+  await finalizeEventRecord(query, event, {
+    subscriptionId: subscriptionDbId,
+    eventType: 'payment_failed',
     amount,
     currency,
-    'failed',
+    status: 'failed',
     failureReason,
-    JSON.stringify(event.data.object)
-  ]);
+  });
 
   // Update subscription status to past_due
   await query(QUERIES.updateSubscriptionStatus, [subscriptionId, 'past_due']);
@@ -508,32 +734,44 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
  * Handle invoice.paid — BL-R-C4: Consolidated from billing.js
  * HD_UPDATES3: Now includes 25% recurring revenue share for referrers
  */
-async function handleInvoicePaid(event, query, env, log) {
+async function handleInvoicePaid(event, query, stripe, env, log) {
   const invoice = event.data.object;
   const subscriptionId = invoice.subscription;
   const amountPaid = invoice.amount_paid;
 
-  // Find subscription
-  const result = await query(QUERIES.getSubscriptionByStripeCustomerId, [invoice.customer]);
-  if (result.rows.length === 0) {
-    log.error({ action: 'invoice_paid_no_subscription', customerId: invoice.customer });
+  const subscriptionRow = await resolveSubscriptionForBillingEvent(query, stripe, env, {
+    customerId: invoice.customer,
+    subscriptionId,
+    eventType: 'invoice.paid',
+    log,
+  });
+  if (!subscriptionRow) {
+    await parkEventForManualReview(
+      query,
+      event,
+      log,
+      'unmapped_customer',
+      {
+        eventType: 'invoice_paid_manual_review',
+        amount: amountPaid,
+        currency: invoice.currency,
+        rawEvent: invoice,
+        logContext: { customerId: invoice.customer, subscriptionId },
+      }
+    );
     return;
   }
 
-  const subscriptionDbId = result.rows[0].id;
-  const userId = result.rows[0].user_id;
+  const subscriptionDbId = subscriptionRow.id;
+  const userId = subscriptionRow.user_id;
 
-  // Record payment event
-  await query(QUERIES.createPaymentEvent, [
-    subscriptionDbId,
-    event.id,
-    'invoice_paid',
-    amountPaid,
-    invoice.currency,
-    'succeeded',
-    null,
-    JSON.stringify(event.data.object)
-  ]);
+  await finalizeEventRecord(query, event, {
+    subscriptionId: subscriptionDbId,
+    eventType: 'invoice_paid',
+    amount: amountPaid,
+    currency: invoice.currency,
+    status: 'succeeded',
+  });
 
   log.info({ action: 'invoice_paid', subscriptionId, amount: amountPaid, currency: invoice.currency });
 
@@ -591,17 +829,14 @@ async function handleChargeRefunded(event, query, log) {
   const userId = result.rows[0].user_id;
   const subscriptionDbId = result.rows[0].id;
 
-  // Record the refund event regardless of full/partial
-  await query(QUERIES.createPaymentEvent, [
-    subscriptionDbId,
-    event.id,
-    'charge_refunded',
-    charge.amount_refunded,
-    charge.currency,
-    'refunded',
-    null,
-    JSON.stringify(charge)
-  ]);
+  await finalizeEventRecord(query, event, {
+    subscriptionId: subscriptionDbId,
+    eventType: 'charge_refunded',
+    amount: charge.amount_refunded,
+    currency: charge.currency,
+    status: 'refunded',
+    rawEvent: charge,
+  });
 
   // P2-BIZ-003: Only downgrade on FULL refund — partial refund preserves tier
   const isFullRefund = charge.refunded === true;
@@ -648,17 +883,15 @@ async function handleChargeDispute(event, query, stripe, log) {
   const userId = result.rows[0].user_id;
   const subscriptionDbId = result.rows[0].id;
 
-  // Record the dispute event
-  await query(QUERIES.createPaymentEvent, [
-    subscriptionDbId,
-    event.id,
-    'charge_dispute',
-    dispute.amount,
-    dispute.currency,
-    'disputed',
-    dispute.reason || 'unknown',
-    JSON.stringify(dispute)
-  ]);
+  await finalizeEventRecord(query, event, {
+    subscriptionId: subscriptionDbId,
+    eventType: 'charge_dispute',
+    amount: dispute.amount,
+    currency: dispute.currency,
+    status: 'disputed',
+    failureReason: dispute.reason || 'unknown',
+    rawEvent: dispute,
+  });
 
   // Downgrade user to free tier immediately
   await query(QUERIES.updateUserTier, ['free', userId]);

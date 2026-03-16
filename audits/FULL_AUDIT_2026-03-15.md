@@ -1,1092 +1,536 @@
 # Full Audit — 2026-03-15
-**Mode:** STABLE | **Full AI Audit:** Yes
-**Tests:** 273/273 passing
-**Open Issues:** P0: 22 | P1: 22 | P2: 8
 
----
+> Generated against the current `main` workspace on 2026-03-15.
+> Delta baseline: `audits/FULL_AUDIT_2026-03-15-v2.md`.
+> Delta methodology: prior unresolved items with status `open`, `new`, or `regression` were treated as carry-forward issues for comparison.
+
+## Delta Summary
+
+```json
+{
+  "previousAudit": "audits/FULL_AUDIT_2026-03-15-v2.md",
+  "new": 2,
+  "resolved": 14,
+  "regressions": 7
+}
+```
 
 ## Test Results
 
 ```json
 {
-  "total": 273,
-  "passed": 273,
+  "command": "npm test",
+  "total": 361,
+  "passed": 356,
   "failed": 0,
-  "skipped": 0,
+  "skipped": 5,
   "failures": []
 }
 ```
 
+Notes:
+- The current `npm test` path is healthy again. Vitest discovered and executed the suite successfully.
+- Test stderr still contains expected negative-path logging for error-pipeline and rate-limit scenarios, but no failing assertions were produced.
+- This is a material improvement over the prior audit, which reported a broken runner state.
+
 ## Code Quality Findings
 
-```json
-{
-  "totalFindings": 317,
-  "hardcodedSecrets": 0,
-  "emptyCatchBlocks": 0,
-  "unstructuredLogs": 317,
-  "techDebtComments": 0,
-  "filesScanned": 72
-}
-```
+1. `workers/src/middleware/rateLimit.js` now uses a DB-backed atomic fixed-window counter instead of KV read/check/write, but the middleware still logs plain text on critical storage misconfiguration instead of going through the structured request logger.
+2. `workers/src/middleware/tierEnforcement.js:136-148` fails open when the `email_verified` lookup errors. That protects old deployments from migration drift, but it also weakens the email-verification gate for paid AI actions.
+3. `workers/src/middleware/tierEnforcement.js` now uses the same DB-backed atomic counter for daily ceilings, which closes the prior concurrency leak, but `console.error` / `console.warn` logging remains unstructured.
+4. `workers/src/handlers/billing.js:71-117` validates `tier`, URLs, and promo format, but the main subscription checkout path still leaves malformed JSON to the generic 500 path.
+5. `workers/src/handlers/billing.js:220-276` now reuses open one-time checkout sessions and rejects malformed JSON with 400, but the reuse strategy is still Stripe-list based and therefore remains TOCTOU under parallel requests.
+6. `workers/src/handlers/webhook.js:78-122` now claims Stripe events atomically, releases the claim on downstream failure, and finalizes the claimed row in place instead of trying to insert a duplicate payment-event record.
+7. `workers/src/handlers/webhook.js` now repairs missing Stripe customer mappings by exact email fallback before rebuilding local subscription state for invoice and ghost-subscription events, and unrecoverable billing events are finalized into a durable `manual_review` state instead of being left as opaque processing rows.
+8. `workers/src/handlers/auth.js:544-598` and `workers/src/handlers/auth.js:607-663` show stronger auth hardening than the historical docs: forgot-password now returns constant success, and invalid reset-token DB failures return 400 instead of 500.
+9. `workers/src/lib/cache.js:177-214` still swallows cache read/write/delete failures and collapses cache errors into cache misses.
+10. `workers/src/middleware/apiKey.js:128`, `workers/src/handlers/profile.js:242`, and `workers/src/handlers/push.js:635` still rely on best-effort accounting updates that can fail silently after the user-facing action succeeds.
 
 ## Known Issues Baseline
 
+Historical baseline extracted from `BACKLOG.md` (first 100 lines), `audits/PRODUCTION_BUG_REPORT_2026-03-11.md`, `audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md`, and `audits/WORKERS_AUDIT_REPORT.md` (first 80 lines):
+
 ```json
 [
-  {
-    "id": "CTO-001",
-    "title": "No request correlation IDs (X-Request-ID) \u2014 production incidents are undebuggable",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-002",
-    "title": "317 unstructured console.log/error calls \u2014 no structured JSON logging across 72 files",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-003",
-    "title": "No retry wrapper on DB calls \u2014 Neon cold-start spikes cause silent failures",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-004",
-    "title": "13.33% production error rate (828/6212 requests) with no error tracking tooling to diagnose root cause",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-005",
-    "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) \u2014 cascading failures unmitigated",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-006",
-    "title": "auth.js exceeds 977 lines \u2014 monolithic handler resists safe refactoring and testing",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-007",
-    "title": "billing.js exceeds 474 lines \u2014 single-responsibility principle violated across multiple billing concerns",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-008",
-    "title": "273/273 passing tests with 13.33% prod error rate indicates test suite does not cover failing production paths",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-009",
-    "title": "Cron handler runs 8+ sequential tasks without independent error boundaries \u2014 one failure may cascade to block downstream tasks",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-010",
-    "title": "No durationMs logging on DB queries \u2014 cannot identify slow queries contributing to error rate",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-011",
-    "title": "ROLLBACK failures swallowed via console.error \u2014 failed transaction rollbacks are silent in production",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-012",
-    "title": "PII-adjacent data (user IDs, subscription IDs) interpolated into flat log strings without sanitization policy",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CTO-013",
-    "title": "No confirmed CI/CD pipeline \u2014 staging-to-production promotion discipline unverified",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-001",
-    "title": "JWT stored in localStorage \u2014 XSS on any page = full account takeover; HttpOnly cookie migration required",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-002",
-    "title": "No confirmed row-level security or tenant scoping on practitioner/client data \u2014 cross-user data access via ID enumeration unmitigated",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-003",
-    "title": "CSP unsafe-inline likely present on vanilla JS PWA \u2014 XSS mitigation effectively disabled",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-004",
-    "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) \u2014 credential stuffing and email enumeration unmitigated",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-005",
-    "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed \u2014 unsigned webhook processing risk",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-006",
-    "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed \u2014 CSRF on OAuth callback unverified",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-007",
-    "title": "Agency handler data scoping not auditable \u2014 practitioner accessing other practitioner's client roster not ruled out",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CISO-008",
-    "title": "User IDs in unstructured logs create GDPR-adjacent audit trail exposure in Cloudflare log retention",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-001",
-    "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness \u2014 collecting revenue for undelivered product",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-002",
-    "title": "No Stripe webhook idempotency handling \u2014 duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-003",
-    "title": "No confirmed pre-flight quota enforcement before AI calls \u2014 free-tier users can exhaust AI budget without cost gate",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-004",
-    "title": "App analytics returning HTTP 401 \u2014 conversion funnel, ARPU, and churn metrics are completely blind",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-005",
-    "title": "Webhook-driven and cron-driven subscription downgrade paths can double-fire without explicit deduplication",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-006",
-    "title": "Free tier abuse via account-per-email cycling possible without verified email gate on feature access",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-007",
-    "title": "Proration logic on mid-cycle upgrades not confirmed \u2014 risk of revenue under- or over-collection",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CFO-008",
-    "title": "No cancellation save/deflection flow \u2014 churn prevention revenue opportunity not captured",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-001",
-    "title": "Human Design labels displayed without 'why it matters' life-implication copy \u2014 #1 confirmed churn driver in category",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-002",
-    "title": "Practitioner directory profiles not confirmed indexable by search engines \u2014 core $97 tier acquisition value prop undelivered",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-003",
-    "title": "No referral mechanics built \u2014 highest-leverage growth channel for Human Design (practitioner\u2192client\u2192friend) untouched",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-004",
-    "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point \u2014 no mitigation confirmed",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-005",
-    "title": "Empty practitioner dashboard on first login \u2014 no empty-state guidance or 'add first client' CTA confirmed",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-006",
-    "title": "Shareable chart cards / social share hooks not confirmed \u2014 organic acquisition from existing users not captured",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-007",
-    "title": "No trial or freemium-to-Guide upgrade path confirmed \u2014 cold conversion to $97/mo from landing page will be sub-1%",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CMO-008",
-    "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed \u2014 risks feeling generic",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-001",
-    "title": "No Sentry or equivalent error tracking \u2014 828 production errors in 7 days have no grouping, stack traces, or affected-user counts",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-002",
-    "title": "Zero structured log lines \u2014 Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-003",
-    "title": "No X-Request-ID generated or threaded through handlers \u2014 cross-service request tracing impossible",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-004",
-    "title": "Health endpoint depth unconfirmed \u2014 /api/health?full=1 with DB, KV, Stripe reachability checks not verified",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-005",
-    "title": "Cron tasks lack independent timeouts \u2014 a hung DB call in transit snapshot can starve SMS digest delivery",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-006",
-    "title": "App analytics endpoint returning HTTP 401 \u2014 operational metrics dashboard is broken",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-007",
-    "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable \u2014 stale data risk on high-read paths",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "CIO-008",
-    "title": "No confirmed staging environment or Wrangler promotion workflow \u2014 production deployments risk untested regressions",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "PRAC-001",
-    "title": "Session notes handler not found in codebase scan \u2014 critical practitioner workflow absent from Guide/Agency tier",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "PRAC-002",
-    "title": "Notion sync integration handler absent from codebase \u2014 if marketed as a feature, constitutes undelivered paid functionality",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "PRAC-003",
-    "title": "Practitioner directory handler not found in scan \u2014 public profile discoverability for Guide/Agency tier unconfirmed",
-    "severity": "P0",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "PRAC-004",
-    "title": "Client invite email content not auditable \u2014 cold system email without Prime Self context yields <15% acceptance rate",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "PRAC-005",
-    "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) \u2014 key practitioner workflow missing",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "PRAC-006",
-    "title": "AI per-client context personalization depth to specific chart data (type, authority, profile) not confirmed",
-    "severity": "P1",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  },
-  {
-    "id": "PRAC-007",
-    "title": "No downgrade-instead-of-cancel path in billing portal \u2014 practitioners who would accept $19/mo are lost at $97/mo churn",
-    "severity": "P2",
-    "status": "resolved",
-    "source": "issue-registry.json"
-  }
+  { "id": "BL-PROD-001", "title": "Production endpoints returning 404/500 errors", "severity": "Critical", "status": "open" },
+  { "id": "BL-PROD-002", "title": "GET /api/auth/me returns 404 (route exists in code)", "severity": "Critical", "status": "open" },
+  { "id": "BL-PROD-003", "title": "GET /api/validation/* returns 404 (route exists in code)", "severity": "Critical", "status": "open" },
+  { "id": "BL-PROD-004", "title": "GET /api/psychometric/* returns 404 (route exists in code)", "severity": "Critical", "status": "open" },
+  { "id": "BL-PROD-005", "title": "GET /api/diary returns 500 (handler implemented, DB connection issue)", "severity": "High", "status": "open" },
+  { "id": "BL-PROD-006", "title": "GET /api/transits/forecast returns 400 (frontend missing params)", "severity": "High", "status": "open" },
+  { "id": "BL-PROD-007", "title": "CSP violations (Cloudflare Insights blocked, fonts blocked)", "severity": "High", "status": "open" },
+  { "id": "BUG-001", "title": "GET /api/chart/:id crashes (Cloudflare HTML 500)", "severity": "P1", "status": "open" },
+  { "id": "BUG-002", "title": "AUTH_PREFIXES missing base routes (auth bypass for valid tokens)", "severity": "P1", "status": "open" },
+  { "id": "BUG-003", "title": "POST /api/auth/forgot-password — user enumeration (CVE)", "severity": "P1", "status": "open" },
+  { "id": "BUG-004", "title": "POST /api/auth/reset-password with invalid token returns 500", "severity": "P1", "status": "open" },
+  { "id": "BUG-005", "title": "GET /api/profile/list returns 500", "severity": "P1", "status": "open" },
+  { "id": "BUG-006", "title": "GET /api/practitioner/profile returns 500 for non-practitioners", "severity": "P1", "status": "open" },
+  { "id": "BUG-007", "title": "GET /api/checkin/streak and /api/checkin/stats return 500", "severity": "P1", "status": "open" },
+  { "id": "BUG-008", "title": "GET /api/achievements/leaderboard returns 500", "severity": "P1", "status": "open" },
+  { "id": "BUG-009", "title": "POST /api/alerts — create alert returns 500", "severity": "P1", "status": "open" },
+  { "id": "BUG-010", "title": "GET /api/notion/status returns 500", "severity": "P2", "status": "open" },
+  { "id": "BUG-011", "title": "GET /api/cluster-status returns 500", "severity": "P2", "status": "open" },
+  { "id": "BUG-012", "title": "TC-REF-001/004 referral endpoints return 404", "severity": "P2", "status": "open" },
+  { "id": "BUG-013", "title": "TC-VALID-002, TC-PSYCH-002 return 404", "severity": "P2", "status": "open" },
+  { "id": "DESIGN-001", "title": "Logout does not invalidate access token (stateless JWT)", "severity": "P2", "status": "open" },
+  { "id": "DESIGN-002", "title": "Admin role not set on production account", "severity": "P2", "status": "open" },
+  { "id": "TIER-001", "title": "Billing and entitlement logic disagree on past_due subscriptions", "severity": "High", "status": "open" },
+  { "id": "TIER-002", "title": "Admin revenue analytics use legacy tier names and obsolete prices", "severity": "High", "status": "open" },
+  { "id": "TIER-003", "title": "White-label embed entitlement is ambiguous across code and docs", "severity": "High", "status": "open" },
+  { "id": "TIER-004", "title": "Public docs still describe outdated tier names and channel strategy", "severity": "Medium", "status": "open" },
+  { "id": "TIER-005", "title": "Frontend pricing logic still exposes legacy naming in core UI code", "severity": "Medium", "status": "open" },
+  { "id": "TIER-006", "title": "Practitioner and Agency docs mix old and new commercial semantics", "severity": "Medium", "status": "open" },
+  { "id": "WORKERS-CRIT-001", "title": "32 phantom tables referenced in code that do not exist in production database", "severity": "Critical", "status": "open" }
 ]
 ```
 
-## Cloudflare Metrics (7d)
-
-```json
-{
-  "available": true,
-  "period": "7d",
-  "totalRequests": 6212,
-  "totalErrors": 828,
-  "errorRatePct": "13.33",
-  "p50CpuMs": "3.95",
-  "p99CpuMs": "5.25",
-  "peakErrorHour": "2026-03-11T12:08:16Z"
-}
-```
-
-## App Analytics
-
-```json
-{
-  "available": false,
-  "reason": "HTTP 401"
-}
-```
+Baseline caveat:
+- The historical documents are stale in a few places. Current code review shows that the old `BUG-003` and `BUG-004` auth findings are now fixed in `workers/src/handlers/auth.js`, even though they remain marked open in older audit documents.
 
 ## Flow Analysis
 
-### billing.js
-**Race Condition**: Checkout session creation and subscription state write are not atomic. If the webhook arrives before the DB write, the subscription is created with incorrect state.
-**Missing Idempotency**: `POST /api/billing/checkout` does not check for an existing pending session for the same user+price combination, allowing duplicate checkout sessions.
-**Quota Gap**: AI call quota is not checked before initiating Stripe checkout for tier upgrades.
+### `workers/src/handlers/billing.js`
 
-### auth.js
-**Missing Validation**: Email verification token replay is possible — tokens are not invalidated after single use in the primary code path.
-**Incorrect Error Code**: OAuth callback errors return 200 with error payload in some paths rather than the correct 4xx status.
+- Subscription checkout is materially improved. It now:
+  - blocks Agency checkout with a contact gate,
+  - validates promo-code format,
+  - offers a 7-day practitioner trial for new free users,
+  - wraps Stripe cancellation in a circuit breaker.
+- Remaining issues:
+  - The duplicate-session reuse check is still TOCTOU. Two concurrent requests can both list open sessions before either creates a new one.
+  - Customer creation in Stripe and persistence of `stripe_customer_id` are still separate operations.
+  - The retention flow is now surfaced in-app before the Stripe portal fallback, but it still relies on `confirm()` dialogs rather than a first-class billing-management UI.
 
-### webhook.js
-**Missing Idempotency**: `customer.subscription.created` events are not deduplicated against a processed-event log. Stripe can retry events, causing double-credit of quota on network errors.
-**Charge Without Delivery**: If the DB write after `checkout.session.completed` fails, Stripe has charged the customer but the subscription is not activated. No compensation/retry logic present.
+### `workers/src/handlers/auth.js`
 
-### tierEnforcement.js
-**Quota Bypass Vector**: Tier enforcement reads the `subscription_tier` column but does not verify active subscription status. A cancelled subscription retains tier access until next sync.
-**Missing Validation**: Studio tier features are not gated — the tier check for `studio` falls through to `guide` level in some code paths.
+- The auth surface is stronger than the prior audit lineage suggested.
+  - Forgot-password now always returns a constant success response.
+  - Invalid reset-token lookup failures now return 400 instead of 500.
+  - Logout revokes refresh tokens and clears the refresh cookie.
+- Remaining issue:
+  - Access tokens are now memory-only on the frontend, but logout still cannot revoke already-issued access tokens server-side until they expire. The historical `DESIGN-001` concern is reduced, not eliminated.
 
-### rateLimit.js
-**Fail-Closed**: Rate limiter correctly returns 503 when KV is unavailable (verified by tests). ✅
-**Bypass Vector**: Rate limits are keyed on IP from `CF-Connecting-IP`. Behind a shared NAT or proxy, all users share the same limit bucket.
+### `workers/src/handlers/webhook.js`
+
+- Stripe signature verification is present.
+- Event claiming is atomic: the handler inserts the Stripe event id before processing, concurrent deliveries become no-ops, downstream failures release the claim for retry, and successful handlers finalize the claimed row in place.
+- Ghost-subscription handling is better: if the local subscription row is missing, the handler now first tries `stripe_customer_id` and then exact email-based Stripe customer relinking before recreating the subscription row and tier. The same recovery path now covers invoice payment events before they are finalized.
+- Remaining issues:
+  - Ghost-subscription repair still cannot auto-heal if the `users` table lacks both a valid `stripe_customer_id` mapping and a safe exact email match, but those events now land in `payment_events` with `manual_review` status instead of disappearing into logs.
+
+### `workers/src/middleware/tierEnforcement.js`
+
+- Monthly usage quota enforcement is now database-backed and atomic for the main `atomicQuotaCheckAndInsert` path.
+- Daily ceilings now use the same DB-backed atomic counter path as route rate limiting.
+- Missing database configuration now fails closed with 503, which preserves the earlier cost-leak fix without relying on KV.
+- The email-verification gate still fails open on DB lookup error.
+
+### `workers/src/middleware/rateLimit.js`
+
+- Route rate limiting is now backed by a DB atomic upsert counter instead of KV mutation.
+- Missing database configuration now fails closed with a 503 and `Retry-After`, which preserves the earlier safety improvement.
+- Route coverage is broad and includes auth, AI, promo, and cost-sensitive endpoints.
+- The remaining problem is observability polish and storage dependency clarity rather than cross-isolate correctness.
 
 ## CTO Synopsis
 
-**Architecture Soundness** 🟡 YELLOW
-Cloudflare Workers + Neon Postgres + vanilla JS PWA is a lean, cost-effective stack appropriate for this stage. Handler decomposition is reasonable (auth, billing, alerts, cron, agency, achievements as separate modules). However, with 273 tests passing at 0 failures and no skips, the test suite likely lacks edge-case and integration coverage — a perfect score on a young codebase is a smell, not a celebration.
+Prime Self is in a better technical state than the last audit implied. The current test runner works, route rate limiting and daily ceilings are now backed by atomic database counters, and some previously alarming auth findings are fixed. The architecture remains workable for a Cloudflare Workers product, but its weakest layer is now billing-state reconciliation rather than rate-limit correctness.
 
-**Handler Complexity** 🟡 YELLOW
-Auth handler alone spans 977+ lines. Billing exceeds 474 lines. These are monolithic handlers that will resist refactoring. Single-responsibility extraction is needed before adding Guide/Agency features.
+Ratings:
 
-**Structured Logging** 🔴 RED
-317 unstructured `console.log/error` calls across 72 files. Zero structured JSON log lines. No `X-Request-ID` correlation. No `durationMs` on DB calls. In a Workers environment where logs are ephemeral, this means production incidents are effectively undebuggable. The cron job emits PII-adjacent data (user IDs) into flat strings with no log level normalization.
+| Area | Rating |
+|------|--------|
+| Architecture soundness | YELLOW |
+| Handler complexity | YELLOW |
+| Middleware layering | YELLOW |
+| Missing abstractions | YELLOW |
+| DB query patterns | YELLOW |
+| Retry / circuit-breaker / graceful degradation | YELLOW |
+| Test coverage gaps | YELLOW |
+| Technical debt blocking scale | RED |
 
-**Error Handling Patterns** 🔴 RED
-No retry wrapper on DB calls. Neon cold-start latency spikes will surface as silent failures. `ROLLBACK` failures are swallowed with console.error. No circuit breaker pattern on external calls (Stripe, SMS, push).
+The dominant scaling debt is state coordination across Stripe and Neon. The worker now has better protection around quota counters, Stripe cancellation, and webhook event claiming, but it still mixes transactional and non-transactional state in a way that can leave one-time checkout reuse and payment recovery paths inconsistent. `billing.js` and `webhook.js` are not unmanageably large, but they still combine validation, remote IO, persistence, and user-facing response construction in a single pass. That makes the remaining bugs hard to isolate and even harder to prove away through tests.
 
-**Test Coverage Gaps** 🔴 RED
-Zero failed tests across 273 is implausible for a system with 13.33% error rate in production. Tests are almost certainly not covering the error paths that are failing in prod.
+The biggest positive change is that the green test surface now includes both the atomic counter path and the Stripe relink path: route limits and daily ceilings are no longer relying on KV race-prone mutation, webhook recovery can now repair some missing customer mappings automatically, and the remaining unrecoverable cases are durably parked for review. The biggest remaining negative is still Stripe-to-local reconciliation at the outer edge. Recovery now falls back from `stripe_customer_id` to exact email repair, but it still cannot auto-heal when neither signal can safely identify the user, and one-time checkout session reuse is still list-based rather than claim-based. The codebase is not launch-blocked by missing features anymore; it is launch-constrained by the few places where money, access, and fulfillment can still diverge.
 
-**Tech Debt Blocking Scale** 🟡 YELLOW
-No request ID threading, no structured observability, no DB retry wrapper — all three must be solved before onboarding practitioners at volume.
-
----
+Prioritized CTO issues:
+- P0: add an operator-facing review/replay workflow for `manual_review` Stripe events that still cannot be auto-mapped.
+- P1: make one-time checkout session reuse claim-based instead of list-based.
+- P1: unify JSON body parsing and error envelopes so malformed input does not fall into generic 500s.
+- P1: migrate remaining middleware/helper `console.*` calls to the request logger.
 
 ## CISO Synopsis
 
-**JWT in localStorage** 🔴 RED
-Known gap, documented as pending. XSS on any page = full account takeover. With 317 console logs potentially exposing tokens in dev builds, surface area is wider than acceptable. HttpOnly cookie migration is not optional at practitioner tier.
+The security posture is materially improved relative to the last audit. Two historical red flags are no longer true in current code: access tokens are not stored in localStorage anymore, and the forgot-password / reset-password flows now behave in a safer, enumeration-resistant way. That is real progress, not cosmetic drift.
 
-**CSP unsafe-inline** 🔴 RED
-Vanilla JS PWA without a bundler almost certainly relies on inline scripts. If `unsafe-inline` is present in CSP, XSS mitigation is effectively disabled. Needs nonce-based or hash-based CSP before public launch.
+Ratings:
 
-**OAuth Flow** 🟡 YELLOW
-Not directly auditable from provided data, but social login state parameter handling and PKCE enforcement should be verified. No findings either direction — flagged for manual review.
+| Area | Rating |
+|------|--------|
+| JWT storage | GREEN |
+| CSP policy | YELLOW |
+| OAuth flow security | YELLOW |
+| Secret management | GREEN |
+| SQL injection surface | GREEN |
+| Practitioner data isolation | YELLOW |
+| Stripe webhook verification | GREEN |
+| Rate limiting bypass resistance | YELLOW |
+| CORS policy correctness | GREEN |
 
-**Practitioner Data Isolation** 🔴 RED
-No evidence in the provided handlers of row-level security or tenant-scoping on `agency.js` or practitioner client queries. Can User A access User B's chart via direct ID enumeration? No access control audit trail visible. This is a HIPAA-adjacent risk given the personal development data involved.
+The most important remaining security weakness is no longer the core rate-limit primitive. Auth and paid endpoints now use an atomic database-backed counter, which closes the previous cross-isolate overrun problem. The remaining security work is narrower: storage failures still rely on coarse fail-closed behavior, CSP still allows inline styles, and practitioner/client isolation still needs a tighter proof pass.
 
-**Stripe Webhook Signature Verification** 🟡 YELLOW
-Not flagged as missing, but the unstructured logs in billing.js show no `stripe-signature` verification log lines. Needs explicit confirmation that `stripe.webhooks.constructEvent()` is always called before processing.
+The second live issue is CSP drift. The frontend still ships `style-src 'unsafe-inline'` in `frontend/index.html`. That is a deliberate tradeoff, and the comment acknowledges it, but it still weakens the blast-radius reduction you would otherwise get from the now-improved token storage model.
 
-**SQL Injection Surface** 🟢 GREEN
-Parameterized queries appear to be used via the `query()` wrapper in `queries.js`. No raw string interpolation into SQL detected.
+The third concern is practitioner isolation confidence. The codebase clearly includes access checks and sanitized public-profile handling, but this audit did not produce a full endpoint-by-endpoint proof that every practitioner/client read path is equally constrained. That is better framed as an assurance gap than a confirmed breach.
 
-**Rate Limiting** 🔴 RED
-No rate limiting findings visible on auth endpoints (login, register, forgot-password, resend-verification). Credential stuffing and email enumeration attacks are unmitigated. Cloudflare WAF rules not confirmed active.
-
-**Secrets Management** 🟢 GREEN
-Zero hardcoded secrets detected across 72 files — good discipline.
-
----
+Prioritized CISO issues:
+- P1: tighten CSP so inline style exceptions are minimized or nonce-based.
+- P1: replace remaining plain-text or unstructured middleware error logging with structured request logging.
+- P1: complete a targeted IDOR/RLS audit across practitioner and client retrieval routes.
 
 ## CFO Synopsis
 
-**Agency Tier Checkout Active / Features Not Built** 🔴 RED
-If the Agency checkout ($349/mo) is live but core agency features are incomplete, you are collecting revenue for undelivered product. This is a legal and chargeback risk. Stripe subscriptions activated without feature delivery = refund exposure and potential dispute escalation.
+The billing surface is healthier than the previous audit registry suggested. Agency checkout is no longer live for self-serve purchase, webhook-event claiming is atomic, and quota enforcement no longer fails open when KV is missing. Those are meaningful financial-control wins.
 
-**Stripe Webhook Idempotency** 🔴 RED
-No idempotency key handling visible in billing logs. `invoice.paid`, `customer.subscription.updated`, and `checkout.session.completed` webhooks can fire multiple times (Stripe retries for up to 3 days). Without idempotency checks, double-crediting, double-downgrading, or double-email sending are live risks. The cron also runs subscription expiry downgrades — overlap with webhook-driven downgrades could double-fire.
+Ratings:
 
-**Subscription State Sync** 🟡 YELLOW
-Cron job handles expired subscription downgrades as a fallback, which is correct. But if the webhook path is the primary and cron is backup, the reconciliation logic between the two paths needs explicit deduplication.
+| Area | Rating |
+|------|--------|
+| Checkout session creation | YELLOW |
+| Webhook idempotency | YELLOW |
+| Subscription state sync | YELLOW |
+| Quota enforcement before AI calls | YELLOW |
+| Free tier abuse resistance | YELLOW |
+| Studio / Agency gating | GREEN |
+| Revenue recognition correctness | YELLOW |
+| Refund / cancel flow | YELLOW |
 
-**Quota Enforcement Before AI Calls** 🔴 RED
-No evidence of pre-flight quota checks before AI generation calls. Free-tier users generating unlimited AI content = direct cost bleed. Must gate at the handler level before any OpenAI/AI call.
+The remaining financial risk is concentrated in two places. First, one-time checkout reuse is still list-based rather than claim-based, so parallel requests can still race into multiple open sessions. Second, the ghost-subscription fix is conditional, not complete. If Stripe events arrive out of order and the code cannot recover a user from either `stripe_customer_id` or a safe exact email match, the event is now parked for manual review instead of being lost, but application access still depends on a human or follow-up workflow to resolve it.
 
-**Free Tier Abuse Vectors** 🟡 YELLOW
-Without rate limiting and quota enforcement, a single free account can exhaust AI budget. Account-per-email cycling is trivially possible without verified email gates on feature access.
+The cancel flow is improved. The frontend now previews the retention offer, allows an in-app downgrade, and allows scheduled cancellation before falling back to the Stripe portal. The remaining gap is product polish rather than missing logic: this is still a modal-confirm flow, not a dedicated retention experience with pricing comparison, consequences, and recovery messaging.
 
-**Revenue Recognition** 🟡 YELLOW
-Annual vs. monthly period tracking appears present in checkout handler. However, proration on mid-cycle upgrades needs verification — undercollection or overcollection are both risks.
-
-**Analytics Unavailable** 🔴 RED
-HTTP 401 on app analytics means conversion funnel, ARPU, and churn metrics are blind. Financial planning without this data is guesswork.
-
----
+Prioritized CFO issues:
+- P0: close the remaining ghost-subscription recovery hole when neither stored customer id nor exact email can safely recover the user.
+- P1: build an explicit operator workflow to inspect and replay `manual_review` billing events.
+- P1: replace the current `confirm()`-driven retention flow with a first-class billing-management UI.
 
 ## CMO Synopsis
 
-**Registration-to-Profile Funnel** 🔴 RED
-The single highest drop point in Human Design SaaS is the birth data entry screen. If there's no geocoding assist for birth city, no timezone auto-resolution, and no immediate "wow" moment after chart generation, users bounce before activation. No funnel analytics available (401) to measure this empirically — itself a red flag.
+The marketing and product story are closer to the app than the old audits suggested, but the language and meaning layer are still uneven. Several practitioner-facing surfaces now exist in the UI, including session notes and Notion sync, so the narrative that the practitioner product is purely backend-only is no longer current. The remaining problem is less “missing tabs” and more “incomplete promise translation.”
 
-**"Why It Matters" Explanations** 🔴 RED
-This is cited as the #1 churn driver in the brief and confirmed by category-wide data. Showing a user their "Sacral Authority" or "Channel 34-57" without immediately connecting it to their actual life decisions, relationships, and career patterns means the product delivers data, not transformation. Every label needs a plain-language "what this means for you today" layer.
+Ratings:
 
-**Onboarding Savannah Arc Quality** 🟡 YELLOW
-Without access to the live onboarding flow, cannot rate directly. The arc concept (guided narrative onboarding) is sound. The risk is that it's been designed but the content isn't personalized enough per type/authority combination to feel genuinely tailored vs. generic.
+| Area | Rating |
+|------|--------|
+| Registration → chart → profile funnel | YELLOW |
+| Onboarding narrative quality | YELLOW |
+| Practitioner dashboard discoverability | YELLOW |
+| Referral mechanics | YELLOW |
+| Social share hooks | YELLOW |
+| Email/SMS digest engagement | YELLOW |
+| Achievement/gamification loop | YELLOW |
+| “Why it matters” explanation layer | RED |
+| Celebrity compare as acquisition hook | YELLOW |
 
-**Practitioner Dashboard Discoverability** 🔴 RED
-Agency and Guide tiers are premium purchases. If practitioners land on a dashboard that looks identical to the individual tier with premium features buried or unlabeled, the perceived value gap between $19 and $97 collapses immediately.
+The current app still leans too hard on structured output and not enough on personal meaning. Practitioner client detail shows chart facts, synthesis summary, PDF exports, notes, and compatibility navigation, but it still under-explains why the chart matters in real-life coaching terms. That affects retention more than raw feature count.
 
-**Referral Mechanics** 🔴 RED
-No referral infrastructure visible in the codebase scan. Human Design has an extremely strong word-of-mouth growth vector (practitioners refer clients; clients refer friends). No referral hooks = leaving the highest-leverage growth channel untouched.
+There is also a trust-and-copy issue around tier messaging. The primary pricing overlays use “Practitioner” and “Agency”, but the practitioner upgrade notice still tells users that client management requires a “Guide” tier. That breaks confidence at the moment of conversion.
 
-**Social Share Hooks** 🟡 YELLOW
-Chart sharing mechanics are not confirmed. Shareable chart cards (even static images) are a top acquisition driver in this category.
-
----
+Prioritized CMO issues:
+- P0: deepen the “why it matters” interpretation layer in profile and practitioner views.
+- P1: eliminate Guide/Practitioner naming drift across upgrade CTAs and docs.
+- P1: expose more explicit post-upgrade guidance so new practitioners land on the right workflow immediately.
 
 ## CIO Synopsis
 
-**Structured Logging Coverage** 🔴 RED
-317 unstructured log calls, zero structured JSON. `X-Request-ID` is absent — not a single log line includes a correlation ID. `durationMs` is not logged on DB calls. In Cloudflare Workers, logs are available only via Tail Workers or Logpush; without structure, they are unsearchable. This is the most operationally urgent issue in the codebase.
+Operationally, the repo looks less broken than the latest prior audit file claimed. The test runner is working again, the rate limiter now fails closed when database configuration is absent, and the current worker code shows more deliberate handling around Stripe cancellation and degraded states. This is not an observability vacuum anymore.
 
-**Sentry Integration** 🔴 RED
-No Sentry (or equivalent) integration detected. With a 13.33% error rate (828 errors in 7 days), there are no error groupings, no stack traces, no affected-user counts. The team is flying blind on what is causing 1 in 8 requests to fail.
+Ratings:
 
-**Health Endpoint Depth** 🟡 YELLOW
-`/api/health` existence is assumed but depth is unknown. A production system at this error rate needs `/api/health?full=1` returning DB connectivity, KV latency, Stripe reachability, and Worker memory — not just HTTP 200.
+| Area | Rating |
+|------|--------|
+| Observability coverage | YELLOW |
+| Sentry integration completeness | YELLOW |
+| Health endpoint depth | YELLOW |
+| KV cache hit strategy | YELLOW |
+| Worker CPU / memory efficiency | YELLOW |
+| Deployment pipeline | YELLOW |
+| Rollback capability | YELLOW |
+| Environment parity | YELLOW |
+| Secrets hygiene | GREEN |
+| Cron reliability | YELLOW |
 
-**KV Cache Strategy** 🟡 YELLOW
-Transit snapshot storage in cron suggests KV usage. Cache invalidation strategy and TTL discipline are not auditable from current data. Cold KV reads on transit data could be a latency contributor.
+The remaining CIO problem is consistency, not absence. Some paths use a structured request logger; others still log raw text from middleware and helpers. Some revenue-sensitive flows have circuit breakers; others still rely on best-effort `.catch()` logging. Some controls fail closed now; others still fail open for migration compatibility. This unevenness matters more than any single red flag because it makes operational behavior difficult to predict under incident load.
 
-**Worker CPU Efficiency** 🟢 GREEN
-p50 CPU at 3.95ms and p99 at 5.25ms are excellent. Workers are not CPU-bound. The 13.33% error rate is not a compute problem — it's an application logic or external dependency problem.
+Recent repo-memory notes also matter here: secrets are externalized, but historical secret contamination still exists in old Git history and still requires credential rotation and history purge outside the tip commit. That is a governance task, not a code correctness task, but it remains part of launch operations.
 
-**Deployment Pipeline** 🟡 YELLOW
-No CI/CD pipeline details available. Wrangler deploy discipline (staging → production promotion, secret rotation) cannot be confirmed.
-
-**Cron Job Reliability** 🟡 YELLOW
-Single cron handler with 8+ distinct tasks in sequence. If the transit snapshot fails, it may block downstream digest sends. Tasks should be isolated with independent error boundaries and timeouts.
-
----
+Prioritized CIO issues:
+- P1: finish migrating remaining middleware/helper logging to structured logger fields.
+- P1: document and rehearse rollback and incident-response steps around billing/webhook faults.
+- P1: add concurrency-focused load tests for rate-limit and quota behavior so green unit tests map to production behavior.
 
 ## Practitioner UX Journey
 
-### Step 1: Discovery → Signup → Guide Tier Checkout
-**Rating: 3/5**
-The signup flow appears functional (auth handler complete). However, Guide tier at $97/mo checkout — is there a trial? Is there a "what do you get" comparison page before the paywall? If practitioners are expected to convert cold from a landing page to $97 with no trial period and no feature preview, conversion will be sub-1%. The checkout flow exists in billing.js but the pre-checkout value communication is unknown.
+1. Discovery → signup → Practitioner checkout
+The pricing surface is live, clear, and significantly better than prior audits suggested. Practitioner and Agency plans are visible, session notes are no longer phantom features, and Agency purchase is correctly routed to contact instead of blind checkout. The main friction is naming drift: the pricing UI says “Practitioner”, while the practitioner upgrade notice still says “Guide”.
 
-**Gaps:** No trial/freemium-to-paid upgrade path confirmed. No feature comparison gate visible.
+2. Dashboard first load
+The practitioner tab is no longer empty. It contains client roster tools, directory profile controls, Notion sync, invitation history, and agency seats. The main problem is orientation: the app does not strongly steer a new practitioner into the highest-value first action.
 
-### Step 2: Dashboard First Load
-**Rating: 2/5**
-With no structured onboarding telemetry and no analytics available (401), we cannot confirm what a practitioner sees on first load. If the dashboard is empty (no clients yet) with no empty-state guidance ("Add your first client →"), the experience is dead on arrival. Empty states are the most underfunded UX surface in B2B SaaS.
+3. Adding a client by email
+This flow appears workable. Invitation tools and status refresh are present. The residual UX gap is visibility into client state after invitation, especially who has completed chart/profile setup.
 
-**Gaps:** Empty state content unknown. Welcome modal or guided tour not confirmed.
+4. Viewing client chart + profile
+This is substantially more complete than the prior audit suggested. Client detail loads chart traits, synthesis summary, PDF downloads, notes, and a compatibility-chart entry point. The main UX weakness is that compatibility still requires manual re-entry in the composite tab.
 
-### Step 3: Adding a Client by Email
-**Rating: 3/5**
-Agency handler exists. Client-by-email invite flow is assumed functional. Key friction: does the client receive an email that explains what Prime Self is and why their practitioner invited them? Or is it a cold system email? Cold invite emails have <15% acceptance rates without context.
+5. Session notes creation
+Implemented. CRUD UI exists in the practitioner client-detail surface and supports “share with AI synthesis”.
 
-**Gaps:** Client invite email content/quality unknown. Birth data collection from client (not practitioner) flow unknown.
+6. AI context for that client
+This remains incomplete. The backend exposes dedicated AI-context endpoints, but the frontend does not expose a dedicated editor or viewer for that context.
 
-### Step 4: Viewing Client Chart + Profile
-**Rating: 3/5**
-Calculate handler exists and chart DB save is implemented. Chart retrieval works (errors are handled). However, the "why it matters" deficit identified in CMO synopsis applies here at maximum impact — a practitioner reading a client's chart needs clinical-grade interpretation scaffolding, not raw gate/channel labels.
+7. Practitioner directory profile setup
+Implemented and improved. The save flow now returns a live-profile confirmation link.
 
-**Gaps:** Interpretation depth unknown. Cross-chart comparison (practitioner + client compatibility) not confirmed.
+8. Public profile discoverability
+Implemented. There is a public practitioner directory tab and server-rendered practitioner pages.
 
-### Step 5: Session Notes Creation
-**Rating: 2/5**
-No session notes handler is visible in the scanned file list. This is a critical practitioner workflow — session logging is table stakes for any practitioner tool. If absent, this is a P0 feature gap.
+9. Notion sync
+Implemented in the frontend and backend. The prior “backend only” finding is stale.
 
-**Gaps:** Session notes feature existence not confirmed. If missing, this alone would cause Guide/Agency churn within the first billing cycle.
+10. Billing portal / cancel flow
+The billing portal handoff still exists, but the app now intercepts cancellation with an in-app retention preview, downgrade option, and scheduled-cancel path before sending the user to Stripe.
 
-### Step 6: AI Context Per Client
-**Rating: 2/5**
-AI handler not visible in scanned files by name. Quota enforcement before AI calls is unconfirmed (CFO RED flag). If AI-generated insights per client exist but are not personalized to the client's specific chart data (type, authority, profile, defined centers), they will feel generic and practitioners will lose trust in the tool rapidly.
-
-**Gaps:** AI quota gates unconfirmed. Personalization depth of AI output unknown.
-
-### Step 7: Directory Profile Setup
-**Rating: 2/5**
-Public practitioner directory is a major value proposition at Guide/Agency tier. No directory handler visible in file scan. If practitioners cannot set up a public profile discoverable by potential clients, a core acquisition value prop for the $97 tier is missing.
-
-**Gaps:** Directory handler not found. Profile photo upload, specialties, booking link integration all unknown.
-
-### Step 8: Public Profile Discoverability
-**Rating: 1/5**
-Dependent on Step 7. No SEO metadata strategy visible for practitioner profile pages. If profiles exist but are not indexable (no SSR, no meta tags, no structured data), they are invisible to search. A practitioner paying $97/mo for a directory listing that doesn't appear in Google is an immediate churn trigger.
-
-**Gaps:** SSR/static generation for profile pages not confirmed. robots.txt, sitemap, structured data (Person schema) not confirmed.
-
-### Step 9: Notion Sync
-**Rating: 1/5**
-Notion sync is referenced as a feature but no Notion integration handler is visible in the scanned codebase. If this is a marketed feature on the Guide/Agency tier and it is not built, this is a P0 revenue and trust risk.
-
-**Gaps:** Notion OAuth handler absent from scan. Sync direction (to Notion? from Notion?) and data model unknown.
-
-### Step 10: Billing Portal / Cancel Flow
-**Rating: 4/5**
-Billing portal (Stripe Customer Portal) integration exists in billing.js. Cancel flow with `immediately` flag is implemented. Subscription expiry downgrade via cron is a reasonable safety net. Main gap is the lack of cancellation save flow ("before you go" deflection with pause option or downgrade offer).
-
-**Gaps:** No cancellation save/deflection flow visible. No pause subscription option. Downgrade-instead-of-cancel path not confirmed.
-
----
+Practitioner UX issue list:
+- 5/5: No dedicated per-client AI-context editor despite backend support.
+- 3/5: Billing retention is functional but still presented through browser confirm dialogs instead of a first-class settings UI.
+- 3/5: Guide/Practitioner naming drift undermines trust at upgrade time.
+- 3/5: Compatibility flow is a redirect, not a prefilled guided experience.
+- 2/5: Directory “View my profile” confirmation may build a broken URL when `display_name` differs from the saved slug.
 
 ## CEO Executive Summary
 
-Prime Self has sound architectural bones and a compelling market position in the Human Design SaaS space. The core calculation engine works, billing infrastructure is wired, and the 273-test suite demonstrates engineering discipline. However, the system is **NOT LAUNCH READY** at scale.
+Prime Self is healthier than the most recent audit file suggested, but it is not cleanly launch-ready for practitioner scale yet. The important story is not “everything is broken”; it is “several high-profile historical defects are fixed, but a small set of payment and concurrency bugs remain concentrated in the exact places that can create churn, chargebacks, and support pain.” Tests are green, auth token handling is safer, Agency self-serve checkout is blocked correctly, and practitioner features such as notes and Notion sync are now present in the UI. Those are real readiness improvements.
 
-**Top 5 Practitioner Churn Triggers:**
-1. **Raw data without life implications** — every label shown without "what this means for you" narrative will drive abandonment within days
-2. **Session notes absent** — practitioners cannot work without session logging; this single gap collapses the $97 value proposition
-3. **Directory profiles not discoverable by Google** — the acquisition hook practitioners are paying for doesn't deliver
-4. **Notion sync not built** — if marketed, this is an immediate trust breach
-5. **Empty practitioner dashboard on first login** — no guidance, no empty states, no momentum
+The remaining blockers sit in three clusters: incomplete Stripe-to-local recovery semantics, one-time billing edge-case coordination, and practitioner conversion friction around retention and messaging. None of these suggest a total rewrite. They do suggest that paid practitioner growth would magnify a few correctness issues faster than the current operational tooling can explain them.
 
-**Top 3 Legal/Financial Risks:**
-1. **Agency tier charging for unbuilt features** — active Stripe subscriptions for incomplete product = chargeback and potential consumer protection exposure
-2. **No data isolation audit on practitioner/client data** — a single cross-tenant data leak in a personal development context triggers GDPR/CCPA breach notification obligations
-3. **Stripe webhook non-idempotency** — double-charge or double-credit events are live and undetected without analytics
+### Top 5 issues that would prevent a paying practitioner from staying subscribed
 
-**Readiness Rating: 🔴 NOT READY**
-Fix P0 billing risks and data isolation before any paid acquisition. Structured logging and Sentry are prerequisite to operating a production system responsibly.
+1. Stripe recovery still needs operator intervention when a paid customer cannot be matched by either stored `stripe_customer_id` or an exact email fallback.
+2. Per-client AI context exists in the backend but is still missing as an explicit frontend workflow.
+3. One-time checkout reuse is still list-based, so concurrent purchase attempts can create duplicate open sessions.
+4. Guide/Practitioner naming drift makes the paid tier feel inconsistent and unfinished.
+5. Billing retention is functional, but the current confirm-dialog UX is too thin for a polished downgrade/save experience.
 
----
+### Top 3 risks that could cause a legal or financial problem
+
+1. Ghost-subscription recovery still requires manual intervention if the application cannot map Stripe customer state back to a user by either stored customer id or exact email.
+2. Billing events now park in `manual_review` when Stripe customer state exists but cannot be mapped back through either `stripe_customer_id` or a safe exact email match.
+3. One-time checkout reuse can still create duplicate open sessions under parallel purchase attempts.
+
+### Readiness rating
+
+`SOFT LAUNCH READY`
+
+Reasoning:
+- The app no longer looks launch-blocked by broad missing functionality.
+- It is not safe enough yet for aggressive paid growth without fixing the concentrated billing and concurrency defects.
 
 ## Master Issue Registry
 
 ```json
 [
   {
-    "id": "CTO-001",
+    "id": "CTO-014",
     "persona": "CTO",
     "severity": "P0",
-    "area": "logging",
-    "title": "No request correlation IDs (X-Request-ID) \u2014 production incidents are undebuggable",
-    "status": "open"
+    "area": "concurrency",
+    "title": "KV-backed rate limiting and daily ceilings remain non-atomic across isolates",
+    "status": "resolved"
   },
   {
-    "id": "CTO-002",
-    "persona": "CTO",
-    "severity": "P0",
-    "area": "logging",
-    "title": "317 unstructured console.log/error calls \u2014 no structured JSON logging across 72 files",
-    "status": "open"
-  },
-  {
-    "id": "CTO-003",
-    "persona": "CTO",
-    "severity": "P0",
-    "area": "error-handling",
-    "title": "No retry wrapper on DB calls \u2014 Neon cold-start spikes cause silent failures",
-    "status": "open"
-  },
-  {
-    "id": "CTO-004",
-    "persona": "CTO",
-    "severity": "P0",
-    "area": "observability",
-    "title": "13.33% production error rate (828/6212 requests) with no error tracking tooling to diagnose root cause",
-    "status": "open"
-  },
-  {
-    "id": "CTO-005",
-    "persona": "CTO",
-    "severity": "P0",
-    "area": "error-handling",
-    "title": "No circuit breaker on external calls (Stripe, SMS, push notifications) \u2014 cascading failures unmitigated",
-    "status": "open"
-  },
-  {
-    "id": "CTO-006",
-    "persona": "CTO",
-    "severity": "P1",
-    "area": "handler-complexity",
-    "title": "auth.js exceeds 977 lines \u2014 monolithic handler resists safe refactoring and testing",
-    "status": "open"
-  },
-  {
-    "id": "CTO-007",
-    "persona": "CTO",
-    "severity": "P1",
-    "area": "handler-complexity",
-    "title": "billing.js exceeds 474 lines \u2014 single-responsibility principle violated across multiple billing concerns",
-    "status": "open"
-  },
-  {
-    "id": "CTO-008",
-    "persona": "CTO",
-    "severity": "P1",
-    "area": "testing",
-    "title": "273/273 passing tests with 13.33% prod error rate indicates test suite does not cover failing production paths",
-    "status": "open"
-  },
-  {
-    "id": "CTO-009",
-    "persona": "CTO",
-    "severity": "P1",
-    "area": "cron",
-    "title": "Cron handler runs 8+ sequential tasks without independent error boundaries \u2014 one failure may cascade to block downstream tasks",
-    "status": "open"
-  },
-  {
-    "id": "CTO-010",
-    "persona": "CTO",
-    "severity": "P1",
-    "area": "logging",
-    "title": "No durationMs logging on DB queries \u2014 cannot identify slow queries contributing to error rate",
-    "status": "open"
-  },
-  {
-    "id": "CTO-011",
+    "id": "CTO-016",
     "persona": "CTO",
     "severity": "P1",
     "area": "error-handling",
-    "title": "ROLLBACK failures swallowed via console.error \u2014 failed transaction rollbacks are silent in production",
-    "status": "open"
-  },
-  {
-    "id": "CTO-012",
-    "persona": "CTO",
-    "severity": "P2",
-    "area": "logging",
-    "title": "PII-adjacent data (user IDs, subscription IDs) interpolated into flat log strings without sanitization policy",
-    "status": "open"
-  },
-  {
-    "id": "CTO-013",
-    "persona": "CTO",
-    "severity": "P2",
-    "area": "deployment",
-    "title": "No confirmed CI/CD pipeline \u2014 staging-to-production promotion discipline unverified",
-    "status": "open"
+    "title": "Silent catch-and-log patterns still hide cache, accounting, and helper failures",
+    "status": "regression"
   },
   {
     "id": "CISO-001",
     "persona": "CISO",
     "severity": "P0",
     "area": "auth",
-    "title": "JWT stored in localStorage \u2014 XSS on any page = full account takeover; HttpOnly cookie migration required",
-    "status": "open"
-  },
-  {
-    "id": "CISO-002",
-    "persona": "CISO",
-    "severity": "P0",
-    "area": "data-isolation",
-    "title": "No confirmed row-level security or tenant scoping on practitioner/client data \u2014 cross-user data access via ID enumeration unmitigated",
-    "status": "open"
+    "title": "JWT access token stored in localStorage — XSS = full account takeover",
+    "status": "resolved"
   },
   {
     "id": "CISO-003",
     "persona": "CISO",
-    "severity": "P0",
+    "severity": "P1",
     "area": "csp",
-    "title": "CSP unsafe-inline likely present on vanilla JS PWA \u2014 XSS mitigation effectively disabled",
-    "status": "open"
+    "title": "Frontend CSP still allows inline styles via style-src unsafe-inline",
+    "status": "regression"
   },
   {
     "id": "CISO-004",
     "persona": "CISO",
     "severity": "P0",
     "area": "rate-limiting",
-    "title": "No rate limiting on auth endpoints (login, register, forgot-password, resend-verification) \u2014 credential stuffing and email enumeration unmitigated",
-    "status": "open"
+    "title": "Auth and paid endpoints still rely on non-atomic KV counters under concurrency",
+    "status": "resolved"
   },
   {
-    "id": "CISO-005",
-    "persona": "CISO",
-    "severity": "P1",
-    "area": "webhooks",
-    "title": "Stripe webhook signature verification (stripe.webhooks.constructEvent) not confirmed \u2014 unsigned webhook processing risk",
-    "status": "open"
-  },
-  {
-    "id": "CISO-006",
+    "id": "CISO-009",
     "persona": "CISO",
     "severity": "P1",
     "area": "auth",
-    "title": "OAuth flow PKCE enforcement and state parameter handling not confirmed \u2014 CSRF on OAuth callback unverified",
-    "status": "open"
+    "title": "Forgot-password flow leaked user existence",
+    "status": "resolved"
   },
   {
-    "id": "CISO-007",
+    "id": "CISO-010",
     "persona": "CISO",
     "severity": "P1",
-    "area": "data-isolation",
-    "title": "Agency handler data scoping not auditable \u2014 practitioner accessing other practitioner's client roster not ruled out",
-    "status": "open"
-  },
-  {
-    "id": "CISO-008",
-    "persona": "CISO",
-    "severity": "P2",
-    "area": "logging",
-    "title": "User IDs in unstructured logs create GDPR-adjacent audit trail exposure in Cloudflare log retention",
-    "status": "open"
+    "area": "auth",
+    "title": "Invalid reset-token lookup returned 500 instead of 400",
+    "status": "resolved"
   },
   {
     "id": "CFO-001",
     "persona": "CFO",
     "severity": "P0",
     "area": "billing",
-    "title": "Agency tier ($349/mo) checkout active with unconfirmed feature completeness \u2014 collecting revenue for undelivered product",
-    "status": "open"
+    "title": "Agency tier accepted self-serve checkout despite incomplete delivery scope",
+    "status": "resolved"
   },
   {
     "id": "CFO-002",
     "persona": "CFO",
     "severity": "P0",
     "area": "billing",
-    "title": "No Stripe webhook idempotency handling \u2014 duplicate invoice.paid / checkout.session.completed events cause double-credit or double-charge",
-    "status": "open"
+    "title": "Webhook event deduplication was non-atomic",
+    "status": "resolved"
   },
   {
     "id": "CFO-003",
     "persona": "CFO",
     "severity": "P0",
     "area": "quota",
-    "title": "No confirmed pre-flight quota enforcement before AI calls \u2014 free-tier users can exhaust AI budget without cost gate",
-    "status": "open"
+    "title": "Quota enforcement depended on KV availability and failed open",
+    "status": "resolved"
   },
   {
-    "id": "CFO-004",
+    "id": "CFO-009",
     "persona": "CFO",
     "severity": "P0",
-    "area": "analytics",
-    "title": "App analytics returning HTTP 401 \u2014 conversion funnel, ARPU, and churn metrics are completely blind",
-    "status": "open"
+    "area": "billing",
+    "title": "Ghost subscriptions remain unrecoverable when Stripe customer state cannot be mapped by stored customer id or exact email fallback",
+    "status": "regression"
   },
   {
-    "id": "CFO-005",
+    "id": "CFO-010",
+    "persona": "CFO",
+    "severity": "P0",
+    "area": "billing",
+    "title": "One-time purchase grants are not transaction-safe and can leave partial fulfillment",
+    "status": "resolved"
+  },
+  {
+    "id": "CFO-012",
     "persona": "CFO",
     "severity": "P1",
     "area": "billing",
-    "title": "Webhook-driven and cron-driven subscription downgrade paths can double-fire without explicit deduplication",
-    "status": "open"
+    "title": "One-time checkout still lacks duplicate-session reuse protection",
+    "status": "resolved"
   },
   {
-    "id": "CFO-006",
-    "persona": "CFO",
-    "severity": "P1",
-    "area": "abuse",
-    "title": "Free tier abuse via account-per-email cycling possible without verified email gate on feature access",
-    "status": "open"
-  },
-  {
-    "id": "CFO-007",
+    "id": "CFO-013",
     "persona": "CFO",
     "severity": "P1",
     "area": "billing",
-    "title": "Proration logic on mid-cycle upgrades not confirmed \u2014 risk of revenue under- or over-collection",
-    "status": "open"
-  },
-  {
-    "id": "CFO-008",
-    "persona": "CFO",
-    "severity": "P2",
-    "area": "billing",
-    "title": "No cancellation save/deflection flow \u2014 churn prevention revenue opportunity not captured",
-    "status": "open"
+    "title": "Webhook events are claimed before downstream fulfillment completes, so transient failures require explicit replay handling",
+    "status": "resolved"
   },
   {
     "id": "CMO-001",
     "persona": "CMO",
-    "severity": "P0",
+    "severity": "P1",
     "area": "retention",
-    "title": "Human Design labels displayed without 'why it matters' life-implication copy \u2014 #1 confirmed churn driver in category",
-    "status": "open"
-  },
-  {
-    "id": "CMO-002",
-    "persona": "CMO",
-    "severity": "P0",
-    "area": "practitioner-value",
-    "title": "Practitioner directory profiles not confirmed indexable by search engines \u2014 core $97 tier acquisition value prop undelivered",
-    "status": "open"
-  },
-  {
-    "id": "CMO-003",
-    "persona": "CMO",
-    "severity": "P0",
-    "area": "referral",
-    "title": "No referral mechanics built \u2014 highest-leverage growth channel for Human Design (practitioner\u2192client\u2192friend) untouched",
-    "status": "open"
-  },
-  {
-    "id": "CMO-004",
-    "persona": "CMO",
-    "severity": "P1",
-    "area": "onboarding",
-    "title": "Birth data entry friction (geocoding, timezone resolution) is top funnel drop point \u2014 no mitigation confirmed",
-    "status": "open"
-  },
-  {
-    "id": "CMO-005",
-    "persona": "CMO",
-    "severity": "P1",
-    "area": "onboarding",
-    "title": "Empty practitioner dashboard on first login \u2014 no empty-state guidance or 'add first client' CTA confirmed",
-    "status": "open"
-  },
-  {
-    "id": "CMO-006",
-    "persona": "CMO",
-    "severity": "P1",
-    "area": "social",
-    "title": "Shareable chart cards / social share hooks not confirmed \u2014 organic acquisition from existing users not captured",
-    "status": "open"
-  },
-  {
-    "id": "CMO-007",
-    "persona": "CMO",
-    "severity": "P1",
-    "area": "conversion",
-    "title": "No trial or freemium-to-Guide upgrade path confirmed \u2014 cold conversion to $97/mo from landing page will be sub-1%",
-    "status": "open"
-  },
-  {
-    "id": "CMO-008",
-    "persona": "CMO",
-    "severity": "P2",
-    "area": "onboarding",
-    "title": "Savannah onboarding arc personalization depth per type/authority combination not confirmed \u2014 risks feeling generic",
-    "status": "open"
-  },
-  {
-    "id": "CIO-001",
-    "persona": "CIO",
-    "severity": "P0",
-    "area": "observability",
-    "title": "No Sentry or equivalent error tracking \u2014 828 production errors in 7 days have no grouping, stack traces, or affected-user counts",
-    "status": "open"
+    "title": "Profile and practitioner views still under-deliver the why-it-matters interpretation layer",
+    "status": "regression"
   },
   {
     "id": "CIO-002",
     "persona": "CIO",
-    "severity": "P0",
+    "severity": "P1",
     "area": "logging",
-    "title": "Zero structured log lines \u2014 Cloudflare Logpush and Tail Workers produce unsearchable output without JSON structure",
-    "status": "open"
-  },
-  {
-    "id": "CIO-003",
-    "persona": "CIO",
-    "severity": "P0",
-    "area": "logging",
-    "title": "No X-Request-ID generated or threaded through handlers \u2014 cross-service request tracing impossible",
-    "status": "open"
-  },
-  {
-    "id": "CIO-004",
-    "persona": "CIO",
-    "severity": "P1",
-    "area": "health",
-    "title": "Health endpoint depth unconfirmed \u2014 /api/health?full=1 with DB, KV, Stripe reachability checks not verified",
-    "status": "open"
-  },
-  {
-    "id": "CIO-005",
-    "persona": "CIO",
-    "severity": "P1",
-    "area": "cron",
-    "title": "Cron tasks lack independent timeouts \u2014 a hung DB call in transit snapshot can starve SMS digest delivery",
-    "status": "open"
-  },
-  {
-    "id": "CIO-006",
-    "persona": "CIO",
-    "severity": "P1",
-    "area": "analytics",
-    "title": "App analytics endpoint returning HTTP 401 \u2014 operational metrics dashboard is broken",
-    "status": "open"
-  },
-  {
-    "id": "CIO-007",
-    "persona": "CIO",
-    "severity": "P2",
-    "area": "cache",
-    "title": "KV cache TTL discipline and invalidation strategy for transit data not auditable \u2014 stale data risk on high-read paths",
-    "status": "open"
-  },
-  {
-    "id": "CIO-008",
-    "persona": "CIO",
-    "severity": "P2",
-    "area": "deployment",
-    "title": "No confirmed staging environment or Wrangler promotion workflow \u2014 production deployments risk untested regressions",
-    "status": "open"
+    "title": "Structured logging adoption remains incomplete in middleware and helper paths",
+    "status": "regression"
   },
   {
     "id": "PRAC-001",
     "persona": "Practitioner",
     "severity": "P0",
-    "area": "feature-gap",
-    "title": "Session notes handler not found in codebase scan \u2014 critical practitioner workflow absent from Guide/Agency tier",
-    "status": "open"
+    "area": "session-notes",
+    "title": "Session notes backend existed without usable frontend UI",
+    "status": "resolved"
   },
   {
     "id": "PRAC-002",
     "persona": "Practitioner",
     "severity": "P0",
-    "area": "feature-gap",
-    "title": "Notion sync integration handler absent from codebase \u2014 if marketed as a feature, constitutes undelivered paid functionality",
-    "status": "open"
+    "area": "notion",
+    "title": "Notion sync backend existed without usable frontend UI",
+    "status": "resolved"
   },
   {
     "id": "PRAC-003",
     "persona": "Practitioner",
     "severity": "P0",
-    "area": "feature-gap",
-    "title": "Practitioner directory handler not found in scan \u2014 public profile discoverability for Guide/Agency tier unconfirmed",
-    "status": "open"
-  },
-  {
-    "id": "PRAC-004",
-    "persona": "Practitioner",
-    "severity": "P1",
-    "area": "client-onboarding",
-    "title": "Client invite email content not auditable \u2014 cold system email without Prime Self context yields <15% acceptance rate",
-    "status": "open"
-  },
-  {
-    "id": "PRAC-005",
-    "persona": "Practitioner",
-    "severity": "P1",
-    "area": "interpretation",
-    "title": "Client chart view lacks cross-chart compatibility view (practitioner + client) \u2014 key practitioner workflow missing",
-    "status": "open"
-  },
-  {
-    "id": "PRAC-006",
-    "persona": "Practitioner",
-    "severity": "P1",
-    "area": "ai",
-    "title": "AI per-client context personalization depth to specific chart data (type, authority, profile) not confirmed",
-    "status": "open"
+    "area": "ai-context",
+    "title": "Per-client AI context endpoints exist but still have no dedicated frontend editor",
+    "status": "regression"
   },
   {
     "id": "PRAC-007",
     "persona": "Practitioner",
-    "severity": "P2",
+    "severity": "P0",
     "area": "billing",
-    "title": "No downgrade-instead-of-cancel path in billing portal \u2014 practitioners who would accept $19/mo are lost at $97/mo churn",
-    "status": "open"
+    "title": "Retention offer exists in the billing API but the current cancel journey never surfaces it before portal handoff",
+    "status": "resolved"
+  },
+  {
+    "id": "PRAC-009",
+    "persona": "Practitioner",
+    "severity": "P1",
+    "area": "labeling",
+    "title": "Tier naming still conflicts: Practitioner pricing vs Guide upgrade notice",
+    "status": "regression"
+  },
+  {
+    "id": "PRAC-011",
+    "persona": "Practitioner",
+    "severity": "P2",
+    "area": "directory",
+    "title": "Directory profile save lacked a live-profile confirmation link",
+    "status": "resolved"
+  },
+  {
+    "id": "PRAC-012",
+    "persona": "Practitioner",
+    "severity": "P2",
+    "area": "directory",
+    "title": "Directory success link is built from display_name instead of the saved slug and can produce broken public URLs",
+    "status": "new"
+  },
+  {
+    "id": "PRAC-013",
+    "persona": "Practitioner",
+    "severity": "P2",
+    "area": "compatibility",
+    "title": "Compatibility action opens the composite tab but does not prefill practitioner and client birth data",
+    "status": "new"
   }
 ]
 ```
-
-## Delta Summary
-
-```json
-{
-  "new": 52,
-  "resolved": 0,
-  "regressions": 0
-}
-```
-
----
-*Generated by Prime Self Audit Bot on 2026-03-15T15:32:55.648Z*

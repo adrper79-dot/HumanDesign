@@ -108,7 +108,7 @@ export async function handleCalculate(request, env) {
     await recordUsage(env, userId, 'chart_calculation', '/api/chart/calculate');
     
     // Track achievement event
-    await trackEvent(env, userId, 'chart_calculated', { chartId }, request._tier || 'free');
+    await trackEvent(env, userId, 'chart_calculated', { chartId }, request._tier || 'free', request._ctx);
   }
 
   return Response.json({

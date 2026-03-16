@@ -92,8 +92,7 @@ async function fetchUserProfile() {
   if (!token) return;
   try {
     const res = await fetch(API + '/api/auth/me', {
-      credentials: 'include',
-      headers: { 'Authorization': 'Bearer ' + token }
+      credentials: 'include'
     });
     if (!res.ok) return; // silently ignore — expired tokens handled by apiFetch elsewhere
     const data = await res.json();
@@ -657,7 +656,7 @@ async function resendVerificationEmail() {
   try {
     const res = await fetch(API + '/api/auth/resend-verification', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include'
     });
     const data = await res.json();
@@ -770,7 +769,7 @@ async function submitAuth() {
       if (pendingRef) {
         fetch(API + '/api/referrals/apply', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ code: pendingRef })
         }).then(res => {
@@ -827,7 +826,7 @@ function logout() {
   fetch(API + '/api/auth/logout', {
     method: 'POST',
     credentials: 'include',
-    headers: oldToken ? { 'Authorization': 'Bearer ' + oldToken, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' }
   }).catch(() => {});
   // Clear cached API responses from service worker
   if ('caches' in window) {
@@ -882,9 +881,7 @@ async function deleteAccount() {
 async function exportMyData() {
   try {
     showNotification('Preparing your data export...', 'info');
-    const headers = {};
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    const res = await fetch(API + '/api/auth/export', { headers, credentials: 'include' });
+    const res = await fetch(API + '/api/auth/export', { credentials: 'include' });
     if (!res.ok) {
       let errMsg = 'Failed to export data';
       try {
@@ -1149,6 +1146,74 @@ async function openBillingPortal() {
   }
 
   try {
+    const preview = await apiFetch('/api/billing/cancel', {
+      method: 'POST'
+      , body: JSON.stringify({ previewOnly: true })
+    });
+
+    if (!preview?.ok) {
+      showNotification('Failed to load billing options: ' + (preview?.error || 'Unknown error'), 'error');
+      return;
+    }
+
+    const retentionOffer = preview.retentionOffer;
+    const subscriptionTier = preview.subscription?.tier || window.currentUser?.tier || 'individual';
+
+    if (retentionOffer) {
+      const acceptDowngrade = confirm(
+        `${retentionOffer.message}\n\nPress OK to switch now. Press Cancel for more billing options.`
+      );
+
+      if (acceptDowngrade) {
+        const downgradeResult = await apiFetch(retentionOffer.upgradeEndpoint || '/api/billing/upgrade', {
+          method: 'POST',
+          body: JSON.stringify({ tier: retentionOffer.targetTier })
+        });
+
+        if (downgradeResult?.contactRequired) {
+          window.location.href = 'mailto:' + downgradeResult.contactEmail + '?subject=Agency%20Tier%20Inquiry';
+          return;
+        }
+
+        if (downgradeResult?.error) {
+          showNotification('Failed to change plan: ' + downgradeResult.error, 'error');
+          return;
+        }
+
+        await fetchUserProfile();
+        updateAuthUI();
+        showNotification(
+          subscriptionTier === 'practitioner'
+            ? 'Downgraded to Individual. Your subscription stays active through the current period.'
+            : 'Downgraded to Free. Your subscription stays active through the current period.',
+          'success'
+        );
+        return;
+      }
+
+      const scheduleCancel = confirm(
+        'Would you rather cancel at the end of your current billing period?\n\nPress OK to schedule cancellation. Press Cancel to open the Stripe billing portal.'
+      );
+
+      if (scheduleCancel) {
+        const cancelResult = await apiFetch('/api/billing/cancel', {
+          method: 'POST',
+          body: JSON.stringify({ immediately: false })
+        });
+
+        if (cancelResult?.error) {
+          showNotification('Failed to cancel subscription: ' + cancelResult.error, 'error');
+          return;
+        }
+
+        const periodEnd = cancelResult?.periodEnd
+          ? new Date(cancelResult.periodEnd).toLocaleDateString()
+          : 'the current billing period';
+        showNotification(`Subscription will cancel at period end (${periodEnd}).`, 'success');
+        return;
+      }
+    }
+
     const result = await apiFetch('/api/billing/portal', {
       method: 'POST'
     });
@@ -1191,7 +1256,9 @@ function showUpgradePrompt(message, feature) {
 // ── API Fetch ─────────────────────────────────────────────────
 async function apiFetch(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  if (token) headers['Authorization'] = 'Bearer ' + token;
+  // CISO-P0: Do NOT add Authorization header — rely on the ps_access HttpOnly cookie
+  // sent automatically via credentials:'include'. This prevents XSS from forging requests
+  // using an exfiltrated token, since HttpOnly cookies are inaccessible to JavaScript.
 
   let res;
   try {
@@ -1208,9 +1275,8 @@ async function apiFetch(path, options = {}) {
   if (res.status === 401) {
     const refreshed = await silentRefresh();
     if (refreshed) {
-      // Retry original request with new token
+      // Retry original request — new ps_access cookie was set by silentRefresh
       const retryHeaders = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-      retryHeaders['Authorization'] = 'Bearer ' + token;
       try {
         const retryRes = await fetch(API + path, { ...options, headers: retryHeaders, credentials: 'include' });
         if (retryRes.status !== 401) return retryRes.json();
@@ -4402,7 +4468,7 @@ async function exportBrandedPDF(clientId) {
     showNotification('Generating branded PDF…', 'info');
     const res = await fetch(`${API}/api/practitioner/clients/${clientId}/pdf`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` }
+      credentials: 'include'
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

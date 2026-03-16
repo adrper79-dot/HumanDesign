@@ -2,7 +2,7 @@
  * Security Fixes Tests — Deep Dive Audit Remediation
  *
  * Tests for the fixes applied during the 2026-07-17 deep dive audit:
- * - BL-RATELIMIT-001: Rate limiter fails closed when KV unavailable
+ * - BL-RATELIMIT-001: Rate limiter fails closed when DB backing is unavailable
  * - BL-ADMIN-001: Constant-time comparison for admin token
  * - BL-RACE-001: Atomic quota query structure
  * - MED-N+1-001: Batch SMS usage query exists in QUERIES registry
@@ -10,28 +10,37 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const { createQueryFnMock } = vi.hoisted(() => ({
+  createQueryFnMock: vi.fn(),
+}));
+
+vi.mock('../workers/src/db/queries.js', async () => {
+  const actual = await vi.importActual('../workers/src/db/queries.js');
+  return {
+    ...actual,
+    createQueryFn: createQueryFnMock,
+  };
+});
+
 import { rateLimit } from '../workers/src/middleware/rateLimit.js';
 import { QUERIES } from '../workers/src/db/queries.js';
 
-// ─── Rate Limiter: Fail-Closed Behavior ─────────────────────
+// ─── Rate Limiter: DB-backed Atomic Behavior ───────────────
 
-describe('rateLimit — fail-closed when KV unavailable', () => {
-  it('returns 503 when CACHE KV is not bound (undefined)', async () => {
+describe('rateLimit — DB-backed atomic counter', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns 503 when NEON_CONNECTION_STRING is not configured', async () => {
     const request = new Request('https://api.test/api/auth/login', { method: 'POST' });
-    const env = {}; // No CACHE binding
+    const env = {};
     const result = await rateLimit(request, env);
     expect(result).not.toBeNull();
     expect(result.status).toBe(503);
     const json = await result.json();
     expect(json.error).toMatch(/temporarily unavailable/i);
-  });
-
-  it('returns 503 when CACHE KV is null', async () => {
-    const request = new Request('https://api.test/api/auth/login', { method: 'POST' });
-    const env = { CACHE: null };
-    const result = await rateLimit(request, env);
-    expect(result).not.toBeNull();
-    expect(result.status).toBe(503);
   });
 
   it('includes Retry-After header on 503', async () => {
@@ -41,18 +50,35 @@ describe('rateLimit — fail-closed when KV unavailable', () => {
     expect(result.headers.get('Retry-After')).toBe('30');
   });
 
-  it('returns null (pass-through) when KV is available and within limit', async () => {
-    const mockKV = {
-      get: vi.fn().mockResolvedValue(null),
-      put: vi.fn().mockResolvedValue(undefined),
-    };
+  it('returns null (pass-through) when DB counter is within limit', async () => {
+    const query = vi.fn().mockResolvedValue({ rows: [{ count: 1, window_end: new Date().toISOString() }] });
+    createQueryFnMock.mockReturnValue(query);
+
     const request = new Request('https://api.test/api/auth/login', {
       method: 'POST',
       headers: { 'CF-Connecting-IP': '1.2.3.4' },
     });
-    const env = { CACHE: mockKV };
+    const env = { NEON_CONNECTION_STRING: 'postgresql://test' };
     const result = await rateLimit(request, env);
     expect(result).toBeNull();
+    expect(query).toHaveBeenCalledWith(
+      QUERIES.atomicWindowCounterIncrement,
+      expect.arrayContaining(['rl:1.2.3.4:/api/auth/login'])
+    );
+  });
+
+  it('returns 429 when DB counter exceeds the configured limit', async () => {
+    const query = vi.fn().mockResolvedValue({ rows: [{ count: 11, window_end: new Date().toISOString() }] });
+    createQueryFnMock.mockReturnValue(query);
+
+    const request = new Request('https://api.test/api/auth/login', {
+      method: 'POST',
+      headers: { 'CF-Connecting-IP': '1.2.3.4' },
+    });
+    const env = { NEON_CONNECTION_STRING: 'postgresql://test' };
+    const result = await rateLimit(request, env);
+    expect(result).not.toBeNull();
+    expect(result.status).toBe(429);
   });
 });
 
@@ -66,6 +92,13 @@ describe('QUERIES registry — new queries from deep dive audit', () => {
     expect(QUERIES.atomicQuotaCheckAndInsert).toMatch(/WITH/i);
     expect(QUERIES.atomicQuotaCheckAndInsert).toMatch(/INSERT INTO usage_records/i);
     expect(QUERIES.atomicQuotaCheckAndInsert).toMatch(/quota_exceeded/i);
+  });
+
+  it('has atomicWindowCounterIncrement query for fixed-window limits', () => {
+    expect(QUERIES.atomicWindowCounterIncrement).toBeDefined();
+    expect(QUERIES.atomicWindowCounterIncrement).toMatch(/INSERT INTO rate_limit_counters/i);
+    expect(QUERIES.atomicWindowCounterIncrement).toMatch(/ON CONFLICT/i);
+    expect(QUERIES.atomicWindowCounterIncrement).toMatch(/RETURNING count/i);
   });
 
   it('has updateTransitPassExpiry query (MED-INLINE-SQL)', () => {
@@ -95,22 +128,14 @@ describe('QUERIES registry — new queries from deep dive audit', () => {
 
 describe('rateLimit config — promo endpoint (MED-PROMO-RATE)', () => {
   it('returns 429 for /api/promo/validate when limit exceeded', async () => {
-    // Must compute the same window boundary as the rate limiter:
-    // windowStart = now - (now % windowSec)
-    const now = Math.floor(Date.now() / 1000);
-    const windowSec = 60; // matches RATE_LIMITS['/api/promo/validate'].windowSec
-    const windowStart = now - (now % windowSec);
-
-    const mockKV = {
-      get: vi.fn().mockResolvedValue({ count: 10, window: windowStart }),
-      put: vi.fn().mockResolvedValue(undefined),
-    };
+    const query = vi.fn().mockResolvedValue({ rows: [{ count: 11, window_end: new Date().toISOString() }] });
+    createQueryFnMock.mockReturnValue(query);
 
     const request = new Request('https://api.test/api/promo/validate', {
       method: 'POST',
       headers: { 'CF-Connecting-IP': '1.2.3.4' },
     });
-    const env = { CACHE: mockKV };
+    const env = { NEON_CONNECTION_STRING: 'postgresql://test' };
     const result = await rateLimit(request, env);
     expect(result).not.toBeNull();
     expect(result.status).toBe(429);

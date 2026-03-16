@@ -198,6 +198,22 @@ function buildEvent(error, context = {}) {
   return event;
 }
 
+export function captureSentryRequest(request) {
+  if (!request) return null;
+
+  const headers = new Map();
+  for (const key of ['content-type', 'accept', 'user-agent', 'referer', 'origin', 'cf-ipcountry']) {
+    const value = request.headers?.get?.(key);
+    if (value) headers.set(key, value);
+  }
+
+  return {
+    url: request.url,
+    method: request.method,
+    headers,
+  };
+}
+
 // ─── Stack Trace Parsing ─────────────────────────────────────────────
 
 function parseStackTrace(stack) {

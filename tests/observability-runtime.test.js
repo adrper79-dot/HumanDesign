@@ -3,11 +3,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const hoisted = vi.hoisted(() => ({
   handleCalculateMock: vi.fn(),
   handleGetChartMock: vi.fn(),
+  createQueryFnMock: vi.fn(),
   trackEventMock: vi.fn(() => Promise.resolve()),
   trackErrorMock: vi.fn(() => Promise.resolve()),
   aggregateDailyMock: vi.fn(() => Promise.resolve()),
+  captureRequestContextMock: vi.fn((request) => ({
+    url: request.url,
+    method: request.method,
+    headers: { 'content-type': request.headers.get('Content-Type') || '' },
+  })),
   captureExceptionMock: vi.fn(() => Promise.resolve()),
   captureMessageMock: vi.fn(() => Promise.resolve()),
+  captureSentryRequestMock: vi.fn((request) => ({
+    url: request.url,
+    method: request.method,
+    headers: new Map([['content-type', request.headers.get('Content-Type') || '']]),
+  })),
   initSentryMock: vi.fn(),
 }));
 
@@ -20,22 +31,35 @@ vi.mock('../workers/src/lib/analytics.js', () => ({
   trackEvent: hoisted.trackEventMock,
   trackError: hoisted.trackErrorMock,
   aggregateDaily: hoisted.aggregateDailyMock,
+  captureRequestContext: hoisted.captureRequestContextMock,
   EVENTS: { API_CALL: 'api_call', ERROR: 'error' },
 }));
 
 vi.mock('../workers/src/lib/sentry.js', () => ({
   initSentry: hoisted.initSentryMock,
+  captureSentryRequest: hoisted.captureSentryRequestMock,
 }));
+
+vi.mock('../workers/src/db/queries.js', async () => {
+  const actual = await vi.importActual('../workers/src/db/queries.js');
+  return {
+    ...actual,
+    createQueryFn: hoisted.createQueryFnMock,
+  };
+});
 
 describe('worker top-level error pipeline', () => {
   beforeEach(() => {
     hoisted.handleCalculateMock.mockReset();
     hoisted.handleGetChartMock.mockReset();
+    hoisted.createQueryFnMock.mockReset();
     hoisted.trackEventMock.mockClear();
     hoisted.trackErrorMock.mockClear();
     hoisted.aggregateDailyMock.mockClear();
+    hoisted.captureRequestContextMock.mockClear();
     hoisted.captureExceptionMock.mockClear();
     hoisted.captureMessageMock.mockClear();
+    hoisted.captureSentryRequestMock.mockClear();
     hoisted.initSentryMock.mockReset();
 
     hoisted.initSentryMock.mockReturnValue({
@@ -43,6 +67,15 @@ describe('worker top-level error pipeline', () => {
       captureMessage: hoisted.captureMessageMock,
       addBreadcrumb: vi.fn(),
     });
+
+    const query = vi.fn(async (sql) => {
+      if (typeof sql === 'string' && sql.includes('INSERT INTO rate_limit_counters')) {
+        return { rows: [{ count: 1, window_end: new Date().toISOString() }] };
+      }
+      return { rows: [] };
+    });
+    query.transaction = vi.fn();
+    hoisted.createQueryFnMock.mockReturnValue(query);
   });
 
   afterEach(() => {
@@ -67,10 +100,7 @@ describe('worker top-level error pipeline', () => {
 
     const env = {
       ENVIRONMENT: 'production',
-      CACHE: {
-        get: vi.fn(async () => null),
-        put: vi.fn(async () => {}),
-      },
+      NEON_CONNECTION_STRING: 'postgresql://test',
       SENTRY_DSN: 'https://public@example.ingest.sentry.io/123456',
     };
 
@@ -95,7 +125,10 @@ describe('worker top-level error pipeline', () => {
       expect.objectContaining({
         endpoint: '/api/chart/calculate',
         severity: 'high',
-        request,
+        requestContext: expect.objectContaining({
+          url: 'https://api.test/api/chart/calculate',
+          method: 'POST',
+        }),
       })
     );
 
@@ -103,7 +136,10 @@ describe('worker top-level error pipeline', () => {
     expect(hoisted.captureExceptionMock).toHaveBeenCalledWith(
       thrown,
       expect.objectContaining({
-        request,
+        request: expect.objectContaining({
+          url: 'https://api.test/api/chart/calculate',
+          method: 'POST',
+        }),
         user: undefined,
         tags: expect.objectContaining({ path: '/api/chart/calculate', method: 'POST' }),
       })

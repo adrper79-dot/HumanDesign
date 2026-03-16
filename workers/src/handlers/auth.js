@@ -47,6 +47,16 @@ function clearRefreshCookie() {
   return 'ps_refresh=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
 }
 
+// CISO-P0: Access token as HttpOnly cookie — prevents XSS token exfiltration.
+// Scoped to /api so it is only sent to the API origin (not served static assets).
+function buildAccessCookie(accessToken) {
+  return `ps_access=${accessToken}; HttpOnly; Secure; SameSite=None; Path=/api; Max-Age=${ACCESS_TOKEN_TTL}`;
+}
+
+function clearAccessCookie() {
+  return 'ps_access=; HttpOnly; Secure; SameSite=None; Path=/api; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+}
+
 /**
  * Read the ps_refresh cookie value from the Cookie request header.
  * Returns null if absent.
@@ -284,6 +294,7 @@ async function handleRegister(request, env) {
 
     const headers = new Headers({ 'Content-Type': 'application/json' });
     headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+    headers.append('Set-Cookie', buildAccessCookie(accessToken));
 
     return new Response(JSON.stringify({
       ok: true,
@@ -323,33 +334,31 @@ async function handleLogin(request, env) {
     );
   }
 
-  // Brute force protection via KV (COND-2)
-  const lockoutKey = `login_attempts:${email.toLowerCase()}`;
-  if (env.CACHE) {
-    const attemptsRaw = await env.CACHE.get(lockoutKey);
-    if (attemptsRaw) {
-      const attempts = parseInt(attemptsRaw, 10);
-      if (attempts >= MAX_LOGIN_ATTEMPTS) {
-        return Response.json(
-          { error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
-          { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
-        );
-      }
-    }
-  }
+  // P1-AUTH-002: Brute-force protection — DB-backed atomic counter (avoids KV read-modify-write race).
+  // Use a hash of the email as the counter key to avoid storing PII in the DB key column.
+  const lockoutKey = `login_fail:${await sha256(email.toLowerCase())}`;
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = Math.floor(now / LOCKOUT_DURATION) * LOCKOUT_DURATION;
+  const windowEnd = windowStart + LOCKOUT_DURATION;
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+    // Fast-path check: read current failure count before touching the DB further
+    const { rows: checkRows } = await query(QUERIES.getCounterValue, [lockoutKey]);
+    if ((checkRows[0]?.count || 0) >= MAX_LOGIN_ATTEMPTS) {
+      return Response.json(
+        { error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
+        { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
+      );
+    }
 
     const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
     const user = result.rows?.[0];
 
     if (!user) {
-      // Track failed attempt
-      if (env.CACHE) {
-        const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
-        await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
-      }
+      // Atomically increment — PostgreSQL count + 1 is an atomic update, not read-modify-write
+      await query(QUERIES.atomicWindowCounterIncrement, [lockoutKey, windowStart, windowEnd]);
       return Response.json(
         { error: 'Invalid email or password' },
         { status: 401 }
@@ -359,10 +368,14 @@ async function handleLogin(request, env) {
     // Verify password
     const valid = await verifyPassword(password, user.password_hash);
     if (!valid) {
-      // Track failed attempt
-      if (env.CACHE) {
-        const current = parseInt(await env.CACHE.get(lockoutKey) || '0', 10);
-        await env.CACHE.put(lockoutKey, String(current + 1), { expirationTtl: LOCKOUT_DURATION });
+      // Atomically increment failure counter; lock out if threshold crossed
+      const { rows: incrRows } = await query(QUERIES.atomicWindowCounterIncrement, [lockoutKey, windowStart, windowEnd]);
+      const newCount = incrRows[0]?.count || 1;
+      if (newCount >= MAX_LOGIN_ATTEMPTS) {
+        return Response.json(
+          { error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
+          { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
+        );
       }
       return Response.json(
         { error: 'Invalid email or password' },
@@ -370,10 +383,10 @@ async function handleLogin(request, env) {
       );
     }
 
-    // Successful password check — clear failed attempts
-    if (env.CACHE) {
-      await env.CACHE.delete(lockoutKey);
-    }
+    // Successful login — clear the failure counter
+    await query(QUERIES.resetRateLimitCounter, [lockoutKey]).catch(err => {
+      log.error('reset_login_counter_failed', { error: err.message });
+    });
 
     // 2FA gate: if user has TOTP enabled, issue a short-lived pending token
     // instead of full credentials. The client must then supply the TOTP code.
@@ -401,6 +414,7 @@ async function handleLogin(request, env) {
 
     const headers = new Headers({ 'Content-Type': 'application/json' });
     headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+    headers.append('Set-Cookie', buildAccessCookie(accessToken));
 
     return new Response(JSON.stringify({
       ok: true,
@@ -496,6 +510,7 @@ async function handleRefresh(request, env) {
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', buildRefreshCookie(newRefreshToken));
+  headers.append('Set-Cookie', buildAccessCookie(accessToken));
 
   return new Response(JSON.stringify({
     ok: true,
@@ -527,6 +542,7 @@ async function handleLogout(request, env) {
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', clearRefreshCookie());
+  headers.append('Set-Cookie', clearAccessCookie());
 
   return new Response(JSON.stringify({ ok: true, message: 'All sessions revoked' }), { headers });
 }
@@ -725,6 +741,12 @@ async function handleDeleteAccount(request, env) {
       log.error('stripe_cancellation_failed', { userId, error: stripeErr.message });
     }
   }
+
+  // P2-AUDIT-001: Persist an audit record before deleting the user row.
+  // Stores email hash (not plaintext) for GDPR Article 17 proof-of-deletion.
+  const emailHash = await sha256(user.email.toLowerCase().trim());
+  const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+  await query(QUERIES.insertAccountDeletionAudit, [userId, emailHash, user.tier || 'free', clientIp]);
 
   // Delete user and all associated data (cascading)
   await query(QUERIES.deleteUserAccount, [userId]);
@@ -1081,6 +1103,7 @@ async function handle2FAVerify(request, env) {
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+  headers.append('Set-Cookie', buildAccessCookie(accessToken));
 
   return new Response(JSON.stringify({
     ok: true,

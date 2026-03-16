@@ -118,8 +118,8 @@ export const FUNNELS = Object.freeze({
  * Infer device type from User-Agent header.
  * Lightweight — no full UA parser needed.
  */
-function getDeviceType(request) {
-  const ua = (request?.headers?.get('User-Agent') || '').toLowerCase();
+function getDeviceType(requestLike) {
+  const ua = (requestLike?.headers?.get?.('User-Agent') || requestLike?.headers?.['user-agent'] || '').toLowerCase();
   if (/mobile|android|iphone|ipod/.test(ua)) return 'mobile';
   if (/tablet|ipad/.test(ua)) return 'tablet';
   return 'desktop';
@@ -128,8 +128,26 @@ function getDeviceType(request) {
 /**
  * Extract country from Cloudflare headers (set automatically on CF Workers).
  */
-function getCountry(request) {
-  return request?.headers?.get('CF-IPCountry') || request?.cf?.country || null;
+function getCountry(requestLike) {
+  return requestLike?.headers?.get?.('CF-IPCountry') || requestLike?.headers?.['cf-ipcountry'] || requestLike?.cf?.country || null;
+}
+
+export function captureRequestContext(request) {
+  if (!request) return null;
+
+  const headerNames = ['user-agent', 'cf-ipcountry', 'accept', 'content-type', 'referer', 'origin'];
+  const headers = {};
+  for (const name of headerNames) {
+    const value = request.headers?.get?.(name);
+    if (value) headers[name] = value;
+  }
+
+  return {
+    url: request.url,
+    method: request.method,
+    headers,
+    cf: request.cf ? { country: request.cf.country || null } : undefined,
+  };
 }
 
 // ─── Core Track Function ─────────────────────────────────────────────
@@ -144,15 +162,17 @@ function getCountry(request) {
  * @param {string} [opts.sessionId] - Client-generated session ID
  * @param {object} [opts.properties] - Arbitrary key-value metadata
  * @param {Request} [opts.request] - Request object for device/geo extraction
+ * @param {object} [opts.requestContext] - Plain request snapshot safe for waitUntil/background tasks
  * @returns {Promise<void>}
  */
 export async function trackEvent(env, eventName, opts = {}) {
   try {
     if (!env?.NEON_CONNECTION_STRING) return;
 
-    const { userId = null, sessionId = null, properties = {}, request = null } = opts;
-    const deviceType = request ? getDeviceType(request) : null;
-    const country = request ? getCountry(request) : null;
+    const { userId = null, sessionId = null, properties = {}, request = null, requestContext = null } = opts;
+    const sourceRequest = requestContext || request;
+    const deviceType = sourceRequest ? getDeviceType(sourceRequest) : null;
+    const country = sourceRequest ? getCountry(sourceRequest) : null;
 
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     await query(

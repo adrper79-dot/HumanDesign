@@ -31,6 +31,30 @@ import { trackEvent, EVENTS } from '../lib/analytics.js';
 import { withCircuitBreaker } from '../lib/circuitBreaker.js';
 import { createLogger } from '../lib/logger.js';
 
+function buildRetentionOffer(subscriptionTier) {
+  if (subscriptionTier === 'practitioner') {
+    return {
+      type: 'downgrade',
+      targetTier: 'individual',
+      targetPrice: 19,
+      message: 'Consider downgrading to Individual ($19/mo) instead — you keep all your charts, AI history, and full transit access at 80% less.',
+      upgradeEndpoint: '/api/billing/upgrade',
+    };
+  }
+
+  if (subscriptionTier === 'individual') {
+    return {
+      type: 'downgrade',
+      targetTier: 'free',
+      targetPrice: 0,
+      message: 'Downgrade to Free to keep your chart data and 1 AI synthesis per month at no cost.',
+      upgradeEndpoint: '/api/billing/upgrade',
+    };
+  }
+
+  return null;
+}
+
 // Validate Stripe redirect URLs — must be https and on the same frontend origin.
 // Prevents open-redirect attacks on checkout/portal return URLs.
 function isSafeRedirectUrl(url, env) {
@@ -44,6 +68,18 @@ function isSafeRedirectUrl(url, env) {
   } catch {
     return false;
   }
+}
+
+async function findReusableOpenCheckoutSession(stripe, customerId, predicate) {
+  if (!customerId) return null;
+
+  const existingSessions = await stripe.checkout.sessions.list({
+    customer: customerId,
+    status: 'open',
+    limit: 10,
+  });
+
+  return existingSessions.data.find(predicate) || null;
 }
 
 // ─── Checkout Session ────────────────────────────────────────
@@ -129,14 +165,11 @@ export async function handleCheckout(request, env, ctx) {
     // creating a second one. This prevents duplicate sessions when the user
     // double-clicks or retries before the first session expires.
     if (customerId) {
-      const existingSessions = await stripe.checkout.sessions.list({
-        customer: customerId,
-        status: 'open',
-        limit: 5,
-      });
-      const dupe = existingSessions.data.find(s =>
-        s.line_items?.data?.some?.(li => li.price?.id === priceId) ||
-        s.metadata?.user_id === user.id && s.metadata?.tier === tier
+      const dupe = await findReusableOpenCheckoutSession(
+        stripe,
+        customerId,
+        (s) => s.line_items?.data?.some?.(li => li.price?.id === priceId)
+          || (s.metadata?.user_id === user.id && s.metadata?.tier === tier)
       );
       if (dupe) {
         log.info('checkout_session_reused', { userId: user.id, tier, sessionId: dupe.id });
@@ -211,7 +244,12 @@ export async function handleOneTimeCheckout(request, env, ctx) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const { product, successUrl, cancelUrl } = body;
 
     const products = getOneTimeProducts(env);
@@ -237,7 +275,17 @@ export async function handleOneTimeCheckout(request, env, ctx) {
       await query(QUERIES.updateUserStripeCustomerId, [customerId, user.id]);
     }
 
-    const session = await createOneTimeCheckoutSession(stripe, {
+    const dupe = await findReusableOpenCheckoutSession(
+      stripe,
+      customerId,
+      (session) => session.metadata?.user_id === user.id && session.metadata?.product === product
+    );
+    if (dupe) {
+      log.info('one_time_checkout_session_reused', { userId: user.id, product, sessionId: dupe.id });
+      return Response.json({ ok: true, sessionId: dupe.id, url: dupe.url });
+    }
+
+    const session = await withCircuitBreaker('stripe', () => createOneTimeCheckoutSession(stripe, {
       customerId,
       priceId: productConfig.priceId,
       successUrl: successUrl || `${env.FRONTEND_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -247,7 +295,7 @@ export async function handleOneTimeCheckout(request, env, ctx) {
         product,
         grants: JSON.stringify(productConfig.grants),
       }
-    });
+    }));
 
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
 
@@ -397,8 +445,29 @@ export async function handleCancelSubscription(request, env, ctx) {
       return Response.json({ error: 'No active subscription' }, { status: 400 });
     }
     
-    const body = await request.json();
-    const { immediately } = body;
+    let body = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+    const { immediately, previewOnly } = body;
+
+    const retentionOffer = buildRetentionOffer(subscription.tier);
+
+    if (previewOnly) {
+      return Response.json({
+        ok: true,
+        previewOnly: true,
+        subscription: {
+          id: subscription.id,
+          tier: subscription.tier,
+          status: subscription.status,
+          currentPeriodEnd: subscription.current_period_end,
+        },
+        retentionOffer,
+      });
+    }
     
     const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
     const canceledSubscription = await withCircuitBreaker('stripe', () => cancelSubscription(
@@ -421,25 +490,6 @@ export async function handleCancelSubscription(request, env, ctx) {
 
     // CFO-008/PRAC-007: Retention offer — surfaces a downgrade-instead-of-cancel option.
     // The frontend / any API consumer can present this offer before the user fully churns.
-    let retentionOffer = null;
-    if (subscription.tier === 'practitioner') {
-      retentionOffer = {
-        type: 'downgrade',
-        targetTier: 'individual',
-        targetPrice: 19,
-        message: 'Consider downgrading to Individual ($19/mo) instead — you keep all your charts, AI history, and full transit access at 80% less.',
-        upgradeEndpoint: '/api/billing/upgrade',
-      };
-    } else if (subscription.tier === 'individual') {
-      retentionOffer = {
-        type: 'downgrade',
-        targetTier: 'free',
-        targetPrice: 0,
-        message: 'Downgrade to Free to keep your chart data and 1 AI synthesis per month at no cost.',
-        upgradeEndpoint: '/api/billing/upgrade',
-      };
-    }
-
     return Response.json({
       ok: true,
       message: immediately ? 'Subscription canceled immediately' : 'Subscription will cancel at period end',

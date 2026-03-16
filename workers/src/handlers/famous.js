@@ -76,7 +76,7 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
     await trackEvent(env, user.id, 'celebrity_compared', {
       matchesCount: matches.length,
       topMatch: matches[0]?.celebrity.name
-    }, user.tier);
+    }, user.tier, request._ctx);
     
     // Format response
     const response = {
@@ -117,7 +117,7 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
  * GET /api/compare/celebrities/:id
  * Get detailed match information for specific celebrity
  */
-export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId) {
+export async function handleGetCelebrityMatchById(request, env, celebrityId) {
   try {
     // P2-BIZ-018: Validate celebrity ID format (UUID or short slug, max 50 chars)
     if (!celebrityId || celebrityId.length > 50) {
@@ -176,7 +176,7 @@ export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId
       celebrityId,
       celebrityName: match.celebrity.name,
       similarity: match.similarity.percentage
-    }, user.tier);
+    }, user.tier, request._ctx);
     
     return new Response(JSON.stringify({
       ok: true,
@@ -206,10 +206,27 @@ export async function handleGetCelebrityMatchById(request, env, ctx, celebrityId
 }
 
 /**
+ * GET /api/compare/categories
+ * List all valid celebrity categories (no auth required - public endpoint)
+ */
+export async function handleGetCategories(request, env, ctx) {
+  const categories = celebsData.metadata.categories;
+  const counts = {};
+  for (const c of celebsData.celebrities) {
+    counts[c.category] = (counts[c.category] || 0) + 1;
+  }
+  return Response.json({
+    ok: true,
+    categories: categories.map(cat => ({ name: cat, count: counts[cat] || 0 })),
+    total: categories.length
+  });
+}
+
+/**
  * GET /api/compare/celebrities/category/:category
  * Get all celebrities in a category (no auth required - public endpoint)
  */
-export async function handleGetCelebritiesByCategory(request, env, ctx, category) {
+export async function handleGetCelebritiesByCategory(request, env, category) {
   try {
     const celebrities = getCelebritiesByCategory(category);
     

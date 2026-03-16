@@ -354,7 +354,7 @@ export async function handleSyncClients(request, env, ctx) {
  * POST /api/notion/export/profile/:id
  * Export profile to Notion page
  */
-export async function handleExportProfile(request, env, ctx, profileId) {
+export async function handleExportProfile(request, env, profileId) {
   try {
     const user = await getUserFromRequest(request, env);
     if (!user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
