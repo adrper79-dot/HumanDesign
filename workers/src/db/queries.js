@@ -2296,5 +2296,19 @@ export const QUERIES = {
     ORDER BY s.updated_at ASC
     LIMIT 100
   `,
+
+  // ─── Referral System (Phase 2A/2D) ───────────────────────
+
+  // Safe fallback — referral earnings tracking is a future sprint.
+  // Returns zero counts until subscription_credits table is built.
+  getPractitionerReferralStats: `
+    SELECT 0::int as referral_count, 0::numeric as earnings_this_month
+  `,
+
+  recordReferralSignup: `
+    INSERT INTO referral_signups (user_id, practitioner_id, created_at)
+    VALUES ($1, $2, NOW())
+    ON CONFLICT (user_id) DO NOTHING
+  `,
 };
 

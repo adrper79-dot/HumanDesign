@@ -305,6 +305,23 @@ async function handleRegister(request, env) {
       });
     }
 
+    // Phase 2D: After successful registration, capture practitioner referral
+    const refSlug = typeof body.ref === 'string' ? body.ref.trim().toLowerCase() : null;
+    if (refSlug && /^[a-z0-9-]+$/.test(refSlug) && env.NEON_CONNECTION_STRING) {
+      // Store the referral association asynchronously (non-fatal)
+      (async () => {
+        try {
+          const refResult = await query(QUERIES.getPractitionerBySlug, [refSlug]);
+          const practitioner = refResult?.rows?.[0];
+          if (practitioner) {
+            await query(QUERIES.recordReferralSignup, [userId, practitioner.id]);
+          }
+        } catch (err) {
+          console.error('[auth] referral capture failed:', err.message);
+        }
+      })();
+    }
+
     const headers = new Headers({ 'Content-Type': 'application/json' });
     headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
     headers.append('Set-Cookie', buildAccessCookie(accessToken));

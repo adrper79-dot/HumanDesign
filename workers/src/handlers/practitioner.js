@@ -503,6 +503,55 @@ async function handleRemoveClient(userId, clientId, query) {
   return Response.json({ ok: true, message: 'Client removed from roster' });
 }
 
+/**
+ * GET /api/practitioner/referral-link
+ * Returns the practitioner's unique referral URL.
+ * Requires practitioner tier.
+ */
+export async function handleGetReferralLink(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  // Get practitioner's directory slug
+  const result = await query(QUERIES.getPractitionerDirectoryProfile, [userId]);
+  const profile = result?.rows?.[0];
+
+  if (!profile) {
+    return Response.json({ error: 'Practitioner profile not found. Complete your directory profile first.' }, { status: 404 });
+  }
+
+  const slug = profile.slug;
+  if (!slug) {
+    return Response.json({ error: 'Set up your directory profile to get a referral link.' }, { status: 400 });
+  }
+
+  const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
+  const referralUrl = `${frontendUrl}/?ref=${encodeURIComponent(slug)}`;
+
+  // Get referral stats (best effort)
+  let referralCount = 0;
+  let referralEarnings = 0;
+  try {
+    const statsResult = await query(QUERIES.getPractitionerReferralStats, [userId]);
+    if (statsResult?.rows?.[0]) {
+      referralCount = parseInt(statsResult.rows[0].referral_count || 0);
+      referralEarnings = parseFloat(statsResult.rows[0].earnings_this_month || 0);
+    }
+  } catch { /* non-fatal */ }
+
+  return Response.json({
+    ok: true,
+    referralUrl,
+    slug,
+    stats: {
+      referralCount,
+      earningsThisMonth: referralEarnings
+    }
+  });
+}
+
 export async function handleGetInvitationDetails(request, env) {
   const url = new URL(request.url);
   const token = url.searchParams.get('token');

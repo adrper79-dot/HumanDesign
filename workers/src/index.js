@@ -140,7 +140,7 @@ import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
 import { handleOAuthSocial, handleOAuthExchange } from './handlers/oauthSocial.js';
 import { handlePdfExport, handleBrandedPdfExport } from './handlers/pdf.js';
-import { handlePractitioner, handleGetInvitationDetails, handleAcceptInvitation } from './handlers/practitioner.js';
+import { handlePractitioner, handleGetInvitationDetails, handleAcceptInvitation, handleGetReferralLink } from './handlers/practitioner.js';
 import { handleAgency } from './handlers/agency.js';
 import {
   handleListDirectory,
@@ -406,6 +406,8 @@ const EXACT_ROUTES = new Map([
   // Practitioner Directory Profile (auth)
   ['GET /api/practitioner/directory-profile',  handleGetDirectoryProfile],
   ['PUT /api/practitioner/directory-profile',  handleUpdateDirectoryProfile],
+  // Practitioner Referral Link (auth)
+  ['GET /api/practitioner/referral-link',      handleGetReferralLink],
   // Email marketing unsubscribe (public, CAN-SPAM compliance — AUDIT-SEC-005)
   ['POST /api/email/unsubscribe',     async (request, env) => {
     const body = await request.json().catch(() => null);
