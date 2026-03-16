@@ -2322,12 +2322,20 @@ function saveBirthData() {
   } catch (e) { window.DEBUG && console.warn('[BirthData] Save failed:', e); }
 }
 
+const BIRTH_DATA_TTL_MS = 30 * 24 * 60 * 60 * 1000; // SYS-047: 30-day TTL
+
 function restoreBirthData() {
   try {
     const raw = localStorage.getItem(BIRTH_DATA_KEY);
     if (!raw) return false;
     const data = JSON.parse(raw);
     if (!data.date || !data.time) return false;
+    // SYS-047: Expire stale birth coordinates after 30 days.
+    if (data.savedAt && (Date.now() - data.savedAt) > BIRTH_DATA_TTL_MS) {
+      localStorage.removeItem(BIRTH_DATA_KEY);
+      if (window.DEBUG) console.log('[BirthData] Expired — removed from localStorage');
+      return false;
+    }
 
     // Restore into ALL forms that share birth fields: chart (c-*), profile (p-*), composite A (comp-*A)
     const prefixes = ['c', 'p'];
