@@ -79,7 +79,15 @@ jobs:
           git add audits/
           # Only commit if there are changes
           git diff --staged --quiet || git commit -m "audit: $(date +%Y-%m-%d) automated run [skip ci]"
-          git push || echo "Nothing to push"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push audit results
+        if: always()
+        run: |
+          BRANCH="audits/$(date +%Y-%m-%d)"
+          git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+          git push origin "$BRANCH"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -143,6 +143,30 @@ npx wrangler secret delete SECRET_NAME
 
 ---
 
+### 7a. `TELNYX_PUBLIC_KEY`
+
+| Field | Value |
+|-------|-------|
+| **Service** | [Telnyx](https://portal.telnyx.com) — Webhook signature verification |
+| **Used by** | `workers/src/handlers/sms.js` (Telnyx webhook signature verification) |
+| **Format** | Ed25519 public key string from Telnyx portal |
+| **Where to rotate** | Telnyx Portal → API Keys → Public Key |
+| **wrangler command** | `npx wrangler secret put TELNYX_PUBLIC_KEY` |
+
+---
+
+### 7b. `TELNYX_CONNECTION_ID`
+
+| Field | Value |
+|-------|-------|
+| **Service** | [Telnyx](https://portal.telnyx.com) — Outbound SMS connection |
+| **Used by** | `workers/src/handlers/sms.js` (outbound SMS routing) |
+| **Format** | Numeric connection ID string from Telnyx portal |
+| **Where to rotate** | Telnyx Portal → Messaging → Connections → your connection ID |
+| **wrangler command** | `npx wrangler secret put TELNYX_CONNECTION_ID` |
+
+---
+
 ### 8. `AI_GATEWAY_URL`
 
 | Field | Value |
@@ -225,6 +249,8 @@ These are infrastructure bindings, not secrets.
 □ Set STRIPE_WEBHOOK_SECRET:       npx wrangler secret put STRIPE_WEBHOOK_SECRET
 □ Set TELNYX_API_KEY:              npx wrangler secret put TELNYX_API_KEY
 □ Set TELNYX_PHONE_NUMBER:         npx wrangler secret put TELNYX_PHONE_NUMBER
+□ Set TELNYX_PUBLIC_KEY:           npx wrangler secret put TELNYX_PUBLIC_KEY
+□ Set TELNYX_CONNECTION_ID:        npx wrangler secret put TELNYX_CONNECTION_ID
 □ Set AI_GATEWAY_URL:              npx wrangler secret put AI_GATEWAY_URL
 □ Set NOTION_CLIENT_ID:            npx wrangler secret put NOTION_CLIENT_ID
 □ Set NOTION_CLIENT_SECRET:        npx wrangler secret put NOTION_CLIENT_SECRET

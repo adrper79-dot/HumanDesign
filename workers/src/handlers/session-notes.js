@@ -14,6 +14,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
 
 async function getPractitionerClientAccess(query, userId, clientId) {
   const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
@@ -38,16 +39,36 @@ export async function handleListNotes(request, env, clientId) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const log = request._log || createLogger(request._reqId || 'session-notes');
 
   const access = await getPractitionerClientAccess(query, userId, clientId);
   if (access.error) return access.error;
 
-  const notes = await query(QUERIES.listSessionNotes, [
-    access.practitionerId,
-    clientId,
-  ]);
+  // SYS-022: Search and date filter support
+  const url = new URL(request.url);
+  const search = url.searchParams.get('search') || '';
+  const fromDate = url.searchParams.get('fromDate') || '';
+  const toDate = url.searchParams.get('toDate') || '';
+  const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10), 200);
+  const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
-  return Response.json({ ok: true, notes: notes.rows });
+  try {
+    const notes = await query(QUERIES.listSessionNotes, [
+      access.practitionerId,
+      clientId,
+      search,
+      fromDate,
+      toDate,
+      limit,
+      offset,
+    ]);
+
+    log.info({ action: 'session_notes_listed', practitionerId: access.practitionerId, clientId });
+    return Response.json({ ok: true, notes: notes.rows });
+  } catch (err) {
+    log.error({ action: 'session_notes_list_failed', error: err.message });
+    throw err;
+  }
 }
 
 /**
@@ -57,6 +78,7 @@ export async function handleCreateNote(request, env, clientId) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const log = request._log || createLogger(request._reqId || 'session-notes');
 
   const access = await getPractitionerClientAccess(query, userId, clientId);
   if (access.error) return access.error;
@@ -78,16 +100,22 @@ export async function handleCreateNote(request, env, clientId) {
   const transitSnapshot = body.transit_snapshot || null;
   const sessionDate = body.session_date || new Date().toISOString().split('T')[0];
 
-  const result = await query(QUERIES.createSessionNote, [
-    access.practitionerId,
-    clientId,
-    content,
-    shareWithAi,
-    transitSnapshot ? JSON.stringify(transitSnapshot) : null,
-    sessionDate,
-  ]);
+  try {
+    const result = await query(QUERIES.createSessionNote, [
+      access.practitionerId,
+      clientId,
+      content,
+      shareWithAi,
+      transitSnapshot ? JSON.stringify(transitSnapshot) : null,
+      sessionDate,
+    ]);
 
-  return Response.json({ ok: true, note: result.rows[0] }, { status: 201 });
+    log.info({ action: 'session_note_created', practitionerId: access.practitionerId, clientId });
+    return Response.json({ ok: true, note: result.rows[0] }, { status: 201 });
+  } catch (err) {
+    log.error({ action: 'session_note_create_failed', error: err.message });
+    throw err;
+  }
 }
 
 /**
@@ -97,6 +125,7 @@ export async function handleUpdateNote(request, env, noteId) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const log = request._log || createLogger(request._reqId || 'session-notes');
 
   const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (practitioner.rows.length === 0) {
@@ -114,19 +143,26 @@ export async function handleUpdateNote(request, env, noteId) {
   }
 
   const shareWithAi = body.share_with_ai === true;
+  const practitionerId = practitioner.rows[0].id;
 
-  const result = await query(QUERIES.updateSessionNote, [
-    noteId,
-    content,
-    shareWithAi,
-    practitioner.rows[0].id,
-  ]);
+  try {
+    const result = await query(QUERIES.updateSessionNote, [
+      noteId,
+      content,
+      shareWithAi,
+      practitionerId,
+    ]);
 
-  if (result.rows.length === 0) {
-    return Response.json({ error: 'Note not found' }, { status: 404 });
+    if (result.rows.length === 0) {
+      return Response.json({ error: 'Note not found' }, { status: 404 });
+    }
+
+    log.info({ action: 'session_note_updated', noteId, practitionerId });
+    return Response.json({ ok: true, note: result.rows[0] });
+  } catch (err) {
+    log.error({ action: 'session_note_update_failed', error: err.message });
+    throw err;
   }
-
-  return Response.json({ ok: true, note: result.rows[0] });
 }
 
 /**
@@ -136,18 +172,27 @@ export async function handleDeleteNote(request, env, noteId) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const log = request._log || createLogger(request._reqId || 'session-notes');
 
   const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (practitioner.rows.length === 0) {
     return Response.json({ error: 'Not registered as practitioner' }, { status: 403 });
   }
 
-  const result = await query(QUERIES.deleteSessionNote, [noteId, practitioner.rows[0].id]);
-  if (!result?.rowCount) {
-    return Response.json({ error: 'Note not found' }, { status: 404 });
-  }
+  const practitionerId = practitioner.rows[0].id;
 
-  return Response.json({ ok: true });
+  try {
+    const result = await query(QUERIES.deleteSessionNote, [noteId, practitionerId]);
+    if (!result?.rowCount) {
+      return Response.json({ error: 'Note not found' }, { status: 404 });
+    }
+
+    log.info({ action: 'session_note_deleted', noteId, practitionerId });
+    return Response.json({ ok: true });
+  } catch (err) {
+    log.error({ action: 'session_note_delete_failed', error: err.message });
+    throw err;
+  }
 }
 
 // ─── Per-Client AI Context ───────────────────────────────────
@@ -159,19 +204,26 @@ export async function handleGetAIContext(request, env, clientId) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const log = request._log || createLogger(request._reqId || 'session-notes');
 
   const access = await getPractitionerClientAccess(query, userId, clientId);
   if (access.error) return access.error;
 
-  const result = await query(QUERIES.getClientAIContext, [
-    access.practitionerId,
-    clientId,
-  ]);
+  try {
+    const result = await query(QUERIES.getClientAIContext, [
+      access.practitionerId,
+      clientId,
+    ]);
 
-  return Response.json({
-    ok: true,
-    ai_context: result.rows[0]?.ai_context || '',
-  });
+    log.info({ action: 'ai_context_fetched', practitionerId: access.practitionerId, clientId });
+    return Response.json({
+      ok: true,
+      ai_context: result.rows[0]?.ai_context || '',
+    });
+  } catch (err) {
+    log.error({ action: 'ai_context_fetch_failed', error: err.message });
+    throw err;
+  }
 }
 
 /**
@@ -181,6 +233,7 @@ export async function handleUpdateAIContext(request, env, clientId) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const log = request._log || createLogger(request._reqId || 'session-notes');
 
   const access = await getPractitionerClientAccess(query, userId, clientId);
   if (access.error) return access.error;
@@ -192,11 +245,17 @@ export async function handleUpdateAIContext(request, env, clientId) {
 
   const aiContext = String(body.ai_context || '').trim().substring(0, 2000);
 
-  await query(QUERIES.updateClientAIContext, [
-    access.practitionerId,
-    clientId,
-    aiContext,
-  ]);
+  try {
+    await query(QUERIES.updateClientAIContext, [
+      access.practitionerId,
+      clientId,
+      aiContext,
+    ]);
 
-  return Response.json({ ok: true, ai_context: aiContext });
+    log.info({ action: 'ai_context_updated', practitionerId: access.practitionerId, clientId });
+    return Response.json({ ok: true, ai_context: aiContext });
+  } catch (err) {
+    log.error({ action: 'ai_context_update_failed', error: err.message });
+    throw err;
+  }
 }

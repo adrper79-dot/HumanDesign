@@ -300,7 +300,7 @@ These are gaps identified by comparing current build against best-in-class apps 
 | **In-app notification feed** | ✅ Done | Notification bell in header + slide-out drawer with `GET /api/push/history` integration |
 | **Search across saved profiles** | ✅ Done | `GET /api/profile/search?q=` endpoint with ILIKE search + debounced frontend search input |
 | **Chart versioning / diff** | ✅ Done | Charts table uses INSERT (not UPSERT) — all versions preserved. Chart history UI + `loadChartById` added |
-| **Two-factor authentication (2FA)** | 🔶 Medium | No TOTP/SMS 2FA option. Only email+password or social OAuth |
+| **Two-factor authentication (2FA)** | ✅ Done | TOTP 2FA: setup, enable, disable, verify endpoints + client-side QR code generation (qr.js). No SMS 2FA |
 | **User preference settings page** | 🔶 Medium | Only quiet hours/timezone stored. No notification preferences UI, theme toggle persistence, or language selection |
 | **Stripe Customer Portal custom branding** | 🔶 Low | Portal is Stripe-hosted with default branding |
 | **Terms of Service / Privacy Policy** | ✅ | `frontend/terms.html` and `frontend/privacy.html` exist and are linked in footer and auth form |

@@ -537,6 +537,86 @@ export async function sendUpgradeNudgeEmail(userEmail, userName, apiKey, fromEma
 }
 
 /**
+ * Trial Ending Reminder — sent at day 5 of a 7-day trial (SYS-017)
+ */
+export async function sendTrialEndingEmail(userEmail, userName, daysLeft, tierName, apiKey, fromEmail) {
+  const subject = `Your Prime Self trial ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+  const html = `<!DOCTYPE html><html><head><style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
+.header{text-align:center;padding:20px 0;border-bottom:2px solid #C9A84C}.logo{font-size:24px;font-weight:700;color:#C9A84C}
+.content{padding:30px 0}.cta{background:#C9A84C;color:white;padding:14px 32px;text-decoration:none;border-radius:6px;display:inline-block;margin:20px 0;font-weight:600}
+.footer{border-top:1px solid #eee;padding-top:20px;margin-top:30px;font-size:12px;color:#666}
+</style></head><body>
+<div class="header"><div class="logo">Prime Self</div></div>
+<div class="content">
+<h2>Your trial ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}</h2>
+<p>Hi ${userName || 'there'},</p>
+<p>Your free trial of Prime Self ${tierName} ends in <strong>${daysLeft} day${daysLeft === 1 ? '' : 's'}</strong>. After that, you'll lose access to your practitioner tools and client roster.</p>
+<p>To keep everything running smoothly, add your payment details now — it takes less than 2 minutes.</p>
+<a href="https://selfprime.net/billing" class="cta">Continue with ${tierName} →</a>
+<p>Questions? Just reply to this email.</p>
+<p>— The Prime Self Team</p>
+</div>
+<div class="footer"><p><a href="{{unsubscribe_url}}">Unsubscribe</a></p></div>
+</body></html>`;
+  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Subscription Renewal Confirmation (SYS-017)
+ */
+export async function sendRenewalConfirmationEmail(userEmail, userName, tierName, amount, nextRenewalDate, apiKey, fromEmail) {
+  const subject = `Your Prime Self subscription has renewed`;
+  const html = `<!DOCTYPE html><html><head><style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
+.header{text-align:center;padding:20px 0;border-bottom:2px solid #C9A84C}.logo{font-size:24px;font-weight:700;color:#C9A84C}
+.content{padding:30px 0}.detail-box{background:#f8f8f8;border-radius:8px;padding:16px;margin:16px 0}
+.footer{border-top:1px solid #eee;padding-top:20px;margin-top:30px;font-size:12px;color:#666}
+</style></head><body>
+<div class="header"><div class="logo">Prime Self</div></div>
+<div class="content">
+<h2>Subscription renewed ✓</h2>
+<p>Hi ${userName || 'there'},</p>
+<p>Your Prime Self ${tierName} subscription has been renewed successfully.</p>
+<div class="detail-box">
+  <p><strong>Plan:</strong> ${tierName}</p>
+  <p><strong>Amount charged:</strong> $${(amount / 100).toFixed(2)}</p>
+  <p><strong>Next renewal:</strong> ${nextRenewalDate}</p>
+</div>
+<p>You can manage your subscription at any time from your billing dashboard.</p>
+<p>— The Prime Self Team</p>
+</div>
+<div class="footer"><p><a href="{{unsubscribe_url}}">Unsubscribe</a></p></div>
+</body></html>`;
+  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Refund Issued Notification (SYS-017)
+ */
+export async function sendRefundIssuedEmail(userEmail, userName, amount, currency, apiKey, fromEmail) {
+  const subject = `Your Prime Self refund has been processed`;
+  const html = `<!DOCTYPE html><html><head><style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
+.header{text-align:center;padding:20px 0;border-bottom:2px solid #C9A84C}.logo{font-size:24px;font-weight:700;color:#C9A84C}
+.content{padding:30px 0}
+.footer{border-top:1px solid #eee;padding-top:20px;margin-top:30px;font-size:12px;color:#666}
+</style></head><body>
+<div class="header"><div class="logo">Prime Self</div></div>
+<div class="content">
+<h2>Refund processed</h2>
+<p>Hi ${userName || 'there'},</p>
+<p>We've processed a refund of <strong>${currency.toUpperCase()} $${(amount / 100).toFixed(2)}</strong> to your original payment method.</p>
+<p>Refunds typically appear within 5–10 business days depending on your bank.</p>
+<p>If you have any questions, reply to this email and we'll help right away.</p>
+<p>— The Prime Self Team</p>
+</div>
+<div class="footer"><p><a href="{{unsubscribe_url}}">Unsubscribe</a></p></div>
+</body></html>`;
+  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
  * Strip HTML tags for plain text fallback
  * @param {string} html - HTML content
  * @returns {string} Plain text

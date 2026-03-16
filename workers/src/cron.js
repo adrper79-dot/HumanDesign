@@ -26,6 +26,7 @@ import { processWebhookRetries } from './lib/webhookDispatcher.js';
 import { sendNotificationToUser } from './handlers/push.js';
 import { evaluateUserAlerts } from './handlers/alerts.js';
 import {
+  sendEmail,
   sendWelcomeEmail2,
   sendWelcomeEmail3,
   sendWelcomeEmail4,
@@ -66,6 +67,17 @@ export async function runDailyTransitCron(env) {
   log.info('transit_snapshot_start', { date: `${year}-${month}-${day}` });
 
   try {
+    // ─── Step 0: Purge expired rate-limit counters (SYS-003) ─
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+    try {
+      await withTimeout(query(QUERIES.purgeExpiredRateLimitCounters), 8000, 'purgeExpiredRateLimitCounters');
+      log.info('rate_limit_counters_purged');
+    } catch (purgeRlErr) {
+      log.error('rate_limit_purge_error', { error: purgeRlErr?.message });
+      // Non-critical — table growth is slow; retry next cron run
+    }
+
     // ─── Step 1: Calculate today's transit positions ─────
     const jdn = toJulianDay(year, month, day, hour, 0, 0);
     const positions = getAllPositions(jdn);
@@ -79,7 +91,6 @@ export async function runDailyTransitCron(env) {
     });
 
     // ─── Step 2: Store in database ──────────────────────
-    const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     await withTimeout(
       query(QUERIES.saveTransitSnapshot, [snapshotDate, positionsJson]),
@@ -88,32 +99,31 @@ export async function runDailyTransitCron(env) {
     log.info('transit_snapshot_saved', { snapshotDate });
 
     // ─── Step 3: Send digests to opted-in users ─────────
-    // BL-FIX: Use named query instead of SELECT * to avoid exposing password_hash in memory
+    let digestUserCount = 0, digestSent = 0, digestFailed = 0;
     await withTimeout((async () => {
     const usersResult = await query(
-      QUERIES.getSmsSubscribedUsers + ` AND birth_date IS NOT NULL`
+      QUERIES.getSmsSubscribedUsersWithBirthDate
     );
 
-    const users = usersResult.rows || [];
-    log.info('sms_digest_users', { count: users.length });
+    const smsUsers = usersResult.rows || [];
+    digestUserCount = smsUsers.length;
+    log.info('sms_digest_users', { count: smsUsers.length });
 
-    let sent = 0, failed = 0;
-
-    for (const user of users) {
+    for (const user of smsUsers) {
       try {
         const digest = await generateDigestForUser(user, env);
         await sendSMS(user.phone, digest, env);
-        sent++;
+        digestSent++;
 
         // Small delay between sends to avoid rate limiting
         await new Promise(r => setTimeout(r, 200));
       } catch (err) {
         log.error('digest_send_failed', { userId: user.id, error: err.message });
-        failed++;
+        digestFailed++;
       }
     }
 
-    log.info('digest_delivery_complete', { sent, failed });
+    log.info('digest_delivery_complete', { sent: digestSent, failed: digestFailed });
     })(), 45000, 'sms_digest');
 
     // ─── Step 4: Process webhook retries ────────────────
@@ -361,7 +371,49 @@ export async function runDailyTransitCron(env) {
       log.error('subscription_expiry_error', { error: expErr?.message });
     }
 
-    return { snapshotDate, userCount: users.length, sent, failed };
+    // ─── Step 10: Dunning — escalate past_due subscriptions ────────
+    try {
+      const { rows: pastDueSubs } = await withTimeout(
+        query(QUERIES.getPastDueSubscriptionsOlderThan, [7]),
+        10000, 'getPastDueSubscriptions'
+      );
+      log.info('dunning_check', { count: pastDueSubs.length });
+
+      for (const sub of pastDueSubs) {
+        try {
+          const daysPastDue = sub.days_past_due || 0;
+          if (daysPastDue >= 14) {
+            // 14+ days: downgrade to free
+            await query.transaction(async (q) => {
+              await q(QUERIES.updateUserTier, ['free', sub.user_id]);
+              await q(QUERIES.updateSubscriptionStatus, [sub.stripe_subscription_id, 'canceled']);
+            });
+            log.warn({ action: 'dunning_downgrade', userId: sub.user_id, daysPastDue });
+          } else if (env.RESEND_API_KEY && sub.email) {
+            // 7-13 days: send escalating reminder
+            const daysWord = daysPastDue === 7 ? 'one week' : `${daysPastDue} days`;
+            await sendEmail({
+              to: sub.email,
+              subject: `Action required: Your Prime Self payment is ${daysWord} overdue`,
+              html: `<!DOCTYPE html><html><body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+<h2>Your payment needs attention</h2>
+<p>Your Prime Self subscription payment has been past due for ${daysWord}. Your access will be suspended in ${14 - daysPastDue} days if payment is not resolved.</p>
+<p><a href="https://selfprime.net/billing" style="background:#C9A84C;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block">Update Payment Method →</a></p>
+<p>Questions? Reply to this email.</p>
+</body></html>`
+            }, env.RESEND_API_KEY, env.FROM_EMAIL || 'Prime Self <hello@primeself.app>');
+            log.info({ action: 'dunning_reminder_sent', userId: sub.user_id, daysPastDue });
+          }
+        } catch (dunningErr) {
+          log.error({ action: 'dunning_step_failed', userId: sub.user_id, error: dunningErr.message });
+        }
+      }
+      log.info('dunning_complete', { processed: pastDueSubs.length });
+    } catch (dunningErr) {
+      log.error('dunning_error', { error: dunningErr?.message });
+    }
+
+    return { snapshotDate, userCount: digestUserCount, sent: digestSent, failed: digestFailed };
 
   } catch (err) {
     log.error('cron_fatal_error', { error: err?.message, stack: err?.stack?.split('\n').slice(0,3).join(' | ') });

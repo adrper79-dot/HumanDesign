@@ -263,10 +263,11 @@ async function begin2FASetup() {
   try {
     const res = await apiFetch('/api/auth/2fa/setup');
     if (res.error) { body.innerHTML = `<p style="color:var(--color-error)">${res.error}</p>`; return; }
+    var qrSrc = (typeof QRCode !== 'undefined') ? QRCode.toDataURL(res.otpauth_url, 4) : '';
     body.innerHTML = `
       <p>Scan this QR code with your authenticator app, or enter the secret manually.</p>
       <div style="text-align:center;margin:1rem 0">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(res.otpauth_url)}" alt="QR code" width="180" height="180" style="border-radius:6px">
+        ${qrSrc ? '<img src="' + qrSrc + '" alt="QR code" width="180" height="180" style="border-radius:6px;image-rendering:pixelated">' : '<p style="color:var(--color-error)">QR code unavailable — enter the manual key below.</p>'}
       </div>
       <p style="font-size:0.8rem;word-break:break-all;background:var(--surface-2);padding:0.5rem 0.75rem;border-radius:4px;margin-bottom:1rem"><strong>Manual key:</strong> ${res.secret}</p>
       <label class="auth-label" for="setup2FACode">Enter the 6-digit code to confirm</label>

@@ -15,7 +15,7 @@
 import { createStripeClient, verifyWebhook } from '../lib/stripe.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { markReferralAsConverted } from './referrals.js';
-import { sendEmail, sendSubscriptionConfirmationEmail } from '../lib/email.js';
+import { sendEmail, sendSubscriptionConfirmationEmail, sendRenewalConfirmationEmail } from '../lib/email.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
 import { createLogger } from '../lib/logger.js';
 
@@ -269,6 +269,14 @@ export async function handleStripeWebhook(request, env) {
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
+        await handleSubscriptionUpdated(event, query, env, log);
+        break;
+
+      case 'customer.subscription.paused':
+        await handleSubscriptionPaused(event, query, log);
+        break;
+
+      case 'customer.subscription.resumed':
         await handleSubscriptionUpdated(event, query, env, log);
         break;
 
@@ -602,6 +610,31 @@ async function handleSubscriptionDeleted(event, query, log) {
 }
 
 /**
+ * Handle customer.subscription.paused
+ * Sets status to paused and downgrades tier to free until resumed.
+ */
+async function handleSubscriptionPaused(event, query, log) {
+  const subscription = event.data.object;
+  const subscriptionId = subscription.id;
+
+  const result = await query(QUERIES.getSubscriptionByStripeSubscriptionId, [subscriptionId]);
+  if (result.rows.length === 0) {
+    log.error({ action: 'subscription_pause_not_found', subscriptionId });
+    return;
+  }
+
+  const userId = result.rows[0].user_id;
+
+  await query.transaction(async (q) => {
+    await q(QUERIES.updateSubscriptionStatus, [subscriptionId, 'paused']);
+    await q(QUERIES.updateUserTier, ['free', userId]);
+  });
+
+  log.info({ action: 'subscription_paused', userId, subscriptionId });
+  await finalizeEventRecord(query, event, { subscriptionId, status: 'paused' });
+}
+
+/**
  * Handle invoice.payment_succeeded
  */
 async function handlePaymentSucceeded(event, query, stripe, env, log) {
@@ -784,7 +817,10 @@ async function handleInvoicePaid(event, query, stripe, env, log) {
 
       if (referrer?.referrer_stripe_id) {
         const shareRate = 0.25;
-        const creditAmount = Math.floor(amountPaid * shareRate);
+        const rawCredit = Math.floor(amountPaid * shareRate);
+        // Agency tier: cap credit at 50% of subscription cost (HD_UPDATES3 spec)
+        const maxCredit = Math.floor(amountPaid * 0.50);
+        const creditAmount = Math.min(rawCredit, maxCredit);
 
         if (creditAmount > 0) {
           const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
@@ -802,6 +838,19 @@ async function handleInvoicePaid(event, query, stripe, env, log) {
       // Don't fail the invoice handler for referral credit errors
       log.warn({ action: 'referral_share_error', error: refErr.message });
     }
+  }
+
+  // SYS-017: Send renewal confirmation email (fire-and-forget)
+  if (env.RESEND_API_KEY && subscriptionRow.user_email) {
+    sendRenewalConfirmationEmail(
+      subscriptionRow.user_email,
+      null,
+      subscriptionRow.tier,
+      amountPaid,
+      new Date(Date.now() + 30 * 86400000).toLocaleDateString(),
+      env.RESEND_API_KEY,
+      env.FROM_EMAIL
+    ).catch(() => {});
   }
 }
 

@@ -150,10 +150,16 @@ const SCHEMAS = new Map([
 
   ['POST /api/billing/upgrade', z.object({
     tier: z.enum(['individual', 'practitioner', 'agency']),
+    billingPeriod: z.enum(['monthly', 'annual']).optional(),
   })],
 
   ['POST /api/billing/portal', z.object({
     returnUrl: z.string().url().max(2048).optional(),
+  })],
+
+  ['POST /api/billing/cancel', z.object({
+    immediately: z.boolean().optional(),
+    previewOnly: z.boolean().optional(),
   })],
 
   // ─── Referrals ───────────────
@@ -305,6 +311,19 @@ const PATTERN_SCHEMAS = [
     eventDescription: z.string().max(10000).optional(),
     eventType: z.enum(['career', 'relationship', 'health', 'spiritual', 'financial', 'family', 'other']).optional(),
     significance: z.enum(['major', 'moderate', 'minor']).optional(),
+  })],
+
+  [/^\/api\/practitioner\/clients\/[^/]+\/notes$/, 'POST', z.object({
+    content: z.string().min(1).max(5000),
+    session_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD').optional(),
+    share_with_ai: z.boolean().optional(),
+    transit_snapshot: z.record(z.unknown()).optional(),
+  })],
+
+  [/^\/api\/practitioner\/notes\/[^/]+$/, 'PUT', z.object({
+    content: z.string().min(1).max(5000),
+    session_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    share_with_ai: z.boolean().optional(),
   })],
 ];
 

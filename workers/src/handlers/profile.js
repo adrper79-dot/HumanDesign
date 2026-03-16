@@ -60,6 +60,14 @@ export async function handleProfile(request, env) {
     }
   }
 
+  // SYS-005: Gate LLM usage behind verified email to prevent abuse
+  if (!request._user?.email_verified) {
+    return Response.json(
+      { error: 'Please verify your email address before generating profiles.', code: 'EMAIL_NOT_VERIFIED' },
+      { status: 403 }
+    );
+  }
+
   const { birthDate, birthTime, birthTimezone, lat, lng, question, systemPreferences } = body;
 
   // Convert to UTC using shared utility

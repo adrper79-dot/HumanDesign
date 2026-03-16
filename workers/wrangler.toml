@@ -80,6 +80,8 @@ crons = ["0 6 * * *"]
 # GROQ_API_KEY
 # TELNYX_API_KEY
 # TELNYX_PHONE_NUMBER
+# TELNYX_PUBLIC_KEY    - Ed25519 public key for Telnyx webhook signature verification
+# TELNYX_CONNECTION_ID - Telnyx connection ID for outbound SMS
 # JWT_SECRET
 # AI_GATEWAY_URL
 # STRIPE_SECRET_KEY

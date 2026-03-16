@@ -23,6 +23,7 @@ import { createStripeClient } from '../lib/stripe.js';  // P2-BIZ-004: cancel su
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
 import { generateSecret, buildOTPAuthURL, verifyTOTP } from '../lib/totp.js';
+import { importEncryptionKey, encryptToken, decryptToken } from '../lib/tokenCrypto.js';
 import { createLogger } from '../lib/logger.js';
 import { hashPassword, verifyPassword } from '../lib/password.js';
 
@@ -264,6 +265,9 @@ async function handleRegister(request, env) {
         { status: 500 }
       );
     }
+
+    // Record GDPR consent timestamp (SYS-044)
+    await query(QUERIES.recordUserConsent, [userId, new Date().toISOString(), '2026-01-01']);
 
     // Issue tokens
     const { accessToken, refreshToken } = await issueTokenPair(env, query, userId, email.toLowerCase());
@@ -749,8 +753,12 @@ async function handleDeleteAccount(request, env) {
     // Stores email hash (not plaintext) for GDPR Article 17 proof-of-deletion.
     const emailHash = await sha256(user.email.toLowerCase().trim());
     const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+    // Hash IP for GDPR compliance before storing (SYS-015)
+    const ipToHash = clientIp || 'unknown';
+    const ipHashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ipToHash + (env.JWT_SECRET || '')));
+    const ipHash = Array.from(new Uint8Array(ipHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     try {
-      await query(QUERIES.insertAccountDeletionAudit, [userId, emailHash, user.tier || 'free', clientIp]);
+      await query(QUERIES.insertAccountDeletionAudit, [userId, emailHash, user.tier || 'free', ipHash]);
     } catch (auditErr) {
       log.error('account_deletion_audit_failed', { userId, error: auditErr.message });
       // Continue — audit failure must not block GDPR deletion
@@ -969,9 +977,21 @@ async function handle2FASetup(request, env) {
   const secret = generateSecret();
   const otpauth_url = buildOTPAuthURL(secret, user.email);
 
+  // SYS-010: Encrypt TOTP secret before DB storage
+  let secretToStore = secret;
+  if (env.TOTP_ENCRYPTION_KEY) {
+    try {
+      const encKey = await importEncryptionKey(env.TOTP_ENCRYPTION_KEY);
+      secretToStore = await encryptToken(secret, encKey);
+    } catch (encErr) {
+      // Fall back to plaintext if key import fails (misconfigured key)
+      console.error('[2fa/setup] TOTP encryption failed, storing plaintext:', encErr.message);
+    }
+  }
+
   // Temporarily store the secret so enable can validate the TOTP code.
   // We save it (with totp_enabled=false) so it persists across requests.
-  await query(QUERIES.setTOTPSecret, [secret, userId]);
+  await query(QUERIES.setTOTPSecret, [secretToStore, userId]);
 
   return Response.json({
     ok: true,
@@ -1015,7 +1035,19 @@ async function handle2FAEnable(request, env) {
     );
   }
 
-  const valid = await verifyTOTP(user.totp_secret, totp_code);
+  // SYS-010: Decrypt TOTP secret before verification
+  let plainSecret = user.totp_secret;
+  if (env.TOTP_ENCRYPTION_KEY && user.totp_secret) {
+    try {
+      const encKey = await importEncryptionKey(env.TOTP_ENCRYPTION_KEY);
+      plainSecret = await decryptToken(user.totp_secret, encKey);
+    } catch {
+      // Secret may be plaintext (legacy row before encryption was enabled)
+      plainSecret = user.totp_secret;
+    }
+  }
+
+  const valid = await verifyTOTP(plainSecret, totp_code);
   if (!valid) {
     return Response.json(
       { ok: false, error: 'Invalid TOTP code. Check your authenticator app and try again.' },
@@ -1064,7 +1096,19 @@ async function handle2FADisable(request, env) {
     return Response.json({ ok: false, error: 'Incorrect password' }, { status: 403 });
   }
 
-  const totpOk = await verifyTOTP(user.totp_secret, totp_code);
+  // SYS-010: Decrypt TOTP secret before verification
+  let plainSecretDisable = user.totp_secret;
+  if (env.TOTP_ENCRYPTION_KEY && user.totp_secret) {
+    try {
+      const encKey = await importEncryptionKey(env.TOTP_ENCRYPTION_KEY);
+      plainSecretDisable = await decryptToken(user.totp_secret, encKey);
+    } catch {
+      // Secret may be plaintext (legacy row before encryption was enabled)
+      plainSecretDisable = user.totp_secret;
+    }
+  }
+
+  const totpOk = await verifyTOTP(plainSecretDisable, totp_code);
   if (!totpOk) {
     return Response.json(
       { ok: false, error: 'Invalid TOTP code. Check your authenticator app and try again.' },
@@ -1110,7 +1154,19 @@ async function handle2FAVerify(request, env) {
     return Response.json({ ok: false, error: 'Invalid 2FA state' }, { status: 401 });
   }
 
-  const valid = await verifyTOTP(user.totp_secret, totp_code);
+  // SYS-010: Decrypt TOTP secret before verification
+  let plainSecretVerify = user.totp_secret;
+  if (env.TOTP_ENCRYPTION_KEY && user.totp_secret) {
+    try {
+      const encKey = await importEncryptionKey(env.TOTP_ENCRYPTION_KEY);
+      plainSecretVerify = await decryptToken(user.totp_secret, encKey);
+    } catch {
+      // Secret may be plaintext (legacy row before encryption was enabled)
+      plainSecretVerify = user.totp_secret;
+    }
+  }
+
+  const valid = await verifyTOTP(plainSecretVerify, totp_code);
   if (!valid) {
     return Response.json(
       { ok: false, error: 'Invalid TOTP code. Check your authenticator app and try again.' },

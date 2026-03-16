@@ -49,7 +49,7 @@ async function callAnthropic(promptPayload, env) {
   const endpoint = resolveEndpoint(env, 'anthropic/v1/messages', 'https://api.anthropic.com/v1/messages');
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25000);
+  const timeout = setTimeout(() => controller.abort(), 18000);
 
   try {
     const res = await fetch(endpoint, {
@@ -98,7 +98,7 @@ async function callGrok(promptPayload, env) {
   ];
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25000);
+  const timeout = setTimeout(() => controller.abort(), 18000);
 
   const endpoint = resolveEndpoint(env, 'grok/v1/chat/completions', 'https://api.x.ai/v1/chat/completions');
 
@@ -147,7 +147,7 @@ async function callGroq(promptPayload, env) {
   ];
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25000);
+  const timeout = setTimeout(() => controller.abort(), 18000);
 
   const endpoint = resolveEndpoint(env, 'groq/openai/v1/chat/completions', 'https://api.groq.com/openai/v1/chat/completions');
 

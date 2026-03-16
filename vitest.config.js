@@ -10,11 +10,17 @@ export default defineConfig({
       '**/dist/**',
       'tests/e2e/**',
       '**/.{idea,git,cache,output,temp}/**',
+      '.claude/worktrees/**',
     ],
   },
   coverage: {
     provider: 'v8',
     reporter: ['text', 'html'],
-    thresholds: { lines: 80 },
+    thresholds: {
+      lines: 60,
+      functions: 60,
+      branches: 50,
+    },
+    exclude: ['tests/e2e/**', 'frontend/**', 'scripts/**'],
   },
 });

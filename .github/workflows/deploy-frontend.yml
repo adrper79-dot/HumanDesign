@@ -55,6 +55,18 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: P0 issue gate
+        run: |
+          P0=$(node scripts/count-issues.js --severity P0 --status open || true)
+          echo "Open P0 issues: $P0"
+          if [ "${P0:-0}" -gt "0" ]; then
+            echo "::error::$P0 open P0 issue(s) in issue-registry.json. Resolve before deploying."
+            exit 1
+          fi
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:

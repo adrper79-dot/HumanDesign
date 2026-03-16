@@ -84,6 +84,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 ### `cron.js` (300 lines) — **Scheduled Daily Task Runner**
 - **Purpose:** Daily 6 AM UTC cron (Cloudflare Cron Triggers)
 - **Steps:**
+  0. Purge expired rate limit counters (`rate_limit_counters` table)
   1. Calculate today's transit positions (engine Layers 2+4)
   2. Save snapshot to `transit_snapshots` table
   3. SMS digest delivery to opted-in users (via Telnyx)
@@ -94,7 +95,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
   7. Email drip campaigns (welcome series, re-engagement, upgrade nudges)
   8. Purge expired/revoked refresh tokens
   9. Downgrade expired cancel-at-period-end subscriptions
-- **DB tables:** transit_snapshots, users, push_subscriptions, notification_preferences, transit_alerts, alert_deliveries, refresh_tokens
+- **DB tables:** transit_snapshots, users, push_subscriptions, notification_preferences, transit_alerts, alert_deliveries, refresh_tokens, rate_limit_counters
 - **Env vars:** NEON_CONNECTION_STRING, RESEND_API_KEY, FROM_EMAIL
 - **Imports from:** engine (julian, planets, gates), handlers (sms, push, alerts), lib (webhookDispatcher, email)
 
@@ -248,7 +249,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 - **Tables created (17):** users, charts, profiles, transit_snapshots, practitioners, practitioner_clients, clusters, cluster_members, sms_messages, validation_data, psychometric_data, diary_entries, subscriptions, payment_events, usage_records, share_events, refresh_tokens + schema_migrations
 - **Key design:** UUID primary keys (gen_random_uuid()), JSONB for chart/profile data, IANA timezone storage, Stripe customer/subscription IDs
 
-#### `migrations/` (14 numbered migration files)
+#### `migrations/` (41 numbered migration files)
 | Migration | Purpose |
 |-----------|---------|
 | `000_migration_tracking.sql` | Create schema_migrations table |
@@ -265,6 +266,30 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 | `016_fix_checkin_streak_trigger.sql` | Fix for streak calculation |
 | `017_standardize_uuid_gen.sql` | Standardize UUID generation |
 | `018_drop_usage_tracking.sql` | Drop deprecated usage_tracking table |
+| `019_cluster_member_birth_data.sql` | Birth data columns for cluster members |
+| `020_fix_subscription_constraints.sql` | Subscription constraint fixes |
+| `021_password_reset_tokens.sql` | Password reset token flow |
+| `022_social_auth.sql` | Google/Apple OAuth tables |
+| `023_discord_integration.sql` | Discord bot integration |
+| `024_atomic_limit_counters.sql` | rate_limit_counters table (atomic window counters) |
+| `024b_practitioner_invitations.sql` | Practitioner invitation flow |
+| `025_session_notes.sql` | Session notes for practitioners |
+| `026_practitioner_directory.sql` | Public practitioner directory |
+| `027_one_time_purchase_columns.sql` | One-time purchase support |
+| `028_grandfather_subscriptions.sql` | Grandfather existing subscriptions |
+| `029_agency_seats.sql` | Agency seat management |
+| `030_add_individual_agency_tiers.sql` | Individual + agency tier support |
+| `031_email_marketing_optout.sql` | Email marketing opt-out |
+| `032_normalize_tier_and_status.sql` | Canonical tier/status normalization |
+| `033_composite_indexes.sql` | Composite index optimizations |
+| `034_drop_dead_views.sql` | Remove unused views |
+| `035_drop_dead_tables.sql` | Remove deprecated tables |
+| `036_email_verification.sql` | Email verification flow |
+| `037_cluster_invite_codes.sql` | Cluster invitation codes |
+| `038_totp_2fa.sql` | TOTP two-factor authentication |
+| `039_account_deletions_audit.sql` | Account deletion audit trail |
+| `040_add_last_login_at.sql` | Add last_login_at to users |
+| `041_experiments_status_enum.sql` | Experiments status enum |
 
 ---
 

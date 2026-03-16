@@ -186,13 +186,31 @@ export const QUERIES = {
     FROM users WHERE id = $1
   `,
 
+  // SYS-011: Safe variant — omits password_hash and totp_secret for non-auth reads
+  getUserByIdSafe: `
+    SELECT id, email, tier, phone, birth_date, birth_time, birth_tz AS birth_timezone,
+      birth_lat, birth_lng, stripe_customer_id, sms_opted_in, email_verified,
+      last_login_at, transit_pass_expires, lifetime_access, totp_enabled,
+      created_at, updated_at
+    FROM users WHERE id = $1
+  `,
+
   getUserByEmail: `
     SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, transit_pass_expires, lifetime_access, totp_enabled, totp_secret, created_at, updated_at
     FROM users WHERE email = $1
   `,
 
+  // SYS-011: Safe variant — omits password_hash and totp_secret for non-auth reads
+  getUserByEmailSafe: `
+    SELECT id, email, tier, phone, birth_date, birth_time, birth_tz AS birth_timezone,
+      birth_lat, birth_lng, stripe_customer_id, sms_opted_in, email_verified,
+      last_login_at, transit_pass_expires, lifetime_access, totp_enabled,
+      created_at, updated_at
+    FROM users WHERE email = $1
+  `,
+
   getUserByPhone: `
-    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, transit_pass_expires, lifetime_access, created_at, updated_at
+    SELECT id, email, phone, password_hash, birth_date, birth_time, birth_tz, birth_lat, birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code, email_verified, last_login_at, transit_pass_expires, lifetime_access, totp_enabled, totp_secret, created_at, updated_at
     FROM users WHERE phone = $1
   `,
 
@@ -374,6 +392,7 @@ export const QUERIES = {
     ) p ON true
     WHERE pc.practitioner_id = $1
     ORDER BY pc.created_at DESC
+    LIMIT $2 OFFSET $3
   `,
 
   expirePendingPractitionerInvitationsByEmail: `
@@ -641,6 +660,11 @@ export const QUERIES = {
   // P1-AUTH-002: Delete a counter row (e.g. clear login-failure count on successful login).
   resetRateLimitCounter: `
     DELETE FROM rate_limit_counters WHERE counter_key = $1
+  `,
+
+  // SYS-003: Purge expired rate-limit windows to prevent unbounded table growth.
+  purgeExpiredRateLimitCounters: `
+    DELETE FROM rate_limit_counters WHERE window_end < NOW() - INTERVAL '1 hour'
   `,
 
   finalizeProcessedEvent: `
@@ -1692,6 +1716,7 @@ export const QUERIES = {
   smsOptOut: `UPDATE users SET sms_opted_in = false WHERE phone = $1`,
   smsOptIn: `UPDATE users SET sms_opted_in = true WHERE phone = $1`,
   getSmsSubscribedUsers: `SELECT id, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng FROM users WHERE sms_opted_in = true AND phone IS NOT NULL`,
+  getSmsSubscribedUsersWithBirthDate: `SELECT id, phone, birth_date, birth_time, birth_tz, birth_lat, birth_lng FROM users WHERE sms_opted_in = true AND phone IS NOT NULL AND birth_date IS NOT NULL`,
   smsSubscribeByUserId: `UPDATE users SET phone = $1, sms_opted_in = true WHERE id = $2`,
   getUserPhone: `SELECT phone FROM users WHERE id = $1`,
   smsUnsubscribeByUserId: `UPDATE users SET sms_opted_in = false WHERE id = $1`,
@@ -1937,7 +1962,7 @@ export const QUERIES = {
 
   // ─── Account Deletion ────────────────────────────────────────
   insertAccountDeletionAudit: `
-    INSERT INTO account_deletions (user_id, email_hash, tier, ip_address)
+    INSERT INTO account_deletions (user_id, email_hash, tier, ip_address_hash)
     VALUES ($1, $2, $3, $4)
   `,
   deleteUserAccount: `
@@ -2020,11 +2045,16 @@ export const QUERIES = {
   `,
 
   listSessionNotes: `
-    SELECT id, content, share_with_ai, transit_snapshot, session_date, created_at, updated_at
+    SELECT id, practitioner_id, client_user_id, content, session_date,
+      share_with_ai, transit_snapshot, created_at, updated_at
     FROM practitioner_session_notes
-    WHERE practitioner_id = $1 AND client_user_id = $2
+    WHERE practitioner_id = $1
+      AND client_user_id = $2
+      AND ($3 = '' OR content ILIKE '%' || $3 || '%')
+      AND ($4 = '' OR session_date >= $4::date)
+      AND ($5 = '' OR session_date <= $5::date)
     ORDER BY session_date DESC, created_at DESC
-    LIMIT 50
+    LIMIT $6 OFFSET $7
   `,
 
   getAISharedNotes: `
@@ -2245,6 +2275,24 @@ export const QUERIES = {
     UPDATE users SET totp_secret = NULL, totp_enabled = false, updated_at = NOW()
     WHERE id = $1
     RETURNING id, email, totp_enabled
+  `,
+
+  // ─── GDPR Consent (SYS-044) ────────────────────────────────
+  recordUserConsent: `
+    UPDATE users
+    SET tos_accepted_at = $2, tos_version = $3, privacy_accepted_at = $2
+    WHERE id = $1
+  `,
+
+  getPastDueSubscriptionsOlderThan: `
+    SELECT s.id, s.user_id, s.stripe_subscription_id, u.email,
+      EXTRACT(EPOCH FROM (NOW() - s.updated_at)) / 86400 AS days_past_due
+    FROM subscriptions s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.status = 'past_due'
+      AND s.updated_at < NOW() - ($1 || ' days')::INTERVAL
+    ORDER BY s.updated_at ASC
+    LIMIT 100
   `,
 };
 

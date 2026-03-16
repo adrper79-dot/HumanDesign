@@ -582,12 +582,16 @@ export async function handleUpgradeSubscription(request, env, ctx) {
     }
     
     const tierConfig = getTier(tier, env);
+    const billingPeriod = body?.billingPeriod || 'monthly';
+    const priceId = (billingPeriod === 'annual' && tierConfig.annualPriceId)
+      ? tierConfig.annualPriceId
+      : tierConfig.priceId;
     const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
-    
+
     const updatedSubscription = await withCircuitBreaker('stripe', () => updateSubscription(
       stripe,
       subscription.stripe_subscription_id,
-      tierConfig.priceId
+      priceId
     ));
     
     // Update database — BL-FIX: wrap in transaction so subscription and user tier stay in sync

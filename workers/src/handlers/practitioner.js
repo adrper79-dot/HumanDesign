@@ -107,7 +107,7 @@ export async function handlePractitioner(request, env, subpath) {
 
     // GET /api/practitioner/clients
     if (subpath === '/clients' && method === 'GET') {
-      return await handleListClients(userId, query);
+      return await handleListClients(request, query);
     }
 
     // POST /api/practitioner/clients/add
@@ -208,7 +208,8 @@ async function handleGetProfile(userId, query) {
   });
 }
 
-async function handleListClients(userId, query) {
+async function handleListClients(request, query) {
+  const userId = request._user?.sub;
   // Verify practitioner
   const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (!practResult.rows?.length) {
@@ -216,92 +217,30 @@ async function handleListClients(userId, query) {
   }
 
   const practitionerId = practResult.rows[0].id;
-  const clients = await query(QUERIES.getPractitionerClientsWithCharts, [practitionerId]);
+
+  // SYS-018: Pagination support
+  const url = new URL(request.url);
+  const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10), 200);
+  const page = Math.max(parseInt(url.searchParams.get('page') || '1', 10), 1);
+  const offset = (page - 1) * limit;
+
+  const clients = await query(QUERIES.getPractitionerClientsWithCharts, [practitionerId, limit, offset]);
+  const rows = clients.rows || [];
 
   return Response.json({
     ok: true,
-    clients: clients.rows || [],
-    count: clients.rows?.length || 0
+    clients: rows,
+    pagination: { page, limit, total: rows.length, hasMore: rows.length === limit },
   });
 }
 
 async function handleAddClient(request, env, userId, query) {
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json(
-      { error: 'Invalid JSON body' },
-      { status: 400 }
-    );
-  }
-  
-  const { clientEmail } = body;
-
-  if (!clientEmail) {
-    return Response.json({ error: 'clientEmail is required' }, { status: 400 });
-  }
-
-  // Basic email format validation
-  if (!isValidEmail(clientEmail)) {
-    return Response.json({ error: 'clientEmail must be a valid email address' }, { status: 400 });
-  }
-
-  // Verify practitioner and check tier limit
-  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
-  if (!practResult.rows?.length) {
-    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
-  }
-
-  const pract = practResult.rows[0];
-  const limit = TIER_LIMITS[pract.tier] || 0;
-
-  if (limit === 0) {
-    return Response.json({
-      error: 'Upgrade required',
-      message: 'Free tier cannot manage clients. Upgrade to standard or higher.'
-    }, { status: 403 });
-  }
-
-  // Count current clients
-  const countResult = await query(QUERIES.countPractitionerClients, [pract.id]);
-  const currentCount = parseInt(countResult.rows?.[0]?.count || '0');
-
-  if (currentCount >= limit) {
-    return Response.json({
-      error: 'Client limit reached',
-      message: `${pract.tier} tier allows up to ${limit} clients. Upgrade to add more.`,
-      currentCount,
-      limit
-    }, { status: 403 });
-  }
-
-  // Find client user by email
-  const clientResult = await query(QUERIES.getUserByEmail, [clientEmail.toLowerCase()]);
-  if (!clientResult.rows?.length) {
-    const frontendUrl = env.FRONTEND_URL || 'https://selfprime.net';
-    return Response.json({
-      error: 'Client not found',
-      message: 'No account found with that email. Ask the client to register, then add them from your roster.',
-      signupUrl: `${frontendUrl}/`
-    }, { status: 404 });
-  }
-
-  const client = clientResult.rows[0];
-
-  // Can't add yourself
-  if (client.id === userId) {
-    return Response.json({ error: 'Cannot add yourself as a client' }, { status: 400 });
-  }
-
-  // Add to roster
-  await query(QUERIES.addClient, [pract.id, client.id]);
-
+  // SYS-019: Direct client add is disabled — use the invite flow for consent compliance
   return Response.json({
-    ok: true,
-    message: `Client added to your roster`,
-    client: { id: client.id }
-  }, { status: 201 });
+    error: 'Direct client add is disabled. Use the invite flow instead.',
+    action: 'Use POST /api/practitioner/clients/invite to send an invitation email.',
+    code: 'USE_INVITE_FLOW',
+  }, { status: 410 });
 }
 
 async function handleInviteClient(request, env, userId, query) {

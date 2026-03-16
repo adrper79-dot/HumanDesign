@@ -38,6 +38,7 @@ import { parseToUTC } from '../utils/parseToUTC.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { callLLM } from '../lib/llm.js';
 import { enforceUsageQuota, recordUsage, enforceDailyCeiling, incrementDailyCounter } from '../middleware/tierEnforcement.js';
+import { getTier } from '../lib/stripe.js';
 import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 
@@ -83,6 +84,14 @@ export async function handleProfileStream(request, env, ctx) {
     if (body[field] === undefined) {
       return Response.json({ error: `Missing required field: ${field}` }, { status: 400 });
     }
+  }
+
+  // SYS-005: Gate LLM usage behind verified email to prevent abuse
+  if (!request._user?.email_verified) {
+    return Response.json(
+      { error: 'Please verify your email address before generating profiles.', code: 'EMAIL_NOT_VERIFIED' },
+      { status: 403 }
+    );
   }
 
   const { birthDate, birthTime, birthTimezone, lat, lng, question, systemPreferences } = body;
@@ -254,7 +263,16 @@ export async function handleProfileStream(request, env, ctx) {
           ]);
           chartId = chartResult.rows?.[0]?.id || null;
 
-          if (validation.parsed && chartId) {
+          // SYS-041: Gate profile save by tier's savedProfilesMax (same guard as profile.js)
+          // Free users (max=0) get generation results but no history persistence
+          const tierCfg = getTier(request._tier || 'free');
+          const maxSavedProfiles = tierCfg.features.savedProfilesMax;
+          let canSaveProfile = maxSavedProfiles > 0;
+          if (canSaveProfile && maxSavedProfiles !== Infinity) {
+            const countResult = await query(QUERIES.countSavedProfilesByUser, [userId]);
+            canSaveProfile = parseInt(countResult.rows[0]?.count || 0) < maxSavedProfiles;
+          }
+          if (validation.parsed && chartId && canSaveProfile) {
             const profileResult = await query(QUERIES.saveProfile, [
               userId, chartId,
               JSON.stringify({
