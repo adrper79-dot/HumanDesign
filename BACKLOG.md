@@ -1,8 +1,8 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-10 (Market validation review — second pass)
+**Last audited:** 2026-03-16 (Page cohesion workflow review)
 **Test suite:** Current local Vitest suite passing
-**Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10
+**Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10 | 1 new cohesion workflow item added 2026-03-16
 **Deployment status:** ⚠️ Last external production report showed stale deployment issues; not re-verified in this repo-only audit
 **Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration** + **market validation (2026-03-10)**
 
@@ -207,7 +207,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Implement frontend tabs/modals for each feature, prioritized by user impact.
 
 ### BL-M15 | Repo-wide observability and handled-error cleanup sweep
-- [~] **Status:** In Progress (Cycle 1: profile.js ✅, oauthSocial.js ✅, alerts.js ✅, achievements.js ✅, auth.js ✅, notion.js ✅; broader long-tail remains across other handlers)
+- [~] **Status:** In Progress (Cycle 1: profile.js ✅, oauthSocial.js ✅, alerts.js ✅, achievements.js ✅, auth.js ✅, notion.js ✅; follow-up: webhooks.js ✅, checkin.js ✅; broader long-tail remains across other handlers)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/*.js`, `workers/src/lib/routeErrors.js`, `workers/src/lib/logger.js`, `workers/src/lib/errorMessages.js`, `frontend/js/app.js`, `tests/handled-route-errors.test.js`, `tests/observability-runtime.test.js`
 - **Problem:** The critical-path error pipeline is now materially stronger, but the repo still has a split-brain observability model. Some routes use structured logging, analytics-backed error capture, Sentry, and request correlation; many other handlers still catch locally with raw `console.error(...)` and return generic failures without durable operator-facing signals. That means debugging quality still depends on which route failed.
@@ -228,12 +228,161 @@ These items cause outright failures in deployed environments.
   - "Perform a repo-wide observability cleanup sweep. Replace console-only handled 5xx paths in customer-facing Workers handlers with the shared `reportHandledRouteError()` flow or a rethrow into the top-level worker catch, whichever preserves the route contract best. Do not change successful response shapes or unrelated business logic. Preserve HTML/browser callback responses where needed by using the shared helper with a custom response factory. Ensure every migrated path emits structured logger data, analytics `trackError`, Sentry capture, and returns `X-Request-ID`. On the frontend, preserve request IDs from failed API responses and append them to support-facing error copy only for server-side failures. Add or extend focused Vitest coverage for at least one handled failure in each migrated area. Keep changes minimal, avoid unrelated refactors, and validate with targeted tests."
 
 ### BL-M16 | 2FA QR delivery path is split between vendored and CDN assets
+- [x] **Status:** Resolved — 2026-03-16 (Cycle 3)
+- **Severity:** Moderate
+- **Files:** `frontend/index.html`, `frontend/_headers`, `frontend/js/qr.js`
+- **Resolution:** Removed CDN `qrcode@1.5.3` script tag and its `dns-prefetch` entry from `index.html`. Removed `https://cdn.jsdelivr.net` from `script-src` in both `_headers` and `index.html` meta CSP. `frontend/js/qr.js` is now the sole, canonical QR generator. `app.js` synchronous `QRCode.toDataURL(text, scale)` API matches `qr.js` exactly. CSP `script-src` is tighter by one origin.
+
+### BL-M17 | Practitioner-first cohesion workflow for home, pricing, onboarding, and workspace
 - [ ] **Status:** Open
 - **Severity:** Moderate
-- **Files:** `frontend/index.html`, `frontend/_headers`, `frontend/js/qr.js`, `process/SESSION_LOG_2026-03-16.md`
-- **Problem:** The repo still contains a local QR generator in `frontend/js/qr.js`, but the current frontend boot path loads `qrcode.min.js` from `cdn.jsdelivr.net` and widens CSP to allow that host. The session log still documents a self-contained local generator. That leaves the runtime dependency model, CSP posture, and rollback story out of sync.
-- **Fix:** Pick one delivery strategy and remove the other. Prefer a single self-hosted asset path if possible, tighten CSP to match the shipped dependency, and update the session log so the implementation story matches the actual frontend.
-- **Verify:** 2FA setup renders QR codes with the chosen asset path only, CSP allows exactly that path, and the documented implementation matches the shipped HTML.
+- **Files:** `frontend/index.html`, `frontend/pricing.html`, `frontend/privacy.html`, `frontend/terms.html`, `frontend/js/app.js`, `frontend/DESIGN_SYSTEM.md`
+- **Problem:** The current frontend is visually premium but product messaging drifts between three identities: consumer self-discovery app, multi-system astrology/metaphysical engine, and practitioner business platform. The result is that the site looks cohesive at a surface level but communicates too many primary jobs at once. Specific friction points from the 2026-03-16 page review:
+  - Home leads with breadth (`systems combined`) instead of a single practitioner-first promise.
+  - The chart journey points to conceptual destinations that do not fully match real tab IDs/workflows.
+  - Pricing is structurally clearer than the app, but it speaks in generic SaaS language instead of Prime Self's actual practitioner-first positioning.
+  - Pricing/privacy trust language is inconsistent: pricing says chart data is never shared with third parties, while privacy correctly discloses AI/SMS processors.
+  - Practitioner onboarding shifts too quickly into referral economics and off-page instructions instead of helping users complete setup in-flow.
+  - The practitioner workspace is operationally useful but framed like an admin portal rather than a premium practice workspace.
+- **Impact:** Users can understand pieces of the product but not the whole. That weakens trust, makes conversion harder, and blurs the distinction between the consumer and practitioner journeys. It also risks redesign churn because page-level changes can accidentally push the product toward a generic D2C spirituality app, which is not the intended positioning.
+- **Positioning guardrails:**
+  - Treat Prime Self as **practitioner-first B2B2C software** with consumer features that support practitioner delivery, lead gen, and retention.
+  - Preserve the premium, mystical visual language, but reduce message sprawl.
+  - Do not solve this by flattening the product into a generic astrology landing page.
+  - Prefer page-specific copy/IA/workflow changes over broad aesthetic rework.
+- **Workflow:**
+  1. **Message alignment pass**
+     - Rewrite home hero/welcome, social proof, and chart/profile callouts to express one dominant promise.
+     - Replace system-count-first copy with outcome-first copy.
+     - Keep multi-system depth available, but secondary.
+  2. **Trust alignment pass**
+     - Reconcile pricing FAQ, privacy, and terms so data-sharing, AI usage, and practitioner/commercial claims say the same thing everywhere.
+     - Remove or reframe any copy that overstates privacy, platform replacement, or monetization outcomes.
+  3. **Workflow alignment pass**
+     - Make the chart step guide and related nav reflect real tabs and real destinations.
+     - Reduce conceptual dead ends and rename steps only where the actual route and UI support them.
+  4. **Practitioner onboarding pass**
+     - Change onboarding from an instruction/referral sequence into a setup sequence.
+     - Complete as much profile/invite setup as possible inside the flow instead of telling users to navigate elsewhere.
+  5. **Practitioner workspace pass**
+     - Reframe the page from portal/admin language into practice workspace language.
+     - Prioritize client service and practice readiness above platform mechanics and partner economics.
+- **Acceptance:**
+  - A first-time visitor can explain the product in one sentence after reading the first screen.
+  - Home, pricing, privacy, and practitioner surfaces describe the same product without contradiction.
+  - The main journey shown on the chart page maps cleanly to actual tabs/workflows.
+  - Practitioner onboarding completes at least one meaningful setup task in-flow, not just via instructions.
+  - The practitioner area reads as a premium workspace for serving clients, not as a generic admin console.
+  - Updated copy and structure remain aligned with practitioner-first positioning and do not regress into a generic consumer astrology app.
+- **Recommended execution order:**
+  - Phase 1: trust + copy alignment (`index.html`, `pricing.html`, `privacy.html`, `terms.html`)
+  - Phase 2: chart journey + nav/workflow alignment (`index.html`, `frontend/js/app.js`)
+  - Phase 3: practitioner onboarding + workspace reframing (`index.html`, relevant JS)
+- **Success checks:**
+  - Manual review: one-sentence product clarity, no trust contradictions, no broken nav/step links.
+  - UX review: practitioner and non-practitioner entry paths are both understandable, but practitioner-first remains the dominant framing.
+  - Regression review: no new mismatch between page copy, legal copy, pricing claims, and in-app workflow names.
+
+---
+
+## Code Review Findings — 2026-03-16 Audit (9 items)
+
+### BL-N1 | `keys.js` TIER_ORDER contains both legacy and canonical names — wrong comparison result
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Files:** `workers/src/handlers/keys.js`
+- **Problem:** `TIER_ORDER` is defined as `['free', 'regular', 'individual', 'practitioner', 'white_label', 'agency']`. This mixes legacy tier aliases (`regular`, `white_label`) alongside canonical tier names (`individual`, `agency`) from `stripe.js`. As a result `regular` (index 1) < `individual` (index 2) even though `normalizeTierName('regular') === 'individual'`. A subscriber whose DB row holds `tier = 'regular'` (written by an older webhook invocation) cannot create an `individual`-level API key even though they paid for it. Same issue for `white_label` (index 4) vs `agency` (index 5).
+- **Impact:** Any user whose tier was set before the legacy→canonical rename silently loses API key creation rights they paid for.
+- **Fix:** Normalize the incoming tier via `normalizeTierName()` before computing the index; remove legacy entries from `TIER_ORDER` (or keep them only as duplicates of their canonical equivalent so the index comparison is always against canonical names).
+- **Verify:** Unit test: `tierIndex('regular') === tierIndex('individual')` returns true.
+
+---
+
+### BL-N2 | `billing.js` retention/cancel offer returns `null` for legacy-tier subscribers
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Files:** `workers/src/handlers/billing.js`
+- **Problem:** `buildRetentionOffer(subscription.tier)` receives the raw tier string from the DB (`'regular'`, `'white_label'`, etc.) with no normalization. The function only branches on `'practitioner'` and `'individual'`. A subscriber stored as `'regular'` (canonical: `'individual'`) matches neither branch and receives `null` — meaning no retention offer is shown before cancellation. This makes the cancel flow silently useless for all legacy-tier subscribers.
+- **Impact:** Retention offer never fires for `regular` subscribers; potential churn goes unaddressed.
+- **Fix:** Call `normalizeTierName(subscriptionTier)` at the top of `buildRetentionOffer` before branching. Also verify the downgrade offer copy and pricing align with current Plan v4 tier names and prices.
+- **Verify:** Cancel flow shows a retention offer for a `regular` subscriber and for an `individual` subscriber.
+
+---
+
+### BL-N3 | Leaderboard email masking incomplete in `stats.js`
+- [ ] **Status:** Open
+- **Severity:** Minor
+- **Files:** `workers/src/handlers/stats.js`
+- **Problem:** `handleGetLeaderboard` masks emails as `email.split('@')[0] + '@***'`, hiding the domain but exposing the full local part (everything before `@`). BL-R-L12 (Sprint 16) fixed the identical bug in `achievements.js` but `stats.js` was missed. Any email in the leaderboard publicly reveals the username/identifier portion.
+- **Impact:** Privacy exposure — user's local email identifier is visible to all visitors of the leaderboard.
+- **Fix:** Apply the same masking pattern used in `achievements.js`: short local parts → `***@domain`, longer → first char + `***@domain`. Or use a generic star mask like `***@***`.
+- **Verify:** Leaderboard response shows no identifiable email fragment; matches masking format from `achievements.js`.
+
+---
+
+### BL-N4 | `forecast.js` transit endpoint is unauthenticated and has no rate limit
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Files:** `workers/src/handlers/forecast.js`, `workers/src/index.js`
+- **Problem:** `GET /api/transits/forecast` accepts birth data in query params and runs `calculateFullChart()` + a multi-day `getTransitForecast()` loop (1–90 days configurable) with no authentication check and no rate-limit middleware. Anyone on the internet can hammer this endpoint with unique birth params to consume significant CPU time in the Worker runtime.
+- **Impact:** Resource exhaustion / cost amplification. Cloudflare CPU-time limits on Workers mean heavy abuse can trigger 503s for legitimate users.
+- **Fix:** Either (a) require authentication (natal chart belongs to an account so auth is natural), or (b) apply the existing `rateLimit` middleware. If keeping it public, cap the `days` param at a safe maximum (e.g., 7) and enforce it server-side.
+- **Verify:** Unauthenticated request without a rate-limit header returns 401 (if auth required) or is throttled after N requests from the same IP.
+
+---
+
+### BL-N5 | `cycles.js` silently falls back to UTC when `birthTimezone` is absent
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Files:** `workers/src/handlers/cycles.js`
+- **Problem:** `url.searchParams.get('birthTimezone')` returns `null` when the query param is omitted. This `null` is passed directly to `parseToUTC(birthDate, birthTime, null)`. `parseToUTC` treats `null` timezone as UTC, so all cycle dates (Saturn return, Uranus opposition, etc.) are computed as if the user was born in UTC — silently wrong for anyone not in UTC. No error or warning is returned to the client.
+- **Impact:** Silent data integrity bug — wrong life-cycle milestone dates for non-UTC users who don't pass the timezone param (e.g., mobile browsers that don't auto-populate it).
+- **Fix:** Check for null/empty timezone before calling `parseToUTC`. Either return a 400 `"birthTimezone is required"` response, or default to UTC and explicitly include `"warning": "birthTimezone not provided, defaulting to UTC"` in the response body.
+- **Verify:** Request with no `birthTimezone` returns a 400 or includes a correct `warning` field; UTC user gets correct dates; non-UTC user gets noticeably different dates than a naive UTC calculation.
+
+---
+
+### BL-N6 | Deprecated `assert { type: 'json' }` import syntax in `famous.js`
+- [ ] **Status:** Open
+- **Severity:** Minor
+- **Files:** `workers/src/handlers/famous.js`
+- **Problem:** `import celebsData from '../data/celebrities.json' assert { type: 'json' }` uses the `assert` keyword for import attributes, which was deprecated by TC39 and replaced with `with`. While Cloudflare Workers' current V8 build accepts both, this will produce a deprecation warning in future runtimes and is scheduled for removal in V8 ~12.6+. Any other files using `assert { type: 'json' }` have the same issue.
+- **Impact:** Forward-compatibility — will break silently on a future CF Workers V8 update without a compile-time error.
+- **Fix:** Replace `assert { type: 'json' }` with `with { type: 'json' }` in `famous.js` and any other files with the same pattern.
+- **Verify:** `grep -r "assert { type: 'json' }" workers/src/` returns no results.
+
+---
+
+### BL-N7 | `timing.js` raw tier check bypasses agency seat propagation
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `workers/src/handlers/timing.js`, `workers/src/middleware/tierEnforcement.js`
+- **Problem:** `handleTiming` guards the electional astrology timing feature with a direct `user.tier === 'free'` check on the raw result from `getUserFromRequest()`. It does not call `enforceFeatureAccess()` from `tierEnforcement.js`. The agency seat propagation logic lives entirely inside `tierEnforcement.js` — it checks if the current user is a seat member and elevates their effective tier to the owner's tier. Agency seat members whose own DB row has `tier = 'free'` or `'individual'` are blocked from timing features even though their agency owner's subscription entitles them to practitioner-level access.
+- **Impact:** Paying agency subscribers whose seat members attempt to use timing features receive a denied response, despite being on a plan that should include this feature.
+- **Fix:** Replace the raw `user.tier === 'free'` check with `await enforceFeatureAccess(request, env, 'timingEngine')` (or the appropriate feature key). This ensures seat propagation is evaluated before the feature gate.
+- **Verify:** Agency seat member (own tier `free`, owner tier `agency`) can successfully access the timing endpoint.
+
+---
+
+### BL-N8 | `practitioner-directory.js` accesses `request._user.sub` without null guard
+- [ ] **Status:** Open
+- **Severity:** Minor
+- **Files:** `workers/src/handlers/practitioner-directory.js`
+- **Problem:** `handleGetDirectoryProfile` (and other authenticated endpoints in the same file) access `request._user.sub` directly without optional chaining. If `_user` is `undefined` due to middleware not attaching it (route misconfiguration, middleware thrown exception caught elsewhere, or test harness), the handler throws a `TypeError: Cannot read properties of undefined` rather than returning a clean 401. The stack trace will reach the global error handler, masking the actual route auth failure.
+- **Impact:** Obscured 500 error instead of 401 when auth middleware fails silently.
+- **Fix:** Guard with `if (!request._user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });` at the top of each authenticated handler, or switch to optional chaining `request._user?.sub` with an explicit null check.
+- **Verify:** Calling an authenticated endpoint without a valid token returns 401, not 500.
+
+---
+
+### BL-N9 | `psychometric.js` has no tier gate — Big Five/VIA available to all authenticated users
+- [ ] **Status:** Open
+- **Severity:** Minor
+- **Files:** `workers/src/handlers/psychometric.js`, `workers/src/lib/stripe.js`
+- **Problem:** The Big Five personality assessment and VIA strengths endpoints in `psychometric.js` have no call to `enforceFeatureAccess()`. Any authenticated user — including free-tier — can save and retrieve psychometric assessment data. These assessments are positioned visually in the "Enhance" or premium tab of the frontend, but there is no backend enforcement preventing free-tier users from accessing the feature.
+- **Impact:** Premium feature accessible on free tier — revenue leakage if intentional gating is expected. If free is intentional, no impact but should be documented.
+- **Fix:** Confirm intended access tier in a team decision. If gating is required, add `enforceFeatureAccess(request, env, 'psychometricAssessments')` (or whichever feature key maps to this). If free access is intentional, add a comment noting this is intentionally ungated.
+- **Verify:** Free-tier user is either allowed (and it's documented) or blocked (and redirected to upgrade).
 
 ---
 
@@ -304,6 +453,7 @@ These items cause outright failures in deployed environments.
 - **Severity:** Minor
 - **Files:** `.vscode/tasks.json`
 - **Problem:** The deterministic test and deploy tasks call `/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`, which assumes a WSL/bash path layout. The repo is being worked from Windows, so task behavior now depends on which shell launches VS Code instead of the task definition being portable.
+- **Revalidated:** 2026-03-16 Cycle 2 intake reproduced task failures where issue-summary scripts launched under WSL relay and exited with `execvpe(node) failed: No such file or directory`.
 - **Fix:** Replace hardcoded WSL paths with shell-agnostic `npm run ...` commands or add platform-specific task overrides so native Windows and WSL both execute the same workflows reliably.
 - **Verify:** `🧪 Run Tests (deterministic)` and `🚀 Deploy Workers` run from VS Code on both native Windows and WSL without manual path edits.
 

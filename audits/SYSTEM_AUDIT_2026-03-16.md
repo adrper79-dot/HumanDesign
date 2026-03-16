@@ -220,6 +220,7 @@ Fix: Created `frontend/js/qr.js` — minimal client-side QR code generator (byte
 File: frontend/_headers line 2; frontend/index.html line 13; frontend/js/app.js line 4
 Finding: `connect-src` in the server CSP header and meta tag does not include `https://prime-self-api.adrper79.workers.dev`. Current: `connect-src 'self' https://api.stripe.com https://cloudflareinsights.com https://plausible.io`. Every `apiFetch()` call targets the Worker — a different origin from selfprime.net. Strict-CSP browser configurations will block all API calls silently.
 Fix: Add `https://prime-self-api.adrper79.workers.dev` to `connect-src` in `_headers`. Long-term: route API through Cloudflare Pages Functions (`/api/* → Worker`) to collapse both origins to `'self'`.
+**✅ RESOLVED 2026-03-16 (Cycle 3)** — Added `https://prime-self-api.adrper79.workers.dev` to `connect-src` in both `frontend/_headers` and `frontend/index.html` meta CSP tag.
 
 ### SYS-038 — INTEGRATION — P1 — Facebook OAuth Referenced But Not Implemented
 File: workers/src/handlers/oauthSocial.js lines 66–78
@@ -230,6 +231,7 @@ Fix: Either implement Facebook OAuth (`graph.facebook.com/v18.0/me`) or remove a
 File: workers/wrangler.toml lines 76–105; workers/src/handlers/sms.js lines 27–32
 Finding: `sms.js` requires `TELNYX_PUBLIC_KEY` for ed25519 webhook signature verification. If absent, all inbound Telnyx webhooks are rejected. This secret is not listed in `wrangler.toml`'s secrets comment block or `SECRETS_GUIDE.md`. Operators setting up from the guide would never know to set it. Inbound SMS (opt-in, opt-out commands) silently dead.
 Fix: Add `# TELNYX_PUBLIC_KEY` and `# TELNYX_CONNECTION_ID` to the secrets comment block in `wrangler.toml` and to `SECRETS_GUIDE.md`.
+**✅ RESOLVED (pre-Cycle 3)** — `TELNYX_PUBLIC_KEY` and `TELNYX_CONNECTION_ID` already present in `wrangler.toml` secrets comment block (lines 82–84) and `SECRETS_GUIDE.md` sections 7a/7b. Audit entry was stale.
 
 ### SYS-040 — INFRA — P1 — Staging KV Namespace IDs Are Placeholders
 File: workers/wrangler.toml lines 138–143
@@ -240,21 +242,25 @@ Fix: Run `wrangler kv namespace create CACHE --env staging` and `wrangler kv nam
 File: workers/src/handlers/profile-stream.js lines 257–267; workers/src/handlers/profile.js lines 222–240
 Finding: `profile.js` checks `tierCfg.features.savedProfilesMax` before persisting a profile; `profile-stream.js` saves profiles unconditionally. Free-tier users using the streaming endpoint can accumulate unlimited saved profiles, bypassing the monetization gate.
 Fix: Extract profile-save guard into a shared helper `canSaveProfileForUser(query, userId, tier)`. Call it in both handlers before save.
+**✅ RESOLVED (pre-Cycle 3)** — `profile-stream.js` lines 266–275 already read `getTier()`, check `features.savedProfilesMax`, and gate DB save on `canSaveProfile`. Audit entry was stale.
 
 ### SYS-042 — AI — P2 — LLM Wall-Clock Race Can Exceed 60s Workers Limit
 File: workers/src/lib/llm.js lines 195–248
 Finding: `checkWallClock()` is called before each provider attempt, not accounting for in-flight request time. Worst case: 3×25s Anthropic timeouts + 3s backoff sleeps = 78s total. Workers are forcibly killed at 60s. User gets an opaque connection-closed error with no fallback.
 Fix: Reduce per-provider AbortController timeout to 18s. Compute dynamic per-call timeout: `Math.min(18000, MAX_WALL_CLOCK_MS - (Date.now() - wallClockStart) - 2000)`.
+**✅ RESOLVED (pre-Cycle 3)** — `llm.js` uses 18s `AbortController` per provider and `MAX_WALL_CLOCK_MS = 55000` with dynamic `min(18000, remainingMs - 2000)` timeout. Audit entry was stale.
 
 ### SYS-043 — INFRA — P2 — Frontend CI Has No P0 Issue Gate
 File: .github/workflows/deploy-frontend.yml
 Finding: Workers CI blocks deployment when P0 issues are open. Frontend CI has no equivalent check. A frontend push bypasses the issue gate entirely.
 Fix: Add the same P0 gate step to `deploy-frontend.yml` before the deploy step.
+**✅ RESOLVED (pre-Cycle 3)** — `deploy-frontend.yml` deploy job already contains identical P0 gate step (`count-issues.js --severity P0 --status open`, exit 1 if >0). Audit entry was stale.
 
 ### SYS-044 — PRIVACY — P2 — No GDPR Consent Timestamp at Registration
 File: workers/src/db/migrations/ (no consent migration); workers/src/handlers/auth.js (registration flow)
 Finding: No migration adds `tos_accepted_at`, `tos_version`, or `data_processing_consent` columns. GDPR Article 7 requires demonstrable proof of consent with timestamp, purpose, and version. `email_marketing_opted_out` is CAN-SPAM, not a GDPR consent record. EU/UK regulators can demand this on audit.
 Fix: Add migration 043: `ALTER TABLE users ADD COLUMN tos_accepted_at TIMESTAMPTZ, ADD COLUMN tos_version VARCHAR(20)`. Set both during registration. Include in data export.
+**✅ RESOLVED (pre-Cycle 3)** — Migration `044_gdpr_consent_fields.sql` exists: adds `tos_accepted_at TIMESTAMPTZ`, `tos_version VARCHAR(20)`, `privacy_accepted_at TIMESTAMPTZ`. Audit entry was stale.
 
 ### SYS-045 — TESTS — P2 — Zero Test Coverage for High-Risk Handlers
 File: tests/ directory
@@ -265,6 +271,7 @@ Fix: Prioritize: (1) push crypto round-trip tests, (2) Telnyx signature verifica
 File: .github/workflows/deploy-workers.yml; vitest.config.js
 Finding: `npm run test:coverage` runs but never enforces a minimum. The step passes at 0% coverage. CI provides no signal on regression.
 Fix: Add to `vitest.config.js`: `coverage: { thresholds: { lines: 60, functions: 60, branches: 50 } }`.
+**✅ RESOLVED (pre-Cycle 3)** — `vitest.config.js` `coverage.thresholds` already set: `lines: 60, functions: 60, branches: 50`. Audit entry was stale.
 
 ### SYS-047 — PRIVACY — P3 — Birth Coordinates Persist in localStorage Indefinitely
 File: frontend/js/app.js lines 2188–2206
