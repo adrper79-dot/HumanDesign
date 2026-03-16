@@ -99,7 +99,7 @@ These items cause outright failures in deployed environments.
 
 ---
 
-## Moderate (14) — Functional gaps, security, data completeness
+## Moderate (15) — Functional gaps, security, data completeness
 
 ### BL-M1 | 7 documented API endpoints not implemented
 - [x] **Status:** Done (2026-03-04)
@@ -207,7 +207,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Implement frontend tabs/modals for each feature, prioritized by user impact.
 
 ### BL-M15 | Repo-wide observability and handled-error cleanup sweep
-- [ ] **Status:** Open
+- [~] **Status:** In Progress (Cycle 1: profile.js ✅, oauthSocial.js ✅, alerts.js ✅, achievements.js ✅, auth.js ✅, notion.js ✅; broader long-tail remains across other handlers)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/*.js`, `workers/src/lib/routeErrors.js`, `workers/src/lib/logger.js`, `workers/src/lib/errorMessages.js`, `frontend/js/app.js`, `tests/handled-route-errors.test.js`, `tests/observability-runtime.test.js`
 - **Problem:** The critical-path error pipeline is now materially stronger, but the repo still has a split-brain observability model. Some routes use structured logging, analytics-backed error capture, Sentry, and request correlation; many other handlers still catch locally with raw `console.error(...)` and return generic failures without durable operator-facing signals. That means debugging quality still depends on which route failed.
@@ -227,9 +227,17 @@ These items cause outright failures in deployed environments.
 - **Implementation prompt:**
   - "Perform a repo-wide observability cleanup sweep. Replace console-only handled 5xx paths in customer-facing Workers handlers with the shared `reportHandledRouteError()` flow or a rethrow into the top-level worker catch, whichever preserves the route contract best. Do not change successful response shapes or unrelated business logic. Preserve HTML/browser callback responses where needed by using the shared helper with a custom response factory. Ensure every migrated path emits structured logger data, analytics `trackError`, Sentry capture, and returns `X-Request-ID`. On the frontend, preserve request IDs from failed API responses and append them to support-facing error copy only for server-side failures. Add or extend focused Vitest coverage for at least one handled failure in each migrated area. Keep changes minimal, avoid unrelated refactors, and validate with targeted tests."
 
+### BL-M16 | 2FA QR delivery path is split between vendored and CDN assets
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Files:** `frontend/index.html`, `frontend/_headers`, `frontend/js/qr.js`, `process/SESSION_LOG_2026-03-16.md`
+- **Problem:** The repo still contains a local QR generator in `frontend/js/qr.js`, but the current frontend boot path loads `qrcode.min.js` from `cdn.jsdelivr.net` and widens CSP to allow that host. The session log still documents a self-contained local generator. That leaves the runtime dependency model, CSP posture, and rollback story out of sync.
+- **Fix:** Pick one delivery strategy and remove the other. Prefer a single self-hosted asset path if possible, tighten CSP to match the shipped dependency, and update the session log so the implementation story matches the actual frontend.
+- **Verify:** 2FA setup renders QR codes with the chosen asset path only, CSP allows exactly that path, and the documented implementation matches the shipped HTML.
+
 ---
 
-## Minor (10) — Polish, consistency, housekeeping
+## Minor (12) — Polish, consistency, housekeeping
 
 ### BL-m1 | Response envelope inconsistency
 - [x] **Status:** Done (2026-03-04)
@@ -291,20 +299,36 @@ These items cause outright failures in deployed environments.
 - **Problem:** Registration only checks `!email || !password`. Users can register with invalid email strings.
 - **Fix:** Add basic regex validation: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`.
 
+### BL-m11 | VS Code tasks are tied to a WSL PowerShell path
+- [ ] **Status:** Open
+- **Severity:** Minor
+- **Files:** `.vscode/tasks.json`
+- **Problem:** The deterministic test and deploy tasks call `/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`, which assumes a WSL/bash path layout. The repo is being worked from Windows, so task behavior now depends on which shell launches VS Code instead of the task definition being portable.
+- **Fix:** Replace hardcoded WSL paths with shell-agnostic `npm run ...` commands or add platform-specific task overrides so native Windows and WSL both execute the same workflows reliably.
+- **Verify:** `🧪 Run Tests (deterministic)` and `🚀 Deploy Workers` run from VS Code on both native Windows and WSL without manual path edits.
+
+### BL-m12 | Quality tracking artifacts drift after late-session reruns
+- [ ] **Status:** Open
+- **Severity:** Minor
+- **Files:** `BACKLOG.md`, `process/SESSION_LOG_2026-03-16.md`
+- **Problem:** The backlog coverage table still carried stale assumptions after new runtime tests were added, and the session log still reports the earlier `420 passed` ratchet even though later validation reached `422 passed`. This makes the repo's operational ledger less trustworthy than the actual verified build.
+- **Fix:** Update session-close docs after the final rerun, and replace brittle static coverage claims with narrower “last verified” notes or a generated summary where possible.
+- **Verify:** Coverage and ratchet references in the backlog/session log match the most recent validated Vitest run.
+
 ---
 
 ## Test Coverage Gaps
 
-These are areas with zero test coverage. Not all need immediate tests, but high-risk modules should be prioritized.
+These are areas with limited or strategically incomplete test coverage. Not all need immediate tests, but high-risk modules should be prioritized.
 
 | Priority | Module | Risk |
 |---|---|---|
-| **High** | `workers/src/db/queries.js` | DB layer — currently broken (BL-C1) |
+| **High** | `workers/src/db/queries.js` | Registry and safe-lookup assertions exist; broader DB contract and migration coverage still needed |
 | **High** | `workers/src/middleware/auth.js` | Focused safe-lookup coverage added 2026-03-16; broader auth-flow coverage still needed |
 | **High** | `workers/src/lib/llm.js` | LLM failover chain — no verification of rotation logic |
 | **Medium** | `src/prompts/digest.js` | SMS content generation — silently broken (BL-M6) |
 | **Medium** | `src/prompts/rag.js` | RAG builder — wrong data access pattern (BL-M7) |
-| **Medium** | `workers/src/handlers/practitioner.js` | 6 endpoints, 0 tests |
+| **Medium** | `workers/src/handlers/practitioner.js` | Focused roster and invitation runtime coverage exists; list/create/export paths still need coverage |
 | **Medium** | `workers/src/handlers/cluster.js` | Cluster synthesis, 0 tests |
 | **Medium** | `workers/src/handlers/onboarding.js` | Story progression, 0 tests |
 | **Low** | `workers/src/middleware/cors.js` | Simple but broken (BL-C4) |
@@ -1576,6 +1600,22 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
   - **Impact:** Mobile users can't reliably tap controls
   - **Fix:** Bump all interactive elements to 44px minimum. Increase tab button padding to 16px.
   - **Verify:** All touch targets ≥ 44px per iOS/Android HIG
+
+- [ ] **BL-UX-H15**: Mobile drawer tabs lose active-nav context
+  - **Severity:** High (UX)
+  - **Files:** `frontend/js/ui-nav.js`, `frontend/js/app.js`, `frontend/index.html`
+  - **Problem:** `updateMobileNavForTab()` only maps `overview`, `chart/profile/celebrity/achievements/directory`, `transits/checkin/timing`, and `composite/clusters`. Tabs reached through the mobile drawer such as `enhance`, `diary`, `practitioner`, `history`, `rectify`, `sms`, and `onboarding` clear the bottom-nav active state entirely.
+  - **Impact:** On mobile, users lose orientation after opening drawer-only sections because no primary nav item stays highlighted and the bottom bar stops reflecting where they are.
+  - **Fix:** Map every drawer-only tab to an owning mobile group or keep the `Menu` item visibly active while a drawer-owned section is open. Ensure `switchTab()` and drawer open/close behavior keep the same active-state source of truth.
+  - **Verify:** Open any mobile drawer-only section and the bottom nav still shows a clear active state instead of dropping all highlights.
+
+- [ ] **BL-UX-H16**: Navigation chrome still uses sub-12px text and 28px controls
+  - **Severity:** High (Accessibility)
+  - **Files:** `frontend/css/components/mobile.css`, `frontend/css/components/sidebar.css`
+  - **Problem:** Key navigation UI still drops below comfortable reading and interaction sizes: `.mobile-nav-label` reaches `0.6rem`, `.nav-group-title` uses `0.65rem`, `.nav-badge` uses `0.6rem`, and `.sidebar-toggle` is only `28px × 28px`.
+  - **Impact:** Desktop sidebar labels/badges are harder to scan, mobile bottom-nav text becomes squint-level on smaller devices, and the collapse affordance is undersized for reliable pointer/touch use.
+  - **Fix:** Set a minimum readable label scale for navigation chrome, reduce all-caps compression where needed, and bring the sidebar toggle up to the shared minimum interactive target size.
+  - **Verify:** Navigation labels remain legible on small phones and tablets, and the sidebar toggle meets the same minimum target guidance as other controls.
 
 ### MEDIUM — Fix This Quarter (🟢 Differentiators)
 

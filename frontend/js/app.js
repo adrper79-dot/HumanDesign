@@ -647,108 +647,6 @@ function capturePractitionerInviteFromUrl() {
   window.history.replaceState({}, '', next);
 }
 
-// Phase 2B: Capture practitioner referral from ?ref= URL param
-function captureReferralFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const ref = params.get('ref');
-  if (!ref) return;
-
-  // Validate: slug format only
-  if (!/^[a-z0-9-]+$/.test(ref)) return;
-
-  sessionStorage.setItem('pending_practitioner_ref', ref);
-
-  // Clean URL
-  params.delete('ref');
-  const cleanUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-  window.history.replaceState({}, '', cleanUrl);
-
-  // Show welcome banner
-  showReferralBanner(ref);
-}
-
-async function showReferralBanner(refSlug) {
-  // Fetch practitioner name
-  let practName = 'your practitioner';
-  let bookingUrl = null;
-  try {
-    const data = await apiFetch(`/api/directory/${encodeURIComponent(refSlug)}`);
-    if (data?.practitioner?.display_name) {
-      practName = data.practitioner.display_name;
-      bookingUrl = data.practitioner.booking_url;
-    }
-  } catch { /* silent */ }
-
-  // Remove existing banner if any
-  document.getElementById('referral-welcome-banner')?.remove();
-
-  const banner = document.createElement('div');
-  banner.id = 'referral-welcome-banner';
-  banner.style.cssText = 'background:var(--bg3);border-bottom:2px solid var(--gold);padding:0.75rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;position:sticky;top:0;z-index:100';
-  banner.innerHTML = `
-    <p style="margin:0;font-size:0.9rem"><strong style="color:var(--gold)">${escapeHtml(practName)}</strong> sent you here. Generate your free chart below — they can guide you through what it means in a session.</p>
-    <div style="display:flex;gap:0.5rem;flex-shrink:0">
-      ${bookingUrl && /^https?:\/\//i.test(bookingUrl) ? `<a href="${escapeAttr(bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">Book with them →</a>` : ''}
-      <button class="btn-secondary btn-sm" onclick="document.getElementById('referral-welcome-banner').remove()">×</button>
-    </div>`;
-
-  // Insert at top of main content area
-  const main = document.querySelector('main') || document.querySelector('.app-main') || document.body;
-  main.insertBefore(banner, main.firstChild);
-}
-
-// Phase 2C: Check and show referral prompt after chart rendering
-function checkAndShowReferralPrompt() {
-  const refSlug = sessionStorage.getItem('pending_practitioner_ref');
-  if (!refSlug) return;
-
-  // Only show once per session
-  if (sessionStorage.getItem('referral_prompt_shown')) return;
-  sessionStorage.setItem('referral_prompt_shown', '1');
-
-  (async () => {
-    let practName = 'your practitioner';
-    let bookingUrl = null;
-    try {
-      const data = await apiFetch(`/api/directory/${encodeURIComponent(refSlug)}`);
-      if (data?.practitioner?.display_name) {
-        practName = data.practitioner.display_name;
-        bookingUrl = data.practitioner.booking_url;
-      }
-    } catch { /* silent */ }
-
-    const actionsHtml = [
-      bookingUrl && /^https?:\/\//i.test(bookingUrl)
-        ? `<a href="${escapeAttr(bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:block;text-align:center;text-decoration:none">Book a Session with ${escapeHtml(practName)} →</a>`
-        : '',
-      `<button class="btn-secondary" style="width:100%;margin-top:0.5rem" onclick="closeReferralModal()">Continue Exploring →</button>`
-    ].filter(Boolean).join('');
-
-    showSimpleModal(
-      'Your chart is ready',
-      `<p style="text-align:center"><strong style="color:var(--gold)">${escapeHtml(practName)}</strong> can walk you through what this means — your specific type, authority, and what to do with it in your actual life right now.</p>`,
-      actionsHtml
-    );
-  })();
-}
-
-function showSimpleModal(title, bodyHtml, actionsHtml) {
-  document.getElementById('referral-prompt-modal')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'referral-prompt-modal';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem';
-  overlay.innerHTML = `<div style="background:var(--bg2);border-radius:12px;padding:2rem;max-width:420px;width:100%">
-    <h3 style="text-align:center;margin:0 0 1rem">${escapeHtml(title)}</h3>
-    ${bodyHtml}
-    <div style="margin-top:1.5rem">${actionsHtml}</div>
-  </div>`;
-  document.body.appendChild(overlay);
-}
-
-function closeReferralModal() {
-  document.getElementById('referral-prompt-modal')?.remove();
-}
-
 function getPendingPractitionerInviteToken() {
   return sessionStorage.getItem(PENDING_PRACTITIONER_INVITE_KEY);
 }
@@ -800,10 +698,6 @@ async function applyPendingPostCheckoutIntent() {
     requestAnimationFrame(() => {
       switchTab('practitioner');
       showNotification('Practitioner plan active. Your workspace is ready.', 'success');
-      // Phase 6: Show onboarding if this is the first time they've upgraded to practitioner
-      if (['practitioner', 'guide'].includes(currentUser?.tier) && !localStorage.getItem('pract_onb_seen')) {
-        setTimeout(showPractitionerOnboarding, 1500);
-      }
     });
     clearPendingPostCheckoutIntent();
     return true;
@@ -2414,11 +2308,6 @@ function renderChart(data) {
 
   let html = '';
 
-  // Phase 4: Daily card — show transit snapshot if transit activations are available
-  if (d?.transits?.activations?.length) {
-    html += renderDailyCard(d.transits, chart);
-  }
-
   // Energy Blueprint block
   html += `<div class="card">
     <div class="card-title"><span class="icon-chart"></span> Energy Blueprint Chart</div>
@@ -3044,7 +2933,6 @@ async function generateProfile() {
     resultEl.innerHTML = renderProfile(data);
     markJourneyMilestone('profileGenerated');
     updateStepGuide('profile');
-    checkAndShowReferralPrompt(); // Phase 2C
   } catch (e) {
     // Clear progress timeouts on error
     progressTimeouts.forEach(clearTimeout);
@@ -3080,14 +2968,6 @@ function renderProfile(data) {
   if (window.DEBUG) console.log('✅ Profile data valid - rendering...');
 
   let html = '';
-
-  // Synthesis opener — felt statement before technical content (Phase 1A)
-  if (qsg?.whoYouAre) {
-    html += `<div class="card synthesis-opener" style="border-left:3px solid var(--gold);padding:1.5rem">
-      <p style="font-size:1.15rem;line-height:1.7;margin:0 0 0.5rem;font-style:italic">${escapeHtml(qsg.whoYouAre)}</p>
-      <p style="font-size:0.8rem;color:var(--text-dim);margin:0">Your full blueprint follows below — <button class="link-btn" data-action="scrollToProfile">skip to details ↓</button></p>
-    </div>`;
-  }
 
   // Chart summary banner
   html += `<div class="card">
@@ -3276,10 +3156,9 @@ function renderProfile(data) {
         html += `</div>`;
       }
       
-      html += renderSourceTag(ti.geneKeysProfile?._sources);
       html += `</div>`; // close Gene Keys card
     }
-
+    
     // Numerology Insights
     if (ti.numerologyInsights) {
       const num = ti.numerologyInsights;
@@ -3311,10 +3190,9 @@ function renderProfile(data) {
         </div>`;
       }
       
-      html += renderSourceTag(ti.numerologyInsights?._sources);
       html += `</div>`; // close Numerology card
     }
-
+    
     // Mayan Tzolkin
     if (ti.mayanTzolkin) {
       const mayan = ti.mayanTzolkin;
@@ -3327,7 +3205,6 @@ function renderProfile(data) {
           ${mayan.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(mayan.convergence)}</p>` : ''}
         </div>
       </div>`;
-      html += renderSourceTag(ti.mayanTzolkin?._sources);
     }
 
     // BaZi Profile
@@ -3341,7 +3218,6 @@ function renderProfile(data) {
           ${bazi.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(bazi.convergence)}</p>` : ''}
         </div>
       </div>`;
-      html += renderSourceTag(ti.baziProfile?._sources);
     }
 
     // Sabian Symbols
@@ -3369,7 +3245,6 @@ function renderProfile(data) {
           ${ch.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(ch.convergence)}</p>` : ''}
         </div>
       </div>`;
-      html += renderSourceTag(ti.chironWound?._sources);
     }
 
     // Lilith Placement
@@ -3384,7 +3259,6 @@ function renderProfile(data) {
           ${lil.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(lil.convergence)}</p>` : ''}
         </div>
       </div>`;
-      html += renderSourceTag(ti.lilithPlacement?._sources);
     }
 
     // Astrological Signatures
@@ -3494,48 +3368,8 @@ function renderProfile(data) {
 
   if (meta.profileId) html += `<div class="alert alert-success"><span class="icon-check"></span> Profile saved (ID: ${escapeHtml(meta.profileId)}) <button class="btn-secondary btn-sm" data-action="exportPDF" data-arg0="${escapeAttr(meta.profileId)}" style="margin-left:var(--space-3)">Download PDF</button></div>`;
 
-  // Phase 1E: Practitioner CTA — direct users to practitioners after synthesis
-  const _practCtaType = chartSummary.type ? escapeHtml(chartSummary.type) + 's' : null;
-  html += `<div class="card" style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--gold-dim,var(--border))">
-    <div class="card-title" style="color:var(--gold)">✦ Want to go deeper?</div>
-    <p style="margin:0 0 1rem">An AI profile is a map — a certified Prime Self practitioner can be your guide. They'll show you how your blueprint applies to your specific relationships, decisions, timing, and career right now.</p>
-    <button class="btn-primary" data-action="switchTab" data-arg0="directory" style="margin-bottom:0.5rem;width:100%">
-      ${_practCtaType ? `Find a Practitioner Who Specializes in ${_practCtaType}` : 'Find a Practitioner Who Specializes in Your Type'}
-    </button>
-    <p style="text-align:center;font-size:0.82em;color:var(--text-dim);margin:0">Already working with a practitioner? <button class="link-btn" data-action="switchTab" data-arg0="settings">Connect your account in settings →</button></p>
-  </div>`;
-
   html += rawToggle(data);
   return html;
-}
-
-// ── Daily Engagement Card (Phase 4) ──────────────────────────
-function renderDailyCard(transitsData, chartData) {
-  if (!transitsData || !chartData) return '';
-
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-  // Find the most active transit (natal hit first, else first activation)
-  const activations = transitsData.activations || [];
-  const topHit = activations.find(a => a.natal) || activations[0];
-
-  let cardBody = '';
-  if (topHit) {
-    const planet = topHit.planet || 'The planets';
-    const gate = topHit.gate ? ` · Gate ${topHit.gate}` : '';
-    cardBody = `<p style="margin:0.5rem 0 0;font-size:0.95rem;color:var(--text-dim)">${escapeHtml(planet)}${escapeHtml(gate)} is active in your chart today.</p>`;
-    if (topHit.natal) {
-      cardBody += `<p style="margin:0.5rem 0 0;font-size:0.88rem;color:var(--gold)">✦ This directly activates one of your natal gates.</p>`;
-    }
-  }
-
-  return `<div class="card daily-card" style="border-left:3px solid var(--gold)">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div class="card-title" style="margin:0">☽ Today — ${today}</div>
-      <button class="btn-secondary btn-sm" data-action="switchTab" data-arg0="transits">Full Report →</button>
-    </div>
-    ${cardBody || '<p style="margin:0.5rem 0 0;color:var(--text-dim);font-size:0.9rem">See today\'s planetary energy and how it activates your chart.</p>'}
-  </div>`;
 }
 
 // ── Transits ──────────────────────────────────────────────────
@@ -5552,17 +5386,6 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// Phase 1B: Source citation helper — renders a collapsible "what this is based on" tag
-function renderSourceTag(sourcesText) {
-  if (!sourcesText) return '';
-  return `<details class="source-tag" style="margin-top:0.5rem">
-    <summary style="cursor:pointer;font-size:0.75rem;color:var(--text-dim);list-style:none">
-      <span style="border-bottom:1px dashed var(--text-dim)">what this is based on ▾</span>
-    </summary>
-    <p style="font-size:0.75rem;color:var(--text-dim);margin:0.25rem 0 0;padding:0.25rem 0.5rem;background:var(--bg3);border-radius:4px">${escapeHtml(sourcesText)}</p>
-  </details>`;
-}
-
 /** Sanitize a value for use inside an HTML attribute (quotes, angle brackets). */
 function escapeAttr(val) {
   return String(val).replace(/[&"'<>]/g, c => ({'&':'&amp;','"':'&quot;',"'":'&#39;','<':'&lt;','>':'&gt;'}[c]));
@@ -7000,7 +6823,6 @@ if (!document.getElementById('notificationStyles')) {
 
 capturePractitionerInviteFromUrl();
 capturePostCheckoutIntentFromUrl();
-captureReferralFromUrl(); // Phase 2B
 
 // Restore session from HttpOnly refresh cookie, then boot UI
 (async () => {
@@ -7037,13 +6859,6 @@ captureReferralFromUrl(); // Phase 2B
 // ── Wrapper functions for complex inline handlers ───────────────────────────
 function hideMemberForm() { const el = document.getElementById('addMemberFormCard'); if (el) el.style.display = 'none'; }
 function hidePracDetail()  { const el = document.getElementById('pracDetailPanel');  if (el) el.style.display = 'none'; }
-// Phase 1A: Scroll past the synthesis opener to the main profile card
-function scrollToProfile() {
-  const profileResult = document.getElementById('profileResult');
-  if (!profileResult) return;
-  const card = profileResult.querySelector('.card:not(.synthesis-opener)');
-  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
 
 // PRAC-005: Navigate to composite tab to generate a compatibility chart with a client.
 // Scrolls the composite form into view so the practitioner can fill in their own birth data
@@ -7198,60 +7013,6 @@ function toggleDetails(toggleId, btn) {
   });
 })();
 
-// ── Practitioner Onboarding Modal (Phase 6) ──────────────────────────────────
-let _practOnbStep = 1;
-const PRACT_ONB_TOTAL = 4;
-
-async function showPractitionerOnboarding() {
-  _practOnbStep = 1;
-  _practOnbRender();
-  document.getElementById('practitionerOnboardingOverlay')?.classList.remove('hidden');
-
-  // Load referral link
-  try {
-    const data = await apiFetch('/api/practitioner/referral-link');
-    if (data?.referralUrl) {
-      const input = document.getElementById('pract-onb-reflink');
-      if (input) input.value = data.referralUrl;
-    }
-  } catch { /* silent */ }
-}
-
-function _practOnbRender() {
-  for (let i = 1; i <= PRACT_ONB_TOTAL; i++) {
-    const step = document.getElementById(`pract-onb-step-${i}`);
-    const dot = document.getElementById(`pract-onb-dot-${i}`);
-    if (step) step.style.display = i === _practOnbStep ? '' : 'none';
-    if (dot) {
-      dot.style.background = i === _practOnbStep ? 'var(--gold)' : 'var(--border)';
-    }
-  }
-}
-
-function practOnbNext() {
-  if (_practOnbStep < PRACT_ONB_TOTAL) {
-    _practOnbStep++;
-    _practOnbRender();
-  }
-}
-
-function practOnbSkip() {
-  practOnbFinish();
-}
-
-function practOnbFinish() {
-  document.getElementById('practitionerOnboardingOverlay')?.classList.add('hidden');
-  localStorage.setItem('pract_onb_seen', '1');
-  switchTab('practitioner');
-}
-
-function practOnbCopyLink() {
-  const val = document.getElementById('pract-onb-reflink')?.value;
-  if (val && navigator.clipboard) {
-    navigator.clipboard.writeText(val).then(() => showNotification('Referral link copied!', 'success'));
-  }
-}
-
 // Ensure delegated actions are always discoverable on global scope.
 // (top-level function declarations in non-module scripts are already on window,
 //  but explicit assignment makes the intent clear and safe for any tooling.)
@@ -7279,14 +7040,6 @@ window.begin2FASetup = begin2FASetup;
 window.confirm2FASetup = confirm2FASetup;
 window.disable2FA = disable2FA;
 window.saveAIContext = saveAIContext;
-window.scrollToProfile = scrollToProfile;
-window.showPractitionerOnboarding = showPractitionerOnboarding;
-window.practOnbNext = practOnbNext;
-window.practOnbSkip = practOnbSkip;
-window.practOnbFinish = practOnbFinish;
-window.practOnbCopyLink = practOnbCopyLink;
-window.checkAndShowReferralPrompt = checkAndShowReferralPrompt;
-window.closeReferralModal = closeReferralModal;
 
 // ── UX-QUICKPICK: Evaluation type + preset question buttons ──────────────────
 const EVAL_QUICKPICKS = {

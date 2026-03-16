@@ -16,6 +16,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { importEncryptionKey, encryptToken, readToken } from '../lib/tokenCrypto.js'; // BL-R-H3
 import { normalizeTierName } from '../lib/stripe.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
+import { createLogger } from '../lib/logger.js';
 
 /**
  * GET /api/notion/auth
@@ -133,7 +134,7 @@ export async function handleNotionCallback(request, env, ctx) {
     
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Notion token exchange failed:', errorText);
+      createLogger('notion').error('token_exchange_failed', { error: errorText });
       return new Response('Failed to exchange authorization code', { status: 500 });
     }
     
@@ -146,7 +147,7 @@ export async function handleNotionCallback(request, env, ctx) {
       storedToken = await encryptToken(tokenData.access_token, encKey);
     } else {
       // P2-SEC-018: Refuse to store plaintext tokens — require encryption key
-      console.error('[Notion] NOTION_TOKEN_ENCRYPTION_KEY not set — refusing to store unencrypted token. Add secret via: wrangler secret put NOTION_TOKEN_ENCRYPTION_KEY');
+      createLogger('notion').error('token_encryption_key_missing', { message: 'NOTION_TOKEN_ENCRYPTION_KEY not set — refusing to store unencrypted token' });
       return new Response('Notion integration is temporarily unavailable. Please contact support.', { status: 503 });
     }
 
@@ -337,7 +338,7 @@ export async function handleSyncClients(request, env, ctx) {
         syncedCount++;
         
       } catch (pageError) {
-        console.error(`Error syncing client ${client.email}:`, pageError);
+        createLogger('notion').error('sync_client_error', { clientEmail: client.email, error: pageError?.message || String(pageError) });
         errorCount++;
       }
     }

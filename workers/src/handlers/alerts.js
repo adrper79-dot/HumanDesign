@@ -18,6 +18,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { dispatchWebhookEvent } from '../lib/webhookDispatcher.js';
 import { sendNotificationToUser } from './push.js';
 import { normalizeTierName } from '../lib/stripe.js';
+import { createLogger } from '../lib/logger.js';
 
 /**
  * Main handler for alert routes
@@ -91,7 +92,7 @@ async function listAlerts(request, env, user) {
       count: rows.length
     });
   } catch (error) {
-    console.error('[ALERTS] List error:', error);
+    createLogger('alerts').error('list_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to list alerts'
@@ -181,7 +182,7 @@ async function createAlert(request, env, user) {
       }
     });
   } catch (error) {
-    console.error('[ALERTS] Create error:', error);
+    createLogger('alerts').error('create_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to create alert'
@@ -220,7 +221,7 @@ async function getAlert(request, env, user, alertId) {
       }
     });
   } catch (error) {
-    console.error('[ALERTS] Get error:', error);
+    createLogger('alerts').error('get_error', { alertId, error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to get alert'
@@ -302,7 +303,7 @@ async function updateAlert(request, env, user, alertId) {
       message: 'Alert updated successfully'
     });
   } catch (error) {
-    console.error('[ALERTS] Update error:', error);
+    createLogger('alerts').error('update_error', { alertId, error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to update alert'
@@ -332,7 +333,7 @@ async function deleteAlert(request, env, user, alertId) {
       message: 'Alert deleted successfully'
     });
   } catch (error) {
-    console.error('[ALERTS] Delete error:', error);
+    createLogger('alerts').error('delete_error', { alertId, error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to delete alert'
@@ -370,7 +371,7 @@ async function listTemplates(request, env, user) {
       }))
     });
   } catch (error) {
-    console.error('[ALERTS] List templates error:', error);
+    createLogger('alerts').error('list_templates_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to list templates'
@@ -455,7 +456,7 @@ async function createAlertFromTemplate(request, env, user, templateId) {
       }
     });
   } catch (error) {
-    console.error('[ALERTS] Create from template error:', error);
+    createLogger('alerts').error('create_from_template_error', { templateId, error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to create alert from template'
@@ -500,7 +501,7 @@ async function getAlertHistory(request, env, user) {
       }
     });
   } catch (error) {
-    console.error('[ALERTS] History error:', error);
+    createLogger('alerts').error('history_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to get alert history'
@@ -761,6 +762,6 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
       }
     }
   } catch (error) {
-    console.error(`[ALERTS] Error evaluating alerts for user ${user.id}:`, error);
+    createLogger('alerts').error('evaluate_user_alerts_error', { userId: user.id, error: error?.message || String(error) });
   }
 }

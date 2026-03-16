@@ -77,7 +77,7 @@ export async function sendEmail({ to, subject, html, text = '', replyTo = '', co
  * Send Welcome Email #1 - Immediately after signup
  * Subject: "Welcome to Prime Self 🌟 Let's generate your chart"
  */
-export async function sendWelcomeEmail1(userEmail, userName, apiKey, fromEmail) {
+export async function sendWelcomeEmail1(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
   const subject = "Welcome to Prime Self 🌟 Let's generate your chart";
   
   const html = `
@@ -136,14 +136,14 @@ export async function sendWelcomeEmail1(userEmail, userName, apiKey, fromEmail) 
 </html>
   `;
 
-  return await sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return await sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Send Welcome Email #2 - 24 hours after signup
  * Subject: "Understanding your unique pattern"
  */
-export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, fromEmail) {
+export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, fromEmail, companyAddress = '') {
   const subject = `${userName}, understanding your ${chartType || 'unique'} pattern`;
   
   const html = `
@@ -238,14 +238,14 @@ export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, 
 </html>
   `;
 
-  return await sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return await sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Send Welcome Email #3 - 72 hours after signup
  * Subject: "How to use your Decision Strategy"
  */
-export async function sendWelcomeEmail3(userEmail, userName, authority, apiKey, fromEmail) {
+export async function sendWelcomeEmail3(userEmail, userName, authority, apiKey, fromEmail, companyAddress = '') {
   const subject = "How to make decisions aligned with your design";
   
   const html = `
@@ -327,14 +327,14 @@ export async function sendWelcomeEmail3(userEmail, userName, authority, apiKey, 
 </html>
   `;
 
-  return await sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return await sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Send Welcome Email #4 - 7 days after signup
  * Subject: "Try Transit Insights (your personalized forecast)"
  */
-export async function sendWelcomeEmail4(userEmail, userName, apiKey, fromEmail) {
+export async function sendWelcomeEmail4(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
   const subject = "Your transits this week - what's activating in your chart?";
   
   const html = `
@@ -395,14 +395,14 @@ export async function sendWelcomeEmail4(userEmail, userName, apiKey, fromEmail) 
 </html>
   `;
 
-  return await sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return await sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Send Re-engagement Email - For users inactive 7+ days
  * Subject: "Your chart misses you (and your transits are interesting)"
  */
-export async function sendReengagementEmail(userEmail, userName, daysSinceLastLogin, apiKey, fromEmail) {
+export async function sendReengagementEmail(userEmail, userName, daysSinceLastLogin, apiKey, fromEmail, companyAddress = '') {
   const subject = "Your transits this week look interesting...";
   
   const html = `
@@ -459,14 +459,14 @@ export async function sendReengagementEmail(userEmail, userName, daysSinceLastLo
 </html>
   `;
 
-  return await sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return await sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Send Upgrade Nudge Email - For free tier users after 30 days
  * Subject: "Ready to unlock your full synthesis?"
  */
-export async function sendUpgradeNudgeEmail(userEmail, userName, apiKey, fromEmail) {
+export async function sendUpgradeNudgeEmail(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
   const subject = "Unlock your full Prime Self potential";
   
   const html = `
@@ -534,13 +534,13 @@ export async function sendUpgradeNudgeEmail(userEmail, userName, apiKey, fromEma
 </html>
   `;
 
-  return await sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return await sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Trial Ending Reminder — sent at day 5 of a 7-day trial (SYS-017)
  */
-export async function sendTrialEndingEmail(userEmail, userName, daysLeft, tierName, apiKey, fromEmail) {
+export async function sendTrialEndingEmail(userEmail, userName, daysLeft, tierName, apiKey, fromEmail, companyAddress = '') {
   const subject = `Your Prime Self trial ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
   const html = `<!DOCTYPE html><html><head><style>
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
@@ -560,13 +560,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
 </div>
 <div class="footer"><p><a href="{{unsubscribe_url}}">Unsubscribe</a></p></div>
 </body></html>`;
-  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Subscription Renewal Confirmation (SYS-017)
  */
-export async function sendRenewalConfirmationEmail(userEmail, userName, tierName, amount, nextRenewalDate, apiKey, fromEmail) {
+export async function sendRenewalConfirmationEmail(userEmail, userName, tierName, amount, nextRenewalDate, apiKey, fromEmail, companyAddress = '') {
   const subject = `Your Prime Self subscription has renewed`;
   const html = `<!DOCTYPE html><html><head><style>
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
@@ -589,13 +589,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
 </div>
 <div class="footer"><p><a href="{{unsubscribe_url}}">Unsubscribe</a></p></div>
 </body></html>`;
-  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
  * Refund Issued Notification (SYS-017)
  */
-export async function sendRefundIssuedEmail(userEmail, userName, amount, currency, apiKey, fromEmail) {
+export async function sendRefundIssuedEmail(userEmail, userName, amount, currency, apiKey, fromEmail, companyAddress = '') {
   const subject = `Your Prime Self refund has been processed`;
   const html = `<!DOCTYPE html><html><head><style>
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
@@ -614,7 +614,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
 </div>
 <div class="footer"><p><a href="{{unsubscribe_url}}">Unsubscribe</a></p></div>
 </body></html>`;
-  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
@@ -668,7 +668,7 @@ export async function scheduleEmailCampaign(user, campaignType, chartData = {}, 
  * @param {string} apiKey - Resend API key
  * @param {string} fromEmail - From email address
  */
-export async function sendPasswordResetEmail(userEmail, resetUrl, apiKey, fromEmail) {
+export async function sendPasswordResetEmail(userEmail, resetUrl, apiKey, fromEmail, companyAddress = '') {
   const subject = 'Reset your Prime Self password';
 
   const html = `
@@ -693,7 +693,7 @@ export async function sendPasswordResetEmail(userEmail, resetUrl, apiKey, fromEm
     </div>
   `;
 
-  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
@@ -703,7 +703,7 @@ export async function sendPasswordResetEmail(userEmail, resetUrl, apiKey, fromEm
  * @param {string} apiKey - Resend API key
  * @param {string} fromEmail - From email address
  */
-export async function sendVerificationEmail(userEmail, verifyUrl, apiKey, fromEmail) {
+export async function sendVerificationEmail(userEmail, verifyUrl, apiKey, fromEmail, companyAddress = '') {
   const subject = 'Verify your Prime Self email';
 
   const html = `
@@ -727,7 +727,7 @@ export async function sendVerificationEmail(userEmail, verifyUrl, apiKey, fromEm
     </div>
   `;
 
-  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
@@ -738,7 +738,7 @@ export async function sendVerificationEmail(userEmail, verifyUrl, apiKey, fromEm
  * @param {string} apiKey - Resend API key
  * @param {string} fromEmail - From email address
  */
-export async function sendPractitionerInvitationEmail(clientEmail, practitionerName, inviteUrl, apiKey, fromEmail) {
+export async function sendPractitionerInvitationEmail(clientEmail, practitionerName, inviteUrl, apiKey, fromEmail, companyAddress = '') {
   const subject = `${practitionerName} wants to explore your energy blueprint`;
 
   const html = `
@@ -774,7 +774,7 @@ export async function sendPractitionerInvitationEmail(clientEmail, practitionerN
     </div>
   `;
 
-  return sendEmail({ to: clientEmail, subject, html }, apiKey, fromEmail);
+  return sendEmail({ to: clientEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
 
 /**
@@ -784,7 +784,7 @@ export async function sendPractitionerInvitationEmail(clientEmail, practitionerN
  * @param {string} apiKey - Resend API key
  * @param {string} fromEmail - From email address
  */
-export async function sendSubscriptionConfirmationEmail(userEmail, tierName, apiKey, fromEmail) {
+export async function sendSubscriptionConfirmationEmail(userEmail, tierName, apiKey, fromEmail, companyAddress = '') {
   const subject = `Welcome to Prime Self ${tierName}! 🎉`;
 
   const html = `
@@ -822,5 +822,5 @@ export async function sendSubscriptionConfirmationEmail(userEmail, tierName, api
 </html>
   `;
 
-  return sendEmail({ to: userEmail, subject, html }, apiKey, fromEmail);
+  return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }

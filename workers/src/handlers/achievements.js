@@ -22,6 +22,7 @@ import {
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { sendNotificationToUser } from './push.js';
+import { createLogger } from '../lib/logger.js';
 
 // ─── GET /api/achievements ───────────────────────────────────────────────
 // Returns all achievements with user's unlock status
@@ -96,7 +97,7 @@ export async function handleGetAchievements(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error fetching achievements:', error);
+    createLogger('achievements').error('fetch_achievements_error', { error: error?.message || String(error) });
     return Response.json({
       error: 'Failed to fetch achievements' // BL-R-H2
     }, { status: 500 });
@@ -161,7 +162,7 @@ export async function handleGetProgress(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error fetching achievement progress:', error);
+    createLogger('achievements').error('fetch_progress_error', { error: error?.message || String(error) });
     return Response.json({
       error: 'Failed to fetch progress'
     }, { status: 500 });
@@ -228,7 +229,7 @@ export async function handleGetLeaderboard(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error fetching leaderboard:', error);
+    createLogger('achievements').error('fetch_leaderboard_error', { error: error?.message || String(error) });
     return Response.json({
       error: 'Failed to fetch leaderboard'
     }, { status: 500 });
@@ -265,7 +266,7 @@ export async function handleTrackEvent(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error tracking achievement event:', error);
+    createLogger('achievements').error('track_event_handler_error', { error: error?.message || String(error) });
     return Response.json({
       error: 'Failed to track event'
     }, { status: 500 });
@@ -325,7 +326,7 @@ export async function trackEvent(env, userId, eventType, eventData = null, userT
         body: achievement.unlockMessage,
         icon: achievement.icon,
         data: { type: 'achievement', achievementId: achievement.id }
-      }).catch(err => console.error('Achievement push notification failed:', err.message));
+      }).catch(err => createLogger('achievements').error('achievement_push_notification_failed', { error: err?.message || String(err) }));
       if (ctx?.waitUntil) {
         ctx.waitUntil(notifPromise);
       } else {
@@ -341,7 +342,7 @@ export async function trackEvent(env, userId, eventType, eventData = null, userT
     return newlyUnlocked;
     
   } catch (error) {
-    console.error('Error in trackEvent:', error);
+    createLogger('achievements').error('track_event_error', { error: error?.message || String(error) });
     // Don't throw - achievement tracking should never break core functionality
     return [];
   }
@@ -461,7 +462,7 @@ async function checkPointMilestones(env, userId, userProgress, ctx = null) {
           body: achievement.unlockMessage,
           icon: achievement.icon,
           data: { type: 'milestone', milestoneId: milestone.id, totalPoints }
-        }).catch(err => console.error('Milestone push notification failed:', err.message));
+        }).catch(err => createLogger('achievements').error('milestone_push_notification_failed', { error: err?.message || String(err) }));
         if (ctx?.waitUntil) {
           ctx.waitUntil(milestoneNotif);
         } else {

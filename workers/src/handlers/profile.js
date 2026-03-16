@@ -29,6 +29,8 @@ import { callLLM } from '../lib/llm.js';
 import { enforceUsageQuota, recordUsage, enforceDailyCeiling, incrementDailyCounter } from '../middleware/tierEnforcement.js';
 import { getTier } from '../lib/stripe.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
+import { createLogger } from '../lib/logger.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleProfile(request, env) {
   // Enforce usage quota for profile generation (BL-RACE-001: atomic check+insert)
@@ -249,14 +251,14 @@ export async function handleProfile(request, env) {
       }
     } catch (err) {
       // DB save failure is non-fatal — log and continue
-      console.error('DB save failed:', err.message);
+      createLogger('profile').error('db_save_failed', { error: err.message });
     }
   }
 
   // BL-DAILY-001: Increment daily counter after successful generation
   // Note: Monthly usage is now recorded atomically inside enforceUsageQuota (BL-RACE-001)
   if (userId) {
-    await incrementDailyCounter(env, userId, 'synthesis').catch(err => console.error('[profile] Daily counter increment failed:', err.message));
+    await incrementDailyCounter(env, userId, 'synthesis').catch(err => createLogger('profile').error('daily_counter_failed', { error: err.message }));
   }
 
   return Response.json({
@@ -362,8 +364,7 @@ export async function handleListProfiles(request, env) {
     }));
     return Response.json({ ok: true, data: profiles });
   } catch (err) {
-    console.error('[list-profiles] DB error:', err.message);
-    return Response.json({ error: 'Database error' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'list-profiles' });
   }
 }
 
@@ -401,7 +402,6 @@ export async function handleSearchProfiles(request, env) {
     }));
     return Response.json({ ok: true, data: profiles });
   } catch (err) {
-    console.error('[search-profiles] DB error:', err.message);
-    return Response.json({ error: 'Database error' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'search-profiles' });
   }
 }

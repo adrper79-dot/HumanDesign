@@ -392,7 +392,8 @@ async function handleCheckoutCompleted(event, query, stripe, env, log) {
       if (userEmail) {
         sendSubscriptionConfirmationEmail(
           userEmail, tierLabel, env.RESEND_API_KEY,
-          env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+          env.FROM_EMAIL || 'Prime Self <hello@primeself.app>',
+          env.COMPANY_ADDRESS || ''
         ).catch(err => log.warn({ action: 'subscription_email_failed', error: err.message }));
       }
     } catch (e) { log.warn({ action: 'subscription_email_lookup_failed', error: e.message }); }
@@ -753,7 +754,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-hei
 <a href="https://primeself.app/billing" class="cta">Update Payment Method →</a>
 <p>If you have any questions, reply to this email and we'll help.</p><p>— The Prime Self Team</p></div>
 <div class="footer"><p>You're receiving this because your subscription payment failed.</p></div>
-</body></html>`
+</body></html>`,
+        companyAddress: env.COMPANY_ADDRESS || ''
       }, env.RESEND_API_KEY, env.FROM_EMAIL || 'Prime Self <hello@primeself.app>');
     } catch (err) {
       log.warn({ action: 'payment_failure_email_error', error: err.message });
@@ -849,7 +851,8 @@ async function handleInvoicePaid(event, query, stripe, env, log) {
       amountPaid,
       new Date(Date.now() + 30 * 86400000).toLocaleDateString(),
       env.RESEND_API_KEY,
-      env.FROM_EMAIL
+      env.FROM_EMAIL,
+      env.COMPANY_ADDRESS || ''
     ).catch(() => {});
   }
 }

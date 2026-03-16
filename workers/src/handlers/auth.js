@@ -279,7 +279,8 @@ async function handleRegister(request, env) {
         email.toLowerCase(),
         email.split('@')[0], // Use email prefix as name fallback
         env.RESEND_API_KEY,
-        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>',
+        env.COMPANY_ADDRESS || ''
       ).catch(err => {
         log.error('send_welcome_email_failed', { error: err?.message });
         // Don't fail registration if email fails
@@ -297,7 +298,8 @@ async function handleRegister(request, env) {
         email.toLowerCase(),
         verifyUrl,
         env.RESEND_API_KEY,
-        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>',
+        env.COMPANY_ADDRESS || ''
       ).catch(err => {
         log.error('send_verification_email_failed', { error: err?.message });
       });
@@ -613,7 +615,8 @@ async function handleForgotPassword(request, env) {
         email.toLowerCase(),
         resetUrl,
         env.RESEND_API_KEY,
-        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>',
+        env.COMPANY_ADDRESS || ''
       ).catch(err => {
         log.error('send_password_reset_failed', { error: err?.message });
       });
@@ -937,7 +940,8 @@ async function handleResendVerification(request, env) {
         userEmail,
         verifyUrl,
         env.RESEND_API_KEY,
-        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>',
+        env.COMPANY_ADDRESS || ''
       );
     }
 
@@ -985,7 +989,7 @@ async function handle2FASetup(request, env) {
       secretToStore = await encryptToken(secret, encKey);
     } catch (encErr) {
       // Fall back to plaintext if key import fails (misconfigured key)
-      console.error('[2fa/setup] TOTP encryption failed, storing plaintext:', encErr.message);
+      createLogger('auth').error('totp_encryption_failed_plaintext_fallback', { error: encErr?.message || String(encErr) });
     }
   }
 

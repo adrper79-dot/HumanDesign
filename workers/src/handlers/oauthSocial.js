@@ -31,6 +31,7 @@
 import { signJWT, sha256, jwtClaims } from '../lib/jwt.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { sendWelcomeEmail1 } from '../lib/email.js';
+import { createLogger } from '../lib/logger.js';
 
 const ACCESS_TOKEN_TTL  = 60 * 15;             // 15 minutes (matches auth.js)
 const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 30;  // 30 days
@@ -194,7 +195,7 @@ async function handleCallback(provider, request, env) {
       if (storedProvider !== provider) {
         return oauthErrorRedirect(frontendUrl, 'State mismatch');
       }
-      env.CACHE.delete(`oauth_state:${state}`).catch(e => console.error('[oauth] state cleanup failed:', e.message));
+      env.CACHE.delete(`oauth_state:${state}`).catch(e => createLogger('oauth').error('state_cleanup_failed', { error: e.message }));
       // Retrieve and immediately consume the PKCE verifier
       codeVerifier = await env.CACHE.get(`oauth_pkce:${state}`).catch(() => null);
       env.CACHE.delete(`oauth_pkce:${state}`).catch(() => {});
@@ -243,7 +244,7 @@ async function handleCallback(provider, request, env) {
         providerEmail?.toLowerCase() || null,
         displayName || null,
         avatarUrl || null
-      ]).catch(err => console.error('[OAuth] Social account upsert failed:', err.message)); // best-effort update
+      ]).catch(err => createLogger('oauth').error('social_account_upsert_failed', { error: err.message })); // best-effort update
     } else {
       // No social account found — check by email to link existing account
       let userRow = null;
@@ -305,8 +306,9 @@ async function handleCallback(provider, request, env) {
         providerEmail.toLowerCase(),
         displayName || providerEmail.split('@')[0],
         env.RESEND_API_KEY,
-        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>'
-      ).catch(err => console.error('[OAuth] Welcome email failed:', err.message));
+        env.FROM_EMAIL || 'Prime Self <hello@primeself.app>',
+        env.COMPANY_ADDRESS || ''
+      ).catch(err => createLogger('oauth').error('welcome_email_failed', { error: err.message }));
     }
 
     // P2-SEC-011: Authorization code flow — never put tokens in URL.
@@ -323,7 +325,7 @@ async function handleCallback(provider, request, env) {
     if (env.CACHE) {
       await env.CACHE.put(`oauth_code:${oauthCode}`, codePayload, { expirationTtl: 60 });
     } else {
-      console.error('[oauth] KV CACHE unavailable — cannot store auth code');
+      createLogger('oauth').error('kv_cache_unavailable', {});
       return oauthErrorRedirect(frontendUrl, 'Service temporarily unavailable — please try again');
     }
 
@@ -334,7 +336,7 @@ async function handleCallback(provider, request, env) {
     return Response.redirect(dest.toString(), 302);
 
   } catch (err) {
-    console.error(`[oauth:${provider}] callback error:`, err.message);
+    createLogger('oauth').error('callback_error', { provider, error: err.message });
     return oauthErrorRedirect(frontendUrl, 'Authentication failed — please try again');
   }
 }
@@ -492,7 +494,7 @@ export async function handleOAuthExchange(request, env) {
 // ─── Helpers ─────────────────────────────────────────────────
 
 function configError(secret) {
-  console.error(`[oauth] Missing required secret: ${secret}`);
+  createLogger('oauth').error('missing_required_secret', { secret });
   return Response.json({ error: `OAuth not configured — missing ${secret}` }, { status: 503 });
 }
 

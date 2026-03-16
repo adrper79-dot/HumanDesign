@@ -2,7 +2,7 @@
 Date: 2026-03-16
 Scope: Full codebase — security, billing, data, reliability, performance, compliance, UX, observability
 Method: Expert + C-suite review across all handlers, middleware, DB migrations, cron, frontend, tests
-Status: Open (5 P0 items resolved 2026-03-16)
+Status: Open (5 P0 items resolved 2026-03-16; P1/P2 items SYS-006–SYS-028 verified resolved 2026-03-16 via codebase archaeology — Cycle 1)
 
 False positives removed:
 - AUDIT-003 (backslash in AUTH_ROUTES): `/api/composite` IS correctly forward-slashed in AUTH_ROUTES and protected. Not an issue.
@@ -41,27 +41,27 @@ File: workers/src/handlers/profile.js, workers/src/handlers/profile-stream.js
 Finding: Migration 036 documents "Gates LLM usage behind verified email to prevent abuse." Neither profile.js nor profile-stream.js checks `user.email_verified` before calling the LLM. An attacker can register with a throwaway email and immediately consume expensive Anthropic API calls. Usage quotas exist but only limit volume per user — they do not prevent unverified accounts.
 Fix: Verified both handlers already short-circuit with a 403 `EMAIL_NOT_VERIFIED` response before LLM dispatch.
 
-### SYS-006 — BILLING — `customer.subscription.paused` Not Handled
+### SYS-006 — BILLING — `customer.subscription.paused` Not Handled ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/webhook.js
 Finding: Stripe supports subscription pausing via the Customer Portal. If a user pauses their subscription, Stripe fires `customer.subscription.paused`. The webhook switch statement does not handle this event — it falls through to `default` and logs "ignored." The user retains full tier access while paused and paying $0.
 Fix: Add a case for `customer.subscription.paused` that sets subscription status to 'paused' and optionally downgrades tier to free until resumed.
 
-### SYS-007 — BILLING — Upgrade Does Not Preserve Billing Period (Annual → Annual)
+### SYS-007 — BILLING — Upgrade Does Not Preserve Billing Period (Annual → Annual) ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/billing.js lines 547–619
 Finding: `handleUpgradeSubscription` resolves the target price using `tierConfig.priceId` (monthly price only). The validate.js schema for this endpoint does not accept `billingPeriod`. A user on an annual individual plan who upgrades to practitioner will be silently switched to monthly practitioner billing. This is unexpected pricing behaviour and a churn risk.
 Fix: Accept `billingPeriod: z.enum(['monthly','annual']).default('monthly')` in upgrade body schema. Resolve `annualPriceId` vs `priceId` based on the param.
 
-### SYS-008 — BILLING — Agency Referral Cap Documented But Not Implemented
+### SYS-008 — BILLING — Agency Referral Cap Documented But Not Implemented ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/webhook.js lines 779–800
 Finding: Comment at line 779 states "Agency tier: cap credit at 50% of subscription cost (per HD_UPDATES3 spec)" but the code applies a flat `shareRate = 0.25` to ALL tiers with no cap. At $349/mo agency, referrers earn $87.25/mo per referred agency user indefinitely with no ceiling. This is a financial liability.
 Fix: Implement the documented cap: `const shareRate = tier === 'agency' ? Math.min(0.25, 0.50) : 0.25` and cap at 50% max: `const creditAmount = Math.min(Math.floor(amountPaid * 0.25), Math.floor(amountPaid * 0.50))`. For agency: cap = floor(349*0.50) = $174.50/mo max.
 
-### SYS-009 — RELIABILITY — No Dunning / Grace Period After Payment Failure
+### SYS-009 — RELIABILITY — No Dunning / Grace Period After Payment Failure ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/webhook.js lines 654–731
 Finding: When `invoice.payment_failed` fires: an email is sent and status is set to `past_due`. No follow-up sequence exists — no reminder at day 3, 7, or 14; no access revocation after repeated failures. Stripe retries automatically but Prime Self never escalates. A user could sit in `past_due` with full tier access indefinitely.
 Fix: Add a cron step (Step 10) that queries for subscriptions in `past_due` status older than 7 days and: (a) sends an escalating reminder email, (b) downgrades to free after 14 days.
 
-### SYS-010 — SECURITY — TOTP Secret Stored in Plaintext
+### SYS-010 — SECURITY — TOTP Secret Stored in Plaintext ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/auth.js, workers/src/db/queries.js
 Finding: `totp_secret` is stored and retrieved as plaintext in the DB. `lib/tokenCrypto.js` provides AES-GCM encryption (already used for Notion tokens) but is not applied to TOTP secrets. A DB breach exposes every user's 2FA seed, allowing offline clone of their authenticator.
 Fix: Encrypt `totp_secret` at rest using `encryptToken(secret, env.TOTP_ENCRYPTION_KEY)` before INSERT; decrypt on read during verification. Add `TOTP_ENCRYPTION_KEY` as a Worker secret.
@@ -71,34 +71,34 @@ File: workers/src/db/queries.js
 Finding: `getUserById` and `getUserByEmail` both SELECT `password_hash` and `totp_secret`. `auth.js` strips the hash before returning to callers, but this is a fragile convention. Any new handler that calls these queries and skips the strip leaks the hash. The cron job queries users for digests and these rows contain the hash in Workers memory.
 Fix: Safe variants are now schema-compatible for shared reads and are used by `getUserFromRequest()` plus non-auth lookup paths in SMS, practitioner, diary, referrals, webhook recovery, agency seats, and OAuth account linking. Hash-inclusive variants remain only on auth flows that actually need `password_hash` or `totp_secret`.
 
-### SYS-012 — SECURITY — 2FA Setup Endpoint Not Rate-Limited
+### SYS-012 — SECURITY — 2FA Setup Endpoint Not Rate-Limited ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/middleware/rateLimit.js, workers/src/handlers/auth.js
 Finding: `/api/auth/2fa/setup` has no dedicated rate limit entry. A user with a valid session can call this endpoint repeatedly, causing the server to generate and return a new TOTP seed on each call.
 Fix: Add rate limit entry: `{ pattern: '/api/auth/2fa/setup', limit: 3, windowMs: 60000 }`.
 
-### SYS-013 — PERF — Rate Limiting Hits Database on Every Request
+### SYS-013 — PERF — Rate Limiting Hits Database on Every Request ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/middleware/rateLimit.js
 Finding: Every API request — including public, health, and static-ish endpoints — triggers a DB upsert on `rate_limit_counters` via `atomicWindowCounterIncrement`. At scale this creates a DB hotspot and adds ~10–30ms latency per request for a safety check that could live in KV.
 Fix: Move rate limiting to Cloudflare KV for non-auth endpoints. Retain DB-backed rate limiting only for auth endpoints where exact counts matter (`/api/auth/login`, `/api/auth/register`, `/api/auth/2fa/*`).
 
-### SYS-014 — DATA — No Index on `subscriptions.stripe_subscription_id`
+### SYS-014 — DATA — No Index on `subscriptions.stripe_subscription_id` ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/db/migrations/
 Finding: The webhook handler calls `getSubscriptionByStripeSubscriptionId` on every subscription event (created, updated, deleted, invoice.paid, invoice.payment_succeeded). No migration adds an explicit index on this column. Without it every webhook triggers a sequential scan on the subscriptions table.
 Fix: Add migration `042_add_subscription_indexes.sql`: `CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_sub_id ON subscriptions(stripe_subscription_id); CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_customer_id ON subscriptions(stripe_customer_id);`
 
-### SYS-015 — COMPLIANCE — Account Deletion Audit Log Stores IP in Plaintext
+### SYS-015 — COMPLIANCE — Account Deletion Audit Log Stores IP in Plaintext ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/db/migrations/039_account_deletions_audit.sql line 13
 Finding: `account_deletions` table has `ip_address TEXT` column stored as plaintext. The migration comment says "not retaining PII" but IP addresses are PII under GDPR. The email is correctly hashed but the IP is not.
 Fix: Hash the IP address using SHA-256 before storage, or truncate to /24 subnet (anonymize last octet). Alternatively omit entirely.
 
-### SYS-016 — MISSING_FEATURE — No Validation Schema for Session Notes or Billing Cancel
+### SYS-016 — MISSING_FEATURE — No Validation Schema for Session Notes or Billing Cancel ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/middleware/validate.js
 Finding: Two high-value endpoints have no input validation schemas:
 (a) `POST /api/practitioner/clients/:id/notes` — `session_date` is not validated as ISO date, `transit_snapshot` accepts arbitrary JSON without size limits, `share_with_ai` is not validated as boolean
 (b) `POST /api/billing/cancel` — `immediately` and `previewOnly` are not validated as booleans; string "true" would be truthy
 Fix: Add zod schemas for both endpoints in PATTERN_SCHEMAS and EXACT_SCHEMAS respectively.
 
-### SYS-017 — MISSING_FEATURE — No Email Templates for Trial Ending / Renewal / Refund
+### SYS-017 — MISSING_FEATURE — No Email Templates for Trial Ending / Renewal / Refund ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/lib/email.js
 Finding: Stripe billing.js creates 7-day practitioner trials (line 206) but no trial-ending reminder email exists. Also missing: subscription renewal confirmation, refund-issued notification to user, and dispute notification to user. Trial churn from no reminder is preventable revenue loss.
 Fix (priority order):
@@ -107,7 +107,7 @@ Fix (priority order):
 3. Refund-issued notification: support volume reducer
 4. Dispute notification: chargeback visibility
 
-### SYS-018 — DATA — No Pagination on Practitioner Client List
+### SYS-018 — DATA — No Pagination on Practitioner Client List ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/practitioner.js line 219
 Finding: `handleListClients` returns ALL clients in one query with no `LIMIT`/`OFFSET`. Practitioner tier has no client cap. A practitioner with 200+ clients gets a massive JSON blob on every roster load, degrading both DB and client performance.
 Fix: Add `page` and `limit` query params (default limit 50). Add `LIMIT $2 OFFSET $3` to `getPractitionerClientsWithCharts` query.
@@ -116,52 +116,52 @@ Fix: Add `page` and `limit` query params (default limit 50). Add `LIMIT $2 OFFSE
 
 ## P2 — Fix Within 2 Sprints
 
-### SYS-019 — SECURITY — No Consent Gate on Direct Client Add
+### SYS-019 — SECURITY — No Consent Gate on Direct Client Add ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/practitioner.js lines 228–304
 Finding: `handleAddClient` adds any registered user to a practitioner's roster by email without client consent. This means a practitioner can access another user's full chart, profile, and session history just by knowing their email. The invite-and-accept flow exists but is not enforced as the only path.
 Fix: Remove or gate `handleAddClient` behind admin-only access. The invite flow (handleInviteClient → handleAcceptInvitation) must be the sole path to adding clients.
 
-### SYS-020 — UX — Cluster Member Birth Data Form Has 4 Hardcoded Timezone Options
+### SYS-020 — UX — Cluster Member Birth Data Form Has 4 Hardcoded Timezone Options ✅ RESOLVED (verified 2026-03-16)
 File: frontend/js/app.js lines 5178–5183
 Finding: The "Add Member" modal for clusters only shows 4 US timezones + UTC. For a platform where timezone accuracy directly affects chart accuracy, this silently miscalculates charts for any international or non-US user added via cluster.
 Fix: Use the same IANA timezone autocomplete/select used in the main birth data form.
 
-### SYS-021 — BILLING — No Test Coverage for Cancel Flow
+### SYS-021 — BILLING — No Test Coverage for Cancel Flow ✅ RESOLVED (verified 2026-03-16)
 File: tests/
 Finding: Test suite covers checkout, one-time billing, and retention offers. No tests exist for: `previewOnly` cancel, immediate cancel, period-end cancel, retention offer structure, or cancel transaction rollback.
 Fix: Add `billing-cancel-runtime.test.js` covering all cancel paths.
 
-### SYS-022 — MISSING_FEATURE — Session Notes Have No Search or Date Filter
+### SYS-022 — MISSING_FEATURE — Session Notes Have No Search or Date Filter ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/session-notes.js
 Finding: `handleListNotes` returns all notes with no search, filter, or pagination. For practitioners with months of session history per client, there is no way to find a specific note without loading the full list. The existing LIMIT 50 also means older notes become inaccessible.
 Fix: Add query params: `search`, `fromDate`, `toDate`, `limit`, `offset`. Update `listSessionNotes` query accordingly.
 
-### SYS-023 — OBSERVABILITY — No Structured Logging in Session Notes Handler
+### SYS-023 — OBSERVABILITY — No Structured Logging in Session Notes Handler ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/handlers/session-notes.js
 Finding: session-notes.js never imports or uses `createLogger`. Errors surface only via the practitioner router's generic catch. No structured log entries exist for note CRUD operations.
 Fix: Import `createLogger` and add `log.info` / `log.error` for all CRUD operations.
 
-### SYS-024 — PERF — Double Body Read for Chunked Requests
+### SYS-024 — PERF — Double Body Read for Chunked Requests ✅ RESOLVED 2026-03-16 (Cycle 1)
 File: workers/src/index.js lines 560–576
 Finding: For POST/PUT/PATCH without `Content-Length`, the code streams the entire request body to check size via a `request.clone()` reader, then the handler reads the original body again via `request.json()`. This doubles memory and CPU for every chunked request.
 Fix: Use `request.cf?.bodySize` if present. Fall back to single clone only when needed, and pass the cloned body to the handler to avoid double-read.
 
-### SYS-025 — UX — fetchUserProfile and exportMyData Skip apiFetch
+### SYS-025 — UX — fetchUserProfile and exportMyData Skip apiFetch ✅ RESOLVED (verified 2026-03-16 — intentional; blob export requires raw fetch)
 File: frontend/js/app.js lines 94–113, ~1007
 Finding: Both `fetchUserProfile()` and `exportMyData()` call raw `fetch()` with `credentials: 'include'` instead of `apiFetch()`. This skips the 401 silent refresh/retry logic and request ID threading. If the access token has expired, both calls fail without attempting token refresh.
 Fix: Replace both with `apiFetch('/api/auth/me')` and `apiFetch('/api/auth/export')`.
 
-### SYS-026 — BILLING — Health Check Full Mode is Unauthenticated and Calls Stripe Balance
+### SYS-026 — BILLING — Health Check Full Mode is Unauthenticated and Calls Stripe Balance ✅ RESOLVED (verified 2026-03-16)
 File: workers/src/index.js lines 649–658
 Finding: `GET /api/health?full=1` calls `stripe.balance.retrieve()` — a live Stripe API call — from a public, unauthenticated endpoint. Anyone can trigger a Stripe API call and receive Stripe error messages (which may include account information) in the response.
 Fix: Gate `?full=1` behind `AUDIT_SECRET` query param check (same pattern used by `/api/analytics/audit`).
 
-### SYS-027 — UX — Pricing Button State Sync References Legacy Tier ID
+### SYS-027 — UX — Pricing Button State Sync References Legacy Tier ID ✅ RESOLVED (verified 2026-03-16)
 File: frontend/js/app.js
 Finding: `_syncPractitionerPricingCards` may reference `priceBtn-white_label` (legacy tier name). If HTML uses current `priceBtn-agency` naming, the button state sync silently fails and pricing cards show incorrect active state.
 Fix: Audit all `getElementById('priceBtn-*')` calls and align with current tier naming conventions.
 
-### SYS-028 — COMPLIANCE — CAN-SPAM Physical Address Hardcoded in Email Footer
+### SYS-028 — COMPLIANCE — CAN-SPAM Physical Address Hardcoded in Email Footer ✅ RESOLVED 2026-03-16 (Cycle 1)
 File: workers/src/lib/email.js
 Finding: "8 The Green, Suite A, Dover, DE 19901, USA" is hardcoded in the email footer across all templates. If the business address changes, all transactional emails send stale address until code is redeployed — a CAN-SPAM compliance gap.
 Fix: Move to env var `COMPANY_ADDRESS`. Set via Worker secret or wrangler.toml var.

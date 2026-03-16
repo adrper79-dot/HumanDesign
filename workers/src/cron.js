@@ -240,7 +240,8 @@ export async function runDailyTransitCron(env) {
             user.email.split('@')[0],
             user.chart_type || 'Generator',
             env.RESEND_API_KEY,
-            env.FROM_EMAIL
+            env.FROM_EMAIL,
+            env.COMPANY_ADDRESS || ''
           );
           emailsSent++;
         } catch (err) {
@@ -259,7 +260,8 @@ export async function runDailyTransitCron(env) {
             user.email.split('@')[0],
             user.authority || 'Sacral',
             env.RESEND_API_KEY,
-            env.FROM_EMAIL
+            env.FROM_EMAIL,
+            env.COMPANY_ADDRESS || ''
           );
           emailsSent++;
         } catch (err) {
@@ -277,7 +279,8 @@ export async function runDailyTransitCron(env) {
             user.email,
             user.email.split('@')[0],
             env.RESEND_API_KEY,
-            env.FROM_EMAIL
+            env.FROM_EMAIL,
+            env.COMPANY_ADDRESS || ''
           );
           emailsSent++;
         } catch (err) {
@@ -296,7 +299,8 @@ export async function runDailyTransitCron(env) {
             user.email.split('@')[0],
             Math.floor(user.days_inactive || 7),
             env.RESEND_API_KEY,
-            env.FROM_EMAIL
+            env.FROM_EMAIL,
+            env.COMPANY_ADDRESS || ''
           );
           emailsSent++;
         } catch (err) {
@@ -314,7 +318,8 @@ export async function runDailyTransitCron(env) {
             user.email,
             user.email.split('@')[0],
             env.RESEND_API_KEY,
-            env.FROM_EMAIL
+            env.FROM_EMAIL,
+            env.COMPANY_ADDRESS || ''
           );
           emailsSent++;
         } catch (err) {

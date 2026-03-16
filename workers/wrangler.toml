@@ -6,6 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
+COMPANY_ADDRESS = "8 The Green, Suite A, Dover, DE 19901, USA"
 # PRA-SEC-002: JWT claims are env-scoped to prevent cross-environment token replay.
 # Override these in a staging wrangler.toml with "staging" values.
 JWT_ISSUER   = "primeself"
@@ -117,6 +118,7 @@ name = "prime-self-api-staging"
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
+COMPANY_ADDRESS = "8 The Green, Suite A, Dover, DE 19901, USA"
 # JWT claims are scoped to staging to prevent token replay into production
 JWT_ISSUER   = "primeself-staging"
 JWT_AUDIENCE = "primeself-api-staging"

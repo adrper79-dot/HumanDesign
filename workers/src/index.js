@@ -556,21 +556,32 @@ export default {
         );
       }
 
-      // Stream-count actual body size when Content-Length is missing (chunked/omitted)
+      // SYS-024: Use Cloudflare's bodySize when available to avoid cloning the body.
+      // Fall back to stream-count only when cf.bodySize is absent (non-CF environments / tests).
       if (['POST', 'PUT', 'PATCH'].includes(request.method) && request.body && !contentLength) {
-        const clone = request.clone();
-        const reader = clone.body.getReader();
-        let totalBytes = 0;
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          totalBytes += value.byteLength;
-          if (totalBytes > MAX_BODY_BYTES) {
-            reader.cancel();
+        const cfBodySize = request.cf?.bodySize;
+        if (cfBodySize !== undefined) {
+          if (cfBodySize > MAX_BODY_BYTES) {
             return addCorsHeaders(
               Response.json({ error: 'Payload too large' }, { status: 413 }),
               request, env.ENVIRONMENT
             );
+          }
+        } else {
+          const clone = request.clone();
+          const reader = clone.body.getReader();
+          let totalBytes = 0;
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            totalBytes += value.byteLength;
+            if (totalBytes > MAX_BODY_BYTES) {
+              reader.cancel();
+              return addCorsHeaders(
+                Response.json({ error: 'Payload too large' }, { status: 413 }),
+                request, env.ENVIRONMENT
+              );
+            }
           }
         }
       }
