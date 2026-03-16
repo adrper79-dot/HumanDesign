@@ -7760,6 +7760,10 @@ async function loadCelebrityMatches() {
 
   try {
     const data = await apiFetch('/api/compare/celebrities');
+    if (data.error && !data.matches) {
+      if (status) status.textContent = data.error;
+      return;
+    }
     _allCelebrityMatches = data.matches || [];
     if (status) status.textContent = '';
     renderCelebrityGrid(_allCelebrityMatches);

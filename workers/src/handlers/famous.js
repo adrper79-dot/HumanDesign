@@ -58,7 +58,10 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
     // Use cached chart or calculate fresh
     let userChart;
     if (chart.hd_json) {
-      userChart = typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json;
+      const raw = typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json;
+      // hd_json may be stored as bare chart object (result.chart) or as full result ({ chart: {...} }).
+      // Normalize to always have the { chart: {...} } wrapper that findCelebrityMatches expects.
+      userChart = raw.chart ? raw : { chart: raw };
     } else {
       const utc = parseToUTC(chart.birth_date, chart.birth_time, chart.birth_tz);
       userChart = calculateFullChart({
@@ -68,7 +71,7 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
         includeTransits: false
       });
     }
-    
+
     // Find celebrity matches
     const matches = await findCelebrityMatches(userChart, limit);
     
@@ -147,7 +150,8 @@ export async function handleGetCelebrityMatchById(request, env, celebrityId) {
     // Use cached chart or calculate fresh
     let userChart;
     if (chart.hd_json) {
-      userChart = typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json;
+      const raw = typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json;
+      userChart = raw.chart ? raw : { chart: raw };
     } else {
       const utc = parseToUTC(chart.birth_date, chart.birth_time, chart.birth_tz);
       userChart = calculateFullChart({
@@ -157,7 +161,7 @@ export async function handleGetCelebrityMatchById(request, env, celebrityId) {
         includeTransits: false
       });
     }
-    
+
     // Get celebrity match
     const match = await getCelebrityMatch(userChart, celebrityId);
     
