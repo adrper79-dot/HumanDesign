@@ -6,6 +6,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { trackEvent, EVENTS } from '../lib/analytics.js';
 
 const RATE_LIMITS = {
   '/api/auth/register':     { max: 10,  windowSec: 60  },  // 10/min (spec: auth endpoints)
@@ -29,6 +30,7 @@ const RATE_LIMITS = {
   '/api/composite':         { max: 10,  windowSec: 60  },  // 10/min (LLM-powered)
   '/api/diary':             { max: 20,  windowSec: 60  },  // P2-BIZ-017: 20/min diary creation
   '/api/timing/find-dates': { max: 10,  windowSec: 60  },  // P2-BIZ-015: 10/min (CPU-intensive)
+  '/api/auth/delete-account': { max: 3, windowSec: 60  },  // 3/min (destructive, irreversible)
   default:                  { max: 60,  windowSec: 60  }
 };
 
@@ -106,6 +108,9 @@ export async function rateLimit(request, env) {
     console.warn(JSON.stringify({
       event: 'rate_limited', clientId, path, count, max: config.max
     }));
+    trackEvent(env, EVENTS.RATE_LIMITED, {
+      properties: { path, clientId, count, max: config.max },
+    }).catch(() => {}); // best-effort
     return new Response(
       JSON.stringify({
         error: 'Rate limit exceeded',

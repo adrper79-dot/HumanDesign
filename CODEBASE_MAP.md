@@ -161,7 +161,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 | File | Lines | Purpose | Key Exports | DB Tables |
 |------|-------|---------|-------------|-----------|
 | `achievements.js` | 467 | Gamification badges & milestones | `handleGetAchievements`, `handleGetProgress`, `handleGetLeaderboard`, `handleTrackEvent` | user_achievements, achievement_events, user_streaks, user_achievement_stats |
-| `famous.js` | 385 | Celebrity chart comparison | `handleGetCelebrityMatches`, `handleGetCelebrityMatchById`, `handleGetCelebritiesByCategory`, `handleSearchCelebrities`, `handleGetAllCelebrities` | charts, users |
+| `famous.js` | 385 | Celebrity chart comparison | `handleGetCelebrityMatches`, `handleGetCelebrityMatchById`, `handleGetCategories`, `handleGetCelebritiesByCategory`, `handleSearchCelebrities`, `handleGetAllCelebrities` | charts, users |
 | `share.js` | 507 | Social sharing (chart, celebrity, achievement, referral) | `handleShareCelebrity`, `handleShareChart`, `handleShareAchievement`, `handleShareReferral`, `handleGetShareStats` | share_events |
 | `stats.js` | 103 | Public activity stats & leaderboard | `handleGetActivityStats`, `handleGetLeaderboard` | analytics_events, profiles, charts, user_achievement_stats |
 
@@ -206,7 +206,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 | `experiments.js` | A/B testing framework (BL-ANA-005) | `getVariant`, `trackConversion`, `getResults` | None (DB only) |
 | `i18n.js` | Server-side internationalization (BL-OPT-006) | `detectLocale`, `t`, `formatDate`, `formatNumber`, `SUPPORTED_LOCALES` | Cloudflare KV |
 | `jwt.js` | HS256 JWT sign/verify | `signJWT`, `verifyHS256` | None (Web Crypto API) |
-| `llm.js` | Multi-provider LLM with failover | `callLLM(promptPayload, env)` — Anthropic (2-retry) → Grok 4 Fast (xAI) → Groq chain | Anthropic API, xAI API, Groq API |
+| `llm.js` | Multi-provider LLM with failover | `callLLM(promptPayload, env)` — Anthropic (2-retry) → Grok 4 Fast (xAI) → Groq chain. All providers route through CF AI Gateway via `resolveEndpoint()` | Anthropic API, xAI API, Groq API (via AI Gateway) |
 | `notion.js` | Notion API v1 client wrapper | `NotionClient` class (request, createDatabase, createPage, etc.) | Notion API |
 | `queryPerf.js` | Query timing + slow query logging (BL-OPT-002) | `createMonitoredQueryFn(env)` | None |
 | `sentry.js` | Lightweight Sentry error tracking (BL-ANA-004) | `initSentry(env)` → `{ captureException, addBreadcrumb }` | Sentry envelope API |
@@ -337,6 +337,18 @@ All files are pure JS with zero external dependencies — designed for both Node
 | `numerology.test.js` | ~200 | **Numerology test suite** — Tests reduceToDigit, lifePathNumber (with master numbers 11/22/33), birthdayNumber, personalYear/Month/Day, tarotBirthCard. Test vectors: AP, Steve Jobs, master number cases |
 | `canonical.test.js` | ~550 | **Canonical philosophy test suite** — 56 tests validating alignment with Sacred Texts. Tests: Five Forges (Initiation, Mastery, Guidance, Perception, Transformation), Six Knowledges (Sciences, Arts, Defenses, Heresies, Connections, Mysteries), Six Sciences, Six Arts, Six Defenses, Six Heresies, Historical Figures library, Book Recommendations library, Synthesis prompt integration, Cross-reference validation |
 | `api-smoke.js` | ~200 | **Production smoke test** — Node.js script (not Vitest) that calls live API endpoints sequentially. Tests auth, chart, profile, transits, geocode endpoints against production URL |
+| `security-fixes.test.js` | ~200 | **Security & rate limit tests** — QUERIES registry validation, rateLimit DB-backed counter, promo endpoint rate limiting |
+| `error-paths.test.js` | ~300 | **Error path coverage** — 14 tests covering auth bypass, handler error paths, audit token bypass |
+| `handler-validation.test.js` | ~200 | **Handler validation** — Auth and input validation for agency, checkin, achievements, notes handlers |
+| `jwt.test.js` | ~200 | **JWT test suite** — HS256 sign/verify, token expiry, claims validation |
+| `sentry.test.js` | ~100 | **Sentry integration** — Error capture pipeline tests |
+| `tier-billing-runtime.test.js` | ~200 | **Tier & billing runtime** — Subscription entitlement, revenue reporting, API key validation |
+| `billing-retention-runtime.test.js` | ~100 | **Billing retention** — Retention preview and downgrade flows |
+| `daily-ceiling-runtime.test.js` | ~100 | **Daily ceiling** — DB-backed atomic daily limit counter |
+| `one-time-billing-runtime.test.js` | ~100 | **One-time billing** — Checkout session reuse, one-time grant fulfillment |
+| `observability-runtime.test.js` | ~200 | **Observability pipeline** — Unhandled error capture via analytics and Sentry |
+| `webhook-claim-runtime.test.js` | ~300 | **Webhook lifecycle** — Claim/release, invoice processing, ghost subscription recovery |
+| `discord/src/index.test.js` | ~200 | **Discord worker** — Command routing, rate limiting, geocode/chart API error handling |
 
 ---
 

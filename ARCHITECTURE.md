@@ -207,6 +207,7 @@ src/knowledgebase/
 >
 > Base schema in `workers/src/db/migrate.sql`. Numbered migrations in `workers/src/db/migrations/`.
 > Applied via `npm run migrate` which tracks each migration in `schema_migrations`.
+> **39 migration files (000–041)** currently on disk. All applied to production DB.
 
 #### Base Schema (`migrate.sql`) — 18 tables
 
@@ -324,6 +325,37 @@ No new tables. Adds `tier` column to `users` + performance indexes across all ma
 
 No new tables. Drops per-statement trigger on `daily_checkins`. Adds `get_user_streak()` function for real-time streak lookup. `refresh_checkin_streaks()` converted to standalone cron-callable function.
 
+#### Migrations 017–041 (subsequent)
+
+| Migration | Purpose |
+|---|---|
+| 017 | Standardize UUID generation |
+| 018 | Drop deprecated `usage_tracking` table |
+| 019 | `cluster_member_birth_data` — birth data on cluster members |
+| 020 | Fix subscription constraints |
+| 021 | `password_reset_tokens` — secure reset flow |
+| 022 | `social_auth` — OAuth (Google/Apple) |
+| 023 | Discord integration |
+| 024a | Atomic rate-limit counters |
+| 024b | Practitioner invitations |
+| 025 | Session notes |
+| 026 | Practitioner directory |
+| 027 | One-time purchase columns |
+| 028 | Grandfather subscriptions |
+| 029 | Agency seats |
+| 030 | Add individual/agency tiers |
+| 031 | Email marketing opt-out |
+| 032 | Normalize tier and status |
+| 033 | Composite indexes |
+| 034 | Drop dead views |
+| 035 | Drop dead tables |
+| 036 | Email verification |
+| 037 | Cluster invite codes |
+| 038 | TOTP 2FA |
+| 039 | `account_deletions` — GDPR deletion audit trail |
+| 040 | Add `last_login_at` to users |
+| 041 | Experiments status enum |
+
 ---
 
 ## 6. API Design
@@ -341,6 +373,11 @@ No new tables. Drops per-statement trigger on `daily_checkins`. Adds `get_user_s
 | POST | `/api/cluster/create` | Create a cluster session |
 | POST | `/api/cluster/:id/synthesize` | Run cluster intelligence synthesis |
 | POST | `/api/rectify` | Birth-time sensitivity analysis |
+| GET | `/api/compare/categories` | List celebrity categories (public) |
+| GET | `/api/compare/celebrities` | Celebrity matches by chart similarity 🔒 |
+| GET | `/api/compare/celebrities/:id` | Detailed celebrity comparison 🔒 |
+| DELETE | `/api/auth/account` | Delete account (GDPR) 🔒 |
+| GET | `/api/auth/export` | Export all user data (GDPR) 🔒 |
 
 ### 6.2 Response Envelope
 

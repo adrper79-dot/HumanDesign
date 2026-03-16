@@ -51,6 +51,10 @@ export const EVENTS = Object.freeze({
   SHARE_CREATE:        'share_create',
   REFERRAL_SEND:       'referral_send',
   CELEBRITY_COMPARE:   'celebrity_compare',
+  CATEGORY_BROWSE:     'category_browse',
+
+  // Account lifecycle
+  ACCOUNT_DELETE:       'account_delete',
 
   // Revenue
   CHECKOUT_START:      'checkout_start',

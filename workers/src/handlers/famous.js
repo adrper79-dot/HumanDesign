@@ -32,7 +32,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
 export async function handleGetCelebrityMatches(request, env, ctx) {
   try {
     const user = await getUserFromRequest(request, env);
-    if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+    if (!user) return Response.json({ ok: false, error: 'Authentication required' }, { status: 401 });
 
     const url = new URL(request.url);
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '10'), 30);
@@ -121,11 +121,11 @@ export async function handleGetCelebrityMatchById(request, env, celebrityId) {
   try {
     // P2-BIZ-018: Validate celebrity ID format (UUID or short slug, max 50 chars)
     if (!celebrityId || celebrityId.length > 50) {
-      return Response.json({ error: 'Invalid celebrity ID' }, { status: 400 });
+      return Response.json({ ok: false, error: 'Invalid celebrity ID' }, { status: 400 });
     }
 
     const user = await getUserFromRequest(request, env);
-    if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+    if (!user) return Response.json({ ok: false, error: 'Authentication required' }, { status: 401 });
 
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
@@ -210,16 +210,26 @@ export async function handleGetCelebrityMatchById(request, env, celebrityId) {
  * List all valid celebrity categories (no auth required - public endpoint)
  */
 export async function handleGetCategories(request, env, ctx) {
-  const categories = celebsData.metadata.categories;
-  const counts = {};
-  for (const c of celebsData.celebrities) {
-    counts[c.category] = (counts[c.category] || 0) + 1;
+  try {
+    const categories = celebsData.metadata.categories;
+    const counts = {};
+    for (const c of celebsData.celebrities) {
+      counts[c.category] = (counts[c.category] || 0) + 1;
+    }
+    return Response.json({
+      ok: true,
+      categories: categories.map(cat => ({ name: cat, count: counts[cat] || 0 })),
+      total: categories.length
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: 'Failed to get categories'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-  return Response.json({
-    ok: true,
-    categories: categories.map(cat => ({ name: cat, count: counts[cat] || 0 })),
-    total: categories.length
-  });
 }
 
 /**

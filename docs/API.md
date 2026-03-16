@@ -825,10 +825,129 @@ Returns diary entries within a date range, with transit data for each entry.
 
 ---
 
+## Celebrity Comparison
+
+### List Categories
+
+```
+GET /api/compare/categories
+```
+
+**Auth:** None (public)
+
+Returns all available celebrity categories with counts.
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "categories": [
+    { "name": "actors", "count": 42 },
+    { "name": "musicians", "count": 38 }
+  ],
+  "total": 150
+}
+```
+
+### Browse Category
+
+```
+GET /api/compare/category/:category
+```
+
+**Auth:** None (public)
+
+Returns celebrities within a specific category.
+
+### List All Celebrities
+
+```
+GET /api/compare/list
+```
+
+**Auth:** None (public)
+
+Returns all celebrities in the database.
+
+### Search Celebrities
+
+```
+GET /api/compare/search?q=einstein
+```
+
+**Auth:** None (public)
+
+Searches celebrities by name. Minimum 2 characters.
+
+### Get Celebrity Matches
+
+```
+GET /api/compare/celebrities
+```
+
+**Auth:** Required (JWT)
+
+Returns celebrities ranked by chart similarity to the authenticated user.
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "matches": [
+    {
+      "celebrity": { "id": "...", "name": "...", "type": "Generator" },
+      "similarity": 0.87,
+      "sharedGates": [1, 13, 25],
+      "sharedChannels": ["1-8"]
+    }
+  ]
+}
+```
+
+### Get Celebrity Match Detail
+
+```
+GET /api/compare/celebrities/:id
+```
+
+**Auth:** Required (JWT)
+
+Returns detailed comparison between authenticated user and a specific celebrity.
+
+---
+
+## Account Management
+
+### Delete Account
+
+```
+DELETE /api/auth/account
+```
+
+**Auth:** Required (JWT)
+**Rate Limit:** 3 requests / minute
+
+Permanently deletes the user's account and all associated data. Stripe subscription is cancelled first. An audit record is logged for GDPR compliance.
+
+### Export User Data
+
+```
+GET /api/auth/export
+```
+
+**Auth:** Required (JWT)
+
+Returns all user data as JSON for GDPR data portability.
+
+---
+
 ## Rate Limits
 
 | Endpoint | Limit |
 |----------|-------|
+| `/api/auth/delete-account` | 3 requests / minute |
 | `/api/chart/calculate` | 60 requests / minute |
 | `/api/profile/generate` | 10 requests / minute |
 | `/api/transits/*` | 120 requests / minute |
@@ -851,6 +970,7 @@ All errors return JSON:
 
 ```json
 {
+  "ok": false,
   "error": "Error Type",
   "message": "Detailed description"
 }

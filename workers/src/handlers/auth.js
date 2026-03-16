@@ -21,6 +21,7 @@ import { signJWT, verifyHS256, sha256, jwtClaims } from '../lib/jwt.js';
 import { sendWelcomeEmail1, sendPasswordResetEmail, sendVerificationEmail } from '../lib/email.js';
 import { createStripeClient } from '../lib/stripe.js';  // P2-BIZ-004: cancel sub on account deletion
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { trackEvent, EVENTS } from '../lib/analytics.js';
 import { generateSecret, buildOTPAuthURL, verifyTOTP } from '../lib/totp.js';
 import { createLogger } from '../lib/logger.js';
 import { hashPassword, verifyPassword } from '../lib/password.js';
@@ -108,18 +109,18 @@ export async function handleAuth(request, env, path) {
     if (path === '/api/auth/2fa/setup') return handle2FASetup(request, env);
     // Known path but wrong method
     if (knownPaths.includes(path)) {
-      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+      return Response.json({ ok: false, error: 'Method not allowed' }, { status: 405 });
     }
-    return Response.json({ error: 'Not found' }, { status: 404 });
+    return Response.json({ ok: false, error: 'Not found' }, { status: 404 });
   }
 
   // DELETE requests
   if (request.method === 'DELETE') {
     if (path === '/api/auth/account') return handleDeleteAccount(request, env);
     if (knownPaths.includes(path)) {
-      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+      return Response.json({ ok: false, error: 'Method not allowed' }, { status: 405 });
     }
-    return Response.json({ error: 'Not found' }, { status: 404 });
+    return Response.json({ ok: false, error: 'Not found' }, { status: 404 });
   }
 
   // POST requests
@@ -135,11 +136,11 @@ export async function handleAuth(request, env, path) {
     if (path === '/api/auth/2fa/enable')  return handle2FAEnable(request, env);
     if (path === '/api/auth/2fa/disable') return handle2FADisable(request, env);
     if (path === '/api/auth/2fa/verify')  return handle2FAVerify(request, env);
-    return Response.json({ error: 'Not found' }, { status: 404 });
+    return Response.json({ ok: false, error: 'Not found' }, { status: 404 });
   }
 
   // Other methods
-  return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  return Response.json({ ok: false, error: 'Method not allowed' }, { status: 405 });
 }
 
 // ─── Get Current User ────────────────────────────────────────
@@ -154,30 +155,36 @@ async function handleGetMe(request, env) {
   
   if (!userId) {
     return Response.json(
-      { error: 'Unauthorized' },
+      { ok: false, error: 'Unauthorized' },
       { status: 401 }
     );
   }
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const result = await query(QUERIES.getUserById, [userId]);
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const result = await query(QUERIES.getUserById, [userId]);
 
-  if (!result.rows || result.rows.length === 0) {
-    return Response.json(
-      { error: 'User not found' },
-      { status: 404 }
-    );
+    if (!result.rows || result.rows.length === 0) {
+      return Response.json(
+        { ok: false, error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const user = result.rows[0];
+
+    // Remove sensitive fields
+    delete user.password_hash;
+
+    return Response.json({
+      ok: true,
+      user
+    });
+  } catch (err) {
+    const log = request._log || createLogger('auth');
+    log.error('get_me_failed', { userId, error: err.message });
+    return Response.json({ ok: false, error: 'Failed to retrieve user info' }, { status: 500 });
   }
-
-  const user = result.rows[0];
-
-  // Remove sensitive fields
-  delete user.password_hash;
-
-  return Response.json({
-    ok: true,
-    user
-  });
 }
 
 // ─── Register ────────────────────────────────────────────────
@@ -189,7 +196,7 @@ async function handleRegister(request, env) {
     body = await request.json();
   } catch {
     return Response.json(
-      { error: 'Invalid JSON body' },
+      { ok: false, error: 'Invalid JSON body' },
       { status: 400 }
     );
   }
@@ -198,7 +205,7 @@ async function handleRegister(request, env) {
 
   if (!email || !password) {
     return Response.json(
-      { error: 'Email and password are required' },
+      { ok: false, error: 'Email and password are required' },
       { status: 400 }
     );
   }
@@ -207,14 +214,14 @@ async function handleRegister(request, env) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return Response.json(
-      { error: 'Invalid email format' },
+      { ok: false, error: 'Invalid email format' },
       { status: 400 }
     );
   }
 
   if (password.length < 8) {
     return Response.json(
-      { error: 'Password must be at least 8 characters' },
+      { ok: false, error: 'Password must be at least 8 characters' },
       { status: 400 }
     );
   }
@@ -244,7 +251,7 @@ async function handleRegister(request, env) {
       // If unique constraint violation on email, return 409
       if (dbErr.code === '23505') {
         return Response.json(
-          { error: 'An account with this email already exists' },
+          { ok: false, error: 'An account with this email already exists' },
           { status: 409 }
         );
       }
@@ -253,7 +260,7 @@ async function handleRegister(request, env) {
 
     if (!userId) {
       return Response.json(
-        { error: 'Failed to create user' },
+        { ok: false, error: 'Failed to create user' },
         { status: 500 }
       );
     }
@@ -304,7 +311,7 @@ async function handleRegister(request, env) {
     }), { status: 201, headers });
   } catch (err) {
     log.error('register_error', { error: err.message });
-    return Response.json({ error: 'Registration failed' }, { status: 500 });
+    return Response.json({ ok: false, error: 'Registration failed' }, { status: 500 });
   }
 }
 
@@ -320,7 +327,7 @@ async function handleLogin(request, env) {
     body = await request.json();
   } catch {
     return Response.json(
-      { error: 'Invalid JSON body' },
+      { ok: false, error: 'Invalid JSON body' },
       { status: 400 }
     );
   }
@@ -329,7 +336,7 @@ async function handleLogin(request, env) {
 
   if (!email || !password) {
     return Response.json(
-      { error: 'Email and password are required' },
+      { ok: false, error: 'Email and password are required' },
       { status: 400 }
     );
   }
@@ -348,7 +355,7 @@ async function handleLogin(request, env) {
     const { rows: checkRows } = await query(QUERIES.getCounterValue, [lockoutKey]);
     if ((checkRows[0]?.count || 0) >= MAX_LOGIN_ATTEMPTS) {
       return Response.json(
-        { error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
+        { ok: false, error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
         { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
       );
     }
@@ -360,7 +367,7 @@ async function handleLogin(request, env) {
       // Atomically increment — PostgreSQL count + 1 is an atomic update, not read-modify-write
       await query(QUERIES.atomicWindowCounterIncrement, [lockoutKey, windowStart, windowEnd]);
       return Response.json(
-        { error: 'Invalid email or password' },
+        { ok: false, error: 'Invalid email or password' },
         { status: 401 }
       );
     }
@@ -373,12 +380,12 @@ async function handleLogin(request, env) {
       const newCount = incrRows[0]?.count || 1;
       if (newCount >= MAX_LOGIN_ATTEMPTS) {
         return Response.json(
-          { error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
+          { ok: false, error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
           { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
         );
       }
       return Response.json(
-        { error: 'Invalid email or password' },
+        { ok: false, error: 'Invalid email or password' },
         { status: 401 }
       );
     }
@@ -424,7 +431,7 @@ async function handleLogin(request, env) {
     }), { headers });
   } catch (err) {
     log.error('login_error', { error: err.message });
-    return Response.json({ error: 'Login failed' }, { status: 500 });
+    return Response.json({ ok: false, error: 'Login failed' }, { status: 500 });
   }
 }
 
@@ -447,7 +454,7 @@ async function handleRefresh(request, env) {
 
   if (!refreshToken) {
     return Response.json(
-      { error: 'Refresh token is required' },
+      { ok: false, error: 'Refresh token is required' },
       { status: 400 }
     );
   }
@@ -456,7 +463,7 @@ async function handleRefresh(request, env) {
   const payload = await verifyHS256(refreshToken, env.JWT_SECRET, jwtClaims(env));
   if (!payload || payload.type !== 'refresh') {
     return Response.json(
-      { error: 'Invalid refresh token' },
+      { ok: false, error: 'Invalid refresh token' },
       { status: 401 }
     );
   }
@@ -475,7 +482,7 @@ async function handleRefresh(request, env) {
       await query(QUERIES.revokeRefreshTokenFamily, [payload.fid]);
     }
     return Response.json(
-      { error: 'Refresh token not recognised — all sessions revoked' },
+      { ok: false, error: 'Refresh token not recognised — all sessions revoked' },
       { status: 401 }
     );
   }
@@ -484,7 +491,7 @@ async function handleRefresh(request, env) {
     // Already revoked — possible token theft. Revoke entire family.
     await query(QUERIES.revokeRefreshTokenFamily, [row.family_id]);
     return Response.json(
-      { error: 'Refresh token reuse detected — all sessions revoked' },
+      { ok: false, error: 'Refresh token reuse detected — all sessions revoked' },
       { status: 401 }
     );
   }
@@ -498,7 +505,7 @@ async function handleRefresh(request, env) {
 
   if (!user) {
     return Response.json(
-      { error: 'User not found' },
+      { ok: false, error: 'User not found' },
       { status: 401 }
     );
   }
@@ -527,7 +534,7 @@ async function handleLogout(request, env) {
 
   if (!userId) {
     return Response.json(
-      { error: 'Unauthorized' },
+      { ok: false, error: 'Unauthorized' },
       { status: 401 }
     );
   }
@@ -561,12 +568,12 @@ async function handleForgotPassword(request, env) {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { email } = body;
   if (!email) {
-    return Response.json({ error: 'Email is required' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Email is required' }, { status: 400 });
   }
 
   // Always respond with success to prevent email enumeration
@@ -625,17 +632,17 @@ async function handleResetPassword(request, env) {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { token, password } = body;
 
   if (!token || !password) {
-    return Response.json({ error: 'Token and new password are required' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Token and new password are required' }, { status: 400 });
   }
 
   if (password.length < 8) {
-    return Response.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Password must be at least 8 characters' }, { status: 400 });
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
@@ -650,14 +657,14 @@ async function handleResetPassword(request, env) {
   } catch (err) {
     log.error('reset_password_db_error', { error: err.message });
     return Response.json(
-      { error: 'Invalid or expired reset token. Please request a new one.' },
+      { ok: false, error: 'Invalid or expired reset token. Please request a new one.' },
       { status: 400 }
     );
   }
 
   if (!resetRow) {
     return Response.json(
-      { error: 'Invalid or expired reset token. Please request a new one.' },
+      { ok: false, error: 'Invalid or expired reset token. Please request a new one.' },
       { status: 400 }
     );
   }
@@ -686,7 +693,7 @@ async function handleResetPassword(request, env) {
     });
   } catch (err) {
     log.error('reset_password_error', { error: err.message });
-    return Response.json({ error: 'Password reset failed. Please try again.' }, { status: 500 });
+    return Response.json({ ok: false, error: 'Password reset failed. Please try again.' }, { status: 500 });
   }
 }
 
@@ -696,69 +703,86 @@ async function handleDeleteAccount(request, env) {
   const log = request._log || createLogger('auth');
   const userId = request._user?.sub;
   if (!userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { password } = body;
   if (!password) {
-    return Response.json({ error: 'Password is required to confirm account deletion' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Password is required to confirm account deletion' }, { status: 400 });
   }
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  // Verify the user exists and password is correct
-  const result = await query(QUERIES.getUserById, [userId]);
-  const user = result.rows?.[0];
-  if (!user) {
-    return Response.json({ error: 'User not found' }, { status: 404 });
-  }
-
-  const valid = await verifyPassword(password, user.password_hash);
-  if (!valid) {
-    return Response.json({ error: 'Incorrect password' }, { status: 403 });
-  }
-
-  // P2-BIZ-004: Cancel active Stripe subscription before deleting DB records
-  // Prevents billing ghosts and Stripe dunning emails to defunct addresses
-  if (env.STRIPE_SECRET_KEY) {
-    try {
-      const { rows: subRows } = await query(QUERIES.getActiveSubscription, [userId]);
-      const sub = subRows[0];
-      if (sub?.stripe_subscription_id) {
-        const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
-        await stripe.subscriptions.cancel(sub.stripe_subscription_id);
-        log.info('stripe_subscription_cancelled', { subscriptionId: sub.stripe_subscription_id, userId });
-      }
-    } catch (stripeErr) {
-      // Log but continue — user wants account deleted regardless
-      log.error('stripe_cancellation_failed', { userId, error: stripeErr.message });
+    // Verify the user exists and password is correct
+    const result = await query(QUERIES.getUserById, [userId]);
+    const user = result.rows?.[0];
+    if (!user) {
+      return Response.json({ ok: false, error: 'User not found' }, { status: 404 });
     }
+
+    const valid = await verifyPassword(password, user.password_hash);
+    if (!valid) {
+      return Response.json({ ok: false, error: 'Incorrect password' }, { status: 403 });
+    }
+
+    // P2-BIZ-004: Cancel active Stripe subscription before deleting DB records
+    // Prevents billing ghosts and Stripe dunning emails to defunct addresses
+    if (env.STRIPE_SECRET_KEY) {
+      try {
+        const { rows: subRows } = await query(QUERIES.getActiveSubscription, [userId]);
+        const sub = subRows[0];
+        if (sub?.stripe_subscription_id) {
+          const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
+          await stripe.subscriptions.cancel(sub.stripe_subscription_id);
+          log.info('stripe_subscription_cancelled', { subscriptionId: sub.stripe_subscription_id, userId });
+        }
+      } catch (stripeErr) {
+        // Log but continue — user wants account deleted regardless
+        log.error('stripe_cancellation_failed', { userId, error: stripeErr.message });
+      }
+    }
+
+    // P2-AUDIT-001: Persist an audit record before deleting the user row.
+    // Stores email hash (not plaintext) for GDPR Article 17 proof-of-deletion.
+    const emailHash = await sha256(user.email.toLowerCase().trim());
+    const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+    try {
+      await query(QUERIES.insertAccountDeletionAudit, [userId, emailHash, user.tier || 'free', clientIp]);
+    } catch (auditErr) {
+      log.error('account_deletion_audit_failed', { userId, error: auditErr.message });
+      // Continue — audit failure must not block GDPR deletion
+    }
+
+    // Delete user and all associated data (cascading)
+    await query(QUERIES.deleteUserAccount, [userId]);
+    log.info('account_deleted', { userId, tier: user.tier || 'free' });
+
+    // Fire analytics event for churn tracking
+    trackEvent(env, EVENTS.ACCOUNT_DELETE, {
+      userId,
+      properties: { tier: user.tier || 'free' },
+    }).catch(() => {}); // best-effort
+
+    // P2-BIZ-006: Clear refresh token cookie so browser doesn't retain stale auth
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    headers.append('Set-Cookie', clearRefreshCookie());
+
+    return new Response(
+      JSON.stringify({ ok: true, message: 'Your account and all associated data have been permanently deleted.' }),
+      { status: 200, headers }
+    );
+  } catch (err) {
+    log.error('account_deletion_failed', { userId, error: err.message });
+    return Response.json({ ok: false, error: 'Failed to delete account' }, { status: 500 });
   }
-
-  // P2-AUDIT-001: Persist an audit record before deleting the user row.
-  // Stores email hash (not plaintext) for GDPR Article 17 proof-of-deletion.
-  const emailHash = await sha256(user.email.toLowerCase().trim());
-  const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
-  await query(QUERIES.insertAccountDeletionAudit, [userId, emailHash, user.tier || 'free', clientIp]);
-
-  // Delete user and all associated data (cascading)
-  await query(QUERIES.deleteUserAccount, [userId]);
-
-  // P2-BIZ-006: Clear refresh token cookie so browser doesn't retain stale auth
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  headers.append('Set-Cookie', clearRefreshCookie());
-
-  return new Response(
-    JSON.stringify({ ok: true, message: 'Your account and all associated data have been permanently deleted.' }),
-    { status: 200, headers }
-  );
 }
 
 // ─── GDPR Data Export ────────────────────────────────────────
@@ -766,41 +790,47 @@ async function handleDeleteAccount(request, env) {
 async function handleExportData(request, env) {
   const userId = request._user?.sub;
   if (!userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const [userData, charts, profiles, checkins, diary, subscription, alerts, sms] = await Promise.all([
-    query(QUERIES.exportUserData, [userId]),
-    query(QUERIES.exportUserCharts, [userId]),
-    query(QUERIES.exportUserProfiles, [userId]),
-    query(QUERIES.exportUserCheckins, [userId]),
-    query(QUERIES.exportUserDiary, [userId]),
-    query(QUERIES.exportUserSubscription, [userId]),
-    query(QUERIES.exportUserAlerts, [userId]),
-    query(QUERIES.exportUserSMS, [userId]),
-  ]);
+    const [userData, charts, profiles, checkins, diary, subscription, alerts, sms] = await Promise.all([
+      query(QUERIES.exportUserData, [userId]),
+      query(QUERIES.exportUserCharts, [userId]),
+      query(QUERIES.exportUserProfiles, [userId]),
+      query(QUERIES.exportUserCheckins, [userId]),
+      query(QUERIES.exportUserDiary, [userId]),
+      query(QUERIES.exportUserSubscription, [userId]),
+      query(QUERIES.exportUserAlerts, [userId]),
+      query(QUERIES.exportUserSMS, [userId]),
+    ]);
 
-  const exportData = {
-    exported_at: new Date().toISOString(),
-    user: userData.rows?.[0] || null,
-    charts: charts.rows || [],
-    profiles: profiles.rows || [],
-    checkins: checkins.rows || [],
-    diary_entries: diary.rows || [],
-    subscription: subscription.rows?.[0] || null,
-    transit_alerts: alerts.rows || [],
-    sms_messages: sms.rows || [],
-  };
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      user: userData.rows?.[0] || null,
+      charts: charts.rows || [],
+      profiles: profiles.rows || [],
+      checkins: checkins.rows || [],
+      diary_entries: diary.rows || [],
+      subscription: subscription.rows?.[0] || null,
+      transit_alerts: alerts.rows || [],
+      sms_messages: sms.rows || [],
+    };
 
-  return new Response(JSON.stringify(exportData, null, 2), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Disposition': 'attachment; filename="prime-self-data-export.json"',
-    },
-  });
+    return new Response(JSON.stringify(exportData, null, 2), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': 'attachment; filename="prime-self-data-export.json"',
+      },
+    });
+  } catch (err) {
+    const log = request._log || createLogger('auth');
+    log.error('export_data_failed', { userId, error: err.message });
+    return Response.json({ ok: false, error: 'Failed to export account data' }, { status: 500 });
+  }
 }
 
 // ─── Email Verification (AUDIT-SEC-003) ──────────────────────
@@ -819,12 +849,12 @@ async function handleVerifyEmail(request, env) {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { token } = body;
   if (!token || typeof token !== 'string') {
-    return Response.json({ error: 'Verification token is required' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Verification token is required' }, { status: 400 });
   }
 
   try {
@@ -840,7 +870,7 @@ async function handleVerifyEmail(request, env) {
 
     if (!record) {
       return Response.json(
-        { error: 'Invalid or expired verification link. Please request a new one.' },
+        { ok: false, error: 'Invalid or expired verification link. Please request a new one.' },
         { status: 400 }
       );
     }
@@ -854,7 +884,7 @@ async function handleVerifyEmail(request, env) {
     });
   } catch (err) {
     log.error('verify_email_error', { error: err.message });
-    return Response.json({ error: 'Verification failed' }, { status: 500 });
+    return Response.json({ ok: false, error: 'Verification failed' }, { status: 500 });
   }
 }
 
@@ -867,7 +897,7 @@ async function handleResendVerification(request, env) {
   const log = request._log || createLogger('auth');
   const userId = request._user?.sub;
   if (!userId) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -885,7 +915,7 @@ async function handleResendVerification(request, env) {
     const userResult = await query(QUERIES.getUserById, [userId]);
     const userEmail = userResult.rows?.[0]?.email;
     if (!userEmail) {
-      return Response.json({ error: 'User not found' }, { status: 404 });
+      return Response.json({ ok: false, error: 'User not found' }, { status: 404 });
     }
 
     // Delete old tokens and create a new one
@@ -914,7 +944,7 @@ async function handleResendVerification(request, env) {
     });
   } catch (err) {
     log.error('resend_verification_error', { error: err.message });
-    return Response.json({ error: 'Failed to resend verification email' }, { status: 500 });
+    return Response.json({ ok: false, error: 'Failed to resend verification email' }, { status: 500 });
   }
 }
 
@@ -927,16 +957,16 @@ async function handleResendVerification(request, env) {
  */
 async function handle2FASetup(request, env) {
   const userId = request._user?.sub;
-  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!userId) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const res = await query(QUERIES.getUserById, [userId]);
   const user = res.rows?.[0];
-  if (!user) return Response.json({ error: 'User not found' }, { status: 404 });
+  if (!user) return Response.json({ ok: false, error: 'User not found' }, { status: 404 });
 
   if (user.totp_enabled) {
     return Response.json(
-      { error: '2FA is already enabled. Disable it first before re-enrolling.' },
+      { ok: false, error: '2FA is already enabled. Disable it first before re-enrolling.' },
       { status: 409 }
     );
   }
@@ -963,29 +993,29 @@ async function handle2FASetup(request, env) {
  */
 async function handle2FAEnable(request, env) {
   const userId = request._user?.sub;
-  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!userId) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
   let body;
   try { body = await request.json(); } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { totp_code } = body;
   if (!totp_code) {
-    return Response.json({ error: 'totp_code is required' }, { status: 400 });
+    return Response.json({ ok: false, error: 'totp_code is required' }, { status: 400 });
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const res = await query(QUERIES.getUserById, [userId]);
   const user = res.rows?.[0];
-  if (!user) return Response.json({ error: 'User not found' }, { status: 404 });
+  if (!user) return Response.json({ ok: false, error: 'User not found' }, { status: 404 });
 
   if (user.totp_enabled) {
-    return Response.json({ error: '2FA is already enabled' }, { status: 409 });
+    return Response.json({ ok: false, error: '2FA is already enabled' }, { status: 409 });
   }
   if (!user.totp_secret) {
     return Response.json(
-      { error: 'No pending 2FA setup. Call /api/auth/2fa/setup first.' },
+      { ok: false, error: 'No pending 2FA setup. Call /api/auth/2fa/setup first.' },
       { status: 400 }
     );
   }
@@ -993,7 +1023,7 @@ async function handle2FAEnable(request, env) {
   const valid = await verifyTOTP(user.totp_secret, totp_code);
   if (!valid) {
     return Response.json(
-      { error: 'Invalid TOTP code. Check your authenticator app and try again.' },
+      { ok: false, error: 'Invalid TOTP code. Check your authenticator app and try again.' },
       { status: 400 }
     );
   }
@@ -1013,36 +1043,36 @@ async function handle2FAEnable(request, env) {
  */
 async function handle2FADisable(request, env) {
   const userId = request._user?.sub;
-  if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!userId) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
   let body;
   try { body = await request.json(); } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { password, totp_code } = body;
   if (!password || !totp_code) {
-    return Response.json({ error: 'password and totp_code are required' }, { status: 400 });
+    return Response.json({ ok: false, error: 'password and totp_code are required' }, { status: 400 });
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const res = await query(QUERIES.getUserById, [userId]);
   const user = res.rows?.[0];
-  if (!user) return Response.json({ error: 'User not found' }, { status: 404 });
+  if (!user) return Response.json({ ok: false, error: 'User not found' }, { status: 404 });
 
   if (!user.totp_enabled || !user.totp_secret) {
-    return Response.json({ error: '2FA is not currently enabled' }, { status: 400 });
+    return Response.json({ ok: false, error: '2FA is not currently enabled' }, { status: 400 });
   }
 
   const passwordOk = await verifyPassword(password, user.password_hash);
   if (!passwordOk) {
-    return Response.json({ error: 'Incorrect password' }, { status: 403 });
+    return Response.json({ ok: false, error: 'Incorrect password' }, { status: 403 });
   }
 
   const totpOk = await verifyTOTP(user.totp_secret, totp_code);
   if (!totpOk) {
     return Response.json(
-      { error: 'Invalid TOTP code. Check your authenticator app and try again.' },
+      { ok: false, error: 'Invalid TOTP code. Check your authenticator app and try again.' },
       { status: 400 }
     );
   }
@@ -1064,31 +1094,31 @@ async function handle2FADisable(request, env) {
 async function handle2FAVerify(request, env) {
   let body;
   try { body = await request.json(); } catch {
-    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { pending_token, totp_code } = body;
   if (!pending_token || !totp_code) {
-    return Response.json({ error: 'pending_token and totp_code are required' }, { status: 400 });
+    return Response.json({ ok: false, error: 'pending_token and totp_code are required' }, { status: 400 });
   }
 
   // Validate the pending token (short-lived JWT)
   const payload = await verifyHS256(pending_token, env.JWT_SECRET, jwtClaims(env));
   if (!payload || payload.type !== '2fa_pending') {
-    return Response.json({ error: 'Invalid or expired 2FA session. Please log in again.' }, { status: 401 });
+    return Response.json({ ok: false, error: 'Invalid or expired 2FA session. Please log in again.' }, { status: 401 });
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const res = await query(QUERIES.getUserById, [payload.sub]);
   const user = res.rows?.[0];
   if (!user || !user.totp_enabled || !user.totp_secret) {
-    return Response.json({ error: 'Invalid 2FA state' }, { status: 401 });
+    return Response.json({ ok: false, error: 'Invalid 2FA state' }, { status: 401 });
   }
 
   const valid = await verifyTOTP(user.totp_secret, totp_code);
   if (!valid) {
     return Response.json(
-      { error: 'Invalid TOTP code. Check your authenticator app and try again.' },
+      { ok: false, error: 'Invalid TOTP code. Check your authenticator app and try again.' },
       { status: 400 }
     );
   }

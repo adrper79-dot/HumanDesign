@@ -90,8 +90,8 @@
 | Get current user | ✅ | `GET /api/auth/me` |
 | Forgot password | ⚠️ | `POST /api/auth/forgot-password` — always returns 200 (enumeration-safe). Email delivery blocked until migration 021 applied in prod. Code is correct and deployed |
 | Reset password | ⚠️ | `POST /api/auth/reset-password` — returns 400 (not 500) when migration not applied. Token-wrapping transaction in place (BL-RESET-001). Fully functional once migration 021 applied |
-| Delete account | ✅ | `DELETE /api/auth/delete-account` — cascades user data |
-| Data export (GDPR) | ✅ | `GET /api/auth/export` — returns all user data as JSON |
+| Delete account | ✅ | `DELETE /api/auth/delete-account` — cascades user data. Audit trail in `account_deletions` table (migration 039). Rate limited 3/min. Analytics event tracked |
+| Data export (GDPR) | ✅ | `GET /api/auth/export` — returns all user data as JSON. Fault-tolerant with try/catch |
 | Google OAuth | ⚠️ | Handler complete (`oauthSocial.js`). Requires `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` secrets configured. Migration 022 required |
 | Apple Sign-In | ⚠️ | Handler complete. Requires `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` secrets configured |
 | Rate limiting (login brute force) | ✅ | KV-backed 60 req/min limiter on auth endpoints. Fails closed (503) if KV unavailable |
@@ -159,8 +159,9 @@
 |---------|--------|---------|
 | Celebrity chart comparison | ✅ | `GET /api/compare/celebrities` — matches user chart to database of celebrity charts by type/authority/profile alignment |
 | Celebrity search | ✅ | `GET /api/compare/search` — search by name |
-| Celebrity list by category | ✅ | All celebrities browsable |
-| Celebrity detail | 🔶 | `GET /api/compare/celebrities/:id` route defined in index.js; no dedicated `GET /api/compare/:id` endpoint — uses list endpoint |
+| Celebrity categories | ✅ | `GET /api/compare/categories` — lists all categories with counts. `GET /api/compare/category/:category` — browse by category |
+| Celebrity list | ✅ | `GET /api/compare/list` — all celebrities browsable |
+| Celebrity detail | ✅ | `GET /api/compare/celebrities/:id` — detailed comparison between user and specific celebrity |
 | Share chart card | ✅ | `POST /api/share/chart` — generates shareable link/card |
 | Share achievement | ✅ | `POST /api/share/achievement` |
 | Share celebrity match | ✅ | `POST /api/share/celebrity` |
@@ -278,7 +279,7 @@
 |---------|--------|---------|
 | Cloudflare Workers (API) | ✅ | Deployed. Last deploy exit 0 |
 | Cloudflare Pages (frontend) | ✅ | Deployed |
-| Neon PostgreSQL | ✅ | 31 migrations (000–030). All applied to production DB. Verified 2026-03-15 via MCP |
+| Neon PostgreSQL | ✅ | 39 migrations (000–041). All applied to production DB. Verified 2026-03-15 via MCP |
 | Cloudflare KV | ✅ | Rate limiting, offline transit cache, onboarding progress |
 | Cloudflare R2 | ✅ | PDF cache, background video delivery |
 | Health endpoint | ✅ | `GET /api/health?full=1` — checks DB, KV, R2, secrets presence |
@@ -338,3 +339,4 @@ These are gaps identified by comparing current build against best-in-class apps 
 | 2026-03-15 | Codebase audit session 5: 7 tier access bugs fixed (agency/individual silently blocked in analytics, embed, notion, experiments, keys, promo, tierEnforcement); try/catch added to 5 handlers (forecast, transits, onboarding, timing, analytics); 16 dead queries removed from queries.js (2017→1915 lines); build status updated 292→250 |
 | 2026-03-15 | All 31 DB migrations confirmed applied via Neon MCP. BLOCKER-DB cleared. Daily check-ins, leaderboard, saved profiles, chart retrieval all unblocked. Registration form ToS/Privacy consent notice added. Multiple stale ❌/⚠️ statuses corrected |
 | 2026-03-15 | `RESEND_API_KEY` and `SENTRY_DSN` pushed to Cloudflare Workers. BL-MV-N4, PROD-P0-002, SENTRY rows resolved. Error tracking and email delivery fully active |
+| 2026-03-15 | Error management + analytics hardening: try/catch on delete-account/getMe/exportData/getCategories, audit INSERT fault-tolerance (GDPR), `ok: false` on all error responses, `ACCOUNT_DELETE` + `RATE_LIMITED` analytics events wired, LLM structured logging, account deletion rate limit (3/min). API docs updated with celebrity comparison + account management sections. Migrations list updated (39 files, 000–041) |

@@ -211,7 +211,7 @@ export async function callLLM(promptPayload, env) {
       const text = await callAnthropic(promptPayload, env);
       return text;
     } catch (err) {
-      console.error(`Anthropic attempt ${attempt + 1} failed: ${err.message}`);
+      console.error(JSON.stringify({ event: 'llm_attempt_failed', provider: 'anthropic', attempt: attempt + 1, error: err.message }));
       errors.push({ provider: `Anthropic(attempt ${attempt + 1})`, error: err.message });
 
       // Don't retry on missing API key or 4xx client errors
@@ -234,10 +234,10 @@ export async function callLLM(promptPayload, env) {
     checkWallClock();
     try {
       const text = await fn(promptPayload, env);
-      console.warn(`LLM failover: used ${name} after ${errors.map(e => e.provider).join(' → ')} failed`);
+      console.warn(JSON.stringify({ event: 'llm_failover', provider: name, fallbackAfter: errors.map(e => e.provider) }));
       return text;
     } catch (err) {
-      console.error(`LLM provider ${name} failed: ${err.message}`);
+      console.error(JSON.stringify({ event: 'llm_provider_failed', provider: name, error: err.message }));
       errors.push({ provider: name, error: err.message });
     }
   }

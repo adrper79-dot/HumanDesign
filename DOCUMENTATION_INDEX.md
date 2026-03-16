@@ -1,7 +1,7 @@
 # Prime Self — Documentation Index
 
 **Purpose**: Canonical map of the current documentation set  
-**Last Verified**: March 14, 2026  
+**Last Verified**: March 15, 2026  
 **Audit Basis**: Repo structure, current code, and targeted documentation cleanup
 
 ---
@@ -57,8 +57,8 @@
 | [docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md) | Practitioner strategy | 90-day product, pricing, and GTM priorities |
 | [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md) | Commercial consistency audit | Tier, billing, analytics, and white-label findings |
 | [DOCUMENTATION_ORGANIZATION.md](DOCUMENTATION_ORGANIZATION.md) | Documentation structure | Lists current canonical locations only |
-| [docs/API.md](docs/API.md) | Quick API reference | Helpful overview, but not exhaustive |
-| [docs/API_SPEC.md](docs/API_SPEC.md) | Detailed API spec | Historical and partially stale; verify against router |
+| [docs/API.md](docs/API.md) | Quick API reference | Updated 2026-03-15: celebrity comparison + account management sections added |
+| [docs/API_SPEC.md](docs/API_SPEC.md) | Detailed API spec | Updated 2026-03-15: celebrity comparison, account deletion, data export sections added. Error format includes `ok: false` |
 | [docs/OPERATION.md](docs/OPERATION.md) | Ops runbook | Deployment, monitoring, rollback |
 | [frontend/DESIGN_SYSTEM.md](frontend/DESIGN_SYSTEM.md) | Design system | Canonical location is `frontend/`, not `docs/` |
 

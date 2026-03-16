@@ -939,6 +939,151 @@ Triggered by the daily cron to send SMS digests.
 
 ---
 
+## Account Management
+
+### `DELETE /api/auth/account` 🔒
+Permanently delete the authenticated user's account and all associated data (GDPR compliant).
+
+**Use this when:** A user wants to close their account. This cascades through all user data: charts, profiles, subscriptions (cancelled in Stripe first), refresh tokens, achievements, diary entries, push subscriptions, and more. An audit record is inserted for compliance.
+
+**Rate Limit:** 3 requests / minute (strict — irreversible action)
+
+**Response 200**
+```json
+{ "ok": true, "message": "Account deleted successfully" }
+```
+
+**Error 401** — Missing or invalid token  
+**Error 500** — Internal error during deletion
+
+---
+
+### `GET /api/auth/export` 🔒
+Export all user data as JSON (GDPR data portability).
+
+**Use this when:** A user requests a copy of their data.
+
+**Response 200**
+```json
+{
+  "ok": true,
+  "exportedAt": "2026-03-15T12:00:00Z",
+  "user": { "id": "...", "email": "...", "name": "..." },
+  "charts": [ ... ],
+  "profiles": [ ... ],
+  "achievements": [ ... ],
+  "diaryEntries": [ ... ],
+  "checkins": [ ... ],
+  "shareEvents": [ ... ],
+  "subscriptions": [ ... ],
+  "smsMessages": [ ... ]
+}
+```
+
+---
+
+## Celebrity Comparison
+
+### `GET /api/compare/categories` (public)
+List all celebrity categories with counts.
+
+**Response 200**
+```json
+{
+  "ok": true,
+  "categories": [
+    { "name": "actors", "count": 42 },
+    { "name": "musicians", "count": 38 }
+  ],
+  "total": 150
+}
+```
+
+### `GET /api/compare/category/:category` (public)
+List celebrities in a specific category. `:category` must match `[a-z0-9-]+`.
+
+**Response 200**
+```json
+{
+  "ok": true,
+  "category": "actors",
+  "celebrities": [
+    { "id": "...", "name": "...", "type": "...", "authority": "..." }
+  ]
+}
+```
+
+### `GET /api/compare/list` (public)
+List all celebrities in the database.
+
+**Response 200**
+```json
+{
+  "ok": true,
+  "celebrities": [ ... ],
+  "total": 150
+}
+```
+
+### `GET /api/compare/search?q=<query>` (public)
+Search celebrities by name.
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `q` | string | Yes | Search term (minimum 2 characters) |
+
+**Response 200**
+```json
+{
+  "ok": true,
+  "query": "einstein",
+  "results": [
+    { "id": "...", "name": "Albert Einstein", "type": "Manifestor", "category": "scientists" }
+  ]
+}
+```
+
+### `GET /api/compare/celebrities` 🔒
+Get celebrity matches ranked by chart similarity for the authenticated user.
+
+**Response 200**
+```json
+{
+  "ok": true,
+  "matches": [
+    {
+      "celebrity": { "id": "...", "name": "...", "type": "...", "authority": "..." },
+      "similarity": 0.87,
+      "sharedGates": [ 1, 13, 25 ],
+      "sharedChannels": [ "1-8" ]
+    }
+  ]
+}
+```
+
+### `GET /api/compare/celebrities/:id` 🔒
+Get detailed comparison between the authenticated user and a specific celebrity. `:id` must match `[a-z0-9-]+`.
+
+**Response 200**
+```json
+{
+  "ok": true,
+  "celebrity": { "id": "...", "name": "...", "type": "...", "profile": "..." },
+  "comparison": {
+    "similarity": 0.87,
+    "sharedGates": [ ... ],
+    "sharedChannels": [ ... ],
+    "userType": "Generator",
+    "celebrityType": "Generator"
+  }
+}
+```
+
+**Error 400** — Invalid celebrity ID  
+**Error 401** — Authentication required
+
+---
+
 ## Health
 
 ### `GET /api/health` (public)
@@ -957,7 +1102,7 @@ Liveness check. Always returns 200.
 All error responses use a consistent shape:
 
 ```json
-{ "error": "Human-readable message", "code": "MACHINE_CODE" }
+{ "ok": false, "error": "Human-readable message", "code": "MACHINE_CODE" }
 ```
 
 Common HTTP status codes:
@@ -981,6 +1126,7 @@ Common HTTP status codes:
 
 | Endpoint group | Limit (spec) | Limit (actual code) |
 |---|---|---|
+| `/api/auth/delete-account` | 3 req / minute per IP | 3 / minute |
 | `/api/auth/*` | 10 req / minute per IP | 60 (default) |
 | `/api/profile/generate` | 5 req / minute per user | 10 / minute |
 | `/api/geocode` | 30 req / minute per IP | 60 (default) |
