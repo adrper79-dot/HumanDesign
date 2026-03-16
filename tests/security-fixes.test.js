@@ -25,6 +25,7 @@ vi.mock('../workers/src/db/queries.js', async () => {
 
 import { rateLimit } from '../workers/src/middleware/rateLimit.js';
 import { QUERIES } from '../workers/src/db/queries.js';
+import { getUserFromRequest } from '../workers/src/middleware/auth.js';
 
 // ─── Rate Limiter: DB-backed Atomic Behavior ───────────────
 
@@ -85,6 +86,20 @@ describe('rateLimit — DB-backed atomic counter', () => {
 // ─── QUERIES Registry: Atomic & Batch Queries Exist ───────────
 
 describe('QUERIES registry — new queries from deep dive audit', () => {
+  it('has safe user lookup variants that omit password_hash and totp_secret', () => {
+    expect(QUERIES.getUserByIdSafe).toBeDefined();
+    expect(QUERIES.getUserByIdSafe).toContain('referral_code');
+    expect(QUERIES.getUserByIdSafe).toContain('birth_tz');
+    expect(QUERIES.getUserByIdSafe).not.toContain('password_hash');
+    expect(QUERIES.getUserByIdSafe).not.toContain('totp_secret');
+
+    expect(QUERIES.getUserByEmailSafe).toBeDefined();
+    expect(QUERIES.getUserByEmailSafe).toContain('referral_code');
+    expect(QUERIES.getUserByEmailSafe).toContain('birth_tz');
+    expect(QUERIES.getUserByEmailSafe).not.toContain('password_hash');
+    expect(QUERIES.getUserByEmailSafe).not.toContain('totp_secret');
+  });
+
   it('has atomicQuotaCheckAndInsert query (BL-RACE-001)', () => {
     expect(QUERIES.atomicQuotaCheckAndInsert).toBeDefined();
     expect(typeof QUERIES.atomicQuotaCheckAndInsert).toBe('string');
@@ -121,6 +136,41 @@ describe('QUERIES registry — new queries from deep dive audit', () => {
     expect(QUERIES.createUsageRecord).toBeDefined();
     expect(QUERIES.getUsageByUserAndAction).toBeDefined();
     expect(QUERIES.countSavedProfilesByUser).toBeDefined();
+  });
+});
+
+describe('getUserFromRequest — safe lookups', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('resolves the authenticated user with the safe query shape', async () => {
+    const query = vi.fn().mockResolvedValue({
+      rows: [{
+        id: 'user-1',
+        email: 'user@example.com',
+        referral_code: 'PRIME-123',
+        birth_tz: 'America/New_York',
+        tier: 'individual',
+      }],
+    });
+    createQueryFnMock.mockReturnValue(query);
+
+    const request = new Request('https://api.test/api/referrals');
+    request._user = { sub: 'user-1' };
+
+    const user = await getUserFromRequest(request, { NEON_CONNECTION_STRING: 'postgresql://test' });
+
+    expect(query).toHaveBeenCalledWith(QUERIES.getUserByIdSafe, ['user-1']);
+    expect(user).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      referral_code: 'PRIME-123',
+      birth_tz: 'America/New_York',
+      tier: 'individual',
+    });
+    expect(user).not.toHaveProperty('password_hash');
+    expect(user).not.toHaveProperty('totp_secret');
   });
 });
 

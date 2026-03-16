@@ -188,9 +188,10 @@ export const QUERIES = {
 
   // SYS-011: Safe variant — omits password_hash and totp_secret for non-auth reads
   getUserByIdSafe: `
-    SELECT id, email, tier, phone, birth_date, birth_time, birth_tz AS birth_timezone,
-      birth_lat, birth_lng, stripe_customer_id, sms_opted_in, email_verified,
-      last_login_at, transit_pass_expires, lifetime_access, totp_enabled,
+    SELECT id, email, phone, birth_date, birth_time, birth_tz, birth_lat,
+      birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code,
+      email_verified, last_login_at, transit_pass_expires, lifetime_access,
+      totp_enabled,
       created_at, updated_at
     FROM users WHERE id = $1
   `,
@@ -202,9 +203,10 @@ export const QUERIES = {
 
   // SYS-011: Safe variant — omits password_hash and totp_secret for non-auth reads
   getUserByEmailSafe: `
-    SELECT id, email, tier, phone, birth_date, birth_time, birth_tz AS birth_timezone,
-      birth_lat, birth_lng, stripe_customer_id, sms_opted_in, email_verified,
-      last_login_at, transit_pass_expires, lifetime_access, totp_enabled,
+    SELECT id, email, phone, birth_date, birth_time, birth_tz, birth_lat,
+      birth_lng, sms_opted_in, tier, stripe_customer_id, referral_code,
+      email_verified, last_login_at, transit_pass_expires, lifetime_access,
+      totp_enabled,
       created_at, updated_at
     FROM users WHERE email = $1
   `,

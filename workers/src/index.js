@@ -608,6 +608,10 @@ export default {
           cache: getCacheMetrics(),
         };
         if (full === '1') {
+          const auditToken = url.searchParams.get('token') || request.headers.get('X-Audit-Token');
+          if (!env.AUDIT_SECRET || auditToken !== env.AUDIT_SECRET) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+          }
           const secrets = {
             hasNeon: !!env?.NEON_CONNECTION_STRING,
             hasJwt: !!env?.JWT_SECRET,

@@ -25,7 +25,7 @@
  * @param {string} fromEmail - From email address
  * @returns {Promise<{success: boolean, id?: string, error?: string}>}
  */
-export async function sendEmail({ to, subject, html, text = '', replyTo = '' }, apiKey, fromEmail) {
+export async function sendEmail({ to, subject, html, text = '', replyTo = '', companyAddress = '' }, apiKey, fromEmail) {
   if (!apiKey) {
     console.warn('RESEND_API_KEY not configured, skipping email send');
     return { success: false, error: 'Email service not configured' };
@@ -36,7 +36,8 @@ export async function sendEmail({ to, subject, html, text = '', replyTo = '' }, 
   let finalHtml = html.replace(/\{\{unsubscribe_url\}\}/g, unsubscribeUrl);
 
   // CAN-SPAM: Inject physical mailing address before closing </body>
-  const canSpamFooter = `<div style="text-align:center;font-size:11px;color:#999;padding:10px 0 20px;">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</div>`;
+  const address = companyAddress || '8 The Green, Suite A, Dover, DE 19901, USA';
+  const canSpamFooter = `<div style="text-align:center;font-size:11px;color:#999;padding:10px 0 20px;">Prime Self · ${address}</div>`;
   finalHtml = finalHtml.replace('</body>', canSpamFooter + '</body>');
 
   try {

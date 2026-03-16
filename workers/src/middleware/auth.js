@@ -75,7 +75,7 @@ export async function authenticate(request, env) {
 /**
  * Resolve the authenticated user's full DB record from the JWT payload.
  *
- * Returns the full `users` row (minus password_hash) or null if the
+ * Returns the safe `users` row (without password_hash or totp_secret) or null if the
  * request is unauthenticated / user doesn't exist.
  *
  * @param {Request} request — must have been processed by authenticate()
@@ -87,11 +87,9 @@ export async function getUserFromRequest(request, env) {
   if (!payload?.sub) return null;
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const result = await query(QUERIES.getUserById, [payload.sub]);
+  const result = await query(QUERIES.getUserByIdSafe, [payload.sub]);
 
   if (!result.rows || result.rows.length === 0) return null;
 
-  const user = result.rows[0];
-  delete user.password_hash;
-  return user;
+  return result.rows[0];
 }

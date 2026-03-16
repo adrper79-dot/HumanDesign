@@ -363,7 +363,7 @@ async function handleSendDigest(request, env) {
     const effectiveId = targetId || request._user.sub;
     
     // Single user — always look up by user ID for safety
-    const userResult = await query(QUERIES.getUserById, [effectiveId]);
+    const userResult = await query(QUERIES.getUserByIdSafe, [effectiveId]);
     const user = userResult.rows?.[0];
 
     if (!user) {

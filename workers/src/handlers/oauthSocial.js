@@ -248,7 +248,7 @@ async function handleCallback(provider, request, env) {
       // No social account found — check by email to link existing account
       let userRow = null;
       if (providerEmail) {
-        const byEmail = await query(QUERIES.getUserByEmail, [providerEmail.toLowerCase()]);
+        const byEmail = await query(QUERIES.getUserByEmailSafe, [providerEmail.toLowerCase()]);
         if (byEmail.rows?.length) userRow = byEmail.rows[0];
       }
 

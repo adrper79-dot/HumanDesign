@@ -8,7 +8,7 @@
      script-src is strict (no unsafe-inline/eval). CSS-only injection risk is accepted. -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io;
+  script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io https://cdn.jsdelivr.net;
   style-src 'self' 'unsafe-inline';
   connect-src 'self' https://api.stripe.com https://cloudflareinsights.com https://plausible.io;
   img-src 'self' data: blob:;
@@ -2062,6 +2062,8 @@
 
 <!-- Background Video Loader (seamless fade-in once playing) -->
 <script src="js/bg-video.js" defer></script>
+<!-- QR code generation for 2FA setup — client-side only, no external secret transmission -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha384-Pu0nWrXfEgOmOK2aXiw3S8jqjGJHUPHT7pllpnlbEdkKFlk5BPXD+C7pGk3bvW5" crossorigin="anonymous"></script>
 
 <!-- Legal Footer -->
 <footer>

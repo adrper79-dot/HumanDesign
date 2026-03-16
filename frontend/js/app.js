@@ -94,11 +94,8 @@ function updateAuthUI() {
 async function fetchUserProfile() {
   if (!token) return;
   try {
-    const res = await fetch(API + '/api/auth/me', {
-      credentials: 'include'
-    });
-    if (!res.ok) return; // silently ignore — expired tokens handled by apiFetch elsewhere
-    const data = await res.json();
+    const data = await apiFetch('/api/auth/me');
+    if (!data || data.error) return; // silently ignore — errors handled by apiFetch
     const user = data?.user || data;
     if (user && user.id) {
       currentUser = Object.freeze({ ...user });
@@ -1005,6 +1002,9 @@ async function deleteAccount() {
 async function exportMyData() {
   try {
     showNotification('Preparing your data export...', 'info');
+    // Use raw fetch here (not apiFetch) because this endpoint returns a binary blob,
+    // not JSON — apiFetch calls res.json() which would fail for file downloads.
+    // Authentication is via the ps_access HttpOnly cookie (credentials: 'include').
     const res = await fetch(API + '/api/auth/export', { credentials: 'include' });
     if (!res.ok) {
       let errMsg = 'Failed to export data';

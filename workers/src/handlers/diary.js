@@ -124,7 +124,7 @@ export async function handleDiaryCreate(request, env) {
   // Get user's birth data for transit calculation
   let transitSnapshot = null;
   try {
-    const userResult = await query(QUERIES.getUserById, [userId]);
+    const userResult = await query(QUERIES.getUserByIdSafe, [userId]);
     if (userResult.rows.length > 0) {
       const user = userResult.rows[0];
       const userTier = user.tier || 'free';

@@ -293,7 +293,7 @@ async function handleInviteClient(request, env, userId, query) {
     }, { status: 403 });
   }
 
-  const clientResult = await query(QUERIES.getUserByEmail, [clientEmail]);
+  const clientResult = await query(QUERIES.getUserByEmailSafe, [clientEmail]);
   if (clientResult.rows?.length) {
     const existingClient = clientResult.rows[0];
     if (existingClient.id === userId) {
@@ -450,7 +450,7 @@ async function handleGetClientDetail(userId, clientId, query) {
   }
 
   // Get client user info
-  const clientResult = await query(QUERIES.getUserById, [clientId]);
+  const clientResult = await query(QUERIES.getUserByIdSafe, [clientId]);
   if (!clientResult.rows?.length) {
     return Response.json({ error: 'Client not found' }, { status: 404 });
   }
@@ -548,7 +548,7 @@ export async function handleAcceptInvitation(request, env) {
   }
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const userResult = await query(QUERIES.getUserById, [userId]);
+  const userResult = await query(QUERIES.getUserByIdSafe, [userId]);
   const user = userResult.rows?.[0];
   if (!user) {
     return Response.json({ error: 'User not found' }, { status: 404 });

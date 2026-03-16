@@ -902,11 +902,12 @@
       "severity": "P1",
       "area": "security",
       "title": "No email_verified gate on LLM usage — unverified accounts consume expensive AI calls",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-16",
       "lastSeen": "2026-03-16",
+      "resolvedAt": "2026-03-16",
       "file": "workers/src/handlers/profile.js; workers/src/handlers/profile-stream.js",
-      "fix": "Add email_verified check before LLM dispatch in both profile and profile-stream handlers"
+      "fix": "Verified both handlers already return 403 EMAIL_NOT_VERIFIED before calling the LLM"
     },
     {
       "id": "SYS-006",
@@ -974,11 +975,12 @@
       "severity": "P1",
       "area": "security",
       "title": "password_hash returned in all getUserById/getUserByEmail queries — fragile strip convention",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-16",
       "lastSeen": "2026-03-16",
+      "resolvedAt": "2026-03-16",
       "file": "workers/src/db/queries.js",
-      "fix": "Create getUserByIdSafe/getUserByEmailSafe variants excluding password_hash and totp_secret"
+      "fix": "Expanded safe user query shapes, switched shared/non-auth call sites to them, and added regression coverage for getUserFromRequest"
     },
     {
       "id": "SYS-012",

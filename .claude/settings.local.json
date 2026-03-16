@@ -6,7 +6,11 @@
       "Bash(grep -c '\"\"siddhi\"\"' src/knowledgebase/genekeys/keys.json)",
       "Bash(node -e \":*)",
       "Bash(ls workers/src/db/migrations/022* workers/src/handlers/oauthSocial.js)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(node verify-money-path.js)",
+      "Bash(npx wrangler:*)",
+      "Bash(npm test:*)",
+      "Bash(npx vitest:*)"
     ]
   }
 }

@@ -365,7 +365,7 @@ export async function handleApplyCode(request, env, ctx) {
     await query(QUERIES.insertReferral, [referrer.id, user.id, code.toUpperCase()]);
 
     // Award +5 AI question bonus to free-tier referrers who bring in new signups
-    const { rows: referrerTierRows } = await query(QUERIES.getUserById, [referrer.id]);
+    const { rows: referrerTierRows } = await query(QUERIES.getUserByIdSafe, [referrer.id]);
     const referrerTier = referrerTierRows[0]?.tier || 'free';
     if (referrerTier === 'free') {
       await query(QUERIES.createUsageRecord, [

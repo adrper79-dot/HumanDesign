@@ -300,7 +300,7 @@ These are areas with zero test coverage. Not all need immediate tests, but high-
 | Priority | Module | Risk |
 |---|---|---|
 | **High** | `workers/src/db/queries.js` | DB layer — currently broken (BL-C1) |
-| **High** | `workers/src/middleware/auth.js` | Auth bypass risk |
+| **High** | `workers/src/middleware/auth.js` | Focused safe-lookup coverage added 2026-03-16; broader auth-flow coverage still needed |
 | **High** | `workers/src/lib/llm.js` | LLM failover chain — no verification of rotation logic |
 | **Medium** | `src/prompts/digest.js` | SMS content generation — silently broken (BL-M6) |
 | **Medium** | `src/prompts/rag.js` | RAG builder — wrong data access pattern (BL-M7) |

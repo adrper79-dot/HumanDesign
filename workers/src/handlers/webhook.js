@@ -115,7 +115,7 @@ async function resolveUserForStripeCustomer(query, stripe, customerId, { custome
     return null;
   }
 
-  const byEmail = await query(QUERIES.getUserByEmail, [normalizedEmail]);
+  const byEmail = await query(QUERIES.getUserByEmailSafe, [normalizedEmail]);
   const emailUser = byEmail.rows?.[0] || null;
   if (!emailUser) {
     log.error({ action: 'billing_event_unrecoverable_user', customerId, customerEmail: normalizedEmail, eventType });
@@ -387,7 +387,7 @@ async function handleCheckoutCompleted(event, query, stripe, env, log) {
     const tierLabel = TIER_LABELS[tier] || tier;
     // Look up user email
     try {
-      const userResult = await query(QUERIES.getUserById, [userId]);
+      const userResult = await query(QUERIES.getUserByIdSafe, [userId]);
       const userEmail = userResult.rows?.[0]?.email;
       if (userEmail) {
         sendSubscriptionConfirmationEmail(

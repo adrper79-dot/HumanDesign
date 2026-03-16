@@ -30,6 +30,8 @@ vi.mock('../workers/src/db/queries.js', () => ({
     getSubscriptionByStripeSubscriptionId: 'getSubscriptionByStripeSubscriptionId',
     getUserByStripeCustomerId: 'getUserByStripeCustomerId',
     getUserByEmail: 'getUserByEmail',
+    getUserByEmailSafe: 'getUserByEmailSafe',
+    getUserByIdSafe: 'getUserByIdSafe',
     updateUserStripeCustomerId: 'updateUserStripeCustomerId',
     upsertSubscription: 'upsertSubscription',
     updateUserTierAndStripe: 'updateUserTierAndStripe',
@@ -287,7 +289,7 @@ describe('webhook claim lifecycle', () => {
       }
       if (sql === 'getSubscriptionByStripeCustomerId') return { rows: [] };
       if (sql === 'getUserByStripeCustomerId') return { rows: [] };
-      if (sql === 'getUserByEmail') {
+      if (sql === 'getUserByEmailSafe') {
         expect(params).toEqual(['email@example.com']);
         return {
           rows: [{
@@ -370,7 +372,7 @@ describe('webhook claim lifecycle', () => {
       if (sql === 'markEventProcessed') return { rowCount: 1, rows: [] };
       if (sql === 'getSubscriptionByStripeCustomerId') return { rows: [] };
       if (sql === 'getUserByStripeCustomerId') return { rows: [] };
-      if (sql === 'getUserByEmail') {
+      if (sql === 'getUserByEmailSafe') {
         expect(params).toEqual(['ghost@example.com']);
         return {
           rows: [{
@@ -445,7 +447,7 @@ describe('webhook claim lifecycle', () => {
       if (sql === 'getSubscriptionByStripeSubscriptionId') return { rows: [] };
       if (sql === 'getSubscriptionByStripeCustomerId') return { rows: [] };
       if (sql === 'getUserByStripeCustomerId') return { rows: [] };
-      if (sql === 'getUserByEmail') return { rows: [] };
+      if (sql === 'getUserByEmailSafe') return { rows: [] };
       if (sql === 'finalizeProcessedEvent') {
         return { rowCount: 1, rows: [{ stripe_event_id: 'evt_invoice_manual_review', status: 'manual_review' }] };
       }
@@ -512,7 +514,7 @@ describe('webhook claim lifecycle', () => {
       if (sql === 'markEventProcessed') return { rowCount: 1, rows: [] };
       if (sql === 'getSubscriptionByStripeCustomerId') return { rows: [] };
       if (sql === 'getUserByStripeCustomerId') return { rows: [] };
-      if (sql === 'getUserByEmail') return { rows: [] };
+      if (sql === 'getUserByEmailSafe') return { rows: [] };
       if (sql === 'finalizeProcessedEvent') {
         return { rowCount: 1, rows: [{ stripe_event_id: 'evt_sub_manual_review', status: 'manual_review' }] };
       }

@@ -90,7 +90,7 @@ async function handleInviteSeat(request, userId, query) {
   }
 
   // Prevent owner from adding themselves
-  const ownerLookup = await query(QUERIES.getUserByEmail, [email]);
+  const ownerLookup = await query(QUERIES.getUserByEmailSafe, [email]);
   if (!ownerLookup.rows?.length) {
     return Response.json({
       error: 'No account found with that email address. The user must sign up first.'

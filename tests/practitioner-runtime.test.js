@@ -23,6 +23,7 @@ vi.mock('../workers/src/db/queries.js', () => ({
     getChartById: 'getChartById',
     getPractitionerBranding: 'getPractitionerBranding',
     getUserById: 'getUserById',
+    getUserByIdSafe: 'getUserByIdSafe',
     getNotionAccessTokenOnly: 'getNotionAccessTokenOnly',
     getNotionExportProfile: 'getNotionExportProfile',
     getPractitionerInvitationById: 'getPractitionerInvitationById',
@@ -369,7 +370,7 @@ describe('practitioner runtime guards', () => {
 
   it('accepts a practitioner invitation for the invited email', async () => {
     const query = vi.fn(async (sql) => {
-      if (sql === 'getUserById') {
+      if (sql === 'getUserByIdSafe') {
         return { rows: [{ id: 'client-1', email: 'client@example.com' }] };
       }
       if (sql === 'getPractitionerInvitationByTokenHash') {
@@ -421,7 +422,7 @@ describe('practitioner runtime guards', () => {
 
   it('rejects invitation acceptance when the signed-in email does not match the invite', async () => {
     const query = vi.fn(async (sql) => {
-      if (sql === 'getUserById') {
+      if (sql === 'getUserByIdSafe') {
         return { rows: [{ id: 'client-2', email: 'other@example.com' }] };
       }
       if (sql === 'getPractitionerInvitationByTokenHash') {

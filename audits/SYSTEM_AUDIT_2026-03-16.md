@@ -36,10 +36,10 @@ Fix: Created dedicated `QUERIES.getSmsSubscribedUsersWithBirthDate` query. Cron 
 
 ## P1 — Fix Within Current Sprint
 
-### SYS-005 — SECURITY — No Email Verification Gate on LLM Usage
+### SYS-005 — SECURITY — No Email Verification Gate on LLM Usage ✅ RESOLVED 2026-03-16
 File: workers/src/handlers/profile.js, workers/src/handlers/profile-stream.js
 Finding: Migration 036 documents "Gates LLM usage behind verified email to prevent abuse." Neither profile.js nor profile-stream.js checks `user.email_verified` before calling the LLM. An attacker can register with a throwaway email and immediately consume expensive Anthropic API calls. Usage quotas exist but only limit volume per user — they do not prevent unverified accounts.
-Fix: Add `if (!user.email_verified) return Response.json({ error: 'Please verify your email to generate profiles.' }, { status: 403 })` before LLM dispatch in both handlers.
+Fix: Verified both handlers already short-circuit with a 403 `EMAIL_NOT_VERIFIED` response before LLM dispatch.
 
 ### SYS-006 — BILLING — `customer.subscription.paused` Not Handled
 File: workers/src/handlers/webhook.js
@@ -66,10 +66,10 @@ File: workers/src/handlers/auth.js, workers/src/db/queries.js
 Finding: `totp_secret` is stored and retrieved as plaintext in the DB. `lib/tokenCrypto.js` provides AES-GCM encryption (already used for Notion tokens) but is not applied to TOTP secrets. A DB breach exposes every user's 2FA seed, allowing offline clone of their authenticator.
 Fix: Encrypt `totp_secret` at rest using `encryptToken(secret, env.TOTP_ENCRYPTION_KEY)` before INSERT; decrypt on read during verification. Add `TOTP_ENCRYPTION_KEY` as a Worker secret.
 
-### SYS-011 — SECURITY — `password_hash` Returned in All User Lookups
+### SYS-011 — SECURITY — `password_hash` Returned in All User Lookups ✅ RESOLVED 2026-03-16
 File: workers/src/db/queries.js
 Finding: `getUserById` and `getUserByEmail` both SELECT `password_hash` and `totp_secret`. `auth.js` strips the hash before returning to callers, but this is a fragile convention. Any new handler that calls these queries and skips the strip leaks the hash. The cron job queries users for digests and these rows contain the hash in Workers memory.
-Fix: Create `getUserByIdSafe` and `getUserByEmailSafe` variants that exclude `password_hash` and `totp_secret`. Use hash-inclusive variants only in auth login/password-reset paths.
+Fix: Safe variants are now schema-compatible for shared reads and are used by `getUserFromRequest()` plus non-auth lookup paths in SMS, practitioner, diary, referrals, webhook recovery, agency seats, and OAuth account linking. Hash-inclusive variants remain only on auth flows that actually need `password_hash` or `totp_secret`.
 
 ### SYS-012 — SECURITY — 2FA Setup Endpoint Not Rate-Limited
 File: workers/src/middleware/rateLimit.js, workers/src/handlers/auth.js

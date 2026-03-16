@@ -213,6 +213,7 @@ Priority 1:
 Priority 2:
 
 - add tests for Sentry and error pipeline behavior
+- keep shared auth/user lookup helpers under focused regression coverage so safe-query guarantees do not drift
 - convert critical fail-open paths into tracked degradation events
 - add structured log schema and correlation IDs
 
