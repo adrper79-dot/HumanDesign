@@ -474,11 +474,17 @@ async function checkOAuthCallback() {
     // P2-SEC-011: Exchange one-time code for tokens via secure POST
     // Tokens are never exposed in URL — code is single-use (60s TTL)
     try {
+      const _oauthExchangeBody = { code: oauthCode };
+      // P0-FIX: Pass stored referral slug for new OAuth signups so attribution is captured
+      if (isNewUser) {
+        const _oauthRef = (localStorage.getItem('ps_pending_ref') || '').toLowerCase();
+        if (_oauthRef) _oauthExchangeBody.ref = _oauthRef;
+      }
       const res = await fetch(API + '/api/auth/oauth/exchange', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ code: oauthCode })
+        body: JSON.stringify(_oauthExchangeBody)
       });
       const data = await res.json();
 

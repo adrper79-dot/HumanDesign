@@ -477,7 +477,20 @@ export async function handleOAuthExchange(request, env) {
     return Response.json({ error: 'Corrupted authorization data' }, { status: 500 });
   }
 
-  const { accessToken, refreshToken, isNewUser } = payload;
+  const { accessToken, refreshToken, isNewUser, userId } = payload;
+
+  // P0-FIX: Capture referral attribution for new OAuth signups
+  const refSlug = typeof body.ref === 'string' ? body.ref.trim().toLowerCase() : null;
+  if (isNewUser && refSlug && /^[a-z0-9-]+$/.test(refSlug) && env.NEON_CONNECTION_STRING) {
+    (async () => {
+      try {
+        const query = createQueryFn(env.NEON_CONNECTION_STRING);
+        const refResult = await query(QUERIES.getPractitionerBySlug, [refSlug]);
+        const practitioner = refResult?.rows?.[0];
+        if (practitioner) await query(QUERIES.recordReferralSignup, [userId, practitioner.id]);
+      } catch (err) { createLogger('oauth').error('referral_capture_failed', { error: err.message }); }
+    })();
+  }
 
   // Return tokens securely — both tokens as HttpOnly cookies; access token also in body for UI state
   const headers = new Headers({ 'Content-Type': 'application/json' });
