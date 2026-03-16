@@ -52,15 +52,21 @@ async function resolveEffectiveTier(query, userId) {
 
   // Agency seat propagation: if this user is a member of an Agency plan,
   // they inherit at least 'practitioner' tier capabilities from the owner.
+  // Guard against missing agency_seats table (migration not yet applied) — 42P01.
   if (tier === 'free' || tier === 'individual') {
-    const seatResult = await query(QUERIES.getAgencyOwnerForMember, [userId]);
-    if (seatResult.rows?.length) {
-      const ownerTier = normalizeTierName(seatResult.rows[0].owner_tier);
-      // Seat members get practitioner access regardless of owner tier,
-      // as long as the owner has an active agency subscription.
-      if (ownerTier === 'agency') {
-        tier = 'practitioner';
+    try {
+      const seatResult = await query(QUERIES.getAgencyOwnerForMember, [userId]);
+      if (seatResult.rows?.length) {
+        const ownerTier = normalizeTierName(seatResult.rows[0].owner_tier);
+        // Seat members get practitioner access regardless of owner tier,
+        // as long as the owner has an active agency subscription.
+        if (ownerTier === 'agency') {
+          tier = 'practitioner';
+        }
       }
+    } catch (seatErr) {
+      // 42P01 = undefined_table — agency_seats not yet migrated; treat as no seat
+      if (seatErr.code !== '42P01') throw seatErr;
     }
   }
 

@@ -416,6 +416,28 @@ export async function handleCheckinStats(request, env, ctx) {
       }
     });
   } catch (error) {
+    // 42P01 = undefined_table — daily_checkins not yet migrated; return empty stats
+    if (error.code === '42P01') {
+      const periodStart = new Date();
+      periodStart.setDate(periodStart.getDate() - period);
+      return Response.json({
+        ok: true,
+        period: {
+          days: period,
+          startDate: periodStart.toISOString().split('T')[0],
+          endDate: new Date().toISOString().split('T')[0]
+        },
+        stats: {
+          totalCheckins: 0,
+          avgAlignmentScore: null,
+          avgEnergyLevel: null,
+          strategyAdherenceRate: null,
+          authorityAdherenceRate: null,
+          moodDistribution: {},
+          dailyScores: []
+        }
+      });
+    }
     return reportHandledRouteError({
       request,
       env,
@@ -493,6 +515,19 @@ export async function handleCheckinStreak(request, env, ctx) {
       }
     });
   } catch (error) {
+    // 42P01 = undefined_table — daily_checkins not yet migrated; return empty streak
+    if (error.code === '42P01') {
+      return Response.json({
+        ok: true,
+        streak: {
+          current: 0,
+          longest: 0,
+          lastCheckinDate: null,
+          streakStartDate: null,
+          message: 'Start your first check-in today!'
+        }
+      });
+    }
     return reportHandledRouteError({
       request,
       env,

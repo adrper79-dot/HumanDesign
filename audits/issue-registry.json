@@ -1,7 +1,7 @@
 {
   "version": "2026-03-15-final",
-  "mode": "STABLE",
-  "consecutiveCleanRuns": 0,
+  "mode": "MAINTENANCE",
+  "consecutiveCleanRuns": 1,
   "issues": [
     {
       "id": "CTO-001",
@@ -1565,6 +1565,70 @@
       "notes": [
         "[Cycle 6 2026-03-16] Fixed: docs/openapi.json updated from 5 paths to 45 paths. All major endpoint groups added. Version bumped to 2.0.0."
       ]
+    },
+    {
+      "id": "PRODUC-001",
+      "title": "BUG-001: handleGetChart HTML 500 \u2014 JSONB serialization guard added",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 \u2014 JSON.stringify/parse safety round-trip in handleGetChart before Response.json()"
+    },
+    {
+      "id": "PRODUC-002",
+      "title": "BUG-002: AUTH_PREFIXES trailing slash auth bypass for checkin/webhooks/alerts/keys",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 pre-flight \u2014 already fixed in index.js; no trailing slashes in AUTH_PREFIXES"
+    },
+    {
+      "id": "PRODUC-003",
+      "title": "BUG-003: forgot-password user enumeration via status code diff",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 pre-flight \u2014 handler already returns 200 for both known/unknown; DB errors masked"
+    },
+    {
+      "id": "PRODUC-004",
+      "title": "BUG-004: reset-password 500 on invalid token (missing migration 021)",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 pre-flight \u2014 handler catches DB error and returns 400; production needs migration 021 applied"
+    },
+    {
+      "id": "PRODUC-005",
+      "title": "BUG-006: GET /api/practitioner/profile 500 (agency_seats phantom table 42P01)",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 \u2014 resolveEffectiveTier catches 42P01 for getAgencyOwnerForMember, continues with free tier"
+    },
+    {
+      "id": "PRODUC-006",
+      "title": "BUG-007: checkin streak/stats 500 (daily_checkins phantom table 42P01)",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 \u2014 handleCheckinStats/handleCheckinStreak catch 42P01, return empty data"
+    },
+    {
+      "id": "PRODUC-007",
+      "title": "BUG-008: leaderboard 500 (user_achievement_stats phantom table 42P01)",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 \u2014 handleGetLeaderboard catches 42P01, returns empty leaderboard"
+    },
+    {
+      "id": "PRODUC-008",
+      "title": "BUG-005: profile list 500 (root: BUG-002 auth bypass, profiles table is live)",
+      "severity": "P1",
+      "status": "resolved",
+      "source": "PRODUCTION_BUG_REPORT",
+      "resolution": "Cycle 7 pre-flight \u2014 profiles table live; 500 was from BUG-002 which is already fixed"
     }
   ],
   "history": [
@@ -1726,6 +1790,20 @@
       "testsFailed": 0,
       "cfErrorRatePct": null,
       "note": "Full two-pass system audit: security, billing, data, reliability, AI, infra, frontend, privacy, tests, docs. 51 new issues identified (SYS-001 through SYS-051). 5 P0s including 2FA broken in production (QR leaks TOTP secret to external domain + CSP blocks render) and cron ReferenceError on every run."
+    },
+    {
+      "date": "2026-03-16",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 473,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
     }
   ],
   "lastAuditDate": "2026-03-16",

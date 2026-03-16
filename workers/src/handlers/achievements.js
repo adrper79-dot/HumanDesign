@@ -229,6 +229,15 @@ export async function handleGetLeaderboard(request, env, ctx) {
     });
     
   } catch (error) {
+    // 42P01 = undefined_table — user_achievement_stats not yet migrated; return empty leaderboard
+    if (error.code === '42P01') {
+      return Response.json({
+        ok: true,
+        leaderboard: [],
+        userRank: null,
+        pagination: { limit: 50, offset: 0, total: 0 }
+      });
+    }
     createLogger('achievements').error('fetch_leaderboard_error', { error: error?.message || String(error) });
     return Response.json({
       error: 'Failed to fetch leaderboard'

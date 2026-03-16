@@ -160,12 +160,24 @@ export async function handleGetChart(request, env, chartId) {
     const hdChart = typeof chart.hd_json === 'string' ? JSON.parse(chart.hd_json) : chart.hd_json;
     const astroChart = typeof chart.astro_json === 'string' ? JSON.parse(chart.astro_json) : chart.astro_json;
 
+    // Ensure JSONB data is serializable (guards against BigInt / circular refs)
+    let hdChartSafe, astroChartSafe;
+    try {
+      const serialized = JSON.stringify({ hdChart, astroChart });
+      const parsed = JSON.parse(serialized);
+      hdChartSafe = parsed.hdChart;
+      astroChartSafe = parsed.astroChart;
+    } catch {
+      hdChartSafe = null;
+      astroChartSafe = null;
+    }
+
     return Response.json({
       ok: true,
       data: {
         id: chart.id,
-        hdChart,
-        astroChart,
+        hdChart: hdChartSafe,
+        astroChart: astroChartSafe,
         calculatedAt: chart.calculated_at
       }
     });
