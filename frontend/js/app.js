@@ -14,7 +14,7 @@ const POST_CHECKOUT_TIER_KEY = 'ps_post_checkout_tier';
 let userEmail = sessionStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
 let _pendingResetToken = null; // SEC-001: closure-scoped, never on window
-window.currentUser = null; // populated by fetchUserProfile() — frozen on set (P2-FE-013)
+let currentUser = null; // populated by fetchUserProfile() — frozen on set (P2-FE-013); module-scoped (SYS-031)
 
 // Tier display configuration — HD_UPDATES3 naming
 const TIER_DISPLAY = {
@@ -53,7 +53,7 @@ function updateAuthUI() {
     if (notifBellEl) notifBellEl.style.display = '';
 
     // Update tier badge and billing/upgrade buttons from cached profile
-    const user = window.currentUser;
+    const user = currentUser;
     if (user) {
       const tier    = user.tier || 'free';
       const cfg     = TIER_DISPLAY[tier] || TIER_DISPLAY.free;
@@ -90,7 +90,7 @@ function updateAuthUI() {
   }
 }
 
-// Fetch /api/auth/me and populate window.currentUser, then refresh UI
+// Fetch /api/auth/me and populate currentUser, then refresh UI
 async function fetchUserProfile() {
   if (!token) return;
   try {
@@ -101,7 +101,7 @@ async function fetchUserProfile() {
     const data = await res.json();
     const user = data?.user || data;
     if (user && user.id) {
-      window.currentUser = Object.freeze({ ...user });
+      currentUser = Object.freeze({ ...user });
       updateAuthUI();
       // AUDIT-SEC-003: Show/hide verification banner based on email_verified status
       if (user.email_verified === false) showEmailVerificationBanner();
@@ -689,9 +689,9 @@ function clearPendingPostCheckoutIntent() {
 
 async function applyPendingPostCheckoutIntent() {
   const destination = sessionStorage.getItem(POST_CHECKOUT_DESTINATION_KEY);
-  if (!destination || !window.currentUser) return false;
+  if (!destination || !currentUser) return false;
 
-  const currentTier = normalizeCurrentTierName(window.currentUser?.tier);
+  const currentTier = normalizeCurrentTierName(currentUser?.tier);
   const hintedTier = normalizeCurrentTierName(sessionStorage.getItem(POST_CHECKOUT_TIER_KEY));
   const effectiveTier = currentTier !== 'free' ? currentTier : hintedTier;
 
@@ -923,7 +923,7 @@ function logout() {
   const previousScopeId = getJourneyScopeId();
   const oldToken = token;
   token = null; userEmail = null;
-  window.currentUser = null;
+  currentUser = null;
   // P2-FE-009: Clear in-memory caches to prevent stale data on re-login
   _allCelebrityMatches = [];
   currentCluster = null;
@@ -1038,7 +1038,7 @@ function openPricingModal(suggestedTier = null) {
     return;
   }
   // Route professional tiers to the practitioner modal
-  const tier = window.currentUser?.tier || 'free';
+  const tier = currentUser?.tier || 'free';
   if (tier === 'practitioner' || tier === 'white_label' || tier === 'guide' || tier === 'agency') {
     openPractitionerPricingModal();
     return;
@@ -1090,7 +1090,7 @@ function openPractitionerPricingModal() {
     document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.signInUpgrade') : 'Sign in to view professional plans.';
     return;
   }
-  const tier = window.currentUser?.tier || 'free';
+  const tier = currentUser?.tier || 'free';
   _syncPractitionerPricingCards(tier);
   document.getElementById('practitionerPricingOverlay').classList.remove('hidden');
 }
@@ -1102,7 +1102,7 @@ function closePractitionerPricingModal() {
 // Sync practitioner pricing card button states
 function _syncPractitionerPricingCards(tier) {
   const practBtn    = document.getElementById('priceBtn-practitioner');
-  const studioBtn   = document.getElementById('priceBtn-white_label');
+  const studioBtn   = document.getElementById('priceBtn-agency');
   if (!practBtn || !studioBtn) return;
 
   if (tier === 'agency' || tier === 'white_label') {
@@ -1281,7 +1281,7 @@ async function openBillingPortal() {
     }
 
     const retentionOffer = preview.retentionOffer;
-    const subscriptionTier = preview.subscription?.tier || window.currentUser?.tier || 'individual';
+    const subscriptionTier = preview.subscription?.tier || currentUser?.tier || 'individual';
 
     if (retentionOffer) {
       const acceptDowngrade = confirm(
@@ -1437,7 +1437,7 @@ async function apiFetch(path, options = {}) {
     localStorage.removeItem('ps_email');   // legacy cleanup
     sessionStorage.removeItem('ps_email');
     clearJourneyStateForScope(previousScopeId);
-    window.currentUser = null;
+    currentUser = null;
     updateAuthUI();
     openAuthOverlay();
     document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.sessionExpired') : 'Session expired. Please sign in.';
@@ -1507,7 +1507,7 @@ const GUIDED_CORE_TABS = new Set(['overview', 'chart', 'profile', 'transits', 'c
 const GUIDED_UNLOCK_KEYS = ['chartGenerated', 'profileGenerated', 'transitsViewed'];
 
 function getJourneyScopeId() {
-  const userId = window.currentUser?.id;
+  const userId = currentUser?.id;
   if (userId) return `uid:${String(userId)}`;
   if (userEmail) return `email:${String(userEmail).trim().toLowerCase()}`;
   return 'anon';
@@ -3994,7 +3994,7 @@ async function loadRoster() {
     applyDirectoryProfileData(directoryData);
 
     // Show and populate Agency Seats card for Agency-tier users
-    const tier = window.currentUser?.tier || 'free';
+    const tier = currentUser?.tier || 'free';
     const agencyCard = document.getElementById('agencySeatsCard');
     if (agencyCard) {
       agencyCard.style.display = (tier === 'agency' || tier === 'white_label') ? '' : 'none';
@@ -5177,10 +5177,51 @@ function showAddMemberForm() {
         <div class="form-group"><label>Latitude</label><input type="number" step="0.0001" id="member-lat" placeholder="e.g., 27.9506"></div>
         <div class="form-group"><label>Longitude</label><input type="number" step="0.0001" id="member-lng" placeholder="e.g., -82.4572"></div>
         <div class="form-group"><label>Timezone</label><select id="member-tz">
-          <option value="America/New_York">America/New_York</option>
-          <option value="America/Chicago">America/Chicago</option>
-          <option value="America/Los_Angeles">America/Los_Angeles</option>
           <option value="UTC">UTC</option>
+          <optgroup label="North America">
+            <option value="America/New_York">America/New_York (Eastern)</option>
+            <option value="America/Chicago">America/Chicago (Central)</option>
+            <option value="America/Denver">America/Denver (Mountain)</option>
+            <option value="America/Los_Angeles">America/Los_Angeles (Pacific)</option>
+            <option value="America/Phoenix">America/Phoenix (Arizona)</option>
+            <option value="America/Anchorage">America/Anchorage (Alaska)</option>
+            <option value="America/Honolulu">America/Honolulu (Hawaii)</option>
+            <option value="America/Toronto">America/Toronto</option>
+            <option value="America/Vancouver">America/Vancouver</option>
+            <option value="America/Mexico_City">America/Mexico_City</option>
+          </optgroup>
+          <optgroup label="South America">
+            <option value="America/Sao_Paulo">America/Sao_Paulo</option>
+            <option value="America/Buenos_Aires">America/Buenos_Aires</option>
+          </optgroup>
+          <optgroup label="Europe">
+            <option value="Europe/London">Europe/London</option>
+            <option value="Europe/Paris">Europe/Paris</option>
+            <option value="Europe/Berlin">Europe/Berlin</option>
+            <option value="Europe/Rome">Europe/Rome</option>
+            <option value="Europe/Madrid">Europe/Madrid</option>
+            <option value="Europe/Amsterdam">Europe/Amsterdam</option>
+            <option value="Europe/Stockholm">Europe/Stockholm</option>
+            <option value="Europe/Moscow">Europe/Moscow</option>
+          </optgroup>
+          <optgroup label="Asia">
+            <option value="Asia/Dubai">Asia/Dubai</option>
+            <option value="Asia/Kolkata">Asia/Kolkata</option>
+            <option value="Asia/Bangkok">Asia/Bangkok</option>
+            <option value="Asia/Singapore">Asia/Singapore</option>
+            <option value="Asia/Shanghai">Asia/Shanghai</option>
+            <option value="Asia/Tokyo">Asia/Tokyo</option>
+            <option value="Asia/Seoul">Asia/Seoul</option>
+          </optgroup>
+          <optgroup label="Australia &amp; Pacific">
+            <option value="Australia/Melbourne">Australia/Melbourne</option>
+            <option value="Australia/Sydney">Australia/Sydney</option>
+            <option value="Pacific/Auckland">Pacific/Auckland</option>
+          </optgroup>
+          <optgroup label="Africa">
+            <option value="Africa/Cairo">Africa/Cairo</option>
+            <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+          </optgroup>
         </select></div>
       </div>
       
@@ -6559,6 +6600,10 @@ async function copyToClipboard(text) {
 /**
  * Share to specific social platform
  * @param {string} platform - 'facebook', 'twitter', 'linkedin', 'whatsapp'
+ *
+ * NOTE (SYS-038): 'facebook' opens the standard Facebook share dialog (sharer.php),
+ * NOT Facebook OAuth login. Facebook login is not implemented — the backend returns 501
+ * for /api/auth/oauth/facebook/* routes. Only Google and Apple OAuth are active.
  */
 function shareToSocial(platform) {
   const shareUrl = buildShareUrl();

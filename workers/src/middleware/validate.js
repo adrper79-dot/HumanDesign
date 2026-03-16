@@ -388,5 +388,8 @@ export async function validateRequestBody(request, method, path) {
   }
 
   request._validatedBody = result.data;
+  // SYS-024: Cache the raw parsed body so handlers can read request._body
+  // instead of calling request.json() again (body can only be read once).
+  request._body = body;
   return null;
 }
