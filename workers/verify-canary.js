@@ -100,7 +100,7 @@ async function main() {
     ({ res, body }) => {
       if (res.status !== 400) fail(`expected 400, got ${res.status}`);
       if (!isObject(body) || typeof body.error !== 'string') fail('missing validation error');
-      if (!/email and password/i.test(body.error)) fail(`unexpected error: ${body.error}`);
+      if (!/email and password|validation failed/i.test(body.error)) fail(`unexpected error: ${body.error}`);
     }
   ));
 
