@@ -168,8 +168,11 @@ export async function handleCheckout(request, env, ctx) {
       const dupe = await findReusableOpenCheckoutSession(
         stripe,
         customerId,
-        (s) => s.line_items?.data?.some?.(li => li.price?.id === priceId)
-          || (s.metadata?.user_id === user.id && s.metadata?.tier === tier)
+        (session) => (
+          session.metadata?.user_id === user.id
+          && session.metadata?.tier === tier
+          && (session.metadata?.billing_period || 'monthly') === period
+        )
       );
       if (dupe) {
         log.info('checkout_session_reused', { userId: user.id, tier, sessionId: dupe.id });

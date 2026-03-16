@@ -182,7 +182,7 @@
     ctx.fillStyle = TEXT_MUTED;
     ctx.font = '12px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('primeself.app — Energy Blueprint + Astrology + AI', CARD_W / 2, y + 10);
+    ctx.fillText('selfprime.net — Energy Blueprint + Astrology + AI', CARD_W / 2, y + 10);
 
     ctx.fillStyle = TEXT_MUTED + '80';
     ctx.font = '10px system-ui, -apple-system, sans-serif';
@@ -483,11 +483,11 @@
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_MUTED;
     ctx.font = (isStory ? '28px' : '24px') + ' system-ui, -apple-system, sans-serif';
-    ctx.fillText('primeself.app — Discover Your Energy Design', W / 2, footY + (isStory ? 48 : 38));
+    ctx.fillText('selfprime.net — Discover Your Energy Design', W / 2, footY + (isStory ? 48 : 38));
 
     ctx.fillStyle = GOLD + '70';
     ctx.font = 'bold ' + (isStory ? '24px' : '20px') + ' system-ui, -apple-system, sans-serif';
-    ctx.fillText('primeself.app', W / 2, footY + (isStory ? 90 : 70));
+    ctx.fillText('selfprime.net', W / 2, footY + (isStory ? 90 : 70));
 
     return canvas;
   }
@@ -553,8 +553,8 @@
 
     // Share caption
     var capitonText = (forge && forge.primaryForge)
-      ? 'My Prime Self Blueprint — ' + forge.primaryForge + ' Forge. Discover yours: primeself.app'
-      : 'My Prime Self Energy Blueprint. Discover yours: primeself.app';
+      ? 'My Prime Self Blueprint — ' + forge.primaryForge + ' Forge. Discover yours: selfprime.net'
+      : 'My Prime Self Energy Blueprint. Discover yours: selfprime.net';
 
     // Button row
     var btnRow = document.createElement('div');
@@ -587,7 +587,7 @@
           await navigator.share({ files: [file], title: 'My Prime Self Blueprint', text: capitonText });
         } else {
           // Copy link fallback
-          await navigator.clipboard.writeText('https://primeself.app/?ref=blueprint');
+          await navigator.clipboard.writeText('https://selfprime.net/?ref=blueprint');
           shareBtn.textContent = '✓ Link Copied!';
           setTimeout(function() { shareBtn.textContent = '📤 Share'; }, 2500);
         }

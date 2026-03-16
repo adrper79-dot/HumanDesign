@@ -28,6 +28,11 @@ import { calculateChart } from '../src/engine/chart.js';
 import { calculateAstrology } from '../src/engine/astro.js';
 import { getCurrentTransits, getTransitForecast } from '../src/engine/transits.js';
 import { buildSynthesisPrompt, validateSynthesisResponse } from '../src/prompts/synthesis.js';
+import { calculateMayan }  from '../src/engine/mayan.js';
+import { calculateBazi }   from '../src/engine/bazi.js';
+import { calculateSabian } from '../src/engine/sabian.js';
+import { calculateChiron } from '../src/engine/chiron.js';
+import { calculateLilith } from '../src/engine/lilith.js';
 
 // ─── AP Test Vector ─────────────────────────────────────────────
 const AP_JDN = toJulianDay(1979, 8, 5, 22, 51, 0);
@@ -830,5 +835,304 @@ describe('Definition Variants', () => {
     const chart = calculateChart(p, d);
     expect(chart.definition).toBe('Triple Split Definition');
     expect(chart.connectedComponents).toHaveLength(3);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// LAYER 12: Mayan Tzolkin (Dreamspell)
+// AP vector: Aug 5 1979 22:51 UTC = JDN 2444091.4521
+// Verified: kin 242, seal 'whiteWind', tone 8 (Galactic), wavespell 19
+// ═══════════════════════════════════════════════════════════════
+
+describe('Layer 12: Mayan Tzolkin (Dreamspell)', () => {
+  const mayan = calculateMayan(AP_JDN);
+
+  it('returns correct kin for AP birth vector', () => {
+    expect(mayan.kin).toBe(242);
+  });
+
+  it('kin is always in range 1–260', () => {
+    expect(mayan.kin).toBeGreaterThanOrEqual(1);
+    expect(mayan.kin).toBeLessThanOrEqual(260);
+  });
+
+  it('returns seal as camelCase key matching sealName', () => {
+    expect(mayan.seal).toBe('whiteWind');
+    expect(mayan.sealName).toBe('White Wind');
+    expect(mayan.sealColor).toBe('White');
+    expect(mayan.sealTribe).toBe('Wind');
+  });
+
+  it('returns correct tone for AP birth vector', () => {
+    expect(mayan.tone).toBe(8);
+    expect(mayan.toneName).toBe('Galactic');
+    expect(mayan.toneAction).toBeTruthy();
+    expect(mayan.tonePower).toBeTruthy();
+    expect(mayan.toneEssence).toBeTruthy();
+  });
+
+  it('tone is always in range 1–13', () => {
+    expect(mayan.tone).toBeGreaterThanOrEqual(1);
+    expect(mayan.tone).toBeLessThanOrEqual(13);
+  });
+
+  it('wavespell is in range 1–20 and signature is composed correctly', () => {
+    expect(mayan.wavespell).toBe(19);
+    expect(mayan.wavespell).toBeGreaterThanOrEqual(1);
+    expect(mayan.wavespell).toBeLessThanOrEqual(20);
+    expect(mayan.signature).toBe('Galactic White Wind');
+    expect(mayan.kin260).toBe('Kin 242');
+  });
+
+  it('produces different kin for a different birth date', () => {
+    const other = calculateMayan(AP_JDN + 1);
+    expect(other.kin).not.toBe(mayan.kin);
+  });
+
+  it('kin cycles correctly — 260 days later kin is identical', () => {
+    const cycle = calculateMayan(AP_JDN + 260);
+    expect(cycle.kin).toBe(mayan.kin);
+    expect(cycle.seal).toBe(mayan.seal);
+    expect(cycle.tone).toBe(mayan.tone);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// LAYER 13: BaZi — Four Pillars of Destiny
+// AP vector: 1979-08-05 22:00 UTC
+// Verified: yearPillar ji/wei, dayMaster Guǐ (Yin Water),
+//           elementBalance dominant=Earth lacking=Fire, total=8
+// ═══════════════════════════════════════════════════════════════
+
+describe('Layer 13: BaZi — Four Pillars', () => {
+  const bazi = calculateBazi(1979, 8, 5, 22, AP_JDN);
+
+  it('returns all four pillars', () => {
+    expect(bazi.yearPillar).toBeTruthy();
+    expect(bazi.monthPillar).toBeTruthy();
+    expect(bazi.dayPillar).toBeTruthy();
+    expect(bazi.hourPillar).toBeTruthy();
+  });
+
+  it('year pillar is Ji-Wei (己未) for Aug 1979', () => {
+    expect(bazi.yearPillar.stem.key).toBe('ji');
+    expect(bazi.yearPillar.branch.key).toBe('wei');
+  });
+
+  it('each pillar has stem and branch with required fields', () => {
+    for (const key of ['yearPillar', 'monthPillar', 'dayPillar', 'hourPillar']) {
+      const p = bazi[key];
+      expect(p.stem).toBeTruthy();
+      expect(p.stem.key).toBeTruthy();
+      expect(p.stem.name).toBeTruthy();
+      expect(p.stem.element).toBeTruthy();
+      expect(p.stem.elementDisplay).toBeTruthy();
+      expect(p.branch).toBeTruthy();
+      expect(p.branch.key).toBeTruthy();
+      expect(p.branch.name).toBeTruthy();
+    }
+  });
+
+  it('day master is Guǐ (Yin Water) for AP birth vector', () => {
+    expect(bazi.dayMaster.key).toBe('gui');
+    expect(bazi.dayMaster.elementDisplay).toBe('Yin Water');
+    expect(bazi.dayMaster.name).toBeTruthy();
+    expect(bazi.dayMaster.chinese).toBe('癸');
+  });
+
+  it('elementBalance has counts object with all 5 elements', () => {
+    const eb = bazi.elementBalance;
+    expect(eb.counts).toBeTruthy();
+    expect(typeof eb.counts.Wood).toBe('number');
+    expect(typeof eb.counts.Fire).toBe('number');
+    expect(typeof eb.counts.Earth).toBe('number');
+    expect(typeof eb.counts.Metal).toBe('number');
+    expect(typeof eb.counts.Water).toBe('number');
+  });
+
+  it('elementBalance totals exactly 8 (4 stems + 4 branches)', () => {
+    const total = Object.values(bazi.elementBalance.counts).reduce((a, b) => a + b, 0);
+    expect(total).toBe(8);
+  });
+
+  it('elementBalance has correct dominant and lacking for AP vector', () => {
+    expect(bazi.elementBalance.dominant).toBe('Earth');
+    expect(bazi.elementBalance.lacking).toBe('Fire');
+  });
+
+  it('Feb 3 vs Feb 4 2000: year changes at Lì Chūn boundary', () => {
+    const before = calculateBazi(2000, 2, 3, 12, 2451578); // Ji-Mao year
+    const after  = calculateBazi(2000, 2, 4, 12, 2451579); // Geng-Chen year
+    expect(before.yearPillar.stem.key).toBe('ji');
+    expect(after.yearPillar.stem.key).toBe('geng');
+    expect(before.yearPillar.stem.key).not.toBe(after.yearPillar.stem.key);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// LAYER 14: Sabian Symbols
+// AP vector verified: Sun at Leo 13° (absolute 133), Moon at Capricorn 13° (283)
+// ═══════════════════════════════════════════════════════════════
+
+describe('Layer 14: Sabian Symbols', () => {
+  const pos    = getAllPositions(AP_JDN);
+  const astro  = calculateAstrology(pos, AP_LAT, AP_LNG, AP_JDN);
+  const sabian = calculateSabian(pos, astro);
+
+  it('returns symbol data for all four points', () => {
+    expect(sabian.sun).toBeTruthy();
+    expect(sabian.moon).toBeTruthy();
+    expect(sabian.ascendant).toBeTruthy();
+    expect(sabian.midheaven).toBeTruthy();
+  });
+
+  it('Sun Sabian is Leo 13° for AP birth vector', () => {
+    expect(sabian.sun.sign).toBe('leo');
+    expect(sabian.sun.degree).toBe(13);
+    expect(sabian.sun.absoluteDegree).toBe(133);
+    expect(sabian.sun.symbol).toMatch(/sea captain/i);
+  });
+
+  it('Moon Sabian is Capricorn 13° for AP birth vector', () => {
+    expect(sabian.moon.sign).toBe('capricorn');
+    expect(sabian.moon.degree).toBe(13);
+    expect(sabian.moon.absoluteDegree).toBe(283);
+  });
+
+  it('each point has all required fields', () => {
+    for (const point of [sabian.sun, sabian.moon, sabian.ascendant, sabian.midheaven]) {
+      expect(point.absoluteDegree).toBeGreaterThanOrEqual(1);
+      expect(point.absoluteDegree).toBeLessThanOrEqual(360);
+      expect(point.sign).toBeTruthy();
+      expect(point.degree).toBeGreaterThanOrEqual(1);
+      expect(point.degree).toBeLessThanOrEqual(30);
+      expect(point.symbol).toBeTruthy();
+      expect(point.keynote).toBeTruthy();
+      expect(point.display).toBeTruthy();
+    }
+  });
+
+  it('absolute degree maps to correct sign and degree-in-sign', () => {
+    // Sun at absolute 133 = Leo (120-150) degree 13 = Leo 13°
+    expect(sabian.sun.signIndex).toBe(4); // Leo is index 4 (0=Aries)
+    expect(sabian.sun.degreesInSign).toBeCloseTo(12.91, 0);
+  });
+
+  it('display string includes sign and degree', () => {
+    expect(sabian.sun.display).toMatch(/Leo 13/i);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// LAYER 15: Chiron
+// AP vector verified: Chiron at Libra 19.59°, house 9
+// ═══════════════════════════════════════════════════════════════
+
+describe('Layer 15: Chiron', () => {
+  const pos    = getAllPositions(AP_JDN);
+  const astro  = calculateAstrology(pos, AP_LAT, AP_LNG, AP_JDN);
+  const chiron = calculateChiron(pos, astro.houses);
+
+  it('returns correct sign for AP birth vector', () => {
+    expect(chiron.error).toBeUndefined();
+    expect(chiron.sign).toBe('Libra');
+  });
+
+  it('returns longitude in valid range', () => {
+    expect(chiron.longitude).toBeGreaterThanOrEqual(0);
+    expect(chiron.longitude).toBeLessThan(360);
+    expect(chiron.longitude).toBeCloseTo(199.59, 0);
+  });
+
+  it('returns house 9 for AP birth vector (not default 1)', () => {
+    expect(chiron.house).toBe(9);
+    expect(chiron.house).toBeGreaterThanOrEqual(1);
+    expect(chiron.house).toBeLessThanOrEqual(12);
+  });
+
+  it('returns KB archetype fields from chiron.json', () => {
+    expect(chiron.archetype).toBeTruthy();
+    expect(chiron.description).toBeTruthy();
+    expect(chiron.shadow).toBeTruthy();
+    expect(chiron.gift).toBeTruthy();
+    expect(chiron.primeInsight).toBeTruthy();
+  });
+
+  it('archetype is "The Wounded Diplomat" for Chiron in Libra', () => {
+    expect(chiron.archetype).toBe('The Wounded Diplomat');
+  });
+
+  it('returns signIndex and degrees fields', () => {
+    expect(chiron.signIndex).toBe(6); // Libra = index 6
+    expect(chiron.degrees).toBeCloseTo(19.59, 0);
+  });
+
+  it('handles missing chiron longitude gracefully', () => {
+    const result = calculateChiron({}, astro.houses);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('works with null houses — returns house null not 1', () => {
+    const result = calculateChiron(pos, null);
+    expect(result.error).toBeUndefined();
+    expect(result.sign).toBe('Libra');
+    expect(result.house).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// LAYER 16: Black Moon Lilith
+// AP vector verified: Lilith at Virgo 3°, house 8; longitude ~153.0
+// J2000 verified: longitude ~263.35, sign Sagittarius
+// ═══════════════════════════════════════════════════════════════
+
+describe('Layer 16: Black Moon Lilith', () => {
+  const astro  = calculateAstrology(getAllPositions(AP_JDN), AP_LAT, AP_LNG, AP_JDN);
+  const lilith = calculateLilith(AP_JDN, astro.houses);
+
+  it('returns correct sign for AP birth vector', () => {
+    expect(lilith.error).toBeUndefined();
+    expect(lilith.sign).toBe('Virgo');
+  });
+
+  it('returns longitude in valid range', () => {
+    expect(lilith.longitude).toBeGreaterThanOrEqual(0);
+    expect(lilith.longitude).toBeLessThan(360);
+    expect(lilith.longitude).toBeCloseTo(153.0, 0);
+  });
+
+  it('returns house 8 for AP birth vector (not default 1)', () => {
+    expect(lilith.house).toBe(8);
+    expect(lilith.house).toBeGreaterThanOrEqual(1);
+    expect(lilith.house).toBeLessThanOrEqual(12);
+  });
+
+  it('returns KB archetype fields from lilith.json', () => {
+    expect(lilith.archetype).toBeTruthy();
+    expect(lilith.description).toBeTruthy();
+    expect(lilith.shadow).toBeTruthy();
+    expect(lilith.gift).toBeTruthy();
+    expect(lilith.primeInsight).toBeTruthy();
+  });
+
+  it('archetype is "The Untamed Priestess" for Lilith in Virgo', () => {
+    expect(lilith.archetype).toBe('The Untamed Priestess');
+  });
+
+  it('J2000 epoch returns Sagittarius at ~263.35°', () => {
+    const j2000 = calculateLilith(2451545.0, null);
+    expect(j2000.sign).toBe('Sagittarius');
+    expect(j2000.longitude).toBeCloseTo(263.35, 0);
+    expect(j2000.house).toBeNull();
+  });
+
+  it('longitude advances with time — different JDNs give different positions', () => {
+    const later = calculateLilith(AP_JDN + 30, astro.houses);
+    expect(later.longitude).not.toBeCloseTo(lilith.longitude, 0);
+  });
+
+  it('handles null jdn gracefully', () => {
+    const result = calculateLilith(null, null);
+    expect(result.error).toBeTruthy();
   });
 });

@@ -140,7 +140,11 @@
     {
       "label": "🚀 Deploy Workers",
       "type": "shell",
-      "command": "cd workers && npx wrangler deploy --force",
+      "command": "powershell",
+      "args": ["-Command", "cd workers; npm run deploy"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "group": "none",
       "presentation": {
         "reveal": "always",

@@ -2,14 +2,10 @@
  * Cloudflare Pages Function — /practitioners/:slug
  *
  * CMO-002: Server-renders meta tags for practitioner profiles so Google can
- * index them. Returns a lightweight HTML shell with OG/Twitter/JSON-LD
- * meta tags, then redirects to the SPA which renders the full UI.
- *
- * The redirect is a client-side JS redirect (instant for real users) while
- * Googlebot waits for the full render — this is the "dynamic rendering" approach.
+ * index them. Returns a lightweight public profile page with OG/Twitter/JSON-LD
+ * metadata rather than redirecting users into an incomplete SPA route.
  */
 
-const API_BASE = 'https://prime-self-api.adrper79.workers.dev';
 const SITE_URL = 'https://selfprime.net';
 
 function escapeHtml(s) {
@@ -18,32 +14,34 @@ function escapeHtml(s) {
   );
 }
 
-export async function onRequestGet({ params }) {
+export async function onRequestGet({ params, request }) {
   const slug = params.slug;
+  const origin = new URL(request.url).origin;
+  const apiBase = origin;
 
   // Validate slug format before hitting the API
   if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
-    return Response.redirect(`${SITE_URL}/`, 302);
+      return Response.redirect(`${origin}/`, 302);
   }
 
   let practitioner;
   try {
-    const res = await fetch(`${API_BASE}/api/directory/${encodeURIComponent(slug)}`, {
+    const res = await fetch(`${apiBase}/api/directory/${encodeURIComponent(slug)}`, {
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return Response.redirect(`${SITE_URL}/`, 302);
+    if (!res.ok) return Response.redirect(`${origin}/`, 302);
     const data = await res.json();
     practitioner = data.practitioner;
-    if (!practitioner) return Response.redirect(`${SITE_URL}/`, 302);
+    if (!practitioner) return Response.redirect(`${origin}/`, 302);
   } catch {
-    return Response.redirect(`${SITE_URL}/`, 302);
+    return Response.redirect(`${origin}/`, 302);
   }
 
   const name        = practitioner.display_name || 'Practitioner';
   const bio         = (practitioner.bio || '').slice(0, 155);
   const description = bio || `${name} is a Human Design practitioner on Prime Self.`;
-  const profileUrl  = `${SITE_URL}/practitioners/${slug}`;
-  const imageUrl    = practitioner.photo_url || `${SITE_URL}/og-image.png`;
+  const profileUrl  = `${origin}/practitioners/${slug}`;
+  const imageUrl    = practitioner.photo_url || `${origin}/og-image.png`;
 
   const specializations = Array.isArray(practitioner.specializations)
     ? practitioner.specializations.join(', ')
@@ -58,10 +56,8 @@ export async function onRequestGet({ params }) {
     ...(imageUrl ? { image: imageUrl } : {}),
     ...(practitioner.booking_url ? { url: practitioner.booking_url } : {}),
     knowsAbout: specializations || 'Human Design',
-    worksFor: { '@type': 'Organization', name: 'Prime Self', url: SITE_URL },
+    worksFor: { '@type': 'Organization', name: 'Prime Self', url: origin },
   };
-
-  const spaRedirectPath = `/?view=practitioners&slug=${encodeURIComponent(slug)}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -88,13 +84,6 @@ export async function onRequestGet({ params }) {
 
   <!-- JSON-LD Person schema -->
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
-
-  <!-- Redirect real users to the SPA instantly; search bots stay on this page -->
-  <script>
-    if (!navigator.userAgent.match(/Googlebot|bingbot|Slurp|DuckDuckBot|Baiduspider/i)) {
-      window.location.replace(${JSON.stringify(spaRedirectPath)});
-    }
-  </script>
   <style>body{font-family:system-ui,sans-serif;max-width:640px;margin:4rem auto;padding:0 1rem;color:#1a1a2e;}a{color:#c9a84c;}</style>
 </head>
 <body>
@@ -103,7 +92,8 @@ export async function onRequestGet({ params }) {
   ${specializations ? `<p><strong>Specializations:</strong> ${escapeHtml(specializations)}</p>` : ''}
   ${practitioner.certification ? `<p><strong>Certification:</strong> ${escapeHtml(practitioner.certification)}</p>` : ''}
   ${practitioner.session_format ? `<p><strong>Sessions:</strong> ${escapeHtml(practitioner.session_format)}</p>` : ''}
-  <p><a href="${SITE_URL}">View full profile on Prime Self →</a></p>
+  ${practitioner.booking_url ? `<p><a href="${escapeHtml(practitioner.booking_url)}" rel="noopener noreferrer">Book a session →</a></p>` : ''}
+  <p><a href="${origin}">Browse Prime Self →</a></p>
 </body>
 </html>`;
 

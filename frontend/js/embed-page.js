@@ -26,7 +26,7 @@ const theme = urlParams.get('theme');
 const accent = urlParams.get('accent');
 const hideAttributionRequested = urlParams.get('hideAttribution') === 'true';
 const apiKey = urlParams.get('apiKey') || '';
-const apiEndpoint = urlParams.get('apiEndpoint') || 'https://prime-self-api.adrper79.workers.dev';
+const apiEndpoint = (urlParams.get('apiEndpoint') || '/api').replace(/\/$/, '');
 
 // Apply theme
 if (theme === 'light') {
@@ -46,7 +46,7 @@ if (accent && /^#[0-9A-F]{6}$/i.test(accent)) {
 async function validateAttributionPermission(key) {
   if (!key) return false;
   try {
-    const res = await fetch(`${apiEndpoint}/api/embed/validate?apiKey=${encodeURIComponent(key)}`, {
+    const res = await fetch(`${apiEndpoint}/embed/validate?apiKey=${encodeURIComponent(key)}`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });
@@ -120,7 +120,7 @@ function openFullChart() {
     source: 'embed',
   });
 
-  const fullChartUrl = `https://primeself.app/?${params.toString()}`;
+  const fullChartUrl = `https://selfprime.net/?${params.toString()}`;
 
   if (window.parent !== window && parentOrigin) {
     safePostMessage({
@@ -150,7 +150,7 @@ document.getElementById('calculatorForm').addEventListener('submit', async (e) =
   document.getElementById('loadingState').classList.remove('hidden');
 
   try {
-    const response = await fetch(`${apiEndpoint}/calculate`, {
+    const response = await fetch(`${apiEndpoint}/chart/calculate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

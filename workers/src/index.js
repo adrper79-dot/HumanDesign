@@ -140,7 +140,7 @@ import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
 import { handleOAuthSocial, handleOAuthExchange } from './handlers/oauthSocial.js';
 import { handlePdfExport, handleBrandedPdfExport } from './handlers/pdf.js';
-import { handlePractitioner } from './handlers/practitioner.js';
+import { handlePractitioner, handleGetInvitationDetails, handleAcceptInvitation } from './handlers/practitioner.js';
 import { handleAgency } from './handlers/agency.js';
 import {
   handleListDirectory,
@@ -240,6 +240,7 @@ import { rateLimit, addRateLimitHeaders } from './middleware/rateLimit.js';
 import { errorResponse } from './lib/errorMessages.js';
 import { applyCacheForPublicAPI } from './middleware/cache.js';
 import { applySecurityHeaders } from './middleware/security.js';
+import { validateRequestBody } from './middleware/validate.js';
 import { getCacheMetrics, kvCache } from './lib/cache.js';
 import { runDailyTransitCron } from './cron.js';
 
@@ -251,6 +252,7 @@ const AUTH_ROUTES = new Set([
   '/api/profile/generate',
   '/api/sms/send-digest',
   '/api/composite',          // HD_UPDATES3: composites gated to practitioner+ tier
+  '/api/invitations/practitioner/accept',
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
@@ -290,6 +292,7 @@ const PUBLIC_ROUTES = new Set([
   '/api/embed/validate',               // Embed widget feature-flag check (cross-origin, no PII)
   '/api/promo/validate',               // Promo code validation (public, no redemption)
   '/api/directory',                    // Public practitioner directory listing
+  '/api/invitations/practitioner',     // Public practitioner invite preview
   '/api/analytics/audit',             // CIO-006: Audit runner uses X-Audit-Token — no user JWT
 ]);
 
@@ -398,6 +401,8 @@ const EXACT_ROUTES = new Map([
   ['GET /api/admin/promo',            handleListPromos],
   // Practitioner Directory (public)
   ['GET /api/directory',              handleListDirectory],
+  ['GET /api/invitations/practitioner', handleGetInvitationDetails],
+  ['POST /api/invitations/practitioner/accept', handleAcceptInvitation],
   // Practitioner Directory Profile (auth)
   ['GET /api/practitioner/directory-profile',  handleGetDirectoryProfile],
   ['PUT /api/practitioner/directory-profile',  handleUpdateDirectoryProfile],
@@ -502,6 +507,18 @@ export default {
       return handleOptions(request, env.ENVIRONMENT);
     }
 
+    // Startup secrets guard — reject early if critical env vars are missing
+    const missingSecrets = [];
+    if (!env?.NEON_CONNECTION_STRING) missingSecrets.push('NEON_CONNECTION_STRING');
+    if (!env?.JWT_SECRET) missingSecrets.push('JWT_SECRET');
+    if (missingSecrets.length > 0) {
+      console.error(JSON.stringify({ event: 'missing_secrets', missing: missingSecrets }));
+      return new Response(JSON.stringify({ error: 'Service configuration error' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+      });
+    }
+
     const url = new URL(request.url);
     const path = url.pathname;
     const sentry = initSentry(env);
@@ -539,6 +556,40 @@ export default {
         );
       }
 
+      // Stream-count actual body size when Content-Length is missing (chunked/omitted)
+      if (['POST', 'PUT', 'PATCH'].includes(request.method) && request.body && !contentLength) {
+        const clone = request.clone();
+        const reader = clone.body.getReader();
+        let totalBytes = 0;
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          totalBytes += value.byteLength;
+          if (totalBytes > MAX_BODY_BYTES) {
+            reader.cancel();
+            return addCorsHeaders(
+              Response.json({ error: 'Payload too large' }, { status: 413 }),
+              request, env.ENVIRONMENT
+            );
+          }
+        }
+      }
+
+      // Content-Type validation for mutating requests with a body
+      if (['POST', 'PUT', 'PATCH'].includes(request.method) && contentLength > 0) {
+        const ct = (request.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json') && !ct.includes('multipart/form-data')) {
+          return addCorsHeaders(
+            Response.json({ error: 'Content-Type must be application/json' }, { status: 415 }),
+            request, env.ENVIRONMENT
+          );
+        }
+      }
+
+      // Input validation — rejects malformed bodies before handler dispatch
+      const validationError = await validateRequestBody(request, request.method, path);
+      if (validationError) return addCorsHeaders(validationError, request, env.ENVIRONMENT);
+
       let response;
 
       // ─── Route matching (table-driven, BL-R-M9) ────────
@@ -566,10 +617,12 @@ export default {
             hasResend: !!env?.RESEND_API_KEY,
             hasSentry: !!env?.SENTRY_DSN,
             hasAuditSecret: !!env?.AUDIT_SECRET,
+            hasAnthropic: !!env?.ANTHROPIC_API_KEY,
+            hasVapid: !!env?.VAPID_PUBLIC_KEY && !!env?.VAPID_PRIVATE_KEY,
           };
 
-          // CIO-004: Run DB, KV, and Stripe reachability checks concurrently.
-          const [db, kv, stripeHealth] = await Promise.all([
+          // CIO-004: Run DB, KV, Stripe, and R2 reachability checks concurrently.
+          const [db, kv, stripeHealth, r2Health] = await Promise.all([
             (async () => {
               if (!env?.NEON_CONNECTION_STRING) return { ok: false, latencyMs: null, error: 'not configured' };
               const { createQueryFn } = await import('./db/queries.js');
@@ -604,11 +657,20 @@ export default {
                 return { ok: false, latencyMs: Date.now() - t0, error: e.message };
               }
             })(),
+            (async () => {
+              if (!env?.R2) return { ok: false, error: 'not bound' };
+              try {
+                await env.R2.head('__health__');
+                return { ok: true, error: null };
+              } catch (e) {
+                return { ok: false, error: e.message };
+              }
+            })(),
           ]);
 
-          const allOk = db.ok && kv.ok && stripeHealth.ok;
+          const allOk = db.ok && kv.ok && stripeHealth.ok && r2Health.ok;
           response = Response.json(
-            Object.assign(base, { status: allOk ? 'ok' : 'degraded', secrets, db, kv, stripe: stripeHealth }),
+            Object.assign(base, { status: allOk ? 'ok' : 'degraded', secrets, db, kv, stripe: stripeHealth, r2: r2Health }),
             { status: allOk ? 200 : 503 }
           );
         } else {

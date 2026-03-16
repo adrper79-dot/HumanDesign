@@ -15,6 +15,20 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 
+async function getPractitionerClientAccess(query, userId, clientId) {
+  const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (practitioner.rows.length === 0) {
+    return { error: Response.json({ error: 'Not registered as practitioner' }, { status: 403 }) };
+  }
+
+  const access = await query(QUERIES.checkPractitionerAccess, [userId, clientId]);
+  if (access.rows.length === 0) {
+    return { error: Response.json({ error: 'Forbidden - client not on your roster' }, { status: 403 }) };
+  }
+
+  return { practitionerId: practitioner.rows[0].id };
+}
+
 // ─── Session Notes CRUD ──────────────────────────────────────
 
 /**
@@ -25,14 +39,11 @@ export async function handleListNotes(request, env, clientId) {
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  // Verify practitioner owns this client
-  const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
-  if (practitioner.rows.length === 0) {
-    return Response.json({ error: 'Not registered as practitioner' }, { status: 403 });
-  }
+  const access = await getPractitionerClientAccess(query, userId, clientId);
+  if (access.error) return access.error;
 
   const notes = await query(QUERIES.listSessionNotes, [
-    practitioner.rows[0].id,
+    access.practitionerId,
     clientId,
   ]);
 
@@ -47,10 +58,8 @@ export async function handleCreateNote(request, env, clientId) {
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
-  if (practitioner.rows.length === 0) {
-    return Response.json({ error: 'Not registered as practitioner' }, { status: 403 });
-  }
+  const access = await getPractitionerClientAccess(query, userId, clientId);
+  if (access.error) return access.error;
 
   let body;
   try { body = await request.json(); } catch {
@@ -70,7 +79,7 @@ export async function handleCreateNote(request, env, clientId) {
   const sessionDate = body.session_date || new Date().toISOString().split('T')[0];
 
   const result = await query(QUERIES.createSessionNote, [
-    practitioner.rows[0].id,
+    access.practitionerId,
     clientId,
     content,
     shareWithAi,
@@ -89,6 +98,11 @@ export async function handleUpdateNote(request, env, noteId) {
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
+  const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (practitioner.rows.length === 0) {
+    return Response.json({ error: 'Not registered as practitioner' }, { status: 403 });
+  }
+
   let body;
   try { body = await request.json(); } catch {
     return Response.json({ error: 'Invalid JSON' }, { status: 400 });
@@ -105,6 +119,7 @@ export async function handleUpdateNote(request, env, noteId) {
     noteId,
     content,
     shareWithAi,
+    practitioner.rows[0].id,
   ]);
 
   if (result.rows.length === 0) {
@@ -127,7 +142,11 @@ export async function handleDeleteNote(request, env, noteId) {
     return Response.json({ error: 'Not registered as practitioner' }, { status: 403 });
   }
 
-  await query(QUERIES.deleteSessionNote, [noteId, practitioner.rows[0].id]);
+  const result = await query(QUERIES.deleteSessionNote, [noteId, practitioner.rows[0].id]);
+  if (!result?.rowCount) {
+    return Response.json({ error: 'Note not found' }, { status: 404 });
+  }
+
   return Response.json({ ok: true });
 }
 
@@ -141,13 +160,11 @@ export async function handleGetAIContext(request, env, clientId) {
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
-  if (practitioner.rows.length === 0) {
-    return Response.json({ error: 'Not registered as practitioner' }, { status: 403 });
-  }
+  const access = await getPractitionerClientAccess(query, userId, clientId);
+  if (access.error) return access.error;
 
   const result = await query(QUERIES.getClientAIContext, [
-    practitioner.rows[0].id,
+    access.practitionerId,
     clientId,
   ]);
 
@@ -165,10 +182,8 @@ export async function handleUpdateAIContext(request, env, clientId) {
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-  const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
-  if (practitioner.rows.length === 0) {
-    return Response.json({ error: 'Not registered as practitioner' }, { status: 403 });
-  }
+  const access = await getPractitionerClientAccess(query, userId, clientId);
+  if (access.error) return access.error;
 
   let body;
   try { body = await request.json(); } catch {
@@ -178,7 +193,7 @@ export async function handleUpdateAIContext(request, env, clientId) {
   const aiContext = String(body.ai_context || '').trim().substring(0, 2000);
 
   await query(QUERIES.updateClientAIContext, [
-    practitioner.rows[0].id,
+    access.practitionerId,
     clientId,
     aiContext,
   ]);

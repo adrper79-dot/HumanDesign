@@ -2,18 +2,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
   getUserFromRequestMock,
+  createCheckoutSessionMock,
   createOneTimeCheckoutSessionMock,
   ensureCustomerMock,
   createStripeClientMock,
+  getTierMock,
   getOneTimeProductsMock,
   createQueryFnMock,
   withCircuitBreakerMock,
   verifyWebhookMock,
 } = vi.hoisted(() => ({
   getUserFromRequestMock: vi.fn(),
+  createCheckoutSessionMock: vi.fn(),
   createOneTimeCheckoutSessionMock: vi.fn(),
   ensureCustomerMock: vi.fn(),
   createStripeClientMock: vi.fn(),
+  getTierMock: vi.fn(),
   getOneTimeProductsMock: vi.fn(),
   createQueryFnMock: vi.fn(),
   withCircuitBreakerMock: vi.fn(async (_name, operation) => operation()),
@@ -27,14 +31,14 @@ vi.mock('../workers/src/middleware/auth.js', () => ({
 vi.mock('../workers/src/lib/stripe.js', () => ({
   createStripeClient: createStripeClientMock,
   ensureCustomer: ensureCustomerMock,
-  createCheckoutSession: vi.fn(),
+  createCheckoutSession: createCheckoutSessionMock,
   createOneTimeCheckoutSession: createOneTimeCheckoutSessionMock,
   createPortalSession: vi.fn(),
   getSubscription: vi.fn(),
   updateSubscription: vi.fn(),
   cancelSubscription: vi.fn(),
   getTierConfig: vi.fn(),
-  getTier: vi.fn(),
+  getTier: getTierMock,
   getOneTimeProducts: getOneTimeProductsMock,
   verifyWebhook: verifyWebhookMock,
 }));
@@ -71,7 +75,7 @@ vi.mock('../workers/src/lib/email.js', () => ({
   sendSubscriptionConfirmationEmail: vi.fn(),
 }));
 
-import { handleOneTimeCheckout } from '../workers/src/handlers/billing.js';
+import { handleCheckout, handleOneTimeCheckout } from '../workers/src/handlers/billing.js';
 import { handleStripeWebhook } from '../workers/src/handlers/webhook.js';
 
 describe('one-time billing runtime', () => {
@@ -85,6 +89,10 @@ describe('one-time billing runtime', () => {
     });
 
     ensureCustomerMock.mockResolvedValue('cus_123');
+    getTierMock.mockImplementation((tier) => ({
+      priceId: `price_${tier}`,
+      annualPriceId: null,
+    }));
     getOneTimeProductsMock.mockReturnValue({
       single_synthesis: {
         priceId: 'price_single',
@@ -135,6 +143,55 @@ describe('one-time billing runtime', () => {
     expect(response.status).toBe(200);
     expect(json).toEqual({ ok: true, sessionId: 'cs_existing', url: 'https://stripe.test/existing' });
     expect(createOneTimeCheckoutSessionMock).not.toHaveBeenCalled();
+  });
+
+  it('reuses an open subscription checkout session for the same tier and billing period', async () => {
+    const stripe = {
+      checkout: {
+        sessions: {
+          list: vi.fn().mockResolvedValue({
+            data: [
+              {
+                id: 'cs_existing_subscription',
+                url: 'https://stripe.test/existing-subscription',
+                metadata: {
+                  user_id: 'user-1',
+                  tier: 'individual',
+                  billing_period: 'monthly',
+                },
+              },
+            ],
+          }),
+        },
+      },
+    };
+    createStripeClientMock.mockReturnValue(stripe);
+
+    const response = await handleCheckout(
+      new Request('https://api.test/api/billing/checkout', {
+        method: 'POST',
+        body: JSON.stringify({
+          tier: 'individual',
+          successUrl: 'https://selfprime.net/billing/success.html',
+          cancelUrl: 'https://selfprime.net/billing/cancel.html',
+        }),
+      }),
+      {
+        STRIPE_SECRET_KEY: 'sk_test',
+        FRONTEND_URL: 'https://selfprime.net',
+        NEON_CONNECTION_STRING: 'postgresql://test',
+      }
+    );
+
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json).toEqual({
+      ok: true,
+      sessionId: 'cs_existing_subscription',
+      url: 'https://stripe.test/existing-subscription',
+    });
+    expect(createCheckoutSessionMock).not.toHaveBeenCalled();
   });
 
   it('applies one-time grants inside a single transaction', async () => {

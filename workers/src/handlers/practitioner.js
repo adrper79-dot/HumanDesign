@@ -66,6 +66,17 @@ async function sha256Hex(input) {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+async function getInvitationByToken(query, rawToken) {
+  const token = String(rawToken || '').trim();
+  if (!token || token.length < 16 || token.length > 256) {
+    return null;
+  }
+
+  const tokenHash = await sha256Hex(token);
+  const result = await query(QUERIES.getPractitionerInvitationByTokenHash, [tokenHash]);
+  return result.rows?.[0] || null;
+}
+
 export async function handlePractitioner(request, env, subpath) {
   const userId = request._user?.sub;
   if (!userId) {
@@ -480,4 +491,97 @@ async function handleRemoveClient(userId, clientId, query) {
     return Response.json({ error: 'Client not found on your roster' }, { status: 404 });
   }
   return Response.json({ ok: true, message: 'Client removed from roster' });
+}
+
+export async function handleGetInvitationDetails(request, env) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get('token');
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  const invitation = await getInvitationByToken(query, token);
+  if (!invitation) {
+    return Response.json({ error: 'Invitation not found' }, { status: 404 });
+  }
+
+  if (invitation.status !== 'pending') {
+    return Response.json({ error: 'Invitation is no longer active' }, { status: 410 });
+  }
+
+  if (new Date(invitation.expires_at).getTime() <= Date.now()) {
+    await query(QUERIES.expirePractitionerInvitationById, [invitation.id]);
+    return Response.json({ error: 'Invitation has expired' }, { status: 410 });
+  }
+
+  return Response.json({
+    ok: true,
+    invitation: {
+      client_email: invitation.client_email,
+      client_name: invitation.client_name,
+      message: invitation.message,
+      expires_at: invitation.expires_at,
+      practitioner_name: invitation.practitioner_display_name || 'Your practitioner',
+    }
+  });
+}
+
+export async function handleAcceptInvitation(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const userResult = await query(QUERIES.getUserById, [userId]);
+  const user = userResult.rows?.[0];
+  if (!user) {
+    return Response.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  const invitation = await getInvitationByToken(query, body?.token);
+  if (!invitation) {
+    return Response.json({ error: 'Invitation not found' }, { status: 404 });
+  }
+
+  if (invitation.status !== 'pending') {
+    return Response.json({ error: 'Invitation is no longer active' }, { status: 410 });
+  }
+
+  if (new Date(invitation.expires_at).getTime() <= Date.now()) {
+    await query(QUERIES.expirePractitionerInvitationById, [invitation.id]);
+    return Response.json({ error: 'Invitation has expired' }, { status: 410 });
+  }
+
+  if (!user.email || user.email.toLowerCase() !== String(invitation.client_email || '').toLowerCase()) {
+    return Response.json({
+      error: 'Sign in with the invited email address to accept this invitation'
+    }, { status: 403 });
+  }
+
+  if (invitation.practitioner_user_id === userId) {
+    return Response.json({ error: 'You cannot accept your own invitation' }, { status: 400 });
+  }
+
+  const accepted = await query.transaction(async (txQuery) => {
+    await txQuery(QUERIES.addClient, [invitation.practitioner_id, userId]);
+    return txQuery(QUERIES.markPractitionerInvitationAccepted, [invitation.id]);
+  });
+
+  if (!accepted.rows?.length) {
+    return Response.json({ error: 'Invitation could not be accepted' }, { status: 409 });
+  }
+
+  return Response.json({
+    ok: true,
+    message: 'Invitation accepted',
+    practitioner: {
+      name: invitation.practitioner_display_name || 'Your practitioner',
+    }
+  });
 }

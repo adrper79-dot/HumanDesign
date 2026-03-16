@@ -1,0 +1,212 @@
+{
+  "jia": {
+    "index": 0,
+    "chinese": "甲",
+    "romanized": "Jiǎ",
+    "element": "Yang Wood",
+    "elementKey": "yang_wood",
+    "nature": "Yang — hard, upward-growing wood (the great tree)",
+    "archetype": "The Trailblazer",
+    "season": "Early Spring",
+    "direction": "East",
+    "color": "Green (light)",
+    "description": "Yang Wood is the tall tree pressing upward — determined, direct, pioneering. Jia people push through obstacles with natural confidence, often becoming the first to chart new territory.",
+    "shadow": "Rigidity. The great tree that cannot bend in the storm. Inflexibility disguised as principle. Difficulty changing course once committed, even when the path is clearly wrong.",
+    "gift": "Visionary directness. The capacity to grow upward through obstacles without losing integrity. Natural authority that comes from genuine rootedness rather than performance.",
+    "primeInsight": "Your power is vertical: you grow upward, toward light, through everything that stands in your way. The shadow is rigidity — the tree that breaks in the storm rather than bending. Flexibility is not compromise for you; it is survival intelligence.",
+    "tenGods": {
+      "selfElement": "Commander",
+      "counterpart": "Yi (Yin Wood)",
+      "note": "Jia and Yi are brother elements — Yang and Yin expressions of the same Wood nature"
+    }
+  },
+  "yi": {
+    "index": 1,
+    "chinese": "乙",
+    "romanized": "Yǐ",
+    "element": "Yin Wood",
+    "elementKey": "yin_wood",
+    "nature": "Yin — flexible, vining wood (the plant that wraps and adapts)",
+    "archetype": "The Adapter",
+    "season": "Late Spring",
+    "direction": "East",
+    "color": "Green (deep)",
+    "description": "Yin Wood is the vine and the climbing plant — flexible, persistent, finding a way around every obstacle. Yi people navigate complexity with grace, adapting without losing their essential nature.",
+    "shadow": "Indirectness that can become manipulation — the vine that wraps around what it cannot push through. Difficulty with direct confrontation. People-pleasing that loses itself in accommodation.",
+    "gift": "Resilient flexibility. The ability to route around obstacles rather than being stopped by them. Social intelligence that navigates complex human systems with elegance.",
+    "primeInsight": "Flexibility is your genius. You find paths that rigid minds cannot see because you don't require obstacles to yield — you simply grow around them. The shadow is indirect behavior that starts to manipulate. Your natural diplomacy is a gift until it becomes a strategy for avoiding truth.",
+    "tenGods": {
+      "selfElement": "Companion",
+      "counterpart": "Jia (Yang Wood)",
+      "note": "Yi and Jia share Wood nature; Yi's flexibility complements Jia's directness"
+    }
+  },
+  "bing": {
+    "index": 2,
+    "chinese": "丙",
+    "romanized": "Bǐng",
+    "element": "Yang Fire",
+    "elementKey": "yang_fire",
+    "nature": "Yang — blazing sun, open fire, public illumination",
+    "archetype": "The Illuminator",
+    "season": "Early Summer",
+    "direction": "South",
+    "color": "Red (bright)",
+    "description": "Yang Fire is the sun and the roaring fire — radiant, warm, visible to all. Bing people naturally illuminate whatever they engage with; their presence is felt in any room.",
+    "shadow": "Burn-out and overshining. The fire that consumes rather than warms. Needing to be seen — attention essential to self-worth. The sun that scorches what it meant to nourish.",
+    "gift": "Illuminating warmth. The capacity to make others feel genuinely seen and valued. Leadership through presence and radiance rather than authority or force.",
+    "primeInsight": "You are the public fire — you are meant to be seen and to illuminate. The shadow is confusing radiance with performance. When your fire is authentic, it warms; when it is performed, it blinds. The challenge is maintaining your glow without needing to be watched to know you're burning.",
+    "tenGods": {
+      "selfElement": "Direct Officer",
+      "counterpart": "Ding (Yin Fire)",
+      "note": "Bing is the public face of Fire; Ding is the intimate flame"
+    }
+  },
+  "ding": {
+    "index": 3,
+    "chinese": "丁",
+    "romanized": "Dīng",
+    "element": "Yin Fire",
+    "elementKey": "yin_fire",
+    "nature": "Yin — candlelight, lamplight, intimate and sustained warmth",
+    "archetype": "The Steady Flame",
+    "season": "Late Summer/Early Summer",
+    "direction": "South",
+    "color": "Red (deep/dim)",
+    "description": "Yin Fire is the candle — intimate, persistent, giving warmth and light in close spaces. Ding people illuminate personal relationships and small groups with a sustained warmth that Bing's blazing sun cannot always reach.",
+    "shadow": "The flame that burns in isolation, warming only itself. Intensity in private that does not translate into the world. Difficulty sustaining warmth when the relationship or context demands more than a candle can give.",
+    "gift": "Intimate, sustained illumination. The capacity to maintain warmth over the long haul, to see by candlelight what sunlight washes out. Deep personal insight and warmth in close relationships.",
+    "primeInsight": "Your fire is intimate and sustained — you light the rooms that need lighting from within, not from outside. The shadow is burning in isolation. Your particular luminousness is irreplaceable in the close quarters of deep relationship, creative work, and personal mentorship.",
+    "tenGods": {
+      "selfElement": "Indirect Resource",
+      "counterpart": "Bing (Yang Fire)",
+      "note": "Ding is intimate Fire; Bing is public. Both are essential expressions of Fire nature"
+    }
+  },
+  "wu": {
+    "index": 4,
+    "chinese": "戊",
+    "romanized": "Wù",
+    "element": "Yang Earth",
+    "elementKey": "yang_earth",
+    "nature": "Yang — mountain, hard ground, immovable stability",
+    "archetype": "The Mountain",
+    "season": "Transition (between seasons)",
+    "direction": "Center",
+    "color": "Yellow/Brown (strong)",
+    "description": "Yang Earth is the mountain — solid, stable, enduring. Wu people provide reliable foundations; their groundedness is a refuge for others navigating uncertainty.",
+    "shadow": "Immovability that becomes obstruction. The mountain that blocks rather than shelters. Stubbornness masquerading as stability. Carrying other people's weight indefinitely without acknowledging what this costs.",
+    "gift": "The capacity to be the unshakeable ground that others stand on. True stability — not the performance of stability, but the real thing. Long-term reliability and the wisdom that accumulates over a lifetime of presence.",
+    "primeInsight": "You are the mountain that others orient by. The shadow is losing yourself in the stability you provide — becoming so committed to being reliable that your own movement becomes impossible. Mountains are not stationary by accident; they stand in the place that serves the most, and they know when it is time to be moved by water.",
+    "tenGods": {
+      "selfElement": "Indirect Wealth",
+      "counterpart": "Ji (Yin Earth)",
+      "note": "Wu is the mountain; Ji is the fertile valley floor — both are Earth, differently expressed"
+    }
+  },
+  "ji": {
+    "index": 5,
+    "chinese": "己",
+    "romanized": "Jǐ",
+    "element": "Yin Earth",
+    "elementKey": "yin_earth",
+    "nature": "Yin — fertile soil, valley earth, the ground that receives and nurtures",
+    "archetype": "The Fertile Ground",
+    "season": "Between seasons",
+    "direction": "Center",
+    "color": "Yellow/Brown (light)",
+    "description": "Yin Earth is fertile valley soil — receptive, nourishing, the medium through which seeds become plants. Ji people have a remarkable capacity to receive, process, and transform — to make things grow.",
+    "shadow": "Absorbing too much without discernment. The soil that takes in everything without filtering, becoming saturated and unable to nourish. Difficulty in maintaining boundaries, which then becomes difficulty maintaining a stable self.",
+    "gift": "The capacity to receive and nurture with remarkable precision — to know what each seed needs to become what it is meant to be. Transformative processing intelligence: what passes through you emerges more viable.",
+    "primeInsight": "You are the ground itself — the medium through which things grow. The shadow is becoming the dumping ground for what others don't want to process. The gift is being the fertile soil that makes extraordinary growth possible. The challenge is knowing the difference.",
+    "tenGods": {
+      "selfElement": "Direct Wealth",
+      "counterpart": "Wu (Yang Earth)",
+      "note": "Ji is fertile valley earth; Wu is the mountain — both are Earth, differently expressed"
+    }
+  },
+  "geng": {
+    "index": 6,
+    "chinese": "庚",
+    "romanized": "Gēng",
+    "element": "Yang Metal",
+    "elementKey": "yang_metal",
+    "nature": "Yang — raw ore, iron, the unforged sword",
+    "archetype": "The Forger",
+    "season": "Early Autumn",
+    "direction": "West",
+    "color": "White/Silver (strong/bright)",
+    "description": "Yang Metal is raw ore and unforged iron — the material of tools and weapons before they are refined. Geng people have enormous raw power and determination; they are being forged by life's experiences.",
+    "shadow": "Harshness before refinement. The raw ore that injures because it has not yet found its intended shape. Bluntness as insensitivity. Power that overwhelms rather than serves. Resistance to the refining process itself.",
+    "gift": "The raw material of extraordinary accomplishment — the toughness and capacity that, once properly directed and refined, can achieve what softer metals cannot. A natural integrity that does not bend under pressure.",
+    "primeInsight": "You are the ore that is being forged into something essential. The forging process — the hammering, heating, and quenching of life's challenges — is not your enemy; it is your making. Resistance to refinement is the primary shadow. The question is always: what am I being shaped into, and is this the right shaping?",
+    "tenGods": {
+      "selfElement": "Seven Killings",
+      "counterpart": "Xin (Yin Metal)",
+      "note": "Geng is raw ore; Xin is polished metal — both are Metal, differently expressed"
+    }
+  },
+  "xin": {
+    "index": 7,
+    "chinese": "辛",
+    "romanized": "Xīn",
+    "element": "Yin Metal",
+    "elementKey": "yin_metal",
+    "nature": "Yin — refined metal, jewelry, the polished sword or gem",
+    "archetype": "The Refinement",
+    "season": "Late Autumn",
+    "direction": "West",
+    "color": "White/Silver (refined/lustrous)",
+    "description": "Yin Metal is the refined gem, precious metal, the polished needle — delicate, precise, and carrying a cutting edge in a small space. Xin people possess refined taste and precise intelligence.",
+    "shadow": "Precious-ness that becomes precociousness. Refinement that becomes superiority. The gem that cuts everyone who handles it because its edges have been perfected but never smoothed. Aestheticism as armor.",
+    "gift": "Exquisite precision and discernment. The capacity to cut through confusion with minimal force — the scalpel rather than the axe. Refined intelligence that operates at the level of essence rather than surface.",
+    "primeInsight": "Your refinement is your gift and your edge. The shadow is confusing polish with perfection — the gem that has cut so many people that no one can hold it. The gift is that your precision in the right application is unmatched. Learning to sheathe your edges when circumstances call for warmth is the work.",
+    "tenGods": {
+      "selfElement": "Direct Officer",
+      "counterpart": "Geng (Yang Metal)",
+      "note": "Xin is refined metal; Geng is raw ore — both are Metal, differently expressed"
+    }
+  },
+  "ren": {
+    "index": 8,
+    "chinese": "壬",
+    "romanized": "Rén",
+    "element": "Yang Water",
+    "elementKey": "yang_water",
+    "nature": "Yang — ocean, river, moving water, the great current",
+    "archetype": "The Flow",
+    "season": "Early Winter",
+    "direction": "North",
+    "color": "Black/Deep Blue (strong)",
+    "description": "Yang Water is the great ocean and the powerful river — moving, containing all, irresistible over time. Ren people carry vast inner resources and a natural capacity to move toward their destination regardless of obstacles.",
+    "shadow": "Inundation. The flood that destroys rather than nourishes. Emotions that overwhelm rather than inform. The restlessness that must always be in motion, drowning what requires stillness.",
+    "gift": "The irresistible force of accumulated depth. The memory and resource-capacity of the ocean. An intelligence that encompasses all perspectives simultaneously — all rivers eventually become this water.",
+    "primeInsight": "You carry vast depths. The shadow is using motion to avoid depth — staying in the current to escape the dark stillness of the ocean floor. Your most profound intelligence lives in that stillness. What you are always seeking is also always seeking you; sometimes you must stop flowing long enough to let it arrive.",
+    "tenGods": {
+      "selfElement": "Eating God",
+      "counterpart": "Gui (Yin Water)",
+      "note": "Ren is the great moving waters; Gui is still, collected water — both are Water, differently expressed"
+    }
+  },
+  "gui": {
+    "index": 9,
+    "chinese": "癸",
+    "romanized": "Guǐ",
+    "element": "Yin Water",
+    "elementKey": "yin_water",
+    "nature": "Yin — rain, dew, underground water, collected and still",
+    "archetype": "The Still Pool",
+    "season": "Late Winter",
+    "direction": "North",
+    "color": "Black/Deep Blue (still, dark)",
+    "description": "Yin Water is rain, dew, the underground spring, the still pool — collected, pure, carrying a reflective quality. Gui people have profound inner sensitivity and depth of perception.",
+    "shadow": "Stagnation. The pool that ceases to receive fresh water and turns. Endless interiority without output. The sensitivity that becomes overwhelm — absorbing everything without sufficient release.",
+    "gift": "The capacity for reflective depth and subtle perception. Like a still pool, you reflect what stands over you with unusual clarity. Intuitive intelligence that operates through the gathering of subtle signals rather than direct observation.",
+    "primeInsight": "Your depth of perception is your most extraordinary quality. The shadow is stagnation — the still pool that has received too much and released too little. Your sensitivity requires both input and output to stay clear. What you perceive must also be expressed, or the pool goes dark.",
+    "tenGods": {
+      "selfElement": "Hurting Officer",
+      "counterpart": "Ren (Yang Water)",
+      "note": "Gui is still, collected water; Ren is the great moving waters — both are Water, differently expressed"
+    }
+  }
+}

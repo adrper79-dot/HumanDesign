@@ -8,6 +8,7 @@ const API = 'https://prime-self-api.adrper79.workers.dev';
 let token = null;
 let _tokenExpiresAt = 0; // P2-FE-005: epoch ms when access token expires
 let _refreshTimer = null; // P2-FE-005: proactive refresh timer
+const PENDING_PRACTITIONER_INVITE_KEY = 'ps_pending_practitioner_invite';
 let userEmail = sessionStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
 let _pendingResetToken = null; // SEC-001: closure-scoped, never on window
@@ -495,6 +496,7 @@ async function checkOAuthCallback() {
       localStorage.removeItem('ps_refresh_token');
 
       await fetchUserProfile();
+      await processPendingPractitionerInvite();
       if (data.new_user) {
         showNotification('Welcome to Prime Self! Enter your birth details below to generate your blueprint.', 'success');
       } else {
@@ -631,6 +633,62 @@ function checkEmailVerificationAction() {
     }
   })
   .catch(() => showNotification('Network error. Please try again.', 'error'));
+}
+
+function capturePractitionerInviteFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const invite = params.get('invite');
+  if (!invite) return;
+
+  sessionStorage.setItem(PENDING_PRACTITIONER_INVITE_KEY, invite);
+  params.delete('invite');
+  const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}${window.location.hash || ''}`;
+  window.history.replaceState({}, '', next);
+}
+
+function getPendingPractitionerInviteToken() {
+  return sessionStorage.getItem(PENDING_PRACTITIONER_INVITE_KEY);
+}
+
+function clearPendingPractitionerInviteToken() {
+  sessionStorage.removeItem(PENDING_PRACTITIONER_INVITE_KEY);
+}
+
+async function processPendingPractitionerInvite(options = {}) {
+  const inviteToken = getPendingPractitionerInviteToken();
+  if (!inviteToken) return;
+
+  if (!token) {
+    if (options.promptForAuth === true) {
+      const preview = await apiFetch(`/api/invitations/practitioner?token=${encodeURIComponent(inviteToken)}`);
+      if (preview?.error) {
+        clearPendingPractitionerInviteToken();
+        showNotification(preview.error, 'error');
+        return;
+      }
+
+      const practitionerName = preview?.invitation?.practitioner_name || 'your practitioner';
+      showNotification(`Invitation detected from ${practitionerName}. Sign in or create an account with the invited email to accept it.`, 'info');
+      openAuthOverlay();
+    }
+    return;
+  }
+
+  const result = await apiFetch('/api/invitations/practitioner/accept', {
+    method: 'POST',
+    body: JSON.stringify({ token: inviteToken })
+  });
+
+  if (result?.error) {
+    if (/expired|not found|no longer active/i.test(result.error)) {
+      clearPendingPractitionerInviteToken();
+    }
+    showNotification(result.error, 'error');
+    return;
+  }
+
+  clearPendingPractitionerInviteToken();
+  showNotification(`Invitation accepted. You are now linked with ${result?.practitioner?.name || 'your practitioner'}.`, 'success');
 }
 
 // Persistent banner shown when email is not verified
@@ -781,7 +839,8 @@ async function submitAuth() {
     updateAuthUI();
     closeAuthOverlay();
     // Fetch subscription/tier info now that we have a valid token
-    fetchUserProfile();
+    await fetchUserProfile();
+    await processPendingPractitionerInvite();
     // AUDIT-SEC-003: Show verification banner after registration
     if (authMode === 'register') {
       showEmailVerificationBanner();
@@ -1349,6 +1408,50 @@ const SIDEBAR_PARENTS = {
   enhance: 'enhance', diary: 'enhance'
 };
 
+const GUIDED_CORE_TABS = new Set(['overview', 'chart', 'profile', 'transits', 'checkin', 'composite']);
+const GUIDED_UNLOCK_KEYS = ['chartGenerated', 'profileGenerated', 'transitsViewed'];
+
+function isGuidedNavigationUnlocked() {
+  try {
+    if (localStorage.getItem('ps_unlock_all_nav') === '1') return true;
+    return GUIDED_UNLOCK_KEYS.every((key) => !!localStorage.getItem(key));
+  } catch (_error) {
+    // Fail open if storage is unavailable (private mode / browser policy).
+    return true;
+  }
+}
+
+function applyGuidedNavigation() {
+  const unlocked = isGuidedNavigationUnlocked();
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  // Keep the initial experience focused by showing only core journey tabs.
+  sidebar.querySelectorAll('.nav-item[data-tab]').forEach((item) => {
+    const tab = item.getAttribute('data-tab') || '';
+    const shouldHide = !unlocked && !GUIDED_CORE_TABS.has(tab);
+    item.classList.toggle('nav-item-guided-hidden', shouldHide);
+    item.setAttribute('aria-hidden', shouldHide ? 'true' : 'false');
+    if (item instanceof HTMLButtonElement || item instanceof HTMLAnchorElement) {
+      item.tabIndex = shouldHide ? -1 : 0;
+    }
+  });
+
+  sidebar.querySelectorAll('.nav-group').forEach((group) => {
+    const hasVisibleNav = Array.from(group.querySelectorAll('.nav-item[data-tab]')).some((item) => {
+      return !item.classList.contains('nav-item-guided-hidden');
+    });
+    group.classList.toggle('nav-group-guided-hidden', !hasVisibleNav);
+  });
+
+  sidebar.querySelectorAll('.nav-divider').forEach((divider) => {
+    divider.classList.toggle('nav-divider-guided-hidden', !unlocked);
+  });
+
+  const hiddenActive = sidebar.querySelector('.nav-item.active.nav-item-guided-hidden');
+  if (hiddenActive) switchTab('chart');
+}
+
 function switchTab(id, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   // legacy support: remove active from old .tabs .tab-btn if any remain
@@ -1415,6 +1518,9 @@ function switchTab(id, btn) {
 
   // Update mobile nav active state
   if (typeof updateMobileNavForTab === 'function') updateMobileNavForTab(id);
+
+  // Recompute guided navigation after tab changes because milestone state may update.
+  applyGuidedNavigation();
 }
 
 // ── Sidebar Navigation ────────────────────────────────────────
@@ -1523,9 +1629,11 @@ document.addEventListener('click', (e) => {
 // Step guide: tracks user progress through the 3-step journey
 function updateStepGuide(activeTab) {
   const steps = [
-    { id: 'sg-chart', tab: 'chart' },
-    { id: 'sg-profile', tab: 'profile' },
-    { id: 'sg-transits', tab: 'transits' }
+    { id: 'sg-chart',         tab: 'chart' },
+    { id: 'sg-profile',       tab: 'profile' },
+    { id: 'sg-transits',      tab: 'transits' },
+    { id: 'sg-checkins',      tab: 'checkin' },
+    { id: 'sg-compatibility', tab: 'composite' }
   ];
   steps.forEach(s => {
     const el = document.getElementById(s.id);
@@ -1542,6 +1650,14 @@ function updateStepGuide(activeTab) {
     const p = document.getElementById('sg-profile');
     if (p) { p.classList.add('done'); p.classList.remove('active-step'); }
   }
+  if (localStorage.getItem('transitsViewed')) {
+    const t = document.getElementById('sg-transits');
+    if (t) { t.classList.add('done'); t.classList.remove('active-step'); }
+  }
+  if (localStorage.getItem('checkinDone')) {
+    const ch = document.getElementById('sg-checkins');
+    if (ch) { ch.classList.add('done'); ch.classList.remove('active-step'); }
+  }
 }
 
 // CMO-004: Auto-trigger geocoding when a user leaves a location field without
@@ -1557,7 +1673,10 @@ document.addEventListener('blur', (e) => {
 }, true); // capture phase so blur fires on the input element
 
 // Call on load to set initial step state
-document.addEventListener('DOMContentLoaded', () => updateStepGuide('chart'));
+document.addEventListener('DOMContentLoaded', () => {
+  updateStepGuide('chart');
+  applyGuidedNavigation();
+});
 
 // ── Astrological Chart Wheel ─────────────────────────────────
 function renderAstroChart(astro) {
@@ -1775,7 +1894,7 @@ async function calculateChart() {
     if (typeof showIdentityStrip === 'function') showIdentityStrip(data);
     // Auto-navigate to Home dashboard after first calculation
     const homeBtn = document.getElementById('btn-home');
-    if (homeBtn && typeof switchTab === 'function') switchTab('overview', homeBtn);
+    if (typeof switchTab === 'function') switchTab('overview', homeBtn);
     // Collapse the chart form now that a chart has been generated
     collapseChartForm();
     // Load chart history for versioning (AUDIT-UX-003)
@@ -1999,6 +2118,7 @@ function renderChart(data) {
           return row('Cross', crossName || lookedUp || (chart.cross?.gates ? chart.cross.gates.join(', ') : '—'));
         })()}
         ${row('Type', chart.cross?.type || chart.crossType || '—')}
+        ${getExplanation(window.CROSS_TYPE_EXPLANATIONS, chart.cross?.type || chart.crossType || '')}
         ${row('Quarter', chart.cross?.quarter || '—')}
         ${(() => {
           const crossName = chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null);
@@ -2050,7 +2170,7 @@ function renderChart(data) {
   const _bgId = 'bodygraph-' + Date.now();
   html += `<div class="section-header">Your Bodygraph <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
   <div class="card" style="padding:var(--space-4);text-align:center">
-    <div id="${_bgId}" style="min-height:200px"></div>
+    <div id="${_bgId}" style="min-height:420px"></div>
     <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap a center or channel to explore</div>
   </div>`;
   // Deferred render after DOM insertion
@@ -2214,6 +2334,155 @@ function renderChart(data) {
     html += renderAstroChart(astro);
   }
 
+  // ── Pattern Interactions (Synergies) ──
+  // All four synergies derive exclusively from existing explanations.js text + structural chart facts.
+  // Each answers a different question that no individual section answers alone.
+  const _synergies = [];
+
+  // ─── SYNERGY 1: The Alignment Loop ───────────────────────────────────────
+  // Question: "What is the feedback loop I live in?"
+  // Sources: NOT_SELF_EXPLANATIONS + STRATEGY_EXPLANATIONS + SIGNATURE_EXPLANATIONS
+  // Why: These three concepts form a closed circuit — the most fundamental experiment in the system.
+  // No other section assembles them together as a loop.
+  {
+    const _notSelfText = window.NOT_SELF_EXPLANATIONS?.[chart.notSelfTheme] || '';
+    const _stratObj = window.STRATEGY_EXPLANATIONS?.[chart.strategy];
+    const _stratText = (typeof _stratObj === 'object' ? _stratObj.full : _stratObj) || '';
+    const _sigMap = { 'Generator':'Satisfaction', 'Manifesting Generator':'Satisfaction', 'Manifestor':'Peace', 'Projector':'Success', 'Reflector':'Surprise' };
+    const _sig = _sigMap[chart.type] || '';
+    const _sigText = _sig ? (window.SIGNATURE_EXPLANATIONS?.[_sig] || '') : '';
+    if (_notSelfText || _stratText || _sigText) {
+      const _loopParts = [
+        _notSelfText && `<strong>Off-track signal — ${escapeHtml(chart.notSelfTheme || 'not-self')}:</strong> ${escapeHtml(_notSelfText)}`,
+        _stratText   && `<strong>The return path — ${escapeHtml(chart.strategy || 'your strategy')}:</strong> ${escapeHtml(_stratText)}`,
+        _sigText     && `<strong>Aligned state — ${escapeHtml(_sig)}:</strong> ${escapeHtml(_sigText)}`
+      ].filter(Boolean);
+      _synergies.push({
+        title: 'The Alignment Loop',
+        insight: `These three signals form a complete feedback circuit. One tells you when you have drifted. One is the route back. One confirms you have arrived.<br><br>${_loopParts.join('<br><br>')}<br><br><em style="font-size:var(--font-size-xs);color:var(--text-muted)">The entire experiment is noticing which of these three states you are in — and responding accordingly.</em>`
+      });
+    }
+  }
+
+  // ─── SYNERGY 2: Primary Conditioning Terrain ─────────────────────────────
+  // Question: "Why do I keep living my not-self despite knowing better?"
+  // Sources: CENTER_EXPLANATIONS.open (our exact text)
+  // Why: Maps the not-self theme to the 1–2 open centers whose conditioning directly produces it.
+  // Bridges "here is your warning signal" to "here is the specific mechanism."
+  {
+    const _allCenters = ['Head','Ajna','Throat','G','Heart','SolarPlexus','Sacral','Spleen','Root'];
+    const _openCenters = _allCenters.filter(c => !(chart.definedCenters || []).includes(c));
+    // Each not-self theme has primary conditioning centers ordered by relevance
+    const _conditioningMap = {
+      'Frustration':    ['G','SolarPlexus','Root'],   // direction confusion / emotional urgency / adrenaline pressure bypass the sacral
+      'Bitterness':     ['Throat','Head','Ajna'],      // compulsive speaking / mental pressure = uninvited guidance
+      'Anger':          ['G','Heart'],                 // direction confusion skips informing / ego-proving replaces informing
+      'Disappointment': ['Sacral','SolarPlexus']       // amplified urgency / borrowed emotional certainty = decides too fast
+    };
+    const _relevantOpen = (_conditioningMap[chart.notSelfTheme] || []).filter(c => _openCenters.includes(c)).slice(0, 2);
+    if (_relevantOpen.length > 0) {
+      const _centerLabel = c => c === 'G' ? 'G (Identity)' : c === 'SolarPlexus' ? 'Solar Plexus' : c;
+      const _centerParts = _relevantOpen.map(c => {
+        const ce = window.CENTER_EXPLANATIONS?.[c];
+        return ce ? `<strong>Open ${escapeHtml(_centerLabel(c))} Center</strong> — ${escapeHtml(ce.open)}` : null;
+      }).filter(Boolean);
+      if (_centerParts.length > 0) {
+        _synergies.push({
+          title: `Why ${escapeHtml(chart.notSelfTheme || 'Off-Track')} Keeps Returning: Your Conditioning Terrain`,
+          insight: `Your open center${_relevantOpen.length > 1 ? 's are' : ' is'} the door your not-self most often walks through. This is not a flaw — it is where you are most sensitive and most susceptible to absorbing energy from others as if it were your own signal:<br><br>${_centerParts.join('<br><br>')}<br><br>When you notice ${escapeHtml((chart.notSelfTheme || 'that signal').toLowerCase())}, the first question is: am I running on my own ${escapeHtml((chart.authority || 'authority').replace(' Authority',''))} — or on energy I absorbed through ${_relevantOpen.length > 1 ? 'these centers' : 'this center'}?`
+        });
+      }
+    }
+  }
+
+  // ─── SYNERGY 3: How Your Energy Reaches Expression ───────────────────────
+  // Question: "How does my energy naturally want to reach the world?"
+  // Sources: CHANNEL_DESCRIPTIONS + CENTER_EXPLANATIONS.Throat (our exact text)
+  // Why: Whether a motor connects to the Throat is one of the most behaviorally observable
+  // differences between people — it explains why some naturally fill silence and others wait.
+  // Three clean structural cases: motor-Throat / defined-without-motor / open Throat.
+  {
+    const _motorThroatMap = { '20-34':'Sacral','34-20':'Sacral','12-22':'Solar Plexus','22-12':'Solar Plexus','21-45':'Heart','45-21':'Heart' };
+    const _activeKeys = (chart.activeChannels || []).map(ch => ch.channel || ((ch.gates?.[0] || '') + '-' + (ch.gates?.[1] || '')));
+    const _motorThroatKey = _activeKeys.find(k => _motorThroatMap[k]);
+    const _throatDefined = (chart.definedCenters || []).includes('Throat');
+    const _throatCE = window.CENTER_EXPLANATIONS?.['Throat'];
+
+    if (_motorThroatKey) {
+      const _chInfo = typeof getChannelInfo === 'function' ? getChannelInfo(_motorThroatKey) : null;
+      const _motor = _motorThroatMap[_motorThroatKey];
+      _synergies.push({
+        title: `Expression Pathway: Motor-to-Throat via ${_chInfo?.name || _motorThroatKey}`,
+        insight: `Your ${escapeHtml(_chInfo?.name || _motorThroatKey)} channel (${escapeHtml(_motorThroatKey)}) runs a direct line from your ${escapeHtml(_motor)} center to your Throat.${_chInfo?.desc ? ' ' + escapeHtml(_chInfo.desc) : ''} This means your expression carries its own fuel — you can initiate conversation, speak in the moment, and fill silence from a genuine internal source. The risk: because the motor is always ready, it is easy to speak ahead of your authority. The motor activates expression; your ${escapeHtml((chart.authority || '').replace(' Authority',''))} is still the one that should govern what you say and when.`
+      });
+    } else if (_throatDefined) {
+      const _defCh = (chart.activeChannels || []).find(ch => {
+        const k = ch.channel || ((ch.gates?.[0] || '') + '-' + (ch.gates?.[1] || ''));
+        const meta = typeof getChannelMeta === 'function' ? getChannelMeta(k) : null;
+        return meta?.centers?.includes('Throat');
+      });
+      const _defChInfo = _defCh ? (typeof getChannelInfo === 'function' ? getChannelInfo(_defCh.channel || ((_defCh.gates?.[0] || '') + '-' + (_defCh.gates?.[1] || ''))) : null) : null;
+      _synergies.push({
+        title: 'Expression Pathway: Defined Throat (Guidance-Driven)',
+        insight: `${_throatCE?.defined ? escapeHtml(_throatCE.defined) + ' ' : ''}${_defChInfo ? `Your Throat is connected through the ${escapeHtml(_defChInfo.name)} channel — ${escapeHtml(_defChInfo.desc)} ` : ''}Because no motor runs directly into your Throat, your expression is most powerful when it arises from recognition, genuine response, or invitation — not self-generated force. The consistency is there; what determines impact is timing, not volume.`
+      });
+    } else {
+      _synergies.push({
+        title: 'Expression Pathway: Open Throat',
+        insight: `${_throatCE?.open ? escapeHtml(_throatCE.open) + ' ' : ''}An open Throat means your expression adapts fluidly to context — and people often notice your voice more than you realise. The shadow is chasing the feeling of being heard by speaking too much or too soon. Your most memorable expression tends to arrive when you are not trying to fill silence, but responding to what is genuinely in front of you.`
+      });
+    }
+  }
+
+  // ─── SYNERGY 4: The Inner Tension of Your Life Role ──────────────────────
+  // Question: "What is the core inner tension I navigate in my daily life?"
+  // Sources: PROFILE_EXPLANATIONS (our text) + line archetype knowledge per specific pair
+  // Why: People feel this line-tension in their bones but have no language for it.
+  // The WTMFY card uses the combined profile description — this unpacks the friction between the two lines.
+  {
+    const _profileStr = chart.profile || '';
+    const _profileParts = _profileStr.split('/');
+    const _L1 = parseInt(_profileParts[0] || '0');
+    const _L2 = parseInt(_profileParts[1] || '0');
+    const _profileEntry = window.PROFILE_EXPLANATIONS?.[_profileStr];
+    const _profileFull = _profileEntry ? (typeof _profileEntry === 'object' ? _profileEntry.full : _profileEntry) : '';
+
+    const _profileTensions = {
+      '1/3': 'Your Investigator nature (Line 1) needs a solid foundation of knowledge to feel secure — but your Martyr path (Line 3) learns by having things break. These two forces are in conversation, not conflict. You research to build solid ground; life breaks something; you research why it broke and build better. Every ending and failure is data. This cycle never fully stops, but what it produces is wisdom that purely theoretical people cannot reach.',
+      '1/4': 'Your deep investigative capacity (Line 1) powers your influence through relationships (Line 4). Without the research, your network reach feels hollow to you. Without the network, your knowledge stays private. The tension you navigate daily: when to keep studying versus when to bring what you know into your connections. Both are always necessary — they take turns being urgent.',
+      '2/4': 'Your natural genius develops in genuine solitude (Line 2) — but it reaches its full expression only through your network (Line 4). The tension: people call you out before you feel ready, and retreating can feel selfish when your relationships need you. Honour the hermit\'s timing. The network benefits far more from what emerges in solitude than from what you produce under pressure.',
+      '2/5': 'Natural gifts formed in private (Line 2) meet a public projection field where others place expectations on you whether you invited it or not (Line 5). The tension: your best work happens in solitude, but the world keeps calling you to perform publicly before you feel prepared. Guard your alone time. The projection field will have something real to meet only if the hermit is well-tended.',
+      '3/5': 'You learn by having bonds break — projects, paths, relationships (Line 3) — while others project practical expectations onto you (Line 5). The tension: your path requires visible experimentation and visible failure, which can erode the projections others hold. This is by design. The hard-won practical knowledge your path produces eventually fulfils the projection more completely than any smooth trajectory could. Trust the mess.',
+      '3/6': 'Relentless experimentation and bond-breaking (Line 3) feeds a three-phase arc toward embodied wisdom (Line 6). The tension: the 3 line wants to experiment and break, yet the 6 line has a structure — roughly 30 years of active learning, then a withdrawal and integration period, then emergence as a living example. Your early failures are curriculum for the person you will eventually embody. The mess is not wasted.',
+      '4/6': 'Your network is central to everything (Line 4) — but the three-phase 6-line arc means your community changes substantially at each life phase. The tension: your depth of loyalty to relationship meets a design that keeps renewing your world. This is not loss. The people and contexts of each phase are precisely what that phase requires, and your network-building instinct ensures each transition has roots.',
+      '4/1': 'Influence through relationships (Line 4) is backed by deep investigative capacity (Line 1) — but here the numbers are transposed, meaning you move into relationship first and build knowledge foundation second. The tension: your network may grant you influence before you feel you have fully earned it. The 1 line is your answer — keep researching. Depth backs up what your connections open the door for.',
+      '5/1': 'Others project practical savior expectations onto you whether you invite it or not (Line 5), and your deep investigative capacity (Line 1) gives you genuine ability to fulfil them. The tension: when you fall short of those projections, the disengagement is sharp. Your insurance is preparation — the more thoroughly you have studied, the more you can actually deliver on what is expected. Study is not optional for you; it is load-bearing.',
+      '5/2': 'Public projections draw you out of the solitude where your natural gifts develop (Line 2 meeting Line 5). The tension: your best contribution forms in private, but the world expects consistent public availability. You will often feel pulled in both directions simultaneously. The hermit is your source. Protect it, and the projection field will have something genuine to meet when it calls.',
+      '6/2': 'A three-phase arc toward embodied wisdom (Line 6) combined with natural gifts that develop in isolation (Line 2). The tension: the second phase of the 6-line arc — the rooftop withdrawal and integration period — aligns with the hermit\'s deepest need for solitude. This is your integration phase, not a detour. The gifts you build privately across your life become the lived teaching you embody in the third phase.',
+      '6/3': 'Relentless experimentation and bond-breaking (Line 3) building toward a three-phase arc of embodied wisdom (Line 6). The tension: the 3 line\'s chaos and the 6 line\'s structure seem incompatible — but they are the same engine. Every bond that breaks in the early phase produces wisdom that cannot be theorised, only lived. By the third phase, your authority to guide others comes precisely from having navigated what others are afraid to approach.'
+    };
+
+    const _tension = _profileTensions[_profileStr];
+    if (_tension && _L1 && _L2) {
+      _synergies.push({
+        title: `Profile ${escapeHtml(_profileStr)} — Line ${_L1} × Line ${_L2}: The Core Tension`,
+        insight: `${_tension}${_profileFull ? `<br><br><span style="font-size:var(--font-size-xs);color:var(--text-muted)">${escapeHtml(_profileFull)}</span>` : ''}`
+      });
+    }
+  }
+
+  // Render synergies card
+  if (_synergies.length > 0) {
+    html += `<div class="card" style="border-left:var(--space-1) solid var(--accent);margin-top:var(--space-4)">
+    <div class="card-title">🔗 Pattern Interactions</div>
+    <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-4);line-height:1.6">Your chart's elements don't work in isolation — they interact. These are the structural patterns that explain the texture of your daily experience.</p>
+    ${_synergies.map((s, i) => `<div style="margin-bottom:var(--space-4)${i < _synergies.length - 1 ? ';padding-bottom:var(--space-4);border-bottom:var(--border-width-thin) solid var(--border)' : ''}">
+      <div style="font-size:var(--font-size-sm);font-weight:700;color:var(--accent);margin-bottom:var(--space-2)">${escapeHtml(s.title)}</div>
+      <p style="font-size:var(--font-size-sm);color:var(--text);line-height:1.75;margin:0">${s.insight}</p>
+    </div>`).join('')}
+  </div>`;
+  }
+
   // "What This Means For You" synthesis summary
   const definedCount = chart.definedCenters?.length || 0;
   const openCount = 9 - definedCount;
@@ -2226,21 +2495,74 @@ function renderChart(data) {
   })();
   const motorCenters = (chart.definedCenters || []).filter(c => typeof isMotorCenter === 'function' && isMotorCenter(c));
 
+  // Per-type deeper guidance
+  const typeGuidance = {
+    'Generator': 'As a Generator, your life force is the most abundant and consistent in the system. You are built to master things you genuinely love — the key word is <em>genuinely</em>. When you are engaged with work or a project that lights you up, your energy feels renewable and your impact multiplies. When you are doing things out of obligation or to please others, you drain. The Sacral gut response is your infallible compass: pay attention to sounds and sensations your body makes before your mind catches up.',
+    'Manifesting Generator': 'As a Manifesting Generator, you move faster than almost anyone else and can do multiple things simultaneously without losing quality. The trap is initiating from the mind rather than from a gut response. You skip steps others cannot, and that is fine — but you must still wait for a clear sacral yes before starting. Let life show you the opening, then explode into it. Frustration or anger signals you\'ve been trying to push through on pure willpower.',
+    'Projector': 'As a Projector, your gift is your ability to see systems and people more clearly than they see themselves. You are not designed to match a Generator\'s output — your power is concentrated, not continuous. The invitation matters enormously: when someone genuinely asks for your guidance, your insights land deep. When you give guidance uninvited, even correct guidance, it creates resistance. Rest without guilt. Your clarity comes from withdrawal as much as engagement.',
+    'Manifestor': 'As a Manifestor, you carry a closed, repelling aura that can make others feel like you are moving too fast or operating in secret — even when you\'re not. You are designed to initiate new things that others then carry forward. The fix is simple and transformative: inform the people who will be affected by your actions before you act. A quick "I\'m about to do X" dissolves the resistance that builds around your natural energy. Anger signals you\'ve been suppressing your instinct to move.',
+    'Reflector': 'As a Reflector, you are profoundly rare — less than 1% of people share your design. With no defined centers, you amplify and reflect the energy of everyone around you. You are the most sensitive barometer in any environment, and your feelings about a place or group are genuinely accurate readings of that community\'s health. Protect your environment fiercely. Never rush major decisions — wait the full 28-day lunar cycle, talking to many different people until clarity arrives on its own.'
+  };
+
+  // Per-authority deeper guidance
+  const authorityGuidance = {
+    'Emotional': 'Your Emotional Authority means clarity never arrives in a single moment — it reveals itself over time. Never make a commitment at the peak of excitement or the depth of fear. Sleep on decisions, then sleep on them again. When the emotional wave has settled and you still feel a quiet "yes," that yes is trustworthy. The phrase "I need time to feel this through" is power, not weakness.',
+    'Emotional Authority': 'Your Emotional Authority means clarity never arrives in a single moment — it reveals itself over time. Never make a commitment at the peak of excitement or the depth of fear. Sleep on decisions, then sleep on them again. When the emotional wave has settled and you still feel a quiet "yes," that yes is trustworthy. The phrase "I need time to feel this through" is power, not weakness.',
+    'Sacral': 'Your Sacral Authority is a body-based yes/no signal that speaks before your mind does. Listen for sounds — an "uh-huh" in your throat or chest when life offers something aligned, an "unh-unh" when it doesn\'t. Ask yourself yes/no questions out loud and notice what your body does. The sacral speaks once, in the present tense. It does not debate.',
+    'Sacral Authority': 'Your Sacral Authority is a body-based yes/no signal that speaks before your mind does. Listen for sounds — an "uh-huh" in your throat or chest when life offers something aligned, an "unh-unh" when it doesn\'t. Ask yourself yes/no questions out loud and notice what your body does. The sacral speaks once, in the present tense. It does not debate.',
+    'Splenic': 'Your Splenic Authority is the quietest voice in the system. It speaks once, in the moment, as a faint knowing or a sudden "that\'s off" feeling. It never repeats itself. If you wait to hear it again — it will be gone. Trust the first instinct even when you can\'t explain it logically. Your body\'s survival intelligence is older and faster than your conscious mind.',
+    'Splenic Authority': 'Your Splenic Authority is the quietest voice in the system. It speaks once, in the moment, as a faint knowing or a sudden "that\'s off" feeling. It never repeats itself. If you wait to hear it again — it will be gone. Trust the first instinct even when you can\'t explain it logically. Your body\'s survival intelligence is older and faster than your conscious mind.',
+    'Self-Projected': 'Your Self-Projected Authority means you find your truth by speaking it out loud. Not to get advice — to hear yourself. Talk through important decisions with a trusted person who will listen rather than give opinions. As you speak, your authentic direction reveals itself in your own voice. The answer is always already in you.',
+    'Ego': 'Your Ego Authority is rare. You have consistent willpower, and your "I want" or "I don\'t want" is not selfishness — it is your navigation system. What the heart genuinely wants leads you correctly. What the heart genuinely rejects leads you to depletion. Commit only to what you will actually do.',
+    'Mental': 'As a Projector with Mental/No Inner Authority, your truth comes from your environment, not from within. There\'s no single internal oracle — you need to talk through decisions with many different people and gather perspectives. The answer emerges from the conversation, not from any one voice. Choose your sounding boards wisely.',
+    'Lunar': 'As a Reflector, your authority unfolds across a full 28-day lunar cycle. Live with a decision for a full month before acting on it. Talk to many different people as the moon moves through each gate — each person mirrors back a different facet of the choice. When the cycle completes and the feeling is consistent, you have your answer.'
+  };
+
+  // Definition-type social dynamics
+  const definitionGuidance = {
+    'Single': 'With a Single Definition, all your defined centers are connected in one continuous circuit. You process information in a consistent, self-contained way — you rarely need others to feel complete. You can be misread as self-sufficient to a fault. Give others time to catch up to your internal processing speed.',
+    'Split': 'With a Split Definition, your chart has two separate areas of definition and a gap between them. You naturally seek people who bridge that gap, often feeling more whole in their presence. This is not weakness — it is your design. Just be aware that bridgers can feel essential even when the relationship isn\'t right for you. Take time to check your sacral response or authority before committing.',
+    'Triple Split': 'With a Triple Split Definition, you have three separate circuitry areas. You need a variety of different people to feel the full range of your chart activated. No single person will ever complete you — and that is perfect. You are designed for rich social ecosystems. Patience is required: your complex inner life needs more time to process and decide.',
+    'Quadruple Split': 'With a Quadruple Split Definition, you have the most complex circuitry in the system. You are deeply fixed in your nature, slow to decide, and thorough. You require great diversity in your social environment to activate all four areas of your chart. Rushing any major life decision will almost always cost you. Your depth is your superpower.',
+    'No Definition': 'As a Reflector with no definition, every person you spend time with activates different parts of your chart temporarily. You are not inconsistent — you are environmental. Your open design gives you the gift of experiencing life through enormous variety. Guard your sleep environment above all else: who you sleep next to literally shapes your biology.'
+  };
+
+  // Build active channel titles as concrete talent list
+  const channelTalents = (chart.activeChannels || []).map(ch => {
+    const chKey = ch.channel || (ch.gates?.[0] + '-' + ch.gates?.[1]);
+    const info = typeof getChannelInfo === 'function' ? getChannelInfo(chKey) : null;
+    return info ? `<strong>${info.name}</strong>` : `Channel ${chKey}`;
+  });
+
   html += `<div class="card" style="border-left:var(--space-1) solid var(--gold);margin-top:var(--space-5)">
     <div class="card-title"><span class="icon-chart"></span> What This Means For You</div>
-    <div style="font-size:var(--font-size-base);color:var(--text);line-height:1.7">
-      <p style="margin:0 0 10px">You are a <strong>${chart.type || 'unique'}</strong> with <strong>${chart.authority || 'inner'}</strong> authority.
-      Your strategy is to <strong>${(chart.strategy || '').toLowerCase()}</strong>, and your life role is <strong>${chart.profile || '—'}</strong>.</p>
-      <p style="margin:0 0 10px">With <strong>${definedCount} defined</strong> and <strong>${openCount} open</strong> center${openCount !== 1 ? 's' : ''},
-      ${definedCount > openCount
-        ? 'you carry consistent, reliable energy in most of your chart — you know who you are.'
-        : definedCount === openCount
-          ? 'you have a balanced mix of fixed and receptive energy — both grounded and adaptable.'
-          : 'you are highly receptive and sensitive to your environment — a natural empath who samples others\' energy.'}
-      ${motorCenters.length ? ` You have <strong>${motorCenters.length} motor center${motorCenters.length > 1 ? 's' : ''}</strong> defined (${motorCenters.join(', ')}), giving you consistent drive and fuel.` : ''}</p>
-      ${channelCount ? `<p style="margin:0 0 10px"><strong>${channelCount} active channel${channelCount > 1 ? 's' : ''}</strong> create${channelCount === 1 ? 's' : ''} fixed energy flows between your centers — these are your reliable gifts and talents.</p>` : ''}
-      ${crossDisplay ? `<p style="margin:0 0 10px">Your soul cross — <strong>${crossDisplay}</strong> — describes your life purpose and the theme you are here to live out.</p>` : ''}
-      <p style="margin:0;font-size:var(--font-size-sm);color:var(--text-muted)">When you feel <em>${(chart.notSelfTheme || 'out of alignment').toLowerCase()}</em>, it\'s a signal to return to your strategy. Experiment with your design — don\'t take it on faith.</p>
+    <div style="font-size:var(--font-size-base);color:var(--text);line-height:1.75">
+
+      <p style="margin:0 0 var(--space-4);font-size:var(--font-size-sm);color:var(--text-muted);font-style:italic">This is a plain-language synthesis of everything your chart reveals. Use it as a starting map, not a fixed verdict. Experiment with what resonates — your lived experience is always the final authority.</p>
+
+      <h4 style="font-size:var(--font-size-sm);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 var(--space-2)">Your Energy Type — ${escapeHtml(chart.type || '—')}</h4>
+      <p style="margin:0 0 var(--space-4)">${typeGuidance[chart.type] || 'You carry a unique energy blueprint. Follow your strategy and authority above all else — your type is the operating system; those two are the applications.'}</p>
+
+      <h4 style="font-size:var(--font-size-sm);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 var(--space-2)">Your Inner Authority — ${escapeHtml(chart.authority || '—')}</h4>
+      <p style="margin:0 0 var(--space-4)">${authorityGuidance[chart.authority] || 'Your authority is the specific inner signal your design uses to guide you toward correct decisions. Trust it above reasoning, above other people\'s advice, above urgency.'}</p>
+
+      <h4 style="font-size:var(--font-size-sm);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 var(--space-2)">Your Life Role — Profile ${escapeHtml(chart.profile || '—')}</h4>
+      <p style="margin:0 0 var(--space-4)">${window.PROFILE_EXPLANATIONS?.[chart.profile] ? (typeof window.PROFILE_EXPLANATIONS[chart.profile] === 'object' ? window.PROFILE_EXPLANATIONS[chart.profile].full : window.PROFILE_EXPLANATIONS[chart.profile]) : 'Your profile describes the archetypal costume you wear in this lifetime — the energetic role you naturally play in every room you enter.'}</p>
+
+      <h4 style="font-size:var(--font-size-sm);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 var(--space-2)">Your Circuitry — ${escapeHtml(chart.definition || '—')}</h4>
+      <p style="margin:0 0 var(--space-4)">${definitionGuidance[chart.definition] || `You have <strong>${definedCount} defined</strong> and <strong>${openCount} open</strong> center${openCount !== 1 ? 's' : ''}. Open centers sample and amplify the energies of those around you; defined centers express consistently regardless of who is present.`}${motorCenters.length ? ` Your ${motorCenters.length > 1 ? motorCenters.length + ' motor centers' : 'motor center'} (${motorCenters.join(', ')}) ${motorCenters.length > 1 ? 'give' : 'gives'} you consistent drive — reliable fuel that does not depend on external motivation.` : ''}</p>
+
+      ${channelTalents.length ? `<h4 style="font-size:var(--font-size-sm);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 var(--space-2)">Your Fixed Gifts — ${channelCount} Active Channel${channelCount !== 1 ? 's' : ''}</h4>
+      <p style="margin:0 0 var(--space-4)">These are not interests or preferences — they are wired-in capacities you carry 24 hours a day: ${channelTalents.join(', ')}. These themes will recur throughout your life in different forms. When others comment on one of these qualities in you⁠ — even unsolicited — pay attention. You are likely in your correct flow.</p>` : ''}
+
+      ${crossDisplay ? `<h4 style="font-size:var(--font-size-sm);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 var(--space-2)">Your Life Purpose — ${escapeHtml(crossDisplay)}</h4>
+      <p style="margin:0 0 var(--space-4)">The <strong>${escapeHtml(crossDisplay)}</strong> is the overarching theme your soul is here to live out. It is not a job title or a spiritual mission statement you force — it is the current that runs beneath all your choices when you are in alignment. ${chart.cross?.type ? `As a <strong>${escapeHtml(chart.cross.type)}</strong>, ${(window.CROSS_TYPE_EXPLANATIONS?.[chart.cross.type] || '').toLowerCase()}` : ''}</p>` : ''}
+
+      <div style="background:var(--bg3);border-radius:var(--radius);padding:var(--space-4);margin-top:var(--space-2);border-left:3px solid var(--accent)">
+        <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">⚡ Your Experiment Starts Here</div>
+        <p style="margin:0 0 var(--space-2);font-size:var(--font-size-sm);color:var(--text)">For the next 30 days, commit to one thing: follow your <strong>${escapeHtml(chart.strategy || 'strategy')}</strong> — and nothing else from this chart. Don't think about gates, channels, or profile lines yet.</p>
+        <p style="margin:0;font-size:var(--font-size-sm);color:var(--text-dim)">When you feel <em>${escapeHtml((chart.notSelfTheme || 'out of alignment').toLowerCase())}</em>, treat it as feedback — not failure. That feeling is your chart asking you to return to your strategy. Notice the pattern. The rest of your design becomes clear from there.</p>
+      </div>
     </div>
     <button class="btn-primary" style="margin-top:var(--space-4);font-size:var(--font-size-base);padding:var(--space-2) 20px" data-action="openLastShareCard">
       📤 Share Your Design
@@ -2376,10 +2698,14 @@ async function generateProfile() {
     const q = document.getElementById('p-question').value.trim();
     if (q) payload.question = q;
 
+    payload.systemPreferences = getSystemPreferences();
+
     const data = await apiFetch('/api/profile/generate', { method: 'POST', body: JSON.stringify(payload) });
     // Clear any remaining progress timeouts
     progressTimeouts.forEach(clearTimeout);
     resultEl.innerHTML = renderProfile(data);
+    localStorage.setItem('profileGenerated', '1');
+    updateStepGuide('profile');
   } catch (e) {
     // Clear progress timeouts on error
     progressTimeouts.forEach(clearTimeout);
@@ -2426,7 +2752,31 @@ function renderProfile(data) {
   if (chartSummary.definition) html += `<span class="pill">${escapeHtml(chartSummary.definition)}</span>`;
   if (chartSummary.cross) html += `<span class="pill" style="font-size:var(--font-size-sm)">${escapeHtml(chartSummary.cross)}</span>`;
   html += `</div>`;
+
+  // Systems-used ribbon (read from request payload echoed back, or from local prefs)
+  const _sysPref = getSystemPreferences ? getSystemPreferences() : null;
+  if (_sysPref) {
+    const _SYS_LABELS = {
+      astrology: '☉ Astrology', geneKeys: '🔑 Gene Keys', numerology: '# Numerology',
+      vedic: '☽ Vedic', ogham: '᚛ Ogham', mayan: '◎ Mayan', bazi: '☯ BaZi',
+      sabian: '◉ Sabian', chiron: '⚷ Chiron', lilith: '🌑 Lilith',
+      transits: '↻ Transits', psychometrics: '⬡ Psychology', behavioral: '★ Behavioral', diary: '📖 Life Events'
+    };
+    const _OPTIONAL_KEYS = Object.keys(_SYS_LABELS);
+    const activeNames = _OPTIONAL_KEYS.filter(k => _sysPref[k] !== false).map(k => _SYS_LABELS[k]);
+    const offCount = _OPTIONAL_KEYS.length - activeNames.length;
+    if (offCount > 0) {
+      html += `<div style="margin-top:var(--space-2);display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <span style="font-size:var(--font-size-xs);color:var(--text-dim)">Synthesized from:</span>
+        ${activeNames.map(n => `<span class="pill" style="font-size:var(--font-size-xs)">${escapeHtml(n)}</span>`).join('')}
+      </div>`;
+    }
+  }
+
   html += `</div>`; // close card
+
+  // Blueprint Composition Wheel
+  html += renderSystemsWheel(payload, typeof getSystemPreferences === 'function' ? getSystemPreferences() : null);
 
   // ═══ QUICK START GUIDE (Layer 1 - Human-Friendly) ═══
   if (qsg) {
@@ -3234,10 +3584,16 @@ async function loadPractitionerInvitations() {
 
   try {
     const data = await apiFetch('/api/practitioner/clients/invitations');
-    el.innerHTML = renderPractitionerInvitations(data);
+    applyPractitionerInvitations(data);
   } catch (e) {
     el.innerHTML = `<div class="alert alert-error">Error loading invitations: ${escapeHtml(e.message)}</div>`;
   }
+}
+
+function applyPractitionerInvitations(data) {
+  const el = document.getElementById('pracInvitesResult');
+  if (!el) return;
+  el.innerHTML = renderPractitionerInvitations(data);
 }
 
 function renderPractitionerInvitations(data) {
@@ -3286,11 +3642,12 @@ async function loadRoster() {
   const resultEl = document.getElementById('pracResult');
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your roster…</div></div>';
 
-  // Also load practitioner profile to get limit info
   try {
-    const [rosterData, profileData] = await Promise.all([
+    const [rosterData, profileData, invitationsData, directoryData] = await Promise.all([
       apiFetch('/api/practitioner/clients'),
-      apiFetch('/api/practitioner/profile').catch(() => null)
+      apiFetch('/api/practitioner/profile').catch(() => null),
+      apiFetch('/api/practitioner/clients/invitations').catch(() => ({ invitations: [] })),
+      apiFetch('/api/practitioner/directory-profile').catch(() => ({ error: 'Not yet configured' }))
     ]);
 
     // Update limit bar
@@ -3307,9 +3664,10 @@ async function loadRoster() {
       }
     }
 
+    renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData });
     resultEl.innerHTML = renderRoster(rosterData);
-    loadPractitionerInvitations();
-    loadDirectoryProfile();
+    applyPractitionerInvitations(invitationsData);
+    applyDirectoryProfileData(directoryData);
 
     // Show and populate Agency Seats card for Agency-tier users
     const tier = window.currentUser?.tier || 'free';
@@ -3406,6 +3764,139 @@ async function removeAgencySeat(memberId, emailLabel) {
   }
 }
 
+function renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData }) {
+  const container = document.getElementById('pracActivationPlan');
+  if (!container) return;
+
+  const clients = Array.isArray(rosterData?.clients) ? rosterData.clients : [];
+  const invitations = Array.isArray(invitationsData?.invitations) ? invitationsData.invitations : [];
+  const directoryProfile = directoryData?.profile || null;
+  const practitioner = profileData?.practitioner || null;
+
+  const directoryReady = !!(directoryProfile?.display_name && directoryProfile?.bio && directoryProfile?.booking_url);
+  const hasClientOrInvite = clients.length > 0 || invitations.length > 0;
+  const chartReadyClient = clients.find(client => !!client.chart_id) || null;
+  const sessionReadyClient = clients.find(client => !!client.profile_id) || null;
+
+  const checklist = [
+    {
+      done: directoryReady,
+      title: 'Complete your public profile',
+      description: directoryReady
+        ? 'Your profile basics and booking path are in place.'
+        : 'Add your public name, bio, and booking URL so your workspace can convert attention into bookings.',
+      cta: !directoryReady ? '<button class="btn-secondary btn-sm" data-action="toggleDirectoryForm">Edit Profile</button>' : ''
+    },
+    {
+      done: hasClientOrInvite,
+      title: 'Add or invite your first client',
+      description: hasClientOrInvite
+        ? `Your workspace already has ${clients.length} client${clients.length === 1 ? '' : 's'} and ${invitations.length} pending invite${invitations.length === 1 ? '' : 's'}.`
+        : 'Bring in your first client so the portal becomes a working session workspace.',
+      cta: !hasClientOrInvite ? '<button class="btn-primary btn-sm" data-action="togglePracAddForm">Invite First Client</button>' : ''
+    },
+    {
+      done: !!chartReadyClient,
+      title: 'Get a client chart into the workspace',
+      description: chartReadyClient
+        ? 'At least one client has generated their chart and is ready for review.'
+        : 'You have clients in motion, but no chart is available yet. The next step is client birth-data completion and chart generation.',
+      cta: (!chartReadyClient && clients[0])
+        ? `<button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clients[0].id)}" data-arg1="${escapeAttr(clients[0].email || '')}">Open First Client</button>`
+        : ''
+    },
+    {
+      done: !!sessionReadyClient,
+      title: 'Reach first session-ready client',
+      description: sessionReadyClient
+        ? 'A client now has both chart and profile available for session preparation and deliverables.'
+        : 'Once a client has both a chart and profile, this portal becomes fully useful for prep, notes, and branded delivery.',
+      cta: sessionReadyClient
+        ? `<button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(sessionReadyClient.id)}" data-arg1="${escapeAttr(sessionReadyClient.email || '')}">Open Session Workspace</button>`
+        : ''
+    }
+  ];
+
+  const completed = checklist.filter(item => item.done).length;
+  const nextStep = checklist.find(item => !item.done) || null;
+  const practitionerName = practitioner?.display_name || practitioner?.business_name || 'Practitioner';
+
+  container.innerHTML = `
+    <div class="card" style="border-top:3px solid var(--gold)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap">
+        <div>
+          <div class="card-title" style="margin-bottom:var(--space-2)"><span class="icon-check"></span> Activation Plan</div>
+          <p style="margin:0;color:var(--text-dim);line-height:1.6;font-size:var(--font-size-sm)">${escapeHtml(practitionerName)} is ${completed === checklist.length ? 'fully operational.' : 'still in setup.'} Complete the core milestones below to turn this portal into a repeatable practitioner workflow.</p>
+        </div>
+        <div style="min-width:120px;text-align:right">
+          <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${completed}/${checklist.length}</div>
+          <div style="font-size:var(--font-size-sm);color:var(--text-dim)">core milestones</div>
+        </div>
+      </div>
+      ${nextStep ? `<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(212,175,55,0.22);border-radius:var(--space-2);background:rgba(212,175,55,0.08)"><strong style="color:var(--text)">Next step:</strong> <span style="color:var(--text-dim)">${escapeHtml(nextStep.title)}</span></div>` : '<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(82,196,26,0.22);border-radius:var(--space-2);background:rgba(82,196,26,0.08);color:var(--text)">Your practitioner workspace is set up for real client work.</div>'}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-3);margin-top:var(--space-4)">
+        ${checklist.map(item => `
+          <div style="padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:var(--bg3)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-2)">
+              <strong style="font-size:var(--font-size-sm);color:var(--text)">${escapeHtml(item.title)}</strong>
+              ${renderPractitionerLifecycleBadge(item.done ? 'done' : 'next')}
+            </div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.6">${escapeHtml(item.description)}</div>
+            ${item.cta ? `<div style="margin-top:var(--space-3)">${item.cta}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function getPractitionerClientLifecycle(client) {
+  if (!client?.birth_date) {
+    return {
+      key: 'needs_birth_data',
+      label: 'Needs birth data',
+      tone: 'warning',
+      nextStep: 'Client account exists, but birth details are not complete yet.'
+    };
+  }
+
+  if (!client?.chart_id) {
+    return {
+      key: 'needs_chart',
+      label: 'Needs chart',
+      tone: 'info',
+      nextStep: 'Birth details are present. Next step is chart generation.'
+    };
+  }
+
+  if (!client?.profile_id) {
+    return {
+      key: 'needs_profile',
+      label: 'Needs profile',
+      tone: 'info',
+      nextStep: 'Chart is ready. Generate or refresh the profile synthesis before the session.'
+    };
+  }
+
+  return {
+    key: 'session_ready',
+    label: 'Session ready',
+    tone: 'success',
+    nextStep: 'Chart and profile are ready for session prep, notes, and export.'
+  };
+}
+
+function renderPractitionerLifecycleBadge(tone) {
+  const config = {
+    success: { label: 'Ready', bg: 'rgba(46, 204, 113, 0.16)', color: 'var(--accent2)' },
+    warning: { label: 'Action', bg: 'rgba(212, 175, 55, 0.14)', color: 'var(--gold)' },
+    info: { label: 'In Progress', bg: 'rgba(91, 143, 249, 0.16)', color: '#8fb8ff' },
+    next: { label: 'Next', bg: 'rgba(212, 175, 55, 0.14)', color: 'var(--gold)' },
+    done: { label: 'Done', bg: 'rgba(46, 204, 113, 0.16)', color: 'var(--accent2)' }
+  };
+  const pill = config[tone] || config.info;
+  return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${pill.bg};color:${pill.color};font-size:var(--font-size-xs);font-weight:700;letter-spacing:0.02em;text-transform:uppercase">${pill.label}</span>`;
+}
+
 function renderRoster(data) {
   const clients = data.clients || [];
 
@@ -3427,19 +3918,27 @@ function renderRoster(data) {
     const addedDate = c.added_at ? new Date(c.added_at).toLocaleDateString() : '—';
     const chartDate = c.chart_date ? new Date(c.chart_date).toLocaleDateString() : 'No chart';
     const chartId   = c.chart_id || null;
+    const profileDate = c.profile_date ? new Date(c.profile_date).toLocaleDateString() : 'No profile';
     const clientId  = c.id;
     const emailSafe = escapeHtml(c.email);
+    const lifecycle = getPractitionerClientLifecycle(c);
+    const statusBadge = renderPractitionerLifecycleBadge(lifecycle.tone).replace(/>[^<]+<\//, `>${escapeHtml(lifecycle.label)}<\/`);
 
     html += `
     <div class="client-row" id="client-row-${escapeAttr(clientId)}" style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:var(--border-width-thin) solid var(--border)">
       <div style="flex:1;min-width:150px">
-        <div style="font-weight:600;color:var(--text)">${emailSafe}</div>
-        <div style="font-size:var(--font-size-sm);color:var(--text-dim)">
-          Added ${addedDate} · Last chart: ${chartDate}
+        <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:4px">
+          <div style="font-weight:600;color:var(--text)">${emailSafe}</div>
+          ${statusBadge}
         </div>
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim)">
+          Added ${addedDate} · Last chart: ${chartDate} · Last profile: ${profileDate}
+        </div>
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:4px">${escapeHtml(lifecycle.nextStep)}</div>
       </div>
       <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
-        <button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">View Details</button>
+        <button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">${c.profile_id ? 'Open Workspace' : 'View Details'}</button>
+        ${chartId && c.profile_id ? `<button class="btn-secondary btn-sm" data-action="exportBrandedPDF" data-arg0="${escapeAttr(clientId)}">Branded PDF</button>` : ''}
         <button class="btn-danger btn-sm" data-action="removeClient" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Remove</button>
       </div>
     </div>`;
@@ -3456,17 +3955,29 @@ async function viewClientDetail(clientId, emailLabel) {
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   try {
-    const [data, notesData] = await Promise.all([
+    const [data, notesData, aiContextData] = await Promise.all([
       apiFetch(`/api/practitioner/clients/${clientId}`),
-      apiFetch(`/api/practitioner/clients/${clientId}/notes`).catch(() => ({ notes: [] }))
+      apiFetch(`/api/practitioner/clients/${clientId}/notes`).catch(() => ({ notes: [] })),
+      apiFetch(`/api/practitioner/clients/${clientId}/ai-context`).catch(() => ({ ai_context: '', error: 'Unable to load AI context' }))
     ]);
-    panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData);
+    panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData);
   } catch (e) {
     panel.innerHTML = `<div class="alert alert-error">Error loading client: ${escapeHtml(e.message)}</div>`;
   }
 }
 
-function renderClientDetail(data, emailLabel, clientId, notesData) {
+function renderPractitionerChecklist(items) {
+  return items.map(item => `
+    <div style="display:flex;align-items:flex-start;gap:var(--space-2);padding:var(--space-2) 0;border-bottom:var(--border-width-thin) solid rgba(255,255,255,0.06)">
+      <div style="font-size:var(--font-size-base);line-height:1.2;color:${item.done ? 'var(--accent2)' : 'var(--gold)'}">${item.done ? '✓' : '•'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text)">${escapeHtml(item.title)}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.5">${escapeHtml(item.description)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData) {
   if (!data || data.error) {
     return `<div class="alert alert-error">${escapeHtml(data?.error || 'Failed to load client detail')}</div>`;
   }
@@ -3474,11 +3985,58 @@ function renderClientDetail(data, emailLabel, clientId, notesData) {
   const { client, chart, profile } = data;
   const email = escapeHtml(emailLabel || client?.email || '');
   const safeClientId = escapeAttr(clientId || client?.id || '');
+  const notes = notesData?.notes || [];
+  const aiContext = typeof aiContextData?.ai_context === 'string' ? aiContextData.ai_context : '';
+  const aiContextStatus = aiContextData?.error
+    ? `<div class="alert alert-warn" style="margin-bottom:var(--space-3)">${escapeHtml(aiContextData.error)}</div>`
+    : '';
+  const workflowChecklist = [
+    {
+      done: !!chart,
+      title: 'Client has generated their chart',
+      description: chart
+        ? 'The client blueprint is available for review in this workspace.'
+        : 'Ask the client to sign in and complete their birth details so their blueprint is available here.'
+    },
+    {
+      done: !!profile,
+      title: 'Profile synthesis is available',
+      description: profile
+        ? 'You can reference the latest synthesis and export it as part of the session workflow.'
+        : 'Have the client generate their Prime Self profile before you prepare a branded deliverable.'
+    },
+    {
+      done: notes.length > 0,
+      title: 'Session record has started',
+      description: notes.length > 0
+        ? 'Session notes are in place and can keep compounding over time.'
+        : 'Capture the first session note after intake so future sessions have continuity.'
+    },
+    {
+      done: aiContext.trim().length > 0,
+      title: 'AI context is tailored',
+      description: aiContext.trim().length > 0
+        ? 'The synthesis engine has custom context about this client and your working style.'
+        : 'Save session guardrails, goals, and recurring themes so future AI outputs stay practitioner-specific.'
+    }
+  ];
+  const incompleteChecklistCount = workflowChecklist.filter(item => !item.done).length;
 
   let html = `<div class="card" style="border-top:3px solid var(--gold)">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-4)">
       <div class="card-title" style="margin:0"><span class="icon-star"></span> ${email}</div>
       <button class="btn-secondary btn-sm" data-action="hidePracDetail">✕ Close</button>
+    </div>`;
+
+  html += `
+    <div class="card" style="margin-bottom:var(--space-4);background:linear-gradient(135deg, rgba(212,175,55,0.12), rgba(0,0,0,0));border:1px solid rgba(212,175,55,0.18)">
+      <div class="card-title" style="margin-bottom:var(--space-2)"><span class="icon-check"></span> Client Session Readiness</div>
+      <p style="margin:0 0 var(--space-3);color:var(--text-dim);font-size:var(--font-size-sm);line-height:1.6">
+        ${incompleteChecklistCount === 0
+          ? 'This client workspace is fully prepared for a practitioner-led session and follow-up synthesis.'
+          : `There ${incompleteChecklistCount === 1 ? 'is' : 'are'} ${incompleteChecklistCount} step${incompleteChecklistCount === 1 ? '' : 's'} left before this workspace is fully session-ready.`}
+      </p>
+      <div>${renderPractitionerChecklist(workflowChecklist)}</div>
     </div>`;
 
   if (!chart) {
@@ -3550,6 +4108,24 @@ function renderClientDetail(data, emailLabel, clientId, notesData) {
     html += `<div class="alert alert-warn" style="margin-top:var(--space-3)">This client has not generated a profile synthesis yet.</div>`;
   }
 
+  html += `
+  <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)">
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0">AI Context</h4>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim)">Visible only inside your practitioner workspace</div>
+    </div>
+    ${aiContextStatus}
+    <p style="font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.6;margin:0 0 var(--space-3)">
+      Capture the context you want future syntheses to honor: current goals, relationship dynamics, sensitivities, coaching boundaries, and how you want the AI to frame follow-up support.
+    </p>
+    <textarea id="aiContext-${safeClientId}" rows="5" class="form-input" maxlength="2000"
+      style="width:100%;resize:vertical;margin-bottom:var(--space-2)" placeholder="Example: Client is working through burnout, responds best to direct but gentle language, and wants follow-up synthesis focused on decision clarity and pacing.">${escapeHtml(aiContext)}</textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+      <div id="aiContextStatus-${safeClientId}" style="font-size:var(--font-size-sm);color:var(--text-dim)">${aiContext.trim().length ? 'Context saved for future synthesis.' : 'No custom AI context saved yet.'}</div>
+      <button class="btn-primary btn-sm" data-action="saveAIContext" data-arg0="${safeClientId}">Save AI Context</button>
+    </div>
+  </div>`;
+
   // ── Session Notes Section ──
   html += `
   <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
@@ -3575,7 +4151,6 @@ function renderClientDetail(data, emailLabel, clientId, notesData) {
     </div>
     <div id="notesList-${safeClientId}">`;
 
-  const notes = notesData?.notes || [];
   if (notes.length === 0) {
     html += `<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No session notes yet. Add your first note to start building a record.</div>`;
   } else {
@@ -3772,6 +4347,34 @@ async function refreshSessionNotes(clientId) {
   }
 }
 
+async function saveAIContext(clientId) {
+  const field = document.getElementById('aiContext-' + clientId);
+  const statusEl = document.getElementById('aiContextStatus-' + clientId);
+  if (!field || !statusEl) return;
+
+  const aiContext = field.value.trim();
+  statusEl.textContent = 'Saving…';
+
+  try {
+    const result = await apiFetch(`/api/practitioner/clients/${clientId}/ai-context`, {
+      method: 'PUT',
+      body: JSON.stringify({ ai_context: aiContext })
+    });
+
+    if (result.error) {
+      statusEl.textContent = 'AI context could not be saved.';
+      showNotification('Error saving AI context: ' + result.error, 'error');
+      return;
+    }
+
+    statusEl.textContent = aiContext ? 'Context saved for future synthesis.' : 'AI context cleared.';
+    showNotification('AI context saved.', 'success');
+  } catch (e) {
+    statusEl.textContent = 'AI context could not be saved.';
+    showNotification('Error saving AI context: ' + e.message, 'error');
+  }
+}
+
 // ── Practitioner Directory Profile editing ──────────────────
 
 function toggleDirectoryForm() {
@@ -3786,34 +4389,38 @@ async function loadDirectoryProfile() {
 
   try {
     const data = await apiFetch('/api/practitioner/directory-profile');
-    if (data.error) {
-      summaryEl.innerHTML = `<span style="color:var(--text-dim)">Not yet set up — click Edit Profile to get started.</span>`;
-      return;
-    }
-
-    const p = data.profile || {};
-    const publicLabel = p.is_public ? '<span style="color:var(--accent2)">✓ Public</span>' : '<span style="color:var(--text-dim)">Hidden</span>';
-    const name = escapeHtml(p.display_name || 'Not set');
-    summaryEl.innerHTML = `<strong>${name}</strong> · ${publicLabel}${p.bio ? ' · ' + escapeHtml(p.bio.substring(0, 60)) + (p.bio.length > 60 ? '…' : '') : ''}`;
-
-    // Pre-fill form fields
-    const el = id => document.getElementById(id);
-    if (el('dir-display-name')) el('dir-display-name').value = p.display_name || '';
-    if (el('dir-bio')) el('dir-bio').value = p.bio || '';
-    if (el('dir-certification')) el('dir-certification').value = p.certification || '';
-    if (el('dir-session-format')) el('dir-session-format').value = p.session_format || 'Remote';
-    if (el('dir-session-info')) el('dir-session-info').value = p.session_info || '';
-    if (el('dir-booking-url')) el('dir-booking-url').value = p.booking_url || '';
-    if (el('dir-is-public')) el('dir-is-public').checked = !!p.is_public;
-
-    // Pre-fill specializations checkboxes
-    const specs = Array.isArray(p.specializations) ? p.specializations : [];
-    document.querySelectorAll('#dir-specializations input[type="checkbox"]').forEach(cb => {
-      cb.checked = specs.includes(cb.value);
-    });
+    applyDirectoryProfileData(data);
   } catch {
     summaryEl.innerHTML = `<span style="color:var(--text-dim)">Could not load directory profile.</span>`;
   }
+}
+
+function applyDirectoryProfileData(data) {
+  const summaryEl = document.getElementById('dirProfileSummary');
+  if (!summaryEl) return;
+  if (data?.error) {
+    summaryEl.innerHTML = `<span style="color:var(--text-dim)">Not yet set up — click Edit Profile to get started.</span>`;
+    return;
+  }
+
+  const p = data?.profile || {};
+  const publicLabel = p.is_public ? '<span style="color:var(--accent2)">✓ Public</span>' : '<span style="color:var(--text-dim)">Hidden</span>';
+  const name = escapeHtml(p.display_name || 'Not set');
+  summaryEl.innerHTML = `<strong>${name}</strong> · ${publicLabel}${p.bio ? ' · ' + escapeHtml(p.bio.substring(0, 60)) + (p.bio.length > 60 ? '…' : '') : ''}`;
+
+  const el = id => document.getElementById(id);
+  if (el('dir-display-name')) el('dir-display-name').value = p.display_name || '';
+  if (el('dir-bio')) el('dir-bio').value = p.bio || '';
+  if (el('dir-certification')) el('dir-certification').value = p.certification || '';
+  if (el('dir-session-format')) el('dir-session-format').value = p.session_format || 'Remote';
+  if (el('dir-session-info')) el('dir-session-info').value = p.session_info || '';
+  if (el('dir-booking-url')) el('dir-booking-url').value = p.booking_url || '';
+  if (el('dir-is-public')) el('dir-is-public').checked = !!p.is_public;
+
+  const specs = Array.isArray(p.specializations) ? p.specializations : [];
+  document.querySelectorAll('#dir-specializations input[type="checkbox"]').forEach(cb => {
+    cb.checked = specs.includes(cb.value);
+  });
 }
 
 async function saveDirectoryProfile() {
@@ -3846,8 +4453,8 @@ async function saveDirectoryProfile() {
       return;
     }
 
-    const profileUrl = body.is_public
-      ? `${window.location.origin}/directory/${encodeURIComponent(body.display_name)}`
+    const profileUrl = result?.profile?.slug && body.is_public
+      ? `${window.location.origin}/practitioners/${encodeURIComponent(result.profile.slug)}`
       : null;
     showNotification(
       profileUrl
@@ -4628,6 +5235,33 @@ function updateOverview(chartResponse) {
     <button class="btn-primary" style="font-size:var(--font-size-sm);padding:var(--space-2) 18px;background:transparent;border:var(--border-width-thin) solid var(--border);color:var(--text-dim)" data-action="switchTab" data-arg0="transits">Today's Transits</button>
   </div>`;
 
+  // Deepen Your Synthesis journey card
+  const _hasProfile = !!localStorage.getItem('profileGenerated');
+  const _steps = [
+    { done: true,       icon: '⊙', label: 'Chart calculated',           cta: null },
+    { done: _hasProfile, icon: '⬡', label: 'AI Profile generated',       cta: ['profile', 'Generate now'] },
+    { done: false,      icon: '★', label: 'Behavioral Validation saved', cta: ['enhance', 'Add validation'] },
+    { done: false,      icon: '◈', label: 'Big Five (OCEAN) saved',      cta: ['enhance', 'Take assessment'] },
+    { done: false,      icon: '✦', label: 'Character Strengths saved',   cta: ['enhance', 'Take assessment'] },
+    { done: false,      icon: '📖', label: '3+ Diary entries added',      cta: ['diary',   'Start diary'] },
+  ];
+  const doneCount = _steps.filter(s => s.done).length;
+  const pct = Math.round((doneCount / _steps.length) * 100);
+  html += `<div class="card" style="margin-top:var(--space-4)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)">
+      <div style="font-size:0.82rem;font-weight:700;color:var(--text)">Deepen Your Synthesis</div>
+      <span style="font-size:0.78rem;color:var(--gold);font-weight:600">${doneCount}/${_steps.length} complete</span>
+    </div>
+    <div style="height:4px;background:var(--bg3);border-radius:2px;margin-bottom:var(--space-4);overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:var(--gold);border-radius:2px;transition:width 0.8s ease"></div>
+    </div>
+    ${_steps.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:0.8rem;color:${s.done ? 'var(--text)' : 'var(--text-dim)'}">${s.done ? '✅' : '○'} ${s.icon} ${s.label}</span>
+      ${(!s.done && s.cta) ? `<button class="btn-secondary" style="font-size:0.72rem;padding:2px 8px" data-action="switchTab" data-arg0="${s.cta[0]}">${s.cta[1]}</button>` : ''}
+    </div>`).join('')}
+    <p style="font-size:0.72rem;color:var(--text-dim);margin-top:var(--space-3)">Each layer you add unlocks richer AI synthesis — the more data, the deeper the insight.</p>
+  </div>`;
+
   container.innerHTML = html;
 
   // Deferred bodygraph render
@@ -4709,6 +5343,113 @@ async function saveValidation() {
   }
 }
 
+// ── OCEAN Radar & VIA Bar Visualizations ─────────────────────
+function _computeOceanScores(responses) {
+  const acc = { openness: [], conscientiousness: [], extraversion: [], agreeableness: [], neuroticism: [] };
+  responses.forEach(({ questionId, score }) => {
+    const q = BIG_FIVE_QUESTIONS.find(q => q.id === questionId);
+    if (!q) return;
+    acc[q.dimension].push(q.reverse ? 6 - score : score);
+  });
+  const out = {};
+  Object.entries(acc).forEach(([dim, vals]) => {
+    if (!vals.length) { out[dim] = 50; return; }
+    const mn = vals.length, mx = vals.length * 5;
+    out[dim] = Math.round(((vals.reduce((a, b) => a + b, 0) - mn) / (mx - mn)) * 100);
+  });
+  return out;
+}
+
+function renderOceanRadar(scores) {
+  const DIMS = [
+    { key: 'openness',          label: 'Openness',           abbr: 'O', color: '#818CF8' },
+    { key: 'conscientiousness', label: 'Conscientiousness',  abbr: 'C', color: '#34D399' },
+    { key: 'extraversion',      label: 'Extraversion',       abbr: 'E', color: '#F5C842' },
+    { key: 'agreeableness',     label: 'Agreeableness',      abbr: 'A', color: '#38BDF8' },
+    { key: 'neuroticism',       label: 'Stability',          abbr: 'N', color: '#F472B6' },
+  ];
+  const N = DIMS.length, cx = 160, cy = 160, maxR = 110;
+
+  const poly = (r) => DIMS.map((_, i) => {
+    const a = (i / N) * 2 * Math.PI - Math.PI / 2;
+    return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+  }).join(' ');
+
+  let svg = `<svg viewBox="0 0 320 320" style="width:100%;max-width:300px;height:auto;display:block;margin:0 auto" role="img" aria-label="OCEAN personality radar chart">`;
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    svg += `<polygon points="${poly(maxR * f)}" fill="none" stroke="var(--bg3)" stroke-width="1" opacity="0.45"/>`;
+  });
+  DIMS.forEach((d, i) => {
+    const a = (i / N) * 2 * Math.PI - Math.PI / 2;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${(cx + maxR * Math.cos(a)).toFixed(1)}" y2="${(cy + maxR * Math.sin(a)).toFixed(1)}" stroke="var(--bg3)" stroke-width="1" opacity="0.4"/>`;
+  });
+  // user polygon
+  const dataPts = DIMS.map((d, i) => {
+    const r = ((scores[d.key] || 0) / 100) * maxR;
+    const a = (i / N) * 2 * Math.PI - Math.PI / 2;
+    return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
+  }).join(' ');
+  svg += `<polygon points="${dataPts}" fill="rgba(56,189,248,0.14)" stroke="#38BDF8" stroke-width="2" stroke-linejoin="round"/>`;
+  DIMS.forEach((d, i) => {
+    const val = scores[d.key] || 0;
+    const r = (val / 100) * maxR;
+    const a = (i / N) * 2 * Math.PI - Math.PI / 2;
+    const px = (cx + r * Math.cos(a)).toFixed(1), py = (cy + r * Math.sin(a)).toFixed(1);
+    const lx = (cx + (maxR + 24) * Math.cos(a)).toFixed(1);
+    const ly = cy + (maxR + 24) * Math.sin(a);
+    svg += `<circle cx="${px}" cy="${py}" r="4" fill="${d.color}"/>`;
+    svg += `<text x="${lx}" y="${(ly - 5).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="bold" fill="${d.color}">${d.abbr}</text>`;
+    svg += `<text x="${lx}" y="${(ly + 6).toFixed(1)}" text-anchor="middle" font-size="8" fill="var(--text-dim)">${Math.round(val)}%</text>`;
+  });
+  svg += `</svg>`;
+
+  const bars = DIMS.map(d => {
+    const val = Math.round(scores[d.key] || 0);
+    // Neuroticism: lower raw score = higher stability, invert for display
+    const display = d.key === 'neuroticism' ? 100 - val : val;
+    const displayLabel = d.key === 'neuroticism' ? 'Emotional Stability' : d.label;
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:0.78rem;color:var(--text)">${displayLabel}</span>
+        <span style="font-size:0.78rem;font-weight:600;color:${d.color}">${display}%</span>
+      </div>
+      <div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${display}%;background:${d.color};border-radius:3px;transition:width 0.8s ease"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div style="margin-top:var(--space-4);padding:var(--space-4);background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+    <div style="font-size:0.88rem;font-weight:600;color:var(--text);margin-bottom:var(--space-3)">◈ Your OCEAN Profile</div>
+    ${svg}
+    <div style="margin-top:var(--space-4)">${bars}</div>
+    <p style="font-size:0.73rem;color:var(--text-dim);margin-top:var(--space-3)">These scores inform your AI synthesis. Generate an AI Profile to see cross-correlations with your Energy Blueprint.</p>
+  </div>`;
+}
+
+function renderVIATopStrengths(responses) {
+  const COLORS = ['#F5C842', '#38BDF8', '#A78BFA', '#34D399', '#F472B6'];
+  const sorted = [...responses].sort((a, b) => b.score - a.score);
+  const top5 = sorted.slice(0, 5);
+  const bars = top5.map((r, i) => {
+    const pct = Math.round((r.score / 5) * 100);
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:0.82rem;color:var(--text)">${escapeHtml(r.strength || '')}</span>
+        <span style="font-size:0.78rem;font-weight:600;color:${COLORS[i]}">${pct}%</span>
+      </div>
+      <div style="height:7px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${COLORS[i]};border-radius:4px;transition:width 0.8s ease"></div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div style="margin-top:var(--space-4);padding:var(--space-4);background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+    <div style="font-size:0.88rem;font-weight:600;color:var(--text);margin-bottom:var(--space-3)">✦ Your Top 5 Character Strengths</div>
+    ${bars}
+    <p style="font-size:0.73rem;color:var(--text-dim);margin-top:var(--space-3)">Character strengths map to your Gene Keys gifts. Generate an AI Profile to see the correlation.</p>
+  </div>`;
+}
+
 // ── Big Five Assessment ───────────────────────────────────────
 const BIG_FIVE_QUESTIONS = [
   {id: 1, text: "I am the life of the party.", dimension: "extraversion"},
@@ -4779,7 +5520,9 @@ async function saveBigFive() {
       method: 'POST',
       body: JSON.stringify({ bigFiveResponses: responses })
     });
-    showEnhanceStatus('bigfiveStatus', 'Big Five assessment saved! Your profile will now cross-correlate psychology with your chart.', 'success');
+    const scores = _computeOceanScores(responses);
+    const statusEl = document.getElementById('bigfiveStatus');
+    if (statusEl) statusEl.innerHTML = `<div class="alert alert-success">Big Five saved — cross-correlations unlocked for your next AI Profile.</div>${renderOceanRadar(scores)}`;
   } catch (e) {
     showEnhanceStatus('bigfiveStatus', 'Error: ' + e.message, 'error');
   } finally {
@@ -4850,7 +5593,8 @@ async function saveVIA() {
       method: 'POST',
       body: JSON.stringify({ viaResponses: responses })
     });
-    showEnhanceStatus('viaStatus', 'Character Strengths saved! Results will map to your Gene Keys gifts.', 'success');
+    const statusEl = document.getElementById('viaStatus');
+    if (statusEl) statusEl.innerHTML = `<div class="alert alert-success">Character Strengths saved — Gene Keys correlations unlocked.</div>${renderVIATopStrengths(responses)}`;
   } catch (e) {
     showEnhanceStatus('viaStatus', 'Error: ' + e.message, 'error');
   } finally {
@@ -5574,6 +6318,8 @@ if (!document.getElementById('notificationStyles')) {
   }
 })();
 
+capturePractitionerInviteFromUrl();
+
 // Restore session from HttpOnly refresh cookie, then boot UI
 (async () => {
   await checkOAuthCallback();
@@ -5583,20 +6329,24 @@ if (!document.getElementById('notificationStyles')) {
   if (_sessionRestoredByOauth) {
     // OAuth callback already set token and called fetchUserProfile — skip silentRefresh
     userEmail = sessionStorage.getItem('ps_email');
+    await processPendingPractitionerInvite();
     return;
   }
   // Avoid noisy /auth/refresh 400s for users who have never signed in on this device.
   const hasSessionHint = !!localStorage.getItem('ps_session');
   if (!hasSessionHint) {
     updateAuthUI();
+    await processPendingPractitionerInvite({ promptForAuth: true });
     return;
   }
   const restored = await silentRefresh();
   if (restored) {
     userEmail = sessionStorage.getItem('ps_email');
     await fetchUserProfile();
+    await processPendingPractitionerInvite();
   } else {
     updateAuthUI();
+    await processPendingPractitionerInvite({ promptForAuth: true });
   }
 })();
 
@@ -5783,6 +6533,7 @@ window.closeSecurityModal = closeSecurityModal;
 window.begin2FASetup = begin2FASetup;
 window.confirm2FASetup = confirm2FASetup;
 window.disable2FA = disable2FA;
+window.saveAIContext = saveAIContext;
 
 // ── UX-QUICKPICK: Evaluation type + preset question buttons ──────────────────
 const EVAL_QUICKPICKS = {
@@ -5825,8 +6576,165 @@ function setQuickPick(question) {
   const input = document.getElementById('p-question');
   if (input) input.value = question;
 }
+
+// ── Blueprint Composition Wheel ────────────────────────────────
+function renderSystemsWheel(payload, sysPref) {
+  const ti = (payload && payload.technicalInsights) || {};
+  const prefs = sysPref || {};
+
+  const SYSTEMS = [
+    { key: 'energyBlueprint', label: 'Energy\nBlueprint',   icon: '⬡', color: '#F5C842', core: true,  hasData: true },
+    { key: 'forge',           label: 'Forge\nArchetype',    icon: '✦', color: '#F5C842', core: true,  hasData: !!(ti.forgeIdentification) },
+    { key: 'astrology',       label: 'Natal\nAstrology',    icon: '☉', color: '#38BDF8', core: false, hasData: !!(ti.astrologicalSignatures && ti.astrologicalSignatures.length) },
+    { key: 'geneKeys',        label: 'Gene\nKeys',          icon: '⟡', color: '#A78BFA', core: false, hasData: !!(ti.geneKeysProfile) },
+    { key: 'numerology',      label: 'Numerology',          icon: '∞', color: '#60A5FA', core: false, hasData: !!(ti.numerologyInsights) },
+    { key: 'vedic',           label: 'Vedic /\nJyotish',    icon: '☽', color: '#818CF8', core: false, hasData: !!(payload.vedic && !payload.vedic.error) },
+    { key: 'ogham',           label: 'Celtic\nOgham',       icon: '᚛', color: '#34D399', core: false, hasData: !!(payload.ogham && !payload.ogham.error) },
+    { key: 'transits',        label: 'Transits',             icon: '↻', color: '#22D3EE', core: false, hasData: !!(payload.transits) },
+    { key: 'psychometrics',   label: 'Psychology\nProfile', icon: '◈', color: '#F472B6', core: false, hasData: !!(payload.psychometricData || payload.psychometrics) },
+    { key: 'behavioral',      label: 'Behavioral\nPattern', icon: '★', color: '#FB923C', core: false, hasData: !!(payload.validationData || payload.behavioral) },
+    { key: 'diary',           label: 'Life\nEvents',        icon: '◉', color: '#F87171', core: false, hasData: !!(Array.isArray(payload.diaryEntries) && payload.diaryEntries.length) },
+  ];
+
+  const N = SYSTEMS.length;
+  const cx = 200, cy = 200, outerR = 148, nodeR = 20;
+
+  SYSTEMS.forEach((s, i) => {
+    const angle = (i / N) * 2 * Math.PI - Math.PI / 2;
+    s.angle = angle;
+    s.x = cx + outerR * Math.cos(angle);
+    s.y = cy + outerR * Math.sin(angle);
+    if (s.core) s.state = 'core';
+    else if (prefs[s.key] === false) s.state = 'off';
+    else if (s.hasData) s.state = 'active';
+    else s.state = 'nodata';
+  });
+
+  const stateProps = {
+    core:   { op: 1,    sw: 2.5, getFill: ()  => 'rgba(245,200,66,0.18)',   nc: '#F5C842', dash: '' },
+    active: { op: 1,    sw: 2,   getFill: (c) => `rgba(${_hexRgb(c)},0.12)`, nc: null,      dash: '' },
+    nodata: { op: 0.35, sw: 1,   getFill: ()  => 'rgba(100,116,139,0.08)', nc: '#64748B', dash: '4 3' },
+    off:    { op: 0.18, sw: 0.8, getFill: ()  => 'rgba(100,116,139,0.05)', nc: '#475569', dash: '3 4' },
+  };
+
+  let svg = `<svg viewBox="0 0 400 400" style="width:100%;max-width:420px;height:auto;display:block;margin:0 auto" `
+    + `role="img" aria-label="Blueprint composition diagram showing active synthesis systems">
+    <defs>
+      <radialGradient id="swBg${Date.now()}" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="var(--bg2)"/>
+        <stop offset="100%" stop-color="var(--bg1)"/>
+      </radialGradient>
+    </defs>
+    <circle cx="${cx}" cy="${cy}" r="198" fill="var(--bg2)" opacity="0.95"/>
+    <circle cx="${cx}" cy="${cy}" r="${outerR + nodeR + 30}" fill="none" stroke="var(--bg3)" stroke-width="1" opacity="0.2" stroke-dasharray="2 5"/>
+    <circle cx="${cx}" cy="${cy}" r="${outerR}" fill="none" stroke="var(--bg3)" stroke-width="0.8" opacity="0.15" stroke-dasharray="3 6"/>
+    <circle cx="${cx}" cy="${cy}" r="${(outerR * 0.6).toFixed(0)}" fill="none" stroke="var(--bg3)" stroke-width="0.8" opacity="0.1" stroke-dasharray="2 6"/>`;
+
+  // Polygon connecting active + core systems
+  const activeGroup = SYSTEMS.filter(s => s.state === 'core' || s.state === 'active');
+  if (activeGroup.length >= 3) {
+    const pts = activeGroup.map(s => `${s.x.toFixed(1)},${s.y.toFixed(1)}`).join(' ');
+    svg += `<polygon points="${pts}" fill="rgba(56,189,248,0.05)" stroke="rgba(56,189,248,0.22)" stroke-width="1.5" stroke-linejoin="round"/>`;
+  }
+
+  // Spokes, glows, nodes, labels
+  SYSTEMS.forEach(s => {
+    const sp = stateProps[s.state];
+    const nc = sp.nc || s.color;
+    const fill = sp.getFill(s.color);
+    const dashAttr = sp.dash ? ` stroke-dasharray="${sp.dash}"` : '';
+    const sx = s.x.toFixed(1), sy = s.y.toFixed(1);
+
+    svg += `<line x1="${cx}" y1="${cy}" x2="${sx}" y2="${sy}" stroke="${nc}" stroke-width="${sp.sw}" opacity="${sp.op}"${dashAttr}/>`;
+
+    if (s.state === 'core' || s.state === 'active') {
+      svg += `<circle cx="${sx}" cy="${sy}" r="${nodeR + 8}" fill="${nc}" opacity="0.07"/>`;
+    }
+
+    const descSuffix = s.state === 'off' ? ' — excluded from synthesis'
+      : s.state === 'nodata' ? ' — awaiting data input' : '';
+    svg += `<circle cx="${sx}" cy="${sy}" r="${nodeR}" fill="${fill}" stroke="${nc}" stroke-width="${sp.sw}" opacity="${sp.op}"><title>${escapeHtml(s.label.replace(/\n/g, ' ') + descSuffix)}</title></circle>`;
+
+    svg += `<text x="${sx}" y="${sy}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="${nc}" opacity="${sp.op}" style="pointer-events:none">${s.icon}</text>`;
+
+    // Label outside node
+    const labelR = outerR + nodeR + 14;
+    const lx = (cx + labelR * Math.cos(s.angle)).toFixed(1);
+    const ly = (cy + labelR * Math.sin(s.angle));
+    const lines = s.label.split('\n');
+    const lineH = 9;
+    const startY = lines.length === 1 ? ly : ly - (lineH * (lines.length - 1)) / 2;
+    lines.forEach((line, li) => {
+      svg += `<text x="${lx}" y="${(startY + li * lineH).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="8.5" fill="var(--text-dim)" opacity="${sp.op}" style="pointer-events:none">${escapeHtml(line)}</text>`;
+    });
+  });
+
+  // Core circle
+  svg += `<circle cx="${cx}" cy="${cy}" r="62" fill="#F5C842" opacity="0.05"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="48" fill="rgba(245,200,66,0.1)" stroke="#F5C842" stroke-width="2"/>`;
+  svg += `<text x="${cx}" y="${cy - 9}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" fill="#F5C842">Prime</text>`;
+  svg += `<text x="${cx}" y="${cy + 9}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" fill="#F5C842">Self</text>`;
+  svg += `</svg>`;
+
+  // Legend
+  const counts = { active: 0, nodata: 0, off: 0 };
+  SYSTEMS.forEach(s => { if (!s.core && counts[s.state] !== undefined) counts[s.state]++; });
+  const legendParts = [`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#F5C842;display:inline-block;flex-shrink:0"></span> Core (always on)</span>`];
+  if (counts.active  > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#38BDF8;display:inline-block;flex-shrink:0"></span> ${counts.active} system${counts.active > 1 ? 's' : ''} active</span>`);
+  if (counts.nodata  > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#64748B;display:inline-block;flex-shrink:0;opacity:0.45"></span> ${counts.nodata} awaiting data</span>`);
+  if (counts.off     > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#475569;display:inline-block;flex-shrink:0;opacity:0.25"></span> ${counts.off} excluded</span>`);
+
+  return `<div class="card" style="background:radial-gradient(circle at center, var(--bg2) 0%, var(--bg1) 100%)">
+    <div class="card-title">⬡ Blueprint Composition</div>
+    <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-4)">Systems woven into this synthesis — hover each node for details.</p>
+    ${svg}
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);justify-content:center;margin-top:var(--space-4)">${legendParts.join('')}</div>
+  </div>`;
+}
+
+// Helper: hex color "#RRGGBB" → "r,g,b" for rgba()
+function _hexRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)].join(',');
+}
+
+// ── Systems-to-Synthesize toggle ────────────────────────────────
+const _OPTIONAL_SYSTEMS = ['astrology','geneKeys','numerology','vedic','ogham','mayan','bazi','sabian','chiron','lilith','transits','psychometrics','behavioral','diary'];
+
+function toggleSystem(btn) {
+  if (btn.classList.contains('sys-toggle-core')) return; // always-on
+  const isOn = btn.classList.contains('sys-toggle-on');
+  btn.classList.toggle('sys-toggle-on', !isOn);
+  btn.classList.toggle('sys-toggle-off', isOn);
+  btn.setAttribute('aria-pressed', String(!isOn));
+  _updateSysSummary();
+}
+
+function _updateSysSummary() {
+  const hint = document.getElementById('sysSummaryHint');
+  if (!hint) return;
+  const onCount = _OPTIONAL_SYSTEMS.filter(s => {
+    const btn = document.querySelector(`.sys-toggle-btn[data-system="${s}"]`);
+    return btn && btn.classList.contains('sys-toggle-on');
+  }).length;
+  const total = _OPTIONAL_SYSTEMS.length;
+  if (onCount === total) hint.textContent = `All ${total} optional systems active — deepest synthesis.`;
+  else if (onCount === 0) hint.textContent = 'Energy Blueprint + Forge only — fastest, most focused synthesis.';
+  else hint.textContent = `${onCount} of ${total} optional systems active.`;
+}
+
+
+function getSystemPreferences() {
+  const prefs = { energyBlueprint: true, forge: true }; // always on
+  _OPTIONAL_SYSTEMS.forEach(s => {
+    const btn = document.querySelector(`.sys-toggle-btn[data-system="${s}"]`);
+    prefs[s] = !btn || btn.classList.contains('sys-toggle-on'); // default on if missing
+  });
+  return prefs;
+}
+
 window.setEvalType = setEvalType;
 window.setQuickPick = setQuickPick;
+window.toggleSystem = toggleSystem;
 window.prefillExample = prefillExample;
 window.expandChartForm = expandChartForm;
 window.openLastShareCard = openLastShareCard;

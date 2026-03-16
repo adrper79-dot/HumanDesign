@@ -3,7 +3,7 @@
  * 
  * Usage:
  * <div id="primeself-widget"></div>
- * <script src="https://primeself.app/embed.js"></script>
+ * <script src="https://selfprime.net/embed.js"></script>
  * <script>
  *   PrimeSelf.init({
  *     elementId: 'primeself-widget',
@@ -11,7 +11,7 @@
  *     accentColor: '#c9a84c',
  *     hideAttribution: false, // Set to true for Agency / white-label capability
  *     width: '100%',
- *     apiEndpoint: 'https://primeself.app/api'
+ *     apiEndpoint: 'https://selfprime.net/api'
  *   });
  * </script>
  */
@@ -36,7 +36,7 @@
         apiKey: options.apiKey || null,  // Required for hideAttribution; must belong to an Agency-capable account
         width: options.width || '100%',
         height: options.height || '600px',
-        apiEndpoint: options.apiEndpoint || 'https://primeself.app/api',
+        apiEndpoint: options.apiEndpoint || '/api',
         onChartCalculated: options.onChartCalculated || null,
         onError: options.onError || null,
       };
@@ -62,7 +62,7 @@
         params.set('apiKey', config.apiKey);
       }
 
-      const iframeUrl = `https://primeself.app/embed.html?${params.toString()}`;
+      const iframeUrl = `https://selfprime.net/embed.html?${params.toString()}`;
 
       // Create iframe
       const iframe = document.createElement('iframe');
@@ -101,7 +101,7 @@
      * @private
      */
     _setupMessageListener: function(instance) {
-      // BL-R-M18: Strict origin validation — only accept from exact primeself.app or localhost origins
+      // BL-R-M18: Strict origin validation — only accept from the production embed origins.
       const ALLOWED_ORIGINS = new Set(['https://selfprime.net', 'https://www.selfprime.net', 'https://prime-self-ui.pages.dev']);
 
       // BL-R-L1: Store handler reference so destroy() can remove it and avoid listener leak

@@ -10,7 +10,7 @@
   default-src 'self';
   script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io;
   style-src 'self' 'unsafe-inline';
-  connect-src 'self' https://prime-self-api.adrper79.workers.dev https://api.stripe.com https://cloudflareinsights.com https://plausible.io;
+  connect-src 'self' https://api.stripe.com https://cloudflareinsights.com https://plausible.io;
   img-src 'self' data: blob:;
   media-src 'self';
   font-src 'self' data:;
@@ -27,11 +27,8 @@
 <script src="js/theme-init.js"></script>
 <!-- ─── Asset Randomizer (v1/v2 brand variants per session) ─── -->
 <script src="js/asset-randomizer.js" defer></script>
-<!-- ─── Resource Hints (BL-OPT-001) ─── -->
-<link rel="preconnect" href="https://prime-self-api.adrper79.workers.dev" crossorigin>
-<link rel="dns-prefetch" href="https://prime-self-api.adrper79.workers.dev">
 <!-- Plausible Analytics — privacy-first, no cookies, GDPR-compliant -->
-<!-- To activate: replace YOUR_DOMAIN with e.g. primeself.app -->
+<!-- To activate: replace YOUR_DOMAIN with e.g. selfprime.net -->
 <script defer data-domain="selfprime.net" src="https://plausible.io/js/script.js"></script>
 <link rel="dns-prefetch" href="https://js.stripe.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -107,8 +104,8 @@
 <meta property="og:title" content="Prime Self — Energy Blueprint & Astrology">
 <meta property="og:description" content="Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology. AI-powered personal chart analysis with personalized daily transit guidance.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://primeself.app">
-<meta property="og:image" content="https://primeself.app/og-image.png">
+<meta property="og:url" content="https://selfprime.net">
+<meta property="og:image" content="https://selfprime.net/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Prime Self — Your Energy Blueprint">
@@ -119,7 +116,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Prime Self — Your Energy Blueprint">
 <meta name="twitter:description" content="Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology. Personalized AI insights and daily guidance.">
-<meta name="twitter:image" content="https://primeself.app/twitter-card.png">
+<meta name="twitter:image" content="https://selfprime.net/twitter-card.png">
 <meta name="twitter:site" content="@primeself">
 <meta name="twitter:creator" content="@primeself">
 
@@ -204,7 +201,7 @@
 
     <!-- Social login buttons -->
     <div class="auth-social-list">
-      <a href="https://prime-self-api.adrper79.workers.dev/api/auth/oauth/google" id="oauthGoogleBtn"
+      <a href="/api/auth/oauth/google" id="oauthGoogleBtn"
          class="btn-social btn-social-google"
     >
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -216,7 +213,7 @@
         Continue with Google
       </a>
 
-      <a href="https://prime-self-api.adrper79.workers.dev/api/auth/oauth/apple" id="oauthAppleBtn"
+      <a href="/api/auth/oauth/apple" id="oauthAppleBtn"
          class="btn-social btn-social-apple"
     >
         <svg width="18" height="18" viewBox="0 0 814 1000" aria-hidden="true" fill="currentColor">
@@ -985,6 +982,28 @@
           </div>
         </div>
         <div class="form-group full">
+          <label>Systems to Include in Synthesis <span class="label-hint">(toggle to focus or exclude)</span></label>
+          <div class="sys-toggle-group" role="group" aria-label="Systems to synthesize">
+            <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">⬡ Energy Blueprint</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">✦ Forge</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="astrology" onclick="toggleSystem(this)" aria-pressed="true">☉ Astrology</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="geneKeys" onclick="toggleSystem(this)" aria-pressed="true">🔑 Gene Keys</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="numerology" onclick="toggleSystem(this)" aria-pressed="true"># Numerology</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="vedic" onclick="toggleSystem(this)" aria-pressed="true">☽ Vedic</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="ogham" onclick="toggleSystem(this)" aria-pressed="true">᚛ Ogham</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="mayan" onclick="toggleSystem(this)" aria-pressed="true">◎ Mayan</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="bazi" onclick="toggleSystem(this)" aria-pressed="true">☯ BaZi</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="sabian" onclick="toggleSystem(this)" aria-pressed="true">◉ Sabian</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="chiron" onclick="toggleSystem(this)" aria-pressed="true">⚷ Chiron</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="lilith" onclick="toggleSystem(this)" aria-pressed="true">🌑 Lilith</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="transits" onclick="toggleSystem(this)" aria-pressed="true">↻ Transits</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="psychometrics" onclick="toggleSystem(this)" aria-pressed="true">⬡ Psychology</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="behavioral" onclick="toggleSystem(this)" aria-pressed="true">★ Behavioral</button>
+            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="diary" onclick="toggleSystem(this)" aria-pressed="true">📖 Life Events</button>
+          </div>
+          <p class="label-hint" id="sysSummaryHint" style="margin-top:6px">All 13 optional systems active — deepest synthesis.</p>
+        </div>
+        <div class="form-group full">
           <label for="p-question">Specific Question <span class="label-hint">(optional — leave blank for full profile)</span></label>
           <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder">
         </div>
@@ -1557,8 +1576,8 @@
     <!-- Upgrade notice for non-practitioner tiers -->
     <div id="practitionerUpgradeNotice" class="alert alert-warn" style="display:none">
       <strong>Practitioner Tools Locked</strong><br>
-      Client management requires a Guide tier subscription.
-      <a href="#" data-action="openPractitionerPricingModal" data-prevent class="link-gold ml-2">Upgrade to Guide →</a>
+      Client management requires a Practitioner tier subscription.
+      <a href="#" data-action="openPractitionerPricingModal" data-prevent class="link-gold ml-2">Upgrade to Practitioner →</a>
     </div>
 
     <!-- Header card: status + add client -->
@@ -1599,6 +1618,8 @@
         <div id="pracAddStatus"></div>
       </div>
     </div>
+
+    <div id="pracActivationPlan"></div>
 
     <!-- Agency Seats (only shown to Agency-tier users) -->
     <div class="card" id="agencySeatsCard" style="display:none">

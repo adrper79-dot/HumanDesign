@@ -47,6 +47,20 @@ import dashasData from '../../src/knowledgebase/vedic/dashas.json';
 // Celtic Ogham knowledgebase
 import oghamTreesData from '../../src/knowledgebase/ogham/trees.json';
 
+// Mayan Tzolkin (Dreamspell) knowledgebase
+import mayanSealsData from '../../src/knowledgebase/mayan/seals.json';
+
+// BaZi (Four Pillars) knowledgebase
+import baziStemsData from '../../src/knowledgebase/bazi/stems.json';
+import baziBranchesData from '../../src/knowledgebase/bazi/branches.json';
+
+// Sabian Symbols knowledgebase
+import sabianSymbolsData from '../../src/knowledgebase/sabian/symbols.json';
+
+// Chiron & Black Moon Lilith knowledgebases
+import chironKBData from '../../src/knowledgebase/astro/chiron.json';
+import lilithKBData from '../../src/knowledgebase/astro/lilith.json';
+
 // Prime Self knowledgebase
 import forgesData from '../../src/knowledgebase/prime_self/forges.json';
 import knowledgesData from '../../src/knowledgebase/prime_self/knowledges.json';
@@ -100,6 +114,20 @@ globalThis.__PRIME_DATA = {
     
     // Celtic Ogham
     'ogham/trees.json': oghamTreesData,
+
+    // Mayan Tzolkin (Dreamspell)
+    'mayan/seals.json': mayanSealsData,
+
+    // BaZi (Four Pillars)
+    'bazi/stems.json': baziStemsData,
+    'bazi/branches.json': baziBranchesData,
+
+    // Sabian Symbols
+    'sabian/symbols.json': sabianSymbolsData,
+
+    // Chiron & Black Moon Lilith
+    'astro/chiron.json': chironKBData,
+    'astro/lilith.json': lilithKBData,
     
     // Prime Self
     'prime_self/forges.json': forgesData,

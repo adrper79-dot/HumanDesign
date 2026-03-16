@@ -101,6 +101,7 @@ describe('worker top-level error pipeline', () => {
     const env = {
       ENVIRONMENT: 'production',
       NEON_CONNECTION_STRING: 'postgresql://test',
+      JWT_SECRET: 'test-jwt-secret',
       SENTRY_DSN: 'https://public@example.ingest.sentry.io/123456',
     };
 

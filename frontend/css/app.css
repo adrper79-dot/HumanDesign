@@ -1693,6 +1693,40 @@ html[data-theme="light"] header {
   border-bottom: 1px solid #c8b898;
 }
 
+/* ── Systems-to-Synthesize toggles ── */
+.sys-toggle-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.sys-toggle-btn {
+  background: none;
+  border: 1px solid var(--border, #1d2f52);
+  border-radius: 100px;
+  color: var(--text-dim, #c4c0d8);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 11px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.sys-toggle-btn.sys-toggle-core {
+  border-color: var(--gold, #c9a84c);
+  color: var(--gold, #c9a84c);
+  opacity: 0.6;
+  cursor: default;
+}
+.sys-toggle-btn.sys-toggle-on {
+  background: rgba(201,168,76,0.12);
+  border-color: var(--gold, #c9a84c);
+  color: var(--gold, #c9a84c);
+}
+.sys-toggle-btn.sys-toggle-off {
+  background: none;
+  border-color: var(--border, #1d2f52);
+  color: var(--text-dim, #c4c0d8);
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.sys-toggle-btn:not(.sys-toggle-core):hover { opacity: 1; border-color: var(--gold, #c9a84c); }
+
 /* ── UX-QUICKPICK: eval type + preset question buttons ── */
 .eval-type-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .eval-type-btn {

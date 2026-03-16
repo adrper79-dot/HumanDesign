@@ -22,7 +22,11 @@
 2. [audits/REPOSITORY_ASSESSMENT_2026-03-09.md](audits/REPOSITORY_ASSESSMENT_2026-03-09.md) — current assessment, ranking, neglected work
 3. [BACKLOG.md](BACKLOG.md) — prioritized backlog with repo-audit delta
 4. [docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md) — practitioner-first product, pricing, and GTM plan
-5. [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md) — focused commercial consistency audit
+5. [docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md](docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md) — build-validated practitioner execution plan and first-pass scope
+6. [docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md](docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md) — expert-level practitioner customer workflow, screen architecture, and build design plan
+7. [docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md](docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md) — P0/P1 practitioner work mapped to concrete files and handlers
+8. [docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md](docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md) — launch gate mapped to UI practitioner test coverage
+9. [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md) — focused commercial consistency audit
 
 ### Developers
 1. [guides/SETUP_DEVELOPMENT.md](guides/SETUP_DEVELOPMENT.md) — local setup
@@ -55,6 +59,10 @@
 | [BACKLOG.md](BACKLOG.md) | Current backlog | Includes audit delta for shipped Sprint 18 items |
 | [process/RELIABILITY_POLICY.md](process/RELIABILITY_POLICY.md) | Reliability operating policy | Canonical truth standard for testing, simulation, verification, and monitoring |
 | [docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md) | Practitioner strategy | 90-day product, pricing, and GTM priorities |
+| [docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md](docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md) | Practitioner execution roadmap | Build-validated first-pass scope, sequencing, and tool improvements |
+| [docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md](docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md) | Practitioner experience design plan | Customer workflow, screen architecture, state model, and build requirements |
+| [docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md](docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md) | Practitioner implementation backlog | P0/P1 work items tied to routes, handlers, and files |
+| [docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md](docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md) | Practitioner launch checklist | Launch-readiness gate mapped to UI practitioner acceptance coverage |
 | [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md) | Commercial consistency audit | Tier, billing, analytics, and white-label findings |
 | [DOCUMENTATION_ORGANIZATION.md](DOCUMENTATION_ORGANIZATION.md) | Documentation structure | Lists current canonical locations only |
 | [docs/API.md](docs/API.md) | Quick API reference | Updated 2026-03-15: celebrity comparison + account management sections added |

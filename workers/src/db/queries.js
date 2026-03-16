@@ -23,34 +23,11 @@ export async function getClient(connectionString) {
 }
 
 /**
- * Singleton pool cache — keyed by connection string.
- * In Cloudflare Workers each isolate is single-threaded and reused across
- * requests, so a module-level Map lets us reuse the same Pool instead of
- * creating a new one on every handler call (~100+ sites).
- * @type {Map<string, Pool>}
- */
-const _pools = new Map();
-
-/**
- * Return (or create) a singleton Pool for the given connection string.
- * @param {string} connectionString
- * @returns {Pool}
- */
-function getPool(connectionString) {
-  let pool = _pools.get(connectionString);
-  if (!pool) {
-    neonConfig.fetchFunction = fetch;
-    pool = new Pool({ connectionString });
-    _pools.set(connectionString, pool);
-  }
-  return pool;
-}
-
-/**
  * Create a serverless query function for Workers runtime.
  * Uses Neon's serverless driver optimized for edge compute.
- * Pool instances are cached per-isolate (singleton) so repeated calls
- * within the same request or across requests reuse the same connection.
+ * Pool instances are intentionally request-scoped. Reusing a cached Pool
+ * across Worker requests can retain WebSocket-backed I/O objects and cause
+ * Cloudflare's "Cannot perform I/O on behalf of a different request" crash.
  *
  * @param {string} connectionString — Neon connection string
  * @returns {Function} query function (sql, params) => Promise<{rows}>
@@ -59,7 +36,8 @@ export function createQueryFn(connectionString) {
   if (!connectionString) {
     throw new Error('NEON_CONNECTION_STRING is not configured. Add it via: `npx wrangler secret put NEON_CONNECTION_STRING`');
   }
-  const pool = getPool(connectionString);
+  neonConfig.fetchFunction = fetch;
+  const pool = new Pool({ connectionString });
 
   // CTO-003: Classify errors as retriable (cold-start, transient network) vs
   // non-retriable (schema errors, constraint violations, auth failures).
@@ -380,7 +358,8 @@ export const QUERIES = {
     SELECT
       u.id, u.email, u.phone, u.birth_date, u.created_at AS joined_at,
       pc.created_at AS added_at,
-      c.id AS chart_id, c.calculated_at AS chart_date
+      c.id AS chart_id, c.calculated_at AS chart_date,
+      p.id AS profile_id, p.created_at AS profile_date
     FROM users u
     JOIN practitioner_clients pc ON pc.client_user_id = u.id
     LEFT JOIN LATERAL (
@@ -388,6 +367,11 @@ export const QUERIES = {
       WHERE user_id = u.id
       ORDER BY calculated_at DESC LIMIT 1
     ) c ON true
+    LEFT JOIN LATERAL (
+      SELECT id, created_at FROM profiles
+      WHERE user_id = u.id
+      ORDER BY created_at DESC LIMIT 1
+    ) p ON true
     WHERE pc.practitioner_id = $1
     ORDER BY pc.created_at DESC
   `,
@@ -419,6 +403,30 @@ export const QUERIES = {
     WHERE practitioner_id = $1
       AND status = 'pending'
     ORDER BY created_at DESC
+  `,
+
+  getPractitionerInvitationByTokenHash: `
+    SELECT pi.id, pi.practitioner_id, pi.client_email, pi.client_name, pi.message,
+           pi.status, pi.expires_at, pi.accepted_at,
+           p.user_id AS practitioner_user_id,
+           p.display_name AS practitioner_display_name
+    FROM practitioner_invitations pi
+    JOIN practitioners p ON p.id = pi.practitioner_id
+    WHERE pi.token_hash = $1
+    LIMIT 1
+  `,
+
+  expirePractitionerInvitationById: `
+    UPDATE practitioner_invitations
+    SET status = 'expired'
+    WHERE id = $1 AND status = 'pending'
+  `,
+
+  markPractitionerInvitationAccepted: `
+    UPDATE practitioner_invitations
+    SET status = 'accepted', accepted_at = NOW()
+    WHERE id = $1 AND status = 'pending' AND expires_at > NOW()
+    RETURNING id, status, accepted_at
   `,
 
   deletePractitionerInvitation: `
@@ -1986,7 +1994,7 @@ export const QUERIES = {
   updateSessionNote: `
     UPDATE practitioner_session_notes
     SET content = $2, share_with_ai = $3, updated_at = NOW()
-    WHERE id = $1
+    WHERE id = $1 AND practitioner_id = $4
     RETURNING *
   `,
 

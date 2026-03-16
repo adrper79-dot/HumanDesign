@@ -21,6 +21,7 @@
 import { kvCache, keys, TTL } from '../lib/cache.js';
 
 export async function handleGeocode(request, env) {
+  try {
   const url = new URL(request.url);
   const q = (url.searchParams.get('q') || '').trim();
 
@@ -93,6 +94,13 @@ export async function handleGeocode(request, env) {
   await kvCache.put(env, cacheKey, result, TTL.GEO);
 
   return Response.json(result);
+  } catch (err) {
+    console.error(JSON.stringify({ event: 'geocode_error', error: err.message }));
+    return Response.json(
+      { error: 'Geocoding failed — please try again.' },
+      { status: 500 }
+    );
+  }
 }
 
 /**

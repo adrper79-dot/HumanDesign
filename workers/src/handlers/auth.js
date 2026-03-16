@@ -673,19 +673,14 @@ async function handleResetPassword(request, env) {
     // Hash new password
     const passwordHash = await hashPassword(password);
 
-    // BL-RESET-001: Wrap all three mutations in a transaction so a crash
-    // between steps cannot leave the token unmarked (reusable) or old
-    // refresh tokens active.
-    await query('BEGIN');
-    try {
-      await query(QUERIES.updatePasswordHash, [resetRow.user_id, passwordHash]);
-      await query(QUERIES.markPasswordResetUsed, [resetRow.id]);
-      await query(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
-      await query('COMMIT');
-    } catch (txErr) {
-      await query('ROLLBACK').catch(e => log.error('rollback_failed', { error: e.message }));
-      throw txErr;
-    }
+    // BL-RESET-001: Use query.transaction() for a real transaction via
+    // pool.connect() (WebSocket-backed). Plain query('BEGIN') on the HTTP
+    // pool executes each statement on a separate connection — non-functional.
+    await query.transaction(async (txQuery) => {
+      await txQuery(QUERIES.updatePasswordHash, [resetRow.user_id, passwordHash]);
+      await txQuery(QUERIES.markPasswordResetUsed, [resetRow.id]);
+      await txQuery(QUERIES.revokeAllUserRefreshTokens, [resetRow.user_id]);
+    });
 
     return Response.json({
       ok: true,

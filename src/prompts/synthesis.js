@@ -212,10 +212,15 @@ FORMAT:
   • Numerology: [Life Path/Personal Year] [specific insight]
   • Vedic: Nakshatra [name] / [current dasha lord] dasha [specific insight] — include ONLY when present in Reference Facts
   • Ogham: Birth Tree [name] [specific insight] — include ONLY when present in Reference Facts
+  • Mayan: Kin [number] Seal [sealName] Tone [toneName] [specific insight] — include ONLY when present in Reference Facts
+  • BaZi: Day Master [element] [nature] [specific insight] — include ONLY when present in Reference Facts
+  • Sabian: [point] degree symbol [specific insight] — include ONLY when present in Reference Facts
+  • Chiron: [sign/house] wound [specific insight] — include ONLY when present in Reference Facts
+  • Lilith: [sign/house] archetype [specific insight] — include ONLY when present in Reference Facts
   
 This convergence suggests [synthesis]."
 
-NOTE: Vedic and Ogham data will only appear in Reference Facts when available. When present, integrate them as additional convergence points. When absent, omit.
+NOTE: Vedic, Ogham, Mayan, BaZi, Sabian, Chiron and Lilith data will only appear in Reference Facts when available. When present, integrate them as additional convergence points. When absent, omit.
 
 EXAMPLE:
 "Leadership through innovation shows up across multiple systems:
@@ -277,6 +282,38 @@ OUTPUT SCHEMA (strict JSON)
       "gift": "string (1 sentence specific to this person's chart context)",
       "shadow": "string (1 sentence)",
       "convergence": "string (how the birth tree resonates with other chart elements)"
+    },
+    "mayanTzolkin": {
+      "kin": "number",
+      "seal": "string (sealName)",
+      "tone": "string (toneName — toneAction)",
+      "archetype": "string (seal archetype)",
+      "gift": "string (seal gift applied to this chart)",
+      "convergence": "string (1 sentence — include ONLY when present in Reference Facts)"
+    },
+    "baziProfile": {
+      "dayMaster": "string (element nature)",
+      "elementBalance": "string (dominant element and what this means)",
+      "convergence": "string (1 sentence — include ONLY when present in Reference Facts)"
+    },
+    "sabianHighlights": [
+      { "point": "string (Sun/Moon/ASC/MC)", "symbol": "string", "insight": "string" }
+    ],
+    "chironWound": {
+      "sign": "string",
+      "house": "number",
+      "archetype": "string",
+      "wound": "string (1 sentence)",
+      "gift": "string (1 sentence)",
+      "convergence": "string (how Chiron theme echoes in other chart areas — include ONLY when present in Reference Facts)"
+    },
+    "lilithPlacement": {
+      "sign": "string",
+      "house": "number",
+      "archetype": "string",
+      "shadow": "string (1 sentence)",
+      "gift": "string (1 sentence)",
+      "convergence": "string (how Lilith theme echoes in other chart areas — include ONLY when present in Reference Facts)"
     },
     "astrologicalSignatures": [
       { "placement": "string", "interpretation": "string", "practicalImplication": "string" }
@@ -759,6 +796,85 @@ function buildReferenceFacts(data) {
     const og = data.ogham;
     sections.push('\n=== CELTIC OGHAM BIRTH TREE REFERENCE FACTS ===');
     sections.push(`Birth Tree: ${og.treeKey ? og.treeKey.charAt(0).toUpperCase() + og.treeKey.slice(1) : 'Unknown'}`);
+  }
+
+  // ── Mayan Tzolkin (Dreamspell) Reference Facts ──
+  if (data.mayan && !data.mayan.error) {
+    const m = data.mayan;
+    sections.push('\n=== MAYAN TZOLKIN (DREAMSPELL) REFERENCE FACTS ===');
+    sections.push(`Kin: ${m.kin} | Seal: ${m.sealName} (${m.sealColor} ${m.sealTribe})`);
+    sections.push(`Tone: ${m.toneName} (${m.toneAction} / ${m.tonePower})`);
+    sections.push(`Wavespell: ${m.wavespell} | Signature: ${m.signature}`);
+    const mayanSeals = loadKB('mayan', 'seals.json');
+    const sealData = mayanSeals ? (mayanSeals[m.seal] || null) : null;
+    if (sealData) {
+      if (sealData.archetype)    sections.push(`Archetype: ${sealData.archetype}`);
+      if (sealData.shadow)       sections.push(`Shadow: ${sealData.shadow}`);
+      if (sealData.gift)         sections.push(`Gift: ${sealData.gift}`);
+      if (sealData.primeInsight) sections.push(`Prime Insight: ${sealData.primeInsight}`);
+    }
+  }
+
+  // ── BaZi Four Pillars Reference Facts ──
+  if (data.bazi && !data.bazi.error) {
+    const b = data.bazi;
+    sections.push('\n=== BAZI — FOUR PILLARS OF DESTINY REFERENCE FACTS ===');
+    if (b.dayMaster) {
+      sections.push(`Day Master: ${b.dayMaster.name} (${b.dayMaster.elementDisplay || b.dayMaster.element})`);
+    }
+    const pillars = ['yearPillar', 'monthPillar', 'dayPillar', 'hourPillar'];
+    for (const p of pillars) {
+      const pillar = b[p];
+      if (pillar) {
+        const stemName = pillar.stem?.name || pillar.stem;
+        const branchName = pillar.branch?.name || pillar.branch;
+        const stemEl = pillar.stem?.elementDisplay || pillar.stem?.element || '';
+        const branchEl = pillar.branch?.elementDisplay || pillar.branch?.element || '';
+        sections.push(`${p.replace('Pillar', '')} Pillar: ${stemName}/${branchName} (${stemEl} over ${branchEl})`);
+      }
+    }
+    if (b.elementBalance) {
+      const eb = b.elementBalance;
+      const c = eb.counts || eb;
+      sections.push(`Element Balance: Wood ${c.Wood}  Fire ${c.Fire}  Earth ${c.Earth}  Metal ${c.Metal}  Water ${c.Water}`);
+      if (eb.dominant) sections.push(`Dominant Element: ${eb.dominant} | Lacking: ${eb.lacking}`);
+    }
+  }
+
+  // ── Sabian Symbols Reference Facts ──
+  if (data.sabian && !data.sabian.error) {
+    const s = data.sabian;
+    sections.push('\n=== SABIAN SYMBOLS REFERENCE FACTS ===');
+    const sabianPoints = ['sun', 'moon', 'ascendant', 'midheaven'];
+    for (const point of sabianPoints) {
+      const sp = s[point];
+      if (sp && sp.symbol) {
+        sections.push(`${point.charAt(0).toUpperCase() + point.slice(1)} (${sp.sign} ${sp.degree}°): "${sp.symbol}"`);
+        if (sp.keynote) sections.push(`  Keynote: ${sp.keynote}`);
+      }
+    }
+  }
+
+  // ── Chiron Reference Facts ──
+  if (data.chiron && !data.chiron.error) {
+    const c = data.chiron;
+    sections.push('\n=== CHIRON — WOUND & GIFT REFERENCE FACTS ===');
+    sections.push(`Chiron: ${c.sign} ${c.degrees?.toFixed(1)}°${c.house ? ` (House ${c.house})` : ''}`);
+    if (c.archetype)    sections.push(`Archetype: ${c.archetype}`);
+    if (c.shadow)       sections.push(`Wound/Shadow: ${c.shadow}`);
+    if (c.gift)         sections.push(`Gift: ${c.gift}`);
+    if (c.primeInsight) sections.push(`Prime Insight: ${c.primeInsight}`);
+  }
+
+  // ── Black Moon Lilith Reference Facts ──
+  if (data.lilith && !data.lilith.error) {
+    const l = data.lilith;
+    sections.push('\n=== BLACK MOON LILITH REFERENCE FACTS ===');
+    sections.push(`Lilith: ${l.sign} ${l.degrees?.toFixed(1)}°${l.house ? ` (House ${l.house})` : ''}`);
+    if (l.archetype)    sections.push(`Archetype: ${l.archetype}`);
+    if (l.shadow)       sections.push(`Shadow: ${l.shadow}`);
+    if (l.gift)         sections.push(`Gift: ${l.gift}`);
+    if (l.primeInsight) sections.push(`Prime Insight: ${l.primeInsight}`);
   }
 
   // ── Deterministic Forge Identification ──

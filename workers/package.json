@@ -12,11 +12,12 @@
   },
   "devDependencies": {
     "pg": "^8.20.0",
-    "wrangler": "^3.114.17"
+    "wrangler": "^4.74.0"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "nanoid": "^5.0.4",
-    "stripe": "^17.4.0"
+    "stripe": "^17.4.0",
+    "zod": "^4.3.6"
   }
 }

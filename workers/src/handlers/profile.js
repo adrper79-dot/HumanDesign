@@ -60,7 +60,7 @@ export async function handleProfile(request, env) {
     }
   }
 
-  const { birthDate, birthTime, birthTimezone, lat, lng, question } = body;
+  const { birthDate, birthTime, birthTimezone, lat, lng, question, systemPreferences } = body;
 
   // Convert to UTC using shared utility
   const utc = parseToUTC(birthDate, birthTime, birthTimezone);
@@ -129,20 +129,29 @@ export async function handleProfile(request, env) {
     }
   }
 
+  // Respect systemPreferences — null out any toggled-off system
+  const sp = systemPreferences || {};
+  const _opt = (key, val) => (sp[key] === false ? null : (val || null));
+
   // Build Layer 8 prompt with all available data
   const promptPayload = buildSynthesisPrompt({
     hdChart: chart.chart,
     astroChart: chart.astrology,
-    transits: chart.transits,
+    transits:         _opt('transits',      chart.transits),
     personalityGates: chart.personalityGates,
-    designGates: chart.designGates,
-    numerology: chart.numerology || null,
-    geneKeys: chart.geneKeys || null,
-    vedic: chart.vedic || null,
-    ogham: chart.ogham || null,
-    validationData,
-    psychometricData,
-    diaryEntries
+    designGates:      chart.designGates,
+    numerology:       _opt('numerology',    chart.numerology),
+    geneKeys:         _opt('geneKeys',      chart.geneKeys),
+    vedic:            _opt('vedic',         chart.vedic),
+    ogham:            _opt('ogham',         chart.ogham),
+    mayan:            _opt('mayan',         chart.mayan),
+    bazi:             _opt('bazi',          chart.bazi),
+    sabian:           _opt('sabian',        chart.sabian),
+    chiron:           _opt('chiron',        chart.chiron),
+    lilith:           _opt('lilith',        chart.lilith),
+    validationData:   _opt('behavioral',    validationData),
+    psychometricData: _opt('psychometrics', psychometricData),
+    diaryEntries:     _opt('diary',         diaryEntries),
   }, question, practitionerContext, request._tier || 'free');
 
   // Call LLM via AI Gateway
@@ -256,6 +265,11 @@ export async function handleProfile(request, env) {
       geneKeys: chart.geneKeys || null,
       vedic: chart.vedic || null,
       ogham: chart.ogham || null,
+      mayan: chart.mayan || null,
+      bazi: chart.bazi || null,
+      sabian: chart.sabian || null,
+      chiron: chart.chiron || null,
+      lilith: chart.lilith || null,
     },
     meta: {
       groundingAudit: validation.parsed?.groundingAudit || null,

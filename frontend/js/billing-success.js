@@ -1,5 +1,5 @@
 (async function () {
-  const API = 'https://prime-self-api.adrper79.workers.dev';
+  const API = '';
 
   const TIER_LABELS = {
     pro: 'Pro',

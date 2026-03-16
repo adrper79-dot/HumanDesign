@@ -21,53 +21,44 @@ export function parseToUTC(birthDate, birthTime, timezone) {
     return { year, month, day, hour, minute, second: 0 };
   }
 
-  // Validate timezone by attempting to use it with Intl
   try {
-    // Use Intl to determine the UTC offset for this timezone at this date
-    const testDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+    // Probe: create a UTC instant from the input and format it in the target
+    // timezone. Comparing the two Date.UTC representations gives exact offset
+    // — correct across all month/year boundaries (fixes BL-C6).
+    const probeUTC = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
       year: 'numeric', month: 'numeric', day: 'numeric',
       hour: 'numeric', minute: 'numeric', second: 'numeric',
       hour12: false
     });
-  const parts = formatter.formatToParts(testDate);
-  const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0');
+    const parts = formatter.formatToParts(probeUTC);
+    const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0');
 
-  const tzHour = getPart('hour');
-  const tzMinute = getPart('minute');
-  const tzDay = getPart('day');
+    const tzYear   = getPart('year');
+    const tzMonth  = getPart('month');
+    const tzDay    = getPart('day');
+    const tzHour   = getPart('hour') % 24; // Intl may return 24 for midnight
+    const tzMinute = getPart('minute');
 
-  // Offset = timezone time - UTC time
-  const utcMinutes = hour * 60 + minute;
-  const tzMinutes = tzHour * 60 + tzMinute;
-  let offsetMinutes = tzMinutes - utcMinutes;
+    // Build Date.UTC for the timezone-local representation and the UTC input.
+    // The difference is the exact offset in ms — works across month/year edges.
+    const tzAsUTC   = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMinute, 0);
+    const inputUTC  = Date.UTC(year, month - 1, day, hour, minute, 0);
+    const offsetMs  = tzAsUTC - inputUTC;
 
-  // Handle day boundary crossings
-  if (tzDay > day) offsetMinutes += 24 * 60;
-  else if (tzDay < day) offsetMinutes -= 24 * 60;
+    // Apply: "local = UTC + offset"  →  "UTC = local - offset"
+    const localMs = Date.UTC(year, month - 1, day, hour, minute, 0);
+    const resultDate = new Date(localMs - offsetMs);
 
-  // Compute actual UTC time for the local input
-  const localTotalMinutes = hour * 60 + minute;
-  const utcTotalMinutes = localTotalMinutes - offsetMinutes;
-
-  let utcHour = Math.floor(utcTotalMinutes / 60);
-  let utcMinuteVal = ((utcTotalMinutes % 60) + 60) % 60;
-  let utcDay = day, utcMonth = month, utcYear = year;
-
-  if (utcHour >= 24) { utcHour -= 24; utcDay++; }
-  if (utcHour < 0) { utcHour += 24; utcDay--; }
-
-  const daysInMonth = new Date(year, month, 0).getDate();
-  if (utcDay > daysInMonth) { utcDay = 1; utcMonth++; }
-  if (utcDay < 1) { utcMonth--; utcDay = new Date(year, utcMonth, 0).getDate(); }
-  if (utcMonth > 12) { utcMonth = 1; utcYear++; }
-  if (utcMonth < 1) { utcMonth = 12; utcYear--; }
-
-  return {
-    year: utcYear, month: utcMonth, day: utcDay,
-    hour: utcHour, minute: utcMinuteVal, second: 0
-  };
+    return {
+      year:   resultDate.getUTCFullYear(),
+      month:  resultDate.getUTCMonth() + 1,
+      day:    resultDate.getUTCDate(),
+      hour:   resultDate.getUTCHours(),
+      minute: resultDate.getUTCMinutes(),
+      second: 0
+    };
   } catch (error) {
     // Invalid timezone string causes Intl.DateTimeFormat to throw RangeError
     throw new Error(`Invalid timezone: ${timezone}`);

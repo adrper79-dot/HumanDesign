@@ -18,6 +18,11 @@ import { calculateNumerologyFromBirthData } from './numerology.js';
 import { calculateGeneKeys } from './genekeys.js';
 import { calculateVedic } from './vedic.js';
 import { calculateOgham } from './ogham.js';
+import { calculateMayan } from './mayan.js';
+import { calculateBazi } from './bazi.js';
+import { calculateSabian } from './sabian.js';
+import { calculateChiron } from './chiron.js';
+import { calculateLilith } from './lilith.js';
 
 /**
  * Calculate the full Prime Self chart for a given birth.
@@ -108,6 +113,21 @@ export function calculateFullChart(params) {
   // Layer 11: Celtic Ogham Birth Tree (birth month + day, no year required)
   const ogham = calculateOgham(month, day);
 
+  // Layer 12: Mayan Tzolkin / Dreamspell
+  const mayan = calculateMayan(jdn);
+
+  // Layer 13: BaZi — Four Pillars of Destiny
+  const bazi = calculateBazi(year, month, day, hour, jdn);
+
+  // Layer 14: Sabian Symbols (Sun, Moon, Ascendant, MC)
+  const sabian = calculateSabian(birthPositions, astrology);
+
+  // Layer 15: Chiron by sign and house
+  const chiron = calculateChiron(birthPositions, astrology?.houses ?? null);
+
+  // Layer 16: Black Moon Lilith (mean apogee) by sign and house
+  const lilith = calculateLilith(jdn, astrology?.houses ?? null);
+
   return {
     birth: { year, month, day, hour, minute, second, lat, lng, jdn },
     design: {
@@ -122,6 +142,11 @@ export function calculateFullChart(params) {
     numerology,
     geneKeys,
     vedic,
-    ogham
+    ogham,
+    mayan,
+    bazi,
+    sabian,
+    chiron,
+    lilith,
   };
 }
