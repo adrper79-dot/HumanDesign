@@ -1033,7 +1033,7 @@ img[data-src].loaded, img:not([data-src]) {
 .frm-eval-card:hover:not(.active) { border-color: var(--text-muted, #8fafc8); }
 .frm-eval-icon { font-size: 1.6rem; margin-bottom: var(--space-2); }
 .frm-eval-label { font-weight: 700; font-size: var(--font-size-base); margin-bottom: var(--space-1); }
-.frm-eval-desc { font-size: 0.76rem; line-height: 1.5; color: var(--text-dim, #c4c0d8); }
+.frm-eval-desc { font-size: 0.78rem; line-height: 1.45; color: var(--text-dim, #c4c0d8); }
 .frm-eval-card.active .frm-eval-desc { color: var(--text-muted, #8fafc8); }
 
 /* First-run wizard — question quick-picks */
@@ -1074,7 +1074,7 @@ img[data-src].loaded, img:not([data-src]) {
 .frm-question-input:focus { outline: none; border-color: var(--gold, #c9a84c); }
 
 /* Mobile: stack eval cards and form grid */
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .frm-eval-choices { flex-direction: column; }
   .frm-form-grid { grid-template-columns: 1fr; }
 }

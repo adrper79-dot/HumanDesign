@@ -8,9 +8,9 @@
      script-src is strict (no unsafe-inline/eval). CSS-only injection risk is accepted. -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io https://cdn.jsdelivr.net;
+  script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io;
   style-src 'self' 'unsafe-inline';
-  connect-src 'self' https://api.stripe.com https://cloudflareinsights.com https://plausible.io;
+  connect-src 'self' https://prime-self-api.adrper79.workers.dev https://api.stripe.com https://cloudflareinsights.com https://plausible.io;
   img-src 'self' data: blob:;
   media-src 'self';
   font-src 'self' data:;
@@ -31,7 +31,7 @@
 <!-- To activate: replace YOUR_DOMAIN with e.g. selfprime.net -->
 <script defer data-domain="selfprime.net" src="https://plausible.io/js/script.js"></script>
 <link rel="dns-prefetch" href="https://js.stripe.com">
-<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<!-- cdn.jsdelivr.net removed: qr.js is self-hosted (BL-M16) -->
 <!-- Preload critical CSS -->
 <link rel="preload" href="css/design-tokens.css" as="style">
 <link rel="preload" href="css/design-tokens-premium.css" as="style">
@@ -565,12 +565,12 @@
           <button class="frm-eval-card active" id="frm-eval-blueprint" data-action="frmSetEvalType" data-arg0="blueprint">
             <div class="frm-eval-icon">◉</div>
             <div class="frm-eval-label">Full Blueprint</div>
-            <div class="frm-eval-desc">Deep AI synthesis across all 64 gates, Gene Keys, astrology &amp; numerology</div>
+            <div class="frm-eval-desc">Your complete synthesis across all systems</div>
           </button>
           <button class="frm-eval-card" id="frm-eval-daily" data-action="frmSetEvalType" data-arg0="daily">
             <div class="frm-eval-icon">☽</div>
             <div class="frm-eval-label">Daily Focus</div>
-            <div class="frm-eval-desc">Today's planetary transits and how they activate your specific gates</div>
+            <div class="frm-eval-desc">Today's transits and your chart right now</div>
           </button>
         </div>
         <button class="btn-primary frm-btn-next" data-action="frmNext">Continue →</button>
@@ -2072,8 +2072,7 @@
 
 <!-- Background Video Loader (seamless fade-in once playing) -->
 <script src="js/bg-video.js" defer></script>
-<!-- QR code generation for 2FA setup — client-side only, no external secret transmission -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha384-Pu0nWrXfEgOmOK2aXiw3S8jqjGJHUPHT7pllpnlbEdkKFlk5BPXD+C7pGk3bvW5" crossorigin="anonymous"></script>
+<!-- QR code generation for 2FA setup: js/qr.js (self-hosted, synchronous, BL-M16 canonical path) -->
 
 <!-- Legal Footer -->
 <footer>
