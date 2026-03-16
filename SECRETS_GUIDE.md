@@ -305,6 +305,19 @@ These are infrastructure bindings, not secrets.
 
 ---
 
+### 14a. `STRIPE_TRIAL_DAYS` (optional)
+
+| Field | Value |
+|-------|-------|
+| **Service** | Internal — Stripe checkout configuration |
+| **Used by** | `workers/src/handlers/billing.js` (`handleCheckout`) |
+| **Purpose** | When set to a positive integer, new subscribers (users currently on the free tier) receive a free trial of this many days before their first charge. Applies to both individual and practitioner tier checkouts. Set to `0` or leave unset to disable trials entirely. Upgrades between paid tiers are never affected. |
+| **Format** | Integer string, e.g. `"7"` for a 7-day trial |
+| **Where to set** | `wrangler.toml` `[vars]` (non-sensitive) or as a Worker secret if you prefer |
+| **wrangler command** | `npx wrangler secret put STRIPE_TRIAL_DAYS` |
+
+---
+
 ### 14. `AUDIT_SECRET`
 
 | Field | Value |

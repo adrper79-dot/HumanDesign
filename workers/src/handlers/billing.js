@@ -202,8 +202,16 @@ export async function handleCheckout(request, env, ctx) {
     }
 
     // Create checkout session (circuit-breaker protected)
-    // CMO-007: Offer 7-day trial for new practitioner subscribers
-    const trialDays = (tier === 'practitioner' && user.tier === 'free') ? 7 : 0;
+    // SYS-049: Optional free trial — controlled by env.STRIPE_TRIAL_DAYS (Worker secret/var).
+    // Applied only for new subscriptions (user currently on free tier), never for upgrades
+    // between paid tiers. Set STRIPE_TRIAL_DAYS=0 or leave unset to disable trials.
+    const isNewSubscription = user.tier === 'free';
+    const configuredTrialDays = isNewSubscription && env.STRIPE_TRIAL_DAYS
+      ? parseInt(env.STRIPE_TRIAL_DAYS, 10)
+      : 0;
+    const trialDays = Number.isFinite(configuredTrialDays) && configuredTrialDays > 0
+      ? configuredTrialDays
+      : 0;
     const session = await withCircuitBreaker('stripe', () => createCheckoutSession(stripe, {
       customerId,
       priceId,
@@ -470,10 +478,13 @@ export async function handleCancelSubscription(request, env, ctx) {
     }
     
     let body = {};
-    try {
-      body = await request.json();
-    } catch {
-      body = {};
+    const rawBody = await request.text();
+    if (rawBody.trim()) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
     }
     const { immediately, previewOnly } = body;
 

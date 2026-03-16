@@ -75,6 +75,18 @@ export async function handleOAuthSocial(request, env, subpath) {
     return handleCallback(callbackMatch[1], request, env);
   }
 
+  // TODO (SYS-038): Facebook OAuth is not implemented.
+  // To add Facebook login: register a Facebook App at developers.facebook.com,
+  // add FACEBOOK_APP_ID + FACEBOOK_APP_SECRET Worker secrets, implement
+  // initiateOAuth/handleCallback cases for 'facebook', and update the
+  // frontend login buttons. Until then, all /facebook routes return 501.
+  if (subpath.startsWith('/facebook')) {
+    return Response.json(
+      { error: 'Facebook login is not yet available. Please use Google or Apple sign-in.' },
+      { status: 501 }
+    );
+  }
+
   return Response.json({ error: 'Not found' }, { status: 404 });
 }
 
