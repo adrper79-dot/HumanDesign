@@ -255,7 +255,7 @@ OUTPUT SCHEMA (strict JSON)
 
 {
   "quickStartGuide": {
-    "whoYouAre": "FELT OPENER — 2-3 sentences written in second person, present tense, as if you are seeing this person clearly for the first time. NO system jargon (no type names, gate numbers, or system labels). Write as if speaking directly to the user's lived experience — their inner tension, their recurring pattern, their specific way of moving through the world. This is the FIRST thing they will read. Make them feel seen before they see any data. Examples of the right tone: 'You are wired to initiate things others won't — and then watch in frustration as the world catches up to what you already knew. The pattern that looks like impatience from the outside is actually intelligence working faster than the room.' / 'You carry other people's emotional weather as if it were your own, and you have spent years wondering why you feel exhausted in crowds. This is not a flaw. It is a form of perception most people don't have.' Do NOT start with 'You are a [type]' or any system classification. Start with the experience.",
+    "whoYouAre": "FELT OPENER — 2-3 sentences, second person, present tense. STRUCTURE: (1) IDENTITY — name the core quality that makes them distinct, stated as fact not label. (2) LIVED PATTERN — the specific tension or dynamic this creates in their daily life, relationships, or decisions. (3) ACTIONABLE CLOSE — one sentence that reframes this pattern as design, not flaw, and points toward what to do with it. NO jargon, no type names, no gate numbers. Start with the experience, not the system. EXAMPLES: 'You are wired to initiate things others won't — and then watch in frustration as the world catches up to what you already knew. The pattern that looks like impatience from the outside is actually intelligence working faster than the room. Stop explaining yourself before you act — your job is to move first, not to convince.' / 'You carry other people's emotional weather as if it were your own, and you have spent years wondering why you feel exhausted in crowds. This is not a flaw — it is a form of perception most people do not have. The practice is learning which feelings are yours before you respond to anything.',",
     "decisionStyle": "string (120-150 words)",
     "lifeStrategy": "string (100-140 words)",
     "thisMonth": "string (80-120 words)",
@@ -286,7 +286,8 @@ OUTPUT SCHEMA (strict JSON)
       "period": "string",
       "gift": "string (1 sentence specific to this person's chart context)",
       "shadow": "string (1 sentence)",
-      "convergence": "string (how the birth tree resonates with other chart elements)"
+      "convergence": "string (how the birth tree resonates with other chart elements)",
+      "_sources": "List the birth date and tree correspondence used (e.g., 'Birth date 08/05 = Oak tree, July 7 – August 4 Ogham calendar')."
     },
     "mayanTzolkin": {
       "kin": "number",
@@ -306,6 +307,7 @@ OUTPUT SCHEMA (strict JSON)
     "sabianHighlights": [
       { "point": "string (Sun/Moon/ASC/MC)", "symbol": "string", "insight": "string" }
     ],
+    "sabianSources": "List the degree positions used (e.g., 'Sun at 13° Leo = Sabian 13 Leo, Moon at 22° Aries = Sabian 22 Aries').",
     "chironWound": {
       "sign": "string",
       "house": "number",

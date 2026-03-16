@@ -3321,6 +3321,36 @@ function renderProfile(data) {
       html += `</div>`; // close Numerology card
     }
 
+    // Vedic / Jyotish Overlay
+    if (ti.vedicOverlay) {
+      const ved = ti.vedicOverlay;
+      html += `<div class="card">
+        <div class="card-title">☽ Vedic / Jyotish</div>
+        <div class="profile-section">
+          ${ved.moonNakshatra ? `<h4>Moon Nakshatra — ${escapeHtml(ved.moonNakshatra)}</h4>` : ''}
+          ${ved.nakshatraGift ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)"><strong style="color:var(--gold)">Gift:</strong> ${escapeHtml(ved.nakshatraGift)}</p>` : ''}
+          ${ved.currentDasha ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2)"><strong>Current Dasha:</strong> ${escapeHtml(ved.currentDasha)}</p>` : ''}
+          ${ved.siderealSun ? `<p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-2)">Sidereal Sun: ${escapeHtml(ved.siderealSun)}</p>` : ''}
+        </div>
+      </div>`;
+      html += renderSourceTag(ti.vedicOverlay?._sources);
+    }
+
+    // Celtic Ogham Tree
+    if (ti.celticOghamTree) {
+      const og = ti.celticOghamTree;
+      html += `<div class="card">
+        <div class="card-title">᚛ Celtic Ogham</div>
+        <div class="profile-section">
+          ${og.tree ? `<h4>${escapeHtml(og.tree)}${og.period ? ` · ${escapeHtml(og.period)}` : ''}</h4>` : ''}
+          ${og.gift ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)"><strong style="color:var(--gold)">Gift:</strong> ${escapeHtml(og.gift)}</p>` : ''}
+          ${og.shadow ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-1)"><strong style="color:#f56565">Shadow:</strong> ${escapeHtml(og.shadow)}</p>` : ''}
+          ${og.convergence ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2);font-style:italic">${escapeHtml(og.convergence)}</p>` : ''}
+        </div>
+      </div>`;
+      html += renderSourceTag(ti.celticOghamTree?._sources);
+    }
+
     // Mayan Tzolkin
     if (ti.mayanTzolkin) {
       const mayan = ti.mayanTzolkin;
@@ -3360,6 +3390,7 @@ function renderProfile(data) {
           ${s.insight ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2)">${escapeHtml(s.insight)}</p>` : ''}
         </div>`;
       });
+      html += renderSourceTag(ti.sabianSources);
       html += `</div>`;
     }
 
