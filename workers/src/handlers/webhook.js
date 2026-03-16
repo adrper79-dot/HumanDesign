@@ -15,7 +15,7 @@
 import { createStripeClient, verifyWebhook } from '../lib/stripe.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { markReferralAsConverted } from './referrals.js';
-import { sendEmail, sendSubscriptionConfirmationEmail, sendRenewalConfirmationEmail } from '../lib/email.js';
+import { sendEmail, sendSubscriptionConfirmationEmail, sendRenewalConfirmationEmail, sendDisputeNotificationEmail } from '../lib/email.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
 import { createLogger } from '../lib/logger.js';
 
@@ -301,7 +301,7 @@ export async function handleStripeWebhook(request, env) {
         break;
 
       case 'charge.dispute.created':
-        await handleChargeDispute(event, query, stripe, log);
+        await handleChargeDispute(event, query, stripe, env, log);
         break;
 
       default:
@@ -818,18 +818,16 @@ async function handleInvoicePaid(event, query, stripe, env, log) {
       const referrer = refResult.rows[0];
 
       if (referrer?.referrer_stripe_id) {
-        const shareRate = 0.25;
-        const rawCredit = Math.floor(amountPaid * shareRate);
-        // Agency tier: cap credit at 50% of subscription cost (HD_UPDATES3 spec)
-        const maxCredit = Math.floor(amountPaid * 0.50);
-        const creditAmount = Math.min(rawCredit, maxCredit);
+        // SYS-008: Agency subscribers generate 50% revenue share per spec; all other tiers 25%
+        const shareRate = subscriptionRow.tier === 'agency' ? 0.50 : 0.25;
+        const creditAmount = Math.floor(amountPaid * shareRate);
 
         if (creditAmount > 0) {
           const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
           await stripe.customers.createBalanceTransaction(referrer.referrer_stripe_id, {
             amount: -creditAmount,  // Negative = credit
             currency: invoice.currency || 'usd',
-            description: `Referral revenue share (25% of $${(amountPaid / 100).toFixed(2)} payment)`,
+            description: `Referral revenue share (${shareRate * 100}% of $${(amountPaid / 100).toFixed(2)} payment)`,
           }, {
             idempotencyKey: `referral-credit-${event.id}`,
           });
@@ -904,7 +902,7 @@ async function handleChargeRefunded(event, query, log) {
  * Handle charge.dispute.created — TXN-025 FIX
  * Downgrade user to free tier when a chargeback/dispute is opened.
  */
-async function handleChargeDispute(event, query, stripe, log) {
+async function handleChargeDispute(event, query, stripe, env, log) {
   const dispute = event.data.object;
   const chargeId = dispute.charge;
 
@@ -949,5 +947,21 @@ async function handleChargeDispute(event, query, stripe, log) {
   await query(QUERIES.updateUserTier, ['free', userId]);
 
   log.error({ action: 'dispute_opened', userId, chargeId, amount: dispute.amount, currency: dispute.currency, reason: dispute.reason });
+
+  // SYS-017: Notify user of dispute via email (fire-and-forget)
+  if (env?.RESEND_API_KEY) {
+    try {
+      const userResult = await query(QUERIES.getUserByIdSafe, [userId]);
+      const userEmail = userResult.rows[0]?.email;
+      if (userEmail) {
+        sendDisputeNotificationEmail(
+          userEmail, dispute.amount, dispute.currency, dispute.reason || 'unknown',
+          env.RESEND_API_KEY, env.FROM_EMAIL, env.COMPANY_ADDRESS || ''
+        ).catch(() => {});
+      }
+    } catch (emailErr) {
+      log.warn({ action: 'dispute_email_error', error: emailErr.message });
+    }
+  }
 }
 

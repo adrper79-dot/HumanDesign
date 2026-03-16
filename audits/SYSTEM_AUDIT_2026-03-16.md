@@ -266,6 +266,7 @@ Fix: Add migration 043: `ALTER TABLE users ADD COLUMN tos_accepted_at TIMESTAMPT
 File: tests/ directory
 Finding: The following deployed handlers have zero test files: `push.js` (HKDF, AES-GCM, ECDH, VAPID JWT), `alerts.js` (tier-gated CRUD), `sms.js` (Telnyx ed25519 signature verification), `oauthSocial.js` (PKCE, state, callbacks), `profile-stream.js` (SSE pipeline), `embed.js`, `famous.js`, `rectify.js`, `share.js`, `geocode.js`.
 Fix: Prioritize: (1) push crypto round-trip tests, (2) Telnyx signature verification path, (3) OAuth state validation, (4) alert tier limit enforcement.
+**✅ PARTIALLY RESOLVED (Cycle 3 — 2026-03-16)** — `tests/push-handler-runtime.test.js` added: 18 deterministic tests covering all 9 push routes + `sendNotificationToUser` + `sendPushNotification`. push.js now fully covered. Remaining open: alerts.js, sms.js, oauthSocial.js, profile-stream.js.
 
 ### SYS-046 — TESTS — P2 — No Coverage Threshold in CI
 File: .github/workflows/deploy-workers.yml; vitest.config.js

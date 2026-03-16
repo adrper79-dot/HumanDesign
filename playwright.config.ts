@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
+const baseURL = process.env.TEST_BASE_URL || 'https://selfprime.net';
+const shouldStartWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER !== '1';
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -8,10 +12,11 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { open: 'never' }]],
   use: {
-    baseURL: 'https://selfprime.net',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    ...(wsEndpoint ? { connectOptions: { wsEndpoint } } : {}),
   },
   projects: [
     {
@@ -19,9 +24,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
     },
   ],
-  webServer: {
-    command: 'npx serve frontend -l 3000',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
+  ...(shouldStartWebServer ? {
+    webServer: {
+      command: 'npx serve frontend -l 3000',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+    },
+  } : {}),
 });

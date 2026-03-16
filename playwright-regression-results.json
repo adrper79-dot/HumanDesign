@@ -1,0 +1,1338 @@
+{
+  "config": {
+    "configFile": "/mnt/c/Users/Ultimate Warrior/My project/HumanDesign/playwright.config.ts",
+    "rootDir": "/mnt/c/Users/Ultimate Warrior/My project/HumanDesign/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 1,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/mnt/c/Users/Ultimate Warrior/My project/HumanDesign/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/mnt/c/Users/Ultimate Warrior/My project/HumanDesign/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 2,
+    "webServer": {
+      "command": "npx serve frontend -l 3000",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true
+    }
+  },
+  "suites": [
+    {
+      "title": "ui-regression.spec.ts",
+      "file": "ui-regression.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "AUTH-001: Login Flow",
+          "file": "ui-regression.spec.ts",
+          "line": 113,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should log in with valid credentials",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 21,
+                      "error": {
+                        "message": "Error: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-5kuTtV --remote-debugging-pipe --no-startup-window\n<launched> pid=45896\n[pid=45896][err] /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory\nCall log:\n\u001b[2m  - <launching> /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-5kuTtV --remote-debugging-pipe --no-startup-window\u001b[22m\n\u001b[2m  - <launched> pid=45896\u001b[22m\n\u001b[2m  - [pid=45896][err] /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory\u001b[22m\n\u001b[2m  - [pid=45896] <gracefully close start>\u001b[22m\n\u001b[2m  - [pid=45896] <kill>\u001b[22m\n\u001b[2m  - [pid=45896] <will force kill>\u001b[22m\n\u001b[2m  - [pid=45896] exception while trying to kill process: Error: kill ESRCH\u001b[22m\n\u001b[2m  - [pid=45896] <process did exit: exitCode=127, signal=null>\u001b[22m\n\u001b[2m  - [pid=45896] starting temporary directories cleanup\u001b[22m\n\u001b[2m  - [pid=45896] finished temporary directories cleanup\u001b[22m\n\u001b[2m  - [pid=45896] <gracefully close end>\u001b[22m\n",
+                        "stack": "Error: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-5kuTtV --remote-debugging-pipe --no-startup-window\n<launched> pid=45896\n[pid=45896][err] /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory\nCall log:\n\u001b[2m  - <launching> /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-5kuTtV --remote-debugging-pipe --no-startup-window\u001b[22m\n\u001b[2m  - <launched> pid=45896\u001b[22m\n\u001b[2m  - [pid=45896][err] /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory\u001b[22m\n\u001b[2m  - [pid=45896] <gracefully close start>\u001b[22m\n\u001b[2m  - [pid=45896] <kill>\u001b[22m\n\u001b[2m  - [pid=45896] <will force kill>\u001b[22m\n\u001b[2m  - [pid=45896] exception while trying to kill process: Error: kill ESRCH\u001b[22m\n\u001b[2m  - [pid=45896] <process did exit: exitCode=127, signal=null>\u001b[22m\n\u001b[2m  - [pid=45896] starting temporary directories cleanup\u001b[22m\n\u001b[2m  - [pid=45896] finished temporary directories cleanup\u001b[22m\n\u001b[2m  - [pid=45896] <gracefully close end>\u001b[22m\n"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-5kuTtV --remote-debugging-pipe --no-startup-window\n<launched> pid=45896\n[pid=45896][err] /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory\nCall log:\n\u001b[2m  - <launching> /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-5kuTtV --remote-debugging-pipe --no-startup-window\u001b[22m\n\u001b[2m  - <launched> pid=45896\u001b[22m\n\u001b[2m  - [pid=45896][err] /home/ltimate_arrior/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory\u001b[22m\n\u001b[2m  - [pid=45896] <gracefully close start>\u001b[22m\n\u001b[2m  - [pid=45896] <kill>\u001b[22m\n\u001b[2m  - [pid=45896] <will force kill>\u001b[22m\n\u001b[2m  - [pid=45896] exception while trying to kill process: Error: kill ESRCH\u001b[22m\n\u001b[2m  - [pid=45896] <process did exit: exitCode=127, signal=null>\u001b[22m\n\u001b[2m  - [pid=45896] starting temporary directories cleanup\u001b[22m\n\u001b[2m  - [pid=45896] finished temporary directories cleanup\u001b[22m\n\u001b[2m  - [pid=45896] <gracefully close end>\u001b[22m\n"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-16T19:03:59.727Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6679087c600b292d4338-71b1144814509a823192",
+              "file": "ui-regression.spec.ts",
+              "line": 114,
+              "column": 3
+            },
+            {
+              "title": "should show error on invalid email",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "interrupted",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-16T19:04:00.706Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-42427ea8cdfe28b43169",
+              "file": "ui-regression.spec.ts",
+              "line": 127,
+              "column": 3
+            },
+            {
+              "title": "should show error on invalid password",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-d93ba30fd5efc4381166",
+              "file": "ui-regression.spec.ts",
+              "line": 144,
+              "column": 3
+            },
+            {
+              "title": "should require email and password fields",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-04cb1463dbdc5a68d96c",
+              "file": "ui-regression.spec.ts",
+              "line": 158,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "AUTH-002: Logout Flow",
+          "file": "ui-regression.spec.ts",
+          "line": 172,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should log out and return to sign-in state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-872157506edf4cfcefa2",
+              "file": "ui-regression.spec.ts",
+              "line": 173,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "AUTH-003: Session Persistence",
+          "file": "ui-regression.spec.ts",
+          "line": 191,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should maintain session across page reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-3314db1963788b6c1eaf",
+              "file": "ui-regression.spec.ts",
+              "line": 192,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "NAV-001: Desktop Sidebar Navigation",
+          "file": "ui-regression.spec.ts",
+          "line": 215,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display all primary nav items",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-7c3bce858f0a83831f66",
+              "file": "ui-regression.spec.ts",
+              "line": 216,
+              "column": 3
+            },
+            {
+              "title": "should switch tabs on nav click",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-4bddd8ac530551c122f5",
+              "file": "ui-regression.spec.ts",
+              "line": 231,
+              "column": 3
+            },
+            {
+              "title": "should collapse/expand sidebar on desktop",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-7952370d58d92b117a03",
+              "file": "ui-regression.spec.ts",
+              "line": 246,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "NAV-002: Mobile Bottom Navigation",
+          "file": "ui-regression.spec.ts",
+          "line": 270,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display bottom nav on mobile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-584d860231439b1d862c",
+              "file": "ui-regression.spec.ts",
+              "line": 271,
+              "column": 3
+            },
+            {
+              "title": "should navigate to tabs from mobile nav",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-e0deff368d44aada4bc7",
+              "file": "ui-regression.spec.ts",
+              "line": 286,
+              "column": 3
+            },
+            {
+              "title": "should open drawer on hamburger menu",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-753755727d8838495f47",
+              "file": "ui-regression.spec.ts",
+              "line": 305,
+              "column": 3
+            },
+            {
+              "title": "should close drawer on backdrop click",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-d4b5f2f1ce7640a93b8d",
+              "file": "ui-regression.spec.ts",
+              "line": 317,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "NAV-003: Tab State & Active Indicators",
+          "file": "ui-regression.spec.ts",
+          "line": 337,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should maintain active tab state across page reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-b17292f6926ac86dc526",
+              "file": "ui-regression.spec.ts",
+              "line": 338,
+              "column": 3
+            },
+            {
+              "title": "should not lose nav orientation when viewing drawer-only tabs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-d2d42506eaed3c671c81",
+              "file": "ui-regression.spec.ts",
+              "line": 358,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "ONBOARD-001: First-Run Modal Flow",
+          "file": "ui-regression.spec.ts",
+          "line": 395,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should show welcome modal on first visit",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-97a22f1c62003d66e0a5",
+              "file": "ui-regression.spec.ts",
+              "line": 396,
+              "column": 3
+            },
+            {
+              "title": "should skip first-run modal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-77d243043c7022f7e217",
+              "file": "ui-regression.spec.ts",
+              "line": 408,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "ONBOARD-002: Birth Data Entry",
+          "file": "ui-regression.spec.ts",
+          "line": 424,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should accept valid birth date",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-1e6cb6b603597203fdf4",
+              "file": "ui-regression.spec.ts",
+              "line": 425,
+              "column": 3
+            },
+            {
+              "title": "should reject invalid birth date",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-efa5ef2c080d3c6934eb",
+              "file": "ui-regression.spec.ts",
+              "line": 438,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "FEAT-001: Chart Tab Navigation",
+          "file": "ui-regression.spec.ts",
+          "line": 460,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should load and display chart tab content",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-9bc0dcb6da521ad7ea61",
+              "file": "ui-regression.spec.ts",
+              "line": 461,
+              "column": 3
+            },
+            {
+              "title": "should display chart profile information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-f687d278614afc72cb20",
+              "file": "ui-regression.spec.ts",
+              "line": 476,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "FEAT-002: Transits Tab",
+          "file": "ui-regression.spec.ts",
+          "line": 492,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should load and display transit information",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-7670d200f2711fb946cc",
+              "file": "ui-regression.spec.ts",
+              "line": 493,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "FEAT-003: Check-In / Diary",
+          "file": "ui-regression.spec.ts",
+          "line": 509,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should navigate to check-in tab",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-0ffa276ad701d04e7881",
+              "file": "ui-regression.spec.ts",
+              "line": 510,
+              "column": 3
+            },
+            {
+              "title": "should allow submitting a check-in entry",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-593b4165cd87e022f889",
+              "file": "ui-regression.spec.ts",
+              "line": 524,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "FEAT-004: Composite / Relationships",
+          "file": "ui-regression.spec.ts",
+          "line": 548,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should navigate to composite tab",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-bd0fdbc7e725231621bd",
+              "file": "ui-regression.spec.ts",
+              "line": 549,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "PRAC-001: Practitioner Tab & Workspace",
+          "file": "ui-regression.spec.ts",
+          "line": 569,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should navigate to practitioner tab",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-88eb0cf8d9132e1a8e10",
+              "file": "ui-regression.spec.ts",
+              "line": 570,
+              "column": 3
+            },
+            {
+              "title": "should display client list or workspace",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-4abe6a497c5a2f95cbe1",
+              "file": "ui-regression.spec.ts",
+              "line": 585,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "PRAC-002: Session Notes",
+          "file": "ui-regression.spec.ts",
+          "line": 601,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should render session notes UI",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-0aa63b9e2aaf84735149",
+              "file": "ui-regression.spec.ts",
+              "line": 602,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "BILL-001: Pricing Modal Display",
+          "file": "ui-regression.spec.ts",
+          "line": 622,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should show pricing modal on upgrade button click",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-1876c87d875f6e7dfdd9",
+              "file": "ui-regression.spec.ts",
+              "line": 623,
+              "column": 3
+            },
+            {
+              "title": "should display tier cards with pricing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-84fdba796f4971a7d696",
+              "file": "ui-regression.spec.ts",
+              "line": 637,
+              "column": 3
+            },
+            {
+              "title": "should toggle billing period (monthly/annual)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-63f7c54ee262e52b2b64",
+              "file": "ui-regression.spec.ts",
+              "line": 652,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "BILL-002: Practitioner Pricing",
+          "file": "ui-regression.spec.ts",
+          "line": 674,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should show practitioner pricing modal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-835b5c218b652a26cb9f",
+              "file": "ui-regression.spec.ts",
+              "line": 675,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "PROF-001: Theme Toggle",
+          "file": "ui-regression.spec.ts",
+          "line": 700,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should toggle between light and dark theme",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-5724936c9e351068302b",
+              "file": "ui-regression.spec.ts",
+              "line": 701,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "PROF-002: Security Settings",
+          "file": "ui-regression.spec.ts",
+          "line": 723,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display security settings button when logged in",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-2386f6b591c6ff2834b0",
+              "file": "ui-regression.spec.ts",
+              "line": 724,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "PROF-003: Data Export",
+          "file": "ui-regression.spec.ts",
+          "line": 737,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should show export data button when logged in",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-248c013769326c939a49",
+              "file": "ui-regression.spec.ts",
+              "line": 738,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "FORM-001: Input Validation",
+          "file": "ui-regression.spec.ts",
+          "line": 755,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should mark required fields as required",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-5451b13e48567b4d8fdb",
+              "file": "ui-regression.spec.ts",
+              "line": 756,
+              "column": 3
+            },
+            {
+              "title": "should reject invalid email format",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-3681abe51a98d7ad4a83",
+              "file": "ui-regression.spec.ts",
+              "line": 773,
+              "column": 3
+            },
+            {
+              "title": "should enforce minimum password length",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-0aecdab1383d1eb48ddf",
+              "file": "ui-regression.spec.ts",
+              "line": 790,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "ERROR-001: Offline & Network Errors",
+          "file": "ui-regression.spec.ts",
+          "line": 805,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should handle network failures gracefully",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-2c45a4b520f4db3ec4da",
+              "file": "ui-regression.spec.ts",
+              "line": 806,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "RESP-001: Mobile Viewport (375px)",
+          "file": "ui-regression.spec.ts",
+          "line": 837,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display correctly on small phone",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-6e6d71d0834a897e2b28",
+              "file": "ui-regression.spec.ts",
+              "line": 838,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "RESP-002: Tablet Viewport (768px+)",
+          "file": "ui-regression.spec.ts",
+          "line": 857,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display desktop layout on tablet",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-64f27d204893af3433c8",
+              "file": "ui-regression.spec.ts",
+              "line": 858,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "RESP-003: Desktop Viewport (1280px+)",
+          "file": "ui-regression.spec.ts",
+          "line": 871,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display full desktop layout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-6bc30712238d405072ed",
+              "file": "ui-regression.spec.ts",
+              "line": 872,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "A11Y-001: ARIA Attributes",
+          "file": "ui-regression.spec.ts",
+          "line": 892,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should have ARIA labels on nav items",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-2ba1474e6085bb9bde89",
+              "file": "ui-regression.spec.ts",
+              "line": 893,
+              "column": 3
+            },
+            {
+              "title": "should have role=\"button\" or proper heading hierarchy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-1e19661d87e717445cde",
+              "file": "ui-regression.spec.ts",
+              "line": 912,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "A11Y-002: Color Contrast",
+          "file": "ui-regression.spec.ts",
+          "line": 927,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should have readable text on background",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-d26a570d2f744ecccf3a",
+              "file": "ui-regression.spec.ts",
+              "line": 928,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "JOURNEY-001: Unauthenticated User Flow",
+          "file": "ui-regression.spec.ts",
+          "line": 944,
+          "column": 6,
+          "specs": [
+            {
+              "title": "complete unauthenticated exploration journey",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-cb31bd78bd04e37d54ce",
+              "file": "ui-regression.spec.ts",
+              "line": 945,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "JOURNEY-002: Authenticated User Full Workflow",
+          "file": "ui-regression.spec.ts",
+          "line": 966,
+          "column": 6,
+          "specs": [
+            {
+              "title": "complete login → navigation → feature interaction flow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-6d7a8ec2a9be2a6b4b2c",
+              "file": "ui-regression.spec.ts",
+              "line": 967,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "JOURNEY-003: Practitioner Workspace Flow",
+          "file": "ui-regression.spec.ts",
+          "line": 991,
+          "column": 6,
+          "specs": [
+            {
+              "title": "complete practitioner mode exploration",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-8102051ea8940fa442f8",
+              "file": "ui-regression.spec.ts",
+              "line": 992,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "JOURNEY-004: Mobile Navigation Full Workflow",
+          "file": "ui-regression.spec.ts",
+          "line": 1012,
+          "column": 6,
+          "specs": [
+            {
+              "title": "complete mobile user journey",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "6679087c600b292d4338-f68e486dd3e00fef6434",
+              "file": "ui-regression.spec.ts",
+              "line": 1013,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "message": "\u001b[31mTesting stopped early after 1 maximum allowed failures.\u001b[39m"
+    }
+  ],
+  "stats": {
+    "startTime": "2026-03-16T19:03:49.813Z",
+    "duration": 10935.803000000002,
+    "expected": 0,
+    "skipped": 48,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

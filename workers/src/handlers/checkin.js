@@ -15,6 +15,7 @@ import { trackEvent } from './achievements.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * Compute the current streak from an ordered array of checkin-date rows.
@@ -197,8 +198,14 @@ export async function handleCheckinCreate(request, env, ctx) {
       }
     });
   } catch (error) {
-    console.error('Check-in create error:', error);
-    return Response.json({ error: 'Failed to save check-in' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'checkin_create',
+      fallbackMessage: 'Failed to save check-in',
+      extra: { userId: user.id, checkinDate },
+    });
   }
 }
 
@@ -249,8 +256,14 @@ export async function handleCheckinToday(request, env, ctx) {
       }
     });
   } catch (error) {
-    console.error('Check-in today error:', error);
-    return Response.json({ error: 'Failed to retrieve today\'s check-in' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'checkin_today',
+      fallbackMessage: 'Failed to retrieve today\'s check-in',
+      extra: { userId: user.id, date: today },
+    });
   }
 }
 
@@ -301,8 +314,14 @@ export async function handleCheckinHistory(request, env, ctx) {
       }
     });
   } catch (error) {
-    console.error('Check-in history error:', error);
-    return Response.json({ error: 'Failed to retrieve check-in history' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'checkin_history',
+      fallbackMessage: 'Failed to retrieve check-in history',
+      extra: { userId: user.id, days, offset },
+    });
   }
 }
 
@@ -397,8 +416,14 @@ export async function handleCheckinStats(request, env, ctx) {
       }
     });
   } catch (error) {
-    console.error('Check-in stats error:', error);
-    return Response.json({ error: 'Failed to retrieve check-in stats' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'checkin_stats',
+      fallbackMessage: 'Failed to retrieve check-in stats',
+      extra: { userId: user.id, period },
+    });
   }
 }
 
@@ -468,8 +493,14 @@ export async function handleCheckinStreak(request, env, ctx) {
       }
     });
   } catch (error) {
-    console.error('Check-in streak error:', error);
-    return Response.json({ error: 'Failed to retrieve streak info' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'checkin_streak',
+      fallbackMessage: 'Failed to retrieve streak info',
+      extra: { userId: user.id },
+    });
   }
 }
 
@@ -534,8 +565,14 @@ export async function handleSetCheckinReminder(request, env, ctx) {
       }
     });
   } catch (error) {
-    console.error('Set reminder error:', error);
-    return Response.json({ error: 'Failed to set reminder' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'checkin_reminder_set',
+      fallbackMessage: 'Failed to set reminder',
+      extra: { userId: user.id, reminderTime, timezone },
+    });
   }
 }
 
@@ -576,7 +613,13 @@ export async function handleGetCheckinReminder(request, env, ctx) {
       }
     });
   } catch (error) {
-    console.error('Get reminder error:', error);
-    return Response.json({ error: 'Failed to retrieve reminder settings' }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'checkin_reminder_get',
+      fallbackMessage: 'Failed to retrieve reminder settings',
+      extra: { userId: user.id },
+    });
   }
 }

@@ -14,6 +14,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 import { dispatchWebhookEvent } from '../lib/webhookDispatcher.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * Main webhook handler router
@@ -156,11 +157,14 @@ async function registerWebhook(request, env, user) {
     });
 
   } catch (error) {
-    console.error('[handleWebhooks] registerWebhook error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to register webhook' // BL-R-H2
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'webhooks_register',
+      fallbackMessage: 'Failed to register webhook',
+      extra: { userId: user.id, webhookAction: 'register' },
+    });
   }
 }
 
@@ -191,11 +195,14 @@ async function listWebhooks(request, env, user) {
     });
 
   } catch (error) {
-    console.error('[handleWebhooks] listWebhooks error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to list webhooks'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'webhooks_list',
+      fallbackMessage: 'Failed to list webhooks',
+      extra: { userId: user.id, webhookAction: 'list' },
+    });
   }
 }
 
@@ -228,11 +235,14 @@ async function getWebhook(request, env, user, webhookId) {
     });
 
   } catch (error) {
-    console.error('[handleWebhooks] getWebhook error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to get webhook'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'webhooks_get',
+      fallbackMessage: 'Failed to get webhook',
+      extra: { userId: user.id, webhookId, webhookAction: 'get' },
+    });
   }
 }
 
@@ -257,11 +267,14 @@ async function deleteWebhook(request, env, user, webhookId) {
     });
 
   } catch (error) {
-    console.error('[handleWebhooks] deleteWebhook error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to delete webhook'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'webhooks_delete',
+      fallbackMessage: 'Failed to delete webhook',
+      extra: { userId: user.id, webhookId, webhookAction: 'delete' },
+    });
   }
 }
 
@@ -300,11 +313,14 @@ async function testWebhook(request, env, user, webhookId) {
     });
 
   } catch (error) {
-    console.error('[handleWebhooks] testWebhook error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to send test webhook'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'webhooks_test',
+      fallbackMessage: 'Failed to send test webhook',
+      extra: { userId: user.id, webhookId, webhookAction: 'test' },
+    });
   }
 }
 
@@ -354,10 +370,13 @@ async function getDeliveryHistory(request, env, user, webhookId) {
     });
 
   } catch (error) {
-    console.error('[handleWebhooks] getDeliveryHistory error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to get delivery history'
-    }, { status: 500 });
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'webhooks_deliveries',
+      fallbackMessage: 'Failed to get delivery history',
+      extra: { userId: user.id, webhookId, webhookAction: 'deliveries' },
+    });
   }
 }

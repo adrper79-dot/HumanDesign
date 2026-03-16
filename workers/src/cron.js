@@ -423,6 +423,15 @@ export async function runDailyTransitCron(env) {
   } catch (err) {
     log.error('cron_fatal_error', { error: err?.message, stack: err?.stack?.split('\n').slice(0,3).join(' | ') });
     sentry.captureException(err, { tags: { source: 'cron', step: 'fatal' } });
+    // SYS-035: Alert admin on fatal cron failure (fire-and-forget)
+    if (env.ADMIN_EMAIL && env.RESEND_API_KEY) {
+      sendEmail({
+        to: env.ADMIN_EMAIL,
+        subject: `[ALERT] Prime Self cron fatal failure — ${new Date().toISOString()}`,
+        html: `<p style="font-family:sans-serif">Cron job failed fatally:<br><pre style="background:#f4f4f4;padding:12px;border-radius:4px">${err?.message}\n${err?.stack?.split('\n').slice(0,5).join('\n')}</pre></p>`,
+        companyAddress: env.COMPANY_ADDRESS || '',
+      }, env.RESEND_API_KEY, env.FROM_EMAIL || 'Prime Self <hello@primeself.app>').catch(() => {});
+    }
     throw err;
   }
 }

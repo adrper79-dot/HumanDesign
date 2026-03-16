@@ -14,6 +14,7 @@
 
 import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
 
 // ─── Web Push Protocol Helpers (RFC 8030 / RFC 8291) ─────────────────────
 
@@ -190,7 +191,7 @@ async function getVapidKey(env) {
   const publicKey = env.VAPID_PUBLIC_KEY;
 
   if (!publicKey) {
-    console.error('[PUSH] VAPID_PUBLIC_KEY not configured');
+    createLogger('push').error('vapid_key_missing', {});
     return Response.json({
       ok: false,
       error: 'Push notifications not configured'
@@ -268,7 +269,7 @@ async function subscribe(request, env, user) {
       await query(QUERIES.insertDefaultNotificationPrefs, [user.id]);
     }
 
-    console.log(`[PUSH] New subscription registered for user ${user.id}: ${result.id}`);
+    createLogger('push').info('subscription_registered', { userId: user.id, subscriptionId: result.id });
 
     return Response.json({
       ok: true,
@@ -280,7 +281,7 @@ async function subscribe(request, env, user) {
       }
     });
   } catch (error) {
-    console.error('[PUSH] Subscribe error:', error);
+    createLogger('push').error('subscribe_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to register subscription'
@@ -313,14 +314,14 @@ async function unsubscribe(request, env, user) {
       }, { status: 404 });
     }
 
-    console.log(`[PUSH] Subscription removed for user ${user.id}: ${endpoint}`);
+    createLogger('push').info('subscription_removed', { userId: user.id });
 
     return Response.json({
       ok: true,
       message: 'Unsubscribed successfully'
     });
   } catch (error) {
-    console.error('[PUSH] Unsubscribe error:', error);
+    createLogger('push').error('unsubscribe_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to unsubscribe'
@@ -375,7 +376,7 @@ async function sendTestNotification(request, env, user) {
       results
     });
   } catch (error) {
-    console.error('[PUSH] Test notification error:', error);
+    createLogger('push').error('test_notification_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to send test notification'
@@ -427,7 +428,7 @@ async function getPreferences(request, env, user) {
       }
     });
   } catch (error) {
-    console.error('[PUSH] Get preferences error:', error);
+    createLogger('push').error('get_preferences_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to get preferences'
@@ -508,14 +509,14 @@ async function updatePreferences(request, env, user) {
       ON CONFLICT (user_id) DO UPDATE SET ${fields.join(', ')}
     `, values);
 
-    console.log(`[PUSH] Preferences updated for user ${user.id}`);
+    createLogger('push').info('preferences_updated', { userId: user.id });
 
     return Response.json({
       ok: true,
       message: 'Preferences updated successfully'
     });
   } catch (error) {
-    console.error('[PUSH] Update preferences error:', error);
+    createLogger('push').error('update_preferences_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to update preferences'
@@ -557,7 +558,7 @@ async function getNotificationHistory(request, env, user) {
       }
     });
   } catch (error) {
-    console.error('[PUSH] History error:', error);
+    createLogger('push').error('history_error', { error: error?.message || String(error) });
     return Response.json({
       ok: false,
       error: 'Failed to get notification history'
@@ -586,7 +587,7 @@ export async function sendPushNotification(env, subscription, notification) {
     const vapidSubject = env.VAPID_SUBJECT || 'mailto:support@primeself.app';
 
     if (!vapidPublicKey || !vapidPrivateKey) {
-      console.error('[PUSH] VAPID keys not configured');
+      createLogger('push').error('vapid_keys_missing', {});
       
       // Log failed notification
       await query(QUERIES.insertPushNotification, [
@@ -632,8 +633,8 @@ export async function sendPushNotification(env, subscription, notification) {
 
     // If 410 Gone, subscription expired — deactivate it
     if (response.status === 410 || response.status === 404) {
-      await query(QUERIES.deactivatePushSubscription, [subscription.id]).catch(err => console.error('[PUSH] Failed to deactivate subscription:', err.message));
-      console.log(`[PUSH] Subscription ${subscription.id} expired, deactivated`);
+      await query(QUERIES.deactivatePushSubscription, [subscription.id]).catch(err => createLogger('push').error('deactivate_subscription_failed', { error: err.message }));
+      createLogger('push').info('subscription_deactivated_expired', { subscriptionId: subscription.id });
     }
     
     // Log notification result
@@ -654,7 +655,7 @@ export async function sendPushNotification(env, subscription, notification) {
 
     return success;
   } catch (error) {
-    console.error('[PUSH] Send notification error:', error);
+    createLogger('push').error('send_notification_error', { error: error?.message || String(error) });
     
     // Log failed notification
     try {
@@ -670,7 +671,7 @@ export async function sendPushNotification(env, subscription, notification) {
         false
       ]);
     } catch (logError) {
-      console.error('[PUSH] Failed to log notification error:', logError);
+      createLogger('push').error('notification_log_failed', { error: logError?.message || String(logError) });
     }
     
     return false;
@@ -705,7 +706,7 @@ export async function sendNotificationToUser(env, userId, notificationType, noti
       
       const prefKey = typeMap[notificationType];
       if (prefKey && prefs[prefKey] === false) {
-        console.log(`[PUSH] User ${userId} has disabled ${notificationType} notifications`);
+        createLogger('push').info('notification_disabled_by_prefs', { userId, notificationType });
         return 0;
       }
 
@@ -725,11 +726,11 @@ export async function sendNotificationToUser(env, userId, notificationType, noti
             : (userHour >= start || userHour < end);     // e.g., 22-7 (overnight)
 
           if (inQuietHours) {
-            console.log(`[PUSH] User ${userId} in quiet hours (${start}:00-${end}:00, current: ${userHour}:00)`);
+            createLogger('push').info('quiet_hours_suppressed', { userId, notificationType, start, end, userHour });
             return 0;
           }
         } catch (tzError) {
-          console.warn(`[PUSH] Quiet hours check failed for user ${userId}:`, tzError.message);
+          createLogger('push').warn('quiet_hours_check_failed', { userId, error: tzError.message });
           // Continue sending if timezone conversion fails
         }
       }
@@ -739,7 +740,7 @@ export async function sendNotificationToUser(env, userId, notificationType, noti
     const { rows: subRows } = await query(QUERIES.getActivePushSubscriptionsFull, [userId]);
 
     if (subRows.length === 0) {
-      console.log(`[PUSH] No active subscriptions for user ${userId}`);
+      createLogger('push').info('no_active_subscriptions', { userId });
       return 0;
     }
 
@@ -754,10 +755,10 @@ export async function sendNotificationToUser(env, userId, notificationType, noti
       if (success) successCount++;
     }
 
-    console.log(`[PUSH] Sent ${notificationType} to ${successCount}/${subRows.length} subscriptions for user ${userId}`);
+    createLogger('push').info('notifications_sent', { userId, notificationType, successCount, total: subRows.length });
     return successCount;
   } catch (error) {
-    console.error(`[PUSH] Error sending notification to user ${userId}:`, error);
+    createLogger('push').error('send_to_user_error', { userId, error: error?.message || String(error) });
     return 0;
   }
 }

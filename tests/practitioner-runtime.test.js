@@ -30,6 +30,7 @@ vi.mock('../workers/src/db/queries.js', () => ({
     getPractitionerInvitationByTokenHash: 'getPractitionerInvitationByTokenHash',
     expirePendingPractitionerInvitationsByEmail: 'expirePendingPractitionerInvitationsByEmail',
     createPractitionerInvitation: 'createPractitionerInvitation',
+    deletePractitionerInvitation: 'deletePractitionerInvitation',
     expirePractitionerInvitationById: 'expirePractitionerInvitationById',
     addClient: 'addClient',
     markPractitionerInvitationAccepted: 'markPractitionerInvitationAccepted',
@@ -366,6 +367,57 @@ describe('practitioner runtime guards', () => {
     const body = await response.json();
     expect(response.status).toBe(410);
     expect(body.error).toMatch(/expired/i);
+  });
+
+  it('allows a practitioner to revoke a pending invitation they own', async () => {
+    const invitationId = 'deadbeef-1234';
+    const query = vi.fn(async (sql, params) => {
+      if (sql === 'getPractitionerByUserId') {
+        return { rows: [{ id: 'pract-1' }] };
+      }
+      if (sql === 'deletePractitionerInvitation') {
+        expect(params).toEqual([invitationId, 'pract-1']);
+        return { rowCount: 1, rows: [] };
+      }
+      throw new Error(`Unexpected query: ${sql}`);
+    });
+
+    createQueryFnMock.mockReturnValue(query);
+
+    const response = await handlePractitioner(
+      Object.assign(new Request(`https://api.test/api/practitioner/clients/invitations/${invitationId}`, {
+        method: 'DELETE',
+      }), { _user: { sub: 'pract-user-1' } }),
+      { NEON_CONNECTION_STRING: 'postgresql://test' },
+      `/clients/invitations/${invitationId}`
+    );
+
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.message).toMatch(/revoked/i);
+  });
+
+  it('treats a revoked invitation token as unavailable during invite preview', async () => {
+    const query = vi.fn(async (sql) => {
+      if (sql === 'getPractitionerInvitationByTokenHash') {
+        return { rows: [] };
+      }
+      throw new Error(`Unexpected query: ${sql}`);
+    });
+
+    createQueryFnMock.mockReturnValue(query);
+
+    const response = await handleGetInvitationDetails(
+      new Request('https://api.test/api/invitations/practitioner?token=revokedinvite1234567890abcdef', {
+        method: 'GET',
+      }),
+      { NEON_CONNECTION_STRING: 'postgresql://test' }
+    );
+
+    const body = await response.json();
+    expect(response.status).toBe(404);
+    expect(body.error).toMatch(/not found/i);
   });
 
   it('accepts a practitioner invitation for the invited email', async () => {

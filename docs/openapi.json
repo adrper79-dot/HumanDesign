@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Prime Self API",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "Programmatic access to Human Design chart calculations, profile generation, transit forecasts, and astrological insights. Perfect for developers, researchers, and businesses building HD-powered applications.",
     "contact": {
       "name": "Prime Self API Support",
@@ -32,30 +32,544 @@
   ],
   "tags": [
     {
+      "name": "Auth",
+      "description": "Authentication and account management"
+    },
+    {
       "name": "Chart",
       "description": "Calculate and retrieve Human Design charts"
     },
     {
       "name": "Profile",
-      "description": "Generate AI-powered profile narratives"
+      "description": "AI-powered profile narrative generation"
     },
     {
       "name": "Transits",
-      "description": "Current and upcoming planetary transits"
-    },
-    {
-      "name": "Gates",
-      "description": "Information about HD gates and channels"
+      "description": "Planetary transits and forecasts"
     },
     {
       "name": "Cycles",
       "description": "Life cycles (Saturn Return, etc.)"
+    },
+    {
+      "name": "Geocode",
+      "description": "Location lookup"
+    },
+    {
+      "name": "Cluster",
+      "description": "Group analysis clusters"
+    },
+    {
+      "name": "Composite",
+      "description": "Relationship composite charts"
+    },
+    {
+      "name": "Billing",
+      "description": "Stripe subscription management"
+    },
+    {
+      "name": "Practitioner",
+      "description": "Practitioner tier and client management"
+    },
+    {
+      "name": "Referrals",
+      "description": "Referral program"
+    },
+    {
+      "name": "Achievements",
+      "description": "User achievement tracking"
+    },
+    {
+      "name": "Webhooks",
+      "description": "External webhook delivery"
+    },
+    {
+      "name": "Admin",
+      "description": "Internal admin operations"
+    },
+    {
+      "name": "Health",
+      "description": "Infrastructure health check"
+    },
+    {
+      "name": "Gates",
+      "description": "HD gate information"
     }
   ],
   "paths": {
+    "/api/achievements": {
+      "get": {
+        "tags": [
+          "Achievements"
+        ],
+        "summary": "Get user achievements",
+        "operationId": "getAchievements",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Achievements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/promo": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List promo codes",
+        "operationId": "adminListPromo",
+        "security": [
+          {
+            "AdminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Promo codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create promo code",
+        "operationId": "adminCreatePromo",
+        "security": [
+          {
+            "AdminToken": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/api/admin/stats": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Overview stats",
+        "operationId": "adminStats",
+        "security": [
+          {
+            "AdminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List/search users",
+        "operationId": "adminListUsers",
+        "security": [
+          {
+            "AdminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get user",
+        "operationId": "adminGetUser",
+        "security": [
+          {
+            "AdminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update user tier/verify",
+        "operationId": "adminPatchUser",
+        "security": [
+          {
+            "AdminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request password reset",
+        "operationId": "forgotPassword",
+        "responses": {
+          "204": {
+            "description": "Reset email sent"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login",
+        "operationId": "login",
+        "responses": {
+          "200": {
+            "description": "Access + refresh tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Revoke refresh token",
+        "operationId": "logout",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get current user",
+        "operationId": "getMe",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh access token",
+        "operationId": "refreshToken",
+        "responses": {
+          "200": {
+            "description": "New access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Create account",
+        "operationId": "register",
+        "responses": {
+          "201": {
+            "description": "Tokens + user object"
+          }
+        }
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Resend verification email",
+        "operationId": "resendVerification",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Sent"
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset password",
+        "operationId": "resetPassword",
+        "responses": {
+          "204": {
+            "description": "Password updated"
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify email",
+        "operationId": "verifyEmail",
+        "responses": {
+          "204": {
+            "description": "Email verified"
+          }
+        }
+      }
+    },
+    "/api/billing/cancel": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Cancel subscription",
+        "operationId": "cancelSub",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cancellation scheduled"
+          }
+        }
+      }
+    },
+    "/api/billing/portal": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Open Stripe billing portal",
+        "operationId": "billingPortal",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portal URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/status": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Get subscription status",
+        "operationId": "billingStatus",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tier + renewal date",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/subscribe": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Create checkout session",
+        "operationId": "subscribe",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checkout URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/chart/calculate": {
       "post": {
-        "tags": ["Chart"],
+        "tags": [
+          "Chart"
+        ],
         "summary": "Calculate Human Design chart",
         "description": "Generate a complete Human Design chart from birth data, including type, profile, authority, centers, gates, channels, astrology, and numerology.",
         "operationId": "calculateChart",
@@ -123,74 +637,213 @@
         }
       }
     },
-    "/api/profile/generate": {
-      "post": {
-        "tags": ["Profile"],
-        "summary": "Generate profile narrative",
-        "description": "Create an AI-powered profile narrative from a Human Design chart. Customizable by section, audience, and length.",
-        "operationId": "generateProfile",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProfileGenerationRequest"
-              }
-            }
+    "/api/chart/history": {
+      "get": {
+        "tags": [
+          "Chart"
+        ],
+        "summary": "List saved charts",
+        "operationId": "chartHistory",
+        "security": [
+          {
+            "BearerAuth": []
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Profile generated successfully",
+            "description": "Chart list",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProfileResponse"
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
                 }
               }
             }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "429": {
-            "$ref": "#/components/responses/RateLimitExceeded"
           }
         }
       }
     },
-    "/api/transits/forecast": {
+    "/api/chart/save": {
       "post": {
-        "tags": ["Transits"],
-        "summary": "Get transit forecast",
-        "description": "Retrieve current and upcoming planetary transits affecting a chart. Includes gate activations, channel formations, and astrological aspects.",
-        "operationId": "getTransitForecast",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TransitForecastRequest"
-              }
+        "tags": [
+          "Chart"
+        ],
+        "summary": "Save chart",
+        "operationId": "saveChart",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Saved"
+          }
+        }
+      }
+    },
+    "/api/chart/{id}": {
+      "get": {
+        "tags": [
+          "Chart"
+        ],
+        "summary": "Get chart by ID",
+        "operationId": "getChart",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Forecast generated successfully",
+            "description": "Chart object",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransitForecastResponse"
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cluster/create": {
+      "post": {
+        "tags": [
+          "Cluster"
+        ],
+        "summary": "Create cluster",
+        "operationId": "createCluster",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Cluster created"
+          }
+        }
+      }
+    },
+    "/api/cluster/list": {
+      "get": {
+        "tags": [
+          "Cluster"
+        ],
+        "summary": "List clusters",
+        "operationId": "listClusters",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clusters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/composite": {
+      "post": {
+        "tags": [
+          "Composite"
+        ],
+        "summary": "Composite/relationship chart",
+        "operationId": "composite",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Composite chart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cycles/{chartId}": {
+      "get": {
+        "tags": [
+          "Cycles"
+        ],
+        "summary": "Get life cycles",
+        "description": "Calculate major astrological life cycles for a chart (Saturn Return, Chiron Return, Uranus Opposition, etc.)",
+        "operationId": "getLifeCycles",
+        "parameters": [
+          {
+            "name": "chartId",
+            "in": "path",
+            "required": true,
+            "description": "Chart ID from /api/chart/calculate",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Filter cycles by type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "saturn_return",
+                "chiron_return",
+                "uranus_opposition",
+                "nodal_return"
+              ],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cycles calculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CyclesResponse"
                 }
               }
             }
           },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -203,7 +856,9 @@
     },
     "/api/gates/{gateNumber}": {
       "get": {
-        "tags": ["Gates"],
+        "tags": [
+          "Gates"
+        ],
         "summary": "Get gate information",
         "description": "Retrieve detailed information about a specific Human Design gate, including name, center, circuit, lines, and Gene Key.",
         "operationId": "getGate",
@@ -243,53 +898,514 @@
         }
       }
     },
-    "/api/cycles/{chartId}": {
+    "/api/geocode": {
       "get": {
-        "tags": ["Cycles"],
-        "summary": "Get life cycles",
-        "description": "Calculate major astrological life cycles for a chart (Saturn Return, Chiron Return, Uranus Opposition, etc.)",
-        "operationId": "getLifeCycles",
+        "tags": [
+          "Geocode"
+        ],
+        "summary": "Geocode city to lat/lng + timezone",
+        "operationId": "geocode",
         "parameters": [
           {
-            "name": "chartId",
-            "in": "path",
+            "name": "city",
+            "in": "query",
             "required": true,
-            "description": "Chart ID from /api/chart/calculate",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "required": false,
-            "description": "Filter cycles by type",
-            "schema": {
-              "type": "string",
-              "enum": ["all", "saturn_return", "chiron_return", "uranus_opposition", "nodal_return"],
-              "default": "all"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Cycles calculated successfully",
+            "description": "lat, lng, timezone",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CyclesResponse"
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        }
+      }
+    },
+    "/api/practitioner/clients": {
+      "get": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "List clients",
+        "operationId": "listClients",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clients",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/practitioner/clients/add": {
+      "post": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Add client by email",
+        "operationId": "addClient",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Client added"
+          }
+        }
+      }
+    },
+    "/api/practitioner/profile": {
+      "get": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Get practitioner profile",
+        "operationId": "getPractitionerProfile",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/practitioner/referral-link": {
+      "get": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Get referral link",
+        "operationId": "getReferralLink",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link + stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/practitioner/register": {
+      "post": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Register as practitioner",
+        "operationId": "registerPractitioner",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Profile created"
+          }
+        }
+      }
+    },
+    "/api/profile/generate": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Generate profile narrative",
+        "description": "Create an AI-powered profile narrative from a Human Design chart. Customizable by section, audience, and length.",
+        "operationId": "generateProfile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileGenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
                 }
               }
             }
           },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
           "429": {
             "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    },
+    "/api/profile/generate/stream": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Generate profile (SSE stream)",
+        "operationId": "generateProfileStream",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE stream"
+          }
+        }
+      }
+    },
+    "/api/profile/list": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "List saved profiles",
+        "operationId": "listProfiles",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/{id}": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get profile by ID",
+        "operationId": "getProfile",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/{id}/pdf": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Export profile as PDF",
+        "operationId": "exportPdf",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF file",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rectify": {
+      "post": {
+        "tags": [
+          "Transits"
+        ],
+        "summary": "Birth-time sensitivity analysis",
+        "operationId": "rectify",
+        "responses": {
+          "200": {
+            "description": "Rectification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/referrals": {
+      "get": {
+        "tags": [
+          "Referrals"
+        ],
+        "summary": "Get referral info",
+        "operationId": "getReferrals",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Referral link + balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/referrals/validate": {
+      "get": {
+        "tags": [
+          "Referrals"
+        ],
+        "summary": "Validate referral code",
+        "operationId": "validateReferral",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid flag",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transits/forecast": {
+      "post": {
+        "tags": [
+          "Transits"
+        ],
+        "summary": "Get transit forecast",
+        "description": "Retrieve current and upcoming planetary transits affecting a chart. Includes gate activations, channel formations, and astrological aspects.",
+        "operationId": "getTransitForecast",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitForecastRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Forecast generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransitForecastResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    },
+    "/api/transits/today": {
+      "get": {
+        "tags": [
+          "Transits"
+        ],
+        "summary": "Current planetary positions",
+        "operationId": "transitsToday",
+        "responses": {
+          "200": {
+            "description": "Today transits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "List webhooks",
+        "operationId": "listWebhooks",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhooks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Register webhook",
+        "operationId": "registerWebhook",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Registered"
           }
         }
       }
@@ -302,12 +1418,26 @@
         "in": "header",
         "name": "X-API-Key",
         "description": "API key from primeself.app Settings > API Keys"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "AdminToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Admin-Token"
       }
     },
     "schemas": {
       "ChartCalculationRequest": {
         "type": "object",
-        "required": ["birthDate", "birthTime", "birthLocation"],
+        "required": [
+          "birthDate",
+          "birthTime",
+          "birthLocation"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -333,7 +1463,11 @@
       },
       "BirthLocation": {
         "type": "object",
-        "required": ["latitude", "longitude", "timezone"],
+        "required": [
+          "latitude",
+          "longitude",
+          "timezone"
+        ],
         "properties": {
           "city": {
             "type": "string",
@@ -429,7 +1563,7 @@
           "designDate": {
             "type": "string",
             "format": "date-time",
-            "description": "Design calculation date (88° before birth)"
+            "description": "Design calculation date (88\u00b0 before birth)"
           }
         }
       },
@@ -438,7 +1572,13 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["Manifestor", "Generator", "Manifesting Generator", "Projector", "Reflector"],
+            "enum": [
+              "Manifestor",
+              "Generator",
+              "Manifesting Generator",
+              "Projector",
+              "Reflector"
+            ],
             "description": "Human Design energy type"
           },
           "profile": {
@@ -449,7 +1589,15 @@
           },
           "authority": {
             "type": "string",
-            "enum": ["Emotional", "Sacral", "Splenic", "Ego", "Self-Projected", "Environmental", "Lunar"],
+            "enum": [
+              "Emotional",
+              "Sacral",
+              "Splenic",
+              "Ego",
+              "Self-Projected",
+              "Environmental",
+              "Lunar"
+            ],
             "description": "Decision-making authority"
           },
           "strategy": {
@@ -458,7 +1606,13 @@
           },
           "definition": {
             "type": "string",
-            "enum": ["None", "Single", "Split", "Triple Split", "Quadruple Split"],
+            "enum": [
+              "None",
+              "Single",
+              "Split",
+              "Triple Split",
+              "Quadruple Split"
+            ],
             "description": "Center connection pattern"
           },
           "centers": {
@@ -545,7 +1699,10 @@
           },
           "type": {
             "type": "string",
-            "enum": ["personality", "design"],
+            "enum": [
+              "personality",
+              "design"
+            ],
             "description": "Conscious (personality) or unconscious (design)"
           }
         }
@@ -655,7 +1812,13 @@
           },
           "aspect": {
             "type": "string",
-            "enum": ["conjunction", "opposition", "trine", "square", "sextile"]
+            "enum": [
+              "conjunction",
+              "opposition",
+              "trine",
+              "square",
+              "sextile"
+            ]
           },
           "orb": {
             "type": "number",
@@ -725,7 +1888,9 @@
       },
       "ProfileGenerationRequest": {
         "type": "object",
-        "required": ["chartId"],
+        "required": [
+          "chartId"
+        ],
         "properties": {
           "chartId": {
             "type": "string",
@@ -735,19 +1900,35 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["overview", "type", "authority", "profile", "gates", "channels", "centers"]
+              "enum": [
+                "overview",
+                "type",
+                "authority",
+                "profile",
+                "gates",
+                "channels",
+                "centers"
+              ]
             },
             "description": "Specific sections to include (default: all)"
           },
           "audience": {
             "type": "string",
-            "enum": ["self", "practitioner", "simple"],
+            "enum": [
+              "self",
+              "practitioner",
+              "simple"
+            ],
             "default": "self",
             "description": "Target audience for language complexity"
           },
           "length": {
             "type": "string",
-            "enum": ["brief", "medium", "comprehensive"],
+            "enum": [
+              "brief",
+              "medium",
+              "comprehensive"
+            ],
             "default": "medium",
             "description": "Profile narrative length"
           }
@@ -789,7 +1970,9 @@
       },
       "TransitForecastRequest": {
         "type": "object",
-        "required": ["chartId"],
+        "required": [
+          "chartId"
+        ],
         "properties": {
           "chartId": {
             "type": "string"
@@ -894,7 +2077,13 @@
           },
           "aspect": {
             "type": "string",
-            "enum": ["conjunction", "opposition", "trine", "square", "sextile"]
+            "enum": [
+              "conjunction",
+              "opposition",
+              "trine",
+              "square",
+              "sextile"
+            ]
           },
           "orb": {
             "type": "number",
@@ -997,7 +2186,12 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["saturn_return", "chiron_return", "uranus_opposition", "nodal_return"]
+            "enum": [
+              "saturn_return",
+              "chiron_return",
+              "uranus_opposition",
+              "nodal_return"
+            ]
           },
           "name": {
             "type": "string"
@@ -1022,7 +2216,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["past", "current", "upcoming"]
+            "enum": [
+              "past",
+              "current",
+              "upcoming"
+            ]
           },
           "daysUntil": {
             "type": "integer",

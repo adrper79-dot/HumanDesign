@@ -96,6 +96,7 @@ npx wrangler pages deploy frontend --project-name=prime-self-ui
 - **Unit tests** (`tests/*.test.js`): Run with `npm test`. Mock DB/KV where possible.
 - **Runtime smoke tests** (`tests/*-runtime.test.js`): Require live env vars (`NEON_CONNECTION_STRING`, etc.). Skipped in CI unless env vars are present.
 - **E2E tests** (`tests/e2e/`): Playwright. Run with `E2E_TEST_EMAIL=... E2E_TEST_PASSWORD=... npx playwright test`.
+- **Production gate**: `npm run verify:prod:gate` runs the live worker verification, public canary, money-path canary, and the focused Playwright smoke suite. CI uses `--strict-browser` so prod creds are required there.
 
 ## Issue Tracking
 

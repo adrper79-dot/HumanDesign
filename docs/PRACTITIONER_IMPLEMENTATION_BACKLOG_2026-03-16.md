@@ -175,6 +175,10 @@ Build:
 - visible booking path from listing or profile
 Acceptance:
 - user can go from directory card to live practitioner profile to booking without confusion
+Progress update:
+- directory cards now expose a canonical `View Profile` CTA into `/practitioners/:slug` instead of asking users to jump straight to booking
+- in-card handoff copy now makes the profile preview → chart → booking path explicit while preserving direct booking for ready buyers
+- deterministic coverage now verifies the public practitioner page keeps both the referral chart entry point and the direct booking CTA intact
 
 ### PRAC-P1-05 — Practitioner Regression Suite Expansion
 Problem: practitioner revenue surfaces are under-tested relative to business importance.
@@ -189,6 +193,7 @@ Acceptance:
 - P0 practitioner trust regressions are covered by automated tests
 Progress update:
 - `tests/practitioner-runtime.test.js` now covers note update ownership, non-roster note creation, non-roster AI context access, note delete miss, client detail rejection, branded PDF roster isolation, invite resend, practitioner-safe Notion export, invite expiry handling, and invite acceptance constraints
+- invite revoke is now covered explicitly, including practitioner-side revocation and revoked-token preview rejection
 
 ---
 

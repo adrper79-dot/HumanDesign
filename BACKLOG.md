@@ -1,8 +1,8 @@
 # Prime Self — Backlog
 
-**Last audited:** 2026-03-16 (Page cohesion workflow review)
+**Last audited:** 2026-03-16 (Excellence audit — world-class B2B2C benchmark review)
 **Test suite:** Current local Vitest suite passing
-**Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10 | 1 new cohesion workflow item added 2026-03-16
+**Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10 | 14 excellence audit items added 2026-03-16 (3 P0, 4 P1, 4 P2, 4 P3)
 **Deployment status:** ⚠️ Last external production report showed stale deployment issues; not re-verified in this repo-only audit
 **Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration** + **market validation (2026-03-10)**
 
@@ -228,10 +228,12 @@ These items cause outright failures in deployed environments.
   - "Perform a repo-wide observability cleanup sweep. Replace console-only handled 5xx paths in customer-facing Workers handlers with the shared `reportHandledRouteError()` flow or a rethrow into the top-level worker catch, whichever preserves the route contract best. Do not change successful response shapes or unrelated business logic. Preserve HTML/browser callback responses where needed by using the shared helper with a custom response factory. Ensure every migrated path emits structured logger data, analytics `trackError`, Sentry capture, and returns `X-Request-ID`. On the frontend, preserve request IDs from failed API responses and append them to support-facing error copy only for server-side failures. Add or extend focused Vitest coverage for at least one handled failure in each migrated area. Keep changes minimal, avoid unrelated refactors, and validate with targeted tests."
 
 ### BL-M16 | 2FA QR delivery path is split between vendored and CDN assets
-- [x] **Status:** Resolved — 2026-03-16 (Cycle 3)
+- [ ] **Status:** Open
 - **Severity:** Moderate
-- **Files:** `frontend/index.html`, `frontend/_headers`, `frontend/js/qr.js`
-- **Resolution:** Removed CDN `qrcode@1.5.3` script tag and its `dns-prefetch` entry from `index.html`. Removed `https://cdn.jsdelivr.net` from `script-src` in both `_headers` and `index.html` meta CSP. `frontend/js/qr.js` is now the sole, canonical QR generator. `app.js` synchronous `QRCode.toDataURL(text, scale)` API matches `qr.js` exactly. CSP `script-src` is tighter by one origin.
+- **Files:** `frontend/index.html`, `frontend/_headers`, `frontend/js/qr.js`, `process/SESSION_LOG_2026-03-16.md`
+- **Problem:** The repo still contains a local QR generator in `frontend/js/qr.js`, but the current frontend boot path loads `qrcode.min.js` from `cdn.jsdelivr.net` and widens CSP to allow that host. The session log still documents a self-contained local generator. That leaves the runtime dependency model, CSP posture, and rollback story out of sync.
+- **Fix:** Pick one delivery strategy and remove the other. Prefer a single self-hosted asset path if possible, tighten CSP to match the shipped dependency, and update the session log so the implementation story matches the actual frontend.
+- **Verify:** 2FA setup renders QR codes with the chosen asset path only, CSP allows exactly that path, and the documented implementation matches the shipped HTML.
 
 ### BL-M17 | Practitioner-first cohesion workflow for home, pricing, onboarding, and workspace
 - [ ] **Status:** Open
@@ -2330,6 +2332,508 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Fix:** (1) Legal review: confirm whether current use qualifies as proper attribution vs. commercial use requiring license. (2) Add "Gene Keys® is a registered trademark of Gene Keys Ltd." disclaimer to relevant pages. (3) Cross-reference with the rebrand approach chosen for BLOCKER-2 — may be able to address both in one pass.
 - **Effort:** Legal review timeline unknown; disclaimer addition 15 min.
 - **Verify:** Legal review documented. Attribution or license clearly stated on any page that uses Gene Keys content.
+
+---
+
+## Website Deep Review — 2026-03-16 Audit (17 items)
+
+### Overview
+**Source:** Comprehensive page-by-page review of home, pricing, privacy, terms, practitioner areas.  
+**Finding:** Messaging drifts between 3+ product identities (consumer app, multi-system engine, practitioner platform). Visual coherence masks semantic incoherence. Trust language contradicts itself. Several UX patterns assume advanced knowledge. 
+
+---
+
+## Practitioner-First Positioning (4 critical items)
+
+### BL-POS-C1 | Home messaging leads with breadth instead of **one** practitioner-first promise
+- [ ] **Status:** Open
+- **Severity:** Critical (Positioning)
+- **Files:** `frontend/index.html` (hero section ~line 100–150)
+- **Problem:** Hero says "Combine Human Design, Astrology, Numerology, Gene Keys, Geneology" (breadth-first). Copy doesn't explain what that MEANS for the user or why a practitioner should care. No single promise.
+- **Impact:** User lands confused. Sounds like generic spirituality app, not a practitioner business platform.
+- **Fix:** Rewrite hero to lead with outcome first, not system count: "Run a values-aligned practice. Prime Self handles chart reads, client profiles, and strategic guidance so you focus on the relationship." Then: "All powered by HD, Astrology, Gene Keys, and Numerology."
+- **Verify:** Non-spirituality person can explain in 1 sentence what Prime Self is for practitioners.
+
+### BL-POS-C2 | Pricing says "chart data never shared with third parties" but privacy says "AI and SMS processors"
+- [ ] **Status:** Open
+- **Severity:** Critical (Trust)
+- **Files:** `frontend/pricing.html` (FAQ section), `frontend/privacy.html` (Section 3)
+- **Problem:** Pricing FAQ lists "Your chart data is never shared with third parties" as a trust differentiator. Privacy policy correctly discloses that synthesis uses Anthropic LLM, SMS uses Telnyx. These contradict each other — Anthropic and Telnyx ARE third parties.
+- **Impact:** Legal liability. Users feel misled once they discover the actual data flow.
+- **Fix:** 
+  - **Option A (strict privacy):** Don't use third-party AI. Run synthesis server-side.
+  - **Option B (transparency):** Rewrite pricing: "Your chart stays on our servers. Processing (synthesis, SMS) uses trusted processors who see anonymized data. [Privacy Policy link]"
+- **Verify:** Pricing and privacy describe the same data flow with no contradictions.
+
+### BL-POS-C3 | Chart journey steps don't map to actual tab IDs
+- [ ] **Status:** Open
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html` (step guide ~line 1042)
+- **Problem:** Step guide says: "1. Take the Challenge (you are here)", "2. See Your Bodygraph", "3. Read Your Prime Self Profile". But: no "Challenge" tab exists; step 2 maps to "Profile" (name mismatch); step 3 is synthesized inside Profile (not separate step). Step 4 (if it exists) isn't documented.
+- **Impact:** User completes step 1, can't find step 2 because the label doesn't match the tab name. Appears broken.
+- **Fix:** 
+  - Either rename tabs to match guide: "Test" instead of "Chart", "Blueprint" instead of "Profile", "Profile Synthesis" for the synthesis output.
+  - OR rewrite guide steps to match actual tab names: "Generate your chart", "View your type and authority", "Read your synthesis".
+- **Verify:** Step names use same terminology as actual tab labels.
+
+### BL-POS-C4 | Practitioner onboarding is instruction sequence, not setup flow
+- [ ] **Status:** Open
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html` (onboarding tab)
+- **Problem:** Practitioner onboarding jumps immediately to: "Invite your clients", "Share your referral link", "See your commission structure". No setup for: name, location, bio, website URL, payment info. User is upsold on add-ons before they've completed basic profile.
+- **Impact:** Friction on new practitioner signup. Looks like a sales mechanism, not a business tool.
+- **Fix:** Reorder as: (1) Set up your profile (name, location, bio), (2) Configure pricing/discounts, (3) Invite clients, (4) Review your referral setup. Only show commission structure AFTER practitioner setup is complete.
+- **Verify:** New practitioner user can set up profile, add clients, and configure their practice before encountering any monetization upsell.
+
+---
+
+## Frontend UX & Clarity (13 items)
+
+### BL-UX-C1 | Color system conflict — 3 competing token sets fight each other
+- [ ] **Status:** Open
+- **Severity:** Critical
+- **Files:** `frontend/index.html` (inline :root ~line 60), `frontend/css/design-tokens.css`, `frontend/css/design-tokens-premium.css`
+- **Problem:** Three token layers: inline `--gold`, `--text`, `--bg`; design-tokens `--color-gold-500`, `--text-primary`; premium overrides with different values. Same visual property defined 3 places. Button shows gold but docs say red is primary.
+- **Impact:** Impossible to theme. Maintenance nightmare. Visual inconsistency.
+- **Fix:** Single token system. Remove ALL :root from inline HTML. Use design-tokens.css as canonical. Update 600+ inline styles to reference semantic tokens.
+- **Verify:** grep `:root` in index.html returns zero. All elements use consistent tokens.
+
+### BL-UX-C2 | WCAG contrast failures on navigation and labels
+- [ ] **Status:** Open
+- **Severity:** Critical (Accessibility)
+- **Files:** `frontend/css/design-tokens.css`, `frontend/css/components/mobile.css`
+- **Problem:** Dim text (`#b0acc8`) on background (`#1a1a24`) = 4.2:1 contrast (fails WCAG AA). Dim labels throughout app are hard to read.
+- **Impact:** Eye strain. Accessibility failure.
+- **Fix:** Increase `--text-dim` to `#c4c0d8` for 5.5:1 contrast. Verify all text meets 4.5:1 minimum.
+- **Verify:** WebAIM contrast checker: all text on background ≥ 4.5:1.
+
+### BL-UX-C3 | Gate/center/channel names hidden — show 0 explanations
+- [ ] **Status:** Open
+- **Severity:** Critical (Education)
+- **Files:** `frontend/index.html` (renderChart ~line 2120), no gate-data.js
+- **Problem:** Chart shows "Gate 44.2", "Sacral" with zero name or meaning. Users don't know what they represent. Reddit: "told me I'm a Generator but didn't say what that means."
+- **Impact:** Data without meaning. No conversion.
+- **Fix:** (1) Load gate/center/channel names from `src/data/gate_wheel.json`, (2) Show "Gate 44: The Coming to Meet", (3) Add tooltips with plain English meaning, (4) Repeat for Type/Authority/Strategy.
+- **Verify:** Non-practitioner reads chart and understands what it means for their life.
+
+### BL-UX-C4 | Mobile nav labels don't match content
+- [ ] **Status:** Open
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html` (mobile bottom nav ~line 4850)
+- **Problem:** Mobile label "Keys" points to Profile (AI synthesis), not Gene Keys. "Astro" points to Enhance (tests), not astrology. Wrong expectations.
+- **Impact:** Confusion. Trust loss.
+- **Fix:** Either rename labels to match actual content, or restructure tabs so labels make sense.
+- **Verify:** Tap each mobile nav item → label describes what you see.
+
+### BL-UX-C5 | Birth data requested 3 times across tabs — massive friction
+- [ ] **Status:** Open
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html` (Chart, Profile, Composite tab forms)
+- **Problem:** Users must enter birth date/time/location in Chart, Profile, Composite separately. By tab 3, users are gone.
+- **Impact:** Abandonment. Product feels broken.
+- **Fix:** localStorage-based birth data manager. Store after first entry. Auto-populate all tabs. Show banner "Using your birth data: June 15, 1990 14:30 Tampa, FL [Change]".
+- **Verify:** Enter in Chart → Profile fields pre-filled → Composite fields pre-filled → remove friction.
+
+### BL-UX-C6 | 13 tabs overwhelm users — force prioritization
+- [ ] **Status:** Open
+- **Severity:** Critical (UX)
+- **Files:** `frontend/index.html` (nav tabs ~line 105)
+- **Problem:** Chart, Profile, Transits, Check-In, More, Enhance, Diary, Composite, Rectify, Saved, Onboarding, Practitioner, Clusters, SMS = 13 options. Users don't know where to start.
+- **Impact:** Analysis paralysis. High bounce.
+- **Fix:** Restructure to 4 primary + More dropdown:
+  - **Blueprint** (Chart + Profile)
+  - **Energy** (Transits + Check-In)
+  - **Relationships** (Composite)
+  - **Deepen** (Enhance)
+  - **More▾**: Diary, Rectify, Saved, Practitioner, Clusters, SMS, Onboarding
+- **Verify:** Desktop shows ≤5 items. Mobile shows clean bottom nav.
+
+### BL-UX-C7 | Tab 13 "More" doesn't auto-close after selection
+- [ ] **Status:** Open
+- **Severity:** High (UX)
+- **Files:** `frontend/index.html` (More dropdown JavaScript)
+- **Problem:** Open More menu → click Practitioner → More stays open, obscuring your screen.
+- **Impact:** Friction on every drawer navigation.
+- **Fix:** `closeAllDropdowns()` after tab switch.
+- **Verify:** Click More → Practitioner → drawer closes automatically.
+
+### BL-UX-C8 | Center pills show no explanation
+- [ ] **Status:** Open
+- **Severity:** High (Education)
+- **Files:** `frontend/index.html` (renderChart, centers section)
+- **Problem:** Shows `<span class="pill">Sacral</span>` (defined/open) with zero context. Users don't know what it means.
+- **Impact:** Data without meaning.
+- **Fix:** Add tooltips or expandable text explaining each center: "Sacral (defined): Consistent life force energy. Work you love."
+- **Verify:** Hover/click any center → see plain English explanation.
+
+### BL-UX-H1 | Load gate data from knowledgebase, not hardcoded
+- [ ] **Status:** Open
+- **Severity:** High (Maintainability)
+- **Files:** `frontend/index.html`, `frontend/js/gate-data.js` (create)
+- **Problem:** Gate names and descriptions exist in `src/data/gate_wheel.json` but aren't loaded by frontend. Code would have to be updated to change a gate name.
+- **Impact:** Brittleness. Poor maintainability.
+- **Fix:** Create `gate-data.js` loader that imports from `src/data/gate_wheel.json` and provides `getGateName()`, `getGateKeywords()`, `getCenterName()`, `getChannelName()` functions.
+- **Verify:** Changing a gate description in `gate_wheel.json` immediately reflects in frontend without code change.
+
+### BL-UX-H2 | All JS in one file (~3000 lines) — massive bundle bloat
+- [ ] **Status:** Open
+- **Severity:** High (Performance)
+- **Files:** `frontend/index.html` (inline scripts)
+- **Problem:** All app logic inline. No code splitting. Big Five (20 Q), VIA (24 Q) load on page init though 95% never visit Enhance tab.
+- **Impact:** Slow page load. Poor Lighthouse score.
+- **Fix:** Extract to modules (app.js, chart.js, profile.js, enhance.js). Lazy-load tab-specific code on tab activation.
+- **Verify:** Initial bundle < 50 KB. Enhance tab loads its own 20 KB bundle when opened.
+
+### BL-UX-H3 | Inline CSS (600+ lines) overrides design system
+- [ ] **Status:** Open
+- **Severity:** High (Maintainability)
+- **Files:** `frontend/index.html` (<style> blocks), external CSS files
+- **Problem:** All styles inline. Duplicates and overrides external files. Impossible to maintain.
+- **Impact:** Maintenance nightmare. Bundle bloat. Specificity wars.
+- **Fix:** Extract all inline CSS to proper files (app.css, buttons.css, cards.css, etc.). Delete inline <style> blocks.
+- **Verify:** index.html has zero <style> blocks (except maybe critical above-the-fold).
+
+### BL-UX-H4 | Hardcoded spacing (50+ instances) — no design tokens
+- [ ] **Status:** Open
+- **Severity:** High (Consistency)
+- **Files:** `frontend/index.html` (inline styles)
+- **Problem:** `margin: 20px`, `padding: 24px`, `gap: 14px` everywhere. Design tokens defined but ignored.
+- **Impact:** Visual inconsistency. Impossible to theme.
+- **Fix:** Replace all hardcoded pixels with `var(--space-4)`, `var(--space-6)`, etc.
+- **Verify:** grep `margin.*px` returns minimal results.
+
+### BL-UX-H5 | Font sizes scattered (15+ different sizes)
+- [ ] **Status:** Open
+- **Severity:** High (Hierarchy)
+- **Files:** `frontend/index.html` (inline styles)
+- **Problem:** `0.65rem, 0.7rem, 0.75rem, 0.8rem, 0.82rem, 0.85rem, 0.9rem, 0.95rem, 1rem, 1.1rem` — visual noise.
+- **Impact:** No clear hierarchy. Unprofessional feel.
+- **Fix:** Consolidate to design token scale: `--text-xs`, `--text-sm`, `--text-base`, `--text-lg`, `--text-xl`. Use only these.
+- **Verify:** No custom font sizes in index.html, all use tokens.
+
+### BL-UX-H6 | Lava lamp animation drains GPU, distracts from content
+- [ ] **Status:** Open
+- **Severity:** High (Performance/UX)
+- **Files:** `frontend/css/artwork.css`
+- **Problem:** Floating blobs, orbs, 30 particles animate continuously. Mobile GPU drain. Distracts. Text readability issues.
+- **Impact:** Battery drain. Performance issues. Readability.
+- **Fix:** Keep stars/crescent (subtle). Remove blobs/orbs. Reduce particles 30 → 10.
+- **Verify:** Mobile GPU usage drops. Content readable.
+
+### BL-UX-M1 | Mobile drawer tabs lose nav context
+- [ ] **Status:** Open
+- **Severity:** Medium (UX)
+- **Files:** `frontend/js/ui-nav.js`
+- **Problem:** Drawer-only tabs (Enhance, Diary, Practitioner, Clusters, SMS) clear the active mobile nav state. User loses orientation.
+- **Impact:** Mobile navigation feels broken.
+- **Fix:** Keep nav highlighted even when drawer is open. Or add breadcrumb showing current section.
+- **Verify:** Open Practitioner from drawer → bottom nav still shows active state.
+
+### BL-SOCIAL-C1 | No share buttons for social media distribution
+- [ ] **Status:** Open
+- **Severity:** Critical (Growth)
+- **Files:** `frontend/index.html`, `frontend/js/social-share.js` (needs creation/enhancement)
+- **Problem:** No Twitter/X, Facebook, Instagram, TikTok, Threads, or Bluesky sharing. Charts can't go viral.
+- **Impact:** Zero word-of-mouth growth. Missed network effects.
+- **Fix:** (1) Add share buttons in profile results area, (2) Generate Instagram-ready 1080x1080 PNG with chart visual, (3) Implement Twitter intent with pre-filled text + referral link, (4) Add Facebook share with OG tags, (5) Add TikTok mobile share sheet option.
+- **Verify:** User generates chart → sees 6+ share buttons → can easily post to social with pre-filled text and chart image.
+
+---
+
+## QR Code Delivery Path (1 item)
+
+### BL-QRPATH-H1 | 2FA QR delivery split between vendored + CDN asset
+- [ ] **Status:** Open
+- **Severity:** High (Reliability)
+- **Files:** `frontend/index.html`, `frontend/js/qr.js`, `frontend/_headers`, CSP meta tag
+- **Problem:** Frontend loads `qrcode.min.js` from `cdn.jsdelivr.net`. Local `frontend/js/qr.js` generator exists (unusued). CSP allows jsdelivr. Session log documents local generator. Three implementations, one is live, unclear which is canonical.
+- **Impact:** Rollback story broken. CSP inconsistent with implementation. Vendor dependency not documented.
+- **Fix:** Pick one delivery strategy. If using CDN: remove local qr.js, document jsdelivr dependency, ensure CSP is tight. If using local: remove CDN reference, verify local generator works.
+- **Verify:** 2FA setup renders QR with single chosen method only. CSP matches delivery path.
+
+---
+
+## Excellence Audit — World-Class Product Sprint (2026-03-16)
+
+**Audit scope:** Full product review against world-class B2B2C SaaS benchmarks. Custom-fit to Prime Self's practitioner-led, spiritually-positioned market.
+**Methodology:** Two-pass review — first pass UX/copy/flows, second pass architecture/performance/security.
+**Priority coding:** P0 = user-facing breakage today | P1 = practitioner hero workflow | P2 = polish and performance | P3 = architecture and scale
+
+---
+
+### BL-EXC-P0-1 | Facebook login button shows 501 Not Implemented to users
+- [ ] **Status:** Open
+- **Severity:** P0 — Broken promise, trust damage
+- **Files:** `frontend/index.html` (social login buttons section), `workers/src/index.js` (route: `/api/auth/facebook/*`)
+- **Problem:** The Facebook login button is rendered in the UI for all users. Clicking it hits a route that returns `501 Not Implemented`. Users see a dead button with no explanation. This is worse than no button — it actively breaks trust at the exact moment a user is trying to sign up.
+- **Why it matters:** OAuth buttons are the highest-converting signup CTAs. A broken one means lost users who never come back.
+- **Fix (option A — recommended):** Remove the Facebook button from `index.html` entirely. Clean cut, zero user confusion. Add a `// TODO: facebook-oauth-2026-Q3` comment in the route file so intent is preserved. Update copy from "Sign in with social" to "Sign in with Google or Apple".
+- **Fix (option B):** Implement Facebook OAuth. Requires Facebook App credentials, server-side token exchange, `social_accounts` table row, and `issueTokenPair` call. See `oauthSocial.js` for the Google pattern to follow. Not worth the complexity unless Facebook drives meaningful signups.
+- **Implementation steps (option A):**
+  1. In `index.html`, find the Facebook `<button>` element in the social login section and delete it.
+  2. In `workers/src/index.js`, add a comment on the `/api/auth/facebook` route stub explaining it is not yet implemented.
+  3. If copy says "or use social login", update to "or continue with Google or Apple".
+  4. Test: Social login section renders cleanly with only Google and Apple.
+- **Exit criteria:** No user-facing Facebook button. No 501 responses from auth routes. Social login section looks intentional, not broken.
+
+---
+
+### BL-EXC-P0-2 | Achievements tab is dead — renders empty with no content or explanation
+- [ ] **Status:** Open
+- **Severity:** P0 — Dead feature visible to all users
+- **Files:** `frontend/index.html` (Achievements tab/section), `frontend/js/app.js` (achievements render logic), `workers/src/handlers/achievements.js`
+- **Problem:** The Achievements tab is accessible from navigation but renders empty for all users. The backend `trackEvent` fires but the frontend achievement display logic either returns empty arrays or fails silently. Users click into a blank tab and assume the product is broken.
+- **Why it matters:** An empty tab signals an unfinished product, which destroys premium pricing confidence at $97/mo.
+- **Fix (option A — ship it):** Wire the existing achievements endpoint to the UI.
+  1. `GET /api/achievements/me` — return user's earned achievements from `user_achievements` table (or KV).
+  2. Render earned achievements as badge cards (icon + title + date earned).
+  3. Show locked achievements with progress: "Compare 3 celebrities — 1/3."
+  4. First achievement auto-pops on chart calculation: "Chart Unlocked — Your Human Design is live."
+- **Fix (option B — hide it):** If achievements are 4+ weeks from shippable, remove the tab from nav entirely. Better no tab than a broken one.
+- **Implementation steps (option A):**
+  1. Audit `workers/src/handlers/achievements.js` — identify which achievement types are tracked and what conditions trigger them.
+  2. Add `GET /api/achievements/me` endpoint returning `[{ id, title, description, icon, earnedAt }]` for earned and `[{ id, title, description, icon, progress, total }]` for locked achievements.
+  3. In `app.js` achievements render function: fetch `/api/achievements/me`, render earned badges grid, then locked progress cards below.
+  4. Add toast notification when a new achievement is earned (compare `earnedAt` values against last-seen timestamp in localStorage).
+- **Exit criteria:** Achievements tab shows at least 5 defined achievements with real earned/locked states. No empty-tab experience for any authenticated user.
+
+---
+
+### BL-EXC-P0-3 | Synthesis has no retry or abort — infinite spinner on AI timeout
+- [ ] **Status:** Open
+- **Severity:** P0 — Core feature appears broken on slow or failed AI calls
+- **Files:** `frontend/js/app.js` (synthesis loading state), `workers/src/handlers/synthesis.js` or equivalent AI handler
+- **Problem:** When the AI synthesis call takes longer than ~30 seconds (Cloudflare Workers timeout, cold Claude Opus call, or network hiccup), the frontend spins forever with no feedback. Users cannot retry, abort, or tell if something is wrong. This is the most important page in the product — a broken loading state here is catastrophic for retention.
+- **Implementation steps:**
+  1. In the synthesis fetch block in `app.js`, wrap with `AbortController` and `setTimeout(controller.abort, 45000)`.
+  2. In the `.catch()` handler, distinguish `AbortError` (timeout) from network errors and show appropriate copy.
+  3. Add a `retrySynthesis()` function that re-uses the same chart data without re-fetching.
+  4. Add a message-cycling interval every 8 seconds: "Reading your gates..." → "Interpreting your profile..." → "Writing your synthesis..." → "Almost ready..."
+  5. On double failure, render chart data directly with a banner: "AI synthesis temporarily unavailable — your chart data is below."
+- **Exit criteria:** Synthesis never shows a spinner for more than 45 seconds without user-actionable UI. Retry works without page reload. Graceful degradation renders raw chart on double failure.
+
+---
+
+### BL-EXC-P1-1 | Practitioner session prep view is missing — their most critical workflow
+- [ ] **Status:** Open
+- **Severity:** P1 — Hero practitioner workflow entirely absent
+- **Files:** `frontend/js/app.js` (practitioner client detail section), `workers/src/handlers/practitioner.js`, `workers/src/db/queries.js`
+- **Problem:** Practitioners pay $97/mo primarily to understand and prepare for client sessions. The current client detail view shows name, chart type, notes — but there is no "session prep" view. No chart synthesis, no gate highlights, no suggested talking points. This is the #1 promised value and it doesn't exist as a dedicated flow.
+- **Why it matters:** A practitioner who doesn't get value from client sessions cancels within 60 days. This is the single highest-retention feature that can be built.
+- **Implementation steps:**
+  1. Add `POST /api/practitioner/clients/:id/session-brief` in `practitioner.js`. Query client chart, build prompt, call Claude Haiku (fast, cheap), return structured JSON.
+  2. Prompt template: "You are a Human Design practitioner preparing for a session. Client chart: {chart}. Notes history: {notes}. Generate: themes (3), resistance areas (2), suggested question (1), this week's transit impact (1 paragraph)."
+  3. In `app.js` client detail section, add "Prepare for Session" button. On click, fetch brief, render in a dedicated panel.
+  4. Add session note autosave on blur: `PATCH /api/practitioner/clients/:id/notes`, debounced 1s.
+  5. Add session history list: `GET /api/practitioner/clients/:id/sessions` returns `[{ date, notePreview }]`.
+- **Exit criteria:** Practitioner can open any client, click "Prepare for Session", get a 4-part AI brief in under 10 seconds, take notes inline, and see session history.
+
+---
+
+### BL-EXC-P1-2 | Practitioners cannot see their referral performance — flywheel invisible to them
+- [ ] **Status:** Open
+- **Severity:** P1 — Referral growth loop broken at practitioner awareness layer
+- **Files:** `frontend/js/app.js` (practitioner dashboard section), `workers/src/handlers/practitioner.js`, `workers/src/db/queries.js`
+- **Problem:** Practitioners have referral links (`/r/{slug}`) but no dashboard to see clicks, signups, or paid conversions. The data exists in `referral_signups` — it's just not surfaced. Practitioners who don't see referral conversions have no incentive to share more, stalling the growth flywheel.
+- **Implementation steps:**
+  1. Add `GET /api/practitioner/referrals` endpoint: queries `referral_signups WHERE practitioner_id = ?`, returns `{ total, thisMonth, activeClients, recentSignups }`.
+  2. Add `QUERIES.getPractitionerReferralStats`: `SELECT COUNT(*) as total, COUNT(CASE WHEN created_at > NOW() - INTERVAL '30 days' THEN 1 END) as this_month FROM referral_signups WHERE practitioner_id = $1`.
+  3. Track referral link clicks: when `/r/{slug}` is hit, increment KV counter `ref_clicks:{practitioner_id}`.
+  4. In `app.js` practitioner dashboard, add a "Referral Performance" card: referral link with one-click copy, total signups, this-month signups, active client count from referrals.
+- **Exit criteria:** Practitioner dashboard shows referral link with copy button and live stats. Stats update within 1 hour of new referral. KV click counter increments on every `/r/{slug}` visit.
+
+---
+
+### BL-EXC-P1-3 | Individual→Practitioner upgrade copy is weak — highest-value conversion path underperforms
+- [ ] **Status:** Open
+- **Severity:** P1 — Missed revenue at key conversion moment (5x revenue per user)
+- **Files:** `frontend/js/app.js` (`showUpgradePrompt` function), `frontend/index.html` (pricing section)
+- **Problem:** When an Individual user hits a practitioner-gated feature, they see a generic upgrade modal with a price. No context for WHY, no social proof, no ROI framing, no risk reduction. Individual→Practitioner is the highest-value upgrade path ($19→$97/mo) and has the weakest copy.
+- **Implementation steps:**
+  1. In `showUpgradePrompt(feature)`, pass the feature name as a parameter.
+  2. Create a `PRACTITIONER_UPGRADE_COPY` map: `{ 'client_roster': { headline, body, cta }, 'session_brief': {...}, ... }`.
+  3. Render feature-specific copy in the modal. Fall back to generic for unmapped features.
+  4. Add to every practitioner upgrade modal: social proof ("Join 200+ practitioners"), ROI framing ("2 clients at $50/session covers it"), and risk reduction ("Cancel anytime").
+  5. Log `upgrade_prompt_shown` event with feature name + user tier for conversion rate analysis.
+- **Exit criteria:** Every practitioner feature gate shows context-aware copy explaining the specific benefit unlocked. Modal includes social proof, ROI framing, and risk reduction language.
+
+---
+
+### BL-EXC-P1-4 | Diary entries have no link to current transits — daily habit loop broken
+- [ ] **Status:** Open
+- **Severity:** P1 — Core daily retention loop not connected
+- **Files:** `frontend/js/app.js` (diary entry section, transits section)
+- **Problem:** The Diary tab and Transits tab are completely separate with no connection. A user writing about how they feel today has no quick way to see what transits might explain their experience. The core habit loop — "I feel X → transits show Y → my chart says Z → I understand myself → I write it down → I return tomorrow" — is broken at the diary↔transits link.
+- **Implementation steps:**
+  1. In the diary entry open handler in `app.js`, if transits data is cached, extract top 3 active gates and render a compact card above the textarea.
+  2. If transits aren't cached, make a lightweight `GET /api/transits/today` call returning only today's active gates.
+  3. Generate diary prompt suggestions client-side from a gate→prompt lookup table (no AI call needed): `{ 36: "Where are you feeling pressure to rush through something today?", ... }`.
+  4. In the transits render function, add a "Reflect on this" button per active gate that opens a new diary entry pre-seeded with the gate context and a prompt.
+- **Exit criteria:** Opening a diary entry shows today's top 3 active gates. Each transit in the Transits tab has a "Reflect on this" link. The diary↔transits connection is one click in each direction.
+
+---
+
+### BL-EXC-P2-1 | Loading states inconsistent — 6+ different spinner patterns across the app
+- [ ] **Status:** Open
+- **Severity:** P2 — Polish and trust signal
+- **Files:** `frontend/js/app.js` (multiple loading state handlers), `frontend/css/app.css`
+- **Problem:** The app uses at least 6 different loading patterns: spinning circle, pulsing dot, "Loading..." text, skeleton screens, shimmer cards, and blank-then-pop. Visual inconsistency signals an unfinished product. Premium products at $97/mo must feel premium at every interaction.
+- **Implementation steps:**
+  1. Add `.skeleton-card`, `.skeleton-list-item`, `.skeleton-text`, `.skeleton-chart` CSS classes with `@keyframes shimmer` animation to `app.css`.
+  2. Add `showSkeleton(containerId, type, count=3)` function in `app.js` that injects appropriate skeleton HTML matching the actual content layout.
+  3. Audit every `container.innerHTML = '<div class="loading">...'` pattern in `app.js` and replace with `showSkeleton()`.
+  4. Add a `fadein` CSS class to content containers: `opacity: 0` → `opacity: 1` over 150ms on content load.
+- **Exit criteria:** Every loading state uses skeleton screens. No bare "Loading..." text visible anywhere. Content fades in rather than popping. Single consistent shimmer animation used throughout.
+
+---
+
+### BL-EXC-P2-2 | Error messages give no action — users are stuck with cryptic text
+- [ ] **Status:** Open
+- **Severity:** P2 — User stuck on errors, support volume increases
+- **Files:** `frontend/js/app.js` (all `.catch()` and error render blocks), `workers/src/handlers/*.js` (error response shapes)
+- **Problem:** Error messages say things like "Failed to load chart", "Something went wrong", "Authentication required". None tell the user what to do next. Every error message must have: (1) plain-English description, (2) specific action to take, (3) fallback if action fails.
+- **Error copy standards for Prime Self:**
+  - Auth expired: "Your session expired — [Sign in again]"
+  - Chart not found: "We couldn't load your chart — [Recalculate] or [Contact support]"
+  - AI timeout: "AI synthesis is taking longer than usual — [Try again] or [View chart without synthesis]"
+  - Network error: "Check your internet connection — [Retry]"
+  - Payment error: "Payment didn't go through — [Update payment method]"
+  - 500 error: "Something went wrong on our end — we've been notified — [Try again in a moment]"
+- **Implementation steps:**
+  1. Create an `ERROR_COPY` map in `app.js` keyed by error code: `{ 'CHART_NOT_FOUND': { title, body, actions: [{ label, fn }] }, ... }`.
+  2. Create a `showError(containerId, errorCode, context)` function that renders a styled error card with mapped copy and action buttons.
+  3. Replace all `.innerHTML = 'Error: ...'` patterns with `showError()` calls.
+  4. On the backend, add machine-readable error codes to all error responses: `{ ok: false, error: 'CHART_NOT_FOUND', message: '...' }`.
+- **Exit criteria:** No user-facing error without at least one actionable CTA. Error copy is plain English. Backend errors include error codes that map to frontend `ERROR_COPY` entries.
+
+---
+
+### BL-EXC-P2-3 | Practitioner directory missing KV cache — N+1 DB queries per page load
+- [ ] **Status:** Open
+- **Severity:** P2 — Performance and DB cost
+- **Files:** `workers/src/handlers/directory.js`, `workers/src/lib/cache.js`
+- **Problem:** Every practitioner directory load hits Neon with a fresh query. The directory data changes infrequently (practitioners update profiles rarely) and is identical for all visitors — a perfect cache candidate. At scale, uncached directory queries are expensive (Neon compute cost) and slow (200-400ms cold connection overhead).
+- **Implementation steps:**
+  1. In `directory.js` `handleGetDirectory`, check `await env.KV.get('directory:all', 'json')` before querying Neon. Return cache hit with `X-Cache: HIT` header.
+  2. On cache miss: query Neon, store result `await env.KV.put('directory:all', JSON.stringify(result), { expirationTtl: 900 })`.
+  3. In the practitioner profile update handler, after successful DB write: `await env.KV.delete('directory:all')` and `await env.KV.delete(`practitioner:slug:${slug}`)`.
+  4. Apply same pattern to individual slug lookups (`/api/directory/:slug`) with key `practitioner:slug:{slug}`, TTL 300s.
+  5. Add `X-Cache: MISS | HIT` response header for debugging.
+- **Exit criteria:** Second directory load returns in <50ms. Profile updates invalidate cache immediately. Directory query load on Neon drops 95%+.
+
+---
+
+### BL-EXC-P2-4 | AI context editor has no character count or save confirmation
+- [ ] **Status:** Open
+- **Severity:** P2 — Practitioner UX friction
+- **Files:** `frontend/js/app.js` (practitioner profile / AI context section)
+- **Problem:** Practitioners can write an "AI context" about themselves that informs their synthesis. The textarea has no character count, no indication of truncation limits, no save confirmation, and no last-saved timestamp. Practitioners write context and don't know if it saved or was silently truncated.
+- **Implementation steps:**
+  1. In the AI context textarea, add an `oninput` handler that updates a `<span class="char-count">{count} / 2000</span>` element. Warn at 1800, hard-limit at 2000.
+  2. Add debounced autosave: `clearTimeout(aiContextSaveTimer); aiContextSaveTimer = setTimeout(saveAiContext, 2000)`.
+  3. `saveAiContext()` calls `PATCH /api/practitioner/profile` with `{ aiContext }`, then shows "Saved ✓" for 3s before reverting to "Last saved: X minutes ago".
+  4. Show "Saving..." during the in-flight request.
+  5. Add a `<p class="form-hint">` tip: "Include your modalities, specialties, and how you work with clients. More specific = better AI synthesis for your clients."
+- **Exit criteria:** Character count visible and live-updating. Autosave triggers on 2s idle. "Saved ✓" confirmation appears after save. Hard limit enforced at 2000 chars with visible warning.
+
+---
+
+### BL-EXC-P2-5 | Session notes have no pagination — crashes on prolific practitioners
+- [ ] **Status:** Open
+- **Severity:** P2 — Data integrity and performance for power users
+- **Files:** `workers/src/handlers/practitioner.js` (notes endpoint), `frontend/js/app.js` (notes render section)
+- **Problem:** Session notes are returned as a flat unbounded array. A practitioner using the product for 6+ months with 20+ active clients will have hundreds of notes. Fetching all of them on every client detail open will exceed Worker response limits, be slow, and cause browser rendering hangs.
+- **Implementation steps:**
+  1. Update `GET /api/practitioner/clients/:id/notes` query with `LIMIT 10 OFFSET $2` and return `{ notes, total, hasMore }`.
+  2. In `app.js` notes render, show "Load 10 more" button if `hasMore` is true. On click, append next page to existing list (not replace).
+  3. Show "Showing {shown} of {total} notes" count above the list.
+  4. Default to 10 most recent notes on first load.
+- **Exit criteria:** Notes endpoint always returns ≤10 notes per request. "Load more" available when applicable. Practitioner with 200 notes sees first 10 load in <200ms.
+
+---
+
+### BL-EXC-P2-6 | Composite reading not mentioned in pricing — conversion copy gap
+- [ ] **Status:** Open
+- **Severity:** P2 — Revenue impact through pricing page conversion
+- **Files:** `frontend/index.html` (pricing section), `frontend/js/app.js` (`showUpgradePrompt`)
+- **Problem:** Composite charts (compatibility readings between user + client) are built and working but not mentioned in the pricing comparison table or practitioner tier description. Prospects evaluating the product don't know this feature exists — a significant missed conversion hook.
+- **Implementation steps:**
+  1. In `index.html` pricing section, add a "Composite Charts" row to the feature comparison table: ✗ Free | ✗ Individual | ✓ Practitioner.
+  2. Update the Practitioner tier card description to include: "Composite compatibility charts with any client — included."
+  3. In `showUpgradePrompt('chart')` copy, add composite charts to the feature benefits list.
+  4. Create a `/demo/composite` page (or modal) with an anonymized hardcoded example for two common chart types — no auth required, drives practitioner consideration.
+- **Exit criteria:** Composite charts appear in pricing table and practitioner tier description. Demo accessible without login. Upgrade modal for chart features mentions composite charts.
+
+---
+
+### BL-EXC-P3-1 | auth.js is a 1200-line monolith — split before it becomes unmaintainable
+- [ ] **Status:** Open
+- **Severity:** P3 — Architecture debt, development velocity
+- **Files:** `workers/src/handlers/auth.js` (~1200 lines)
+- **Problem:** `auth.js` handles registration, login, logout, 2FA setup/verify, password reset (request + confirm), token refresh, OAuth exchange, and social account linking — 8+ distinct features in one file. Any change to login logic risks breaking 2FA. At 1500+ lines (as OAuth grows) it becomes essentially unmaintainable without tests.
+- **Target structure:**
+  - `handlers/auth/register.js` — registration + email verification
+  - `handlers/auth/login.js` — password login + JWT issuance
+  - `handlers/auth/twoFactor.js` — 2FA setup, verify, recovery
+  - `handlers/auth/passwordReset.js` — request reset, confirm reset
+  - `handlers/auth/tokens.js` — refresh token, logout, token validation
+  - `handlers/auth/index.js` — re-exports all handlers (no routing changes needed in `index.js`)
+  - `lib/token.js` — `issueTokenPair`, `verifyToken`, `revokeToken` (shared)
+- **Implementation steps:**
+  1. Create `workers/src/handlers/auth/` directory.
+  2. Extract each concern into its own file, keeping function signatures identical.
+  3. `auth/index.js` re-exports everything — `index.js` routing is unchanged.
+  4. Run full test suite after each extraction to verify no regressions.
+  5. Delete original `auth.js` only after all exports confirmed working.
+- **Exit criteria:** No single auth file exceeds 200 lines. All existing tests pass. `index.js` routing unchanged.
+
+---
+
+### BL-EXC-P3-2 | No per-tier API rate limiting — free users can exhaust AI budget
+- [ ] **Status:** Open
+- **Severity:** P3 — Cost protection and tier fairness
+- **Files:** `workers/src/middleware/` (new `rateLimit.js`), `workers/src/index.js` (middleware chain), `workers/src/handlers/` (AI endpoints)
+- **Problem:** All authenticated users hit AI endpoints with no rate limiting by tier. A free user can call `/api/synthesis` repeatedly, burning Claude API credits at the same rate as a Practitioner user. No protection against a single free user generating $50+ of AI costs through rapid synthesis calls.
+- **Tier limits (recommended):**
+  - Free: 3 synthesis/day, 5 transits forecasts/day
+  - Individual: 10 synthesis/day, 20 transits forecasts/day, 5 compatibility charts/day
+  - Practitioner: 50 synthesis/day, 100 transits forecasts/day, unlimited compatibility charts
+- **Implementation steps:**
+  1. Create `workers/src/middleware/rateLimit.js` with `checkRateLimit(env, userId, action, tierLimits)`.
+  2. `checkRateLimit` reads `await env.KV.get(`rl:${userId}:${action}:${windowKey}`)`, increments, compares to tier limit. Uses 24-hour rolling window (not calendar day).
+  3. In each AI handler (`synthesis.js`, transits, compatibility), call `checkRateLimit` before the AI call.
+  4. On limit hit, return `429 Too Many Requests` with `{ ok: false, error: 'RATE_LIMITED', retryAfter, upgradeUrl: '/pricing' }`.
+  5. Frontend handles 429 with: "You've used your {X} daily syntheses — [Upgrade for more] or come back tomorrow."
+- **Exit criteria:** Free users hitting synthesis 4+ times/day get a friendly rate limit with upgrade CTA. AI costs bounded per tier. Rate limit resets on 24-hour rolling window.
+
+---
+
+### BL-EXC-P3-3 | Neon connection not pooled — new TCP connection per Worker request adds latency
+- [ ] **Status:** Open
+- **Severity:** P3 — Performance at scale
+- **Files:** `workers/src/db/queries.js` (`createQueryFn`), Cloudflare Workers environment variables
+- **Problem:** `createQueryFn(env.NEON_CONNECTION_STRING)` creates a fresh Neon HTTP connection on every Worker invocation. At high request volume (100+ RPM), this adds 50-150ms of overhead per request. Neon's built-in PgBouncer pooler is available and unused.
+- **Implementation steps:**
+  1. In Cloudflare Workers dashboard → Prime Self API → Settings → Variables, update `NEON_CONNECTION_STRING` to use the pooler endpoint (format: `postgresql://user:pass@ep-xxx-pooler.region.aws.neon.tech/dbname?sslmode=require`).
+  2. In `queries.js`, if using `@neondatabase/serverless`: add `{ fetchConnectionCache: true }` to the `neon()` driver call to reuse HTTP connections within the same Worker isolate.
+  3. Test: measure response time for a DB-heavy endpoint (e.g., `/api/auth/me`) before and after. Expect 50-150ms improvement.
+  4. Monitor Neon console for connection count — should stabilize rather than spike on traffic bursts.
+- **Exit criteria:** DB-heavy endpoints respond 50ms+ faster under load. Neon connection count stable. No connection exhaustion errors in Sentry.
+
+---
+
+### BL-EXC-P3-4 | No API versioning — breaking changes require simultaneous frontend + backend deploys
+- [ ] **Status:** Open
+- **Severity:** P3 — Future-proofing, operational risk
+- **Files:** `workers/src/index.js` (routing), `frontend/js/app.js` (`API_BASE` constant)
+- **Problem:** All routes are unversioned (`/api/auth/login`, not `/api/v1/auth/login`). Breaking changes must be deployed simultaneously with a frontend change, creating deployment coupling that risks brief outages. As the API matures, this becomes a hard constraint on development velocity.
+- **Implementation steps:**
+  1. In `index.js`, add a `VERSION = 'v1'` constant and update all route patterns from `/api/` to `/api/v1/`.
+  2. Add redirect middleware: `GET /api/*` → `GET /api/v1/*` with `301 Moved Permanently` for backward compatibility during transition.
+  3. In `app.js`, update `const API_BASE = 'https://prime-self-api.adrper79.workers.dev/api/v1'` (single constant change).
+  4. Update `docs/API_SPEC.md` to prefix all endpoints with `/v1`.
+  5. Document versioning policy: "v1 = stable; breaking changes → v2 with 60-day deprecation notice."
+- **Exit criteria:** All routes respond at `/api/v1/*`. Old `/api/*` paths redirect. API spec reflects versioning. Zero client-observable breakage during the change.
 
 ---
 

@@ -10,7 +10,11 @@
       "Bash(node verify-money-path.js)",
       "Bash(npx wrangler:*)",
       "Bash(npm test:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "WebFetch(domain:www.jaccunningham.com)",
+      "WebFetch(domain:www.vanesshenry.com)",
+      "Bash(powershell -Command \"New-Item -ItemType Directory -Force -Path ''c:\\\\Users\\\\Ultimate Warrior\\\\My project\\\\HumanDesign\\\\.git\\\\worktrees\\\\agent-a39c33bb'' | Out-Null; Write-Host ''created''\")",
+      "Bash(powershell -Command \":*)"
     ]
   }
 }

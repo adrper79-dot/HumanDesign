@@ -29,9 +29,9 @@ Evidence: workers/src/handlers/practitioner.js, workers/src/index.js, frontend/j
 - [x] Pending invite can be resent from practitioner workspace
 Map: roadmap first-pass invite-management requirement
 Evidence: workers/src/handlers/practitioner.js and frontend/js/app.js now support invitation resend with fresh-link rotation
-- [ ] Invitation expiry and revoke behavior fully regression-tested
+- [x] Invitation expiry and revoke behavior fully regression-tested
 Map: UI_TESTCASES.md Section 6.1
-Status: Partial
+Evidence: tests/practitioner-runtime.test.js now covers expired invite preview, practitioner revoke, and revoked-token preview rejection
 
 ### 3. Client Detail Workspace
 - [x] `GET /api/practitioner/clients/:id` returns scoped client detail
@@ -80,9 +80,9 @@ Evidence: frontend/js/app.js saveDirectoryProfile
 - [x] `/practitioners/:slug` is a working public page, not a broken SPA redirect
 Map: UI_TESTCASES.md Section 6.4 and 6.5
 Evidence: frontend/functions/practitioners/[slug].js
-- [ ] Directory listing links cleanly into the public practitioner page in the in-app UI
+- [x] Directory listing links cleanly into the public practitioner page in the in-app UI
 Map: UI_TESTCASES.md Section 6.5 `Click practitioner → view their public profile`
-Status: Partial
+Evidence: frontend/js/app.js directory cards now include a canonical `View Profile` CTA alongside direct booking
 
 ---
 
@@ -174,14 +174,16 @@ Evidence: tests/practitioner-runtime.test.js
 - [x] Invite acceptance regression test added
 Map: roadmap Phase 0 exit criteria
 Evidence: tests/practitioner-runtime.test.js
-- [ ] Add explicit tests for expired/revoked invite and remaining client isolation on detail routes
+- [x] Add explicit tests for expired/revoked invite and remaining client isolation on detail routes
 Map: UI_TESTCASES.md Section 6.1 and 6.2
-Status: Open
+Evidence: tests/practitioner-runtime.test.js covers client detail rejection, expired invite preview, practitioner revoke, and revoked-token preview rejection
 - Current verified additions:
 - client detail rejection test added
 - note delete miss test added
 - branded PDF non-roster rejection test added
 - expired invite preview test added
+- practitioner revoke test added
+- revoked invite preview rejection test added
 - [x] Run deterministic practitioner regression suite successfully in the local environment
 Map: release validation
 Evidence: direct Vitest execution from repo root passes on `tests/practitioner-runtime.test.js` with 11 passing tests
@@ -200,5 +202,5 @@ Practitioner rollout is ready for a broader first-pass launch only when all of t
 Current assessment:
 - Trust layer: improved materially, not fully certified yet
 - Core workflow: usable and materially stronger after AI context UI/productization
-- Discovery layer: functional, needs stronger click-through validation
+- Discovery layer: click-through handoff improved; long-form profile conversion quality still needs validation
 - Rollout recommendation: limited design-partner release after the remaining client-detail isolation checks and directory click-through validation

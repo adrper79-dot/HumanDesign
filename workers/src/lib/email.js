@@ -824,3 +824,45 @@ export async function sendSubscriptionConfirmationEmail(userEmail, tierName, api
 
   return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
+
+/**
+ * Dispute / Chargeback Notification — SYS-017
+ * Sent to the user when a chargeback is opened on their account.
+ */
+export async function sendDisputeNotificationEmail(userEmail, amount, currency, reason, apiKey, fromEmail, companyAddress = '') {
+  const subject = 'Important: A dispute has been opened on your Prime Self account';
+  const formattedAmount = `$${(amount / 100).toFixed(2)} ${(currency || 'usd').toUpperCase()}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0a0a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:560px;margin:0 auto;padding:32px 24px">
+    <div style="text-align:center;padding:24px 0;border-bottom:1px solid #2a2a3a">
+      <div style="font-size:24px;font-weight:700;color:#c9a84c">Prime Self</div>
+    </div>
+    <div style="padding:32px 0">
+      <h2 style="margin:0 0 16px;color:#e8e4f0;font-size:22px">Your account requires attention</h2>
+      <p style="margin:0 0 16px;line-height:1.6;color:#c4c0d8">A payment dispute has been opened for <strong style="color:#c9a84c">${formattedAmount}</strong> on your Prime Self account${reason && reason !== 'unknown' ? ` (reason: ${reason})` : ''}.</p>
+      <div style="background:#1a1a24;border-radius:8px;padding:20px;margin:20px 0;border-left:4px solid #e05c5c">
+        <p style="margin:0 0 8px;color:#c4c0d8;font-weight:600">What this means:</p>
+        <ul style="margin:0;padding:0 0 0 20px;color:#c4c0d8;line-height:1.8">
+          <li>Your account has been temporarily downgraded to free tier</li>
+          <li>Your card issuer has initiated a chargeback review</li>
+          <li>If you believe this is an error, please contact us so we can resolve it</li>
+        </ul>
+      </div>
+      <p style="margin:0 0 16px;line-height:1.6;color:#8882a0;font-size:14px">If you did not intend to dispute this charge, please reply to this email or contact your bank to cancel the dispute and we will restore your account promptly.</p>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+      <p style="margin:0">Prime Self — Discover your unique energy blueprint</p>
+      ${companyAddress ? `<p style="margin:4px 0 0">${companyAddress}</p>` : ''}
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
+}

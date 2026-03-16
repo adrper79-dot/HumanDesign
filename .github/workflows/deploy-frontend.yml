@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Install worker dependencies (needed for vitest to resolve worker imports)
         run: npm ci --prefix workers
 
@@ -73,3 +76,22 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy frontend --project-name=prime-self-ui --branch=main
+
+      - name: Run production gate
+        run: npm run verify:prod:gate -- --strict-browser
+        env:
+          E2E_TEST_EMAIL: ${{ secrets['E2E_TEST_EMAIL'] }}
+          E2E_TEST_PASSWORD: ${{ secrets['E2E_TEST_PASSWORD'] }}
+          TEST_BASE_URL: https://selfprime.net
+          PROD_API: https://prime-self-api.adrper79.workers.dev
+
+      - name: Upload prod gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-gate-frontend-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
