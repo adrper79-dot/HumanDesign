@@ -4,6 +4,9 @@
  * Routes (all require authentication):
  *   POST /api/practitioner/register        — Register as practitioner
  *   GET  /api/practitioner/profile         — Get own practitioner profile
+ *   GET  /api/practitioner/session-templates — List all session note templates
+ *   GET  /api/practitioner/session-templates/:templateId — Get template by ID
+ *   POST /api/practitioner/session-templates/:templateId/hydrate — Hydrate template with client data
  *   GET  /api/practitioner/clients         — List all clients
  *   POST /api/practitioner/clients/add     — Add a client by email
  *   POST /api/practitioner/clients/invite  — Invite or add client by email
@@ -27,6 +30,7 @@ import { sendPractitionerInvitationEmail, sendClientReminder as sendClientRemind
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 import { callLLM } from '../lib/llm.js';
 import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
+import { handleListSessionTemplates, handleGetSessionTemplate, handleHydrateTemplate } from './session-templates.js';
 
 // Tier limits aligned with billing tier names (individual/practitioner/agency)
 const TIER_LIMITS = {
@@ -106,6 +110,23 @@ export async function handlePractitioner(request, env, subpath) {
     // GET /api/practitioner/profile
     if (subpath === '/profile' && method === 'GET') {
       return await handleGetProfile(userId, query);
+    }
+
+    // GET /api/practitioner/session-templates
+    if (subpath === '/session-templates' && method === 'GET') {
+      return await handleListSessionTemplates(request);
+    }
+
+    // POST /api/practitioner/session-templates/:templateId/hydrate
+    const hydrateMatch = subpath.match(/^\/session-templates\/([a-z_]+)\/hydrate$/i);
+    if (hydrateMatch && method === 'POST') {
+      return await handleHydrateTemplate(request, env, hydrateMatch[1]);
+    }
+
+    // GET /api/practitioner/session-templates/:templateId
+    const templateMatch = subpath.match(/^\/session-templates\/([a-z_]+)$/i);
+    if (templateMatch && method === 'GET') {
+      return await handleGetSessionTemplate(request, templateMatch[1]);
     }
 
     // GET /api/practitioner/clients
