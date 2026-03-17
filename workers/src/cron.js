@@ -32,6 +32,7 @@ import {
   sendWelcomeEmail4,
   sendReengagementEmail,
   sendUpgradeNudgeEmail,
+  sendTrialEndingEmail,
   sendPractitionerWeeklyDigest,
 } from './lib/email.js';
 import { createCronLogger } from './lib/logger.js';
@@ -335,6 +336,41 @@ export async function runDailyTransitCron(env) {
       log.error('drip_campaign_error', { error: emailErr?.message });
       sentry.captureException(emailErr, { tags: { source: 'cron', step: 'drip_campaigns' } });
       // Don't throw - email failures shouldn't break the main cron
+    }
+
+    // ─── Step 7b: Trial Ending Reminders (BL-P1-Trial-Reminder) ─
+    try {
+      await withTimeout((async () => {
+      const { rows: trialEndingUsers } = await query(QUERIES.cronGetTrialEndingUsers);
+      log.info('trial_ending_users', { count: trialEndingUsers.length });
+
+      let trialRemindersSent = 0, trialRemindersFailed = 0;
+
+      for (const user of (trialEndingUsers || [])) {
+        try {
+          const daysRemaining = Math.round(user.days_remaining) || 2; // default to 2 days if rounding
+          await sendTrialEndingEmail(
+            user.email,
+            user.email.split('@')[0],
+            daysRemaining,
+            'Practitioner', // BL-TODO: determine tier from subscription if needed
+            env.RESEND_API_KEY,
+            env.FROM_EMAIL,
+            env.COMPANY_ADDRESS || ''
+          );
+          trialRemindersSent++;
+        } catch (err) {
+          log.error('trial_reminder_failed', { userId: user.id, error: err.message });
+          trialRemindersFailed++;
+        }
+      }
+
+      log.info('trial_reminders_complete', { sent: trialRemindersSent, failed: trialRemindersFailed });
+      })(), 30000, 'trial_reminders');
+    } catch (trialErr) {
+      log.error('trial_reminder_error', { error: trialErr?.message });
+      sentry.captureException(trialErr, { tags: { source: 'cron', step: 'trial_reminders' } });
+      // Don't throw - trial reminder failures shouldn't break the main cron
     }
 
     // ─── Step 8: Purge expired / old revoked refresh tokens ─

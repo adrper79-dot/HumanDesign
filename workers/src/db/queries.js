@@ -1863,6 +1863,18 @@ export const QUERIES = {
       AND u.email_marketing_opted_out != true
   `,
 
+  cronGetTrialEndingUsers: `
+    SELECT u.id, u.email, s.current_period_end,
+           EXTRACT(DAY FROM (s.current_period_end - NOW())) AS days_remaining
+    FROM users u
+    JOIN subscriptions s ON u.id = s.user_id
+    WHERE s.status = 'trialing'
+      AND s.current_period_end >= NOW() + INTERVAL '2 days'
+      AND s.current_period_end < NOW() + INTERVAL '2 days 1 hour'
+      AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
+  `,
+
   // ─── Promo Codes ──────────────────────────────────────────
 
   validatePromoCode: `
