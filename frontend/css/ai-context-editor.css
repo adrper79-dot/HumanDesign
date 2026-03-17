@@ -1,0 +1,270 @@
+/**
+ * AI Context Editor Modal Styles
+ * 
+ * Accessible modal with focus trapping, keyboard navigation,
+ * dark theme matching Prime Self design system
+ */
+
+/* ─── Modal Overlay ─── */
+.ai-context-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Modal Content ─── */
+.ai-context-modal-content {
+  background: #0a0e27;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .ai-context-modal {
+    padding: 8px;
+  }
+
+  .ai-context-modal-content {
+    max-height: 85vh;
+  }
+}
+
+/* ─── Header ─── */
+.ai-context-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.ai-context-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffd700;
+  margin: 0;
+}
+
+.ai-context-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #b0b0b0;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.ai-context-close:hover {
+  background: rgba(255, 215, 0, 0.1);
+  color: #ffd700;
+}
+
+.ai-context-close:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+/* ─── Body ─── */
+.ai-context-body {
+  padding: 24px;
+}
+
+.ai-context-hint {
+  font-size: 14px;
+  color: #808080;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+/* ─── Input Group ─── */
+.ai-context-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-context-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 4px;
+}
+
+.ai-context-token-count {
+  font-size: 12px;
+  color: #808080;
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.ai-context-token-warning {
+  color: #ff9800;
+  font-weight: 600;
+}
+
+/* ─── Textarea ─── */
+.ai-context-textarea {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 150px;
+  max-height: 300px;
+  transition: all 0.2s ease;
+}
+
+.ai-context-textarea:focus {
+  outline: none;
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.03);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+}
+
+.ai-context-textarea::placeholder {
+  color: #606060;
+}
+
+/* ─── Hint Text ─── */
+.ai-context-hint-small {
+  font-size: 12px;
+  color: #606060;
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+}
+
+/* ─── Footer ─── */
+.ai-context-footer {
+  display: flex;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
+  justify-content: flex-end;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.btn:focus {
+  outline-color: currentColor;
+}
+
+.btn-primary {
+  background: #ffd700;
+  color: #000;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #ffed4e;
+  transform: translateY(-2px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #b0b0b0;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 215, 0, 0.1);
+  color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.4);
+}
+
+/* Mobile buttons */
+@media (max-width: 480px) {
+  .ai-context-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ─── Accessibility ─── */
+@media (prefers-reduced-motion: reduce) {
+  .ai-context-modal-content {
+    animation: none;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .ai-context-modal-content {
+    border-color: #ffd700;
+  }
+
+  .ai-context-header h2 {
+    color: #ffff00;
+  }
+
+  .btn-primary {
+    border: 2px solid #000;
+  }
+}

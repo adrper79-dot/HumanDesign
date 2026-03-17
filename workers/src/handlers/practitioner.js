@@ -13,6 +13,10 @@
  *   GET  /api/practitioner/clients/invitations — List pending invitations
  *   POST /api/practitioner/clients/invitations/:id/resend — Resend invitation
  *   DELETE /api/practitioner/clients/invitations/:id — Revoke invitation
+ *   GET  /api/practitioner/clients/:id/ai-context — Get per-client AI context
+ *   POST /api/practitioner/clients/:id/ai-context — Save per-client AI context
+ *   GET  /api/practitioner/clients/:id/context — Alias of ai-context endpoint
+ *   POST /api/practitioner/clients/:id/context — Alias of ai-context endpoint
  *   GET  /api/practitioner/clients/:id     — Get a specific client's chart + profiles
  *   DELETE /api/practitioner/clients/:id  — Remove client from roster
  *   POST /api/practitioner/clients/:id/session-brief — Generate AI session brief
@@ -31,6 +35,7 @@ import { reportHandledRouteError } from '../lib/routeErrors.js';
 import { callLLM } from '../lib/llm.js';
 import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
 import { handleListSessionTemplates, handleGetSessionTemplate, handleHydrateTemplate } from './session-templates.js';
+import { handleGetPractitionerProfileSSR, handleGetPractitionerProfileJSON } from './practitioner-profile.js';
 
 // Tier limits aligned with billing tier names (individual/practitioner/agency)
 const TIER_LIMITS = {
@@ -87,6 +92,22 @@ async function getInvitationByToken(query, rawToken) {
 }
 
 export async function handlePractitioner(request, env, subpath) {
+  const method = request.method;
+
+  // ─── PUBLIC ROUTES (no authentication required) ───
+  // GET /api/practitioner/:username/profile (SSR with OG tags)
+  const srrProfileMatch = subpath.match(/^\/([a-zA-Z0-9_]+)\/profile$/i);
+  if (srrProfileMatch && method === 'GET') {
+    return await handleGetPractitionerProfileSSR(request, env, srrProfileMatch[1]);
+  }
+
+  // GET /api/practitioner/:username/profile.json
+  const jsonProfileMatch = subpath.match(/^\/([a-zA-Z0-9_]+)\/profile\.json$/i);
+  if (jsonProfileMatch && method === 'GET') {
+    return await handleGetPractitionerProfileJSON(request, env, jsonProfileMatch[1]);
+  }
+
+  // ─── ALL OTHER ROUTES REQUIRE AUTHENTICATION ───
   const userId = request._user?.sub;
   if (!userId) {
     return Response.json({ error: 'Authentication required' }, { status: 401 });
@@ -99,7 +120,6 @@ export async function handlePractitioner(request, env, subpath) {
       if (featureCheck) return featureCheck;
     }
 
-    const method = request.method;
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // POST /api/practitioner/register
@@ -171,6 +191,24 @@ export async function handlePractitioner(request, env, subpath) {
     const remindMatch = subpath.match(/^\/clients\/([a-f0-9-]+)\/remind$/i);
     if (remindMatch && method === 'POST') {
       return await handleClientRemind(userId, remindMatch[1], query, env);
+    }
+
+    // GET|POST /api/practitioner/clients/:id/ai-context
+    const aiContextMatch = subpath.match(/^\/clients\/([a-f0-9-]+)\/ai-context$/i);
+    if (aiContextMatch && method === 'GET') {
+      return await handleGetClientAIContext(userId, aiContextMatch[1], query);
+    }
+    if (aiContextMatch && method === 'POST') {
+      return await handleSaveClientAIContext(request, userId, aiContextMatch[1], query);
+    }
+
+    // GET|POST /api/practitioner/clients/:id/context (alias)
+    const contextAliasMatch = subpath.match(/^\/clients\/([a-f0-9-]+)\/context$/i);
+    if (contextAliasMatch && method === 'GET') {
+      return await handleGetClientAIContext(userId, contextAliasMatch[1], query);
+    }
+    if (contextAliasMatch && method === 'POST') {
+      return await handleSaveClientAIContext(request, userId, contextAliasMatch[1], query);
     }
 
     // GET /api/practitioner/clients/:id
@@ -800,6 +838,60 @@ Respond with this exact JSON schema:
       fallbackMessage: 'AI session brief temporarily unavailable'
     });
   }
+}
+
+async function handleGetClientAIContext(userId, clientId, query) {
+  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practResult.rows?.length) {
+    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
+  }
+  const practitionerId = practResult.rows[0].id;
+
+  const accessCheck = await query(QUERIES.checkPractitionerAccess, [userId, clientId]);
+  if (!accessCheck.rows?.length) {
+    return Response.json({ error: 'Forbidden — client not on your roster' }, { status: 403 });
+  }
+
+  const result = await query(QUERIES.getClientAIContext, [practitionerId, clientId]);
+  return Response.json({
+    ok: true,
+    ai_context: result.rows?.[0]?.ai_context || '',
+  });
+}
+
+async function handleSaveClientAIContext(request, userId, clientId, query) {
+  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practResult.rows?.length) {
+    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
+  }
+  const practitionerId = practResult.rows[0].id;
+
+  const accessCheck = await query(QUERIES.checkPractitionerAccess, [userId, clientId]);
+  if (!accessCheck.rows?.length) {
+    return Response.json({ error: 'Forbidden — client not on your roster' }, { status: 403 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const aiContext = typeof body?.ai_context === 'string'
+    ? body.ai_context
+    : (typeof body?.context === 'string' ? body.context : '');
+
+  if (aiContext.length > 4000) {
+    return Response.json({ error: 'AI context too long (max 4000 characters)' }, { status: 400 });
+  }
+
+  await query(QUERIES.updateClientAIContext, [practitionerId, clientId, aiContext]);
+  return Response.json({
+    ok: true,
+    ai_context: aiContext,
+    message: 'AI context saved',
+  });
 }
 
 // ─── PRAC-012: Practitioner Metrics Stats ────────────────────
