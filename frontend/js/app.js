@@ -259,7 +259,7 @@ async function begin2FASetup() {
   body.innerHTML = '<p>Generating secret…</p>';
   try {
     const res = await apiFetch('/api/auth/2fa/setup');
-    if (res.error) { body.innerHTML = `<p style="color:var(--color-error)">${res.error}</p>`; return; }
+    if (res.error) { body.innerHTML = `<p style="color:var(--color-error)">${escapeHtml(res.error)}</p>`; return; }
     var qrSrc = (typeof QRCode !== 'undefined') ? QRCode.toDataURL(res.otpauth_url, 4) : '';
     body.innerHTML = `
       <p>Scan this QR code with your authenticator app, or enter the secret manually.</p>
@@ -1794,6 +1794,8 @@ function applyGuidedNavigation() {
 }
 
 function switchTab(id, btn) {
+  // Close More dropdown if open (BL-UX-C7)
+  closeMoreMenu();
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   // legacy support: remove active from old .tabs .tab-btn if any remain
   document.querySelectorAll('.tabs .tab-btn').forEach(el => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
@@ -3009,14 +3011,14 @@ async function generateProfile() {
   spinner.style.display = '';
   resultEl.innerHTML = skeletonProfile();
 
-  // Progress indicator updates during the 15-30s generation
+  // Progress indicator: cycles every 8s, covers 45s timeout window (BL-EXC-P0-3)
   const progressMessages = [
-    { delay: 0, message: 'Analyzing your birth chart...' },
-    { delay: 3000, message: 'Calculating gate activations...' },
-    { delay: 6000, message: 'Mapping planetary positions...' },
-    { delay: 9000, message: 'Synthesizing Gene Keys insights...' },
-    { delay: 12000, message: 'Generating personalized profile...' },
-    { delay: 15000, message: 'Finalizing your Prime Self synthesis...' }
+    { delay: 0,     message: 'Reading your gates...' },
+    { delay: 8000,  message: 'Interpreting your profile lines...' },
+    { delay: 16000, message: 'Mapping planetary influences...' },
+    { delay: 24000, message: 'Synthesizing Gene Keys insights...' },
+    { delay: 32000, message: 'Writing your synthesis...' },
+    { delay: 40000, message: 'Almost ready...' },
   ];
 
   // Set up progress message updates
@@ -3058,9 +3060,33 @@ async function generateProfile() {
 
     payload.systemPreferences = getSystemPreferences();
 
-    const data = await apiFetch('/api/profile/generate', { method: 'POST', body: JSON.stringify(payload) });
+    // Abort after 45s — prevents infinite spinner on slow or timed-out AI calls (BL-EXC-P0-3)
+    const controller = new AbortController();
+    const abortTimeout = setTimeout(() => controller.abort(), 45_000);
+
+    let data;
+    try {
+      data = await apiFetch('/api/profile/generate', { method: 'POST', body: JSON.stringify(payload), signal: controller.signal });
+    } finally {
+      clearTimeout(abortTimeout);
+    }
+
     // Clear any remaining progress timeouts
     progressTimeouts.forEach(clearTimeout);
+
+    // Detect timeout — show retry and fallback (BL-EXC-P0-3)
+    if (data && data.error && /abort/i.test(data.error)) {
+      resultEl.innerHTML = `<div class="alert alert-warn" style="padding:16px">
+        <strong>AI synthesis timed out.</strong>
+        <p style="margin:8px 0 12px">This can happen when AI is under load. Your chart data is ready.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-secondary btn-sm" onclick="generateProfile()">Try again</button>
+          <button class="btn-dim btn-sm" onclick="switchTab('chart')">View chart without synthesis</button>
+        </div>
+      </div>`;
+      return;
+    }
+
     resultEl.innerHTML = renderProfile(data);
     markJourneyMilestone('profileGenerated');
     updateStepGuide('profile');
