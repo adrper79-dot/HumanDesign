@@ -18,13 +18,6 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleForecast(request, env) {
-  // BL-N4: Require authentication. This endpoint runs calculateFullChart() +
-  // a multi-day transit loop — unauthenticated access enables CPU exhaustion.
-  const user = await getUserFromRequest(request, env);
-  if (!user) {
-    return Response.json({ error: 'Authentication required' }, { status: 401 });
-  }
-
   const url = new URL(request.url);
 
   const birthDate = url.searchParams.get('birthDate');
@@ -33,11 +26,19 @@ export async function handleForecast(request, env) {
   const lat = parseFloat(url.searchParams.get('lat'));
   const lng = parseFloat(url.searchParams.get('lng'));
 
+  // Validate params first (before auth check) so client gets meaningful error
   if (!birthDate || !birthTime || isNaN(lat) || isNaN(lng)) {
     return Response.json(
       { error: 'Required params: birthDate, birthTime, lat, lng' },
       { status: 400 }
     );
+  }
+
+  // BL-N4: Require authentication. This endpoint runs calculateFullChart() +
+  // a multi-day transit loop — unauthenticated access enables CPU exhaustion.
+  const user = await getUserFromRequest(request, env);
+  if (!user) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
   }
 
   const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get('days') || '30', 10)));
