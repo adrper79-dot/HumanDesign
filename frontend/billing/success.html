@@ -125,6 +125,28 @@
 
 </div>
 
+<!-- ── Practitioner Onboarding Modal ── -->
+<div id="pracOnboardingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#0f1522;border:1px solid #1e2a45;border-radius:16px;padding:48px 40px;max-width:480px;width:calc(100% - 48px);max-height:80vh;overflow-y:auto">
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:16px;color:#e8e6f0">Welcome to Practitioner Tier! 🎉</h2>
+    <p style="font-size:14px;color:#918db0;line-height:1.6;margin-bottom:20px">You're now ready to manage client charts, notes, and profiles. Let's get you started with your first client.</p>
+    
+    <div style="background:#1a2240;border:1px solid #2a3a5a;border-radius:12px;padding:20px;margin-bottom:24px">
+      <h3 style="font-size:14px;font-weight:600;color:#c9a84c;margin-bottom:12px">Quick Setup (2 min)</h3>
+      <ol style="font-size:13px;color:#b8b5c8;line-height:1.8;margin-left:20px;margin-bottom:0">
+        <li>Create your public profile (so clients can find you)</li>
+        <li>Invite your first client by email</li>
+        <li>Start taking session notes</li>
+      </ol>
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <button id="pracOnbStart" style="flex:1;background:linear-gradient(135deg, #c9a84c 0%, #6a4fc8 100%);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:600;cursor:pointer">Start Setup →</button>
+      <button id="pracOnbSkip" style="flex:1;background:#1a2240;color:#c9a84c;border:1px solid #2a3a5a;padding:12px;border-radius:8px;font-weight:600;cursor:pointer">Skip for Now</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/billing-success.js" defer></script>
 </body>
 </html>

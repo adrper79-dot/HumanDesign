@@ -12,6 +12,7 @@ let _pracSchedulingEmbedUrl = ''; // PRAC-015: practitioner's scheduling embed U
 const PENDING_PRACTITIONER_INVITE_KEY = 'ps_pending_practitioner_invite';
 const POST_CHECKOUT_DESTINATION_KEY = 'ps_post_checkout_destination';
 const POST_CHECKOUT_TIER_KEY = 'ps_post_checkout_tier';
+const PRACTITIONER_ONBOARDING_KEY = 'ps_pract_onb_triggered';
 let userEmail = sessionStorage.getItem('ps_email');
 let authMode = 'login'; // 'login' | 'register'
 let _pendingResetToken = null; // SEC-001: closure-scoped, never on window
@@ -767,17 +768,24 @@ function clearPendingPractitionerInviteToken() {
 function capturePostCheckoutIntentFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const destination = params.get('post_checkout');
-  if (!destination) return;
+  const onboarding = params.get('onboarding');
+  
+  if (!destination && !onboarding) return;
 
   const safeDestinations = new Set(['overview', 'practitioner']);
-  if (safeDestinations.has(destination)) {
+  if (destination && safeDestinations.has(destination)) {
     sessionStorage.setItem(POST_CHECKOUT_DESTINATION_KEY, destination);
     const tier = params.get('tier');
     if (tier) sessionStorage.setItem(POST_CHECKOUT_TIER_KEY, tier);
   }
 
+  if (onboarding === 'practitioner') {
+    sessionStorage.setItem(PRACTITIONER_ONBOARDING_KEY, '1');
+  }
+
   params.delete('post_checkout');
   params.delete('tier');
+  params.delete('onboarding');
   const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}${window.location.hash || ''}`;
   window.history.replaceState({}, '', next);
 }
@@ -791,15 +799,29 @@ function normalizeCurrentTierName(tier) {
 function clearPendingPostCheckoutIntent() {
   sessionStorage.removeItem(POST_CHECKOUT_DESTINATION_KEY);
   sessionStorage.removeItem(POST_CHECKOUT_TIER_KEY);
+  sessionStorage.removeItem(PRACTITIONER_ONBOARDING_KEY);
 }
 
 async function applyPendingPostCheckoutIntent() {
   const destination = sessionStorage.getItem(POST_CHECKOUT_DESTINATION_KEY);
-  if (!destination || !currentUser) return false;
+  const shouldShowOnboarding = sessionStorage.getItem(PRACTITIONER_ONBOARDING_KEY);
+  
+  if (!destination && !shouldShowOnboarding) return false;
+  if (!currentUser) return false;
 
   const currentTier = normalizeCurrentTierName(currentUser?.tier);
   const hintedTier = normalizeCurrentTierName(sessionStorage.getItem(POST_CHECKOUT_TIER_KEY));
   const effectiveTier = currentTier !== 'free' ? currentTier : hintedTier;
+
+  if (shouldShowOnboarding === '1' && ['practitioner', 'agency'].includes(effectiveTier)) {
+    requestAnimationFrame(() => {
+      switchTab('practitioner');
+      showNotification('Practitioner plan active. Let\'s set up your profile!', 'success');
+      setTimeout(showPractitionerOnboarding, 800);
+    });
+    clearPendingPostCheckoutIntent();
+    return true;
+  }
 
   if (destination === 'practitioner') {
     if (effectiveTier !== 'practitioner' && effectiveTier !== 'agency') return false;
@@ -808,7 +830,7 @@ async function applyPendingPostCheckoutIntent() {
       switchTab('practitioner');
       showNotification('Practitioner plan active. Your workspace is ready.', 'success');
       // Phase 6: Show onboarding if this is the first time they've upgraded to practitioner
-      if (['practitioner', 'guide'].includes(currentUser?.tier) && !localStorage.getItem('pract_onb_seen')) {
+      if (['practitioner', 'guide', 'agency', 'white_label'].includes(currentUser?.tier) && !localStorage.getItem('pract_onb_seen')) {
         setTimeout(showPractitionerOnboarding, 1500);
       }
     });

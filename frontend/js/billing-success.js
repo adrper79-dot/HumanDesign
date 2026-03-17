@@ -116,7 +116,46 @@
     document.getElementById('tierBadge').textContent =
       (TIER_LABELS[tier] ?? tier.charAt(0).toUpperCase() + tier.slice(1)) + ' — Active';
     showState('success');
-    startRedirect(target);
+    
+    // Show practitioner onboarding modal if tier is practitioner or agency
+    if (['practitioner', 'agency', 'white_label'].includes(tier)) {
+      const modal = document.getElementById('pracOnboardingModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        
+        const startBtn = document.getElementById('pracOnbStart');
+        const skipBtn = document.getElementById('pracOnbSkip');
+        
+        let redirectTimer = null;
+        const closeModal = () => {
+          modal.style.display = 'none';
+          if (redirectTimer) clearInterval(redirectTimer);
+        };
+        
+        const proceedToApp = () => {
+          closeModal();
+          // Redirect with onboarding flag
+          const onboardTarget = target.href + '&onboarding=practitioner';
+          window.location.replace(onboardTarget);
+        };
+        
+        if (startBtn) {
+          startBtn.addEventListener('click', proceedToApp);
+        }
+        
+        if (skipBtn) {
+          skipBtn.addEventListener('click', () => {
+            closeModal();
+            // Normal redirect without onboarding
+            window.location.replace(target.href);
+          });
+        }
+      } else {
+        startRedirect(target);
+      }
+    } else {
+      startRedirect(target);
+    }
   } else {
     document.getElementById('errorTitle').textContent = 'Almost there…';
     document.getElementById('errorMsg').textContent =
