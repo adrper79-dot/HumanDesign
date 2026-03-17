@@ -15,6 +15,8 @@ async function bypassFirstRun(page) {
       localStorage.setItem('hasSeenWelcome', 'true');
       localStorage.setItem('prime_self_first_run', 'false');
       localStorage.setItem('ps_session', '1');
+      localStorage.setItem('primeself_frm_seen', '1');
+      localStorage.setItem('ps_hasSeenOnboarding', '1');
     } catch {
       // Ignore browsers that disallow storage during setup.
     }
@@ -30,6 +32,24 @@ async function dismissAnyDialog(page) {
       await expect(firstRunModal).toBeHidden({ timeout: 5000 });
       return;
     }
+
+    // Fallback: production can land in onboarding steps without an explicit close CTA.
+    await page.evaluate(() => {
+      try {
+        localStorage.setItem('primeself_frm_seen', '1');
+        localStorage.setItem('ps_hasSeenOnboarding', '1');
+      } catch {
+        // Ignore storage failures.
+      }
+      const modal = document.getElementById('first-run-modal');
+      if (modal) {
+        modal.setAttribute('aria-hidden', 'true');
+        (modal as HTMLElement).style.display = 'none';
+        (modal as HTMLElement).style.pointerEvents = 'none';
+      }
+    });
+    await expect(firstRunModal).toBeHidden({ timeout: 5000 });
+    return;
   }
 
   try {
