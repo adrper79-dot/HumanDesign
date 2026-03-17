@@ -14,8 +14,16 @@
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { getTransitForecast } from '../../../src/engine/transits.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
+import { getUserFromRequest } from '../middleware/auth.js';
 
 export async function handleForecast(request, env) {
+  // BL-N4: Require authentication. This endpoint runs calculateFullChart() +
+  // a multi-day transit loop — unauthenticated access enables CPU exhaustion.
+  const user = await getUserFromRequest(request, env);
+  if (!user) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
   const url = new URL(request.url);
 
   const birthDate = url.searchParams.get('birthDate');

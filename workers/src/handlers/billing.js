@@ -22,7 +22,8 @@ import {
   cancelSubscription,
   getTierConfig,
   getTier,
-  getOneTimeProducts
+  getOneTimeProducts,
+  normalizeTierName
 } from '../lib/stripe.js';
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
@@ -33,7 +34,11 @@ import { createLogger } from '../lib/logger.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 function buildRetentionOffer(subscriptionTier) {
-  if (subscriptionTier === 'practitioner') {
+  // BL-N2: Normalize legacy tier aliases before branching so 'regular' subscribers
+  // receive the same retention offer as 'individual' subscribers.
+  const tier = normalizeTierName(subscriptionTier);
+
+  if (tier === 'practitioner') {
     return {
       type: 'downgrade',
       targetTier: 'individual',
@@ -43,7 +48,7 @@ function buildRetentionOffer(subscriptionTier) {
     };
   }
 
-  if (subscriptionTier === 'individual') {
+  if (tier === 'individual') {
     return {
       type: 'downgrade',
       targetTier: 'free',

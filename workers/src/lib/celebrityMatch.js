@@ -16,7 +16,7 @@
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
-import celebsData from '../data/celebrities.json' assert { type: 'json' };
+import celebsData from '../data/celebrities.json' with { type: 'json' };
 
 // ─── Similarity Scoring ──────────────────────────────────────────────────
 

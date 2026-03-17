@@ -228,7 +228,7 @@ These items cause outright failures in deployed environments.
   - "Perform a repo-wide observability cleanup sweep. Replace console-only handled 5xx paths in customer-facing Workers handlers with the shared `reportHandledRouteError()` flow or a rethrow into the top-level worker catch, whichever preserves the route contract best. Do not change successful response shapes or unrelated business logic. Preserve HTML/browser callback responses where needed by using the shared helper with a custom response factory. Ensure every migrated path emits structured logger data, analytics `trackError`, Sentry capture, and returns `X-Request-ID`. On the frontend, preserve request IDs from failed API responses and append them to support-facing error copy only for server-side failures. Add or extend focused Vitest coverage for at least one handled failure in each migrated area. Keep changes minimal, avoid unrelated refactors, and validate with targeted tests."
 
 ### BL-M16 | 2FA QR delivery path is split between vendored and CDN assets
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16) — Self-hosted `js/qr.js` is the only delivery path; CDN reference removed from HTML; CSP does not include jsdelivr.
 - **Severity:** Moderate
 - **Files:** `frontend/index.html`, `frontend/_headers`, `frontend/js/qr.js`, `process/SESSION_LOG_2026-03-16.md`
 - **Problem:** The repo still contains a local QR generator in `frontend/js/qr.js`, but the current frontend boot path loads `qrcode.min.js` from `cdn.jsdelivr.net` and widens CSP to allow that host. The session log still documents a self-contained local generator. That leaves the runtime dependency model, CSP posture, and rollback story out of sync.
@@ -290,7 +290,7 @@ These items cause outright failures in deployed environments.
 ## Code Review Findings — 2026-03-16 Audit (9 items)
 
 ### BL-N1 | `keys.js` TIER_ORDER contains both legacy and canonical names — wrong comparison result
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/keys.js`
 - **Problem:** `TIER_ORDER` is defined as `['free', 'regular', 'individual', 'practitioner', 'white_label', 'agency']`. This mixes legacy tier aliases (`regular`, `white_label`) alongside canonical tier names (`individual`, `agency`) from `stripe.js`. As a result `regular` (index 1) < `individual` (index 2) even though `normalizeTierName('regular') === 'individual'`. A subscriber whose DB row holds `tier = 'regular'` (written by an older webhook invocation) cannot create an `individual`-level API key even though they paid for it. Same issue for `white_label` (index 4) vs `agency` (index 5).
@@ -301,7 +301,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N2 | `billing.js` retention/cancel offer returns `null` for legacy-tier subscribers
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/billing.js`
 - **Problem:** `buildRetentionOffer(subscription.tier)` receives the raw tier string from the DB (`'regular'`, `'white_label'`, etc.) with no normalization. The function only branches on `'practitioner'` and `'individual'`. A subscriber stored as `'regular'` (canonical: `'individual'`) matches neither branch and receives `null` — meaning no retention offer is shown before cancellation. This makes the cancel flow silently useless for all legacy-tier subscribers.
@@ -312,7 +312,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N3 | Leaderboard email masking incomplete in `stats.js`
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** Minor
 - **Files:** `workers/src/handlers/stats.js`
 - **Problem:** `handleGetLeaderboard` masks emails as `email.split('@')[0] + '@***'`, hiding the domain but exposing the full local part (everything before `@`). BL-R-L12 (Sprint 16) fixed the identical bug in `achievements.js` but `stats.js` was missed. Any email in the leaderboard publicly reveals the username/identifier portion.
@@ -323,7 +323,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N4 | `forecast.js` transit endpoint is unauthenticated and has no rate limit
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/forecast.js`, `workers/src/index.js`
 - **Problem:** `GET /api/transits/forecast` accepts birth data in query params and runs `calculateFullChart()` + a multi-day `getTransitForecast()` loop (1–90 days configurable) with no authentication check and no rate-limit middleware. Anyone on the internet can hammer this endpoint with unique birth params to consume significant CPU time in the Worker runtime.
@@ -334,7 +334,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N5 | `cycles.js` silently falls back to UTC when `birthTimezone` is absent
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/cycles.js`
 - **Problem:** `url.searchParams.get('birthTimezone')` returns `null` when the query param is omitted. This `null` is passed directly to `parseToUTC(birthDate, birthTime, null)`. `parseToUTC` treats `null` timezone as UTC, so all cycle dates (Saturn return, Uranus opposition, etc.) are computed as if the user was born in UTC — silently wrong for anyone not in UTC. No error or warning is returned to the client.
@@ -345,7 +345,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N6 | Deprecated `assert { type: 'json' }` import syntax in `famous.js`
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** Minor
 - **Files:** `workers/src/handlers/famous.js`
 - **Problem:** `import celebsData from '../data/celebrities.json' assert { type: 'json' }` uses the `assert` keyword for import attributes, which was deprecated by TC39 and replaced with `with`. While Cloudflare Workers' current V8 build accepts both, this will produce a deprecation warning in future runtimes and is scheduled for removal in V8 ~12.6+. Any other files using `assert { type: 'json' }` have the same issue.
@@ -356,7 +356,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N7 | `timing.js` raw tier check bypasses agency seat propagation
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** High
 - **Files:** `workers/src/handlers/timing.js`, `workers/src/middleware/tierEnforcement.js`
 - **Problem:** `handleTiming` guards the electional astrology timing feature with a direct `user.tier === 'free'` check on the raw result from `getUserFromRequest()`. It does not call `enforceFeatureAccess()` from `tierEnforcement.js`. The agency seat propagation logic lives entirely inside `tierEnforcement.js` — it checks if the current user is a seat member and elevates their effective tier to the owner's tier. Agency seat members whose own DB row has `tier = 'free'` or `'individual'` are blocked from timing features even though their agency owner's subscription entitles them to practitioner-level access.
@@ -367,7 +367,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N8 | `practitioner-directory.js` accesses `request._user.sub` without null guard
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16)
 - **Severity:** Minor
 - **Files:** `workers/src/handlers/practitioner-directory.js`
 - **Problem:** `handleGetDirectoryProfile` (and other authenticated endpoints in the same file) access `request._user.sub` directly without optional chaining. If `_user` is `undefined` due to middleware not attaching it (route misconfiguration, middleware thrown exception caught elsewhere, or test harness), the handler throws a `TypeError: Cannot read properties of undefined` rather than returning a clean 401. The stack trace will reach the global error handler, masking the actual route auth failure.
@@ -378,7 +378,7 @@ These items cause outright failures in deployed environments.
 ---
 
 ### BL-N9 | `psychometric.js` has no tier gate — Big Five/VIA available to all authenticated users
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16) — Documented as intentionally ungated: assessments are a free lead-gen hook; AI synthesis of results is quota-gated separately.
 - **Severity:** Minor
 - **Files:** `workers/src/handlers/psychometric.js`, `workers/src/lib/stripe.js`
 - **Problem:** The Big Five personality assessment and VIA strengths endpoints in `psychometric.js` have no call to `enforceFeatureAccess()`. Any authenticated user — including free-tier — can save and retrieve psychometric assessment data. These assessments are positioned visually in the "Enhance" or premium tab of the frontend, but there is no backend enforcement preventing free-tier users from accessing the feature.

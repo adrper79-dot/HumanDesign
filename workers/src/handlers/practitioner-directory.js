@@ -94,6 +94,7 @@ export async function handleGetPublicProfile(request, env, slug) {
  * GET /api/practitioner/directory-profile — own settings
  */
 export async function handleGetDirectoryProfile(request, env) {
+  if (!request._user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   const userId = request._user.sub;
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const result = await query(QUERIES.getPractitionerDirectoryProfile, [userId]);
@@ -109,6 +110,7 @@ export async function handleGetDirectoryProfile(request, env) {
  * PUT /api/practitioner/directory-profile — update own directory settings
  */
 export async function handleUpdateDirectoryProfile(request, env) {
+  if (!request._user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   const userId = request._user.sub;
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 

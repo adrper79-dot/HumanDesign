@@ -15,6 +15,7 @@
 import { generateApiKey } from '../middleware/apiKey.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { normalizeTierName } from '../lib/stripe.js';
 
 /**
  * Main handler for /api/keys routes
@@ -88,11 +89,11 @@ async function generateKey(request, env, user) {
     }
 
     // Determine tier based on user's subscription
-    // Free users get free tier, paid users can only create keys up to their own tier
-    // BL-FIX: Normalize null/undefined tier to 'free' to prevent null bypass
-    const TIER_ORDER = ['free', 'regular', 'individual', 'practitioner', 'white_label', 'agency'];
-    const effectiveTier = user.tier || 'free';
-    let keyTier = tier || 'free';
+    // BL-N1: Use canonical-only TIER_ORDER and normalize both sides before comparison
+    // to prevent legacy aliases ('regular', 'white_label') from producing wrong index results.
+    const TIER_ORDER = ['free', 'individual', 'practitioner', 'agency'];
+    const effectiveTier = normalizeTierName(user.tier || 'free');
+    let keyTier = normalizeTierName(tier || 'free');
 
     // Reject unknown tier values outright
     if (!TIER_ORDER.includes(keyTier)) {

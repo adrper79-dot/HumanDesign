@@ -47,6 +47,7 @@ vi.mock('../workers/src/lib/stripe.js', () => ({
     priceId: env?.STRIPE_PRICE_INDIVIDUAL || 'price_individual',
   })),
   getOneTimeProducts: vi.fn(),
+  normalizeTierName: (t) => ({ regular: 'individual', explorer: 'individual', white_label: 'agency', studio: 'agency', guide: 'practitioner', seeker: 'individual' })[t] || t || 'free',
 }));
 
 vi.mock('../workers/src/lib/circuitBreaker.js', () => ({

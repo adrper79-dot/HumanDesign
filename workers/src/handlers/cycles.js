@@ -63,8 +63,18 @@ export async function handleCycles(request, env) {
   }
 
   try {
+    // BL-N5: Require birthTimezone — passing null silently computes cycles in UTC,
+    // producing wrong milestone dates for non-UTC users.
+    const birthTimezone = url.searchParams.get('birthTimezone');
+    if (!birthTimezone) {
+      return Response.json({
+        ok: false,
+        error: 'birthTimezone is required. Please provide a valid IANA timezone (e.g. "America/New_York").'
+      }, { status: 400 });
+    }
+
     // Parse birth data to UTC
-    const utc = parseToUTC(birthDate, birthTime, url.searchParams.get('birthTimezone'));
+    const utc = parseToUTC(birthDate, birthTime, birthTimezone);
 
     // Calculate natal chart (we need natal planet positions)
     const chart = calculateFullChart({

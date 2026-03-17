@@ -84,10 +84,21 @@ export async function handleGetLeaderboard(request, env, ctx) {
       []
     );
 
+    // BL-N3: Use the same masking pattern as achievements.js (BL-R-L12).
+    // Short local parts (< 4 chars) are fully masked; longer ones show first 3 chars.
+    function maskEmail(email) {
+      const atIdx = email.indexOf('@');
+      if (atIdx < 0) return '***';
+      const local = email.slice(0, atIdx);
+      const domain = email.slice(atIdx); // includes @
+      if (local.length < 4) return `***${domain}`;
+      return `${local.slice(0, 3)}***${domain}`;
+    }
+
     return Response.json({
       ok: true,
       leaderboard: result.rows.map(row => ({
-        email: row.email.split('@')[0] + '@***', // Anonymize
+        email: maskEmail(row.email),
         points: row.total_points,
         achievements: row.total_achievements
       }))

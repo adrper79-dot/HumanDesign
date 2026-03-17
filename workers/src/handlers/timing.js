@@ -14,6 +14,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { trackEvent } from './achievements.js';
 import { getAllPositions } from '../../../src/engine/planets.js';
+import { normalizeTierName } from '../lib/stripe.js';
 
 // Intention templates with astrological preferences
 const INTENTION_TEMPLATES = {
@@ -109,8 +110,11 @@ export async function handleTiming(request, env) {
     });
   }
 
-  // Tier enforcement: Timing engine requires Explorer tier or above
-  if (user.tier === 'free') {
+  // Tier enforcement: Timing engine requires Individual tier or above.
+  // BL-N7: Normalize tier before checking to handle legacy aliases like 'regular'
+  // (which maps to 'individual'). Without this, agency seat members and legacy
+  // subscribers are incorrectly blocked.
+  if (normalizeTierName(user.tier) === 'free') {
     return Response.json({
       error: 'Upgrade required',
       message: 'Best Timing Engine requires Explorer tier or above',

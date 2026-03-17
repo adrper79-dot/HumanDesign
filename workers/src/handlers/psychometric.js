@@ -93,6 +93,10 @@ function calculateVIAStrengths(responses) {
 
 /**
  * Save or update psychometric assessment data.
+ * BL-N9: Psychometric assessments (Big Five, VIA) are intentionally accessible
+ * to all authenticated users regardless of tier. These assessments serve as a
+ * lead-generation hook — free users can complete them, and the AI synthesis of
+ * results is tier-gated separately via the standard profile-generation quota.
  */
 export async function handlePsychometricSave(request, env) {
   const userId = request._user?.sub;
