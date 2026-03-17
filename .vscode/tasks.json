@@ -93,8 +93,7 @@
     {
       "label": "🧪 Run Tests (deterministic)",
       "type": "shell",
-      "command": "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
-      "args": ["-Command", "npm run test:deterministic"],
+      "command": "npm run test:deterministic",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -144,10 +143,9 @@
     {
       "label": "🚀 Deploy Workers",
       "type": "shell",
-      "command": "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
-      "args": ["-Command", "cd workers; npm run deploy"],
+      "command": "npm run deploy",
       "options": {
-        "cwd": "${workspaceFolder}"
+        "cwd": "${workspaceFolder}/workers"
       },
       "group": "none",
       "presentation": {
