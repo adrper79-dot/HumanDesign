@@ -1,8 +1,8 @@
 /**
  * Layer 4: Gate/Line Lookup
  *
- * Converts ecliptic longitudes to Human Design gates and lines
- * using the Rave Mandala wheel mapping.
+ * Converts ecliptic longitudes to Energy Blueprint gates and lines
+ * using the gate wheel mapping.
  *
  * The wheel maps 360° of ecliptic longitude to 64 I Ching hexagrams.
  * Each gate = 5.625° (360/64). Each line = 0.9375° (5.625/6).
@@ -15,9 +15,9 @@
  */
 
 // ─── WHEEL OFFSET ───────────────────────────────────────────────
-// The Rave Mandala is rotated 3°52'30" from 0° Aries.
+// The gate wheel is rotated 3°52'30" from 0° Aries.
 // Subtract this from ecliptic longitude before position lookup.
-// Calibrated: Gate 41 Line 1 starts at ~302° (Rave New Year point).
+// Calibrated: Gate 41 Line 1 starts at ~302° (New Year point).
 export const WHEEL_OFFSET = 3.875;
 
 // ─── GATE SEQUENCE ──────────────────────────────────────────────

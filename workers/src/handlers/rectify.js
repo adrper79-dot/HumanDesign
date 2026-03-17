@@ -91,9 +91,6 @@ function diffFingerprints(base, test, offsetLabel) {
 }
 
 export async function handleRectify(request, env) {
-  const user = await getUserFromRequest(request, env);
-  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
-
   let body;
   try {
     body = await request.json();
@@ -104,7 +101,8 @@ export async function handleRectify(request, env) {
     );
   }
 
-  // Validate
+  // Validate params FIRST (before auth check) so client gets meaningful error
+  // BL-BACKEND-P1-2: Return 400 for missing params, not 401 from auth
   for (const field of ['birthDate', 'birthTime', 'lat', 'lng']) {
     if (body[field] === undefined || body[field] === null) {
       return Response.json(
@@ -113,6 +111,10 @@ export async function handleRectify(request, env) {
       );
     }
   }
+
+  // BL-BACKEND-P1-2: Authenticate AFTER param validation
+  const user = await getUserFromRequest(request, env);
+  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
 
   const { birthDate, birthTime, birthTimezone, lat, lng } = body;
   const windowMinutes = Math.min(120, Math.max(5, parseInt(body.windowMinutes || '30', 10)));

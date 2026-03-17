@@ -230,7 +230,7 @@ async function geocodeCity(city, apiUrl) {
 }
 
 /**
- * Calculate a full Human Design chart.
+ * Calculate a full Energy Blueprint chart.
  * Calls the existing public /api/chart/calculate endpoint.
  * @param {{ birthDate: string, birthTime: string, lat: number, lng: number, birthTimezone: string }} params
  * @param {string} apiUrl

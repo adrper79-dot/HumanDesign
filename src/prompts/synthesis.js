@@ -91,7 +91,7 @@ LAYER 1: QUICK START GUIDE (user-facing default)
 • Sections: Who You Are | How You Make Best Decisions | Your Life Strategy | This Month | Working With Others
 
 LAYER 2: TECHNICAL INSIGHTS (opt-in, collapsible)
-• Gene Keys terminology (NOT Human Design IP terms)
+• Frequency Keys terminology (NOT Human Design IP terms)
 • Astrological signatures with interpretations
 • Numerology insights (Life Path, Personal Year)
 • I Ching hexagram wisdom
@@ -107,7 +107,7 @@ FORBIDDEN TERMS (Human Design IP risk - DO NOT USE):
   ✗ "Incarnation Cross", "Variable", "PHS", "Environment"
   ✗ "Emotional Solar Plexus Authority", "Sacral Authority" (as proper nouns)
 
-APPROVED ALTERNATIVES (Gene Keys / Prime Self language):
+APPROVED ALTERNATIVES (Frequency Keys / Prime Self language):
   ✓ Types → Patterns/Archetypes
     - Projector → "Guide Pattern" or "Oracle Pattern"
     - Generator → "Builder Pattern" or "Life Force Pattern"  
@@ -124,9 +124,9 @@ APPROVED ALTERNATIVES (Gene Keys / Prime Self language):
     - Mental/Environmental → "Collaborative Clarity"
     - Lunar → "Moon Cycle Wisdom"
   
-  ✓ Gates → Gene Keys
-    - "Gate 37" → "Gene Key 37"
-    - "Gate 37.4" → "Gene Key 37, Line 4" or "GK37.4"
+  ✓ Gates → Frequency Keys
+    - "Gate 37" → "Frequency Key 37"
+    - "Gate 37.4" → "Frequency Key 37, Line 4" or "FK37.4"
   
   ✓ Other Terms
     - Incarnation Cross → "Life Purpose Vector" or "Dharma Path"
@@ -209,7 +209,7 @@ Identify themes where multiple systems align. These convergences are MORE specif
 
 FORMAT:
 "[Theme] shows up across multiple systems:
-  • Gene Key [X]: [specific insight]
+  • Frequency Key [X]: [specific insight]
   • Astrology: [planet] in [sign/house] [specific insight]
   • Numerology: [Life Path/Personal Year] [specific insight]
   • Vedic: Nakshatra [name] / [current dasha lord] dasha [specific insight] — include ONLY when present in Reference Facts
@@ -226,7 +226,7 @@ NOTE: Vedic, Ogham, Mayan, BaZi, Sabian, Chiron and Lilith data will only appear
 
 EXAMPLE:
 "Leadership through innovation shows up across multiple systems:
-  • Gene Key 3 (Innovation, Line 5 Heretic): You're designed to revolutionize stuck systems through radical new approaches
+  • Frequency Key 3 (Innovation, Line 5 Heretic): You're designed to revolutionize stuck systems through radical new approaches
   • Astrology: Uranus (breakthroughs) conjunct your Sun in Aquarius (reformer) in the 10th house (public career)
   • Numerology: Life Path 1 (pioneer) + Personal Year 5 (dramatic change)
   • Vedic: Ardra nakshatra (intensity and storm that precedes breakthrough, Rahu lord) in a Rahu dasha — a period of amplified disruptive innovation
@@ -264,9 +264,9 @@ OUTPUT SCHEMA (strict JSON)
   },
   "technicalInsights": {
     "geneKeysProfile": {
-      "lifesWork": { "key": "number", "shadow": "string", "gift": "string", "siddhi": "string", "contemplation": "string" },
+      "lifesWork": { "key": "number", "shadow": "string", "gift": "string", "mastery": "string", "contemplation": "string" },
       "otherActiveKeys": [{ "key": "number", "position": "string", "shadow": "string", "gift": "string", "message": "string" }],
-      "_sources": "List the specific gates/Gene Keys and their positions (e.g., 'Gate 36 conscious Sun, Gate 22 unconscious Earth') that generated these Gene Keys interpretations. Be specific — cite the actual chart data points."
+      "_sources": "List the specific gates/Frequency Keys and their positions (e.g., 'Gate 36 conscious Sun, Gate 22 unconscious Earth') that generated these Frequency Keys interpretations. Be specific — cite the actual chart data points."
     },
     "numerologyInsights": {
       "lifePath": { "number": "number", "name": "string", "essence": "string", "currentGuidance": "string" },
@@ -754,11 +754,11 @@ function buildReferenceFacts(data) {
     }
   }
 
-  // ── Gene Keys Profile Reference Facts ──
+  // ── Frequency Keys Profile Reference Facts ──
   if (data.geneKeys) {
     const gk = data.geneKeys;
-    sections.push('\n=== GENE KEYS PROFILE REFERENCE FACTS ===');
-    sections.push('(Shadow → Gift → Siddhi triad for each active gate position)');
+    sections.push('\n=== FREQUENCY KEYS PROFILE REFERENCE FACTS ===');
+    sections.push('(Shadow → Gift → Mastery triad for each active gate position)');
     const gkPositions = [
       { key: 'lifesWork',  label: "Life's Work (Personality Sun)" },
       { key: 'evolution',  label: 'Evolution (Personality Earth)' },
@@ -1046,7 +1046,7 @@ function buildReferenceFacts(data) {
       const topFive = strengths.filter(s => s.isSignature || s.rank <= 5).slice(0, 5);
       topFive.forEach((s, i) => {
         sections.push(`${i + 1}. ${s.strength} (score: ${s.score.toFixed(1)})`);
-        sections.push(`   → Cross-correlate with Gene Keys gifts/siddhis and astrological aspects`);
+        sections.push(`   → Cross-correlate with Frequency Keys gifts/mastery levels and astrological aspects`);
       });
     }
   }

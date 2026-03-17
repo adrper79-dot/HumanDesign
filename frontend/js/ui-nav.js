@@ -399,7 +399,7 @@ async function loadSocialProofStats() {
   try {
     const response = await fetch(API + '/api/stats/activity');
     const data = await response.json();
-    if (data.success && data.stats) {
+    if (data.ok && data.stats) {
       const el = document.getElementById('totalProfiles');
       if (el && data.stats.totalProfiles) {
         animateNumber('totalProfiles', 0, data.stats.totalProfiles, 1500);

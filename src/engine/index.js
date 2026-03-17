@@ -104,7 +104,7 @@ export function calculateFullChart(params) {
   // Layer 8: Numerology (Life Path, Personal Year, Tarot)
   const numerology = calculateNumerologyFromBirthData(year, month, day);
 
-  // Layer 9: Gene Keys Profile (derived from existing gate data, no extra intake)
+  // Layer 9: Frequency Keys Profile (derived from existing gate data, no extra intake)
   const geneKeys = calculateGeneKeys(personalityGates, designGates);
 
   // Layer 10: Vedic Astrology Overlay (Lahiri sidereal, Moon nakshatra, Vimshottari Dasha)

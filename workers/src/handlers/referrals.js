@@ -12,6 +12,7 @@
  */
 
 import { nanoid } from 'nanoid';
+import { createLogger } from '../lib/logger.js';
 import { trackEvent } from './achievements.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
@@ -503,10 +504,12 @@ export async function handleClaimReward(request, env, ctx) {
             currency: 'usd',
             description: 'Referral welcome bonus + 25% recurring revenue share activated'
           });
-          console.log(`Applied $5 referral welcome bonus to customer ${stripeCustomerId} for referral ${referralId}`);
+          const log = createLogger(env, { action: 'referral_claim_reward' });
+          log.info({ action: 'referral_welcome_bonus_applied', stripeCustomerId, referralId });
         }
       } catch (stripeError) {
-        console.warn('[referrals] Stripe credit application failed (non-fatal):', stripeError.message);
+        const log = createLogger(env, { action: 'referral_claim_reward' });
+        log.error({ action: 'referral_stripe_credit_failed', stripeCustomerId, error: stripeError.message });
         // Don't fail the claim — reward is already marked as granted in DB
       }
     }
@@ -542,18 +545,16 @@ export async function markReferralAsConverted(env, userId) {
     const referral = refRows[0] || null;
     
     if (!referral) {
-      console.log('No referral record found for user:', userId);
+      const log = createLogger(env, { action: 'mark_referral_converted' });
+      log.info({ action: 'referral_not_found', userId });
       return;
     }
     
     // Mark as converted
     await query(QUERIES.markReferralConverted, [referral.id]);
     
-    console.log('Referral marked as converted:', {
-      referralId: referral.id,
-      referrerId: referral.referrer_user_id,
-      referredId: userId
-    });
+    const log = createLogger(env, { action: 'mark_referral_converted' });
+    log.info({ action: 'referral_marked_converted', referralId: referral.id, referrerId: referral.referrer_user_id, convertedUserId: userId });
     
     // Notify referrer about the successful conversion
     sendNotificationToUser(env, referral.referrer_user_id, 'achievement', {
@@ -561,9 +562,13 @@ export async function markReferralAsConverted(env, userId) {
       body: 'Someone you referred just upgraded to a paid plan! Claim your reward.',
       icon: '🎉',
       data: { type: 'referral_conversion', referralId: referral.id }
-    }).catch(err => console.warn('[referrals] Conversion notification failed (non-fatal):', err.message));
+    }).catch(err => {
+      const log = createLogger(env, { action: 'mark_referral_converted' });
+      log.error({ action: 'referral_conversion_notification_failed', referrerId: referral.referrer_user_id, error: err.message });
+    });
     
   } catch (error) {
-    console.warn('[referrals] markReferralAsConverted failed (non-fatal):', error?.message);
+    const log = createLogger(env, { action: 'mark_referral_converted' });
+    log.error({ action: 'mark_referral_converted_failed', userId, error: error?.message });
   }
 }

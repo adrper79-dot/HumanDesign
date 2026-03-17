@@ -12,6 +12,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { trackEvent, captureRequestContext } from '../lib/analytics.js';
 
 // ─── Slug generation ─────────────────────────────────────────
 
@@ -28,7 +29,7 @@ function generateSlug(displayName) {
 const VALID_SPECIALIZATIONS = new Set([
   'Generators', 'Manifesting Generators', 'Projectors', 'Manifestors', 'Reflectors',
   'Relationships', 'Business', 'Parenting', 'Career', 'Health',
-  'Trauma-Informed', 'Gene Keys', 'Children', 'Leadership',
+  'Trauma-Informed', 'Frequency Keys', 'Children', 'Leadership',
 ]);
 
 const VALID_CERTIFICATIONS = new Set([
@@ -117,6 +118,12 @@ export async function handleGetPublicProfile(request, env, slug) {
     await env.KV.put(cacheKey, JSON.stringify(payload), { expirationTtl: 300 });
   }
 
+  // PRAC-013: Track directory profile views (fire-and-forget, never blocks response)
+  trackEvent(env, 'directory_profile_view', {
+    properties: { slug, practitionerId: result.rows[0].id },
+    requestContext: captureRequestContext(request),
+  }).catch(() => {});
+
   return Response.json(payload, { headers: { 'X-Cache': 'MISS' } });
 }
 
@@ -195,6 +202,17 @@ export async function handleUpdateDirectoryProfile(request, env) {
     } catch { /* invalid URL — leave blank */ }
   }
 
+  // Validate scheduling embed URL — only Cal.com and Calendly allowed (PRAC-015)
+  let schedulingEmbedUrl = '';
+  if (body.scheduling_embed_url) {
+    try {
+      const parsed = new URL(String(body.scheduling_embed_url));
+      if (parsed.protocol === 'https:' && /^(app\.cal\.com|cal\.com|calendly\.com)$/.test(parsed.hostname)) {
+        schedulingEmbedUrl = parsed.href;
+      }
+    } catch { /* invalid URL — leave blank */ }
+  }
+
   // Payment links — display-only fields (HD_UPDATES4: do NOT process payments)
   const paymentLinks = {};
   const allowedLinkKeys = ['venmo', 'cashapp', 'paypal', 'stripe', 'website'];
@@ -224,6 +242,7 @@ export async function handleUpdateDirectoryProfile(request, env) {
     bookingUrl,
     JSON.stringify(paymentLinks),
     synthesisStyle,
+    schedulingEmbedUrl,
   ]);
 
   // Invalidate directory + slug caches on profile update (BL-EXC-P2-3)
@@ -234,6 +253,16 @@ export async function handleUpdateDirectoryProfile(request, env) {
       // Also delete new slug if it changed
       slug !== practitioner.slug ? env.KV.delete(`practitioner:slug:${slug}`) : Promise.resolve(),
     ]);
+  }
+  trackEvent(env, 'directory_profile_update', { userId, properties: { isPublic, slug } }).catch(() => {});
+
+  // CMO-012: Persist notification preferences if provided
+  if (body.notification_preferences && typeof body.notification_preferences === 'object') {
+    const prefs = {
+      clientChartReady: body.notification_preferences.clientChartReady !== false,
+      clientSessionReady: body.notification_preferences.clientSessionReady !== false,
+    };
+    await query(QUERIES.updatePractitionerNotificationPrefs, [practitioner.id, JSON.stringify(prefs)]).catch(() => {});
   }
 
   return Response.json({ ok: true, profile: updated.rows[0] });
@@ -256,4 +285,26 @@ function sanitizePublicProfile(row) {
     payment_links: row.payment_links,
     client_count: parseInt(row.client_count || '0', 10),
   };
+}
+
+// ─── PRAC-013: Directory stats for practitioners ─────────────
+export async function handleGetDirectoryStats(request, env) {
+  if (!request._user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const userId = request._user.sub;
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practitioner.rows?.length) {
+    return Response.json({ error: 'Not registered as practitioner' }, { status: 404 });
+  }
+
+  const practitionerId = String(practitioner.rows[0].id);
+  const viewResult = await query(QUERIES.getPractitionerDirectoryViewStats, [practitionerId]).catch(() => ({ rows: [] }));
+
+  return Response.json({
+    ok: true,
+    stats: {
+      profileViews30d: parseInt(viewResult.rows?.[0]?.views_30d ?? 0),
+    },
+  });
 }

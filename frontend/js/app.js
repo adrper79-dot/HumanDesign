@@ -8,6 +8,7 @@ const API = 'https://prime-self-api.adrper79.workers.dev';
 let token = null;
 let _tokenExpiresAt = 0; // P2-FE-005: epoch ms when access token expires
 let _refreshTimer = null; // P2-FE-005: proactive refresh timer
+let _pracSchedulingEmbedUrl = ''; // PRAC-015: practitioner's scheduling embed URL, set during loadRoster
 const PENDING_PRACTITIONER_INVITE_KEY = 'ps_pending_practitioner_invite';
 const POST_CHECKOUT_DESTINATION_KEY = 'ps_post_checkout_destination';
 const POST_CHECKOUT_TIER_KEY = 'ps_post_checkout_tier';
@@ -3080,7 +3081,7 @@ async function generateProfile() {
     { delay: 0,     message: 'Reading your gates...' },
     { delay: 8000,  message: 'Interpreting your profile lines...' },
     { delay: 16000, message: 'Mapping planetary influences...' },
-    { delay: 24000, message: 'Synthesizing Gene Keys insights...' },
+    { delay: 24000, message: 'Synthesizing Frequency Keys insights...' },
     { delay: 32000, message: 'Writing your synthesis...' },
     { delay: 40000, message: 'Almost ready...' },
   ];
@@ -3214,7 +3215,7 @@ function renderProfile(data) {
   const _sysPref = getSystemPreferences ? getSystemPreferences() : null;
   if (_sysPref) {
     const _SYS_LABELS = {
-      astrology: '☉ Astrology', geneKeys: '🔑 Gene Keys', numerology: '# Numerology',
+      astrology: '☉ Astrology', geneKeys: '🔑 Frequency Keys', numerology: '# Numerology',
       vedic: '☽ Vedic', ogham: '᚛ Ogham', mayan: '◎ Mayan', bazi: '☯ BaZi',
       sabian: '◉ Sabian', chiron: '⚷ Chiron', lilith: '🌑 Lilith',
       transits: '↻ Transits', psychometrics: '⬡ Psychology', behavioral: '★ Behavioral', diary: '📖 Life Events'
@@ -3356,19 +3357,19 @@ function renderProfile(data) {
     // ═══ TECHNICAL INSIGHTS (Layer 2 - Collapsible) ═══
     html += `<div id="${escapeAttr(toggleId)}" style="display:none">`;
     
-    // Gene Keys Profile
+    // Frequency Keys Profile
     if (ti.geneKeysProfile) {
       const gk = ti.geneKeysProfile;
       html += `<div class="card">
-        <div class="card-title"><span class="icon-key"></span> Gene Keys Profile</div>`;
+        <div class="card-title"><span class="icon-key"></span> Frequency Keys Profile</div>`;
       
       if (gk.lifesWork) {
         const lw = gk.lifesWork;
         html += `<div class="profile-section">
-          <h4>Life's Work — Gene Key ${lw.key}</h4>
+          <h4>Life's Work — Frequency Key ${lw.key}</h4>
           <p style="font-size:var(--font-size-sm);margin-top:var(--space-2)"><strong style="color:#f56565">Shadow:</strong> ${escapeHtml(lw.shadow)}</p>
           <p style="font-size:var(--font-size-sm)"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(lw.gift)}</p>
-          <p style="font-size:var(--font-size-sm)"><strong style="color:var(--gold)">Siddhi:</strong> ${escapeHtml(lw.siddhi)}</p>
+          <p style="font-size:var(--font-size-sm)"><strong style="color:var(--gold)">Mastery:</strong> ${escapeHtml(lw.siddhi)}</p>
           ${lw.contemplation ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);font-style:italic;color:var(--text-dim)">${escapeHtml(lw.contemplation)}</p>` : ''}
         </div>`;
       }
@@ -3378,7 +3379,7 @@ function renderProfile(data) {
           <h4>Other Active Keys</h4>`;
         gk.otherActiveKeys.forEach(k => {
           html += `<div style="margin-top:var(--space-3);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2)">
-            <div style="font-weight:600;color:var(--gold)">GK ${escapeHtml(String(k.key))} — ${escapeHtml(k.position)}</div>
+            <div style="font-weight:600;color:var(--gold)">FK ${escapeHtml(String(k.key))} — ${escapeHtml(k.position)}</div>
             <p style="font-size:var(--font-size-sm);margin-top:var(--space-1)"><strong>Shadow:</strong> ${escapeHtml(k.shadow)} <strong>→ Gift:</strong> ${escapeHtml(k.gift)}</p>
             ${k.message ? `<p style="font-size:var(--font-size-base);margin-top:var(--space-2);font-style:italic">${escapeHtml(k.message)}</p>` : ''}
           </div>`;
@@ -3387,7 +3388,7 @@ function renderProfile(data) {
       }
       
       html += renderSourceTag(ti.geneKeysProfile?._sources);
-      html += `</div>`; // close Gene Keys card
+      html += `</div>`; // close Frequency Keys card
     }
 
     // Numerology Insights
@@ -3893,7 +3894,7 @@ function renderHistory(data) {
     return `<div class="empty-state">
       <span class="icon-profile icon-xl"></span>
       <h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No Saved Profiles Yet</h3>
-      <p style="max-width:min(500px, 90vw);margin:0 auto 24px">Generate your first Prime Self Profile to unlock AI-powered synthesis combining your gates, Gene Keys, astrology, and numerology into personalized lifecycle guidance.</p>
+      <p style="max-width:min(500px, 90vw);margin:0 auto 24px">Generate your first Prime Self Profile to unlock AI-powered synthesis combining your energy gates, Frequency Keys, astrology, and numerology into personalized lifecycle guidance.</p>
       <button class="btn-primary" data-action="switchTab" data-arg0="profile" style="margin:0 auto;display:inline-block">
         <span class="icon-sparkle"></span> Generate Your Profile
       </button>
@@ -4162,6 +4163,7 @@ async function addClient() {
     } else {
       showNotification(data.message || 'Invitation sent', 'success');
     }
+    trackEvent('practitioner', 'client_invite', data?.mode || 'unknown');
 
     if (data?.inviteUrl && !data?.emailSent) {
       statusEl.innerHTML = `<div class="alert alert-warn">Email delivery unavailable. Share this link manually:<br><a href="${escapeAttr(data.inviteUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(data.inviteUrl)}</a></div>`;
@@ -4277,12 +4279,14 @@ async function loadRoster() {
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your roster…</div></div>';
 
   try {
-    const [rosterData, profileData, invitationsData, directoryData, referralData] = await Promise.all([
+    const [rosterData, profileData, invitationsData, directoryData, referralData, metricsData, dirStatsData] = await Promise.all([
       apiFetch('/api/practitioner/clients'),
       apiFetch('/api/practitioner/profile').catch(() => null),
       apiFetch('/api/practitioner/clients/invitations').catch(() => ({ invitations: [] })),
       apiFetch('/api/practitioner/directory-profile').catch(() => ({ error: 'Not yet configured' })),
-      apiFetch('/api/practitioner/referral-link').catch(() => null)
+      apiFetch('/api/practitioner/referral-link').catch(() => null),
+      apiFetch('/api/practitioner/stats').catch(() => null),
+      apiFetch('/api/practitioner/directory-stats').catch(() => null)
     ]);
 
     // Update limit bar
@@ -4300,10 +4304,12 @@ async function loadRoster() {
     }
 
     renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData });
+    renderPractitionerMetrics(metricsData, dirStatsData);
     resultEl.innerHTML = renderRoster(rosterData);
     applyPractitionerInvitations(invitationsData);
     applyDirectoryProfileData(directoryData);
     renderPractitionerReferralStats(referralData);
+    _pracSchedulingEmbedUrl = directoryData?.profile?.scheduling_embed_url || '';
 
     // Show and populate Agency Seats card for Agency-tier users
     const tier = currentUser?.tier || 'free';
@@ -4360,10 +4366,43 @@ function renderPractitionerReferralStats(data) {
 function copyPracReferralLink() {
   const val = document.getElementById('pracRefLinkDisplay')?.value;
   if (val && navigator.clipboard) {
-    navigator.clipboard.writeText(val).then(() => showNotification('Referral link copied!', 'success'));
+    navigator.clipboard.writeText(val).then(() => {
+      showNotification('Referral link copied!', 'success');
+      trackEvent('practitioner', 'referral_link_copy', 'dashboard');
+    });
   }
 }
 window.copyPracReferralLink = copyPracReferralLink;
+
+// ── Practitioner Metrics Card (PRAC-012) ─────────────────────
+function renderPractitionerMetrics(data, dirData) {
+  const el = document.getElementById('pracMetricsCard');
+  if (!el) return;
+  const s = data?.stats;
+  if (!s) { el.innerHTML = ''; return; }
+
+  const profileViews = dirData?.stats?.profileViews30d ?? '—';
+  const stat = (value, label) => `
+    <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+      <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">${value}</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-dim)">${label}</div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:var(--space-4)">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">📊</span> Practice Metrics</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:var(--space-3);margin-top:var(--space-3)">
+        ${stat(s.activeClients, 'Active Clients')}
+        ${stat(s.notesThisMonth, 'Notes This Month')}
+        ${stat(s.totalNotes, 'Total Notes')}
+        ${stat(s.aiSharedNotes, 'AI-Shared Notes')}
+        ${stat(profileViews, 'Profile Views (30d)')}
+      </div>
+    </div>
+  `;
+}
 
 // ── Agency Seat Management ────────────────────────────────────
 
@@ -4623,6 +4662,7 @@ function renderRoster(data) {
       <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
         <button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">${c.profile_id ? 'Open Workspace' : 'View Details'}</button>
         ${chartId && c.profile_id ? `<button class="btn-secondary btn-sm" data-action="exportBrandedPDF" data-arg0="${escapeAttr(clientId)}">Branded PDF</button>` : ''}
+        ${(lifecycle.key === 'needs_birth_data' || lifecycle.key === 'needs_profile') ? `<button class="btn-secondary btn-sm" id="remind-btn-${escapeAttr(clientId)}" data-action="sendClientReminder" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Send Reminder</button>` : ''}
         <button class="btn-danger btn-sm" data-action="removeClient" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Remove</button>
       </div>
     </div>`;
@@ -4645,10 +4685,32 @@ async function viewClientDetail(clientId, emailLabel) {
       apiFetch(`/api/practitioner/clients/${clientId}/ai-context`).catch(() => ({ ai_context: '', error: 'Unable to load AI context' }))
     ]);
     panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData);
+    trackEvent('practitioner', 'client_view', clientId);
   } catch (e) {
     panel.innerHTML = `<div class="alert alert-error">Error loading client: ${escapeHtml(e.message)}</div>`;
   }
 }
+
+// ── PRAC-014: Send client reminder ────────────────────────────
+async function sendClientReminder(clientId, emailLabel) {
+  const btn = document.getElementById(`remind-btn-${clientId}`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    const result = await apiFetch(`/api/practitioner/clients/${clientId}/remind`, { method: 'POST' });
+    if (result.error) {
+      showNotification(result.error, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Send Reminder'; }
+    } else {
+      showNotification('Reminder sent to ' + escapeHtml(emailLabel), 'success');
+      if (btn) { btn.textContent = 'Reminder Sent'; }
+    }
+  } catch (e) {
+    const msg = e.message?.includes('429') ? 'Reminder already sent in the last 24 hours' : 'Error sending reminder: ' + e.message;
+    showNotification(msg, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Send Reminder'; }
+  }
+}
+window.sendClientReminder = sendClientReminder;
 
 function renderPractitionerChecklist(items) {
   return items.map(item => `
@@ -4980,10 +5042,24 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
   }
 
   html += `</div>`;
+
+  // ── PRAC-015: Scheduling embed (Cal.com / Calendly) ─────────
+  if (_pracSchedulingEmbedUrl) {
+    html += `
+  <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+    <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0 0 var(--space-3)">Schedule Next Session</h4>
+    <iframe
+      src="${escapeAttr(_pracSchedulingEmbedUrl)}"
+      style="width:100%;height:500px;border:none;border-radius:var(--space-2)"
+      loading="lazy"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      title="Schedule a session"
+    ></iframe>
+  </div>`;
+  }
+
   return html;
 }
-
-// ── Session Notes helpers ────────────────────────────────────
 
 function renderSessionNote(note, clientId) {
   const noteId = escapeAttr(note.id);
@@ -5051,6 +5127,7 @@ async function saveSessionNote(clientId) {
     }
 
     showNotification('Note saved', 'success');
+    trackEvent('practitioner', 'note_create', clientId);
     hideNewNoteForm(clientId);
     await refreshSessionNotes(clientId);
   } catch (e) {
@@ -5249,7 +5326,10 @@ async function saveAIContext(clientId, isAutosave = false) {
     }
 
     statusEl.textContent = 'Saved ✓';
-    if (!isAutosave) showNotification('AI context saved.', 'success');
+    if (!isAutosave) {
+      showNotification('AI context saved.', 'success');
+      trackEvent('practitioner', 'ai_context_save', clientId);
+    }
     setTimeout(() => {
       const el = document.getElementById('aiContextStatus-' + clientId);
       if (el && el.textContent === 'Saved ✓') {
@@ -5303,7 +5383,12 @@ function applyDirectoryProfileData(data) {
   if (el('dir-session-format')) el('dir-session-format').value = p.session_format || 'Remote';
   if (el('dir-session-info')) el('dir-session-info').value = p.session_info || '';
   if (el('dir-booking-url')) el('dir-booking-url').value = p.booking_url || '';
+  if (el('dir-scheduling-embed')) el('dir-scheduling-embed').value = p.scheduling_embed_url || '';
   if (el('dir-is-public')) el('dir-is-public').checked = !!p.is_public;
+
+  const notifPrefs = p.notification_preferences || {};
+  if (el('notif-client-chart-ready')) el('notif-client-chart-ready').checked = notifPrefs.clientChartReady !== false;
+  if (el('notif-client-session-ready')) el('notif-client-session-ready').checked = notifPrefs.clientSessionReady !== false;
 
   const specs = Array.isArray(p.specializations) ? p.specializations : [];
   document.querySelectorAll('#dir-specializations input[type="checkbox"]').forEach(cb => {
@@ -5326,8 +5411,13 @@ async function saveDirectoryProfile() {
     session_format: el('dir-session-format')?.value || 'Remote',
     session_info: el('dir-session-info')?.value?.trim() || '',
     booking_url: el('dir-booking-url')?.value?.trim() || '',
+    scheduling_embed_url: el('dir-scheduling-embed')?.value?.trim() || '',
     is_public: el('dir-is-public')?.checked || false,
     specializations,
+    notification_preferences: {
+      clientChartReady: el('notif-client-chart-ready')?.checked !== false,
+      clientSessionReady: el('notif-client-session-ready')?.checked !== false,
+    },
   };
 
   try {
@@ -6029,6 +6119,7 @@ async function exportBrandedPDF(clientId) {
     a.download = `profile-${clientId.slice(0, 8)}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
+    trackEvent('practitioner', 'branded_pdf_export', clientId);
   } catch (e) {
     showNotification('Error: ' + e.message, 'error');
   }
@@ -6052,6 +6143,7 @@ async function exportProfileToNotion(profileId) {
     }
 
     showNotification('Profile exported to Notion.', 'success');
+    trackEvent('practitioner', 'notion_export', profileId);
   } catch (e) {
     showNotification('Error exporting to Notion: ' + e.message, 'error');
   }
@@ -6263,7 +6355,7 @@ function updateOverview(chartResponse) {
     </div>`;
   }
 
-  // Mini bodygraph
+  // Mini Energy Chart
   const _ovBgId = 'overview-bodygraph-' + Date.now();
   html += `<div class="card" style="margin-bottom:var(--space-4);text-align:center">
     <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Bodygraph</div>
@@ -6315,7 +6407,7 @@ function updateOverview(chartResponse) {
 
   container.innerHTML = html;
 
-  // Deferred bodygraph render
+  // Deferred Energy Chart render
   setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_ovBgId, chart); }, 50);
 }
 
@@ -6644,7 +6736,7 @@ function renderVIATopStrengths(responses) {
   return `<div style="margin-top:var(--space-4);padding:var(--space-4);background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
     <div style="font-size:0.88rem;font-weight:600;color:var(--text);margin-bottom:var(--space-3)">✦ Your Top 5 Character Strengths</div>
     ${bars}
-    <p style="font-size:0.73rem;color:var(--text-dim);margin-top:var(--space-3)">Character strengths map to your Gene Keys gifts. Generate an AI Profile to see the correlation.</p>
+    <p style="font-size:0.73rem;color:var(--text-dim);margin-top:var(--space-3)">Character strengths map to your Frequency Keys gifts. Generate an AI Profile to see the correlation.</p>
   </div>`;
 }
 
@@ -6792,7 +6884,7 @@ async function saveVIA() {
       body: JSON.stringify({ viaResponses: responses })
     });
     const statusEl = document.getElementById('viaStatus');
-    if (statusEl) statusEl.innerHTML = `<div class="alert alert-success">Character Strengths saved — Gene Keys correlations unlocked.</div>${renderVIATopStrengths(responses)}`;
+    if (statusEl) statusEl.innerHTML = `<div class="alert alert-success">Character Strengths saved — Frequency Keys correlations unlocked.</div>${renderVIATopStrengths(responses)}`;
   } catch (e) {
     showEnhanceStatus('viaStatus', 'Error: ' + e.message, 'error');
   } finally {
@@ -6838,7 +6930,7 @@ async function saveDiaryEntry() {
         method: 'PUT',
         body: JSON.stringify(payload)
       });
-      if (updateResult?.error || updateResult?.success === false) {
+      if (!updateResult?.ok) {
         throw new Error(updateResult?.error || 'Failed to update event');
       }
       showEnhanceStatus('diaryStatus', 'Event updated!', 'success');
@@ -6850,7 +6942,7 @@ async function saveDiaryEntry() {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      if (createResult?.error || createResult?.success === false) {
+      if (!createResult?.ok) {
         throw new Error(createResult?.error || 'Failed to save event');
       }
       showEnhanceStatus('diaryStatus', 'Event saved! Transits auto-calculated for correlation.', 'success');
@@ -6972,7 +7064,7 @@ async function deleteDiaryEntry(entryId) {
 
   try {
     const result = await apiFetch(`/api/diary/${entryId}`, { method: 'DELETE' });
-    if (result?.error || result?.success === false) {
+    if (!result?.ok) {
       throw new Error(result?.error || 'Failed to delete event');
     }
     showEnhanceStatus('diaryStatus', 'Event deleted', 'success');
@@ -7225,7 +7317,7 @@ async function shareProfile(title, text, url) {
     // Build share URL with referral tracking
     const shareUrl = url || buildShareUrl(user);
     const shareTitle = title || `Check out my Prime Self Energy Blueprint!`;
-    const shareText = text || `Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology.`;
+    const shareText = text || `Discover your unique energy blueprint through Frequency Keys, Astrology, and Numerology.`;
     
     // Use Web Share API if available (mobile browsers)
     if (navigator.share) {
@@ -7314,7 +7406,7 @@ async function copyToClipboard(text) {
  */
 function shareToSocial(platform) {
   const shareUrl = buildShareUrl();
-  const shareText = encodeURIComponent('Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology on Prime Self!');
+  const shareText = encodeURIComponent('Discover your unique energy blueprint through Frequency Keys, Astrology, and Numerology on Prime Self!');
   
   const urls = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,

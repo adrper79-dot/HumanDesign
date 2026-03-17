@@ -3,7 +3,7 @@
   "info": {
     "title": "Prime Self API",
     "version": "2.0.0",
-    "description": "Programmatic access to Human Design chart calculations, profile generation, transit forecasts, and astrological insights. Perfect for developers, researchers, and businesses building HD-powered applications.",
+    "description": "Programmatic access to Energy Blueprint chart calculations, profile generation, transit forecasts, and astrological insights. Perfect for developers, researchers, and businesses building Energy Blueprint-powered applications.",
     "contact": {
       "name": "Prime Self API Support",
       "email": "api@primeself.app",
@@ -37,7 +37,7 @@
     },
     {
       "name": "Chart",
-      "description": "Calculate and retrieve Human Design charts"
+      "description": "Calculate and retrieve Energy Blueprint charts"
     },
     {
       "name": "Profile",
@@ -570,8 +570,8 @@
         "tags": [
           "Chart"
         ],
-        "summary": "Calculate Human Design chart",
-        "description": "Generate a complete Human Design chart from birth data, including type, profile, authority, centers, gates, channels, astrology, and numerology.",
+        "summary": "Calculate Energy Blueprint chart",
+        "description": "Generate a complete Energy Blueprint chart from birth data, including energy pattern, archetype code, authority, centers, gates, channels, astrology, and numerology.",
         "operationId": "calculateChart",
         "requestBody": {
           "required": true,
@@ -860,7 +860,7 @@
           "Gates"
         ],
         "summary": "Get gate information",
-        "description": "Retrieve detailed information about a specific Human Design gate, including name, center, circuit, lines, and Gene Key.",
+        "description": "Retrieve detailed information about a specific Energy Blueprint gate, including name, center, circuit, lines, and Frequency Key.",
         "operationId": "getGate",
         "parameters": [
           {
@@ -1068,7 +1068,7 @@
           "Profile"
         ],
         "summary": "Generate profile narrative",
-        "description": "Create an AI-powered profile narrative from a Human Design chart. Customizable by section, audience, and length.",
+        "description": "Create an AI-powered profile narrative from an Energy Blueprint chart. Customizable by section, audience, and length.",
         "operationId": "generateProfile",
         "requestBody": {
           "required": true,
@@ -1579,7 +1579,7 @@
               "Projector",
               "Reflector"
             ],
-            "description": "Human Design energy type"
+            "description": "Energy Blueprint energy pattern"
           },
           "profile": {
             "type": "string",

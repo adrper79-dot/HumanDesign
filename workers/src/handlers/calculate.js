@@ -22,6 +22,7 @@ import { enforceUsageQuota, recordUsage } from '../middleware/tierEnforcement.js
 import { trackEvent } from './achievements.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
+import { sendPractitionerClientChartReady } from '../lib/email.js';
 
 export async function handleCalculate(request, env) {
   // Enforce usage quota for chart calculation (only if authenticated)
@@ -98,6 +99,29 @@ export async function handleCalculate(request, env) {
       const astroJson = JSON.stringify(result.astrology || null);
       const saved = await query(QUERIES.saveChart, [userId, hdJson, astroJson]);
       chartId = saved?.rows?.[0]?.id || null;
+
+      // CMO-012: Fire-and-forget chart-ready notification to any practitioners for this client
+      if (chartId && env.RESEND_API_KEY) {
+        (async () => {
+          try {
+            const prows = await query(QUERIES.getPractitionersForClient, [userId]);
+            const hdChart = result.chart || result;
+            for (const prac of (prows.rows || [])) {
+              const prefs = prac.notification_preferences || {};
+              if (prefs.clientChartReady === false) continue;
+              await sendPractitionerClientChartReady(
+                prac.practitioner_email,
+                prac.practitioner_name || 'Your practitioner',
+                prac.client_name || prac.client_email || 'A client',
+                hdChart.type || 'Unknown',
+                hdChart.authority || 'Unknown',
+                env.RESEND_API_KEY,
+                env.FROM_EMAIL
+              );
+            }
+          } catch { /* non-fatal */ }
+        })();
+      }
     } catch (e) {
       // DB failure is non-fatal — chart still returned; demoted to warn
       console.warn('[calculate] Chart DB save failed (non-fatal):', e.message);

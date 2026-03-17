@@ -1,11 +1,11 @@
 /**
- * Gene Keys Profile Engine
+ * Frequency Keys Profile Engine
  *
- * Derives the Gene Keys profile from existing chart gate data.
+ * Derives the Frequency Keys profile from existing chart gate data.
  * No additional intake fields required — all positions come from
  * personalityGates and designGates already computed in Layers 3-4.
  *
- * Gene Keys Profile Positions (based on I Ching gate framework):
+ * Frequency Keys Profile Positions (based on I Ching gate framework):
  *   Life's Work  = Personality (Conscious) Sun gate  — your visible purpose
  *   Evolution    = Personality (Conscious) Earth gate — how you ground yourself
  *   Radiance     = Design (Unconscious) Earth gate    — your essence, others feel it
@@ -13,18 +13,18 @@
  *   Attraction   = Personality (Conscious) Moon gate  — what you draw toward you
  *   IQ / Pearl   = Design (Unconscious) Moon gate     — unconscious intelligence
  *
- * Each gate maps to a Shadow/Gift/Siddhi triad in the knowledgebase.
- * The knowledgebase lookup (Shadow → Gift → Siddhi) happens in rag.js.
+ * Each gate maps to a Shadow/Gift/Mastery triad in the knowledgebase.
+ * The knowledgebase lookup (Shadow → Gift → Mastery) happens in rag.js.
  *
  * @module genekeys
  */
 
 /**
- * Build the Gene Keys profile from gate data.
+ * Build the Frequency Keys profile from gate data.
  *
  * @param {object} personalityGates — Layer 4 output: { sun: {gate, line}, earth: {gate, line}, moon: {gate, line}, ... }
  * @param {object} designGates      — Layer 4 output: same structure for design/unconscious side
- * @returns {object} Gene Keys profile with six key positions
+ * @returns {object} Frequency Keys profile with six key positions
  */
 export function calculateGeneKeys(personalityGates, designGates) {
   function pos(gateData, label, planet) {

@@ -1,6 +1,6 @@
 /**
  * Calculate Chart Action
- * Calculates a new Human Design chart from birth data
+ * Calculates a new Energy Blueprint chart from birth data
  */
 
 const perform = async (z, bundle) => {
@@ -64,8 +64,8 @@ module.exports = {
   noun: 'Chart',
   
   display: {
-    label: 'Calculate Human Design Chart',
-    description: 'Calculates a Human Design chart from birth data (date, time, location).',
+    label: 'Calculate Energy Blueprint Chart',
+    description: 'Calculates an Energy Blueprint chart from birth data (date, time, location).',
     important: true
   },
 

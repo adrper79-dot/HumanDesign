@@ -119,6 +119,27 @@ async function main() {
     body: JSON.stringify({ returnUrl: `${frontendBase}/` })
   });
 
+  // BL-TEST-P1-1: Verify cycles and rectify param validation return 400, not 401
+  const cyclesNoParams = await jsonFetch('/api/cycles?birthDate=');
+  if (cyclesNoParams.res.status !== 400) {
+    fail(`cycles missing params should return 400, got ${cyclesNoParams.res.status}`);
+  }
+  if (cyclesNoParams.body?.error !== 'Missing required parameters: birthDate, birthTime') {
+    fail(`cycles error message incorrect: ${cyclesNoParams.body?.error}`);
+  }
+
+  const rectifyNoParams = await jsonFetch('/api/rectify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+  if (rectifyNoParams.res.status !== 400) {
+    fail(`rectify missing params should return 400, got ${rectifyNoParams.res.status}`);
+  }
+  if (!rectifyNoParams.body?.error?.includes('Missing required field')) {
+    fail(`rectify error message incorrect: ${rectifyNoParams.body?.error}`);
+  }
+
   console.log(JSON.stringify({
     apiBase,
     frontendBase,
@@ -131,6 +152,14 @@ async function main() {
     portalStatus: portal.res.status,
     portalOk: portal.res.ok,
     portalBody: portal.body,
+    cyclesParamValidation: {
+      status: cyclesNoParams.res.status,
+      errorCorrect: cyclesNoParams.body?.error === 'Missing required parameters: birthDate, birthTime'
+    },
+    rectifyParamValidation: {
+      status: rectifyNoParams.res.status,
+      errorCorrect: rectifyNoParams.body?.error?.includes('Missing required field')
+    },
   }, null, 2));
 }
 

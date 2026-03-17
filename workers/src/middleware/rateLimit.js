@@ -39,6 +39,7 @@ const RATE_LIMITS = {
   '/api/diary':             { max: 20,  windowSec: 60  },  // P2-BIZ-017: 20/min diary creation
   '/api/timing/find-dates': { max: 10,  windowSec: 60  },  // P2-BIZ-015: 10/min (CPU-intensive)
   '/api/auth/delete-account': { max: 3, windowSec: 60  },  // 3/min (destructive, irreversible)
+  '/api/practitioner/clients/invite': { max: 10, windowSec: 3600 }, // BL-AUDIT-H1: 10/hour max to prevent email quota exhaustion; Resend free tier is 100/day
   default:                  { max: 60,  windowSec: 60  }
 };
 

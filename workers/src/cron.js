@@ -31,7 +31,8 @@ import {
   sendWelcomeEmail3,
   sendWelcomeEmail4,
   sendReengagementEmail,
-  sendUpgradeNudgeEmail
+  sendUpgradeNudgeEmail,
+  sendPractitionerWeeklyDigest,
 } from './lib/email.js';
 import { createCronLogger } from './lib/logger.js';
 import { initSentry } from './lib/sentry.js';
@@ -416,6 +417,43 @@ export async function runDailyTransitCron(env) {
       log.info('dunning_complete', { processed: pastDueSubs.length });
     } catch (dunningErr) {
       log.error('dunning_error', { error: dunningErr?.message });
+    }
+
+    // ─── Step 11: Practitioner weekly digest (CMO-013) — Mondays only ──────
+    if (now.getUTCDay() === 1) {
+      try {
+        await withTimeout((async () => {
+          log.info('practitioner_digest_start');
+          const { rows: practitioners } = await query(QUERIES.getPractitionerWeeklyDigestList);
+          log.info('practitioner_digest_practitioners', { count: practitioners.length });
+
+          let digestSentCount = 0, digestFailedCount = 0;
+          for (const p of practitioners) {
+            try {
+              await sendPractitionerWeeklyDigest(
+                p.email,
+                p.name,
+                {
+                  clientCount: p.client_count,
+                  notesThisWeek: p.notes_this_week,
+                  newChartsThisWeek: p.new_charts_this_week,
+                },
+                env.RESEND_API_KEY,
+                env.FROM_EMAIL
+              );
+              digestSentCount++;
+              await new Promise(r => setTimeout(r, 100));
+            } catch (digestErr) {
+              log.error('practitioner_digest_send_failed', { email: p.email, error: digestErr.message });
+              digestFailedCount++;
+            }
+          }
+          log.info('practitioner_digest_complete', { sent: digestSentCount, failed: digestFailedCount });
+        })(), 60000, 'practitioner_weekly_digest');
+      } catch (digestErr) {
+        log.error('practitioner_digest_error', { error: digestErr?.message });
+        // Non-critical — main cron should continue
+      }
     }
 
     return { snapshotDate, userCount: digestUserCount, sent: digestSent, failed: digestFailed };

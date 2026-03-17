@@ -80,7 +80,7 @@ export async function handleShareCelebrity(request, env, ctx) {
     const metadata = generateShareMetadata({
       type: 'article',
       title: `I'm ${match.similarity.percentage}% like ${match.celebrity.name}!`,
-      description: `Discover your Human Design celebrity match on Prime Self.`,
+      description: `Discover your Energy Blueprint celebrity match on Prime Self.`,
       imageUrl: imageDataUrl,
       url: `https://primeself.app/compare/${celebrityId}`
     });
@@ -111,7 +111,7 @@ export async function handleShareCelebrity(request, env, ctx) {
         messages: platform ? { [platform]: messages[platform] } : messages,
         metadata,
         title: `I'm ${match.similarity.percentage}% like ${match.celebrity.name}!`,
-        description: `Based on my Human Design chart, I share ${match.similarity.percentage}% similarity with ${match.celebrity.name}.`
+        description: `Based on my Energy Blueprint chart, I share ${match.similarity.percentage}% similarity with ${match.celebrity.name}.`
       }
     });
     
@@ -158,8 +158,8 @@ export async function handleShareChart(request, env, ctx) {
     // Generate metadata
     const metadata = generateShareMetadata({
       type: 'article',
-      title: `I'm a ${fullChart.chart.type} in Human Design`,
-      description: `Discover your Human Design type on Prime Self.`,
+      title: `I'm a ${fullChart.chart.type} Energy Blueprint Pattern`,
+      description: `Discover your Energy Blueprint pattern on Prime Self.`,
       imageUrl: imageDataUrl,
       url: 'https://primeself.app'
     });
@@ -187,8 +187,8 @@ export async function handleShareChart(request, env, ctx) {
         imageUrl: imageDataUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
         metadata,
-        title: `I'm a ${fullChart.chart.type} in Human Design`,
-        description: `My Human Design type is ${fullChart.chart.type} with profile ${fullChart.chart.profile}.`
+        title: `I'm a ${fullChart.chart.type} Energy Blueprint Pattern`,
+        description: `My Energy Blueprint pattern is ${fullChart.chart.type} with Archetype Code ${fullChart.chart.profile}.`
       }
     });
     
@@ -322,7 +322,7 @@ export async function handleShareReferral(request, env, ctx) {
     const metadata = generateShareMetadata({
       type: 'website',
       title: 'Get Your First Month Free on Prime Self',
-      description: 'Discover your Human Design chart and get your first month free.',
+      description: 'Discover your Energy Blueprint chart and get your first month free.',
       imageUrl: imageDataUrl,
       url: `https://primeself.app/signup?ref=${referralCode}`
     });
@@ -350,7 +350,7 @@ export async function handleShareReferral(request, env, ctx) {
         metadata,
         referralUrl: `https://primeself.app/signup?ref=${referralCode}`,
         title: 'Join me on Prime Self — First Month Free',
-        description: 'Discover your Human Design chart and get your first month free.'
+        description: 'Discover your Energy Blueprint chart and get your first month free.'
       }
     });
     

@@ -227,7 +227,7 @@ export class NotionClient {
           title: [
             {
               text: {
-                content: `${email} — Human Design Profile`
+                content: `${email} — Energy Blueprint Profile`
               }
             }
           ]
@@ -239,7 +239,7 @@ export class NotionClient {
           object: 'block',
           type: 'heading_1',
           heading_1: {
-            rich_text: [{ text: { content: 'Human Design Profile' } }]
+            rich_text: [{ text: { content: 'Energy Blueprint Profile' } }]
           }
         },
         {

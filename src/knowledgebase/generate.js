@@ -78,10 +78,10 @@ async function callClaude(systemPrompt, userPrompt) {
 
 // ─── Gate Generation ─────────────────────────────────────────
 
-const GATE_SYSTEM = `You are a scholar of the I Ching, Human Design structural logic,
+const GATE_SYSTEM = `You are a scholar of the I Ching, Energy Blueprint structural logic,
 and Western Astrology. You write original interpretive content grounded in
-primary sources. You never use Ra Uru Hu's specific phrases or proprietary
-terminology beyond standard HD structural terms.`;
+primary sources. You never use proprietary system phrases or terminology
+beyond standard structural terms.`;
 
 async function generateGate(gateNum, wheelData, centersData, channelsData) {
   // Find gate info — wheelData is the .wheel array of {gate, startDeg, hexName}
@@ -361,7 +361,7 @@ async function generateAllCrosses() {
 
 // ─── Quality Audit ───────────────────────────────────────────
 
-const AUDIT_SYSTEM = `You are a quality auditor for Human Design content.
+const AUDIT_SYSTEM = `You are a quality auditor for Energy Blueprint content.
 Your task is to check that interpretive content is original, grounded,
 and does not borrow from proprietary sources.`;
 
@@ -369,7 +369,7 @@ async function auditContent(content) {
   const userPrompt = `Review this gate/channel description. Check against these criteria:
 
 1. Does it contain any phrases that appear to be directly borrowed from
-   Ra Uru Hu's proprietary HD teachings?
+   proprietary system teachings?
 2. Is every claim grounded in either the I Ching source text or
    observable HD structural logic?
 3. Does the language feel original vs derivative?

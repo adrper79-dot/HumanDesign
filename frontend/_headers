@@ -6,12 +6,12 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self "https://js.stripe.com")
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
-# Admin dashboard — noindex; inline scripts needed for self-contained UI
+# Admin dashboard — noindex; external JS file for CSP hardening (BL-AUDIT-H4)
 /admin.html
   Cache-Control: no-store
   X-Robots-Tag: noindex, nofollow
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
 
 # Billing pages — never cache; inline scripts only (no external JS needed)
 /billing/success.html
@@ -28,6 +28,12 @@
   Pragma: no-cache
 
 # Embed surface must be frameable by practitioner-owned sites.
+# BL-AUDIT-H2: frame-ancestors https: allows any HTTPS site to embed. This is intentional design:
+# - Product vision: practitioners embed widget on their own client-facing sites for lead generation
+# - Risk: clickjacking / brand misappropriation by third parties
+# - Mitigation: Referer header logged in embed handler for audit trail. Monitor CF Analytics for unexpected embedding patterns.
+# - Alternative: Whitelist known domains (requires operational process and updates)
+# Decision: Accept open HTTPS policy + log audit trail (2026-03-17)
 /embed
   ! Content-Security-Policy
   ! X-Frame-Options
@@ -36,5 +42,5 @@
 /embed.html
   ! Content-Security-Policy
   ! X-Frame-Options
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.stripe.com https://cloudflareinsights.com https://plausible.io; img-src 'self' data: blob:; media-src 'self'; font-src 'self' data:; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors https:;
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://js.stripe.com https://static.cloudflareinsights.com https://plausible.io; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.stripe.com https://cloudflareinsights.com https://plausible.io; img-src 'self' data: blob:; media-src 'self'; font-src 'self' data:; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors https:; # BL-AUDIT-H2: See /embed route comments above
 

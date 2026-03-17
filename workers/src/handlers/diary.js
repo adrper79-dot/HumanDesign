@@ -12,6 +12,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
+import { createLogger } from '../lib/logger.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
@@ -58,7 +59,8 @@ async function getTransitsForEventDate(eventDate, userBirthData, env, userId) {
       calculated: new Date().toISOString()
     };
   } catch (error) {
-    console.warn('[diary] Transit calculation error (non-fatal):', error?.message);
+    const log = createLogger(env, { action: 'diary_transit_calculation' });
+    log.warn({ action: 'diary_transit_calculation_error', eventDate, userId, error: error?.message });
     return { date: eventDate, transitData: null, calculated: new Date().toISOString() };
   }
 }
@@ -139,7 +141,8 @@ export async function handleDiaryCreate(request, env) {
       }
     }
   } catch (error) {
-    console.warn('Transit snapshot calculation failed:', error);
+    const log = createLogger(env, { action: 'diary_create_snapshot' });
+    log.warn({ action: 'diary_transit_snapshot_failed', error: error?.message });
     // Non-fatal - continue without transit data
   }
 

@@ -1,5 +1,5 @@
 {
-  "description": "Human Design 36 Channels — each connects two gates across two centers",
+  "description": "Energy Blueprint 36 Channels — each connects two gates across two centers",
   "channels": [
     { "channel": "1-8",   "gates": [1, 8],   "centers": ["G", "Throat"],        "circuit": "Individual", "name": "Inspiration" },
     { "channel": "2-14",  "gates": [2, 14],  "centers": ["G", "Sacral"],        "circuit": "Individual", "name": "The Beat" },

@@ -5,7 +5,7 @@
  * Used by renderChart(), renderTransits(), and renderComposite() 
  * to show "WHY it matters" alongside raw data.
  * 
- * Sources: Gene Keys (Richard Rudd)
+ * Sources: Frequency Keys (Prime Self Research)
  */
 
 // ── Type Explanations ──────────────────────────────────────────

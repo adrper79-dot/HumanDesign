@@ -39,8 +39,13 @@ function mapStripeStatus(stripeStatus) {
 
 /**
  * Determine tier from Stripe price ID
+ * 
+ * BL-AUDIT-H3: Added observability for unknown price IDs.
+ * If a price ID isn't found in the configured price map (e.g., new Stripe price
+ * created via dashboard but not added to wrangler.toml), we log an error instead
+ * of silently downgrading to 'free'. This prevents undetected customer downgrades.
  */
-function getTierFromPriceId(priceId, env) {
+function getTierFromPriceId(priceId, env, { log, eventType } = {}) {
   // Accept both new canonical names and legacy env var aliases so existing
   // subscribers and new subscribers both resolve correctly.
   const priceIdMap = {
@@ -53,7 +58,21 @@ function getTierFromPriceId(priceId, env) {
 
   // Filter out undefined keys (unset env vars) before lookup
   const tier = priceIdMap[priceId];
-  return tier || 'free';
+  
+  if (!tier) {
+    // Log error with context so ops is notified of misconfiguration
+    if (log) {
+      log.error({
+        action: 'unknown_stripe_price_id',
+        priceId,
+        eventType,
+        message: 'Price ID not found in STRIPE_PRICE_* env vars. Check wrangler.toml and Stripe Dashboard.',
+      });
+    }
+    return 'free';
+  }
+  
+  return tier;
 }
 
 async function finalizeEventRecord(query, event, details = {}) {
@@ -178,7 +197,7 @@ async function resolveSubscriptionForBillingEvent(query, stripe, env, { customer
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   const priceId = subscription.items.data[0]?.price.id;
-  const tier = getTierFromPriceId(priceId, env);
+  const tier = getTierFromPriceId(priceId, env, { log, eventType });
   const status = mapStripeStatus(subscription.status);
 
   await query.transaction(async (q) => {
@@ -353,7 +372,7 @@ async function handleCheckoutCompleted(event, query, stripe, env, log) {
   // Fetch full subscription details
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   const priceId = subscription.items.data[0]?.price.id;
-  const tier = getTierFromPriceId(priceId, env);
+  const tier = getTierFromPriceId(priceId, env, { log, eventType: event.type });
 
   // Atomic: upsert subscription + update user tier together
   await query.transaction(async (q) => {
@@ -485,7 +504,7 @@ async function handleSubscriptionUpdated(event, query, env, log) {
   const customerId = subscription.customer;
   const subscriptionId = subscription.id;
   const priceId = subscription.items.data[0]?.price.id;
-  const tier = getTierFromPriceId(priceId, env);
+  const tier = getTierFromPriceId(priceId, env, { log, eventType: event.type });
 
   // Find subscription by customer ID
   const existingSub = await query(QUERIES.getSubscriptionByStripeCustomerId, [customerId]);

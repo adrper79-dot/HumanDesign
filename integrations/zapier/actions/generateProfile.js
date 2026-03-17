@@ -1,6 +1,6 @@
 /**
  * Generate Profile Action
- * Creates a comprehensive Human Design profile narrative
+ * Creates a comprehensive Energy Blueprint profile narrative
  */
 
 const perform = async (z, bundle) => {
@@ -50,8 +50,8 @@ module.exports = {
   noun: 'Profile',
   
   display: {
-    label: 'Generate Human Design Profile',
-    description: 'Creates a comprehensive narrative profile from a Human Design chart.',
+    label: 'Generate Energy Blueprint Profile',
+    description: 'Creates a comprehensive narrative profile from an Energy Blueprint chart.',
     important: true
   },
 

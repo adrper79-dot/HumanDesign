@@ -154,7 +154,7 @@ function getContextualGateInterpretation(gateNumber, planet, line, isDesignSide,
  * - Active Gates and Channels
  * - Forge mapping
  * - Incarnation Cross
- * - Gene Keys wisdom
+ * - Frequency Keys wisdom
  * - Astrology (planets, signs, houses, aspects)
  * - Numerology (life path, personal year, tarot)
  * - Six Knowledges (Prime Self framework)
@@ -374,7 +374,7 @@ export function buildRAGContext(chartData) {
       }
     }
 
-    // Gene Keys for active gates WITH LINE-SPECIFIC WISDOM (BL-PS6)
+    // Frequency Keys for active gates WITH LINE-SPECIFIC WISDOM (BL-PS6)
     const geneKeys = loadKB('genekeys', 'keys.json');
     if (Object.keys(geneKeys).length > 0) {
       const keyLines = [];
@@ -410,7 +410,7 @@ export function buildRAGContext(chartData) {
         return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
       });
       
-      // Generate Gene Key entries with line themes
+      // Generate Frequency Key entries with line themes
       for (const { gate, line, planet, isDesign } of gatesWithLines.slice(0, 8)) {
         const key = geneKeys[gate];
         if (!key) continue;
@@ -418,10 +418,10 @@ export function buildRAGContext(chartData) {
         const lineTheme = LINE_THEMES[line];
         const sideLabel = isDesign ? 'Design (unconscious)' : 'Personality (conscious)';
         
-        let entry = `**Gene Key ${gate}.${line} — ${key.name}** (${planet.toUpperCase()} ${sideLabel})\n`;
+        let entry = `**Frequency Key ${gate}.${line} — ${key.name}** (${planet.toUpperCase()} ${sideLabel})\n`;
         entry += `  **Shadow:** ${key.shadow} — ${key.shadowDescription?.slice(0, 120) || ''}\n`;
         entry += `  **Gift:** ${key.gift} — ${key.giftDescription?.slice(0, 120) || ''}\n`;
-        entry += `  **Siddhi:** ${key.siddhi}\n`;
+        entry += `  **Mastery:** ${key.siddhi}\n`;
         
         if (lineTheme) {
           entry += `  **Line ${line} Theme (${lineTheme.name}):** ${lineTheme.theme}. Your ${lineTheme.gift.toLowerCase()}.`;
@@ -434,7 +434,7 @@ export function buildRAGContext(chartData) {
         keyLines.push(entry);
       }
       
-      if (keyLines.length) sections.push(`### GENE KEYS WISDOM (with Line Themes)\n\n${keyLines.join('\n\n')}`);
+      if (keyLines.length) sections.push(`### FREQUENCY KEYS WISDOM (with Line Themes)\n\n${keyLines.join('\n\n')}`);
     }
 
     // Astrology: Major Planets in Signs

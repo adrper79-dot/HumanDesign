@@ -1,8 +1,8 @@
 {
-  "description": "Human Design Rave Mandala gate wheel. 64 gates mapped to 360° ecliptic longitude. Each gate occupies exactly 5.625° (360/64). Each line within a gate occupies 0.9375° (5.625/6). Index 0 = gate starting at 0.0° ecliptic longitude.",
-  "source": "Standard Rave Mandala mapping. Gates are I Ching hexagrams arranged around the ecliptic in a fixed, non-sequential order.",
+  "description": "Energy Blueprint gate wheel. 64 gates mapped to 360° ecliptic longitude. Each gate occupies exactly 5.625° (360/64). Each line within a gate occupies 0.9375° (5.625/6). Index 0 = gate starting at 0.0° ecliptic longitude.",
+  "source": "Standard gate wheel mapping. Gates are I Ching hexagrams arranged around the ecliptic in a fixed, non-sequential order.",
   "wheelOffsetDegrees": 3.875,
-  "wheelOffsetNote": "The Rave Mandala is rotated 3°52'30\" from 0° Aries. Subtract this offset from ecliptic longitude before position lookup. Gate 41 Line 1 starts at ~302° (2° Aquarius), the Rave New Year point.",
+  "wheelOffsetNote": "The gate wheel is rotated 3°52'30\" from 0° Aries. Subtract this offset from ecliptic longitude before position lookup. Gate 41 Line 1 starts at ~302° (2° Aquarius), the New Year point.",
   "degreesPerGate": 5.625,
   "degreesPerLine": 0.9375,
   "wheel": [

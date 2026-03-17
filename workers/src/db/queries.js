@@ -2105,7 +2105,8 @@ export const QUERIES = {
       session_info = $11,
       booking_url = $12,
       payment_links = $13,
-      synthesis_style = $14
+      synthesis_style = $14,
+      scheduling_embed_url = $15
     WHERE id = $1
     RETURNING *
   `,
@@ -2148,7 +2149,8 @@ export const QUERIES = {
   getPractitionerDirectoryProfile: `
     SELECT id, is_public, slug, display_name, photo_url, bio,
            specializations, certification, languages, session_format,
-           session_info, booking_url, payment_links, synthesis_style
+           session_info, booking_url, payment_links, synthesis_style,
+           scheduling_embed_url
     FROM practitioners
     WHERE user_id = $1
   `,
@@ -2307,6 +2309,70 @@ export const QUERIES = {
     LIMIT 100
   `,
 
+  // ─── Practitioner Notifications (CMO-012) ────────────────
+
+  getPractitionersForClient: `
+    SELECT p.id         AS practitioner_id,
+           p.user_id    AS practitioner_user_id,
+           p.display_name AS practitioner_name,
+           p.notification_preferences,
+           u.email      AS practitioner_email,
+           cu.email     AS client_email,
+           COALESCE(cu.name, cu.email) AS client_name
+    FROM practitioner_clients pc
+    JOIN practitioners p ON pc.practitioner_id = p.id
+    JOIN users u         ON p.user_id = u.id
+    JOIN users cu        ON cu.id = pc.client_user_id
+    WHERE pc.client_user_id = $1
+  `,
+
+  updatePractitionerNotificationPrefs: `
+    UPDATE practitioners
+       SET notification_preferences = $2
+     WHERE id = $1
+  `,
+
+  // ─── Practitioner Stats (PRAC-012) ───────────────────────
+
+  getPractitionerStats: `
+    SELECT
+      (SELECT COUNT(*) FROM practitioner_clients WHERE practitioner_id = p.id)::int             AS active_clients,
+      (SELECT COUNT(*) FROM practitioner_session_notes WHERE practitioner_id = p.id)::int        AS total_notes,
+      (SELECT COUNT(*) FROM practitioner_session_notes WHERE practitioner_id = p.id
+         AND created_at > NOW() - INTERVAL '30 days')::int                                      AS notes_this_month,
+      (SELECT COUNT(*) FROM practitioner_session_notes WHERE practitioner_id = p.id
+         AND share_with_ai = true)::int                                                         AS ai_shared_notes
+    FROM practitioners p
+    WHERE p.user_id = $1
+  `,
+
+  // ─── Directory Stats (PRAC-013) ──────────────────────────
+
+  getPractitionerDirectoryViewStats: `
+    SELECT COUNT(*)::int AS views_30d
+    FROM analytics_events
+    WHERE event_name = 'directory_profile_view'
+      AND properties->>'practitionerId' = $1
+      AND created_at > NOW() - INTERVAL '30 days'
+  `,
+
+  // ─── PRAC-014: Client reminder lookup ────────────────────
+
+  getPractitionerClientForReminder: `
+    SELECT u.id, u.email,
+      p.id         AS practitioner_id,
+      p.display_name AS practitioner_name,
+      c.id         AS chart_id,
+      pr.id        AS profile_id
+    FROM practitioner_clients pc
+    JOIN practitioners p  ON pc.practitioner_id = p.id
+    JOIN users u          ON pc.client_user_id = u.id
+    LEFT JOIN LATERAL (SELECT id FROM charts   WHERE user_id = u.id ORDER BY calculated_at DESC LIMIT 1) c  ON true
+    LEFT JOIN LATERAL (SELECT id FROM profiles WHERE user_id = u.id ORDER BY created_at DESC   LIMIT 1) pr ON true
+    WHERE pc.client_user_id = $1
+      AND p.user_id = $2
+  `,
+
   // ─── Referral System (Phase 2A/2D) ───────────────────────
 
   // Safe fallback — referral earnings tracking is a future sprint.
@@ -2319,6 +2385,30 @@ export const QUERIES = {
     INSERT INTO referral_signups (user_id, practitioner_id, created_at)
     VALUES ($1, $2, NOW())
     ON CONFLICT (user_id) DO NOTHING
+  `,
+
+  // ─── CMO-013: Weekly practitioner digest ─────────────────
+
+  getPractitionerWeeklyDigestList: `
+    SELECT
+      p.id            AS practitioner_id,
+      u.email         AS email,
+      COALESCE(p.display_name, p.business_name, u.email) AS name,
+      COUNT(DISTINCT pc.client_user_id)::int              AS client_count,
+      COUNT(DISTINCT psn.id) FILTER (
+        WHERE psn.created_at >= NOW() - INTERVAL '7 days'
+      )::int                                              AS notes_this_week,
+      COUNT(DISTINCT c.id) FILTER (
+        WHERE c.created_at >= NOW() - INTERVAL '7 days'
+      )::int                                              AS new_charts_this_week
+    FROM practitioners p
+    JOIN users u ON u.id = p.user_id
+    LEFT JOIN practitioner_clients pc ON pc.practitioner_id = p.id
+    LEFT JOIN practitioner_session_notes psn ON psn.practitioner_id = p.id
+    LEFT JOIN charts c ON c.user_id = pc.client_user_id
+    WHERE p.tier != 'free'
+    GROUP BY p.id, u.email, p.display_name, p.business_name
+    HAVING COUNT(DISTINCT pc.client_user_id) > 0
   `,
 };
 

@@ -1,5 +1,5 @@
 {
-  "description": "Type and Authority determination rules for Human Design chart calculation",
+  "description": "Type and Authority determination rules for Energy Blueprint chart calculation",
 
   "typeRules": {
     "description": "Applied in order. First match wins.",

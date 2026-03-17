@@ -13,7 +13,7 @@
  * v18 - Audit 2026-03-14: resilient cache install (Promise.allSettled per-asset), DOM cleared on logout
  */
 
-const CACHE_VERSION = 'v18';
+const CACHE_VERSION = 'v19'; // BL-AUDIT-H5: Added billing flow pages to precache
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
@@ -70,7 +70,11 @@ const STATIC_ASSETS = [
   '/logo-animation-v2.mp4',
   '/logo-animation-v2.webm',
   // Background video
-  '/bg-video-poster.jpg'
+  '/bg-video-poster.jpg',
+  // Billing flow pages (BL-AUDIT-H5: essential for offline UX after payment redirect)
+  '/billing/success.html',
+  '/billing/cancel.html',
+  '/404.html'
   // NOTE: bg-video.mp4 and bg-video.webm are NOT pre-cached (too large).
   // They are cached on first play via the runtime cache strategy below.
 ];

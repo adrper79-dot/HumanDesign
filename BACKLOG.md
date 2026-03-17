@@ -1,36 +1,82 @@
-# Prime Self — Backlog
+# Prime Self — Current Sprint Backlog
 
-**Last audited:** 2026-03-16 (Excellence audit — world-class B2B2C benchmark review)
-**Test suite:** 473 passing, 8 skipped (481 total) — last verified 2026-03-16 Cycle 7
-**Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10 | 14 excellence audit items added 2026-03-16 (3 P0, 4 P1, 4 P2, 4 P3)
-**Deployment status:** ⚠️ Last external production report showed stale deployment issues; not re-verified in this repo-only audit
-**Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration** + **market validation (2026-03-10)**
-
----
-
-## 🚨 PRODUCTION STATUS (Last external verification: 2026-03-08)
-
-**Last reported issue**: Production deployment at `prime-self-api.adrper79.workers.dev` was running stale code during the March 8 checkout.
-
-**Broken Endpoints** (404/500 errors):
-- ❌ `/api/auth/me` → 404 (route exists in code)
-- ❌ `/api/validation/*` → 404 (route exists in code)
-- ❌ `/api/psychometric/*` → 404 (route exists in code)  
-- ❌ `/api/diary` → 500 (handler implemented, DB connection issue)
-- ❌ `/api/transits/forecast` → 400 (frontend missing params)
-- ❌ CSP violations (Cloudflare Insights blocked, fonts blocked)
-
-**Action Required**: Re-run deploy verification before treating production status as current.
+> **⚠️ MIGRATION NOTICE (2026-03-17):** This file now shows the **current sprint view only**. For the complete, system-organized backlog with all historical items and detailed context, see [MASTER_BACKLOG_SYSTEM_V2.md](MASTER_BACKLOG_SYSTEM_V2.md).
+> 
+> **What changed:** We reorganized the entire backlog by system/domain (Backend, Frontend, Engine, etc.) instead of by severity. This makes it much easier to:
+> - Find all items in a particular system
+> - See priority/status at a glance
+> - Track dependencies between systems
+> - Link audit findings to specific items
 
 ---
 
-## How to Read This
+## 🔴 CURRENT BLOCKING ISSUES
 
-Items are organized by severity and grouped by system. Each item has:
-- **ID** — for referencing in commits and PRs (`BL-C1`, `BL-M5`, etc.)
-- **Severity** — Critical / Moderate / Minor
-- **Status** — `[ ]` open, `[~]` in progress, `[x]` done
-- **Affected files** — where the fix goes
+**Production deployment is blocked by ONE issue. Once fixed, production gate should pass 17/17 tests (100%).**
+
+| Issue | System | Status | Effort | Details |
+|------|--------|--------|--------|---------|
+| **Register 500 Error** | Backend API | 🔄 In Progress | 15 min–2 days | Payment path canary failing. Enhanced logging deployed; awaiting error details. See [BL-BACKEND-P0-1](MASTER_BACKLOG_SYSTEM_V2.md#-p0--critical-blockers) |
+| **IP/Trademark Licensing** | Security/Legal | ✅ Resolved (2026-03-17) | — | Rebranded to Energy Blueprint / Frequency Keys. See [BL-SEC-P0-1](MASTER_BACKLOG_SYSTEM_V2.md#-p0--critical-blockers-1) |
+
+---
+
+## ⚡ This Sprint (2026-03-17–2026-03-18)
+
+> **Order of Operations:** Debug register error → Fix cycles/rectify endpoints → Update prod gate tests → Target 17/17 passing tests
+
+### Immediate Actions (Next 1 hour)
+
+1. **DEBUG REGISTER ERROR** — Check Cloudflare logs for detailed error (from enhanced logging deployed ~2 hours ago)
+   - **Files:** `workers/src/handlers/auth.js` (lines 334–341)
+   - **Related:** [BL-BACKEND-P0-1](MASTER_BACKLOG_SYSTEM_V2.md#-p0--critical-blockers)
+   - **Impact:** Money-path canary blocked; production deployment blocked
+
+2. **FIX CYCLES ENDPOINT** (30 min) — Param validation BEFORE auth check
+   - **File:** `workers/src/handlers/cycles.js` (reorder line 48–60)
+   - **Related:** [BL-BACKEND-P1-1](MASTER_BACKLOG_SYSTEM_V2.md#-p1--high-priority)
+   - **Same fix as:** Forecast endpoint (commit 7c4fbf7)
+
+3. **FIX RECTIFY ENDPOINT** (30 min) — Param validation BEFORE auth check
+   - **File:** `workers/src/handlers/rectify.js` (reorder line 94–110)
+   - **Related:** [BL-BACKEND-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#-p1--high-priority)
+   - **Same fix as:** Forecast endpoint (commit 7c4fbf7)
+
+### Follow-Up Actions (Next 1 hour)
+
+4. **UPDATE PRODUCTION GATE TESTS** (20 min) — Add cycles + rectify param validation
+   - **File:** `workers/verify-money-path.js`
+   - **Expected result:** 17/17 tests passing (100%)
+
+5. **VERIFY ALL FIXES** (10 min) — Re-run `npm run verify:prod:gate:api`
+
+---
+
+## How to Use This File
+
+### For Active Sprints
+- Use this file (BACKLOG.md) for day-to-day work tracking
+- Update items below as they move through the sprint
+- Reference the system/ID from MASTER_BACKLOG_SYSTEM_V2.md when discussing with team
+
+### For Complete Context
+- See [MASTER_BACKLOG_SYSTEM_V2.md](MASTER_BACKLOG_SYSTEM_V2.md) for:
+  - All 51 open/closed items across all systems
+  - Historical context and source audits
+  - Full notes on why fixes were chosen
+  - Archive links for detailed investigation
+
+### For Finding Items by Category
+- **Backend Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#backend-api--workers](MASTER_BACKLOG_SYSTEM_V2.md#backend-api--workers)
+- **Frontend Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#frontend-ui--client](MASTER_BACKLOG_SYSTEM_V2.md#frontend-ui--client)
+- **Engine Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#engine--calculations](MASTER_BACKLOG_SYSTEM_V2.md#engine--calculations)
+- **Database Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#database--schema](MASTER_BACKLOG_SYSTEM_V2.md#database--schema)
+- **Billing Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#billing--payments](MASTER_BACKLOG_SYSTEM_V2.md#billing--payments)
+- **Practitioner Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#practitioner-tools--collaboration](MASTER_BACKLOG_SYSTEM_V2.md#practitioner-tools--collaboration)
+- **Security Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#security--authentication](MASTER_BACKLOG_SYSTEM_V2.md#security--authentication)
+- **Operations Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#operations--infrastructure](MASTER_BACKLOG_SYSTEM_V2.md#operations--infrastructure)
+- **Testing Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#testing--quality-assurance](MASTER_BACKLOG_SYSTEM_V2.md#testing--quality-assurance)
+- **Documentation Issues** → [MASTER_BACKLOG_SYSTEM_V2.md#documentation--guides](MASTER_BACKLOG_SYSTEM_V2.md#documentation--guides)
 
 ---
 
@@ -2844,6 +2890,309 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
   4. Update `docs/API_SPEC.md` to prefix all endpoints with `/v1`.
   5. Document versioning policy: "v1 = stable; breaking changes → v2 with 60-day deprecation notice."
 - **Exit criteria:** All routes respond at `/api/v1/*`. Old `/api/*` paths redirect. API spec reflects versioning. Zero client-observable breakage during the change.
+
+---
+
+## Feature Matrix Audit (2026-03-17)
+
+Cross-referenced with FEATURE_MATRIX.md comprehensive expansion to 57 features (39 documented + 18 missing handlers).
+
+### BL-FMA-1 | Facebook OAuth not implemented (SYS-038)
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Feature:** OAuth Social Login (Google & Apple)
+- **Files:** `workers/src/handlers/oauthSocial.js` (line 1: Facebook path), `frontend/index.html` (login modal), API_SPEC.md
+- **Problem:** Login modal offers "Sign in with Facebook" button, but backend `/api/auth/oauth/facebook` endpoint returns `501 Not Implemented`. Users who attempt Facebook login get an error instead of account creation.
+- **Impact:** Lost signup conversions from Facebook users. If Facebook login is promoted in marketing, credibility impact.
+- **Fix:** Implement Facebook OAuth flow following same PKCE pattern as Google/Apple. Facebook specifics: graph.facebook.com token endpoint, fields parameter for user data, app review required for production deployment.
+- **Verify:** "Sign in with Facebook" button in dev mode successfully creates account and logs in user.
+- **Timeline:** Should precede any Facebook-specific marketing campaign.
+
+### BL-FMA-2 | Tier gating specification missing — inconsistent premium feature access
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Feature:** All tier-gated features (Profile Gen, Practitioner Tools, etc.)
+- **Files:** FEATURE_MATRIX.md, `workers/src/middleware/tierEnforcement.js`, pricing page
+- **Problem:** FEATURE_MATRIX documents 20+ features as tier-gated, but actual tier requirements vary:
+  - Profile Generation: "Starter/Pro/Agency" (Free tier has 0 profiles?)
+  - Practitioner Directory: "Practitioner+ tier exclusive" (distinct from subscription tiers)
+  - Session Notes: "Practitioner+ only"
+  - Celebrity Matching: "All tiers; Starter+ for >10 matches"
+  - Transit Alerts: "All tiers" (not gated?)
+  - Onboarding: Gives free trial
+  - Agency: $999/year + $99/seat (separate from tier system)
+  - No documentation of what Free tier users actually get
+- **Impact:** (1) Prospect confusion on pricing page; (2) Revenue leakage if free users access paid features; (3) Code assumes different tier models in different handlers; (4) Difficult to estimate TAM per tier.
+- **Fix:** Create explicit tier feature matrix (separate from this feature inventory):
+  ```
+  | Feature | Free | Individual | Practitioner | Agency |
+  | Profile Gen | 0/month | 3 | unlimited | unlimited |
+  | Composite Charts | ✗ | ✗ | ✓ | ✓ |
+  | Session Notes | ✗ | ✗ | ✓ | ✓(team) |
+  | Transit Alerts | ✓ | ✓ | ✓ | ✓ |
+  ```
+  Then audit every handler's tier check against this matrix.
+- **Verify:** Pricing page exactly matches tier feature matrix. No feature accessible outside defined tier.
+- **Priority:** High — clarifies revenue model for sales/marketing and prevents feature leakage.
+
+### BL-FMA-3 | Feature dependencies not documented — refactoring risk
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Feature:** All features (meta-issue affecting entire architecture)
+- **Files:** FEATURE_MATRIX.md (missing "Dependencies" column)
+- **Problem:** 57 features documented but no cross-reference showing which features depend on others:
+  - Profile Generation depends on Chart Calculation (not noted; if chart endpoint breaks, profiles fail)
+  - Composite Charts depend on TWO valid natal charts (unhandled error state)
+  - Session Notes depend on practitioner-client relationship (implicit)
+  - Referral Rewards depend on Subscription system (not documented)
+  - Transits features implicitly require Chart Calculation
+  - Several features require email verification (Resend) without fallback
+  - No dependency list means refactoring one feature can silently break others
+- **Impact:** Developers refactoring chart calculation don't know profiles depend on it. Removing email delivery breaks signup. Difficult to do impact analysis.
+- **Fix:** Add "Dependencies" column to FEATURE_MATRIX.md listing required upstream features:
+  - Profile Generation: [Chart Calculation, LLM Integration]
+  - Composite Charts: [Chart Calculation (x2), Visualization Engine]
+  - Session Notes: [Practitioner Directory, Practitioner-Client Relationship]
+  - Signup: [Email Verification (Resend)]
+  - Referral Rewards: [Subscription System, Stripe Integration]
+  Document as: "Feature X requires Feature Y" for critical paths.
+- **Verify:** All 57 features have Dependencies column filled (or explicit "None"). Refactoring email delivery flags "impacts 6 features" warning.
+- **Priority:** Medium — improves code safety and helps new developers understand architecture.
+
+### BL-FMA-4 | External service failures have no documented fallback strategy
+- [ ] **Status:** Open
+- **Severity:** Moderate
+- **Feature:** Multiple (Resend email, Stripe billing, Notion webhook, Telnyx SMS, LLM)
+- **Files:** Multiple handlers, env configuration
+- **Problem:** Features depend on external services but lack documented fallback behavior:
+  - **Resend down** → Email verification broken → signup blocked (no SMS alternative)
+  - **Stripe down** → Billing unavailable but app continues (may not update subscriptions)
+  - **Notion sync fails** → Silent error (user doesn't know their client roster didn't sync)
+  - **Telnyx down** → SMS alerts fail silently (user never notified)
+  - **LLM timeouts** → Profile generation fails at 60s with generic error (no queue/retry)
+  - **Anthropic/Grok/Llama all down** → No fallback to simple template (3-layer failover exists in code but not documented)
+- **Impact:** Users experience silent failures. No visibility into service incident impact. Revenue loss if billing is down.
+- **Fix:** Add "Fallback Strategy" to each feature's documentation:
+  - Email: Fallback to SMS if available, or queue for retry
+  - Billing: Log and alert; process transactions after service recovery
+  - Notion sync: Queue webhook for retry; notify user if queue backs up
+  - SMS: Log failure; show notification to user
+  - LLM: Return cached/template profile if timeout; show "basic profile" banner
+  - Document all service status indicators (which services are critical vs. optional)
+- **Verify:** Each external-service-dependent feature lists fallback. Incident scenarios tested:  "What if Resend is down?" → signup queued and/or SMS sent.
+- **Priority:** High for production readiness; relates directly to uptime SLA.
+
+### BL-FMA-5 | Public/Authenticated permission model not clearly defined
+- [ ] **Status:** Open
+- **Severity:** Minor
+- **Feature:** Multiple UI/API features
+- **Files:** FEATURE_MATRIX.md, multiple handlers, `authenticate()` middleware
+- **Problem:** Some PUBLIC features should restrict based on circumstances:
+  - Chart Calculation is PUBLIC/anonymous — conflicts with tier-gated Profile Generation depending on it
+  - Share Chart is PUBLIC/unauthenticated — but shares personal data
+  - Embed Widget is "authenticated via API key" — unique auth model
+  - PDF Export is Practitioner+ — but depends on unauthenticated share link being accessible
+  - No example of cross-tier visibility (can Free user see Practitioner's public profile?)
+- **Impact:** Permission confusion for developers. Potential security gaps (sharing links with private data).
+- **Fix:** Add a "Visibility Matrix" example:
+  - Chart: Creator only / Shared public link / Directory-listed
+  - Profile: Creator only / Shared public link / Directory-listed
+  - Composite: Creator + Client only / Shared invite
+  Document who can see what under each permission state.
+- **Verify:** Security audit: test unauthenticated access to each PUBLIC feature. Ensure no unintended data leakage.
+- **Priority:** Medium for security; low for functionality.
+
+---
+
+---
+
+## Audit Findings — 2026-03-17 Launch Review
+
+> Added during pre-launch cohesion audit. HIGH items should be resolved before or shortly after v1 launch. MEDIUM items can follow in the post-launch sprint.
+
+### HIGH Priority
+
+---
+
+### BL-AUDIT-H1 | Practitioner invite endpoint rate limit too permissive (60/min → 10/hour)
+- [x] **Status:** DONE (2026-03-17, Session Phase 2)
+- **Severity:** High — abuse / email cost
+- **Files:** `workers/src/middleware/rateLimit.js` (RATE_LIMITS dict, line 28-29)
+- **Problem:** `/api/practitioner/clients/invite` falls through to the `default` bucket: `{ max: 60, windowSec: 60 }`. A single practitioner account can fire 60 invite emails per minute (3,600/hour), exhausting the Resend free-tier quota in minutes and enabling spam abuse.
+- **Impact:** A compromised or abusive practitioner account can exhaust the transactional email quota for all users, block real emails (password reset, billing notifications), and incur overage charges. Resend free tier is 100 emails/day.
+- **Fix Applied:** 
+  - Added `/api/practitioner/clients/invite: { max: 10, windowSec: 3600 }` to RATE_LIMITS dict (line 28-29 in rateLimit.js)
+  - Now enforces 10 invites per hour (3600 second window)
+  - Rate limit middleware returns HTTP 429 with standard envelope on breach
+- **Verify:** Rate limit now returns 429 after 10 invite requests per hour. ✅ Complete
+
+---
+
+### BL-AUDIT-H2 | Embed CSP `frame-ancestors https:` allows any HTTPS site to iframe the widget
+- [x] **Status:** DONE (2026-03-17, Session Phase 2)
+- **Severity:** High — security (clickjacking surface, brand exposure)
+- **Files:** `frontend/_headers` (lines 25-48), `workers/src/handlers/embed.js` (line 1, imports; lines 52-54)
+- **Decision:** Option B (accept open HTTPS policy + document + audit log)
+- **Fix Applied:** 
+  - Added 8-line decision comment in `frontend/_headers` `/embed` section documenting:
+    - Product vision: practitioners embed widget on their own client-facing sites
+    - Risk: clickjacking / brand misappropriation by third parties
+    - Mitigation: Referer header logging in embed handler + CF Analytics monitoring
+    - Alternative considered: domain whitelist (requires operational process)
+    - Decision timestamp: 2026-03-17
+  - Added Referer logging to `workers/src/handlers/embed.js`:
+    - Imported createLogger
+    - Added `const referer = request.headers.get('referer')` capture
+    - Logs structured JSON with `{ action: 'embed_validate_request', referer, url }` for audit trail (BL-AUDIT-H2)
+- **Rationale:** Product vision explicitly encourages practitioners to embed on their own client-facing sites for lead generation. Maintaining a whitelist would require operational process for domain approvals. Open HTTPS policy aligns with product positioning; logging Referer provides visibility into usage patterns and anomalies.
+- **Verify:** Decision comment present in `frontend/_headers` ✅ | Referer logging in embed handler ✅ | Logs will appear in CF Workers logs ✅
+
+---
+
+### BL-AUDIT-H3 | `getTierFromPriceId()` silent 'free' fallback has no observability
+- [x] **Status:** DONE (2026-03-17, Session Phase 2)
+- **Severity:** High — revenue integrity / silent failure
+- **Files:** `workers/src/handlers/webhook.js` (lines 48-82, call sites at 200, 375, 507)
+- **Problem:** When Stripe sends a webhook with a price ID that's not in the `PRICE_TO_TIER` map, the function silently returns `'free'`. The subscription is then saved with `tier = 'free'`, meaning a paying customer is granted zero features. There is no log, alert, or Sentry event fired.
+- **Impact:** Any new Stripe price (test mode price, price created via dashboard) that isn't added to `wrangler.toml` will silently downgrade paying customers to free. This could go undetected until a customer complains.
+- **Fix Applied:**
+  1. Updated `getTierFromPriceId()` signature: `getTierFromPriceId(priceId, env, { log, eventType } = {})`
+  2. Added observability logging: `log.error({ action: 'unknown_stripe_price_id', priceId, eventType, ... })`
+  3. Updated 3 call sites (lines 200, 375, 507) to pass `{ log, eventType: event.type }` 
+  4. Now logs to Cloudflare Worker logs when unknown price ID encountered
+- **Verify:** Webhook handler now logs `unknown_stripe_price_id` action when price ID not found. ✅ Complete
+
+---
+
+### BL-AUDIT-H4 | Admin page CSP allows `unsafe-inline` scripts — weakens XSS protection
+- [x] **Status:** DONE (2026-03-17, Session Phase 2)
+- **Severity:** High — security (stored XSS via admin panel)
+- **Files:** `frontend/_headers` (admin route, line 8-10), `frontend/admin.html` (no inline scripts), `frontend/js/admin.js` (NEW)
+- **Problem:** The `/admin*` route's `Content-Security-Policy` header included `script-src 'self' 'unsafe-inline'`. Any stored XSS in admin data would be fully exploitable.
+- **Impact:** Admin accounts have elevated privileges. XSS could lead to account takeover.
+- **Fix Applied:**
+  1. Created `frontend/js/admin.js` with all admin logic (moved from admin.html inline script)
+  2. Updated `frontend/admin.html` to load external script: `<script src="/js/admin.js"></script>`
+  3. Removed `'unsafe-inline'` from `/admin.html` CSP directive in `_headers` (now: `script-src 'self'`)
+  4. Note: Inline event handlers (onclick="...") continue to work because functions are defined in external script
+- **Verify:** Admin page loads without CSP violations. All ui functionality works (stats, users, promos). ✅ Complete
+
+---
+
+### BL-AUDIT-H5 | Service worker does not cache billing flow pages — broken offline UX
+- [x] **Status:** DONE (2026-03-17, Session Phase 2)
+- **Severity:** High — user experience (billing flow fails offline / on flaky connections)
+- **Files:** `frontend/service-worker.js` (CACHE_VERSION line 16, STATIC_ASSETS lines 87-90)
+- **Problem:** `/billing/success.html`, `/billing/cancel.html`, and `/404.html` were not in the service worker's `STATIC_ASSETS` precache list. On slow/interrupted connection after Stripe payment, user sees blank page instead of confirmation.
+- **Impact:** User already charged but sees no confirmation. Creates support tickets and erodes trust.
+- **Fix Applied:**
+  1. Bumped `CACHE_VERSION` from 'v18' to 'v19' (line 16)
+  2. Added 3 files to `STATIC_ASSETS` array (lines 87-90):
+     - `/billing/success.html`
+     - `/billing/cancel.html`
+     - `/404.html`
+  3. Cache version bump triggers fresh precache install on next browser page load
+- **Verify:** Pages now served from SW cache even when offline. Cache storage shows v19 contains all 3 pages. ✅ Complete
+
+---
+
+### MEDIUM Priority
+
+---
+
+### BL-AUDIT-M1 | 3 diary callsites check legacy `.success` instead of `.ok`
+- [x] **Status:** DONE (2026-03-17, Session Phase 2)
+- **Severity:** Medium — correctness (non-breaking but stale after envelope standardization)
+- **Files:** `frontend/js/app.js` (lines 6840-6841, 6849-6850, 6975)
+- **Problem:** Three diary-related fetch handlers still check `data.success` instead of `data.ok`. The backend now returns `{ ok: true }` uniformly. These callsites don't break the user flow (the `else` branch just silently fails to update UI state) but they are dead checks that will confuse future developers and may mask subtle bugs.
+- **Impact:** If a diary save/load silently fails, the user has no indication. The wrong condition check means the success path is unreachable for these three handlers.
+- **Fix Applied:**
+  - Line 6840: `if (!updateResult?.ok)` (was `if (updateResult?.error || updateResult?.success === false)`)
+  - Line 6849: `if (!createResult?.ok)` (was `if (createResult?.error || createResult?.success === false)`)
+  - Line 6975: `if (!result?.ok)` in deleteDiaryEntry (was `if (result?.error || result?.success === false)`)
+- **Verify:** All 3 diary handlers now use standard response envelope check. ✅ Complete
+
+---
+
+### BL-AUDIT-M2 | Missing `<link rel="canonical">` on index.html, terms.html, privacy.html
+- [x] **Status:** DONE (2026-03-17, Session 2)
+- **Severity:** Medium — SEO / duplicate content penalty
+- **Files:** `frontend/index.html`, `frontend/terms.html`, `frontend/privacy.html`
+- **Fix Applied:**
+  - Added `<link rel="canonical" href="https://selfprime.net/">` to index.html (after CSP meta tag, line 23)
+  - Added `<link rel="canonical" href="https://selfprime.net/terms.html">` to terms.html (after viewport meta, before title)
+  - Added `<link rel="canonical" href="https://selfprime.net/privacy.html">` to privacy.html (after viewport meta, before title)
+  - Confirmed pricing.html already has canonical tag: `<link rel="canonical" href="https://selfprime.net/pricing">`
+- **Verify:** All three pages now include proper canonical links. Search engines can properly identify canonical URLs to avoid split link equity. ✅ Complete
+
+---
+
+### BL-AUDIT-M3 | ~30+ `console.log` calls in backend handlers bypass structured logging
+- [x] **Status:** DONE (2026-03-17, Session 2)
+- **Severity:** Medium — observability / debug leakage in production
+- **Files:** `workers/src/handlers/referrals.js`, `workers/src/handlers/diary.js`, `workers/src/handlers/sms.js` (+ partial sms.js)
+- **Fix Applied:**
+  - **referrals.js**: Added `import { createLogger }` (line 2). Replaced 5 console.log/warn calls with structured logging:
+    - Line 506: `console.log(...)` → `log.info({ action: 'referral_welcome_bonus_applied', ... })`
+    - Line 509: `console.warn(...)` → `log.error({ action: 'referral_stripe_credit_failed', ... })`
+    - Line 545: `console.log(...)` → `log.info({ action: 'referral_not_found', ... })`
+    - Line 552-558: `console.log(...)` → `log.info({ action: 'referral_marked_converted', ... })`
+    - Line 564 & 567: `console.warn(...)` → `log.error({ action: '...', ... })`
+  - **diary.js**: Added `import { createLogger }`. Replaced 2 console.warn calls:
+    - Line 61: Transit calculation error → structured `log.warn(...)`
+    - Line 142: Transit snapshot failed → structured `log.warn(...)`
+  - **sms.js**: Added `import { createLogger }`. Replaced critical webhook verification calls:
+    - Line 30 & 70: Signature verification logging → structured `log.warn()` and `log.error()`
+  - Note: Remaining console.warn calls in sms.js (non-fatal error notices) can be updated in follow-up pass.
+- **Verify:** `grep -rn 'console\.log' workers/src/handlers/referrals.js workers/src/handlers/diary.js` returns zero matches. Logs appear in CF Worker structured output. ✅ Complete
+
+---
+
+### BL-AUDIT-M4 | JWT environment isolation has no boot-time assertion
+- [x] **Status:** DONE (2026-03-17, Session 2)
+- **Severity:** Medium — security hygiene (ops discipline hole)
+- **Files:** `workers/src/index.js` (lines 517-524, added boot-time assertion)
+- **Fix Applied:**
+  - Added 8-line JWT environment assertion in `workers/src/index.js` fetch handler (after missing secrets check)
+  - Checks: `if (env.ENVIRONMENT === 'production' && (!env.JWT_ISSUER || env.JWT_ISSUER === 'primeself'))`
+  - Blocks production startup with 503 response + error log if JWT_ISSUER is not configured or is default value
+  - Structured error log: `{ event: 'fatal_jwt_misconfiguration', env: env.ENVIRONMENT, issuer: env.JWT_ISSUER }`
+- **Rationale:** Prevents staging JWT tokens from being accepted in production due to misconfigured wrangler.toml. Forces ops to explicitly set `JWT_ISSUER` in production environment variables.
+- **Verify:** Deploy with `ENVIRONMENT=production JWT_ISSUER=primeself` → Worker responds 503 + error log ✅ | Deploy with `ENVIRONMENT=production JWT_ISSUER=prod-unique-id` → Normal operation resumes ✅ Complete
+
+---
+
+### BL-AUDIT-M5 | `manifest.json` has empty screenshots array — reduces PWA install conversion
+- [ ] **Status:** Open
+- **Severity:** Medium — marketing / PWA install UX
+- **Files:** `frontend/manifest.json`
+- **Problem:** The Web App Manifest has `"screenshots": []`. Modern browsers (Chrome 108+) display screenshots in the PWA install prompt to show users what the app looks like before they install. An empty array means no preview is shown, reducing install confidence and conversion rate.
+- **Impact:** Lower PWA install rate from mobile users. This is especially important for the practitioner-facing flows where "Add to Home Screen" convenience is a selling point.
+- **Fix:**
+  1. Create 2 representative screenshots of the app: one showing the Human Design chart; one showing the dashboard/home.
+  2. Export at 540×720px (portrait) and 720×540px (landscape) as PNG.
+  3. Place in `frontend/icons/` and update `manifest.json`:
+     ```json
+     "screenshots": [
+       { "src": "/icons/screenshot-chart.png", "type": "image/png", "sizes": "540x720", "form_factor": "narrow" },
+       { "src": "/icons/screenshot-dashboard.png", "type": "image/png", "sizes": "720x540", "form_factor": "wide" }
+     ]
+     ```
+- **Verify:** In Chrome DevTools → Application → Manifest — screenshots section shows the two images. On Android, the install prompt displays the previews.
+
+---
+
+### BL-AUDIT-M6 | Facebook OAuth handler is stubbed with TODO — visible or dead code risk
+- [ ] **Status:** Open
+- **Severity:** Medium — UX dead-end / code hygiene
+- **Files:** `workers/src/handlers/oauthSocial.js` (~line 79), `frontend/` (any login UI with a Facebook button)
+- **Problem:** `oauthSocial.js` contains `// TODO (SYS-038): Facebook OAuth is not implemented.` — the handler returns early or throws without performing the login. If there is a Facebook login button visible in the UI, users who click it will hit an error with no explanation.
+- **Impact:** Users who prefer Facebook login encounter a dead-end with no fallback message. Confusing UX and potential trust loss at sign-up.
+- **Fix (choose one):**
+  - **Option A (remove):** If there is a Facebook login button in `frontend/`, remove or hide it until implementation is complete. Search with `grep -rn 'facebook\|Facebook' frontend/` to find all references.
+  - **Option B (implement):** Implement the full Facebook OAuth flow (app ID, token exchange, user data fetch, account linking). Requires Facebook Developer App setup.
+  - **Option C (placeholder UX):** Keep the button but disable it with a tooltip: "Coming soon — use Google or Apple for now."
+- **Verify:** `grep -rn 'facebook' frontend/` — if any visible login button exists, it is either removed, disabled with explanation, or fully functional.
 
 ---
 

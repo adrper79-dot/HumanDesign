@@ -81,7 +81,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 - **~120 API endpoints** across chart, profile, transits, auth, billing, achievements, webhooks, push, alerts, API keys, timing, celebrities, sharing, Notion, check-ins, analytics, experiments
 - **Env vars used:** ENVIRONMENT, NEON_CONNECTION_STRING, JWT_SECRET, STRIPE_SECRET_KEY, TELNYX_API_KEY
 
-### `cron.js` (300 lines) — **Scheduled Daily Task Runner**
+### `cron.js` (475 lines) — **Scheduled Daily Task Runner**
 - **Purpose:** Daily 6 AM UTC cron (Cloudflare Cron Triggers)
 - **Steps:**
   0. Purge expired rate limit counters (`rate_limit_counters` table)
@@ -95,7 +95,9 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
   7. Email drip campaigns (welcome series, re-engagement, upgrade nudges)
   8. Purge expired/revoked refresh tokens
   9. Downgrade expired cancel-at-period-end subscriptions
-- **DB tables:** transit_snapshots, users, push_subscriptions, notification_preferences, transit_alerts, alert_deliveries, refresh_tokens, rate_limit_counters
+  10. *(reserved)*
+  11. Monday-only (`getUTCDay() === 1`) practitioner weekly digest — queries `getPractitionerWeeklyDigestList`, loops active practitioners, fires `sendPractitionerWeeklyDigest` per practitioner; wrapped in `withTimeout(..., 60000)`
+- **DB tables:** transit_snapshots, users, push_subscriptions, notification_preferences, transit_alerts, alert_deliveries, refresh_tokens, rate_limit_counters, practitioners, practitioner_clients, practitioner_session_notes, charts
 - **Env vars:** NEON_CONNECTION_STRING, RESEND_API_KEY, FROM_EMAIL
 - **Imports from:** engine (julian, planets, gates), handlers (sms, push, alerts), lib (webhookDispatcher, email)
 
@@ -169,7 +171,9 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 #### Practitioner & Cluster
 | File | Lines | Purpose | Key Exports | DB Tables |
 |------|-------|---------|-------------|-----------|
-| `practitioner.js` | 265 | Practitioner registration, client management | `handlePractitioner` | practitioners, practitioner_clients, users, charts |
+| `practitioner.js` | 836 | Practitioner registration, client management, analytics, stats, reminders | `handlePractitioner` (router), `handleGetReferralLink`, `handleAcceptInvitation`, `handleGetInvitationDetails` | practitioners, practitioner_clients, users, charts |
+| `practitioner-directory.js` | 310 | Public directory, profile edit, view tracking, scheduling embed | `handleListDirectory`, `handleGetPublicProfile`, `handleGetDirectoryProfile`, `handleUpdateDirectoryProfile`, `handleGetDirectoryStats` | practitioners, users, analytics_events |
+| `session-notes.js` | 277 | Per-client session notes + AI context | `handleListNotes`, `handleCreateNote`, `handleUpdateNote`, `handleDeleteNote`, `handleGetAIContext`, `handleUpdateAIContext` | practitioner_session_notes, practitioner_clients (ai_context column) |
 | `cluster.js` | 514 | Group/cluster management + synthesis | `handleCluster` | clusters, cluster_members, charts, users |
 
 #### Communication
@@ -202,7 +206,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 | `analytics.js` | Non-blocking event tracking (BL-ANA-001) | `trackEvent`, `trackError`, `trackFunnel`, `aggregateDaily`, `EVENTS` | None (DB only) |
 | `cache.js` | Unified KV caching (BL-OPT-003) | `kvCache` (getOrSet, get, put, del, invalidatePrefix), `keys`, `TTL`, `getCacheMetrics`, `recordCacheAccess` | Cloudflare KV |
 | `celebrityMatch.js` | Chart similarity scoring algorithm | `calculateSimilarity(userChart, celebChart)` | None |
-| `email.js` | Transactional email via Resend (BL-ENG-007) | `sendEmail`, `sendWelcomeEmail2/3/4`, `sendReengagementEmail`, `sendUpgradeNudgeEmail` | Resend API |
+| `email.js` | Transactional email via Resend (BL-ENG-007) | `sendEmail`, `sendWelcomeEmail2/3/4`, `sendReengagementEmail`, `sendUpgradeNudgeEmail`, `sendPractitionerClientChartReady`, `sendPractitionerClientSessionReady`, `sendClientReminder`, `sendPractitionerWeeklyDigest` | Resend API |
 | `errorMessages.js` | User-friendly error translation | `translateError(error)`, `errorResponse(err, status, env)` | None |
 | `experiments.js` | A/B testing framework (BL-ANA-005) | `getVariant`, `trackConversion`, `getResults` | None (DB only) |
 | `i18n.js` | Server-side internationalization (BL-OPT-006) | `detectLocale`, `t`, `formatDate`, `formatNumber`, `SUPPORTED_LOCALES` | Cloudflare KV |
@@ -233,12 +237,13 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 
 ### workers/src/db/ — Database Layer
 
-#### `queries.js` (1,578 lines) — **Query Repository**
+#### `queries.js` (2,411 lines) — **Query Repository**
 - **Purpose:** All prepared SQL queries + connection management
 - **Exports:** `createQueryFn(connectionString)`, `getClient(connectionString)`, `QUERIES` object
 - **Connection:** Singleton `Pool` per connection string (Neon serverless driver), WebSocket-backed transactions
-- **Query count:** ~130 named queries organized by domain
-- **DB tables referenced:** users, charts, profiles, transit_snapshots, practitioners, practitioner_clients, clusters, cluster_members, sms_messages, validation_data, psychometric_data, diary_entries, subscriptions, payment_events, usage_records, share_events, refresh_tokens, user_achievements, achievement_events, user_streaks, user_achievement_stats, webhooks, webhook_deliveries, push_subscriptions, push_notifications, notification_preferences, transit_alerts, alert_deliveries, alert_templates, api_keys, api_usage, oauth_states, notion_connections, notion_syncs, referrals, invoices, daily_checkins, checkin_reminders, analytics_events, analytics_daily, funnel_events, experiments, experiment_assignments, experiment_conversions
+- **Query count:** ~145 named queries organized by domain
+- **DB tables referenced:** users, charts, profiles, transit_snapshots, practitioners, practitioner_clients, practitioner_session_notes, practitioner_ai_context, practitioner_invitations, clusters, cluster_members, sms_messages, validation_data, psychometric_data, diary_entries, subscriptions, payment_events, usage_records, share_events, refresh_tokens, user_achievements, achievement_events, user_streaks, user_achievement_stats, webhooks, webhook_deliveries, push_subscriptions, push_notifications, notification_preferences, transit_alerts, alert_deliveries, alert_templates, api_keys, api_usage, oauth_states, notion_connections, notion_syncs, referrals, invoices, daily_checkins, checkin_reminders, analytics_events, analytics_daily, funnel_events, experiments, experiment_assignments, experiment_conversions
+- **Notable new queries (practitioner sprint):** `getPractitionersForClient`, `updatePractitionerNotificationPrefs`, `getPractitionerStats`, `getPractitionerDirectoryViewStats`, `getPractitionerClientForReminder`, `getPractitionerWeeklyDigestList`
 
 #### `migrate.js` (~125 lines) — **Migration Runner**
 - **Purpose:** Runs base schema + numbered migrations, tracks in `schema_migrations`
@@ -249,7 +254,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 - **Tables created (17):** users, charts, profiles, transit_snapshots, practitioners, practitioner_clients, clusters, cluster_members, sms_messages, validation_data, psychometric_data, diary_entries, subscriptions, payment_events, usage_records, share_events, refresh_tokens + schema_migrations
 - **Key design:** UUID primary keys (gen_random_uuid()), JSONB for chart/profile data, IANA timezone storage, Stripe customer/subscription IDs
 
-#### `migrations/` (41 numbered migration files)
+#### `migrations/` (45 migration files)
 | Migration | Purpose |
 |-----------|---------|
 | `000_migration_tracking.sql` | Create schema_migrations table |
@@ -290,6 +295,13 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 | `039_account_deletions_audit.sql` | Account deletion audit trail |
 | `040_add_last_login_at.sql` | Add last_login_at to users |
 | `041_experiments_status_enum.sql` | Experiments status enum |
+| `042_add_stripe_indexes.sql` | Stripe lookup index optimizations |
+| `043_hash_deletion_audit_ip.sql` | Hash IP addresses in account deletion audit |
+| `044_gdpr_consent_fields.sql` | GDPR consent fields on users |
+| `045_referral_signups.sql` | Referral signup attribution table |
+| `050_bug_reporting.sql` | Bug reporting tables (bug_reports, bug_comments) |
+| `051_practitioner_notification_prefs.sql` | `notification_preferences JSONB` column on `practitioners` (clientChartReady, clientSessionReady); default true for all tiers |
+| `052_practitioner_scheduling_embed.sql` | `scheduling_embed_url TEXT` column on `practitioners`; hostname-whitelisted to cal.com/calendly.com |
 
 ---
 

@@ -47,7 +47,7 @@ module.exports = {
   
   display: {
     label: 'New Chart Created',
-    description: 'Triggers when a new Human Design chart is calculated.',
+    description: 'Triggers when a new Energy Blueprint chart is calculated.',
     important: true
   },
 

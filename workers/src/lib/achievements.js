@@ -13,7 +13,7 @@ export const ACHIEVEMENTS = {
   FIRST_CHART: {
     id: 'first_chart',
     name: 'Self-Discovery Begins',
-    description: 'Generated your first Human Design chart',
+    description: 'Generated your first Energy Blueprint chart',
     category: 'getting_started',
     icon: '🌟',
     tier: 'bronze',

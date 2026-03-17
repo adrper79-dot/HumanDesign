@@ -1,7 +1,7 @@
 /**
  * Layer 3: Design Side Calculation (Unconscious / -88 Solar Degrees)
  *
- * Human Design uses TWO chart calculations:
+ * Energy Blueprint uses TWO chart calculations:
  *   Personality (Conscious):  planetary positions at birth moment
  *   Design (Unconscious):    planetary positions at the moment the Sun
  *                            was 88° earlier in the ecliptic
@@ -105,7 +105,7 @@ function jdnToCalendar(jdn) {
 }
 
 /**
- * Calculate the Design (Unconscious) side of a Human Design chart.
+ * Calculate the Design (Unconscious) side of an Energy Blueprint chart.
  *
  * Finds the moment when the Sun was 88° earlier in the ecliptic,
  * then computes all planetary positions at that moment.

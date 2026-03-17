@@ -15,7 +15,7 @@ describe('practitioner public profile page', () => {
     global.fetch.mockResolvedValueOnce(Response.json({
       practitioner: {
         display_name: 'Avery Guide',
-        bio: 'Relationship-centered Human Design practitioner.',
+        bio: 'Relationship-centered Energy Blueprint practitioner.',
         booking_url: 'https://cal.example.com/avery',
         certification: 'IHDS',
         specializations: ['Relationships', 'Projectors'],

@@ -40,7 +40,7 @@ export async function onRequestGet({ params, request }) {
   const name        = practitioner.display_name || 'Practitioner';
   const firstName   = name.split(/\s+/)[0];
   const bio         = (practitioner.bio || '').slice(0, 155);
-  const description = bio || `${name} is a Human Design practitioner on Prime Self.`;
+  const description = bio || `${name} is an Energy Blueprint practitioner on Prime Self.`;
   const profileUrl  = `${origin}/practitioners/${slug}`;
   const imageUrl    = practitioner.photo_url || `${origin}/og-image.png`;
 
@@ -57,7 +57,7 @@ export async function onRequestGet({ params, request }) {
     url: profileUrl,
     ...(imageUrl ? { image: imageUrl } : {}),
     ...(practitioner.booking_url ? { url: practitioner.booking_url } : {}),
-    knowsAbout: specializations || 'Human Design',
+    knowsAbout: specializations || 'Energy Blueprint',
     worksFor: { '@type': 'Organization', name: 'Prime Self', url: origin },
   };
 
@@ -93,13 +93,13 @@ export async function onRequestGet({ params, request }) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${escapeHtml(name)} — Human Design Practitioner | Prime Self</title>
+  <title>${escapeHtml(name)} — Energy Blueprint Practitioner | Prime Self</title>
   <meta name="description" content="${escapeHtml(description)}">
   <link rel="canonical" href="${escapeHtml(profileUrl)}">
 
   <!-- Open Graph -->
   <meta property="og:type" content="profile">
-  <meta property="og:title" content="${escapeHtml(name)} — Human Design Practitioner">
+  <meta property="og:title" content="${escapeHtml(name)} — Energy Blueprint Practitioner">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:url" content="${escapeHtml(profileUrl)}">
   <meta property="og:image" content="${escapeHtml(imageUrl)}">
@@ -107,7 +107,7 @@ export async function onRequestGet({ params, request }) {
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(name)} — Human Design Practitioner">
+  <meta name="twitter:title" content="${escapeHtml(name)} — Energy Blueprint Practitioner">
   <meta name="twitter:description" content="${escapeHtml(description)}">
   <meta name="twitter:image" content="${escapeHtml(imageUrl)}">
 
@@ -138,7 +138,7 @@ export async function onRequestGet({ params, request }) {
   <div class="card" style="border:2px solid var(--gold,#c9a84c);text-align:center">
     <h2 style="margin:0 0 0.5rem;font-size:1.2rem">Start by seeing what ${escapeHtml(firstName)} sees</h2>
     <p style="color:#888;margin:0 0 1.25rem;font-size:0.95rem">
-      Generate your free Human Design chart — then book a session and ${escapeHtml(firstName)}
+      Generate your free Energy Blueprint chart — then book a session and ${escapeHtml(firstName)}
       can show you exactly what it means for your life, decisions, and relationships.
     </p>
     <a href="${escapeHtml(origin)}/?ref=${encodeURIComponent(slug)}"

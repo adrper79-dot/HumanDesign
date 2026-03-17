@@ -146,7 +146,8 @@ import {
   handleListDirectory,
   handleGetPublicProfile,
   handleGetDirectoryProfile,
-  handleUpdateDirectoryProfile
+  handleUpdateDirectoryProfile,
+  handleGetDirectoryStats
 } from './handlers/practitioner-directory.js';
 import {
   handleListNotes,
@@ -406,6 +407,8 @@ const EXACT_ROUTES = new Map([
   // Practitioner Directory Profile (auth)
   ['GET /api/practitioner/directory-profile',  handleGetDirectoryProfile],
   ['PUT /api/practitioner/directory-profile',  handleUpdateDirectoryProfile],
+  // Practitioner Directory Stats (auth, PRAC-013)
+  ['GET /api/practitioner/directory-stats',    handleGetDirectoryStats],
   // Practitioner Referral Link (auth)
   ['GET /api/practitioner/referral-link',      handleGetReferralLink],
   // Email marketing unsubscribe (public, CAN-SPAM compliance — AUDIT-SEC-005)
@@ -516,6 +519,16 @@ export default {
     if (missingSecrets.length > 0) {
       console.error(JSON.stringify({ event: 'missing_secrets', missing: missingSecrets }));
       return new Response(JSON.stringify({ error: 'Service configuration error' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+      });
+    }
+
+    // BL-AUDIT-M4: Boot-time JWT environment assertion
+    // Prevent production from accepting tokens signed with dev/default issuer
+    if (env.ENVIRONMENT === 'production' && (!env.JWT_ISSUER || env.JWT_ISSUER === 'primeself')) {
+      console.error(JSON.stringify({ event: 'fatal_jwt_misconfiguration', env: env.ENVIRONMENT, issuer: env.JWT_ISSUER }));
+      return new Response(JSON.stringify({ error: 'Service misconfigured (JWT_ISSUER)' }), {
         status: 503,
         headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
       });

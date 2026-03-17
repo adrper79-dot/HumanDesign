@@ -16,7 +16,7 @@
 // Core chart data
 import crossesData from '../../src/data/crosses.json';
 
-// Human Design knowledgebase
+// Energy Blueprint knowledgebase
 import typesData from '../../src/knowledgebase/hd/types.json';
 import profilesData from '../../src/knowledgebase/hd/profiles.json';
 import gatesData from '../../src/knowledgebase/hd/gates.json';
@@ -26,7 +26,7 @@ import authorityData from '../../src/knowledgebase/hd/authority.json';
 import definitionData from '../../src/knowledgebase/hd/definition.json';
 import crossesKBData from '../../src/knowledgebase/hd/crosses.json';
 
-// Gene Keys knowledgebase
+// Frequency Keys knowledgebase
 import geneKeysData from '../../src/knowledgebase/genekeys/keys.json';
 
 // Astrology knowledgebase
@@ -84,7 +84,7 @@ import derivationChainData from '../../src/knowledgebase/library/derivation_chai
 globalThis.__PRIME_DATA = {
   crosses: crossesData,
   kb: {
-    // Human Design
+    // Energy Blueprint
     'hd/types.json': typesData,
     'hd/profiles.json': profilesData,
     'hd/gates.json': gatesData,
@@ -94,7 +94,7 @@ globalThis.__PRIME_DATA = {
     'hd/definition.json': definitionData,
     'hd/crosses.json': crossesKBData,
     
-    // Gene Keys
+    // Frequency Keys
     'genekeys/keys.json': geneKeysData,
     
     // Astrology

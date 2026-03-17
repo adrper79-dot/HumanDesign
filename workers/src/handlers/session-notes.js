@@ -15,6 +15,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { createLogger } from '../lib/logger.js';
+import { trackEvent } from '../lib/analytics.js';
 
 async function getPractitionerClientAccess(query, userId, clientId) {
   const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
@@ -123,6 +124,7 @@ export async function handleCreateNote(request, env, clientId) {
     ]);
 
     log.info({ action: 'session_note_created', practitionerId: access.practitionerId, clientId });
+    trackEvent(env, 'session_note_create', { userId, properties: { shareWithAi, clientId } }).catch(() => {});
     return Response.json({ ok: true, note: result.rows[0] }, { status: 201 });
   } catch (err) {
     log.error({ action: 'session_note_create_failed', error: err.message });
@@ -170,6 +172,7 @@ export async function handleUpdateNote(request, env, noteId) {
     }
 
     log.info({ action: 'session_note_updated', noteId, practitionerId });
+    trackEvent(env, 'session_note_update', { userId, properties: { noteId } }).catch(() => {});
     return Response.json({ ok: true, note: result.rows[0] });
   } catch (err) {
     log.error({ action: 'session_note_update_failed', error: err.message });
@@ -265,6 +268,7 @@ export async function handleUpdateAIContext(request, env, clientId) {
     ]);
 
     log.info({ action: 'ai_context_updated', practitionerId: access.practitionerId, clientId });
+    trackEvent(env, 'ai_context_update', { userId, properties: { clientId, length: aiContext.length } }).catch(() => {});
     return Response.json({ ok: true, ai_context: aiContext });
   } catch (err) {
     log.error({ action: 'ai_context_update_failed', error: err.message });

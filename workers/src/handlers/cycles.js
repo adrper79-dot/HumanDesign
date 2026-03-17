@@ -45,17 +45,16 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleCycles(request, env) {
-  const user = await getUserFromRequest(request, env);
-  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
-
   const url = new URL(request.url);
   const birthDate = url.searchParams.get('birthDate');
   const birthTime = url.searchParams.get('birthTime');
+  const birthTimezone = url.searchParams.get('birthTimezone');
   const lat = parseFloat(url.searchParams.get('lat')) || 0;
   const lng = parseFloat(url.searchParams.get('lng')) || 0;
   const lookAheadYears = parseInt(url.searchParams.get('lookAheadYears')) || 5;
 
-  // Validate required params
+  // Validate required params FIRST (before auth check) so client gets meaningful error
+  // BL-BACKEND-P1-1: Return 400 for missing params, not 401 from auth
   if (!birthDate || !birthTime) {
     return Response.json({
       ok: false,
@@ -63,16 +62,20 @@ export async function handleCycles(request, env) {
     }, { status: 400 });
   }
 
+  // BL-N5: Require birthTimezone — passing null silently computes cycles in UTC,
+  // producing wrong milestone dates for non-UTC users.
+  if (!birthTimezone) {
+    return Response.json({
+      ok: false,
+      error: 'birthTimezone is required. Please provide a valid IANA timezone (e.g. "America/New_York").'
+    }, { status: 400 });
+  }
+
+  // BL-BACKEND-P1-1: Authenticate AFTER param validation
+  const user = await getUserFromRequest(request, env);
+  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+
   try {
-    // BL-N5: Require birthTimezone — passing null silently computes cycles in UTC,
-    // producing wrong milestone dates for non-UTC users.
-    const birthTimezone = url.searchParams.get('birthTimezone');
-    if (!birthTimezone) {
-      return Response.json({
-        ok: false,
-        error: 'birthTimezone is required. Please provide a valid IANA timezone (e.g. "America/New_York").'
-      }, { status: 400 });
-    }
 
     // Parse birth data to UTC
     const utc = parseToUTC(birthDate, birthTime, birthTimezone);

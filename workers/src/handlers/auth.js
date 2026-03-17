@@ -26,6 +26,7 @@ import { generateSecret, buildOTPAuthURL, verifyTOTP } from '../lib/totp.js';
 import { importEncryptionKey, encryptToken, decryptToken } from '../lib/tokenCrypto.js';
 import { createLogger } from '../lib/logger.js';
 import { hashPassword, verifyPassword } from '../lib/password.js';
+import { initSentry } from '../lib/sentry.js';
 
 // JWT expiry durations
 // Access token is short-lived so that a stolen in-memory token has a small
@@ -340,9 +341,39 @@ async function handleRegister(request, env) {
     const errorMsg = err?.message || String(err) || 'unknown error';
     const errorCode = err?.code || 'UNKNOWN';
     log.error('register_error', { error: errorMsg, code: errorCode, stack: err?.stack?.split('\n')[0] });
-    // Include error details in dev mode; generic message in production
-    const detailedError = env?.ENVIRONMENT === 'development' ? ` (${errorCode}: ${errorMsg})` : '';
-    return Response.json({ ok: false, error: `Registration failed${detailedError}` }, { status: 500 });
+    
+    // BL-BACKEND-P2-2: Send error to Sentry for telemetry and dashboard visibility
+    const sentry = initSentry(env);
+    await sentry.captureException(err, {
+      request,
+      request: {
+        url: request.url,
+        method: request.method,
+        headers: { 'content-type': request.headers.get('content-type') }
+      },
+      tags: {
+        endpoint: '/api/auth/register',
+        errorCode,
+        stage: env.ENVIRONMENT || 'production'
+      },
+      extra: {
+        email: email?.toLowerCase(),
+        errorMessage: errorMsg
+      }
+    });
+    
+    // BL-BACKEND-P2-1: Use safe error code mapping instead of raw error details
+    // Maps internal error codes to safe user-facing messages (never leak connection strings/internal details)
+    const ERROR_MESSAGES = {
+      'DUPLICATE_KEY': 'Email already registered',
+      'NEON_ERROR': 'Database unavailable (please retry)',
+      'AUTH_ERROR': 'Authentication failed',
+      'VALIDATION_ERROR': 'Invalid registration data',
+      'UNKNOWN': 'Registration failed (support contacted)'
+    };
+    const userMessage = ERROR_MESSAGES[errorCode] || ERROR_MESSAGES['UNKNOWN'];
+    
+    return Response.json({ ok: false, error: userMessage }, { status: 500 });
   }
 }
 

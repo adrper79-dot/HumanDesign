@@ -9,6 +9,11 @@ const { getUserFromRequestMock, notionCreateProfilePageMock } = vi.hoisted(() =>
   notionCreateProfilePageMock: vi.fn(),
 }));
 
+const { trackEventMock, trackFunnelMock } = vi.hoisted(() => ({
+  trackEventMock: vi.fn().mockResolvedValue(undefined),
+  trackFunnelMock: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../workers/src/db/queries.js', () => ({
   createQueryFn: createQueryFnMock,
   QUERIES: {
@@ -34,6 +39,29 @@ vi.mock('../workers/src/db/queries.js', () => ({
     expirePractitionerInvitationById: 'expirePractitionerInvitationById',
     addClient: 'addClient',
     markPractitionerInvitationAccepted: 'markPractitionerInvitationAccepted',
+    createPractitioner: 'createPractitioner',
+    countPractitionerClients: 'countPractitionerClients',
+    getUserByEmailSafe: 'getUserByEmailSafe',
+    removeClient: 'removeClient',
+    listPractitionerInvitations: 'listPractitionerInvitations',
+    getPractitionerStats: 'getPractitionerStats',
+    getPractitionerClientForReminder: 'getPractitionerClientForReminder',
+  },
+}));
+
+vi.mock('../workers/src/lib/analytics.js', () => ({
+  trackEvent: trackEventMock,
+  trackFunnel: trackFunnelMock,
+  captureRequestContext: vi.fn(() => ({})),
+  EVENTS: {
+    CLIENT_ADD: 'client_add',
+    CLIENT_REMOVE: 'client_remove',
+    PROFILE_GENERATE: 'profile_generate',
+    CHART_CALCULATE: 'chart_calculate',
+    ERROR: 'error',
+  },
+  FUNNELS: {
+    PRACTITIONER: { name: 'practitioner', steps: ['register', 'first_client', 'first_synthesis', 'upgrade_guide'] },
   },
 }));
 
@@ -47,6 +75,7 @@ vi.mock('../workers/src/middleware/auth.js', () => ({
 
 vi.mock('../workers/src/lib/email.js', () => ({
   sendPractitionerInvitationEmail: vi.fn(),
+  sendClientReminder: vi.fn(),
 }));
 
 vi.mock('../workers/src/lib/notion.js', () => ({
@@ -509,5 +538,151 @@ describe('practitioner runtime guards', () => {
     expect(response.status).toBe(403);
     expect(body.error).toMatch(/invited email address/i);
     expect(query.transaction).not.toHaveBeenCalled();
+  });
+
+  // ─── CTO-017: Analytics instrumentation regression tests ─────────────────────
+
+  it('tracks session_note_create event when a note is successfully created', async () => {
+    const query = vi.fn(async (sql) => {
+      if (sql === 'getPractitionerByUserId') return { rows: [{ id: 'pract-1' }] };
+      if (sql === 'checkPractitionerAccess') return { rows: [{ practitioner_id: 'pract-1' }] };
+      if (sql === 'createSessionNote') return { rows: [{ id: 'note-new', content: 'First note', share_with_ai: false }] };
+      return { rows: [] };
+    });
+    createQueryFnMock.mockReturnValue(query);
+
+    const response = await handleCreateNote(
+      Object.assign(new Request('https://api.test/api/practitioner/clients/client-1/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: 'First note', share_with_ai: false }),
+      }), { _user: { sub: 'user-1' } }),
+      { NEON_CONNECTION_STRING: 'postgresql://test' },
+      'client-1'
+    );
+
+    expect(response.status).toBe(201);
+    expect(trackEventMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'session_note_create',
+      expect.objectContaining({ userId: 'user-1' })
+    );
+  });
+
+  it('tracks ai_context_update event when AI context is successfully updated', async () => {
+    const query = vi.fn(async (sql) => {
+      if (sql === 'getPractitionerByUserId') return { rows: [{ id: 'pract-1' }] };
+      if (sql === 'checkPractitionerAccess') return { rows: [{ practitioner_id: 'pract-1' }] };
+      if (sql === 'updateClientAIContext') return { rows: [] };
+      return { rows: [] };
+    });
+    createQueryFnMock.mockReturnValue(query);
+
+    const { handleUpdateAIContext } = await import('../workers/src/handlers/session-notes.js');
+    const response = await handleUpdateAIContext(
+      Object.assign(new Request('https://api.test/api/practitioner/clients/client-1/ai-context', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ai_context: 'Updated context' }),
+      }), { _user: { sub: 'user-1' } }),
+      { NEON_CONNECTION_STRING: 'postgresql://test' },
+      'client-1'
+    );
+
+    expect(response.status).toBe(200);
+    expect(trackEventMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'ai_context_update',
+      expect.objectContaining({ userId: 'user-1' })
+    );
+  });
+
+  it('tracks CLIENT_ADD event when a client is added via invite', async () => {
+    const query = vi.fn(async (sql) => {
+      if (sql === 'getPractitionerByUserId') return { rows: [{ id: 'pract-1', tier: 'practitioner', display_name: 'Test Guide' }] };
+      if (sql === 'countPractitionerClients') return { rows: [{ count: '0' }] };
+      if (sql === 'getUserByEmailSafe') return { rows: [] };
+      if (sql === 'expirePendingPractitionerInvitationsByEmail') return { rowCount: 0 };
+      if (sql === 'createPractitionerInvitation') return { rows: [{ id: 'inv-1', client_email: 'new@example.com' }] };
+      return { rows: [] };
+    });
+    createQueryFnMock.mockReturnValue(query);
+
+    const response = await handlePractitioner(
+      Object.assign(new Request('https://api.test/api/practitioner/clients/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientEmail: 'new@example.com' }),
+      }), { _user: { sub: 'pract-user-1', email: 'pract@example.com' } }),
+      {
+        NEON_CONNECTION_STRING: 'postgresql://test',
+        FRONTEND_URL: 'https://selfprime.net',
+      },
+      '/clients/invite'
+    );
+
+    expect(response.status).toBe(201);
+    expect(trackEventMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'client_add',
+      expect.objectContaining({ userId: 'pract-user-1' })
+    );
+    expect(trackFunnelMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'pract-user-1',
+      'practitioner',
+      'first_client'
+    );
+  });
+
+  it('tracks practitioner funnel register step on first registration', async () => {
+    const query = vi.fn(async (sql) => {
+      if (sql === 'getPractitionerByUserId') return { rows: [] };
+      if (sql === 'createPractitioner') return { rows: [{ id: 'pract-new', user_id: 'user-new', tier: 'free' }] };
+      return { rows: [] };
+    });
+    createQueryFnMock.mockReturnValue(query);
+
+    const response = await handlePractitioner(
+      Object.assign(new Request('https://api.test/api/practitioner/register', {
+        method: 'POST',
+      }), { _user: { sub: 'user-new' } }),
+      { NEON_CONNECTION_STRING: 'postgresql://test' },
+      '/register'
+    );
+
+    expect(response.status).toBe(201);
+    expect(trackFunnelMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'user-new',
+      'practitioner',
+      'register'
+    );
+  });
+
+  it('tracks CLIENT_REMOVE event when a client is removed from the roster', async () => {
+    const query = vi.fn(async (sql) => {
+      if (sql === 'getPractitionerByUserId') return { rows: [{ id: 'pract-1' }] };
+      if (sql === 'removeClient') return { rowCount: 1, rows: [] };
+      return { rows: [] };
+    });
+    createQueryFnMock.mockReturnValue(query);
+
+    const response = await handlePractitioner(
+      Object.assign(new Request('https://api.test/api/practitioner/clients/deadbeef-0000-0000-0000-000000000099', {
+        method: 'DELETE',
+      }), { _user: { sub: 'pract-user-1' } }),
+      { NEON_CONNECTION_STRING: 'postgresql://test' },
+      '/clients/deadbeef-0000-0000-0000-000000000099'
+    );
+
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(trackEventMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'client_remove',
+      expect.objectContaining({ userId: 'pract-user-1' })
+    );
   });
 });

@@ -2,9 +2,9 @@
   "_meta": {
     "version": "1.0",
     "source": "Prime Self Historical Figures Library",
-    "description": "Library of historical figures organized by Human Design type, Forge affinity, and primary domain for personalized recommendations",
-    "usage": "Match user's HD type, dominant Forge, and interests to suggest resonant historical exemplars for Priming practice",
-    "note": "HD types are based on available biographical data and chart calculations. Some attributions may be speculative for figures with unclear birth times."
+    "description": "Library of historical figures organized by Energy Blueprint type, Forge affinity, and primary domain for personalized recommendations",
+    "usage": "Match user's Energy Blueprint type, dominant Forge, and interests to suggest resonant historical exemplars for Priming practice",
+    "note": "Energy Blueprint types are based on available biographical data and chart calculations. Some attributions may be speculative for figures with unclear birth times."
   },
   "byType": {
     "generator": {
@@ -122,9 +122,9 @@
         {
           "name": "Ra Uru Hu",
           "years": "1948-2011",
-          "domain": "Human Design, Spirituality",
+          "domain": "Energy Blueprint, Spirituality",
           "forge": "lux",
-          "primeGift": "Initiated the Human Design System — pure Manifestor role of bringing new forms",
+          "primeGift": "Initiated the Energy Blueprint System — pure Manifestor role of bringing new forms",
           "keyLesson": "Manifestors download and initiate new systems for others to build",
           "recommendFor": ["System creators", "Those receiving new frameworks", "HD practitioners"]
         },

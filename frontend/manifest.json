@@ -75,7 +75,7 @@
     {
       "name": "My Chart",
       "short_name": "Chart",
-      "description": "View your bodygraph",
+      "description": "View your Energy Chart",
       "url": "/?tab=chart",
       "icons": [
         {

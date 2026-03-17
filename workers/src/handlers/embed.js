@@ -19,6 +19,7 @@
  *   no PII, and requires a valid key to return any useful data.
  */
 
+import { createLogger } from '../lib/logger.js';
 import { createQueryFn } from '../db/queries.js';
 import { hasFeatureAccess, normalizeTierName } from '../lib/stripe.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
@@ -50,6 +51,11 @@ function json(body, status = 200) {
  * entitled to use inside an embedded widget.
  */
 export async function handleEmbedValidate(request, env) {
+  const log = createLogger(env, { action: 'embed_validate' });
+  const referer = request.headers.get('referer') || 'unknown';
+  // BL-AUDIT-H2: Log Referer to track cross-origin embed usage for audit trail
+  log.info({ action: 'embed_validate_request', referer, url: request.url });
+
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }

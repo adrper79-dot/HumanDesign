@@ -62,7 +62,7 @@ export function toJulianDay(year, month, day, hour = 0, minute = 0, second = 0) 
  * Calculate the Sun's apparent ecliptic longitude for a given JDN.
  *
  * Uses Meeus Ch. 25 (Solar Coordinates) with low-accuracy method
- * sufficient for Human Design gate-level precision (~0.01° accuracy).
+ * sufficient for Energy Blueprint gate-level precision (~0.01° accuracy).
  *
  * Steps:
  *   1. Julian centuries T from J2000.0

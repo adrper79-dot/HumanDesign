@@ -3,7 +3,7 @@
  *
  * Relationship / composite chart for two people.
  *
- * Overlays two Human Design bodygraphs to identify:
+ * Overlays two Energy Blueprint charts to identify:
  *   - Electromagnetic connections (channels where each person provides one gate)
  *   - Dominance channels (one person activates both gates)
  *   - Compromise channels (both people activate the same gate)
@@ -90,7 +90,7 @@ function parsePerson(person) {
 }
 
 /**
- * Analyze the overlay of two bodygraphs for relationship dynamics.
+ * Analyze the overlay of two Energy Charts for relationship dynamics.
  */
 function analyzeComposite(chartA, chartB) {
   const gatesA = collectGates(chartA.personalityGates, chartA.designGates);

@@ -506,7 +506,7 @@ export async function sendUpgradeNudgeEmail(userEmail, userName, apiKey, fromEma
       <div class="feature"><span class="free">✗</span> Transit alerts (know when major planets activate your gates)</div>
       <div class="feature"><span class="free">✗</span> Composite charts (relationship compatibility)</div>
       <div class="feature"><span class="free">✗</span> Daily check-in tracking (unlimited history)</div>
-      <div class="feature"><span class="free">✗</span> Gene Keys integration</div>
+      <div class="feature"><span class="free">✗</span> Frequency Keys integration</div>
       <div class="feature"><span class="free">✗</span> API access (for developers)</div>
     </div>
     
@@ -753,7 +753,7 @@ export async function sendPractitionerInvitationEmail(clientEmail, practitionerN
         <div style="background:#1a1a24;border-radius:10px;padding:20px 24px;margin:0 0 24px;border-left:3px solid #c9a84c">
           <p style="margin:0 0 12px;font-weight:600;color:#c9a84c;font-size:14px;text-transform:uppercase;letter-spacing:0.5px">What you'll discover</p>
           <ul style="margin:0;padding:0 0 0 18px;color:#c4c0d8;line-height:1.9;font-size:15px">
-            <li>Your Human Design chart — energy type, strategy &amp; authority</li>
+            <li>Your Energy Blueprint chart — energy pattern, strategy &amp; authority</li>
             <li>Astrology birth chart with houses &amp; aspects</li>
             <li>Numerology life path &amp; expression numbers</li>
             <li>AI-generated synthesis connecting all three systems</li>
@@ -865,4 +865,142 @@ export async function sendDisputeNotificationEmail(userEmail, amount, currency, 
   `;
 
   return sendEmail({ to: userEmail, subject, html, companyAddress }, apiKey, fromEmail);
+}
+
+/**
+ * Notify practitioner: a client just generated their chart (CMO-012)
+ */
+export async function sendPractitionerClientChartReady(practitionerEmail, practitionerName, clientEmail, chartType, chartAuthority, apiKey, fromEmail) {
+  const dashboardUrl = 'https://selfprime.net/?tab=practitioner';
+  const subject = `Your client generated their chart`;
+  const html = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px;text-align:center;border-bottom:1px solid #2a2a3a">
+    <div style="font-size:28px;margin-bottom:8px">✦</div>
+    <h1 style="color:#c9a84c;font-size:22px;margin:0">Client chart ready</h1>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="margin:0 0 16px;line-height:1.7;font-size:16px"><strong>${clientEmail}</strong> has generated their Energy Blueprint chart.</p>
+    <div style="background:#1a1a24;border-radius:8px;padding:16px 20px;margin:0 0 20px;border-left:3px solid #c9a84c">
+      <p style="margin:0;font-size:14px;color:#c4c0d8"><strong>Type:</strong> ${chartType || 'Unknown'} &nbsp;·&nbsp; <strong>Authority:</strong> ${chartAuthority || 'Unknown'}</p>
+    </div>
+    <p style="margin:0 0 20px;line-height:1.6;color:#c4c0d8;font-size:15px">Their workspace is ready — you can now prepare session notes, AI context, and a session brief.</p>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${dashboardUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:15px">Open Practitioner Dashboard →</a>
+    </div>
+  </div>
+  <div style="padding:14px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+    <p style="margin:0">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</p>
+    <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+  </div>
+</div>`;
+  return sendEmail({ to: practitionerEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Notify practitioner: client now has both chart + profile — fully session-ready (CMO-012)
+ */
+export async function sendPractitionerClientSessionReady(practitionerEmail, practitionerName, clientEmail, apiKey, fromEmail) {
+  const dashboardUrl = 'https://selfprime.net/?tab=practitioner';
+  const subject = `Client is session-ready`;
+  const html = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px;text-align:center;border-bottom:1px solid #2a2a3a">
+    <div style="font-size:28px;margin-bottom:8px">✦</div>
+    <h1 style="color:#c9a84c;font-size:22px;margin:0">Client is session-ready</h1>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="margin:0 0 16px;line-height:1.7;font-size:16px"><strong>${clientEmail}</strong> now has both chart and profile generated.</p>
+    <p style="margin:0 0 20px;line-height:1.6;color:#c4c0d8;font-size:15px">You can prepare session notes, set AI context, and generate a session brief — everything you need is ready in their workspace.</p>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${dashboardUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:15px">Open Practitioner Dashboard →</a>
+    </div>
+  </div>
+  <div style="padding:14px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+    <p style="margin:0">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</p>
+    <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+  </div>
+</div>`;
+  return sendEmail({ to: practitionerEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Send client reminder on behalf of a practitioner (PRAC-014)
+ */
+export async function sendClientReminder(clientEmail, practitionerName, reminderType, apiKey, fromEmail) {
+  const appUrl = 'https://selfprime.net';
+  let subject, bodyHtml;
+
+  if (reminderType === 'complete_birth_data') {
+    subject = `${practitionerName} is preparing your session`;
+    bodyHtml = `<p style="margin:0 0 16px;line-height:1.7;font-size:16px">Your practitioner <strong>${practitionerName}</strong> is getting ready for your session.</p>
+    <p style="margin:0 0 20px;line-height:1.6;color:#c4c0d8;font-size:15px">To prepare your personalised blueprint, sign in to Prime Self and enter your birth details.</p>`;
+  } else {
+    subject = `Your blueprint is ready — generate your profile`;
+    bodyHtml = `<p style="margin:0 0 16px;line-height:1.7;font-size:16px"><strong>${practitionerName}</strong> has reviewed your chart.</p>
+    <p style="margin:0 0 20px;line-height:1.6;color:#c4c0d8;font-size:15px">Generate your profile synthesis to unlock the full session experience.</p>`;
+  }
+
+  const html = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px;text-align:center;border-bottom:1px solid #2a2a3a">
+    <div style="font-size:28px;margin-bottom:8px">✦</div>
+    <h1 style="color:#c9a84c;font-size:22px;margin:0">A message from your practitioner</h1>
+  </div>
+  <div style="padding:28px 32px">
+    ${bodyHtml}
+    <div style="text-align:center;margin:24px 0">
+      <a href="${appUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:15px">Open Prime Self →</a>
+    </div>
+  </div>
+  <div style="padding:14px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+    <p style="margin:0">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</p>
+    <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+  </div>
+</div>`;
+  return sendEmail({ to: clientEmail, subject, html }, apiKey, fromEmail);
+}
+
+/**
+ * Send practitioner weekly digest (CMO-013)
+ */
+export async function sendPractitionerWeeklyDigest(practitionerEmail, practitionerName, { clientCount, notesThisWeek, newChartsThisWeek }, apiKey, fromEmail) {
+  const dashboardUrl = 'https://selfprime.net/?tab=practitioner';
+  const subject = `Your Prime Self Weekly Summary`;
+  const html = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;background:#0a0a0f;color:#e8e6f0;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1a1a24 0%,#0a0a0f 100%);padding:32px;text-align:center;border-bottom:1px solid #2a2a3a">
+    <div style="font-size:28px;margin-bottom:8px">✦</div>
+    <h1 style="color:#c9a84c;font-size:22px;margin:0">Your weekly summary</h1>
+    <p style="margin:8px 0 0;color:#8882a0;font-size:14px">Hi ${practitionerName} — here's what happened this week</p>
+  </div>
+  <div style="padding:28px 32px">
+    <table style="width:100%;border-collapse:collapse;margin:0 0 24px">
+      <tr>
+        <td style="background:#1a1a24;border-radius:8px;padding:20px 12px;text-align:center;width:33%">
+          <div style="font-size:32px;font-weight:700;color:#c9a84c">${clientCount}</div>
+          <div style="font-size:13px;color:#8882a0;margin-top:4px">Active clients</div>
+        </td>
+        <td style="width:8px"></td>
+        <td style="background:#1a1a24;border-radius:8px;padding:20px 12px;text-align:center;width:33%">
+          <div style="font-size:32px;font-weight:700;color:#c9a84c">${notesThisWeek}</div>
+          <div style="font-size:13px;color:#8882a0;margin-top:4px">Notes written</div>
+        </td>
+        <td style="width:8px"></td>
+        <td style="background:#1a1a24;border-radius:8px;padding:20px 12px;text-align:center;width:33%">
+          <div style="font-size:32px;font-weight:700;color:#c9a84c">${newChartsThisWeek}</div>
+          <div style="font-size:13px;color:#8882a0;margin-top:4px">New charts</div>
+        </td>
+      </tr>
+    </table>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${dashboardUrl}" style="display:inline-block;background:#c9a84c;color:#0a0a0f;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:15px">Open Dashboard →</a>
+    </div>
+  </div>
+  <div style="padding:14px 24px;border-top:1px solid #2a2a3a;text-align:center;font-size:12px;color:#6a6580">
+    <p style="margin:0">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</p>
+    <p style="margin:4px 0 0"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe from weekly digest</a></p>
+  </div>
+</div>`;
+  return sendEmail({ to: practitionerEmail, subject, html }, apiKey, fromEmail);
 }

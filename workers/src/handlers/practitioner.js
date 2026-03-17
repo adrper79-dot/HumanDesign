@@ -23,9 +23,10 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
-import { sendPractitionerInvitationEmail } from '../lib/email.js';
+import { sendPractitionerInvitationEmail, sendClientReminder as sendClientReminderEmail } from '../lib/email.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 import { callLLM } from '../lib/llm.js';
+import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
 
 // Tier limits aligned with billing tier names (individual/practitioner/agency)
 const TIER_LIMITS = {
@@ -145,6 +146,12 @@ export async function handlePractitioner(request, env, subpath) {
       return await handleGenerateSessionBrief(userId, sessionBriefMatch[1], query, env);
     }
 
+    // POST /api/practitioner/clients/:id/remind
+    const remindMatch = subpath.match(/^\/clients\/([a-f0-9-]+)\/remind$/i);
+    if (remindMatch && method === 'POST') {
+      return await handleClientRemind(userId, remindMatch[1], query, env);
+    }
+
     // GET /api/practitioner/clients/:id
     const clientDetailMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
     if (clientDetailMatch && method === 'GET') {
@@ -154,7 +161,12 @@ export async function handlePractitioner(request, env, subpath) {
     // DELETE /api/practitioner/clients/:id
     const clientDeleteMatch = subpath.match(/^\/clients\/([a-f0-9-]+)$/i);
     if (clientDeleteMatch && method === 'DELETE') {
-      return await handleRemoveClient(userId, clientDeleteMatch[1], query);
+      return await handleRemoveClient(userId, clientDeleteMatch[1], query, env);
+    }
+
+    // GET /api/practitioner/stats
+    if (subpath === '/stats' && method === 'GET') {
+      return await handlePractitionerStats(userId, query);
     }
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
@@ -184,6 +196,8 @@ async function handleRegister(request, env, userId, query) {
   // Create practitioner record — starts on free tier
   const result = await query(QUERIES.createPractitioner, [userId, false, 'free']);
   const practitioner = result.rows?.[0];
+
+  trackFunnel(env, userId, FUNNELS.PRACTITIONER.name, 'register').catch(() => {});
 
   return Response.json({
     ok: true,
@@ -309,6 +323,8 @@ async function handleInviteClient(request, env, userId, query) {
     }
 
     await query(QUERIES.addClient, [pract.id, existingClient.id]);
+    trackEvent(env, EVENTS.CLIENT_ADD, { userId, properties: { mode: 'added', tier: pract.tier } }).catch(() => {});
+    trackFunnel(env, userId, FUNNELS.PRACTITIONER.name, 'first_client').catch(() => {});
     return Response.json({
       ok: true,
       mode: 'added',
@@ -347,6 +363,8 @@ async function handleInviteClient(request, env, userId, query) {
     );
   }
 
+  trackEvent(env, EVENTS.CLIENT_ADD, { userId, properties: { mode: 'invited', tier: pract.tier } }).catch(() => {});
+  trackFunnel(env, userId, FUNNELS.PRACTITIONER.name, 'first_client').catch(() => {});
   return Response.json({
     ok: true,
     mode: 'invited',
@@ -498,7 +516,7 @@ async function handleGetClientDetail(userId, clientId, query) {
   });
 }
 
-async function handleRemoveClient(userId, clientId, query) {
+async function handleRemoveClient(userId, clientId, query, env) {
   const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (!practResult.rows?.length) {
     return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
@@ -508,6 +526,7 @@ async function handleRemoveClient(userId, clientId, query) {
   if (!result.rowCount) {
     return Response.json({ error: 'Client not found on your roster' }, { status: 404 });
   }
+  trackEvent(env, EVENTS.CLIENT_REMOVE, { userId, properties: { clientId } }).catch(() => {});
   return Response.json({ ok: true, message: 'Client removed from roster' });
 }
 
@@ -705,8 +724,8 @@ async function handleGenerateSessionBrief(userId, clientId, query, env) {
   const contextSummary = aiContext.trim() || 'No custom AI context set.';
 
   const promptPayload = {
-    system: `You are a Human Design session preparation assistant for a certified practitioner. 
-You analyze a client's HD chart, session notes, and practitioner context to generate a focused pre-session brief.
+    system: `You are an Energy Blueprint session preparation assistant for a certified practitioner. 
+You analyze a client's Energy Blueprint chart, session notes, and practitioner context to generate a focused pre-session brief.
 Be specific, grounded in the chart data, and actionable. Never invent chart data.
 Output ONLY valid JSON matching the exact schema requested — no markdown, no explanation outside the JSON.`,
 
@@ -741,6 +760,8 @@ Respond with this exact JSON schema:
 
   try {
     const text = await callLLM(promptPayload, env);
+    trackEvent(env, 'session_brief_generate', { userId, properties: { clientId } }).catch(() => {});
+    trackFunnel(env, userId, FUNNELS.PRACTITIONER.name, 'first_synthesis').catch(() => {});
     let brief;
     try {
       brief = JSON.parse(text);
@@ -758,4 +779,58 @@ Respond with this exact JSON schema:
       fallbackMessage: 'AI session brief temporarily unavailable'
     });
   }
+}
+
+// ─── PRAC-012: Practitioner Metrics Stats ────────────────────
+async function handlePractitionerStats(userId, query) {
+  const result = await query(QUERIES.getPractitionerStats, [userId]);
+  const row = result.rows?.[0] || {};
+  return Response.json({
+    ok: true,
+    stats: {
+      activeClients: parseInt(row.active_clients ?? 0),
+      totalNotes: parseInt(row.total_notes ?? 0),
+      notesThisMonth: parseInt(row.notes_this_month ?? 0),
+      aiSharedNotes: parseInt(row.ai_shared_notes ?? 0),
+    },
+  });
+}
+
+// ─── PRAC-014: Send client reminder ──────────────────────────
+async function handleClientRemind(userId, clientId, query, env) {
+  const result = await query(QUERIES.getPractitionerClientForReminder, [clientId, userId]);
+  if (!result.rows?.length) {
+    return Response.json({ error: 'Client not found or not in your roster' }, { status: 404 });
+  }
+
+  const client = result.rows[0];
+
+  // KV rate-limit: 1 reminder per client per 24 hours
+  const rateLimitKey = `reminder:${client.practitioner_id}:${clientId}`;
+  if (env.KV) {
+    const existing = await env.KV.get(rateLimitKey);
+    if (existing) {
+      return Response.json({ error: 'A reminder was already sent to this client in the last 24 hours' }, { status: 429 });
+    }
+  }
+
+  // Determine reminder type based on client lifecycle state
+  const reminderType = !client.chart_id ? 'complete_birth_data' : 'generate_profile';
+
+  if (env.RESEND_API_KEY && client.email) {
+    await sendClientReminderEmail(
+      client.email,
+      client.practitioner_name || 'Your practitioner',
+      reminderType,
+      env.RESEND_API_KEY,
+      env.FROM_EMAIL
+    );
+  }
+
+  // Store rate-limit flag (24 hours)
+  if (env.KV) {
+    await env.KV.put(rateLimitKey, '1', { expirationTtl: 86400 });
+  }
+
+  return Response.json({ ok: true, message: 'Reminder sent' });
 }

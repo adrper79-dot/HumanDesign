@@ -2,7 +2,7 @@
  * Best Timing Engine — Electional Astrology
  * 
  * Helps users find the best dates for important life actions based on:
- * - Personal Human Design strategy
+ * - Personal Energy Blueprint strategy
  * - Favorable planetary transits
  * - Challenging aspects to avoid
  * - Moon phases and Lunar cycles

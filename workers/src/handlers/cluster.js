@@ -576,9 +576,9 @@ function buildClusterSynthesisPrompt(members, composition, challenge) {
   ).join('\n');
 
   return {
-    system: `You are a Prime Self Cluster Intelligence synthesizer. You analyze small group dynamics using Human Design structural logic and Prime Self Forge philosophy.
+    system: `You are a Prime Self Cluster Intelligence synthesizer. You analyze small group dynamics using Energy Blueprint structural logic and Prime Self Forge philosophy.
 
-Your output must be grounded in the specific HD data provided — Types, Authorities, Profiles, defined centers. Never invent chart data.
+Your output must be grounded in the specific Energy Blueprint data provided — Energy Patterns, Authorities, Archetype Codes, defined centers. Never invent chart data.
 
 The Five Forges:
 - Forge of Power (Manifestor) — initiating energy

@@ -72,7 +72,7 @@ const GATE_NAMES = Object.freeze({
 });
 
 /**
- * Get the I Ching hexagram name for a Human Design gate number.
+ * Get the I Ching hexagram name for an Energy Blueprint gate number.
  * @param {number|string} gate
  * @returns {string} e.g. "Following" or "" if not found
  */

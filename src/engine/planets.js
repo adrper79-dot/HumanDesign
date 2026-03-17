@@ -2,7 +2,7 @@
  * Layer 2: All Planetary Positions
  *
  * Computes geocentric ecliptic longitudes for all bodies needed
- * by Human Design and Western Astrology:
+ * by Energy Blueprint and Western Astrology:
  *   Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn,
  *   Uranus, Neptune, Pluto, North Node, South Node
  *
@@ -405,7 +405,7 @@ function getNorthNodeLongitude(T) {
 
 /**
  * Compute geocentric ecliptic longitudes for all celestial bodies
- * used by Human Design and Western Astrology.
+ * used by Energy Blueprint and Western Astrology.
  *
  * @param {number} jdn – Julian Day Number (from Layer 1)
  * @returns {Object} Keyed by body name, each with { longitude: number }

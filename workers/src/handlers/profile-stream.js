@@ -42,6 +42,7 @@ import { getTier } from '../lib/stripe.js';
 import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
+import { sendPractitionerClientSessionReady } from '../lib/email.js';
 
 // ─── Stage Definitions ───────────────────────────────────────────────
 
@@ -284,6 +285,26 @@ export async function handleProfileStream(request, env, ctx) {
               JSON.stringify(validation.parsed.groundingAudit || {}),
             ]);
             profileId = profileResult.rows?.[0]?.id || null;
+
+            // CMO-012: Notify practitioners when client profile is ready
+            if (profileId && env.RESEND_API_KEY && userId) {
+              (async () => {
+                try {
+                  const prows = await query(QUERIES.getPractitionersForClient, [userId]);
+                  for (const prac of (prows.rows || [])) {
+                    const prefs = prac.notification_preferences || {};
+                    if (prefs.clientSessionReady === false) continue;
+                    await sendPractitionerClientSessionReady(
+                      prac.practitioner_email,
+                      prac.practitioner_name || 'Your practitioner',
+                      prac.client_name || prac.client_email || 'A client',
+                      env.RESEND_API_KEY,
+                      env.FROM_EMAIL
+                    );
+                  }
+                } catch { /* non-fatal */ }
+              })();
+            }
           }
         } catch (err) {
           console.warn('[profile-stream] DB save failed (non-fatal):', err.message);

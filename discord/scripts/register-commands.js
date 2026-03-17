@@ -35,7 +35,7 @@ if (!APPLICATION_ID || !BOT_TOKEN) {
 const commands = [
   {
     name: 'primself',
-    description: 'Get your Human Design Quick Start Guide — type, authority, profile, and decision protocol.',
+    description: 'Get your Energy Blueprint Quick Start Guide — energy pattern, authority, archetype code, and decision protocol.',
     options: [
       {
         name: 'date',

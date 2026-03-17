@@ -12,6 +12,7 @@ import { buildDigestPrompt } from '../../../src/prompts/digest.js';
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
 import { callLLM } from '../lib/llm.js';
 import { enforceFeatureAccess, recordUsage } from '../middleware/tierEnforcement.js';
 import { getTier } from '../lib/stripe.js';
@@ -26,8 +27,9 @@ import { reportHandledRouteError } from '../lib/routeErrors.js';
  */
 async function verifyTelnyxSignature(request, env) {
   const publicKeyBase64 = env.TELNYX_PUBLIC_KEY;
+  const log = createLogger(env, { action: 'sms_webhook_verify' });
   if (!publicKeyBase64) {
-    console.warn('[sms] TELNYX_PUBLIC_KEY not configured — rejecting webhook');
+    log.warn({ action: 'sms_telnyx_public_key_missing' });
     return false;
   }
 
@@ -67,7 +69,8 @@ async function verifyTelnyxSignature(request, env) {
 
     return await crypto.subtle.verify('Ed25519', cryptoKey, sigBytes, data);
   } catch (err) {
-    console.warn('[sms] Telnyx signature verification failed (non-fatal):', err.message);
+    const log = createLogger(env, { action: 'sms_webhook_verify' });
+    log.error({ action: 'sms_signature_verification_failed', error: err.message });
     return false;
   }
 }

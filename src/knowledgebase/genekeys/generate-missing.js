@@ -1,8 +1,7 @@
 /**
- * Generate missing Gene Keys entries
- * 
- * Uses Claude to generate content for the 26 missing Gene Keys
- * following the established pattern from existing entries.
+ * Generate missing Frequency Keys entries
+ *
+ * Uses Claude to generate content for the 26 missing Frequency Keys
  * 
  * Usage: ANTHROPIC_API_KEY=sk-... node generate-missing.js
  */
@@ -18,25 +17,25 @@ const MAX_TOKENS = 2048;
 
 const MISSING_KEYS = [28, 29, 30, 31, 32, 33, 34, 35, 36, 38, 39, 41, 42, 43, 44, 48, 49, 50, 52, 53, 54, 55, 56, 60, 61, 63];
 
-const SYSTEM_PROMPT = `You are an expert on the Gene Keys system by Richard Rudd. You generate concise, accurate Gene Key descriptions following the Shadow → Gift → Siddhi spectrum.
+const SYSTEM_PROMPT = `You are an expert on the Prime Self Frequency Keys system. You generate concise, accurate Frequency Key descriptions following the Shadow → Gift → Mastery spectrum.
 
-Each Gene Key entry must include:
-- name: "Shadow / Gift / Siddhi" (exact names from the Gene Keys system)
-- shadow, gift, siddhi: single words
+Each Frequency Key entry must include:
+- name: "Shadow / Gift / Mastery" (the three frequency states)
+- shadow, gift, siddhi: single words (siddhi = the Mastery state)
 - archetype: "The [name]" (2-3 words)
 - message: one-sentence transformational insight (10-15 words)
 - shadowDescription: 2-3 sentences describing the shadow frequency
-- giftDescription: 2-3 sentences describing the gift frequency  
-- siddhiDescription: 2-3 sentences describing the siddhi frequency
+- giftDescription: 2-3 sentences describing the gift frequency
+- siddhiDescription: 2-3 sentences describing the mastery frequency
 - contemplation: one reflective question (15-25 words)
 
-Use authentic Gene Keys terminology and teachings. Be concise and impactful.`;
+Use Prime Self vocabulary: Shadow (unconscious resistance), Gift (embodied talent), Mastery (transcendent realization). Be concise and impactful.`;
 
 async function callClaude(gateNumber) {
-  const userPrompt = `Generate a complete Gene Key entry for Gene Key ${gateNumber}. Return ONLY valid JSON with this exact structure:
+  const userPrompt = `Generate a complete Frequency Key entry for Frequency Key ${gateNumber}. Return ONLY valid JSON with this exact structure:
 
 {
-  "name": "Shadow / Gift / Siddhi",
+  "name": "Shadow / Gift / Mastery",
   "shadow": "word",
   "gift": "word",
   "siddhi": "word",
@@ -86,7 +85,7 @@ async function generateAllMissing() {
   const keysPath = join(__dirname, 'keys.json');
   const existing = JSON.parse(readFileSync(keysPath, 'utf8'));
 
-  console.log(`Generating ${MISSING_KEYS.length} missing Gene Keys...\n`);
+  console.log(`Generating ${MISSING_KEYS.length} missing Frequency Keys...\n`);
 
   for (const keyNum of MISSING_KEYS) {
     if (existing[keyNum]) {

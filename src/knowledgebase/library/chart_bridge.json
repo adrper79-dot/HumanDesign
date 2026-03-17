@@ -2,7 +2,7 @@
   "_meta": {
     "version": "1.0",
     "source": "The Library Canonical Philosophy — Chart Bridge Mapping",
-    "description": "Maps each Library overtone to specific Human Design chart structures, enabling the synthesis to explain WHY chart elements behave as they do at a structural level.",
+    "description": "Maps each Library overtone to specific Energy Blueprint chart structures, enabling the synthesis to explain WHY chart elements behave as they do at a structural level.",
     "usage": "Injected into RAG context. For each chart element, look up the relevant overtone to provide structural explanation."
   },
   "polarity": {

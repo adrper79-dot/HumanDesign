@@ -2,7 +2,7 @@
  * Layer 5: Chart Determination — Type, Authority, Profile, Definition, Cross
  *
  * Takes gate/line assignments from both Personality and Design sides
- * and determines the full Human Design chart:
+ * and determines the full Energy Blueprint chart:
  *   - Active channels (gate pairs where both gates are present)
  *   - Defined centers (centers with at least one active channel)
  *   - Type (Manifestor, Generator, MG, Projector, Reflector)
@@ -248,7 +248,7 @@ function hasMotorToThroatConnection(graph) {
 }
 
 /**
- * Determine Human Design Type.
+ * Determine Energy Blueprint Type.
  *
  * @param {Set<string>} definedCenters
  * @param {Map} graph
@@ -391,7 +391,7 @@ function determineCross(pSunGate, pEarthGate, dSunGate, dEarthGate, personalityS
 // ─── MAIN EXPORT ────────────────────────────────────────────────
 
 /**
- * Calculate the complete Human Design chart from gate assignments.
+ * Calculate the complete Energy Blueprint chart from gate assignments.
  *
  * @param {object} personalityGates – Personality gate/line map
  *   { sun: { gate, line }, earth: { gate, line }, moon: {...}, ... }
