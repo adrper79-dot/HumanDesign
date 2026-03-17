@@ -333,8 +333,12 @@ async function handleRegister(request, env) {
       expiresIn: ACCESS_TOKEN_TTL
     }), { status: 201, headers });
   } catch (err) {
-    log.error('register_error', { error: err.message });
-    return Response.json({ ok: false, error: 'Registration failed' }, { status: 500 });
+    const errorMsg = err?.message || String(err) || 'unknown error';
+    const errorCode = err?.code || 'UNKNOWN';
+    log.error('register_error', { error: errorMsg, code: errorCode, stack: err?.stack?.split('\n')[0] });
+    // Include error details in dev mode; generic message in production
+    const detailedError = env?.ENVIRONMENT === 'development' ? ` (${errorCode}: ${errorMsg})` : '';
+    return Response.json({ ok: false, error: `Registration failed${detailedError}` }, { status: 500 });
   }
 }
 
