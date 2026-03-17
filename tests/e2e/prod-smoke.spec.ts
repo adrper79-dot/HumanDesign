@@ -22,6 +22,16 @@ async function bypassFirstRun(page) {
 }
 
 async function dismissAnyDialog(page) {
+  const firstRunModal = page.locator('#first-run-modal');
+  if (await firstRunModal.isVisible({ timeout: 1500 }).catch(() => false)) {
+    const firstRunDismiss = firstRunModal.getByRole('button', { name: /skip for now|skip|close|maybe later|continue/i });
+    if (await firstRunDismiss.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await firstRunDismiss.click();
+      await expect(firstRunModal).toBeHidden({ timeout: 5000 });
+      return;
+    }
+  }
+
   try {
     const dialog = page.getByRole('dialog');
     const dismissButton = dialog.getByRole('button', { name: /skip|continue|close|maybe later/i });
@@ -36,6 +46,7 @@ async function dismissAnyDialog(page) {
 async function login(page) {
   test.skip(!hasAuthCredentials(), 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD are required for authenticated prod smoke tests.');
 
+  await dismissAnyDialog(page);
   await page.click('#authBtn');
   await page.fill('#authEmail', e2eEmail);
   await page.fill('#authPassword', e2ePassword);
