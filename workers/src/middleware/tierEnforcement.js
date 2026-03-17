@@ -15,6 +15,9 @@
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getTier, hasFeatureAccess, isQuotaExceeded, normalizeTierName } from '../lib/stripe.js';
 import { emitDegradeEvent } from '../lib/analytics.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('tierEnforcement');
 
 /**
  * Resolve effective tier considering lifetime access + subscription status.
@@ -116,7 +119,7 @@ export async function enforceFeatureAccess(request, env, feature) {
     return null; // Authorized
 
   } catch (error) {
-    console.error('Tier enforcement error:', error);
+    log.error('tier_enforcement_error', { error: error.message });
     // BL-S-MW4: Don't leak internal error details to client
     return Response.json({
       error: 'Failed to verify subscription'
@@ -157,7 +160,7 @@ export async function enforceUsageQuota(request, env, action, feature) {
   } catch (err) {
     // If the column doesn't exist yet (pre-migration), fail open to avoid
     // breaking existing users. Emit degradation event for alerting.
-    console.warn('[enforceUsageQuota] email_verified check failed, failing open:', err.message);
+    log.warn('email_verified_check_failed', { error: err.message, failOpen: true });
     emitDegradeEvent(env, {
       dependency: 'db',
       route: 'enforceUsageQuota/email_verified',
@@ -199,9 +202,7 @@ export async function enforceUsageQuota(request, env, action, feature) {
     const netUsage = parseInt(net_usage);
 
     if (quota_exceeded) {
-      console.warn(JSON.stringify({
-        event: 'quota_exceeded', userId: user.sub, tier, feature, limit, current_usage: netUsage
-      }));
+      log.warn('quota_exceeded', { userId: user.sub, tier, feature, limit, current_usage: netUsage });
       return Response.json({
         error: 'Usage quota exceeded',
         current_tier: tier,
@@ -219,7 +220,7 @@ export async function enforceUsageQuota(request, env, action, feature) {
     return null; // Within quota — usage already recorded atomically
 
   } catch (error) {
-    console.error('Usage quota enforcement error:', error);
+    log.error('usage_quota_enforcement_error', { error: error.message });
     // BL-S-MW4: Don't leak internal error details to client
     return Response.json({
       error: 'Failed to verify usage quota'
@@ -248,7 +249,7 @@ export async function recordUsage(env, userId, action, endpoint = null, quotaCos
     ]);
   } catch (error) {
     // Don't fail the request if usage recording fails, just log it
-    console.error('Failed to record usage:', error);
+    log.error('record_usage_failed', { error: error.message, userId });
     emitDegradeEvent(env, {
       dependency: 'db',
       route: 'recordUsage',
@@ -289,7 +290,7 @@ export async function enforceDailyCeiling(request, env, action) {
   // Fail closed — if DB is not available, deny the request rather than
   // allowing unlimited free access.
   if (!env.NEON_CONNECTION_STRING) {
-    console.error('[enforceDailyCeiling] NEON_CONNECTION_STRING not configured — blocking request');
+    log.error('daily_ceiling_neon_missing', { action: 'enforceDailyCeiling' });
     return Response.json(
       { error: 'Service temporarily unavailable — please try again shortly' },
       { status: 503, headers: { 'Retry-After': '30' } }
@@ -340,7 +341,7 @@ export async function enforceDailyCeiling(request, env, action) {
   } catch (error) {
     // CFO-003: Fail closed — DB failure should block the request
     // to prevent unlimited free access during storage outages.
-    console.error('Daily ceiling check failed:', error);
+    log.error('daily_ceiling_check_failed', { error: error.message });
     return Response.json(
       { error: 'Service temporarily unavailable — please try again shortly' },
       { status: 503, headers: { 'Retry-After': '30' } }
@@ -378,7 +379,7 @@ export async function getUserTier(env, userId) {
     const { tier } = await resolveEffectiveTier(query, userId);
     return tier;
   } catch (error) {
-    console.error('Failed to get user tier:', error);
+    log.error('get_user_tier_failed', { error: error.message, userId });
     return 'free'; // Default to free on error
   }
 }

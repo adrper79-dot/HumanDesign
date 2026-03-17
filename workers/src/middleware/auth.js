@@ -7,6 +7,9 @@
 
 import { verifyHS256, jwtClaims } from '../lib/jwt.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('auth');
 
 /**
  * Verify JWT and attach decoded payload to request context.
@@ -15,7 +18,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 export async function authenticate(request, env) {
   // BL-S-MW2: Guard against missing JWT_SECRET to prevent silent failures
   if (!env.JWT_SECRET) {
-    console.error('[auth] CRITICAL: JWT_SECRET not set in environment');
+    log.error('jwt_secret_missing', { action: 'authenticate' });
     return Response.json(
       { error: 'Server configuration error' },
       { status: 500 }
@@ -64,7 +67,7 @@ export async function authenticate(request, env) {
     request._user = payload;
     return null; // Authenticated
   } catch (err) {
-    console.error('[auth] Token verification failed:', err.message); // BL-R-H2
+    log.error('token_verification_failed', { error: err.message });
     return Response.json(
       { error: 'Token verification failed' },
       { status: 401 }

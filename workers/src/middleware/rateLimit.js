@@ -13,6 +13,9 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { trackEvent, EVENTS } from '../lib/analytics.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('rateLimit');
 
 const RATE_LIMITS = {
   '/api/auth/register':     { max: 10,  windowSec: 60  },  // 10/min (spec: auth endpoints)
@@ -113,7 +116,7 @@ async function kvRateLimit(request, env, clientId, resolved) {
   const kv = env.RATE_LIMIT_KV;
   if (!kv) {
     // KV not bound — fail open with a warning (non-auth endpoints are best-effort)
-    console.warn('[rateLimit] RATE_LIMIT_KV not bound — skipping KV rate limit check');
+    log.warn('rate_limit_kv_not_bound', { action: 'kvRateLimit' });
     return null;
   }
 
@@ -140,19 +143,13 @@ async function kvRateLimit(request, env, clientId, resolved) {
       expirationTtl: config.windowSec,
     });
   } catch (error) {
-    console.error(JSON.stringify({
-      event: 'kv_rate_limit_error',
-      key: kvKey,
-      error: error.message,
-    }));
+    log.error('kv_rate_limit_error', { key: kvKey, error: error.message });
     // Fail open — KV errors should not block legitimate requests
     return null;
   }
 
   if (count > config.max) {
-    console.warn(JSON.stringify({
-      event: 'rate_limited', clientId, path: resolved.key, count, max: config.max, backend: 'kv'
-    }));
+    log.warn('rate_limited', { clientId, path: resolved.key, count, max: config.max, backend: 'kv' });
     trackEvent(env, EVENTS.RATE_LIMITED, {
       properties: { path: resolved.key, clientId, count, max: config.max, backend: 'kv' },
     }).catch(() => {}); // best-effort
@@ -170,7 +167,7 @@ async function kvRateLimit(request, env, clientId, resolved) {
  */
 async function dbRateLimit(request, env, clientId, resolved) {
   if (!env.NEON_CONNECTION_STRING) {
-    console.error('[rateLimit] NEON_CONNECTION_STRING not configured — blocking request.');
+    log.error('neon_connection_string_missing', { action: 'dbRateLimit' });
     return new Response(
       JSON.stringify({ error: 'Service temporarily unavailable' }),
       { status: 503, headers: { 'Content-Type': 'application/json', 'Retry-After': '30' } }
@@ -194,7 +191,7 @@ async function dbRateLimit(request, env, clientId, resolved) {
     ]);
     count = parseInt(result.rows[0]?.count || '0', 10);
   } catch (error) {
-    console.error(JSON.stringify({ event: 'rate_limit_query_failed', path: resolved.key, clientId, error: error.message }));
+    log.error('rate_limit_query_failed', { path: resolved.key, clientId, error: error.message });
     return new Response(
       JSON.stringify({ error: 'Service temporarily unavailable' }),
       { status: 503, headers: { 'Content-Type': 'application/json', 'Retry-After': '30' } }
@@ -202,9 +199,7 @@ async function dbRateLimit(request, env, clientId, resolved) {
   }
 
   if (count > config.max) {
-    console.warn(JSON.stringify({
-      event: 'rate_limited', clientId, path: resolved.key, count, max: config.max, backend: 'db'
-    }));
+    log.warn('rate_limited', { clientId, path: resolved.key, count, max: config.max, backend: 'db' });
     trackEvent(env, EVENTS.RATE_LIMITED, {
       properties: { path: resolved.key, clientId, count, max: config.max, backend: 'db' },
     }).catch(() => {}); // best-effort
