@@ -21,6 +21,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceUsageQuota, recordUsage } from '../middleware/tierEnforcement.js';
 import { trackEvent } from './achievements.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleCalculate(request, env) {
   // Enforce usage quota for chart calculation (only if authenticated)
@@ -98,8 +99,8 @@ export async function handleCalculate(request, env) {
       const saved = await query(QUERIES.saveChart, [userId, hdJson, astroJson]);
       chartId = saved?.rows?.[0]?.id || null;
     } catch (e) {
-      // DB failure is non-fatal — chart still returned
-      console.error('Chart DB save failed:', e.message);
+      // DB failure is non-fatal — chart still returned; demoted to warn
+      console.warn('[calculate] Chart DB save failed (non-fatal):', e.message);
     }
   }
 
@@ -182,7 +183,6 @@ export async function handleGetChart(request, env, chartId) {
       }
     });
   } catch (err) {
-    console.error('[get-chart] Error retrieving chart:', err.message, { code: err.code, detail: err.detail, chartId });
-    return Response.json({ error: 'Failed to retrieve chart' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'get-chart', extra: { chartId } });
   }
 }

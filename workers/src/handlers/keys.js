@@ -16,6 +16,7 @@ import { generateApiKey } from '../middleware/apiKey.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { normalizeTierName } from '../lib/stripe.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * Main handler for /api/keys routes
@@ -150,11 +151,7 @@ async function generateKey(request, env, user) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Generate API key error:', error);
-    return Response.json({
-      error: 'Internal error',
-      message: 'Failed to generate API key'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'keys-generate' });
   }
 }
 
@@ -192,11 +189,7 @@ async function listKeys(request, env, user) {
     });
 
   } catch (error) {
-    console.error('List API keys error:', error);
-    return Response.json({
-      error: 'Internal error',
-      message: 'Failed to retrieve API keys'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'keys-list' });
   }
 }
 
@@ -234,11 +227,7 @@ async function getKey(request, env, user, keyId) {
     });
 
   } catch (error) {
-    console.error('Get API key error:', error);
-    return Response.json({
-      error: 'Internal error',
-      message: 'Failed to retrieve API key'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'keys-get' });
   }
 }
 
@@ -269,11 +258,7 @@ async function deleteKey(request, env, user, keyId) {
     });
 
   } catch (error) {
-    console.error('Delete API key error:', error);
-    return Response.json({
-      error: 'Internal error',
-      message: 'Failed to delete API key'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'keys-delete' });
   }
 }
 
@@ -340,10 +325,6 @@ async function getUsageStats(request, env, user, keyId) {
     });
 
   } catch (error) {
-    console.error('Get usage stats error:', error);
-    return Response.json({
-      error: 'Internal error',
-      message: 'Failed to retrieve usage statistics'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'keys-usage-stats' });
   }
 }

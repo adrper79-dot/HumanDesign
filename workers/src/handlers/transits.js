@@ -16,6 +16,7 @@ import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { trackEvent } from './achievements.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleTransits(request, env) {
   const url = new URL(request.url);
@@ -82,7 +83,6 @@ export async function handleTransits(request, env) {
       }
     });
   } catch (err) {
-    console.error('[Transits] Unhandled error:', err);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'transits' });
   }
 }

@@ -17,6 +17,7 @@ import { parseToUTC } from '../utils/parseToUTC.js';
 import { callLLM } from '../lib/llm.js';
 import { trackEvent } from './achievements.js';
 import { enforceFeatureAccess, enforceUsageQuota } from '../middleware/tierEnforcement.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 // ─── Forge Role Mapping ─────────────────────────────────────────
 const FORGE_ROLES = {
@@ -170,7 +171,7 @@ async function handleCreate(request, env) {
     await query(QUERIES.addClusterMember, [
       clusterId, createdBy, 'Creator',
       null, null, null, null, null
-    ]).catch(err => console.error('[cluster] Auto-join creator failed:', err.message));
+    ]).catch(err => console.warn('[cluster] Auto-join creator failed (non-fatal):', err.message));
   }
 
   return Response.json({
@@ -225,11 +226,7 @@ async function handleList(request, env) {
       clusters
     });
   } catch (err) {
-    console.error('Cluster list error:', err);
-    return Response.json(
-      { error: 'Failed to fetch cluster list' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error: err, source: 'cluster-list' });
   }
 }
 
@@ -270,11 +267,7 @@ async function handleLeave(request, env, clusterId) {
       message: 'Successfully left cluster'
     });
   } catch (err) {
-    console.error('Cluster leave error:', err);
-    return Response.json(
-      { error: 'Failed to leave cluster' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error: err, source: 'cluster-leave' });
   }
 }
 

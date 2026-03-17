@@ -7,6 +7,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * Calculate Big Five scores from questionnaire responses.
@@ -157,11 +158,7 @@ export async function handlePsychometricSave(request, env) {
       }
     });
   } catch (error) {
-    console.error('Psychometric save error:', error);
-    return Response.json(
-      { error: 'Failed to save psychometric data' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'psychometric-save' });
   }
 }
 
@@ -185,11 +182,7 @@ export async function handlePsychometricGet(request, env) {
 
     return Response.json({ data: result.rows[0] });
   } catch (error) {
-    console.error('Psychometric get error:', error);
-    return Response.json(
-      { error: 'Failed to retrieve psychometric data' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'psychometric-get' });
   }
 }
 

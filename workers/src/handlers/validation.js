@@ -8,6 +8,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * Save or update user's behavioral validation data.
@@ -76,11 +77,7 @@ export async function handleValidationSave(request, env) {
       data: result.rows[0]
     });
   } catch (error) {
-    console.error('Validation save error:', error);
-    return Response.json(
-      { error: 'Failed to save validation data' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'validation-save' });
   }
 }
 
@@ -104,11 +101,7 @@ export async function handleValidationGet(request, env) {
 
     return Response.json({ data: result.rows[0] });
   } catch (error) {
-    console.error('Validation get error:', error);
-    return Response.json(
-      { error: 'Failed to retrieve validation data' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'validation-get' });
   }
 }
 

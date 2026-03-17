@@ -12,6 +12,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * Convert a date string (YYYY-MM-DD) to Julian Day Number for transit calculation.
@@ -158,11 +159,7 @@ export async function handleDiaryCreate(request, env) {
       data: result.rows[0]
     });
   } catch (error) {
-    console.error('Diary create error:', error);
-    return Response.json(
-      { error: 'Failed to create diary entry' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'diary-create' });
   }
 }
 
@@ -190,11 +187,7 @@ export async function handleDiaryList(request, env) {
       pagination: { limit, offset, count: result.rows?.length || 0 }
     });
   } catch (error) {
-    console.error('Diary list error:', error);
-    return Response.json(
-      { error: 'Failed to retrieve diary entries' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'diary-list' });
   }
 }
 
@@ -221,11 +214,7 @@ export async function handleDiaryGet(request, env, entryId) {
       data: result.rows[0]
     });
   } catch (error) {
-    console.error('Diary get error:', error);
-    return Response.json(
-      { error: 'Failed to retrieve diary entry' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'diary-get' });
   }
 }
 
@@ -308,11 +297,7 @@ export async function handleDiaryUpdate(request, env, entryId) {
       data: result.rows[0]
     });
   } catch (error) {
-    console.error('Diary update error:', error);
-    return Response.json(
-      { error: 'Failed to update diary entry' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'diary-update' });
   }
 }
 
@@ -339,11 +324,7 @@ export async function handleDiaryDelete(request, env, entryId) {
       deleted: result.rows[0].id
     });
   } catch (error) {
-    console.error('Diary delete error:', error);
-    return Response.json(
-      { error: 'Failed to delete diary entry' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({ request, env, error, source: 'diary-delete' });
   }
 }
 

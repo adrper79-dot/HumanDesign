@@ -15,6 +15,7 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { getTransitForecast } from '../../../src/engine/transits.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { getUserFromRequest } from '../middleware/auth.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleForecast(request, env) {
   // BL-N4: Require authentication. This endpoint runs calculateFullChart() +
@@ -79,7 +80,6 @@ export async function handleForecast(request, env) {
       }
     });
   } catch (err) {
-    console.error('[Forecast] Unhandled error:', err);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'forecast' });
   }
 }

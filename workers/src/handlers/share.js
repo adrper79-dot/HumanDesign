@@ -24,6 +24,7 @@ import { getUserFromRequest } from '../middleware/auth.js';
 import { getCelebrityMatch } from '../lib/celebrityMatch.js';
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * POST /api/share/celebrity
@@ -115,8 +116,7 @@ export async function handleShareCelebrity(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error generating celebrity share:', error);
-    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'share-celebrity' });
   }
 }
 
@@ -193,8 +193,7 @@ export async function handleShareChart(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error generating chart share:', error);
-    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'share-chart' });
   }
 }
 
@@ -284,8 +283,7 @@ export async function handleShareAchievement(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error generating achievement share:', error);
-    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'share-achievement' });
   }
 }
 
@@ -357,8 +355,7 @@ export async function handleShareReferral(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error generating referral share:', error);
-    return Response.json({ ok: false, error: 'Failed to generate share content' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'share-referral' });
   }
 }
 
@@ -420,7 +417,6 @@ export async function handleGetShareStats(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error getting share stats:', error);
-    return Response.json({ ok: false, error: 'Failed to get share stats' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'share-stats' });
   }
 }

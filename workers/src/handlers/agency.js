@@ -15,6 +15,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 const MAX_SEATS = 5;
 
@@ -50,8 +51,7 @@ export async function handleAgency(request, env, subpath) {
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
   } catch (err) {
-    console.error('[agency] Unhandled error:', err.message);
-    return Response.json({ error: 'Service temporarily unavailable' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'agency' });
   }
 }
 

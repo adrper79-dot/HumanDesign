@@ -6,6 +6,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * GET /api/stats/activity - Get public activity statistics
@@ -55,18 +56,14 @@ export async function handleGetActivityStats(request, env, ctx) {
     });
 
   } catch (error) {
-    console.error('Get activity stats error:', error);
-    
-    // BL-FIX: Return ok: false so monitoring can detect DB outages
-    return Response.json({
-      ok: false,
-      stats: {
-        weeklyUsers: 0,
-        totalProfiles: 0,
-        totalCharts: 0
-      },
-      note: 'Stats temporarily unavailable'
-    }, { status: 503 });
+    return reportHandledRouteError({
+      request, env, error, source: 'stats-activity', status: 503,
+      responseFactory: () => Response.json({
+        ok: false,
+        stats: { weeklyUsers: 0, totalProfiles: 0, totalCharts: 0 },
+        note: 'Stats temporarily unavailable'
+      }, { status: 503 })
+    });
   }
 }
 
@@ -105,10 +102,6 @@ export async function handleGetLeaderboard(request, env, ctx) {
     });
 
   } catch (error) {
-    console.error('Get leaderboard error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to retrieve leaderboard'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'stats-leaderboard' });
   }
 }

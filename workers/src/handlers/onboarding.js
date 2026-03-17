@@ -14,6 +14,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 // KV key format for progress: onboarding:{userId}:{forge}:{chapterIndex} = "1"
 // Summary key: onboarding:progress:{userId} = JSON
@@ -111,8 +112,7 @@ export async function handleOnboarding(request, env, subpath) {
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
   } catch (err) {
-    console.error('[Onboarding] Unhandled error:', err);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'onboarding' });
   }
 }
 

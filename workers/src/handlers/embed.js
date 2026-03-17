@@ -21,6 +21,7 @@
 
 import { createQueryFn } from '../db/queries.js';
 import { hasFeatureAccess, normalizeTierName } from '../lib/stripe.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /** Re-implement the same SHA-256 hash used in middleware/apiKey.js */
 async function hashApiKey(apiKey) {
@@ -106,8 +107,10 @@ export async function handleEmbedValidate(request, env) {
     });
 
   } catch (err) {
-    console.error('embed/validate error:', err);
     // Fail safe — do not expose error details cross-origin
-    return json({ valid: false, reason: 'Service error' }, 500);
+    return reportHandledRouteError({
+      request, env, error: err, source: 'embed-validate',
+      responseFactory: () => json({ valid: false, reason: 'Service error' }, 500)
+    });
   }
 }

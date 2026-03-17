@@ -42,6 +42,7 @@ import { calculateLifeCycles } from '../../../src/engine/transits.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { toJulianDay } from '../../../src/engine/julian.js';
 import { getUserFromRequest } from '../middleware/auth.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleCycles(request, env) {
   const user = await getUserFromRequest(request, env);
@@ -113,10 +114,6 @@ export async function handleCycles(request, env) {
     });
 
   } catch (error) {
-    console.error('[handleCycles] Error:', error);
-    return Response.json({
-      ok: false,
-      error: 'Failed to calculate life cycles' // BL-R-H2
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'cycles' });
   }
 }

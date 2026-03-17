@@ -17,6 +17,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { sendNotificationToUser } from './push.js';
 import { createStripeClient } from '../lib/stripe.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 // ─── Generate Referral Code ──────────────────────────────────
 
@@ -82,10 +83,7 @@ export async function handleGenerateCode(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Generate code error:', error);
-    return Response.json({
-      error: 'Failed to generate referral code' // BL-R-H2
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'referrals-generate-code' });
   }
 }
 
@@ -152,10 +150,7 @@ export async function handleGetStats(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Get referral stats error:', error);
-    return Response.json({
-      error: 'Failed to get referral stats'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'referrals-get-stats' });
   }
 }
 
@@ -208,10 +203,7 @@ export async function handleGetHistory(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Get referral history error:', error);
-    return Response.json({
-      error: 'Failed to get referral history'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'referrals-get-history' });
   }
 }
 
@@ -263,10 +255,7 @@ export async function handleValidateCode(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Validate code error:', error);
-    return Response.json({
-      error: 'Failed to validate referral code'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'referrals-validate-code' });
   }
 }
 
@@ -390,10 +379,7 @@ export async function handleApplyCode(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Apply code error:', error);
-    return Response.json({
-      error: 'Failed to apply referral code'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'referrals-apply-code' });
   }
 }
 
@@ -432,10 +418,7 @@ export async function handleGetRewards(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Get rewards error:', error);
-    return Response.json({
-      error: 'Failed to get rewards'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'referrals-get-rewards' });
   }
 }
 
@@ -523,7 +506,7 @@ export async function handleClaimReward(request, env, ctx) {
           console.log(`Applied $5 referral welcome bonus to customer ${stripeCustomerId} for referral ${referralId}`);
         }
       } catch (stripeError) {
-        console.error('Stripe credit application error:', stripeError);
+        console.warn('[referrals] Stripe credit application failed (non-fatal):', stripeError.message);
         // Don't fail the claim — reward is already marked as granted in DB
       }
     }
@@ -539,10 +522,7 @@ export async function handleClaimReward(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Claim reward error:', error);
-    return Response.json({
-      error: 'Failed to claim reward'
-    }, { status: 500 });
+    return reportHandledRouteError({ request, env, error, source: 'referrals-claim-reward' });
   }
 }
 
@@ -581,7 +561,7 @@ export async function markReferralAsConverted(env, userId) {
       body: 'Someone you referred just upgraded to a paid plan! Claim your reward.',
       icon: '🎉',
       data: { type: 'referral_conversion', referralId: referral.id }
-    }).catch(err => console.error('Referral conversion notification failed:', err));
+    }).catch(err => console.warn('[referrals] Conversion notification failed (non-fatal):', err.message));
     
   } catch (error) {
     console.error('Error marking referral as converted:', error);

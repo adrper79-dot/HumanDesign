@@ -17,6 +17,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { FUNNELS } from '../lib/analytics.js';
 import { getTier, normalizeTierName } from '../lib/stripe.js';
 import { getUserTier } from '../middleware/tierEnforcement.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * Main analytics router.
@@ -70,8 +71,7 @@ export async function handleAnalytics(request, env, subpath) {
 
     return Response.json({ error: 'Not found' }, { status: 404 });
   } catch (err) {
-    console.error('[Analytics] Unhandled error:', err);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return reportHandledRouteError({ request, env, error: err, source: 'analytics' });
   }
 }
 
