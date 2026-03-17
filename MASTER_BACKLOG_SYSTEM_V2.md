@@ -333,11 +333,62 @@ Each item uses:
 1. **Identify Correct Section** — Which system does it affect? (Backend API, Frontend, Engine, etc.)
 2. **Assess Priority** — P0 (blocker), P1 (high), P2 (medium), P3 (low)
 3. **Create ID** — Next available number in that section
-4. **Format:**
+4. **Write the intake fields first** — Do not add the item until these are explicit:
+   - **Journey / Job:** Which journey does this serve? (`Practitioner` or `Personal User`) and which step/job?
+   - **Signal:** What user or practitioner behavior should change if this fix works?
+   - **Simplest Version:** What is the smallest implementation that proves value?
+   - **Why It Matters:** One sentence in plain language explaining why the user should care.
+   - **Principle Tags:** Which product principles govern this item? (e.g. `Earn the Next Step`, `Plain Language First`)
+5. **Format:**
    ```markdown
    | **BL-SECTION-P#-N** | **Title** — Brief description with implications. Include file names and line numbers if available. | Status | Effort | [Source](link-to-audit) |
    ```
-5. **Link Source** — Always cite where the issue was found (audit file, GitHub issue, user report, etc.)
+6. **Link Source** — Always cite where the issue was found (audit file, GitHub issue, user report, etc.)
+
+### Required Issue Intake Template
+
+Use this template before creating either a backlog item or an issue-registry entry:
+
+```markdown
+Journey / Job:
+- Practitioner or Personal User
+- Exact gate/job supported
+
+Signal:
+- What measurable behavior should change?
+
+Simplest Version:
+- Smallest implementation that proves value
+
+Why It Matters:
+- One sentence in plain language
+
+Principle Tags:
+- Which items from PRODUCT_PRINCIPLES.md apply?
+```
+
+### Example Backlog Intake
+
+```markdown
+Journey / Job:
+- Personal User
+- Gate 2 -> Gate 4 (`Calculate` -> `Synthesize`)
+
+Signal:
+- More users who calculate a chart reach profile generation without abandoning the form
+
+Simplest Version:
+- Pre-fill profile birth-data fields from chart fields when the profile tab opens
+
+Why It Matters:
+- Users should not have to re-enter the same birth data to get the product's main reading
+
+Principle Tags:
+- Earn the Next Step
+- No Feature Without a Story
+```
+
+If these fields cannot be written clearly, the item is not ready for the backlog.
 
 ### Deduplication
 

@@ -345,7 +345,6 @@ async function handleRegister(request, env) {
     // BL-BACKEND-P2-2: Send error to Sentry for telemetry and dashboard visibility
     const sentry = initSentry(env);
     await sentry.captureException(err, {
-      request,
       request: {
         url: request.url,
         method: request.method,

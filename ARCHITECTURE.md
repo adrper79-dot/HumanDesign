@@ -6,6 +6,8 @@
 
 The technology exists to serve the philosophy. Every architectural decision flows from one constraint: *the calculation must be verifiably accurate, the interpretation must be honestly grounded, and the philosophy must be faithfully delivered.*
 
+> **Companion document:** [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md) defines the product-level design principles, user journeys, fitness test, and canonical vocabulary that govern every build decision. Architecture decisions flow from product principles — read both together.
+
 ---
 
 ## 2. System Overview

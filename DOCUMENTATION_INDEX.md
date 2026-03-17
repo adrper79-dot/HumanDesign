@@ -18,15 +18,18 @@
 ## Start Here
 
 ### Product / Stakeholders
-1. [README.md](README.md) — project overview and current repo status
-2. [audits/REPOSITORY_ASSESSMENT_2026-03-09.md](audits/REPOSITORY_ASSESSMENT_2026-03-09.md) — current assessment, ranking, neglected work
-3. [BACKLOG.md](BACKLOG.md) — prioritized backlog with repo-audit delta
-4. [docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md) — practitioner-first product, pricing, and GTM plan
-5. [docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md](docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md) — build-validated practitioner execution plan and first-pass scope
-6. [docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md](docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md) — expert-level practitioner customer workflow, screen architecture, and build design plan
-7. [docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md](docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md) — P0/P1 practitioner work mapped to concrete files and handlers
-8. [docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md](docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md) — launch gate mapped to UI practitioner test coverage
-9. [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md) — focused commercial consistency audit
+1. [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md) — **read this first** — design principles, user journeys, fitness test, and canonical vocabulary that govern every build decision
+2. [README.md](README.md) — project overview and current repo status
+3. [audits/REPOSITORY_ASSESSMENT_2026-03-09.md](audits/REPOSITORY_ASSESSMENT_2026-03-09.md) — current assessment, ranking, neglected work
+4. [BACKLOG.md](BACKLOG.md) — prioritized backlog with repo-audit delta
+5. [docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md](docs/PRACTITIONER_FIRST_90_DAY_ROADMAP.md) — practitioner-first product, pricing, and GTM plan
+6. [docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md](docs/PRACTITIONER_EXECUTION_ROADMAP_2026-03-16.md) — build-validated practitioner execution plan and first-pass scope
+7. [docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md](docs/PRACTITIONER_EXPERIENCE_DESIGN_PLAN_2026-03-16.md) — expert-level practitioner customer workflow, screen architecture, and build design plan
+8. [docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md](docs/PRACTITIONER_IMPLEMENTATION_BACKLOG_2026-03-16.md) — P0/P1 practitioner work mapped to concrete files and handlers
+9. [docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md](docs/PRACTITIONER_LAUNCH_CHECKLIST_2026-03-16.md) — launch gate mapped to UI practitioner test coverage
+10. [audits/UX_RERANK_2026-03-17.md](audits/UX_RERANK_2026-03-17.md) — current open UX items re-ranked by journey impact using PRODUCT_PRINCIPLES.md
+11. [audits/FEATURE_ARCHITECTURE_SCAN_2026-03-17.md](audits/FEATURE_ARCHITECTURE_SCAN_2026-03-17.md) — full feature-by-feature architecture scan: core vs sharpen vs bound vs hold
+12. [audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md](audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md) — focused commercial consistency audit
 
 ### Developers
 1. [guides/SETUP_DEVELOPMENT.md](guides/SETUP_DEVELOPMENT.md) — local setup
