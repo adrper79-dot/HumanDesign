@@ -77,6 +77,9 @@ export const EVENTS = Object.freeze({
   ADMIN_AUTH_FAIL:     'admin_auth_fail',
   PASSWORD_RESET:      'password_reset',
 
+  // Operational — degraded / fail-open paths (BL-S20-H2)
+  DEGRADE:             'service_degrade',
+
   // Practitioner
   CLIENT_ADD:          'client_add',
   CLIENT_REMOVE:       'client_remove',
@@ -343,4 +346,29 @@ export async function aggregateDaily(env, dateStr) {
   } catch (err) {
     console.error('[Analytics] Daily aggregation failed:', err.message);
   }
+}
+
+/**
+ * Emit a structured degradation event for a fail-open or partial-failure path.
+ * Fire-and-forget — never throws or blocks the request.
+ *
+ * @param {object} env - Worker environment bindings
+ * @param {object} opts
+ * @param {string} opts.dependency   - Failing dependency (e.g. 'db', 'kv', 'ai', 'email')
+ * @param {string} opts.route        - Affected route/handler (e.g. '/api/chart')
+ * @param {string} opts.severity     - 'critical' | 'high' | 'medium' | 'low'
+ * @param {string} [opts.reason]     - Short reason string for alerting
+ * @param {boolean} [opts.failOpen]  - true if the system failed open (allowed the request)
+ * @param {string} [opts.userId]
+ */
+export async function emitDegradeEvent(env, opts = {}) {
+  const { dependency, route, severity, reason, failOpen = false, userId = null } = opts;
+  console.warn(JSON.stringify({
+    event: EVENTS.DEGRADE, severity, dependency, route, reason, fail_open: failOpen, ts: new Date().toISOString()
+  }));
+  // Best-effort durable write — do not await in hot path
+  void trackEvent(env, EVENTS.DEGRADE, {
+    userId,
+    properties: { severity, dependency, route, reason, fail_open: failOpen },
+  }).catch(() => {});
 }

@@ -14,6 +14,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getTier, hasFeatureAccess, isQuotaExceeded, normalizeTierName } from '../lib/stripe.js';
+import { emitDegradeEvent } from '../lib/analytics.js';
 
 /**
  * Resolve effective tier considering lifetime access + subscription status.
@@ -155,8 +156,16 @@ export async function enforceUsageQuota(request, env, action, feature) {
     }
   } catch (err) {
     // If the column doesn't exist yet (pre-migration), fail open to avoid
-    // breaking existing users. Log for monitoring.
+    // breaking existing users. Emit degradation event for alerting.
     console.warn('[enforceUsageQuota] email_verified check failed, failing open:', err.message);
+    emitDegradeEvent(env, {
+      dependency: 'db',
+      route: 'enforceUsageQuota/email_verified',
+      severity: 'high',
+      reason: err.message,
+      failOpen: true,
+      userId: user.sub,
+    });
   }
 
   try {
@@ -240,6 +249,14 @@ export async function recordUsage(env, userId, action, endpoint = null, quotaCos
   } catch (error) {
     // Don't fail the request if usage recording fails, just log it
     console.error('Failed to record usage:', error);
+    emitDegradeEvent(env, {
+      dependency: 'db',
+      route: 'recordUsage',
+      severity: 'medium',
+      reason: error.message,
+      failOpen: true,
+      userId,
+    });
   }
 }
 

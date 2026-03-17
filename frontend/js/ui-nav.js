@@ -58,8 +58,12 @@ const MOBILE_TAB_GROUPS = {
   celebrity: 'blueprint', achievements: 'blueprint', directory: 'blueprint',
   // Today (transits & check-in)
   transits: 'today', checkin: 'today', timing: 'today',
+  diary: 'today',
   // Connect
   composite: 'connect', clusters: 'connect',
+  // Drawer-only tabs → highlight "More" button via sentinel value 'more'
+  enhance: 'more', practitioner: 'more', sms: 'more',
+  settings: 'more', admin: 'more', embed: 'more',
 };
 
 function updateMobileNavForTab(tabName) {
@@ -68,8 +72,13 @@ function updateMobileNavForTab(tabName) {
     item.classList.remove('active');
     item.setAttribute('aria-current', 'false');
   });
-  // Try to find by group first, then by tab
-  let navItem = group ? document.querySelector(`.mobile-nav-item[data-group="${group}"]`) : null;
+  let navItem;
+  if (group === 'more') {
+    // Drawer-only tab: highlight the "More" button so user retains orientation
+    navItem = document.getElementById('mobileMoreBtn');
+  } else if (group) {
+    navItem = document.querySelector(`.mobile-nav-item[data-group="${group}"]`);
+  }
   if (!navItem) navItem = document.querySelector(`.mobile-nav-item[data-tab="${tabName}"]`);
   if (navItem) {
     navItem.classList.add('active');
