@@ -10,6 +10,7 @@
  *   GET  /api/admin/users/:id          — Get a specific user
  *   PATCH /api/admin/users/:id/tier    — Set user tier
  *   PATCH /api/admin/users/:id/verify  — Set email_verified
+ *   GET  /api/admin/analytics/funnel?name=practitioner — Get funnel metrics
  *   GET  /api/admin/promo              — List all promo codes (re-exported from promo.js)
  *   POST /api/admin/promo              — Create promo code (re-exported from promo.js)
  *   PATCH /api/admin/promo/:id/deactivate — Deactivate a promo code
@@ -87,6 +88,11 @@ export async function handleAdmin(request, env, subpath) {
     return deactivatePromo(env, promoMatch[1]);
   }
 
+  // GET /api/admin/analytics/funnel?name=...
+  if (method === 'GET' && subpath.startsWith('/analytics/funnel')) {
+    return getFunnelMetrics(request, env);
+  }
+
   return Response.json({ error: 'Not found' }, { status: 404 });
 }
 
@@ -96,6 +102,43 @@ async function getStats(env) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows } = await query(QUERIES.adminGetOverviewStats);
   return Response.json({ ok: true, stats: rows[0] });
+}
+
+async function getFunnelMetrics(request, env) {
+  const url = new URL(request.url);
+  const funnelName = url.searchParams.get('name') || 'practitioner';
+  const validFunnels = ['practitioner', 'onboarding'];
+  
+  if (!validFunnels.includes(funnelName)) {
+    return Response.json({ error: `funnel must be one of: ${validFunnels.join(', ')}` }, { status: 400 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const { rows } = await query(QUERIES.getAnalyticsFunnelSteps, [funnelName]);
+  
+  if (!rows.length) {
+    return Response.json({ ok: true, funnel: funnelName, steps: [] });
+  }
+
+  const steps = rows.map(row => ({
+    name: row.step_name,
+    order: row.step_order,
+    users: parseInt(row.users || '0', 10),
+  }));
+
+  // Calculate conversion rates
+  const firstStepUsers = steps[0]?.users || 1;
+  const stepsWithConversion = steps.map((step, idx) => ({
+    ...step,
+    conversionRate: idx === 0 ? 1.0 : (step.users / firstStepUsers).toFixed(2),
+  }));
+
+  return Response.json({
+    ok: true,
+    funnel: funnelName,
+    steps: stepsWithConversion,
+    totalEntered: firstStepUsers,
+  });
 }
 
 async function listUsers(request, env) {
