@@ -16,7 +16,8 @@
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
-import celebsData from '../data/celebrities.json' with { type: 'json' };
+// Import JSON data - modern bundlers handle this automatically
+import celebsData from '../data/celebrities.json';
 
 // ─── Similarity Scoring ──────────────────────────────────────────────────
 
