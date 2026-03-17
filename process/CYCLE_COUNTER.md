@@ -19,18 +19,20 @@
 | 13    | 2026-03-17 | BL-PRAC-Onboarding-Modal(post-checkout UI flow), BL-PRAC-Analytics(funnel instrumentation) | 485/8 ✅ | GREEN |
 | 14    | 2026-03-17 | BL-PRAC-Session-Templates(Intake/Follow-up/Integration/Closing guides + hydration API) | 485/8 ✅ | GREEN |
 | 15    | 2026-03-17 | BL-PRAC-Directory-SSR(public profiles + OG tags), BL-UI-Share-Card(Twitter/LinkedIn buttons), BL-UI-Profile-Polish(mobile+a11y) | 485/8 ✅ | GREEN |
+| 16    | 2026-03-17 | BL-PRAC-AI-Context-Editor(modal + accessibility), BL-PRAC-Context-API(unified ai-context/context GET/POST/PUT routes) | 485/8 ✅ | GREEN |
 
-**Current cycle:** 16 (READY FOR INTAKE — priorities pre-locked)
+**Current cycle:** 17 (READY FOR INTAKE)
 **Last cycle date:** 2026-03-17
-**Cumulative items resolved this loop:** 42 (7 total items across cycles 14-15)
+**Cumulative items resolved this loop:** 44 (9 total items across cycles 14-16)
 **Open P0:** 0 ✅
 **Open P1:** 0 ✅
-**Open P2/P3:** ~35 items remaining (AI context editor, analytics refinement, agency RBAC, etc.)
-**Status:** Cycles 14–15 complete (2 cycles, 7 features, all syntax validated)
+**Open P2/P3:** ~33 items remaining (analytics refinement, agency RBAC, advanced automation, etc.)
+**Status:** Cycles 14–16 complete (3 cycles, 9 features, syntax validated)
 
-**Cycle 16 Priorities Pre-locked (Integration Batch):**
-- Item 1: AI Context Editor (6h) — Modal UI for client context management
-- Item 2: Session Note Storage (2h) — Backend persistence for session templates  
+**Cycle 17 Candidate Priorities (Growth + Ops Batch):**
+- Item 1: Practitioner referral workflow hardening (tracking + CTA surfacing)
+- Item 2: Funnel analytics dashboard polish (step deltas + conversion guardrails)
+- Item 3: Session template save/load UX completion
 
 ---
 

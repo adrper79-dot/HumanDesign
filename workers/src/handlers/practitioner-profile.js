@@ -13,6 +13,16 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * GET /api/practitioner/:username/profile
  * Return server-rendered profile HTML with OG tags
@@ -45,8 +55,8 @@ export async function handleGetPractitionerProfileSSR(request, env, username) {
     // Generate OG tags
     const baseUrl = 'https://selfprime.net';
     const profileUrl = `${baseUrl}/practitioner/${practitioner.username}`;
-    const displayName = practitioner.display_name || practitioner.username;
-    const bio = practitioner.bio || 'Human Design practitioner on Prime Self';
+    const displayName = escapeHtml(practitioner.display_name || practitioner.username);
+    const bio = escapeHtml(practitioner.bio || 'Energy Blueprint practitioner on Prime Self');
     const ogImage = `${baseUrl}/og-practitioner.png`; // Static image (can be customized per practitioner later)
 
     // Server-render HTML with OG tags
@@ -56,12 +66,12 @@ export async function handleGetPractitionerProfileSSR(request, env, username) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${displayName} — Human Design Practitioner | Prime Self</title>
+  <title>${displayName} — Energy Blueprint Practitioner | Prime Self</title>
   
   <!-- OG Tags (Twitter, LinkedIn, Facebook) -->
   <meta property="og:type" content="profile">
   <meta property="og:url" content="${profileUrl}">
-  <meta property="og:title" content="${displayName} — Human Design Practitioner">
+  <meta property="og:title" content="${displayName} — Energy Blueprint Practitioner">
   <meta property="og:description" content="${bio}">
   <meta property="og:image" content="${ogImage}">
   <meta property="og:image:alt" content="${displayName}'s profile">
@@ -70,7 +80,7 @@ export async function handleGetPractitionerProfileSSR(request, env, username) {
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="${profileUrl}">
-  <meta name="twitter:title" content="${displayName} — Human Design Practitioner">
+  <meta name="twitter:title" content="${displayName} — Energy Blueprint Practitioner">
   <meta name="twitter:description" content="${bio}">
   <meta name="twitter:image" content="${ogImage}">
   <meta name="twitter:site" content="@PrimeSelfApp">
@@ -140,7 +150,7 @@ export async function handleGetPractitionerProfileSSR(request, env, username) {
       },
     });
   } catch (err) {
-    console.error('SSR error:', err);
+    console.error(JSON.stringify({ event: 'practitioner_profile_ssr_error', error: err.message }));
     return Response.json(
       { error: 'Service temporarily unavailable' },
       { status: 500 }
@@ -190,7 +200,7 @@ export async function handleGetPractitionerProfileJSON(request, env, username) {
       },
     });
   } catch (err) {
-    console.error('Profile JSON error:', err);
+    console.error(JSON.stringify({ event: 'practitioner_profile_json_error', error: err.message }));
     return Response.json(
       { error: 'Service temporarily unavailable' },
       { status: 500 }
