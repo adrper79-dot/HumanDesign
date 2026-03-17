@@ -2446,19 +2446,6 @@ function restoreBirthData() {
     }
 
     if (window.DEBUG) console.log('[BirthData] Restored from localStorage');
-
-    // Show "Using your birth data" banner in chart + profile tabs
-    if (data.date && data.location) {
-      const bannerHtml = `<div id="birthDataBanner" class="alert" style="font-size:var(--font-size-sm);display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-2) var(--space-3);background:rgba(201,168,76,.12);border-left:3px solid var(--gold)">
-        <span>📍 Using your saved birth data: <strong>${escapeHtml(data.location)}</strong> · ${escapeHtml(data.date)} ${data.time ? escapeHtml(data.time) : ''}</span>
-        <button class="btn-sm" style="margin-left:auto;opacity:.7" onclick="clearBirthData()">Clear</button>
-      </div>`;
-      ['chartBanner', 'profileBanner'].forEach(bannerId => {
-        const el = document.getElementById(bannerId);
-        if (el && !document.getElementById('birthDataBanner')) el.innerHTML = bannerHtml;
-      });
-    }
-
     return true;
   } catch (e) { window.DEBUG && console.warn('[BirthData] Restore failed:', e); return false; }
 }
@@ -2469,19 +2456,6 @@ if (document.readyState === 'loading') {
 } else {
   restoreBirthData();
 }
-
-function clearBirthData() {
-  try { localStorage.removeItem(BIRTH_DATA_KEY); } catch (_) {}
-  document.getElementById('birthDataBanner')?.remove();
-  // Clear form fields
-  ['c', 'p'].forEach(prefix => {
-    ['date','time','location','lat','lng','tz'].forEach(field => {
-      const el = document.getElementById(`${prefix}-${field}`);
-      if (el) el.value = '';
-    });
-  });
-}
-window.clearBirthData = clearBirthData;
 
 // Show identity strip from cached chart (if page reloaded after a chart was generated)
 document.addEventListener('DOMContentLoaded', () => {
@@ -3017,10 +2991,6 @@ function renderChart(data) {
     <button class="btn-primary" style="margin-top:var(--space-4);font-size:var(--font-size-base);padding:var(--space-2) 20px" data-action="openLastShareCard">
       📤 Share Your Design
     </button>
-    <div id="socialShareBtns-chart" style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)">
-      <button class="btn-secondary btn-sm" data-action="shareOnTwitter" data-arg0="chart" style="display:flex;align-items:center;gap:6px">𝕏 Share on X/Twitter</button>
-      <button class="btn-secondary btn-sm" data-action="copyShareLink" data-arg0="chart" style="display:flex;align-items:center;gap:6px">🔗 Copy Link</button>
-    </div>
   </div>`;
 
   // Store chart data for share card
@@ -3069,12 +3039,12 @@ async function loadChartById(chartId) {
   const resultEl = document.getElementById('chartResult');
   if (!resultEl) return;
 
-  showSkeleton('chartResult', 'chart');
+  resultEl.innerHTML = '<div style="text-align:center;padding:var(--space-6)"><span class="spinner"></span> Loading chart…</div>';
 
   try {
     const resp = await apiFetch('/api/chart/' + encodeURIComponent(chartId));
     if (!resp?.data) {
-      showError('chartResult', 'CHART_NOT_FOUND');
+      resultEl.innerHTML = '<div class="alert alert-warn">Could not load chart.</div>';
       return;
     }
     const d = resp.data;
@@ -3085,8 +3055,7 @@ async function loadChartById(chartId) {
     if (typeof renderBodygraph === 'function' && chart) renderBodygraph(chart);
     window._lastChart = chart;
   } catch (e) {
-    const code = e.status === 401 ? 'AUTH_EXPIRED' : (e.status >= 500 ? 'SERVER_ERROR' : 'CHART_NOT_FOUND');
-    showError('chartResult', code, { retryFn: 'loadChartHistory' });
+    resultEl.innerHTML = '<div class="alert alert-warn">Failed to load chart: ' + escapeHtml(e.message) + '</div>';
   }
 }
 
@@ -3902,7 +3871,7 @@ async function loadHistory() {
 
   btn.disabled = true;
   spinner.style.display = '';
-  showSkeleton('profileResult', 'list');
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('profile.loadingProfiles') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/profile/list');
@@ -3973,7 +3942,7 @@ async function searchProfiles() {
   if (term.length < 2) { loadHistory(); return; }
   if (!token) { openAuthOverlay(); return; }
 
-  showSkeleton('profileResult', 'list');
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Searching…</div></div>';
   try {
     const data = await apiFetch('/api/profile/search?q=' + encodeURIComponent(term));
     resultEl.innerHTML = renderHistory(data);
@@ -4677,8 +4646,7 @@ async function viewClientDetail(clientId, emailLabel) {
     ]);
     panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData);
   } catch (e) {
-    const code = e.status === 403 ? 'FORBIDDEN' : (e.status >= 500 ? 'SERVER_ERROR' : 'NETWORK_ERROR');
-    showError(panel, code);
+    panel.innerHTML = `<div class="alert alert-error">Error loading client: ${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -5527,8 +5495,7 @@ async function loadClusters() {
     const data = await apiFetch('/api/cluster/list');
     container.innerHTML = renderClusterList(data);
   } catch (e) {
-    const code = e.status === 403 ? 'FORBIDDEN' : (e.status >= 500 ? 'SERVER_ERROR' : 'NETWORK_ERROR');
-    showError(container, code, { retryFn: 'loadClusters' });
+    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error loading clusters: ${escapeHtml(e.message)}</div>`;
   } finally {
     spinner.style.display = 'none';
   }
@@ -6214,30 +6181,6 @@ function skeletonTransits() {
   </div>`;
 }
 
-function skeletonList(count = 3) {
-  return Array.from({ length: count }, () =>
-    `<div class="skeleton-card" style="padding:var(--space-3) var(--space-4)">
-      <div style="display:flex;gap:var(--space-3);align-items:center">
-        <div class="skeleton-circle" style="width:36px;height:36px;flex-shrink:0"></div>
-        <div style="flex:1"><div class="skeleton-line w-60"></div><div class="skeleton-line w-40" style="margin-top:var(--space-1)"></div></div>
-      </div>
-    </div>`
-  ).join('');
-}
-
-/**
- * Show a skeleton loading placeholder inside a container element.
- * @param {string} containerId - DOM element id
- * @param {'chart'|'profile'|'transits'|'list'} type
- * @param {number} [count] - for 'list' type
- */
-function showSkeleton(containerId, type, count = 3) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  const map = { chart: skeletonChart, profile: skeletonProfile, transits: skeletonTransits };
-  el.innerHTML = map[type] ? map[type]() : skeletonList(count);
-}
-
 function row(label, value) {
   if (!value && value !== 0) return '';
   return `<div class="data-row"><span class="data-label">${label}</span><span class="data-value">${escapeHtml(String(value))}</span></div>`;
@@ -6561,42 +6504,6 @@ function openDiaryFromTransit(gate, prompt) {
   setTimeout(() => prefillDiaryFromTransit(gate, prompt), 100);
 }
 window.openDiaryFromTransit = openDiaryFromTransit;
-
-// ── Actionable Error Messages (BL-EXC-P2-2) ─────────────────────
-const ERROR_COPY = {
-  AUTH_EXPIRED:    { title: 'Your session expired',             body: 'Sign in again to continue.', actions: [{ label: 'Sign in', fn: 'openAuthOverlay' }] },
-  CHART_NOT_FOUND: { title: 'We couldn\'t load your chart',     body: 'The chart may have been deleted or is unavailable.', actions: [{ label: 'Recalculate', fn: 'expandChartForm' }] },
-  AI_TIMEOUT:      { title: 'AI synthesis is taking longer than usual', body: 'Please try again in a moment.', actions: [{ label: 'Try again', fn: null }] },
-  NETWORK_ERROR:   { title: 'Check your internet connection',  body: 'Could not reach the server.', actions: [{ label: 'Retry', fn: null }] },
-  PAYMENT_ERROR:   { title: 'Payment didn\'t go through',       body: 'Check your billing details and try again.', actions: [{ label: 'Update payment method', fn: 'openPricingModal' }] },
-  SERVER_ERROR:    { title: 'Something went wrong on our end',  body: 'We\'ve been notified. Please try again in a moment.', actions: [{ label: 'Try again', fn: null }] },
-  FORBIDDEN:       { title: 'Access restricted',               body: 'You may need to upgrade your plan to access this feature.', actions: [{ label: 'View plans', fn: 'openPricingModal' }] },
-  NOT_FOUND:       { title: 'Not found',                       body: 'The requested resource does not exist.', actions: [] },
-};
-
-/**
- * Show a styled error card with actionable CTAs.
- * @param {string} containerId
- * @param {string} errorCode - key in ERROR_COPY, or raw message string as fallback
- * @param {{ retryFn?: string }} [context]
- */
-function showError(containerId, errorCode, context = {}) {
-  const el = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
-  if (!el) return;
-  const copy = ERROR_COPY[errorCode] || { title: 'Something went wrong', body: escapeHtml(errorCode || ''), actions: [] };
-  const actions = [...copy.actions];
-  if (context.retryFn) actions.push({ label: 'Retry', fn: context.retryFn });
-  const btns = actions.map(a => a.fn
-    ? `<button class="btn-secondary btn-sm" onclick="${escapeAttr(a.fn)}()">${escapeHtml(a.label)}</button>`
-    : ''
-  ).join('');
-  el.innerHTML = `<div class="alert alert-error" style="display:flex;flex-direction:column;gap:var(--space-2)">
-    <strong>${escapeHtml(copy.title)}</strong>
-    <span style="font-size:var(--font-size-sm);opacity:.85">${copy.body}</span>
-    ${btns ? `<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-1)">${btns}</div>` : ''}
-  </div>`;
-}
-window.showError = showError;
 
 // ── Behavioral Validation ─────────────────────────────────────
 async function saveValidation() {
@@ -7680,45 +7587,6 @@ function openCompatibilityWithClient(clientId, emailLabel) {
 }
 function openLastShareCard() { if (typeof showShareCard === 'function') showShareCard(window._lastChart); }
 function openBlueprintCard() { if (typeof showBlueprintCard === 'function') showBlueprintCard(window._lastChart, window._lastForge); }
-
-function _buildShareText(source) {
-  const chart = window._lastChart;
-  if (!chart) return { text: 'Discover your Human Design blueprint!', url: window.location.origin };
-  const type = chart.type || 'unique type';
-  const authority = chart.authority || '';
-  const profile = chart.profile || '';
-  const parts = [`I just discovered I'm a ${type} in Human Design!`];
-  if (authority) parts.push(`My inner authority is ${authority}`);
-  if (profile) parts.push(`and I have a ${profile} Profile.`);
-  parts.push('Explore your own blueprint 👇');
-  return { text: parts.join(' '), url: window.location.origin };
-}
-
-function shareOnTwitter(source) {
-  const { text, url } = _buildShareText(source);
-  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-  window.open(tweetUrl, '_blank', 'noopener,noreferrer,width=600,height=400');
-}
-
-async function copyShareLink(source) {
-  const { text, url } = _buildShareText(source);
-  const full = `${text} ${url}`;
-  try {
-    await navigator.clipboard.writeText(full);
-    showNotification('Share text copied to clipboard!', 'success');
-  } catch {
-    // Fallback for environments where clipboard API is unavailable
-    const ta = document.createElement('textarea');
-    ta.value = full;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showNotification('Share text copied!', 'success');
-  }
-}
 function switchToPricingModal()    { closePractitionerPricingModal(); openPricingModal(); }
 function switchToPracPricingModal() { openPractitionerPricingModal(); closePricingModal(); }
 
@@ -7914,6 +7782,56 @@ function practOnbCopyLink() {
   }
 }
 
+async function practOnbSaveProfile() {
+  const name = document.getElementById('pract-onb-name')?.value?.trim();
+  const specialty = document.getElementById('pract-onb-specialty')?.value?.trim();
+  const bio = document.getElementById('pract-onb-bio')?.value?.trim();
+  const statusEl = document.getElementById('pract-onb-dir-status');
+  if (!name && !specialty) {
+    practOnbNext(); // allow skipping if blank
+    return;
+  }
+  if (statusEl) statusEl.textContent = 'Saving…';
+  try {
+    await apiFetch('/api/practitioner/directory-profile', {
+      method: 'POST',
+      body: JSON.stringify({ displayName: name, specialty, bio, visible: true })
+    });
+    if (statusEl) statusEl.textContent = '✓ Profile saved';
+    // reflect in step 4 stat
+    const stat = document.getElementById('pract-onb-stat-profile');
+    if (stat) { stat.textContent = 'Done'; stat.style.color = 'var(--accent2)'; }
+    setTimeout(() => practOnbNext(), 600);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Could not save — try again in your Practitioner workspace.';
+    setTimeout(() => practOnbNext(), 1500);
+  }
+}
+
+async function practOnbSendInvite() {
+  const email = document.getElementById('pract-onb-client-email')?.value?.trim();
+  const name = document.getElementById('pract-onb-client-name')?.value?.trim();
+  const statusEl = document.getElementById('pract-onb-invite-status');
+  if (!email) {
+    practOnbNext(); // blank → skip
+    return;
+  }
+  if (statusEl) statusEl.textContent = 'Sending…';
+  try {
+    await apiFetch('/api/practitioner/clients', {
+      method: 'POST',
+      body: JSON.stringify({ email, name: name || undefined })
+    });
+    if (statusEl) statusEl.textContent = '✓ Invite sent';
+    const stat = document.getElementById('pract-onb-stat-clients');
+    if (stat) stat.textContent = '1';
+    setTimeout(() => practOnbNext(), 600);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Could not send — you can invite clients from your workspace.';
+    setTimeout(() => practOnbNext(), 1500);
+  }
+}
+
 // Ensure delegated actions are always discoverable on global scope.
 // (top-level function declarations in non-module scripts are already on window,
 //  but explicit assignment makes the intent clear and safe for any tooling.)
@@ -7947,6 +7865,8 @@ window.practOnbNext = practOnbNext;
 window.practOnbSkip = practOnbSkip;
 window.practOnbFinish = practOnbFinish;
 window.practOnbCopyLink = practOnbCopyLink;
+window.practOnbSaveProfile = practOnbSaveProfile;
+window.practOnbSendInvite = practOnbSendInvite;
 window.checkAndShowReferralPrompt = checkAndShowReferralPrompt;
 window.closeReferralModal = closeReferralModal;
 
@@ -8154,8 +8074,6 @@ window.prefillExample = prefillExample;
 window.expandChartForm = expandChartForm;
 window.openLastShareCard = openLastShareCard;
 window.openBlueprintCard = openBlueprintCard;
-window.shareOnTwitter = shareOnTwitter;
-window.copyShareLink = copyShareLink;
 window.loadChartHistory = loadChartHistory;
 window.loadChartById = loadChartById;
 window.toggleNotifDrawer = toggleNotifDrawer;

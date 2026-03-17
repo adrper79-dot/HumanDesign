@@ -19,7 +19,7 @@
   base-uri 'self';
   form-action 'self';
 ">
-<title>Prime Self — Energy Blueprint & Astrology</title>
+<title>Prime Self — Chart Software for HD Practitioners</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
 <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
@@ -97,12 +97,12 @@
 <link rel="apple-touch-startup-image" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" href="/icons/splash-2048x2732.png">
 
 <!-- Description for App Stores -->
-<meta name="description" content="Your Personal Energy Blueprint — AI-powered birth chart analysis combining Gene Keys, Astrology, and Numerology for personalized daily guidance">
+<meta name="description" content="Prime Self is practice software for Human Design coaches and chart analysts. Run client sessions, generate AI-powered chart profiles, and deliver practitioner-grade guidance — powered by HD, Gene Keys, Astrology, and Numerology.">
 <meta name="keywords" content="energy blueprint, birth chart analysis, AI astrology, gene keys, natal chart reading, numerology, life purpose, personal energy type, daily transits, soul blueprint, cosmic chart, life path calculator, astrology AI, personality chart, energy centers">
 
 <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
-<meta property="og:title" content="Prime Self — Energy Blueprint & Astrology">
-<meta property="og:description" content="Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology. AI-powered personal chart analysis with personalized daily transit guidance.">
+<meta property="og:title" content="Prime Self — Chart Software for HD Practitioners">
+<meta property="og:description" content="Run client sessions, generate AI chart profiles, and manage your HD practice in one place. Powered by Human Design, Gene Keys, Astrology, and Numerology.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://selfprime.net">
 <meta property="og:image" content="https://selfprime.net/og-image.png">
@@ -114,8 +114,8 @@
 
 <!-- Twitter Card Meta Tags -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Prime Self — Your Energy Blueprint">
-<meta name="twitter:description" content="Discover your unique energy blueprint through Gene Keys, Astrology, and Numerology. Personalized AI insights and daily guidance.">
+<meta name="twitter:title" content="Prime Self — Chart Software for HD Practitioners">
+<meta name="twitter:description" content="Run client sessions, generate AI chart profiles, and manage your HD practice in one place. Powered by Human Design, Gene Keys, Astrology, and Numerology.">
 <meta name="twitter:image" content="https://selfprime.net/twitter-card.png">
 <meta name="twitter:site" content="@primeself">
 <meta name="twitter:creator" content="@primeself">
@@ -750,12 +750,12 @@
 <!-- Value Proposition Banner -->
 <div class="social-proof-banner" id="socialProofBanner">
   <div class="social-proof-stat">
-    <span class="social-proof-number">9+</span>
-    <span class="social-proof-label">systems combined: Energy Blueprint · Gene Keys · Astrology · Numerology · Mayan · BaZi · Sabian · Chiron · Lilith &amp; more</span>
+    <span class="social-proof-number">✦</span>
+    <span class="social-proof-label">Practitioner-grade chart software — for HD coaches, analysts, and wellness professionals running a values-aligned practice</span>
   </div>
   <div class="social-proof-stat">
-    <span class="social-proof-number">64</span>
-    <span class="social-proof-label">gates calculated per chart — conscious &amp; unconscious</span>
+    <span class="social-proof-number">9+</span>
+    <span class="social-proof-label">systems in every chart — Human Design, Gene Keys, Astrology, Numerology, Mayan &amp; more</span>
   </div>
   <div class="social-proof-stat">
     <span class="social-proof-number" id="totalProfiles">100+</span>
@@ -1625,15 +1625,15 @@
 
     <!-- Upgrade notice for non-practitioner tiers -->
     <div id="practitionerUpgradeNotice" class="alert alert-warn" style="display:none">
-      <strong>Practitioner Tools Locked</strong><br>
-      Client management requires a Practitioner tier subscription.
+      <Strong>Practitioner Tools Locked</strong><br>
+      Client management and session tools require a Practitioner plan.
       <a href="#" data-action="openPractitionerPricingModal" data-prevent class="link-gold ml-2">Upgrade to Practitioner →</a>
     </div>
 
     <!-- Header card: status + add client -->
     <div class="card" id="pracHeaderCard">
-      <div class="card-title"><span class="icon-star"></span> Practitioner Portal</div>
-      <p class="card-intro">Manage your client roster. View their charts and profiles, export PDFs, and keep your session work organized.</p>
+      <div class="card-title"><span class="icon-star"></span> Practice Workspace</div>
+      <p class="card-intro">Your client roster, session tools, and directory listing — everything you need to serve clients and run your practice.</p>
 
       <!-- Client limit progress bar -->
       <div id="pracLimitBar" style="display:none;margin-bottom:var(--space-5)">
@@ -2133,49 +2133,78 @@
 <div id="practitionerOnboardingOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pract-onb-title">
   <div class="modal-panel" style="max-width:520px">
     <div id="pract-onb-steps">
-      <!-- Step 1 -->
+      <!-- Step 1: Directory profile — complete in-flow -->
       <div class="pract-onb-step active" id="pract-onb-step-1">
         <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">🔍</div>
-        <h2 id="pract-onb-title" style="text-align:center;margin-bottom:0.5rem">Set up your profile first</h2>
-        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">Your public directory listing is how clients find you. Complete profiles get significantly more inquiries.</p>
-        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Go to <strong>Practitioner → Directory Profile</strong> in the sidebar to complete your listing. Takes 2 minutes.</p>
-        <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
+        <h2 id="pract-onb-title" style="text-align:center;margin-bottom:0.5rem">Set up your practice profile</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.25rem">Your public directory listing is how clients find you. Add your name, specialty, and bio right here — takes under 2 minutes.</p>
+        <div id="pract-onb-dir-form" style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1rem">
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            <div>
+              <label style="display:block;font-size:0.82em;color:var(--text-dim);margin-bottom:0.3rem">Your name / practice name</label>
+              <input id="pract-onb-name" type="text" placeholder="e.g. Jana Moreau · HD Analyst" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:0.45rem 0.65rem;font-size:0.9em;color:var(--text-primary)">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.82em;color:var(--text-dim);margin-bottom:0.3rem">One-line specialty</label>
+              <input id="pract-onb-specialty" type="text" placeholder="e.g. Human Design readings &amp; Gene Keys integration" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:0.45rem 0.65rem;font-size:0.9em;color:var(--text-primary)">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.82em;color:var(--text-dim);margin-bottom:0.3rem">Short bio (optional)</label>
+              <textarea id="pract-onb-bio" rows="2" placeholder="Tell potential clients about your approach and background…" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:0.45rem 0.65rem;font-size:0.9em;color:var(--text-primary);resize:vertical"></textarea>
+            </div>
+          </div>
+          <div id="pract-onb-dir-status" style="font-size:0.82em;margin-top:0.5rem;color:var(--accent2)"></div>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-top:0.5rem" data-action="practOnbSaveProfile">Save &amp; Continue →</button>
+        <button class="btn-secondary" style="width:100%;margin-top:0.5rem" data-action="practOnbNext">I'll complete my profile later</button>
       </div>
-      <!-- Step 2 -->
+      <!-- Step 2: Invite first client — in-flow form -->
       <div class="pract-onb-step" id="pract-onb-step-2" style="display:none">
         <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">👥</div>
-        <h2 style="text-align:center;margin-bottom:0.5rem">Add your first client</h2>
-        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">Invite a client from the Practitioner tab — they'll get their chart, and you'll see their profile for session prep.</p>
-        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Go to <strong>Practitioner → Client Roster</strong> and click "Add Client".</p>
-        <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
-        <button class="btn-secondary" style="width:100%;margin-top:0.5rem" data-action="practOnbNext">I'll do this later</button>
+        <h2 style="text-align:center;margin-bottom:0.5rem">Invite your first client</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.25rem">Send an invite and they'll receive their chart access. You'll see their profile in your client roster for session prep.</p>
+        <div style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1rem">
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            <div>
+              <label style="display:block;font-size:0.82em;color:var(--text-dim);margin-bottom:0.3rem">Client name (optional)</label>
+              <input id="pract-onb-client-name" type="text" placeholder="Client name" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:0.45rem 0.65rem;font-size:0.9em;color:var(--text-primary)">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.82em;color:var(--text-dim);margin-bottom:0.3rem">Client email</label>
+              <input id="pract-onb-client-email" type="email" placeholder="client@email.com" style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:0.45rem 0.65rem;font-size:0.9em;color:var(--text-primary)">
+            </div>
+          </div>
+          <div id="pract-onb-invite-status" style="font-size:0.82em;margin-top:0.5rem;color:var(--accent2)"></div>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-top:0.5rem" data-action="practOnbSendInvite">Send Invite &amp; Continue →</button>
+        <button class="btn-secondary" style="width:100%;margin-top:0.5rem" data-action="practOnbNext">I'll add clients later</button>
       </div>
-      <!-- Step 3 -->
+      <!-- Step 3: Copy referral link — secondary setup, not lead -->
       <div class="pract-onb-step" id="pract-onb-step-3" style="display:none">
         <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">📎</div>
-        <h2 style="text-align:center;margin-bottom:0.5rem">Share your referral link</h2>
-        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">When clients join via your referral link and subscribe, you earn 25% monthly — for as long as they stay.</p>
+        <h2 style="text-align:center;margin-bottom:0.5rem">Copy your client link</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.25rem">Share this link with clients you want to bring on. When they sign up &amp; subscribe, you receive a 25% recurring commission.</p>
         <div style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1rem">
-          <p style="margin:0 0 0.5rem;font-size:0.85em;color:var(--text-dim)">Your referral link:</p>
+          <p style="margin:0 0 0.5rem;font-size:0.82em;color:var(--text-dim)">Your referral link:</p>
           <div style="display:flex;gap:0.5rem">
             <input id="pract-onb-reflink" readonly style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:0.4rem 0.6rem;font-size:0.85em;color:var(--text-primary)" value="Loading…">
             <button class="btn-secondary btn-sm" data-action="practOnbCopyLink">Copy</button>
           </div>
         </div>
-        <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
+        <button class="btn-primary" style="width:100%;margin-top:1rem" data-action="practOnbNext">Continue →</button>
         <button class="btn-secondary" style="width:100%;margin-top:0.5rem" data-action="practOnbSkip">I'll do this later</button>
       </div>
-      <!-- Step 4 -->
+      <!-- Step 4: Ready state — practice-readiness focus, not economics -->
       <div class="pract-onb-step" id="pract-onb-step-4" style="display:none">
         <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">✦</div>
-        <h2 style="text-align:center;margin-bottom:0.5rem">You're ready</h2>
-        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.5rem">Your profile is live. Your referral link is ready. Here's your practice at a glance:</p>
+        <h2 style="text-align:center;margin-bottom:0.5rem">Your practice is ready</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.5rem">Here's where you stand. You can update anything from your Practitioner workspace.</p>
         <div id="pract-onb-stats" style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1.5rem">
-          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem"><span style="color:var(--text-dim)">Clients on roster</span><strong id="pract-onb-stat-clients">0</strong></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem"><span style="color:var(--text-dim)">Directory profile</span><strong id="pract-onb-stat-profile" style="color:var(--gold)">Incomplete</strong></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Referral commissions</span><strong>$0 this month</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem"><span style="color:var(--text-dim)">Clients on roster</span><strong id="pract-onb-stat-clients">0</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Session tools</span><strong style="color:var(--accent2)">Ready</strong></div>
         </div>
-        <button class="btn-primary" style="width:100%" data-action="practOnbFinish">Go to My Dashboard →</button>
+        <button class="btn-primary" style="width:100%" data-action="practOnbFinish">Go to My Workspace →</button>
       </div>
     </div>
     <!-- Progress dots -->
