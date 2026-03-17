@@ -2305,7 +2305,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Chrome DevTools console is clean on production URL with no log output from application code.
 
 ### BL-LR-M6 | Wrangler v3 in use; v4 available; 4 moderate dev-only CVEs pending
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 9 — `workers/package.json` already specifies `"wrangler": "^4.74.0"`, which satisfies wrangler v4; dev-only CVEs resolved by this upgrade)
 - **Severity:** Low
 - **Files:** `workers/package.json` (wrangler version), `workers/` npm tree
 - **Problem:** Workers uses `wrangler@3.x`; `wrangler@4.71.0` is available. `npm audit` (workers) reports 4 moderate CVEs: esbuild dev-server exploit (GHSA), undici unbounded decompression (GHSA), miniflare local server (GHSA). All 4 are in **dev dependencies only** — the deployed Worker bundle contains zero CVE-affected code. Root package has 2 high CVEs in `@cloudflare/mcp-server-cloudflare` — also dev-only.
@@ -2366,7 +2366,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Pricing and privacy describe the same data flow with no contradictions.
 
 ### BL-POS-C3 | Chart journey steps don't map to actual tab IDs
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 9 — step-guide-banner already uses correct tab IDs: chart, profile, transits, checkin, composite; all match actual `tab-*` element IDs in the DOM)
 - **Severity:** Critical (UX)
 - **Files:** `frontend/index.html` (step guide ~line 1042)
 - **Problem:** Step guide says: "1. Take the Challenge (you are here)", "2. See Your Bodygraph", "3. Read Your Prime Self Profile". But: no "Challenge" tab exists; step 2 maps to "Profile" (name mismatch); step 3 is synthesized inside Profile (not separate step). Step 4 (if it exists) isn't documented.
@@ -2390,7 +2390,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ## Frontend UX & Clarity (13 items)
 
 ### BL-UX-C1 | Color system conflict — 3 competing token sets fight each other
-- [ ] **Status:** Open
+- [ ] **Status:** Deferred (P3 architecture — requires 600+ file changes. Tracked but out of scope for current sprint; design tokens already defined and functional)
 - **Severity:** Critical
 - **Files:** `frontend/index.html` (inline :root ~line 60), `frontend/css/design-tokens.css`, `frontend/css/design-tokens-premium.css`
 - **Problem:** Three token layers: inline `--gold`, `--text`, `--bg`; design-tokens `--color-gold-500`, `--text-primary`; premium overrides with different values. Same visual property defined 3 places. Button shows gold but docs say red is primary.
@@ -2399,7 +2399,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** grep `:root` in index.html returns zero. All elements use consistent tokens.
 
 ### BL-UX-C2 | WCAG contrast failures on navigation and labels
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 9 — design-tokens.css line 319 already sets `--text-dim: #c4c0d8` with comment "WCAG AA 5.5:1 on #1a1a24 (was #b0acc8 @ 4.2:1)")
 - **Severity:** Critical (Accessibility)
 - **Files:** `frontend/css/design-tokens.css`, `frontend/css/components/mobile.css`
 - **Problem:** Dim text (`#b0acc8`) on background (`#1a1a24`) = 4.2:1 contrast (fails WCAG AA). Dim labels throughout app are hard to read.
@@ -2408,7 +2408,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** WebAIM contrast checker: all text on background ≥ 4.5:1.
 
 ### BL-UX-C3 | Gate/center/channel names hidden — show 0 explanations
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P2 — requires gate-data.js loader and tooltip system)
 - **Severity:** Critical (Education)
 - **Files:** `frontend/index.html` (renderChart ~line 2120), no gate-data.js
 - **Problem:** Chart shows "Gate 44.2", "Sacral" with zero name or meaning. Users don't know what they represent. Reddit: "told me I'm a Generator but didn't say what that means."
@@ -2417,7 +2417,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Non-practitioner reads chart and understands what it means for their life.
 
 ### BL-UX-C4 | Mobile nav labels don't match content
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 9 — mobile nav items use correct labels: Home (overview), My Chart (chart), Today (transits), Connect (composite), Menu (more). No "Keys" or "Astro" labels present in HTML)
 - **Severity:** Critical (UX)
 - **Files:** `frontend/index.html` (mobile bottom nav ~line 4850)
 - **Problem:** Mobile label "Keys" points to Profile (AI synthesis), not Gene Keys. "Astro" points to Enhance (tests), not astrology. Wrong expectations.
@@ -2426,7 +2426,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Tap each mobile nav item → label describes what you see.
 
 ### BL-UX-C5 | Birth data requested 3 times across tabs — massive friction
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P2 — localStorage birth data manager; partially mitigated by existing restoreBirthData() for composite tab)
 - **Severity:** Critical (UX)
 - **Files:** `frontend/index.html` (Chart, Profile, Composite tab forms)
 - **Problem:** Users must enter birth date/time/location in Chart, Profile, Composite separately. By tab 3, users are gone.
@@ -2435,7 +2435,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Enter in Chart → Profile fields pre-filled → Composite fields pre-filled → remove friction.
 
 ### BL-UX-C6 | 13 tabs overwhelm users — force prioritization
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 architecture — requires IA restructuring across all nav surfaces)
 - **Severity:** Critical (UX)
 - **Files:** `frontend/index.html` (nav tabs ~line 105)
 - **Problem:** Chart, Profile, Transits, Check-In, More, Enhance, Diary, Composite, Rectify, Saved, Onboarding, Practitioner, Clusters, SMS = 13 options. Users don't know where to start.
@@ -2467,7 +2467,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Hover/click any center → see plain English explanation.
 
 ### BL-UX-H1 | Load gate data from knowledgebase, not hardcoded
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P2 — create gate-data.js; gate_wheel.json exists in src/data/)
 - **Severity:** High (Maintainability)
 - **Files:** `frontend/index.html`, `frontend/js/gate-data.js` (create)
 - **Problem:** Gate names and descriptions exist in `src/data/gate_wheel.json` but aren't loaded by frontend. Code would have to be updated to change a gate name.
@@ -2476,7 +2476,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Changing a gate description in `gate_wheel.json` immediately reflects in frontend without code change.
 
 ### BL-UX-H2 | All JS in one file (~3000 lines) — massive bundle bloat
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 architecture — requires module extraction; functional but unoptimized)
 - **Severity:** High (Performance)
 - **Files:** `frontend/index.html` (inline scripts)
 - **Problem:** All app logic inline. No code splitting. Big Five (20 Q), VIA (24 Q) load on page init though 95% never visit Enhance tab.
@@ -2485,7 +2485,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Initial bundle < 50 KB. Enhance tab loads its own 20 KB bundle when opened.
 
 ### BL-UX-H3 | Inline CSS (600+ lines) overrides design system
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 architecture — requires extraction of 600+ CSS lines; functional but unmaintainable)
 - **Severity:** High (Maintainability)
 - **Files:** `frontend/index.html` (<style> blocks), external CSS files
 - **Problem:** All styles inline. Duplicates and overrides external files. Impossible to maintain.
@@ -2494,7 +2494,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** index.html has zero <style> blocks (except maybe critical above-the-fold).
 
 ### BL-UX-H4 | Hardcoded spacing (50+ instances) — no design tokens
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 — token refactor; 50+ instances across inline styles)
 - **Severity:** High (Consistency)
 - **Files:** `frontend/index.html` (inline styles)
 - **Problem:** `margin: 20px`, `padding: 24px`, `gap: 14px` everywhere. Design tokens defined but ignored.
@@ -2503,7 +2503,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** grep `margin.*px` returns minimal results.
 
 ### BL-UX-H5 | Font sizes scattered (15+ different sizes)
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 — typography token refactor; visual but not functional regression)
 - **Severity:** High (Hierarchy)
 - **Files:** `frontend/index.html` (inline styles)
 - **Problem:** `0.65rem, 0.7rem, 0.75rem, 0.8rem, 0.82rem, 0.85rem, 0.9rem, 0.95rem, 1rem, 1.1rem` — visual noise.
@@ -2512,7 +2512,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** No custom font sizes in index.html, all use tokens.
 
 ### BL-UX-H6 | Lava lamp animation drains GPU, distracts from content
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 9 — lava-lamp-bg and lava-blob CSS classes exist in artwork.css but no `<div class="lava-lamp-bg">` or lava-blob elements are rendered in index.html; the HTML side of this is already clean)
 - **Severity:** High (Performance/UX)
 - **Files:** `frontend/css/artwork.css`
 - **Problem:** Floating blobs, orbs, 30 particles animate continuously. Mobile GPU drain. Distracts. Text readability issues.
@@ -2521,7 +2521,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Mobile GPU usage drops. Content readable.
 
 ### BL-UX-M1 | Mobile drawer tabs lose nav context
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P2 — sidebar nav `updateSidebarActive()` already tracks state; mobile specific fix needed)
 - **Severity:** Medium (UX)
 - **Files:** `frontend/js/ui-nav.js`
 - **Problem:** Drawer-only tabs (Enhance, Diary, Practitioner, Clusters, SMS) clear the active mobile nav state. User loses orientation.
@@ -2543,7 +2543,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ## QR Code Delivery Path (1 item)
 
 ### BL-QRPATH-H1 | 2FA QR delivery split between vendored + CDN asset
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 9 — index.html comment at line 34 confirms "cdn.jsdelivr.net removed: qr.js is self-hosted (BL-M16)"; `<script src="js/qr.js" defer>` is the sole delivery path; no jsdelivr in CSP)
 - **Severity:** High (Reliability)
 - **Files:** `frontend/index.html`, `frontend/js/qr.js`, `frontend/_headers`, CSP meta tag
 - **Problem:** Frontend loads `qrcode.min.js` from `cdn.jsdelivr.net`. Local `frontend/js/qr.js` generator exists (unusued). CSP allows jsdelivr. Session log documents local generator. Three implementations, one is live, unclear which is canonical.
@@ -2615,7 +2615,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P1-1 | Practitioner session prep view is missing — their most critical workflow
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 9 — backend `POST /api/practitioner/clients/:id/session-brief` exists in practitioner.js with Claude Haiku prompt; frontend renders "Prepare for Session" button in client detail with spinner + output panel)
 - **Severity:** P1 — Hero practitioner workflow entirely absent
 - **Files:** `frontend/js/app.js` (practitioner client detail section), `workers/src/handlers/practitioner.js`, `workers/src/db/queries.js`
 - **Problem:** Practitioners pay $97/mo primarily to understand and prepare for client sessions. The current client detail view shows name, chart type, notes — but there is no "session prep" view. No chart synthesis, no gate highlights, no suggested talking points. This is the #1 promised value and it doesn't exist as a dedicated flow.
@@ -2767,7 +2767,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P3-1 | auth.js is a 1200-line monolith — split before it becomes unmaintainable
-- [ ] **Status:** Open
+- [ ] **Status:** Deferred (P3 architecture — requires careful extraction; all tests passing; defer until a feature sprint requires touching auth.js)
 - **Severity:** P3 — Architecture debt, development velocity
 - **Files:** `workers/src/handlers/auth.js` (~1200 lines)
 - **Problem:** `auth.js` handles registration, login, logout, 2FA setup/verify, password reset (request + confirm), token refresh, OAuth exchange, and social account linking — 8+ distinct features in one file. Any change to login logic risks breaking 2FA. At 1500+ lines (as OAuth grows) it becomes essentially unmaintainable without tests.
@@ -2790,7 +2790,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P3-2 | No per-tier API rate limiting — free users can exhaust AI budget
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 — KV-backed per-tier rate limiter; global rate limiting already in place via rateLimit middleware)
 - **Severity:** P3 — Cost protection and tier fairness
 - **Files:** `workers/src/middleware/` (new `rateLimit.js`), `workers/src/index.js` (middleware chain), `workers/src/handlers/` (AI endpoints)
 - **Problem:** All authenticated users hit AI endpoints with no rate limiting by tier. A free user can call `/api/synthesis` repeatedly, burning Claude API credits at the same rate as a Practitioner user. No protection against a single free user generating $50+ of AI costs through rapid synthesis calls.
@@ -2809,7 +2809,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P3-3 | Neon connection not pooled — new TCP connection per Worker request adds latency
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 — operational configuration change; requires Neon pooler URL update, measured impact at current traffic scale is minimal)
 - **Severity:** P3 — Performance at scale
 - **Files:** `workers/src/db/queries.js` (`createQueryFn`), Cloudflare Workers environment variables
 - **Problem:** `createQueryFn(env.NEON_CONNECTION_STRING)` creates a fresh Neon HTTP connection on every Worker invocation. At high request volume (100+ RPM), this adds 50-150ms of overhead per request. Neon's built-in PgBouncer pooler is available and unused.
@@ -2823,7 +2823,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P3-4 | No API versioning — breaking changes require simultaneous frontend + backend deploys
-- [ ] **Status:** Open
+- [ ] **Status:** Open (P3 architecture — both frontend and worker deploy as a unit on each release; risk is low at current single-tenant scale)
 - **Severity:** P3 — Future-proofing, operational risk
 - **Files:** `workers/src/index.js` (routing), `frontend/js/app.js` (`API_BASE` constant)
 - **Problem:** All routes are unversioned (`/api/auth/login`, not `/api/v1/auth/login`). Breaking changes must be deployed simultaneously with a frontend change, creating deployment coupling that risks brief outages. As the API matures, this becomes a hard constraint on development velocity.

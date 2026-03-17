@@ -53,9 +53,18 @@ export async function handleListDirectory(request, env) {
   const limit  = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 50);
   const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10), 0);
 
-  const query = createQueryFn(env.NEON_CONNECTION_STRING);
-
   const hasFilters = specialty || certification || language || format;
+
+  // KV cache for unfiltered directory listings (BL-EXC-P2-3)
+  const cacheKey = 'directory:all';
+  if (!hasFilters && env.KV) {
+    const cached = await env.KV.get(cacheKey, 'json');
+    if (cached) {
+      return Response.json(cached, { headers: { 'X-Cache': 'HIT' } });
+    }
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   const result = hasFilters
     ? await query(QUERIES.searchPublicPractitioners, [
@@ -63,11 +72,18 @@ export async function handleListDirectory(request, env) {
       ])
     : await query(QUERIES.listPublicPractitioners, [limit, offset]);
 
-  return Response.json({
+  const payload = {
     ok: true,
     practitioners: result.rows.map(sanitizePublicProfile),
     pagination: { limit, offset, count: result.rows.length }
-  });
+  };
+
+  // Store unfiltered result in KV for 15 minutes (BL-EXC-P2-3)
+  if (!hasFilters && env.KV) {
+    await env.KV.put(cacheKey, JSON.stringify(payload), { expirationTtl: 900 });
+  }
+
+  return Response.json(payload, { headers: { 'X-Cache': 'MISS' } });
 }
 
 /**
@@ -78,6 +94,15 @@ export async function handleGetPublicProfile(request, env, slug) {
     return Response.json({ error: 'Invalid practitioner slug' }, { status: 400 });
   }
 
+  // KV cache for individual slug lookups (BL-EXC-P2-3)
+  const cacheKey = `practitioner:slug:${slug}`;
+  if (env.KV) {
+    const cached = await env.KV.get(cacheKey, 'json');
+    if (cached) {
+      return Response.json(cached, { headers: { 'X-Cache': 'HIT' } });
+    }
+  }
+
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const result = await query(QUERIES.getPractitionerBySlug, [slug]);
 
@@ -85,7 +110,14 @@ export async function handleGetPublicProfile(request, env, slug) {
     return Response.json({ error: 'Practitioner not found' }, { status: 404 });
   }
 
-  return Response.json({ ok: true, practitioner: sanitizePublicProfile(result.rows[0]) });
+  const payload = { ok: true, practitioner: sanitizePublicProfile(result.rows[0]) };
+
+  // Cache slug lookups for 5 minutes (BL-EXC-P2-3)
+  if (env.KV) {
+    await env.KV.put(cacheKey, JSON.stringify(payload), { expirationTtl: 300 });
+  }
+
+  return Response.json(payload, { headers: { 'X-Cache': 'MISS' } });
 }
 
 // ─── Authenticated endpoints ─────────────────────────────────
@@ -193,6 +225,16 @@ export async function handleUpdateDirectoryProfile(request, env) {
     JSON.stringify(paymentLinks),
     synthesisStyle,
   ]);
+
+  // Invalidate directory + slug caches on profile update (BL-EXC-P2-3)
+  if (env.KV) {
+    await Promise.all([
+      env.KV.delete('directory:all'),
+      env.KV.delete(`practitioner:slug:${practitioner.slug}`),
+      // Also delete new slug if it changed
+      slug !== practitioner.slug ? env.KV.delete(`practitioner:slug:${slug}`) : Promise.resolve(),
+    ]);
+  }
 
   return Response.json({ ok: true, profile: updated.rows[0] });
 }
