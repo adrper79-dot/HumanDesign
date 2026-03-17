@@ -261,7 +261,7 @@ export function initAIContextEditors() {
         if (!response.ok) throw new Error('Failed to fetch context');
 
         const data = await response.json();
-        const currentContext = data?.context || '';
+        const currentContext = data?.context || data?.ai_context || '';
 
         // Create and show editor
         const editor = new AIContextEditor({
@@ -276,7 +276,7 @@ export function initAIContextEditors() {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${window.token}`,
               },
-              body: JSON.stringify({ context: newContext }),
+              body: JSON.stringify({ ai_context: newContext }),
             });
 
             if (!saveResponse.ok) throw new Error('Failed to save context');

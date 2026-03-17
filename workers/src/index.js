@@ -472,7 +472,11 @@ const PATTERN_ROUTES = [
   [/^\/api\/practitioner\/notes\/([^/]+)$/,             'DELETE', 1, (req, env, id) => handleDeleteNote(req, env, id)],
   // Per-client AI context
   [/^\/api\/practitioner\/clients\/([^/]+)\/ai-context$/, 'GET',  1, (req, env, id) => handleGetAIContext(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/ai-context$/, 'POST', 1, (req, env, id) => handleUpdateAIContext(req, env, id)],
   [/^\/api\/practitioner\/clients\/([^/]+)\/ai-context$/, 'PUT',  1, (req, env, id) => handleUpdateAIContext(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/context$/,    'GET',  1, (req, env, id) => handleGetAIContext(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/context$/,    'POST', 1, (req, env, id) => handleUpdateAIContext(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/context$/,    'PUT',  1, (req, env, id) => handleUpdateAIContext(req, env, id)],
 ];
 
 /**
