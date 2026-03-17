@@ -236,7 +236,17 @@ These items cause outright failures in deployed environments.
 - **Verify:** 2FA setup renders QR codes with the chosen asset path only, CSP allows exactly that path, and the documented implementation matches the shipped HTML.
 
 ### BL-M17 | Practitioner-first cohesion workflow for home, pricing, onboarding, and workspace
-- [ ] **Status:** Open
+- [x] **Status:** Resolved
+- **Severity:** Moderate
+- **Files:** `frontend/index.html`, `frontend/pricing.html`, `frontend/js/app.js`
+- **Fix Applied (Cycle 12):**
+  - **Message alignment**: Rewrote social proof banner from "9+ systems combined" breadth-first to practitioner-first outcome: "Practitioner-grade chart software — for HD coaches, analysts, and wellness professionals running a values-aligned practice." Secondary stat retained "9+ systems" but as a supporting fact.
+  - **Page title + meta**: Updated `<title>` to "Prime Self — Chart Software for HD Practitioners". Updated OG and Twitter card descriptions to practitioner-first outcome copy.
+  - **Pricing alignment**: Rewrote pricing page `<h1>` from "Simple, Transparent Pricing" (generic SaaS) to "Pricing for Practitioners & Clients". Sub-headline now leads with practitioner plan. Individual plan feature line clarifies client self-study use case.
+  - **Trust alignment**: Pricing FAQ "Is my data private?" already consistent with privacy.html (both correctly disclose AI/SMS processors, both correctly say we never sell data). No changes needed.
+  - **Practitioner onboarding rewrite**: Steps 1–2 now complete setup tasks in-flow (name/bio form + client invite form) rather than redirecting elsewhere. Step 3 (referral link) demoted to secondary setup step. Step 4 completion state leads with practice-readiness ("Session tools: Ready") not commission economics. "Go to My Dashboard" → "Go to My Workspace". Added `practOnbSaveProfile()` and `practOnbSendInvite()` handler functions in `app.js` with API calls to `/api/practitioner/directory-profile` and `/api/practitioner/clients`.
+  - **Practitioner workspace reframing**: Header card "Practitioner Portal" → "Practice Workspace"; intro copy changed from "Manage your client roster" to "Your client roster, session tools, and directory listing — everything you need to serve clients and run your practice."
+- **Verify:** First-time visitor reads a practitioner-first product promise. Home, pricing, and practitioner surfaces consistently position Prime Self as practice software for HD coaches. Onboarding completes directory profile + first client invite without leaving the modal.
 - **Severity:** Moderate
 - **Files:** `frontend/index.html`, `frontend/pricing.html`, `frontend/privacy.html`, `frontend/terms.html`, `frontend/js/app.js`, `frontend/DESIGN_SYSTEM.md`
 - **Problem:** The current frontend is visually premium but product messaging drifts between three identities: consumer self-discovery app, multi-system astrology/metaphysical engine, and practitioner business platform. The result is that the site looks cohesive at a surface level but communicates too many primary jobs at once. Specific friction points from the 2026-03-16 page review:
