@@ -12,6 +12,7 @@
  *   DELETE /api/practitioner/clients/invitations/:id — Revoke invitation
  *   GET  /api/practitioner/clients/:id     — Get a specific client's chart + profiles
  *   DELETE /api/practitioner/clients/:id  — Remove client from roster
+ *   POST /api/practitioner/clients/:id/session-brief — Generate AI session brief
  *
  * Tier definitions:
  *   free          — Basic access, no client management (0 clients)
@@ -24,6 +25,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 import { sendPractitionerInvitationEmail } from '../lib/email.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
+import { callLLM } from '../lib/llm.js';
 
 // Tier limits aligned with billing tier names (individual/practitioner/agency)
 const TIER_LIMITS = {
@@ -135,6 +137,12 @@ export async function handlePractitioner(request, env, subpath) {
     const invitationDeleteMatch = subpath.match(/^\/clients\/invitations\/([a-f0-9-]+)$/i);
     if (invitationDeleteMatch && method === 'DELETE') {
       return await handleDeleteInvitation(userId, invitationDeleteMatch[1], query);
+    }
+
+    // POST /api/practitioner/clients/:id/session-brief
+    const sessionBriefMatch = subpath.match(/^\/clients\/([a-f0-9-]+)\/session-brief$/i);
+    if (sessionBriefMatch && method === 'POST') {
+      return await handleGenerateSessionBrief(userId, sessionBriefMatch[1], query, env);
     }
 
     // GET /api/practitioner/clients/:id
@@ -643,4 +651,111 @@ export async function handleAcceptInvitation(request, env) {
       name: invitation.practitioner_display_name || 'Your practitioner',
     }
   });
+}
+
+/**
+ * POST /api/practitioner/clients/:id/session-brief
+ * Generate an AI session prep brief for a client using Claude Haiku.
+ * Returns: { themes, resistanceAreas, suggestedQuestion, transitImpact }
+ */
+async function handleGenerateSessionBrief(userId, clientId, query, env) {
+  // Verify practitioner access
+  const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
+  if (!practResult.rows?.length) {
+    return Response.json({ error: 'Not a registered practitioner' }, { status: 403 });
+  }
+  const practitionerId = practResult.rows[0].id;
+
+  const accessCheck = await query(QUERIES.checkPractitionerAccess, [userId, clientId]);
+  if (!accessCheck.rows?.length) {
+    return Response.json({ error: 'Forbidden — client not on your roster' }, { status: 403 });
+  }
+
+  // Gather data: chart, AI-shared notes, AI context
+  const [chartResult, notesResult, contextResult] = await Promise.all([
+    query(QUERIES.getLatestChart, [clientId]),
+    query(QUERIES.getAISharedNotes, [clientId]),
+    query(QUERIES.getClientAIContext, [practitionerId, clientId]),
+  ]);
+
+  const chart = chartResult.rows?.[0] ? parseJsonSafe(chartResult.rows[0].hd_json) : null;
+  const notes = notesResult.rows || [];
+  const aiContext = contextResult.rows?.[0]?.ai_context || '';
+
+  if (!chart) {
+    return Response.json({
+      error: 'Client has not generated a chart yet. Ask them to complete their chart before running a session brief.'
+    }, { status: 422 });
+  }
+
+  // Build prompt
+  const chartSummary = [
+    `Type: ${chart.type || 'Unknown'}`,
+    `Authority: ${chart.authority || 'Unknown'}`,
+    `Profile: ${chart.profile || 'Unknown'}`,
+    `Definition: ${chart.definition || 'Unknown'}`,
+    chart.incarnationCross ? `Incarnation Cross: ${chart.incarnationCross}` : null,
+    chart.definedCenters?.length ? `Defined centers: ${chart.definedCenters.join(', ')}` : null,
+  ].filter(Boolean).join('\n');
+
+  const notesSummary = notes.length
+    ? notes.map((n, i) => `Note ${i + 1} (${n.session_date || 'undated'}): ${n.content.trim().slice(0, 400)}`).join('\n\n')
+    : 'No session notes yet.';
+
+  const contextSummary = aiContext.trim() || 'No custom AI context set.';
+
+  const promptPayload = {
+    system: `You are a Human Design session preparation assistant for a certified practitioner. 
+You analyze a client's HD chart, session notes, and practitioner context to generate a focused pre-session brief.
+Be specific, grounded in the chart data, and actionable. Never invent chart data.
+Output ONLY valid JSON matching the exact schema requested — no markdown, no explanation outside the JSON.`,
+
+    messages: [{
+      role: 'user',
+      content: `Generate a pre-session brief for my upcoming client session.
+
+CLIENT CHART:
+${chartSummary}
+
+SESSION NOTES (AI-shared):
+${notesSummary}
+
+PRACTITIONER CONTEXT:
+${contextSummary}
+
+Respond with this exact JSON schema:
+{
+  "themes": ["theme 1 (1-2 sentences grounded in chart)", "theme 2", "theme 3"],
+  "resistanceAreas": ["resistance area 1 (1-2 sentences)", "resistance area 2"],
+  "suggestedQuestion": "One open question to open the session with, specific to this client's design",
+  "transitImpact": "One paragraph on how current transit energy may be affecting this client type and authority"
+}`
+    }],
+
+    config: {
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 800,
+      temperature: 0.3
+    }
+  };
+
+  try {
+    const text = await callLLM(promptPayload, env);
+    let brief;
+    try {
+      brief = JSON.parse(text);
+    } catch {
+      // LLM returned non-JSON — wrap it
+      return Response.json({ ok: true, raw: text });
+    }
+    return Response.json({ ok: true, brief });
+  } catch (error) {
+    return reportHandledRouteError({
+      request: { url: `/api/practitioner/clients/${clientId}/session-brief`, method: 'POST' },
+      env,
+      error,
+      source: 'practitioner-session-brief',
+      fallbackMessage: 'AI session brief temporarily unavailable'
+    });
+  }
 }
