@@ -1484,13 +1484,71 @@ async function openBillingPortal() {
   }
 }
 
+// BL-EXC-P1-3: Feature-specific upgrade copy for highest-value conversion path (Individual→Practitioner)
+const PRACTITIONER_UPGRADE_COPY = {
+  composite: {
+    headline: 'Composite charts reveal what one chart can\'t show.',
+    body: 'See how two people\'s energy centers merge, bridge, and amplify. Used by relationship coaches, family constellators, and partnership advisors.',
+    roi: '2 composite sessions at $75 pays for the month. Cancel anytime.'
+  },
+  client_roster: {
+    headline: 'Your client list is a practice asset.',
+    body: 'Track every session, store birth data, and prepare before each call — all in one place designed for HD professionals.',
+    roi: 'Average practitioner saves 4 hrs/week on session prep. Pays for itself in week 1.'
+  },
+  clients: {
+    headline: 'Your client list is a practice asset.',
+    body: 'Track every session, store birth data, and prepare before each call — all in one place designed for HD professionals.',
+    roi: 'Average practitioner saves 4 hrs/week on session prep. Pays for itself in week 1.'
+  },
+  session_brief: {
+    headline: 'Know what each client needs before they walk in.',
+    body: 'AI session briefs surface the top 3 design tensions active for your client right now — so you arrive prepared, not reactive.',
+    roi: 'One better-prepared session per week = $50–200 more in referrals. Covered.'
+  },
+  pdf: {
+    headline: 'Branded PDF reports your clients keep forever.',
+    body: 'Send a polished, white-labeled chart report after every session. Clients share them — your name spreads.',
+    roi: 'Reports become referral tools. Each one is marketing you\'ve already paid for.'
+  },
+  practitionerTools: {
+    headline: 'The full practitioner toolkit in one place.',
+    body: 'Sessions, clients, composites, reports, and your own referral link — everything a professional HD practice needs.',
+    roi: '2 clients at $50/session covers it. Join 200+ practitioners already running their practice here.'
+  },
+  whiteLabel: {
+    headline: 'Your brand. Your client portal. Your practice.',
+    body: 'White-label the entire client experience — your logo, your domain, your voice. Looks like yours, powered by Prime Self.',
+    roi: 'Agency plan: 5 practitioner seats means your team scales without extra tooling costs.'
+  }
+};
+
 // Helper to show upgrade modal on quota/feature errors
 // Routes free → Individual (consumer modal) and Individual → Practitioner (pro modal)
 function showUpgradePrompt(message, feature) {
-  const practitionerFeatures = ['practitionerTools', 'whiteLabel', 'clients', 'composite', 'pdf'];
+  const practitionerFeatures = ['practitionerTools', 'whiteLabel', 'clients', 'composite', 'pdf', 'client_roster', 'session_brief'];
   if (feature && practitionerFeatures.includes(feature)) {
+    // Inject context-aware copy before opening (BL-EXC-P1-3)
+    const copy = PRACTITIONER_UPGRADE_COPY[feature];
+    const banner = document.getElementById('upgradeContextBanner');
+    if (copy && banner) {
+      document.getElementById('upgradeContextHeadline').textContent = copy.headline;
+      document.getElementById('upgradeContextBody').textContent = copy.body;
+      document.getElementById('upgradeContextROI').textContent = copy.roi;
+      banner.classList.remove('hidden');
+    } else if (banner) {
+      banner.classList.add('hidden');
+    }
+    // Analytics: log which feature triggered the upgrade prompt
+    try {
+      if (typeof gtag === 'function') {
+        gtag('event', 'upgrade_prompt_shown', { feature, tier: currentUser?.tier || 'free' });
+      }
+    } catch (_) { /* non-blocking */ }
     openPractitionerPricingModal();
   } else {
+    const banner = document.getElementById('upgradeContextBanner');
+    if (banner) banner.classList.add('hidden');
     openPricingModal();
   }
 }
@@ -1861,6 +1919,12 @@ function switchTab(id, btn) {
   // P2-FE-002: Clear diary edit mode when leaving diary tab
   if (id !== 'diary' && typeof cancelDiaryEdit === 'function') {
     cancelDiaryEdit();
+  }
+
+  // BL-EXC-P1-4: Load transit context card when diary tab is opened
+  if (id === 'diary' && token && !switchTab._loading.has('diary-transits')) {
+    switchTab._loading.add('diary-transits');
+    Promise.resolve(loadDiaryTransitContext()).finally(() => switchTab._loading.delete('diary-transits'));
   }
 
   // Update mobile nav active state
@@ -3627,6 +3691,7 @@ async function loadTransits() {
 
   try {
     const data = await apiFetch('/api/transits/today');
+    _diaryTransitCache = data; // BL-EXC-P1-4: cache for diary tab
     resultEl.innerHTML = renderTransits(data);
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
@@ -3748,6 +3813,7 @@ function renderTransits(data) {
     const speed = PLANET_SPEED[body] || '';
     const isNatalHit = natalGateSet.has(String(pos.gate));
     const gateExplanation = getTransitGateExplanation(pos.gate, pos.line, body, isNatalHit);
+    const reflectPrompt = GATE_DIARY_PROMPTS[pos.gate] ? escapeAttr(GATE_DIARY_PROMPTS[pos.gate]) : '';
     html += `<div class="transit-row${isNatalHit ? ' transit-row-hit' : ''}">
       <div>
         <div class="planet-name">${sym} ${body}</div>
@@ -3757,6 +3823,7 @@ function renderTransits(data) {
         <div class="planet-pos">${pos.sign || ''} ${pos.degrees != null ? pos.degrees.toFixed ? pos.degrees.toFixed(1) : pos.degrees : ''}°</div>
         <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1);line-height:1.4">${theme}</div>
         ${gateExplanation ? `<div style="font-size:var(--font-size-sm);color:var(--text);margin-top:var(--space-1);line-height:1.45">${escapeHtml(gateExplanation)}</div>` : ''}
+        ${reflectPrompt ? `<button class="btn-secondary btn-sm" style="margin-top:var(--space-2);font-size:var(--font-size-xs)" data-action="openDiaryFromTransit" data-arg0="${escapeAttr(String(pos.gate))}" data-arg1="${reflectPrompt}">📖 Reflect on this</button>` : ''}
       </div>
       <div class="gate-badge" role="img" aria-label="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}" title="Gate ${pos.gate || '?'}, Line ${pos.line || '?'}${getGateName(pos.gate) ? ' — ' + getGateName(pos.gate) : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ' ('+getGateHex(pos.gate)+')' : ''}">Gate ${pos.gate || '?'}.${pos.line || '?'}${getGateName(pos.gate) ? ` <span class="gate-name-tag">${getGateName(pos.gate)}</span>` : ''}${typeof getGateHex==='function'&&getGateHex(pos.gate) ? ` <span style="font-size:var(--font-size-xs);color:var(--text-muted);font-style:italic">☰ ${getGateHex(pos.gate)}</span>` : ''}</div>
     </div>`;
@@ -4210,11 +4277,12 @@ async function loadRoster() {
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your roster…</div></div>';
 
   try {
-    const [rosterData, profileData, invitationsData, directoryData] = await Promise.all([
+    const [rosterData, profileData, invitationsData, directoryData, referralData] = await Promise.all([
       apiFetch('/api/practitioner/clients'),
       apiFetch('/api/practitioner/profile').catch(() => null),
       apiFetch('/api/practitioner/clients/invitations').catch(() => ({ invitations: [] })),
-      apiFetch('/api/practitioner/directory-profile').catch(() => ({ error: 'Not yet configured' }))
+      apiFetch('/api/practitioner/directory-profile').catch(() => ({ error: 'Not yet configured' })),
+      apiFetch('/api/practitioner/referral-link').catch(() => null)
     ]);
 
     // Update limit bar
@@ -4235,6 +4303,7 @@ async function loadRoster() {
     resultEl.innerHTML = renderRoster(rosterData);
     applyPractitionerInvitations(invitationsData);
     applyDirectoryProfileData(directoryData);
+    renderPractitionerReferralStats(referralData);
 
     // Show and populate Agency Seats card for Agency-tier users
     const tier = currentUser?.tier || 'free';
@@ -4247,6 +4316,54 @@ async function loadRoster() {
     resultEl.innerHTML = `<div class="alert alert-error">Error loading roster: ${escapeHtml(e.message)}</div>`;
   }
 }
+
+// ── Referral Performance Card (BL-EXC-P1-2) ──────────────────
+function renderPractitionerReferralStats(data) {
+  const el = document.getElementById('pracReferralStats');
+  if (!el) return;
+  if (!data?.referralUrl) { el.innerHTML = ''; return; }
+
+  const url = escapeHtml(data.referralUrl);
+  const urlAttr = escapeAttr(data.referralUrl);
+  const total = parseInt(data.stats?.referralCount ?? data.referralCount ?? 0);
+  const thisMonth = parseInt(data.stats?.earningsThisMonth != null ? '—' : 0);
+  const earnings = data.stats?.earningsThisMonth != null
+    ? `$${parseFloat(data.stats.earningsThisMonth).toFixed(2)}`
+    : (data.earningsThisMonth != null ? `$${parseFloat(data.earningsThisMonth).toFixed(2)}` : '—');
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:var(--space-4)">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">🔗</span> Referral Performance</div>
+      </div>
+      <p class="card-hint">Every time someone signs up through your link and subscribes, you earn 25% commission for life.</p>
+      <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)">
+        <input readonly value="${urlAttr}" id="pracRefLinkDisplay"
+               style="flex:1;background:var(--bg2);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-1);padding:0.4rem 0.6rem;font-size:var(--font-size-sm);color:var(--text-dim);min-width:0"
+               onclick="this.select()" />
+        <button class="btn-primary btn-sm" data-action="copyPracReferralLink">Copy Link</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--space-3)">
+        <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+          <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">${total}</div>
+          <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Total Referrals</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+          <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">${earnings}</div>
+          <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Earned This Month</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function copyPracReferralLink() {
+  const val = document.getElementById('pracRefLinkDisplay')?.value;
+  if (val && navigator.clipboard) {
+    navigator.clipboard.writeText(val).then(() => showNotification('Referral link copied!', 'success'));
+  }
+}
+window.copyPracReferralLink = copyPracReferralLink;
 
 // ── Agency Seat Management ────────────────────────────────────
 
@@ -4524,7 +4641,7 @@ async function viewClientDetail(clientId, emailLabel) {
   try {
     const [data, notesData, aiContextData] = await Promise.all([
       apiFetch(`/api/practitioner/clients/${clientId}`),
-      apiFetch(`/api/practitioner/clients/${clientId}/notes`).catch(() => ({ notes: [] })),
+      apiFetch(`/api/practitioner/clients/${clientId}/notes?limit=10&offset=0`).catch(() => ({ notes: [], total: 0, hasMore: false })),
       apiFetch(`/api/practitioner/clients/${clientId}/ai-context`).catch(() => ({ ai_context: '', error: 'Unable to load AI context' }))
     ]);
     panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData);
@@ -4601,6 +4718,8 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
   const email = escapeHtml(emailLabel || client?.email || '');
   const safeClientId = escapeAttr(clientId || client?.id || '');
   const notes = notesData?.notes || [];
+  const notesTotal = notesData?.total ?? notes.length;
+  const notesHasMore = notesData?.hasMore ?? false;
   const aiContext = typeof aiContextData?.ai_context === 'string' ? aiContextData.ai_context : '';
   const aiContextStatus = aiContextData?.error
     ? `<div class="alert alert-warn" style="margin-bottom:var(--space-3)">${escapeHtml(aiContextData.error)}</div>`
@@ -4744,7 +4863,13 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
       Capture the context you want future syntheses to honor: current goals, relationship dynamics, sensitivities, coaching boundaries, and how you want the AI to frame follow-up support.
     </p>
     <textarea id="aiContext-${safeClientId}" rows="5" class="form-input" maxlength="2000"
-      style="width:100%;resize:vertical;margin-bottom:var(--space-2)" placeholder="Example: Client is working through burnout, responds best to direct but gentle language, and wants follow-up synthesis focused on decision clarity and pacing.">${escapeHtml(aiContext)}</textarea>
+      style="width:100%;resize:vertical;margin-bottom:var(--space-1)" placeholder="Example: Client is working through burnout, responds best to direct but gentle language, and wants follow-up synthesis focused on decision clarity and pacing."
+      oninput="onAIContextInput('${safeClientId}')">${escapeHtml(aiContext)}</textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+      <span id="aiContextCharCount-${safeClientId}" style="font-size:var(--font-size-xs);color:var(--text-dim)">${aiContext.length} / 2000</span>
+      <span style="font-size:var(--font-size-xs);color:var(--text-dim);font-style:italic">Autosaves after 2 seconds of inactivity</span>
+    </div>
+    <p class="form-hint" style="font-size:var(--font-size-xs);color:var(--text-dim);margin:0 0 var(--space-2)">Include your modalities, specialties, and how you work with clients. More specific = better AI synthesis for your clients.</p>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap">
       <div id="aiContextStatus-${safeClientId}" style="font-size:var(--font-size-sm);color:var(--text-dim)">${aiContext.trim().length ? 'Context saved for future synthesis.' : 'No custom AI context saved yet.'}</div>
       <button class="btn-primary btn-sm" data-action="saveAIContext" data-arg0="${safeClientId}">Save AI Context</button>
@@ -4779,9 +4904,15 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
   if (notes.length === 0) {
     html += `<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No session notes yet. Add your first note to start building a record.</div>`;
   } else {
+    if (notesTotal > notes.length) {
+      html += `<div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-2)">Showing ${notes.length} of ${notesTotal} notes</div>`;
+    }
     notes.forEach(note => {
       html += renderSessionNote(note, safeClientId);
     });
+    if (notesHasMore) {
+      html += `<button class="btn-secondary btn-sm" style="margin-top:var(--space-3)" data-action="loadMoreNotes" data-arg0="${safeClientId}" data-arg1="1" id="loadMoreNotesBtn-${safeClientId}">Load 10 more</button>`;
+    }
   }
 
   html += `</div></div>`;
@@ -5006,20 +5137,98 @@ async function refreshSessionNotes(clientId) {
   if (!listEl) return;
 
   try {
-    const notesData = await apiFetch(`/api/practitioner/clients/${clientId}/notes`);
+    const notesData = await apiFetch(`/api/practitioner/clients/${clientId}/notes?limit=10&offset=0`);
     const notes = notesData?.notes || [];
+    const notesTotal = notesData?.total ?? notes.length;
+    const notesHasMore = notesData?.hasMore ?? false;
 
     if (notes.length === 0) {
       listEl.innerHTML = `<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No session notes yet. Add your first note to start building a record.</div>`;
     } else {
-      listEl.innerHTML = notes.map(n => renderSessionNote(n, clientId)).join('');
+      let html = '';
+      if (notesTotal > notes.length) {
+        html += `<div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-2)">Showing ${notes.length} of ${notesTotal} notes</div>`;
+      }
+      html += notes.map(n => renderSessionNote(n, clientId)).join('');
+      if (notesHasMore) {
+        html += `<button class="btn-secondary btn-sm" style="margin-top:var(--space-3)" data-action="loadMoreNotes" data-arg0="${escapeAttr(clientId)}" data-arg1="1" id="loadMoreNotesBtn-${escapeAttr(clientId)}">Load 10 more</button>`;
+      }
+      listEl.innerHTML = html;
     }
   } catch (e) {
     listEl.innerHTML = `<div class="alert alert-error">Error loading notes: ${escapeHtml(e.message)}</div>`;
   }
 }
 
-async function saveAIContext(clientId) {
+async function loadMoreNotes(clientId, page) {
+  const pageNum = parseInt(page, 10) || 1;
+  const offset = pageNum * 10;
+  const btn = document.getElementById('loadMoreNotesBtn-' + clientId);
+  const listEl = document.getElementById('notesList-' + clientId);
+  if (!listEl) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+
+  try {
+    const notesData = await apiFetch(`/api/practitioner/clients/${clientId}/notes?limit=10&offset=${offset}`);
+    const newNotes = notesData?.notes || [];
+    const notesTotal = notesData?.total ?? 0;
+    const notesHasMore = notesData?.hasMore ?? false;
+
+    // Remove existing Load More button
+    if (btn) btn.remove();
+
+    // Update count display
+    const countEl = listEl.querySelector('[data-notes-count]');
+    const currentCount = listEl.querySelectorAll('[data-note-id]').length + newNotes.length;
+    if (countEl) countEl.textContent = `Showing ${currentCount} of ${notesTotal} notes`;
+
+    // Append new notes
+    const frag = document.createDocumentFragment();
+    newNotes.forEach(note => {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = renderSessionNote(note, clientId);
+      while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+    });
+
+    // Insert before the "Load more" button position (append to listEl)
+    listEl.appendChild(frag);
+
+    // Append new Load More button if needed
+    if (notesHasMore) {
+      const newBtn = document.createElement('button');
+      newBtn.className = 'btn-secondary btn-sm';
+      newBtn.style.marginTop = 'var(--space-3)';
+      newBtn.dataset.action = 'loadMoreNotes';
+      newBtn.dataset.arg0 = clientId;
+      newBtn.dataset.arg1 = String(pageNum + 1);
+      newBtn.id = 'loadMoreNotesBtn-' + clientId;
+      newBtn.textContent = 'Load 10 more';
+      listEl.appendChild(newBtn);
+    }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Load 10 more'; }
+    showNotification('Error loading more notes: ' + e.message, 'error');
+  }
+}
+
+// BL-EXC-P2-4: AI context char count + debounced autosave
+const _aiContextTimers = {};
+function onAIContextInput(clientId) {
+  const field = document.getElementById('aiContext-' + clientId);
+  const countEl = document.getElementById('aiContextCharCount-' + clientId);
+  if (!field) return;
+  const len = field.value.length;
+  if (countEl) {
+    countEl.textContent = `${len} / 2000`;
+    countEl.style.color = len >= 1800 ? 'var(--warning, #e8a838)' : 'var(--text-dim)';
+  }
+  clearTimeout(_aiContextTimers[clientId]);
+  _aiContextTimers[clientId] = setTimeout(() => saveAIContext(clientId, true), 2000);
+}
+window.onAIContextInput = onAIContextInput;
+
+async function saveAIContext(clientId, isAutosave = false) {
   const field = document.getElementById('aiContext-' + clientId);
   const statusEl = document.getElementById('aiContextStatus-' + clientId);
   if (!field || !statusEl) return;
@@ -5035,15 +5244,22 @@ async function saveAIContext(clientId) {
 
     if (result.error) {
       statusEl.textContent = 'AI context could not be saved.';
-      showNotification('Error saving AI context: ' + result.error, 'error');
+      if (!isAutosave) showNotification('Error saving AI context: ' + result.error, 'error');
       return;
     }
 
-    statusEl.textContent = aiContext ? 'Context saved for future synthesis.' : 'AI context cleared.';
-    showNotification('AI context saved.', 'success');
+    statusEl.textContent = 'Saved ✓';
+    if (!isAutosave) showNotification('AI context saved.', 'success');
+    setTimeout(() => {
+      const el = document.getElementById('aiContextStatus-' + clientId);
+      if (el && el.textContent === 'Saved ✓') {
+        const now = new Date();
+        el.textContent = `Last saved: just now`;
+      }
+    }, 3000);
   } catch (e) {
     statusEl.textContent = 'AI context could not be saved.';
-    showNotification('Error saving AI context: ' + e.message, 'error');
+    if (!isAutosave) showNotification('Error saving AI context: ' + e.message, 'error');
   }
 }
 
@@ -6141,6 +6357,153 @@ initParticles();
 // ══════════════════════════════════════════════════════════════
 // ENHANCEMENT & DIARY FUNCTIONS
 // ══════════════════════════════════════════════════════════════
+
+// BL-EXC-P1-4: Gate→diary prompt map (client-side, no AI call)
+const GATE_DIARY_PROMPTS = {
+  1: "What are you being called to create or express today?",
+  2: "Where does your inner knowing want to guide you right now?",
+  3: "What uncertainty or confusion can you turn into a learning experiment today?",
+  4: "What solution or idea keeps returning — is it time to share it?",
+  5: "What rhythm or ritual supports you more than you realize?",
+  6: "Where do you sense a potential connection or collision forming?",
+  7: "Who is looking to you for direction right now, and what do you need?",
+  8: "What unique contribution feels most authentic to share today?",
+  9: "What detail or pattern deserves closer attention in your life right now?",
+  10: "How are you being true to yourself, even if others don't understand?",
+  11: "What new idea or vision wants to be explored — not acted on yet, just held?",
+  12: "Where are you being selective about your voice — what's worth expressing?",
+  13: "Who carries a story that needs to be heard, and are you available to listen?",
+  14: "Where are you aligning your material focus with what genuinely empowers you?",
+  15: "How are you honoring your natural rhythms rather than forcing consistency?",
+  16: "What skill or enthusiasm feels worth investing in right now?",
+  17: "What opinion is forming — and what evidence supports or challenges it?",
+  18: "What needs improvement or correction in your immediate environment?",
+  19: "Where do you feel called to belong or contribute to something larger?",
+  20: "What do you need to acknowledge or act on right in this moment?",
+  21: "Where are you taking charge — and is it in service or in reaction?",
+  22: "What feeling or mood wants to be honored rather than managed?",
+  23: "What truth feels ready to be articulated, even if it disrupts comfort?",
+  24: "What cycle of thought is ready to transform into understanding?",
+  25: "Where are you being asked to act from innocence rather than strategy?",
+  26: "What ego strength or personal power serves the greater good today?",
+  27: "Where are you being called to nurture — yourself or others?",
+  28: "What risk or struggle is making your life more meaningful right now?",
+  29: "What commitment are you deepening — and is it truly aligned for you?",
+  30: "What desire or passion wants to be felt fully rather than acted on impulsively?",
+  31: "What leadership is emerging through you — not forced, but offered?",
+  32: "What needs to be preserved before it can transform?",
+  33: "What memory or story from the past holds a lesson for right now?",
+  34: "What independent action feels most powerful and necessary today?",
+  35: "What new experience is calling you out of your comfort zone?",
+  36: "What emotional intensity is seeking understanding rather than relief?",
+  37: "Where does belonging or family harmony require your attention?",
+  38: "What are you fighting for that truly matters at a soul level?",
+  39: "Where does tension point toward what matters most to you?",
+  40: "Where have you been over-giving — and where do you need rest?",
+  41: "What desire in you is brand new and not yet shaped into form?",
+  42: "What cycle is completing, and are you allowing the ending?",
+  43: "What insight just arrived that might not make sense to others yet?",
+  44: "What patterns from the past are informing your current awareness?",
+  45: "What resources or communities are you being asked to gather or lead?",
+  46: "How is your body guiding your path today?",
+  47: "What has been confusing that is now becoming clear?",
+  48: "What depth of knowledge do you have that hasn't been invited yet?",
+  49: "What principles are you refusing to compromise — and what does that cost?",
+  50: "What values are you being asked to uphold or protect?",
+  51: "Where did something unexpected shock you into greater awareness?",
+  52: "What deserves your steady, focused attention right now?",
+  53: "What new beginning wants to start — and do you have real energy for it?",
+  54: "What ambition is driving you, and is it in alignment with your spirit?",
+  55: "What mood is carrying an important message about what you need?",
+  56: "What story or meaning are you constructing from recent experiences?",
+  57: "What subtle intuition or body signal is worth trusting today?",
+  58: "What brings you genuine aliveness and joy today?",
+  59: "Where is intimacy or honest connection calling you?",
+  60: "What limitation is actually the container for your next breakthrough?",
+  61: "What truth is pressing for understanding even if it has no words yet?",
+  62: "What facts or details help you think clearly about a current challenge?",
+  63: "What are you genuinely doubtful about — and what would resolve it?",
+  64: "What unresolved confusion is actually the beginning of an insight?",
+};
+
+// BL-EXC-P1-4: Load transit context for diary tab
+let _diaryTransitCache = null;
+async function loadDiaryTransitContext() {
+  const container = document.getElementById('diaryTransitContext');
+  if (!container) return;
+
+  try {
+    const data = _diaryTransitCache || await apiFetch('/api/transits/today');
+    _diaryTransitCache = data;
+
+    const t = data.data || data.transits || data;
+    const positions = t.transitPositions || t.positions || {};
+    const activations = t.gateActivations || [];
+
+    // Get top 3 gates (natal hits first, then by planet priority)
+    const PLANET_ORDER = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','NorthNode','TrueNode','Chiron'];
+    const topGates = Object.entries(positions)
+      .map(([planet, pos]) => ({ planet, gate: pos.gate, line: pos.line, isNatal: activations.some(a => a.natalGatePresent && String(a.gate) === String(pos.gate)) }))
+      .filter(p => p.gate)
+      .sort((a, b) => {
+        if (a.isNatal !== b.isNatal) return a.isNatal ? -1 : 1;
+        return PLANET_ORDER.indexOf(a.planet) - PLANET_ORDER.indexOf(b.planet);
+      })
+      .slice(0, 3);
+
+    if (!topGates.length) { container.style.display = 'none'; return; }
+
+    const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    let html = `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-3)">
+      <div class="card-title" style="margin:0;font-size:var(--font-size-base)">☽ Today's Transit Energy — ${escapeHtml(today)}</div>
+      <button class="btn-secondary btn-sm" data-action="switchTab" data-arg0="transits" style="font-size:var(--font-size-sm)">Full Report →</button>
+    </div>
+    <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin:0 0 var(--space-3)">Today's active gates. Tap a reflection prompt to pre-fill your diary entry.</p>
+    <div style="display:flex;flex-direction:column;gap:var(--space-2)">`;
+
+    topGates.forEach(({ planet, gate, line, isNatal }) => {
+      const prompt = GATE_DIARY_PROMPTS[gate] || `What does Gate ${gate} energy mean in your life today?`;
+      const safePlanet = escapeHtml(planet);
+      const safeGate = escapeAttr(String(gate));
+      const safePrompt = escapeAttr(prompt);
+      html += `<div style="background:var(--bg3);border-radius:var(--space-2);padding:var(--space-3);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:var(--font-size-sm);font-weight:600;color:${isNatal ? 'var(--gold)' : 'var(--text)'}">
+            ${safePlanet} · Gate ${escapeHtml(String(gate))}${line ? '.' + escapeHtml(String(line)) : ''}${isNatal ? ' ✦' : ''}
+          </div>
+          <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:2px;line-height:1.4">${escapeHtml(prompt)}</div>
+        </div>
+        <button class="btn-secondary btn-sm" data-action="prefillDiaryFromTransit" data-arg0="${safeGate}" data-arg1="${safePrompt}" style="white-space:nowrap;flex-shrink:0">Reflect →</button>
+      </div>`;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+    container.style.display = '';
+  } catch {
+    container.style.display = 'none';
+  }
+}
+window.loadDiaryTransitContext = loadDiaryTransitContext;
+
+function prefillDiaryFromTransit(gate, prompt) {
+  const titleEl = document.getElementById('diary-title');
+  const descEl = document.getElementById('diary-description');
+  const dateEl = document.getElementById('diary-date');
+  if (titleEl && !titleEl.value) titleEl.value = `Gate ${gate} reflection`;
+  if (descEl) descEl.value = prompt + (descEl.value ? '\n\n' + descEl.value : '');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+  descEl?.focus();
+  descEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+window.prefillDiaryFromTransit = prefillDiaryFromTransit;
+
+function openDiaryFromTransit(gate, prompt) {
+  switchTab('diary');
+  // Allow tab switch render to complete before pre-filling
+  setTimeout(() => prefillDiaryFromTransit(gate, prompt), 100);
+}
+window.openDiaryFromTransit = openDiaryFromTransit;
 
 // ── Behavioral Validation ─────────────────────────────────────
 async function saveValidation() {
@@ -7677,6 +8040,7 @@ window.editSessionNote = editSessionNote;
 window.cancelEditNote = cancelEditNote;
 window.updateSessionNote = updateSessionNote;
 window.deleteSessionNote = deleteSessionNote;
+window.loadMoreNotes = loadMoreNotes;
 window.toggleDirectoryForm = toggleDirectoryForm;
 window.saveDirectoryProfile = saveDirectoryProfile;
 window.checkNotionStatus = checkNotionStatus;

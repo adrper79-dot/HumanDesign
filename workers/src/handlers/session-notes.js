@@ -53,18 +53,30 @@ export async function handleListNotes(request, env, clientId) {
   const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
   try {
-    const notes = await query(QUERIES.listSessionNotes, [
-      access.practitionerId,
-      clientId,
-      search,
-      fromDate,
-      toDate,
-      limit,
-      offset,
+    const [notes, countResult] = await Promise.all([
+      query(QUERIES.listSessionNotes, [
+        access.practitionerId,
+        clientId,
+        search,
+        fromDate,
+        toDate,
+        limit,
+        offset,
+      ]),
+      query(QUERIES.countSessionNotes, [
+        access.practitionerId,
+        clientId,
+        search,
+        fromDate,
+        toDate,
+      ]),
     ]);
 
-    log.info({ action: 'session_notes_listed', practitionerId: access.practitionerId, clientId });
-    return Response.json({ ok: true, notes: notes.rows });
+    const total = countResult.rows[0]?.total ?? 0;
+    const hasMore = offset + notes.rows.length < total;
+
+    log.info({ action: 'session_notes_listed', practitionerId: access.practitionerId, clientId, total });
+    return Response.json({ ok: true, notes: notes.rows, total, hasMore });
   } catch (err) {
     log.error({ action: 'session_notes_list_failed', error: err.message });
     throw err;

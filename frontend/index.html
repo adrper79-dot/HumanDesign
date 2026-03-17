@@ -303,6 +303,7 @@
           <li>SMS energy digest subscriptions</li>
           <li>Unlimited saved profiles</li>
           <li>PDF export &amp; sharing</li>
+          <li class="disabled">Composite / relationship charts</li>
           <li style="margin-top:0.75rem;font-size:0.85em;color:var(--text-dim)">Already working with an HD practitioner? <span style="color:var(--gold)">Connect your account in settings →</span></li>
         </ul>
         <button class="btn-primary tier-cta" id="priceBtn-regular"
@@ -377,6 +378,12 @@
   <div class="pricing-modal pricing-modal--pro">
     <div class="pricing-pro-label-wrap">
       <span class="pricing-pro-label">Professional Plans</span>
+    </div>
+    <!-- Context-aware copy injected by showUpgradePrompt() when a practitioner feature gate is hit -->
+    <div id="upgradeContextBanner" class="hidden" style="background:var(--surface-elevated,#1e1e2e);border:1px solid var(--accent,#7c6af7);border-radius:8px;padding:0.85rem 1rem;margin-bottom:1rem;">
+      <p id="upgradeContextHeadline" style="font-weight:700;margin:0 0 0.35rem;color:var(--text-primary,#fff)"></p>
+      <p id="upgradeContextBody" style="margin:0 0 0.35rem;font-size:0.88em;color:var(--text-secondary,#aaa)"></p>
+      <p id="upgradeContextROI" style="margin:0;font-size:0.82em;color:var(--accent,#7c6af7);font-style:italic"></p>
     </div>
     <h2 id="practitionerPricingTitle">Build Your Practice</h2>
     <p class="subtitle">Built for HD practitioners, coaches, and training organizations.</p>
@@ -777,8 +784,8 @@
     <div id="overviewContent">
       <div class="card card-welcome">
         <div class="welcome-icon">✦</div>
-        <h3 class="welcome-title">Welcome to Prime Self</h3>
-        <p class="welcome-text">Generate your chart to unlock your personalized dashboard — energy type, decision strategy, active transits, and daily insights in one place.</p>
+        <h3 class="welcome-title">Run a values-aligned practice</h3>
+        <p class="welcome-text">Prime Self handles chart reads, client profiles, and strategic guidance — so you can focus on the relationship. Powered by Human Design, Astrology, Gene Keys, and Numerology.</p>
         <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
       </div>
     </div>
@@ -1234,6 +1241,8 @@
     <p class="feature-callout-text">Log key life events — the system cross-references them with active transits to confirm chart accuracy and refine birth time.</p>
   </div>
 </div>
+
+    <div id="diaryTransitContext" style="display:none" class="card" aria-live="polite"></div>
 
     <div class="card">
       <div class="card-title"><span class="icon-plus"></span> <span data-i18n="diary.addEvent">Add Life Event</span></div>
@@ -1775,6 +1784,9 @@
       <div id="pracInvitesResult"></div>
     </div>
 
+    <!-- Referral Performance (auto-loads on tab open) -->
+    <div id="pracReferralStats"></div>
+
     <!-- Roster (auto-loads on tab open) -->
     <div id="pracResult"></div>
 
@@ -2109,6 +2121,9 @@
     &nbsp;·&nbsp; <a href="/privacy.html">Privacy Policy</a>
     &nbsp;·&nbsp; <a href="/terms.html">Terms of Service</a>
   </p>
+  <p style="font-size:0.75em;color:var(--text-muted,#888);margin-top:0.35rem">
+    Gene Keys® is a registered trademark of Gene Keys Ltd. Human Design® is a registered trademark of Jovian Archive Corp. Prime Self is an independent platform and is not affiliated with or endorsed by Gene Keys Ltd or Jovian Archive Corp.
+  </p>
 </footer>
 
 <!-- Practitioner Onboarding Modal (shown post-checkout for practitioners) -->
@@ -2117,28 +2132,25 @@
     <div id="pract-onb-steps">
       <!-- Step 1 -->
       <div class="pract-onb-step active" id="pract-onb-step-1">
-        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">⭐</div>
-        <h2 id="pract-onb-title" style="text-align:center;margin-bottom:0.5rem">Welcome to your practice</h2>
-        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.5rem">You now have everything you need to run your HD practice in one place — chart engine, client management, session notes, and branded reports.</p>
-        <div style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1.5rem">
-          <div style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:0.75rem"><span style="color:var(--gold);font-size:1.1rem">✓</span><span>Replaces your chart tool and session notes app</span></div>
-          <div style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:0.75rem"><span style="color:var(--gold);font-size:1.1rem">✓</span><span>Clients find you in the directory and book directly</span></div>
-          <div style="display:flex;gap:0.75rem;align-items:flex-start"><span style="color:var(--gold);font-size:1.1rem">✓</span><span>25% commission on every client you refer who subscribes</span></div>
-        </div>
-        <button class="btn-primary" style="width:100%" data-action="practOnbNext">Set Up My Profile →</button>
+        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">🔍</div>
+        <h2 id="pract-onb-title" style="text-align:center;margin-bottom:0.5rem">Set up your profile first</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">Your public directory listing is how clients find you. Complete profiles get significantly more inquiries.</p>
+        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Go to <strong>Practitioner → Directory Profile</strong> in the sidebar to complete your listing. Takes 2 minutes.</p>
+        <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
       </div>
       <!-- Step 2 -->
       <div class="pract-onb-step" id="pract-onb-step-2" style="display:none">
-        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">🔍</div>
-        <h2 style="text-align:center;margin-bottom:0.5rem">Your practitioner profile</h2>
-        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">This is your public page on the Prime Self directory. Practitioners with complete profiles get significantly more client inquiries.</p>
-        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Go to <strong>Practitioner → Directory Profile</strong> in the sidebar to complete your listing. Takes 2 minutes.</p>
+        <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">👥</div>
+        <h2 style="text-align:center;margin-bottom:0.5rem">Add your first client</h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">Invite a client from the Practitioner tab — they'll get their chart, and you'll see their profile for session prep.</p>
+        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Go to <strong>Practitioner → Client Roster</strong> and click "Add Client".</p>
         <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
+        <button class="btn-secondary" style="width:100%;margin-top:0.5rem" data-action="practOnbNext">I'll do this later</button>
       </div>
       <!-- Step 3 -->
       <div class="pract-onb-step" id="pract-onb-step-3" style="display:none">
         <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">📎</div>
-        <h2 style="text-align:center;margin-bottom:0.5rem">Invite your first client</h2>
+        <h2 style="text-align:center;margin-bottom:0.5rem">Share your referral link</h2>
         <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">When clients join via your referral link and subscribe, you earn 25% monthly — for as long as they stay.</p>
         <div style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1rem">
           <p style="margin:0 0 0.5rem;font-size:0.85em;color:var(--text-dim)">Your referral link:</p>
@@ -2147,7 +2159,6 @@
             <button class="btn-secondary btn-sm" data-action="practOnbCopyLink">Copy</button>
           </div>
         </div>
-        <p style="text-align:center;font-size:0.85em;color:var(--text-dim)">Or invite directly from your <strong>Client Roster</strong> tab.</p>
         <button class="btn-primary" style="width:100%;margin-top:1.5rem" data-action="practOnbNext">Continue →</button>
         <button class="btn-secondary" style="width:100%;margin-top:0.5rem" data-action="practOnbSkip">I'll do this later</button>
       </div>

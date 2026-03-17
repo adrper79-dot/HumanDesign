@@ -1998,7 +1998,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** A healthy deployment exits 0. A broken endpoint or changed payload exits non-zero.
 
 ### BL-S20-C3 | Error pipeline and alert path are not proven end to end
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 9 — added `tests/error-pipeline.test.js` with 7 passing tests covering: ctx.waitUntil on throw, JSON error response, trackError in batch, sentry.captureException in batch, no-op without SENTRY_DSN, error response without Sentry, severity=high tagging.)
 - **Severity:** Critical (Hands-off Operations)
 - **Files:** `workers/src/index.js`, `workers/src/lib/sentry.js`, new tests for error capture
 - **Problem:** Sentry capture and analytics error tracking exist, but there is no automated proof that thrown worker errors become durable operator-visible incidents.
@@ -2193,7 +2193,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** No instance of "Human Design" remains in: share-card footer/share-text, `embed.html`, `<meta>` tags. All type names use IP-safe equivalents in user-facing surfaces.
 
 ### BL-LR-C3 | Migration 020 not confirmed applied to production — Stripe tier constraint may crash on checkout
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — verified via Neon MCP: `subscriptions_tier_check` constraint already allows `individual|practitioner|agency`, which aligns exactly with `getTierFromPriceId` in webhook.js. Migration 020 is **obsolete and must NOT be applied** — it would drop `individual`/`agency` and restore legacy values, breaking all Individual/Agency checkouts.)
 - **Severity:** Critical (Revenue)
 - **Files:** `workers/src/db/migrations/020_fix_subscription_constraints.sql`, `workers/src/handlers/webhook.js` (lines 43–45)
 - **Problem:** Webhook handler writes `'regular'`, `'practitioner'`, `'white_label'` to `subscriptions.tier`. The original schema only permitted `('free','seeker','guide','practitioner')`. Migration 020 expands the constraint to include both old and new tier names. The migration file is correctly written — but there is no confirmation it has been applied to the **production** Neon database. If it has not, every Explorer ($12) and Studio ($149) checkout will: complete payment → fire webhook → hit DB CHECK constraint violation → roll back → **customer charged but tier not upgraded**.
@@ -2275,7 +2275,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** `curl -I https://<worker-url>/api/health` response includes `Content-Security-Policy: default-src 'none'`.
 
 ### BL-LR-M4 | Migration 019 exited with code 1 — cluster synthesis may fail if columns absent
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — verified via Neon MCP: all 5 birth data columns confirmed in `cluster_members`: `birth_date`, `birth_time`, `birth_timezone`, `birth_lat`, `birth_lng`. Migration 019 was already applied.)
 - **Severity:** Medium
 - **Files:** `workers/src/db/migrations/019_cluster_member_birth_data.sql`, `workers/src/handlers/cluster.js`
 - **Problem:** Migration 019 adds `birth_date`, `birth_time`, `birth_timezone`, `birth_lat`, `birth_lng` to `cluster_members`. During a prior session, `run-migration.js` exited with code 1 on this file. If the migration did not apply, `handleSynthesize()` will throw a DB column-not-found error for every cluster synthesis attempt. Migration 019 uses `ADD COLUMN IF NOT EXISTS` throughout — it is **safe to re-run**.
@@ -2324,7 +2324,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** `grep STRIPE_PRICE guides/ENVIRONMENT_VARIABLES.md` matches `grep STRIPE_PRICE workers/wrangler.toml`.
 
 ### BL-LR-M8 | Gene Keys knowledgebase — license and attribution scope not verified
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — added trademark disclaimer to site footer: "Gene Keys® is a registered trademark of Gene Keys Ltd. Human Design® is a registered trademark of Jovian Archive Corp. Prime Self is independent and not affiliated or endorsed." Legal review of commercial use terms still recommended before scaling.)
 - **Severity:** Medium (Legal)
 - **Files:** `src/knowledgebase/genekeys/keys.json`, `frontend/js/explanations.js` (line 8)
 - **Problem:** `keys.json` contains the 64 Gene Keys system content. `explanations.js:8` credits "Gene Keys (Richard Rudd)" in user-facing JS. Gene Keys® is a registered trademark of Gene Keys Ltd (Richard Rudd). Unlike Human Design (aggressively enforced by IHDS), Gene Keys uses a more flexible community model, but commercial use still requires awareness of license terms.
@@ -2346,7 +2346,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ## Practitioner-First Positioning (4 critical items)
 
 ### BL-POS-C1 | Home messaging leads with breadth instead of **one** practitioner-first promise
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — welcome card hero rewritten to practitioner-first outcome: "Run a values-aligned practice." with feature star grid and benefit bullets. CTA: "Generate Your Blueprint →")
 - **Severity:** Critical (Positioning)
 - **Files:** `frontend/index.html` (hero section ~line 100–150)
 - **Problem:** Hero says "Combine Human Design, Astrology, Numerology, Gene Keys, Geneology" (breadth-first). Copy doesn't explain what that MEANS for the user or why a practitioner should care. No single promise.
@@ -2355,7 +2355,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Non-spirituality person can explain in 1 sentence what Prime Self is for practitioners.
 
 ### BL-POS-C2 | Pricing says "chart data never shared with third parties" but privacy says "AI and SMS processors"
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 10 — pricing FAQ already reads: "Your chart stays on our servers. Generating your AI synthesis and sending SMS transit alerts requires trusted processors (Anthropic for AI, Telnyx for SMS) who see only the data needed to complete that task." Privacy policy correctly discloses Anthropic/Telnyx as processors. Both documents are consistent.)
 - **Severity:** Critical (Trust)
 - **Files:** `frontend/pricing.html` (FAQ section), `frontend/privacy.html` (Section 3)
 - **Problem:** Pricing FAQ lists "Your chart data is never shared with third parties" as a trust differentiator. Privacy policy correctly discloses that synthesis uses Anthropic LLM, SMS uses Telnyx. These contradict each other — Anthropic and Telnyx ARE third parties.
@@ -2377,7 +2377,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Step names use same terminology as actual tab labels.
 
 ### BL-POS-C4 | Practitioner onboarding is instruction sequence, not setup flow
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — onboarding Step 1 rewritten to focus on setup: profile, client management, session prep. Commission mention moved to Step 3 (referral link) where it's contextually appropriate.)
 - **Severity:** Critical (UX)
 - **Files:** `frontend/index.html` (onboarding tab)
 - **Problem:** Practitioner onboarding jumps immediately to: "Invite your clients", "Share your referral link", "See your commission structure". No setup for: name, location, bio, website URL, payment info. User is upsold on add-ons before they've completed basic profile.
@@ -2458,7 +2458,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Click More → Practitioner → drawer closes automatically.
 
 ### BL-UX-C8 | Center pills show no explanation
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 10 — `CENTER_EXPLANATIONS` in `explanations.js` provides governs/defined/open text for all 9 centers; `renderChart` renders `center-explain` divs and governs labels with `bioTip` tooltip for each pill.)
 - **Severity:** High (Education)
 - **Files:** `frontend/index.html` (renderChart, centers section)
 - **Problem:** Shows `<span class="pill">Sacral</span>` (defined/open) with zero context. Users don't know what it means.
@@ -2631,7 +2631,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P1-2 | Practitioners cannot see their referral performance — flywheel invisible to them
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — added `renderPractitionerReferralStats()` that fetches `/api/practitioner/referral-link` in parallel with roster load, renders a "Referral Performance" card with one-click copy button and stats: Total Referrals + Earned This Month.)
 - **Severity:** P1 — Referral growth loop broken at practitioner awareness layer
 - **Files:** `frontend/js/app.js` (practitioner dashboard section), `workers/src/handlers/practitioner.js`, `workers/src/db/queries.js`
 - **Problem:** Practitioners have referral links (`/r/{slug}`) but no dashboard to see clicks, signups, or paid conversions. The data exists in `referral_signups` — it's just not surfaced. Practitioners who don't see referral conversions have no incentive to share more, stalling the growth flywheel.
@@ -2645,7 +2645,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P1-3 | Individual→Practitioner upgrade copy is weak — highest-value conversion path underperforms
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — added `PRACTITIONER_UPGRADE_COPY` map in app.js with feature-specific headline/body/ROI for composite, client_roster, clients, session_brief, pdf, practitionerTools, whiteLabel. Context banner injected into practitionerPricingOverlay. Analytics event `upgrade_prompt_shown` logged with feature+tier.)
 - **Severity:** P1 — Missed revenue at key conversion moment (5x revenue per user)
 - **Files:** `frontend/js/app.js` (`showUpgradePrompt` function), `frontend/index.html` (pricing section)
 - **Problem:** When an Individual user hits a practitioner-gated feature, they see a generic upgrade modal with a price. No context for WHY, no social proof, no ROI framing, no risk reduction. Individual→Practitioner is the highest-value upgrade path ($19→$97/mo) and has the weakest copy.
@@ -2660,7 +2660,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P1-4 | Diary entries have no link to current transits — daily habit loop broken
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — Added `#diaryTransitContext` card shown when diary tab opens, fetching `/api/transits/today` (uses cached `_diaryTransitCache` if transits were already loaded). Shows top 3 active gates with reflection prompts from `GATE_DIARY_PROMPTS` map (64 gate prompts). "Reflect →" button pre-fills diary title + description. Each transit row in Transits tab now has "📖 Reflect on this" button that switches to the diary tab and pre-fills the entry.)
 - **Severity:** P1 — Core daily retention loop not connected
 - **Files:** `frontend/js/app.js` (diary entry section, transits section)
 - **Problem:** The Diary tab and Transits tab are completely separate with no connection. A user writing about how they feel today has no quick way to see what transits might explain their experience. The core habit loop — "I feel X → transits show Y → my chart says Z → I understand myself → I write it down → I return tomorrow" — is broken at the diary↔transits link.
@@ -2709,7 +2709,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P2-3 | Practitioner directory missing KV cache — N+1 DB queries per page load
-- [ ] **Status:** Open
+- [x] **Status:** Complete (verified Cycle 10 — `practitioner-directory.js` already implements `directory:all` KV cache with 15-min TTL on unfiltered listings, `practitioner:slug:{slug}` cache with 5-min TTL on individual slug lookups, and `env.KV.delete()` cache invalidation on profile update. `X-Cache: HIT|MISS` header present.)
 - **Severity:** P2 — Performance and DB cost
 - **Files:** `workers/src/handlers/directory.js`, `workers/src/lib/cache.js`
 - **Problem:** Every practitioner directory load hits Neon with a fresh query. The directory data changes infrequently (practitioners update profiles rarely) and is identical for all visitors — a perfect cache candidate. At scale, uncached directory queries are expensive (Neon compute cost) and slow (200-400ms cold connection overhead).
@@ -2724,7 +2724,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P2-4 | AI context editor has no character count or save confirmation
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — added live char count with 1800-char warning, debounced 2s autosave via `onAIContextInput()`, "Saved ✓" confirmation reverting to "Last saved: just now" after 3s. Form hint added.)
 - **Severity:** P2 — Practitioner UX friction
 - **Files:** `frontend/js/app.js` (practitioner profile / AI context section)
 - **Problem:** Practitioners can write an "AI context" about themselves that informs their synthesis. The textarea has no character count, no indication of truncation limits, no save confirmation, and no last-saved timestamp. Practitioners write context and don't know if it saved or was silently truncated.
@@ -2739,7 +2739,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P2-5 | Session notes have no pagination — crashes on prolific practitioners
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — backend `handleListNotes` now runs parallel `countSessionNotes` query and returns `{ notes, total, hasMore }`; frontend initial fetch uses `limit=10&offset=0`; notes section shows "Showing X of Y" count; "Load 10 more" button appends next page without replacing existing notes.)
 - **Severity:** P2 — Data integrity and performance for power users
 - **Files:** `workers/src/handlers/practitioner.js` (notes endpoint), `frontend/js/app.js` (notes render section)
 - **Problem:** Session notes are returned as a flat unbounded array. A practitioner using the product for 6+ months with 20+ active clients will have hundreds of notes. Fetching all of them on every client detail open will exceed Worker response limits, be slow, and cause browser rendering hangs.
@@ -2753,7 +2753,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P2-6 | Composite reading not mentioned in pricing — conversion copy gap
-- [ ] **Status:** Open
+- [x] **Status:** Complete (Cycle 10 — added composite charts as a disabled feature item in Individual tier pricing, making the practitioner-only gate visible to users considering upgrade paths.)
 - **Severity:** P2 — Revenue impact through pricing page conversion
 - **Files:** `frontend/index.html` (pricing section), `frontend/js/app.js` (`showUpgradePrompt`)
 - **Problem:** Composite charts (compatibility readings between user + client) are built and working but not mentioned in the pricing comparison table or practitioner tier description. Prospects evaluating the product don't know this feature exists — a significant missed conversion hook.

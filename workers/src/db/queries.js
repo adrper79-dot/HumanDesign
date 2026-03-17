@@ -2059,6 +2059,16 @@ export const QUERIES = {
     LIMIT $6 OFFSET $7
   `,
 
+  countSessionNotes: `
+    SELECT COUNT(*)::int AS total
+    FROM practitioner_session_notes
+    WHERE practitioner_id = $1
+      AND client_user_id = $2
+      AND ($3 = '' OR content ILIKE '%' || $3 || '%')
+      AND ($4 = '' OR session_date >= $4::date)
+      AND ($5 = '' OR session_date <= $5::date)
+  `,
+
   getAISharedNotes: `
     SELECT content, session_date
     FROM practitioner_session_notes
