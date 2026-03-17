@@ -143,6 +143,13 @@ export function generateSecret() {
  * @returns {string}
  */
 export function buildOTPAuthURL(secret, email, issuer = 'Prime Self') {
-  const label = encodeURIComponent(`${issuer}:${email}`);
-  return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+  const label = encodeURIComponent(`${issuer}:${email}`).replace(/%40/g, '@');
+  const params = new URLSearchParams({
+    secret,
+    issuer,
+    algorithm: 'SHA1',
+    digits: '6',
+    period: '30'
+  });
+  return `otpauth://totp/${label}?${params.toString()}`;
 }

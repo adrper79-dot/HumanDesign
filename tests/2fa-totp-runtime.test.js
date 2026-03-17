@@ -22,7 +22,8 @@ import { importEncryptionKey, encryptToken, decryptToken } from '../workers/src/
 
 // ── Test Env ─────────────────────────────────────────────────────────────────
 
-const TOTP_ENCRYPTION_KEY = 'test-totp-key-32-chars-long!!!';
+const TOTP_ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef';
+const WRONG_TOTP_ENCRYPTION_KEY = 'fedcba9876543210fedcba9876543210';
 
 // ── TOTP Library Tests ───────────────────────────────────────────────────────
 
@@ -186,7 +187,7 @@ describe('TOTP Secret Encryption (SYS-010)', () => {
     it('rejects decryption with wrong key', async () => {
       const secret = generateSecret();
       const key = await importEncryptionKey(TOTP_ENCRYPTION_KEY);
-      const wrongKey = await importEncryptionKey('different-key-32-chars-long!!!');
+      const wrongKey = await importEncryptionKey(WRONG_TOTP_ENCRYPTION_KEY);
 
       const encrypted = await encryptToken(secret, key);
 

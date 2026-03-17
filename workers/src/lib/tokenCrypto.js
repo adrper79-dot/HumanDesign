@@ -23,17 +23,41 @@
 /**
  * Import a raw AES-256-GCM key from a base64-encoded string.
  *
- * @param {string} base64Key – base64-encoded 32-byte secret
+ * Accepts either:
+ * - base64-encoded 32-byte secret, or
+ * - a passphrase-like string at least 32 characters long
+ *
+ * Passphrases are normalized to a 32-byte AES key via SHA-256 so existing
+ * operator-provided secrets remain usable without silent plaintext fallback.
+ *
+ * @param {string} base64Key – base64-encoded 32-byte secret or 32+ char passphrase
  * @returns {Promise<CryptoKey>}
  */
 export async function importEncryptionKey(base64Key) {
   if (!base64Key) {
     throw new Error('NOTION_TOKEN_ENCRYPTION_KEY is not configured. Add it via: wrangler secret put NOTION_TOKEN_ENCRYPTION_KEY');
   }
-  const keyBytes = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
-  if (keyBytes.length !== 32) {
-    throw new Error('NOTION_TOKEN_ENCRYPTION_KEY must be 32 bytes (base64 of `openssl rand -base64 32`)');
+
+  let keyBytes = null;
+
+  try {
+    const decoded = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
+    if (decoded.length === 32) {
+      keyBytes = decoded;
+    }
+  } catch {
+    // Not valid base64; fall through to passphrase handling.
   }
+
+  if (!keyBytes) {
+    if (base64Key.length < 32) {
+      throw new Error('Encryption key must be base64 of 32 bytes or at least 32 characters long');
+    }
+    const passphraseBytes = new TextEncoder().encode(base64Key);
+    const digest = await crypto.subtle.digest('SHA-256', passphraseBytes);
+    keyBytes = new Uint8Array(digest);
+  }
+
   return crypto.subtle.importKey(
     'raw',
     keyBytes,
@@ -82,11 +106,16 @@ export async function decryptToken(encrypted, key) {
   const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
   const ct = Uint8Array.from(atob(ctB64), c => c.charCodeAt(0));
 
-  const plainBuf = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    ct
-  );
+  let plainBuf;
+  try {
+    plainBuf = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      ct
+    );
+  } catch {
+    throw new Error('Token decryption/authentication failed');
+  }
 
   return new TextDecoder().decode(plainBuf);
 }

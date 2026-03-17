@@ -38,6 +38,8 @@
 4. [docs/API.md](docs/API.md) — quick API overview
 5. [process/BUILD_BIBLE.md](process/BUILD_BIBLE.md) — implementation standards
 6. [process/RELIABILITY_POLICY.md](process/RELIABILITY_POLICY.md) — active policy for tests, verification, simulation, and monitoring
+7. [process/PRIME_SELF_LOOP_V2.md](process/PRIME_SELF_LOOP_V2.md) — **THE LOOP** enterprise build & certification cycle protocol (full specification)
+8. [process/LOOP_INVOCATION.md](process/LOOP_INVOCATION.md) — **THE LOOP** quick invocation guide with ready-to-use prompts
 
 ### Frontend / UX
 1. [frontend/DESIGN_SYSTEM.md](frontend/DESIGN_SYSTEM.md) — design tokens and UI rules
