@@ -11,14 +11,15 @@
 | 5     | 2026-03-16 | SYS-047(localStorage TTL), SYS-021(billing cancel tests +7), BL-N series(practitioner safety guards) | 473/8 ✅ | GREEN |
 | 6     | 2026-03-16 | BL-N1–N9(keys/billing/stats/forecast/cycles/famous/timing/practitioner-directory), SYS-048(audit branch), SYS-049(Stripe trial), SYS-050(onboarding doc), SYS-051(OpenAPI) | 473/8 ✅ | GREEN |
 | 7     | 2026-03-16 | BL-M15(chart-save/famous/geocode/timing/sms), BL-m11(tasks.json), BL-m12(doc drift) | 473/8 ✅ | GREEN |
-| 8     | 2026-03-17 | IN_PROGRESS | 473/8 ✅ | GREEN |
+| 8     | 2026-03-17 | BL-M17(practitioner-first messaging in index.html + pricing.html), JWT_ISSUER test fix | 485/8 ✅ | GREEN |
 
-**Current cycle:** 8
+**Current cycle:** 8 (✅ COMPLETE)
 **Last cycle date:** 2026-03-17
-**Cumulative items resolved this loop:** 30+
-**Open P0:** 0
-**Open P1:** 0
-**Open Moderate:** 1 (BL-M17 — practitioner messaging cohesion, dedicated session)  
+**Cumulative items resolved this loop:** 31+ (BL-M17 resolved in Cycle 8)
+**Open P0:** 0 ✅
+**Open P1:** 0 ✅ (BL-M17 resolved)
+**Open Moderate:** 0 ✅
+**Status:** All major issues resolved. Proceeding to Cycle 9 for remaining backlog cleanup per user directive "loop until there are 0 backlog items"  
 
 ---
 
