@@ -1,7 +1,7 @@
 # Prime Self — Backlog
 
 **Last audited:** 2026-03-16 (Excellence audit — world-class B2B2C benchmark review)
-**Test suite:** Current local Vitest suite passing
+**Test suite:** 473 passing, 8 skipped (481 total) — last verified 2026-03-16 Cycle 7
 **Code status:** Sprints 1–19 COMPLETE ✅ | Sprint 18 UX: 51/51 defects cleared | 4 new market-validation issues added 2026-03-10 | 14 excellence audit items added 2026-03-16 (3 P0, 4 P1, 4 P2, 4 P3)
 **Deployment status:** ⚠️ Last external production report showed stale deployment issues; not re-verified in this repo-only audit
 **Audit scope:** Full codebase + all documentation + DB schema alignment + engine accuracy + language/comprehension + profile specificity + **production verification** + **deep-dive DB/Engine/Workers audit** + **comprehensive UX review** + **social media integration** + **market validation (2026-03-10)**
@@ -207,7 +207,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Implement frontend tabs/modals for each feature, prioritized by user impact.
 
 ### BL-M15 | Repo-wide observability and handled-error cleanup sweep
-- [~] **Status:** In Progress (Cycle 1: profile.js ✅, oauthSocial.js ✅, alerts.js ✅, achievements.js ✅, auth.js ✅, notion.js ✅; follow-up: webhooks.js ✅, checkin.js ✅; broader long-tail remains across other handlers)
+- [x] **Status:** Done (2026-03-16) — Cycle 1: profile.js ✅, oauthSocial.js ✅, alerts.js ✅, achievements.js ✅, auth.js ✅, notion.js ✅; Cycle 2: webhooks.js ✅, checkin.js ✅; Cycle 6: agency ✅, analytics ✅, calculate ✅, cluster ✅, cycles ✅, diary ✅, embed ✅, forecast ✅, keys ✅, onboarding ✅, psychometric ✅, referrals ✅, share ✅, stats ✅, transits ✅, validation ✅; Cycle 7: chart-save.js ✅, famous.js ✅, geocode.js ✅, timing.js ✅, sms.js ✅. All customer-facing 5xx paths now use `reportHandledRouteError`. Zero console-only 5xx paths remain.
 - **Severity:** Moderate
 - **Files:** `workers/src/handlers/*.js`, `workers/src/lib/routeErrors.js`, `workers/src/lib/logger.js`, `workers/src/lib/errorMessages.js`, `frontend/js/app.js`, `tests/handled-route-errors.test.js`, `tests/observability-runtime.test.js`
 - **Problem:** The critical-path error pipeline is now materially stronger, but the repo still has a split-brain observability model. Some routes use structured logging, analytics-backed error capture, Sentry, and request correlation; many other handlers still catch locally with raw `console.error(...)` and return generic failures without durable operator-facing signals. That means debugging quality still depends on which route failed.
@@ -451,7 +451,7 @@ These items cause outright failures in deployed environments.
 - **Fix:** Add basic regex validation: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`.
 
 ### BL-m11 | VS Code tasks are tied to a WSL PowerShell path
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16 Cycle 7) — Replaced hardcoded `/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe` paths with shell-agnostic `npm run test:deterministic` (cwd: workspaceFolder) and `npm run deploy` (cwd: workspaceFolder/workers) in `.vscode/tasks.json`.
 - **Severity:** Minor
 - **Files:** `.vscode/tasks.json`
 - **Problem:** The deterministic test and deploy tasks call `/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`, which assumes a WSL/bash path layout. The repo is being worked from Windows, so task behavior now depends on which shell launches VS Code instead of the task definition being portable.
@@ -460,7 +460,7 @@ These items cause outright failures in deployed environments.
 - **Verify:** `🧪 Run Tests (deterministic)` and `🚀 Deploy Workers` run from VS Code on both native Windows and WSL without manual path edits.
 
 ### BL-m12 | Quality tracking artifacts drift after late-session reruns
-- [ ] **Status:** Open
+- [x] **Status:** Done (2026-03-16 Cycle 7) — Updated BACKLOG.md header with verified ratchet (473/8/481); marked BL-M15 Cycle 7 additions and BL-m11 as resolved; updated CYCLE_COUNTER.md with cycles 4-7; created SESSION_LOG_2026-03-16_CYCLE_7.md. All doc artifacts now reflect the actual verified build state.
 - **Severity:** Minor
 - **Files:** `BACKLOG.md`, `process/SESSION_LOG_2026-03-16.md`
 - **Problem:** The backlog coverage table still carried stale assumptions after new runtime tests were added, and the session log still reports the earlier `420 passed` ratchet even though later validation reached `422 passed`. This makes the repo's operational ledger less trustworthy than the actual verified build.
