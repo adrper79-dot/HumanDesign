@@ -317,7 +317,7 @@ async function handleRegister(request, env) {
             await query(QUERIES.recordReferralSignup, [userId, practitioner.id]);
           }
         } catch (err) {
-          console.error('[auth] referral capture failed:', err.message);
+          console.warn('[auth] Referral capture failed (non-fatal):', err.message);
         }
       })();
     }

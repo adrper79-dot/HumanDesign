@@ -41,6 +41,7 @@ import { enforceUsageQuota, recordUsage, enforceDailyCeiling, incrementDailyCoun
 import { getTier } from '../lib/stripe.js';
 import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 // ─── Stage Definitions ───────────────────────────────────────────────
 
@@ -285,14 +286,14 @@ export async function handleProfileStream(request, env, ctx) {
             profileId = profileResult.rows?.[0]?.id || null;
           }
         } catch (err) {
-          console.error('DB save failed:', err.message);
+          console.warn('[profile-stream] DB save failed (non-fatal):', err.message);
         }
       }
 
       // BL-DAILY-001: Increment daily counter after successful generation
       // Note: Monthly usage is now recorded atomically inside enforceUsageQuota (BL-RACE-001)
       if (userId) {
-        await incrementDailyCounter(env, userId, 'synthesis').catch(err => console.error('[profile-stream] Daily counter increment failed:', err.message));
+        await incrementDailyCounter(env, userId, 'synthesis').catch(err => console.warn('[profile-stream] Daily counter increment failed (non-fatal):', err.message));
       }
 
       // Track analytics
@@ -305,10 +306,10 @@ export async function handleProfileStream(request, env, ctx) {
           partialGrounding: validation.partialGrounding || false,
         },
         request,
-      }).catch(e => console.error('[profile-stream] trackEvent failed:', e.message));
+      }).catch(e => console.warn('[profile-stream] trackEvent failed (non-fatal):', e.message));
 
       if (userId) {
-        await trackFunnel(env, userId, 'onboarding', 'first_profile').catch(e => console.error('[profile-stream] trackFunnel failed:', e.message));
+        await trackFunnel(env, userId, 'onboarding', 'first_profile').catch(e => console.warn('[profile-stream] trackFunnel failed (non-fatal):', e.message));
       }
 
       // ── Stage 6: Complete ──────────────────────────────
@@ -349,7 +350,7 @@ export async function handleProfileStream(request, env, ctx) {
 
       await writer.close();
     } catch (err) {
-      console.error('[ProfileStream] Pipeline error:', err);
+      reportHandledRouteError({ request, env, error: err, source: 'profile-stream-pipeline', responseFactory: () => new Response(null) });
       await send('error', { error: 'Internal error during profile generation' });
       await writer.close();
     }

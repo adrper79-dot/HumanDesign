@@ -15,6 +15,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { trackEvent } from './achievements.js';
 import { getAllPositions } from '../../../src/engine/planets.js';
 import { normalizeTierName } from '../lib/stripe.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 // Intention templates with astrological preferences
 const INTENTION_TEMPLATES = {
@@ -210,8 +211,12 @@ export async function handleTiming(request, env) {
       totalCandidates: optimalDates.length
     });
   } catch (err) {
-    console.error('[Timing] Unhandled error:', err);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return reportHandledRouteError({
+      request, env, error: err,
+      source: 'handleFindDates',
+      fallbackMessage: 'Internal server error',
+      status: 500,
+    });
   }
 }
 

@@ -58,7 +58,7 @@ async function getTransitsForEventDate(eventDate, userBirthData, env, userId) {
       calculated: new Date().toISOString()
     };
   } catch (error) {
-    console.error('Transit calculation error:', error);
+    console.warn('[diary] Transit calculation error (non-fatal):', error?.message);
     return { date: eventDate, transitData: null, calculated: new Date().toISOString() };
   }
 }

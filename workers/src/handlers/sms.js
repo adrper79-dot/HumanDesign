@@ -15,6 +15,7 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { callLLM } from '../lib/llm.js';
 import { enforceFeatureAccess, recordUsage } from '../middleware/tierEnforcement.js';
 import { getTier } from '../lib/stripe.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 // ─── Telnyx Webhook Signature Verification ───────────────────
 
@@ -26,7 +27,7 @@ import { getTier } from '../lib/stripe.js';
 async function verifyTelnyxSignature(request, env) {
   const publicKeyBase64 = env.TELNYX_PUBLIC_KEY;
   if (!publicKeyBase64) {
-    console.error('TELNYX_PUBLIC_KEY not configured — rejecting webhook');
+    console.warn('[sms] TELNYX_PUBLIC_KEY not configured — rejecting webhook');
     return false;
   }
 
@@ -66,7 +67,7 @@ async function verifyTelnyxSignature(request, env) {
 
     return await crypto.subtle.verify('Ed25519', cryptoKey, sigBytes, data);
   } catch (err) {
-    console.error('Telnyx signature verification failed:', err);
+    console.warn('[sms] Telnyx signature verification failed (non-fatal):', err.message);
     return false;
   }
 }
@@ -195,7 +196,7 @@ async function handleWebhook(request, env) {
       );
       await sendSMS(from, 'You\'ve been unsubscribed from Prime Self transit digests. Text START to re-subscribe.', env);
     } catch (err) {
-      console.error('Opt-out error:', err);
+      console.warn('[sms] Opt-out error (non-fatal):', err.message);
     }
     return Response.json({ ok: true, action: 'opt-out' });
   }
@@ -209,7 +210,7 @@ async function handleWebhook(request, env) {
       );
       await sendSMS(from, 'Welcome to Prime Self transit digests! You\'ll receive daily transit insights based on your chart. Text STOP to unsubscribe.', env);
     } catch (err) {
-      console.error('Opt-in error:', err);
+      console.warn('[sms] Opt-in error (non-fatal):', err.message);
     }
     return Response.json({ ok: true, action: 'opt-in' });
   }
@@ -228,7 +229,7 @@ async function handleWebhook(request, env) {
       const digest = await generateDigestForUser(user, env);
       await sendSMS(from, digest, env);
     } catch (err) {
-      console.error('Status request error:', err);
+      console.warn('[sms] Status request error (non-fatal):', err.message);
       await sendSMS(from, 'Unable to generate your transit update right now. Try again later.', env);
     }
     return Response.json({ ok: true, action: 'status' });
@@ -238,7 +239,7 @@ async function handleWebhook(request, env) {
   try {
     await sendSMS(from, 'Prime Self: Text TODAY for your transit update, or STOP to unsubscribe.', env);
   } catch (err) {
-    console.error('Reply error:', err);
+    console.warn('[sms] Reply error (non-fatal):', err.message);
   }
 
   return Response.json({ ok: true, action: 'unknown-command' });
@@ -308,10 +309,10 @@ async function handleSendDigest(request, env) {
         }
         const digest = await generateDigestForUser(user, env);
         await sendSMS(user.phone, digest, env);
-        await recordUsage(env, user.id, 'sms_digest', '/api/sms/scheduled').catch(err => console.error('[SMS] Usage record failed:', err.message));
+        await recordUsage(env, user.id, 'sms_digest', '/api/sms/scheduled').catch(err => console.warn('[sms] Usage record failed (non-fatal):', err.message));
         sent++;
       } catch (err) {
-        console.error(`Digest send failed for ${user.phone}:`, err);
+        console.warn(`[sms] Digest send failed for ${user.phone} (non-fatal):`, err.message);
         failed++;
       }
     }
@@ -390,7 +391,7 @@ async function handleSendDigest(request, env) {
 
     const digest = await generateDigestForUser(user, env);
     await sendSMS(user.phone, digest, env);
-    await recordUsage(env, user.id, 'sms_digest', '/api/sms/send-digest').catch(err => console.error('[SMS] Usage record failed:', err.message));
+    await recordUsage(env, user.id, 'sms_digest', '/api/sms/send-digest').catch(err => console.warn('[sms] Usage record failed (non-fatal):', err.message));
 
     return Response.json({
       ok: true,
@@ -501,7 +502,7 @@ async function handleSubscribe(request, env) {
         );
       } catch (smsErr) {
         // Log but don't fail the subscription if SMS fails
-        console.error('Confirmation SMS failed:', smsErr);
+        console.warn('Confirmation SMS failed (non-fatal):', smsErr.message);
       }
     }
 
@@ -511,11 +512,12 @@ async function handleSubscribe(request, env) {
       phone
     });
   } catch (err) {
-    console.error('SMS subscribe error:', err);
-    return Response.json(
-      { error: 'Failed to subscribe' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({
+      request, env, error: err,
+      source: 'handleSmsSubscribe',
+      fallbackMessage: 'Failed to subscribe',
+      status: 500,
+    });
   }
 }
 
@@ -562,7 +564,7 @@ async function handleUnsubscribe(request, env) {
         );
       } catch (smsErr) {
         // Log but don't fail the unsubscribe if SMS fails
-        console.error('Confirmation SMS failed:', smsErr);
+        console.warn('Confirmation SMS failed (non-fatal):', smsErr.message);
       }
     }
 
@@ -571,11 +573,12 @@ async function handleUnsubscribe(request, env) {
       message: 'Successfully unsubscribed from SMS digests'
     });
   } catch (err) {
-    console.error('SMS unsubscribe error:', err);
-    return Response.json(
-      { error: 'Failed to unsubscribe' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({
+      request, env, error: err,
+      source: 'handleSmsUnsubscribe',
+      fallbackMessage: 'Failed to unsubscribe',
+      status: 500,
+    });
   }
 }
 

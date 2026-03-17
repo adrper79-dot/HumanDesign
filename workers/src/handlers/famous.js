@@ -20,6 +20,7 @@ import celebsData from '../data/celebrities.json' with { type: 'json' };
 import { trackEvent } from './achievements.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 /**
  * GET /api/compare/celebrities
@@ -105,13 +106,11 @@ export async function handleGetCelebrityMatches(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error finding celebrity matches:', error);
-    return new Response(JSON.stringify({
-      ok: false,
-      error: 'Failed to find celebrity matches'
-    }), {
+    return reportHandledRouteError({
+      request, env, error,
+      source: 'handleGetCelebrityMatches',
+      fallbackMessage: 'Failed to find celebrity matches',
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
@@ -198,13 +197,11 @@ export async function handleGetCelebrityMatchById(request, env, celebrityId) {
     });
     
   } catch (error) {
-    console.error('Error getting celebrity match:', error);
-    return new Response(JSON.stringify({
-      ok: false,
-      error: 'Failed to get celebrity match'
-    }), {
+    return reportHandledRouteError({
+      request, env, error,
+      source: 'handleGetCelebrityMatchById',
+      fallbackMessage: 'Failed to get celebrity match',
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
@@ -272,14 +269,7 @@ export async function handleGetCelebritiesByCategory(request, env, category) {
     });
     
   } catch (error) {
-    console.error('Error getting celebrities by category:', error);
-    return new Response(JSON.stringify({
-      ok: false,
-      error: 'Failed to get celebrities'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return reportHandledRouteError({ request, env, error, source: 'famous-get-by-category' });
   }
 }
 
@@ -322,13 +312,11 @@ export async function handleSearchCelebrities(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error searching celebrities:', error);
-    return new Response(JSON.stringify({
-      ok: false,
-      error: 'Failed to search celebrities'
-    }), {
+    return reportHandledRouteError({
+      request, env, error,
+      source: 'handleSearchCelebrities',
+      fallbackMessage: 'Failed to search celebrities',
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
@@ -357,13 +345,11 @@ export async function handleGetAllCelebrities(request, env, ctx) {
     });
     
   } catch (error) {
-    console.error('Error getting all celebrities:', error);
-    return new Response(JSON.stringify({
-      ok: false,
-      error: 'Failed to get celebrities'
-    }), {
+    return reportHandledRouteError({
+      request, env, error,
+      source: 'handleGetAllCelebrities',
+      fallbackMessage: 'Failed to get all celebrities',
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
     });
   }
 }

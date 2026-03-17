@@ -564,6 +564,6 @@ export async function markReferralAsConverted(env, userId) {
     }).catch(err => console.warn('[referrals] Conversion notification failed (non-fatal):', err.message));
     
   } catch (error) {
-    console.error('Error marking referral as converted:', error);
+    console.warn('[referrals] markReferralAsConverted failed (non-fatal):', error?.message);
   }
 }

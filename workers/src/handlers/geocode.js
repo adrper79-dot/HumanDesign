@@ -19,6 +19,7 @@
  */
 
 import { kvCache, keys, TTL } from '../lib/cache.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleGeocode(request, env) {
   try {
@@ -95,11 +96,12 @@ export async function handleGeocode(request, env) {
 
   return Response.json(result);
   } catch (err) {
-    console.error(JSON.stringify({ event: 'geocode_error', error: err.message }));
-    return Response.json(
-      { error: 'Geocoding failed — please try again.' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({
+      request, env, error: err,
+      source: 'handleGeocode',
+      fallbackMessage: 'Geocoding failed — please try again.',
+      status: 500,
+    });
   }
 }
 

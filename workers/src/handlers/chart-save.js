@@ -19,6 +19,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { reportHandledRouteError } from '../lib/routeErrors.js';
 
 export async function handleSaveChart(request, env) {
   const userId = request._user?.sub;
@@ -75,11 +76,12 @@ export async function handleSaveChart(request, env) {
       savedAt: new Date().toISOString()
     });
   } catch (err) {
-    console.error('Chart save failed:', err);
-    return Response.json(
-      { error: 'Failed to save chart' }, // BL-R-H2
-      { status: 500 }
-    );
+    return reportHandledRouteError({
+      request, env, error: err,
+      source: 'handleSaveChart',
+      fallbackMessage: 'Failed to save chart',
+      status: 500,
+    });
   }
 }
 
@@ -120,10 +122,11 @@ export async function handleChartHistory(request, env) {
       count: charts.length
     });
   } catch (err) {
-    console.error('Chart history fetch failed:', err);
-    return Response.json(
-      { error: 'Failed to fetch chart history' },
-      { status: 500 }
-    );
+    return reportHandledRouteError({
+      request, env, error: err,
+      source: 'handleChartHistory',
+      fallbackMessage: 'Failed to fetch chart history',
+      status: 500,
+    });
   }
 }
