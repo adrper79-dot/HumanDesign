@@ -13,6 +13,20 @@
  *   FROM_EMAIL - Sender email (e.g., "Prime Self <hello@primeself.app>")
  */
 
+const TYPE_DISPLAY = {
+  'Generator': 'Builder Pattern', 'Manifesting Generator': 'Builder-Initiator Pattern',
+  'Projector': 'Guide Pattern', 'Manifestor': 'Catalyst Pattern', 'Reflector': 'Mirror Pattern',
+};
+function displayType(t) { return TYPE_DISPLAY[t] || t; }
+
+const AUTH_DISPLAY = {
+  'Emotional': 'Emotional Wave Navigation', 'Emotional Authority': 'Emotional Wave Navigation',
+  'Sacral': 'Life Force Response', 'Sacral Authority': 'Life Force Response',
+  'Splenic': 'Intuitive Knowing', 'Splenic Authority': 'Intuitive Knowing',
+  'Self-Projected': 'Voiced Truth', 'Ego': 'Willpower Alignment',
+};
+function displayAuth(a) { return AUTH_DISPLAY[a] || a; }
+
 /**
  * Send email via Resend API
  * @param {Object} options
@@ -174,7 +188,7 @@ export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, 
     
     ${chartType === 'Generator' || chartType === 'Manifesting Generator' ? `
     <div class="highlight">
-      <h3>As a ${chartType}, you:</h3>
+      <h3>Your ${displayType(chartType)} energy:</h3>
       <ul>
         <li>Have sustainable life force energy when doing what lights you up</li>
         <li>Make best decisions by waiting to respond (not initiating)</li>
@@ -185,7 +199,7 @@ export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, 
     </div>
     ` : chartType === 'Projector' ? `
     <div class="highlight">
-      <h3>As a Projector, you:</h3>
+      <h3>Your Guide Pattern energy:</h3>
       <ul>
         <li>Are designed to guide and direct others' energy</li>
         <li>Make best decisions when recognized and invited</li>
@@ -196,18 +210,18 @@ export async function sendWelcomeEmail2(userEmail, userName, chartType, apiKey, 
     </div>
     ` : chartType === 'Manifestor' ? `
     <div class="highlight">
-      <h3>As a Manifestor, you:</h3>
+      <h3>Your Catalyst Pattern energy:</h3>
       <ul>
         <li>Are designed to initiate and make things happen</li>
         <li>Make best decisions by informing before acting</li>
-        <li>Work in bursts of energy (not sustainable like Generators)</li>
+        <li>Work in bursts of energy (not sustained like a Builder Pattern)</li>
         <li>Create impact and change when you follow your urges</li>
       </ul>
       <p><strong>This week:</strong> Before making a move, inform the people it affects. Notice how resistance melts.</p>
     </div>
     ` : chartType === 'Reflector' ? `
     <div class="highlight">
-      <h3>As a Reflector, you:</h3>
+      <h3>Your Mirror Pattern energy:</h3>
       <ul>
         <li>Are designed to mirror and evaluate the health of your environment</li>
         <li>Make best decisions over a full lunar cycle (28 days)</li>
@@ -281,7 +295,7 @@ export async function sendWelcomeEmail3(userEmail, userName, authority, apiKey, 
     </div>
     
     ${authority === 'Sacral' ? `
-    <h3>Your Sacral Authority</h3>
+    <h3>Your Life Force Response</h3>
     <p>You make best decisions by listening to your gut response - that immediate "uh-huh" (yes) or "uhn-uhn" (no) you feel in your belly.</p>
     
     <div class="example">
@@ -290,7 +304,7 @@ export async function sendWelcomeEmail3(userEmail, userName, authority, apiKey, 
     
     <p><strong>This week's experiment:</strong> Ask yourself yes/no questions out loud and listen for the Sacral sound. Practice with low-stakes decisions (what to eat, which route to drive).</p>
     ` : authority === 'Emotional' ? `
-    <h3>Your Emotional Authority</h3>
+    <h3>Your Emotional Wave Navigation</h3>
     <p>You make best decisions by riding your emotional wave. Never decide in the high or low - wait for clarity over time.</p>
     
     <div class="example">
@@ -299,7 +313,7 @@ export async function sendWelcomeEmail3(userEmail, userName, authority, apiKey, 
     
     <p><strong>This week's experiment:</strong> For any big decision, wait at least 24-48 hours. Notice how your emotional clarity shifts day by day.</p>
     ` : authority === 'Splenic' ? `
-    <h3>Your Splenic Authority</h3>
+    <h3>Your Intuitive Knowing</h3>
     <p>You make best decisions through intuitive hits in the moment. Your body knows instantly - the challenge is trusting it.</p>
     
     <div class="example">

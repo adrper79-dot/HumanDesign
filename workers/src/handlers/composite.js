@@ -23,6 +23,13 @@ import { trackEvent } from './achievements.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 
+// ─── Display-name mapping for HD types ─────────────────────────────
+const TYPE_DISPLAY = {
+  'Generator': 'Builder', 'Manifesting Generator': 'Builder-Initiator',
+  'Projector': 'Guide', 'Manifestor': 'Catalyst', 'Reflector': 'Mirror',
+};
+function dType(t) { return TYPE_DISPLAY[t] || t; }
+
 // ─── Channel definitions: [gateA, gateB, centerA, centerB] ──────
 const CHANNELS = [
   [1,  8,  'G',           'Throat'],
@@ -306,7 +313,7 @@ function describeDynamics(chartA, chartB, electromagnetic) {
   // Type interaction
   dynamics.push({
     area: 'energy-dynamic',
-    note: `${chartA.type} + ${chartB.type}: ` + typeInteraction(chartA.type, chartB.type)
+    note: `${dType(chartA.type)} + ${dType(chartB.type)}: ` + typeInteraction(chartA.type, chartB.type)
   });
 
   return dynamics;
@@ -318,20 +325,20 @@ function describeDynamics(chartA, chartB, electromagnetic) {
 function typeInteraction(typeA, typeB) {
   const pair = [typeA, typeB].sort().join('+');
   const interactions = {
-    'Generator+Generator': 'Powerful sustaining energy. Both have sacral response — the key is respecting each other\'s capacity signals.',
-    'Generator+Manifestor': 'Initiator meets sustainer. The Manifestor informs, the Generator responds to the invitation from the work.',
-    'Generator+Projector': 'The Generator provides energy, the Projector provides direction. Recognition and invitation are essential.',
-    'Generator+Reflector': 'The Generator\'s consistent aura provides stability for the Reflector\'s sampling process.',
-    'Generator+Manifesting Generator': 'Double sacral power. Both respond, but the MG may move faster. Patience with timing differences.',
-    'Manifestor+Manifestor': 'Two initiating forces. Clear informing is critical to avoid energetic collisions.',
-    'Manifestor+Projector': 'The Manifestor initiates, the Projector sees the most efficient path. Informing and recognition matter.',
-    'Manifestor+Reflector': 'The Manifestor\'s fixed aura gives the Reflector something consistent to sample.',
-    'Manifesting Generator+Manifesting Generator': 'Rapid, multi-tracking energy. Both leap and correct course. Mutual response is key.',
-    'Manifesting Generator+Projector': 'Speed meets precision. The MG brings versatile energy, the Projector provides focused guidance.',
-    'Manifesting Generator+Reflector': 'The MG\'s dynamic energy gives the Reflector a strong aura to reflect.',
-    'Projector+Projector': 'Both see deeply. The challenge is who guides whom — mutual recognition and taking turns.',
+    'Generator+Generator': 'Powerful sustaining energy. Both Builder Patterns have sacral response — the key is respecting each other\'s capacity signals.',
+    'Generator+Manifestor': 'Catalyst meets Builder. The Catalyst informs, the Builder responds to the invitation from the work.',
+    'Generator+Projector': 'The Builder provides energy, the Guide provides direction. Recognition and invitation are essential.',
+    'Generator+Reflector': 'The Builder\'s consistent aura provides stability for the Mirror\'s sampling process.',
+    'Generator+Manifesting Generator': 'Double sacral power. Both respond, but the Builder-Initiator may move faster. Patience with timing differences.',
+    'Manifestor+Manifestor': 'Two Catalyst forces. Clear informing is critical to avoid energetic collisions.',
+    'Manifestor+Projector': 'The Catalyst initiates, the Guide sees the most efficient path. Informing and recognition matter.',
+    'Manifestor+Reflector': 'The Catalyst\'s fixed aura gives the Mirror something consistent to sample.',
+    'Manifesting Generator+Manifesting Generator': 'Rapid, multi-tracking energy. Both Builder-Initiators leap and correct course. Mutual response is key.',
+    'Manifesting Generator+Projector': 'Speed meets precision. The Builder-Initiator brings versatile energy, the Guide provides focused guidance.',
+    'Manifesting Generator+Reflector': 'The Builder-Initiator\'s dynamic energy gives the Mirror a strong aura to reflect.',
+    'Projector+Projector': 'Both Guides see deeply. The challenge is who guides whom — mutual recognition and taking turns.',
     'Projector+Reflector': 'Two non-energy types creating awareness together. Rest and alone time are vital.',
-    'Reflector+Reflector': 'Rare and highly sensitive pairing. Both reflect the environment and each other\'s reflections.'
+    'Reflector+Reflector': 'Rare and highly sensitive pairing. Both Mirrors reflect the environment and each other\'s reflections.'
   };
   return interactions[pair] || 'A unique pairing with its own dynamics.';
 }

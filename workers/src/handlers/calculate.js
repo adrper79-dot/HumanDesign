@@ -102,7 +102,7 @@ export async function handleCalculate(request, env) {
 
       // CMO-012: Fire-and-forget chart-ready notification to any practitioners for this client
       if (chartId && env.RESEND_API_KEY) {
-        (async () => {
+        request._ctx?.waitUntil((async () => {
           try {
             const prows = await query(QUERIES.getPractitionersForClient, [userId]);
             const hdChart = result.chart || result;
@@ -120,7 +120,7 @@ export async function handleCalculate(request, env) {
               );
             }
           } catch { /* non-fatal */ }
-        })();
+        })());
       }
     } catch (e) {
       // DB failure is non-fatal — chart still returned; demoted to warn

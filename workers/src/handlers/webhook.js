@@ -197,6 +197,10 @@ async function resolveSubscriptionForBillingEvent(query, stripe, env, { customer
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   const priceId = subscription.items.data[0]?.price.id;
+  if (!priceId) {
+    log.error({ action: 'billing_missing_price_id', subscriptionId, customerId, eventType });
+    return null;
+  }
   const tier = getTierFromPriceId(priceId, env, { log, eventType });
   const status = mapStripeStatus(subscription.status);
 
@@ -372,6 +376,10 @@ async function handleCheckoutCompleted(event, query, stripe, env, log) {
   // Fetch full subscription details
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   const priceId = subscription.items.data[0]?.price.id;
+  if (!priceId) {
+    log.error({ action: 'checkout_missing_price_id', subscriptionId, sessionId: session.id });
+    return Response.json({ received: true, warning: 'subscription has no price' }, { status: 200 });
+  }
   const tier = getTierFromPriceId(priceId, env, { log, eventType: event.type });
 
   // Atomic: upsert subscription + update user tier together
@@ -504,6 +512,10 @@ async function handleSubscriptionUpdated(event, query, env, log) {
   const customerId = subscription.customer;
   const subscriptionId = subscription.id;
   const priceId = subscription.items.data[0]?.price.id;
+  if (!priceId) {
+    log.error({ action: 'subscription_update_missing_price_id', subscriptionId, customerId });
+    return Response.json({ received: true, warning: 'subscription has no price' }, { status: 200 });
+  }
   const tier = getTierFromPriceId(priceId, env, { log, eventType: event.type });
 
   // Find subscription by customer ID

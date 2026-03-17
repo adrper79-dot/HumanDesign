@@ -288,7 +288,7 @@ export async function handleProfileStream(request, env, ctx) {
 
             // CMO-012: Notify practitioners when client profile is ready
             if (profileId && env.RESEND_API_KEY && userId) {
-              (async () => {
+              request._ctx?.waitUntil((async () => {
                 try {
                   const prows = await query(QUERIES.getPractitionersForClient, [userId]);
                   for (const prac of (prows.rows || [])) {
@@ -303,7 +303,7 @@ export async function handleProfileStream(request, env, ctx) {
                     );
                   }
                 } catch { /* non-fatal */ }
-              })();
+              })());
             }
           }
         } catch (err) {

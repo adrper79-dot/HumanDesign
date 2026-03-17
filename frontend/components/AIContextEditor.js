@@ -70,7 +70,7 @@ export class AIContextEditor {
         <textarea
           id="context-textarea"
           class="ai-context-textarea"
-          placeholder="E.g., 'Manifestor with sacral authority, tends to overthink decisions, recently transitioned careers, exploring work-life balance...'"
+          placeholder="E.g., 'Catalyst Pattern with Life Force Response, tends to overthink decisions, recently transitioned careers, exploring work-life balance...'"
           maxlength="${this.maxTokens}"
           aria-describedby="context-hint"
         ></textarea>

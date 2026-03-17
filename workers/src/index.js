@@ -415,11 +415,26 @@ const EXACT_ROUTES = new Map([
   ['POST /api/email/unsubscribe',     async (request, env) => {
     const body = await request.json().catch(() => null);
     const email = body?.email;
+    const token = body?.token;
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return Response.json({ error: 'Valid email required' }, { status: 400 });
     }
+    // Verify unsubscribe token (HMAC-SHA256 of email with JWT_SECRET as key)
+    if (!token || typeof token !== 'string') {
+      return Response.json({ error: 'Unsubscribe token required' }, { status: 400 });
+    }
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw', encoder.encode(env.JWT_SECRET || 'fallback'),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(email.toLowerCase().trim()));
+    const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
+    if (token !== expected) {
+      return Response.json({ error: 'Invalid unsubscribe token' }, { status: 403 });
+    }
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const { rows } = await query(QUERIES.emailMarketingOptOut, [email.toLowerCase().trim()]);
+    await query(QUERIES.emailMarketingOptOut, [email.toLowerCase().trim()]);
     return Response.json({ ok: true, message: 'You have been unsubscribed from marketing emails.' });
   }],
 ]);

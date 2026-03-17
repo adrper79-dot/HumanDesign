@@ -711,8 +711,9 @@ export function buildRAGContext(chartData) {
     }
 
     return sections.length ? `## KNOWLEDGEBASE CONTEXT (RAG)\n\n${sections.join('\n\n---\n\n')}` : '';
-  } catch {
-    return '';
+  } catch (err) {
+    // Return partial context with error flag instead of silently dropping all RAG data
+    return `## KNOWLEDGEBASE CONTEXT (RAG)\n\n**WARNING: RAG context generation encountered an error: ${err.message}. Some grounding data may be missing. Proceed with available chart data only — do not fabricate details to fill gaps.**`;
   }
 }
 

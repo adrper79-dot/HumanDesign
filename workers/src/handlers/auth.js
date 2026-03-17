@@ -314,7 +314,7 @@ async function handleRegister(request, env) {
     const refSlug = typeof body.ref === 'string' ? body.ref.trim().toLowerCase() : null;
     if (refSlug && /^[a-z0-9-]+$/.test(refSlug) && env.NEON_CONNECTION_STRING) {
       // Store the referral association asynchronously (non-fatal)
-      (async () => {
+      request._ctx?.waitUntil((async () => {
         try {
           const refResult = await query(QUERIES.getPractitionerBySlug, [refSlug]);
           const practitioner = refResult?.rows?.[0];
@@ -324,7 +324,7 @@ async function handleRegister(request, env) {
         } catch (err) {
           console.warn('[auth] Referral capture failed (non-fatal):', err.message);
         }
-      })();
+      })());
     }
 
     const headers = new Headers({ 'Content-Type': 'application/json' });

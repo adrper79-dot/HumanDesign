@@ -620,62 +620,62 @@ function getCycleGuidance(planet, type, status) {
   const guidance = {
     saturn: {
       return: {
-        approaching: 'Prepare for major life restructuring. Review commitments, release what no longer serves.',
-        upcoming: 'A 2-3 year period of maturation and responsibility consolidation is ahead.',
-        recent: 'Integrate lessons learned. New structures are forming.'
+        approaching: 'This pattern suggests a period of structural review — your data aligns with themes of reassessing commitments and releasing outdated frameworks.',
+        upcoming: 'Your chart points to a 2-3 year maturation cycle focused on consolidating responsibility and long-term foundations.',
+        recent: 'Your data suggests this cycle carries themes of integration — new structures are taking shape from recent lessons.'
       },
       opposition: {
-        approaching: 'Mid-cycle evaluation time. What needs to change?',
-        upcoming: 'A pivotal reassessment of life direction approaches.',
-        recent: 'Course corrections are being implemented.'
+        approaching: 'This pattern aligns with a mid-cycle evaluation — themes of honest reassessment tend to surface here.',
+        upcoming: 'Your chart points to a pivotal reassessment period regarding life direction and priorities.',
+        recent: 'Your data suggests course corrections from this cycle are actively integrating into daily patterns.'
       },
       square: {
-        approaching: 'Tension building. Address unresolved issues now.',
-        upcoming: 'A challenging period requiring persistence and discipline.',
-        recent: 'Obstacles were growth opportunities in disguise.'
+        approaching: 'This pattern suggests rising tension — your data aligns with themes of addressing unresolved structural issues.',
+        upcoming: 'Your chart points to a period that typically calls for persistence, discipline, and deliberate effort.',
+        recent: 'Your data suggests recent obstacles carried growth-oriented themes — patterns of resilience are consolidating.'
       }
     },
     jupiter: {
       return: {
-        approaching: 'Expansion phase beginning. Say yes to opportunities.',
-        upcoming: 'A year of growth, learning, and new possibilities.',
-        recent: 'Integrate new wisdom and experiences gained.'
+        approaching: 'This pattern suggests an expansion phase — your data aligns with themes of openness to new opportunities.',
+        upcoming: 'Your chart points to a year-long cycle oriented around growth, learning, and broadened perspective.',
+        recent: 'Your data suggests this cycle carries themes of integrating newly gained wisdom and experiences.'
       }
     },
     uranus: {
       opposition: {
-        approaching: 'Mid-life awakening approaching. Embrace authentic self.',
-        upcoming: 'Prepare for radical changes. Freedom vs. security themes.',
-        recent: 'Life has been revolutionized. Find new stability.'
+        approaching: 'This pattern suggests a mid-life awakening theme — your data aligns with a push toward greater authenticity.',
+        upcoming: 'Your chart points to themes of change and tension between freedom and security.',
+        recent: 'Your data suggests this cycle has carried revolutionary themes — patterns of finding new stability are emerging.'
       },
       square: {
-        approaching: 'Breakthrough moment coming. Question everything.',
-        upcoming: 'Rebellion against constraints. Innovation required.',
-        recent: 'Liberation achieved. Integrate sudden changes.'
+        approaching: 'This pattern suggests a breakthrough theme — your data aligns with questioning established structures.',
+        upcoming: 'Your chart points to themes of innovation and pushing against constraints.',
+        recent: 'Your data suggests this cycle carried liberation themes — sudden changes are integrating into new patterns.'
       }
     },
     chiron: {
       return: {
-        approaching: 'Your wounds become your medicine. Prepare to teach.',
-        upcoming: 'A period of deep healing and spiritual maturity.',
-        recent: 'You are now the wounded healer. Share your gifts.'
+        approaching: 'This period\'s data aligns with themes of turning experience into wisdom.',
+        upcoming: 'Your chart points to a period oriented around deep healing and accumulated maturity.',
+        recent: 'Your chart suggests this cycle carries themes of deep healing and sharing accumulated insight.'
       }
     },
     neptune: {
       square: {
-        approaching: 'Spiritual crossroads ahead. Surrender or confusion?',
-        upcoming: 'Dreams dissolve or transform. Trust the process.',
-        recent: 'Illusions cleared. New vision emerging.'
+        approaching: 'This pattern suggests a spiritual crossroads theme — your data aligns with navigating between surrender and clarity.',
+        upcoming: 'Your chart points to themes of dissolving old visions and allowing new ones to form.',
+        recent: 'Your data suggests this cycle carried themes of clearing illusions — new clarity is emerging.'
       }
     },
     pluto: {
       square: {
-        approaching: 'Transformation accelerating. Release control.',
-        upcoming: 'Death and rebirth cycle. Power dynamics shift.',
-        recent: 'You are reborn. Claim your power.'
+        approaching: 'This pattern suggests accelerating transformation themes — your data aligns with releasing old forms of control.',
+        upcoming: 'This pattern points to themes of transformation and shifting power dynamics.',
+        recent: 'Your data suggests a rebirth cycle — a time of stepping into renewed authority.'
       }
     }
   };
 
-  return guidance[planet]?.[type]?.[status] || 'Navigate this cycle with awareness and intention.';
+  return guidance[planet]?.[type]?.[status] || 'This pattern suggests navigating this cycle with awareness and intentional observation.';
 }

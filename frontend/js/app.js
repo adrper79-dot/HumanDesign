@@ -18,6 +18,26 @@ let authMode = 'login'; // 'login' | 'register'
 let _pendingResetToken = null; // SEC-001: closure-scoped, never on window
 let currentUser = null; // populated by fetchUserProfile() — frozen on set (P2-FE-013); module-scoped (SYS-031)
 
+// ─── Canonical display-name mapping (PRODUCT_PRINCIPLES.md §8) ───
+const DISPLAY_TYPE = {
+  'Generator': 'Builder Pattern', 'Manifesting Generator': 'Builder-Initiator Pattern',
+  'Projector': 'Guide Pattern', 'Manifestor': 'Catalyst Pattern', 'Reflector': 'Mirror Pattern',
+};
+const DISPLAY_AUTH = {
+  'Emotional': 'Emotional Wave Navigation', 'Emotional Authority': 'Emotional Wave Navigation',
+  'Sacral': 'Life Force Response', 'Sacral Authority': 'Life Force Response',
+  'Splenic': 'Intuitive Knowing', 'Splenic Authority': 'Intuitive Knowing',
+  'Ego': 'Willpower Alignment', 'Heart': 'Willpower Alignment',
+  'Self-Projected': 'Voiced Truth', 'Lunar': 'Lunar Cycle Awareness', 'None': 'Outer Authority',
+};
+const DISPLAY_DEF = {
+  'Split': 'Bridging Pattern', 'Triple Split': 'Triple Bridging Pattern',
+  'Quadruple Split': 'Quadruple Bridging Pattern', 'No Definition': 'Open Flow',
+};
+function dType(v) { return DISPLAY_TYPE[v] || v; }
+function dAuth(v) { return DISPLAY_AUTH[v] || v; }
+function dDef(v) { return DISPLAY_DEF[v] || v; }
+
 // Tier display configuration — HD_UPDATES3 naming
 const TIER_DISPLAY = {
   free:         { label: 'FREE',          badge: 'tier-free',         canUpgrade: true,  isPro: false },
@@ -531,7 +551,10 @@ function checkEmailUnsubscribeAction() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email })
   })
-  .then(r => r.json())
+  .then(r => {
+    if (!r.ok) throw new Error('Unsubscribe failed');
+    return r.json();
+  })
   .then(data => {
     if (data.ok) showNotification('You have been unsubscribed from marketing emails.', 'success');
     else showNotification(data.error || 'Unsubscribe failed. Please try again.', 'error');
@@ -630,7 +653,10 @@ function checkEmailVerificationAction() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token: verifyToken })
   })
-  .then(r => r.json())
+  .then(r => {
+    if (!r.ok) throw new Error('Verification failed');
+    return r.json();
+  })
   .then(data => {
     if (data.ok) {
       showNotification('Email verified! You now have full access to AI features.', 'success');
@@ -1047,6 +1073,7 @@ async function submitAuth() {
     localStorage.removeItem('ps_token');
     // Apply pending referral code (if user arrived via a ?ref= link)
     if (authMode === 'register') {
+      trackEvent('auth', 'register', 'email');
       const pendingRef = localStorage.getItem('ps_pending_ref');
       if (pendingRef) {
         fetch(API + '/api/referrals/apply', {
@@ -1059,6 +1086,8 @@ async function submitAuth() {
           else console.warn('Referral apply failed, will retry next login');
         }).catch(() => console.warn('Referral apply network error, will retry next login'));
       }
+    } else {
+      trackEvent('auth', 'login', 'email');
     }
     updateAuthUI();
     closeAuthOverlay();
@@ -1382,6 +1411,8 @@ async function startCheckout(tier, event) {
     const checkoutBody = { tier };
     if (activePromoCode) checkoutBody.promoCode = activePromoCode;
     if (activeBillingPeriod === 'annual') checkoutBody.billingPeriod = 'annual';
+
+    trackEvent('billing', 'checkout_start', tier);
 
     const result = await apiFetch('/api/billing/checkout', {
       method: 'POST',
@@ -2342,6 +2373,7 @@ async function calculateChart() {
     const data = await apiFetch('/api/chart/calculate', { method: 'POST', body: JSON.stringify(payload) });
     resultEl.innerHTML = renderChart(data);
     _applyChartHeadings(resultEl);
+    trackEvent('chart', 'calculate');
     // Save birth data to localStorage after successful chart calculation
     saveBirthData();
     // Update overview tab with fresh data
@@ -2566,7 +2598,7 @@ function renderChart(data) {
         ${getExplanation(PROFILE_EXPLANATIONS, chart.profile)}
         ${row('Circuit Type <span class="icon-info help-icon" title="How your energy centers connect: Single, Split, Triple Split, or Quad Split. Affects how you process and share energy"></span>', chart.definition)}
         ${getExplanation(DEFINITION_EXPLANATIONS, chart.definition)}
-        ${row('Not-Self Theme <span class="icon-info help-icon" title="The emotional signal that you are out of alignment with your pattern and strategy"></span>', chart.notSelfTheme)}
+        ${row('Not-Self Signal <span class="icon-info help-icon" title="The emotional signal that you are out of alignment with your pattern and strategy"></span>', chart.notSelfTheme)}
         ${getExplanation(NOT_SELF_EXPLANATIONS, chart.notSelfTheme)}
         ${(() => {
           const sigMap = { 'Generator': 'Satisfaction', 'Manifesting Generator': 'Satisfaction', 'Manifestor': 'Peace', 'Projector': 'Success', 'Reflector': 'Surprise' };
@@ -2637,7 +2669,7 @@ function renderChart(data) {
 
   // Interactive Bodygraph (Phase 7)
   const _bgId = 'bodygraph-' + Date.now();
-  html += `<div class="section-header">Your Bodygraph <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
+  html += `<div class="section-header">Your Energy Chart <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
   <div class="card" style="padding:var(--space-4);text-align:center">
     <div id="${_bgId}" style="min-height:420px"></div>
     <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap a center or channel to explore</div>
@@ -2966,34 +2998,34 @@ function renderChart(data) {
 
   // Per-type deeper guidance
   const typeGuidance = {
-    'Generator': 'As a Generator, your life force is the most abundant and consistent in the system. You are built to master things you genuinely love — the key word is <em>genuinely</em>. When you are engaged with work or a project that lights you up, your energy feels renewable and your impact multiplies. When you are doing things out of obligation or to please others, you drain. The Sacral gut response is your infallible compass: pay attention to sounds and sensations your body makes before your mind catches up.',
-    'Manifesting Generator': 'As a Manifesting Generator, you move faster than almost anyone else and can do multiple things simultaneously without losing quality. The trap is initiating from the mind rather than from a gut response. You skip steps others cannot, and that is fine — but you must still wait for a clear sacral yes before starting. Let life show you the opening, then explode into it. Frustration or anger signals you\'ve been trying to push through on pure willpower.',
-    'Projector': 'As a Projector, your gift is your ability to see systems and people more clearly than they see themselves. You are not designed to match a Generator\'s output — your power is concentrated, not continuous. The invitation matters enormously: when someone genuinely asks for your guidance, your insights land deep. When you give guidance uninvited, even correct guidance, it creates resistance. Rest without guilt. Your clarity comes from withdrawal as much as engagement.',
-    'Manifestor': 'As a Manifestor, you carry a closed, repelling aura that can make others feel like you are moving too fast or operating in secret — even when you\'re not. You are designed to initiate new things that others then carry forward. The fix is simple and transformative: inform the people who will be affected by your actions before you act. A quick "I\'m about to do X" dissolves the resistance that builds around your natural energy. Anger signals you\'ve been suppressing your instinct to move.',
-    'Reflector': 'As a Reflector, you are profoundly rare — less than 1% of people share your design. With no defined centers, you amplify and reflect the energy of everyone around you. You are the most sensitive barometer in any environment, and your feelings about a place or group are genuinely accurate readings of that community\'s health. Protect your environment fiercely. Never rush major decisions — wait the full 28-day lunar cycle, talking to many different people until clarity arrives on its own.'
+    'Generator': 'Builder Pattern: Your chart reveals the most abundant and consistent life-force energy in the system. This pattern suggests you thrive when you master things you genuinely love — the key word is <em>genuinely</em>. When you are engaged with work or a project that lights you up, your energy feels renewable and your impact multiplies. When you are doing things out of obligation or to please others, the data suggests you drain. The Sacral gut response is your compass: pay attention to sounds and sensations your body makes before your mind catches up.',
+    'Manifesting Generator': 'Builder-Initiator Pattern: Your data shows a rare combination — the sustained life force of a Builder with the initiating impulse of a Catalyst. This pattern suggests you move faster than almost anyone and can do multiple things simultaneously without losing quality. The trap is initiating from the mind rather than from a gut response. You skip steps others cannot, and that is fine — but this pattern works best when you wait for a clear sacral yes before starting. Let life show you the opening, then explode into it. Frustration or anger signals you\'ve been trying to push through on pure willpower.',
+    'Projector': 'Guide Pattern: Your chart points to a natural ability to see systems and people more clearly than they see themselves. This pattern suggests you\'re not designed to match a Builder\'s output — your power is concentrated, not continuous. The invitation matters enormously: when someone genuinely asks for your guidance, your insights land deep. When you give guidance uninvited, even correct guidance, it creates resistance. Rest without guilt. Your clarity comes from withdrawal as much as engagement.',
+    'Manifestor': 'Catalyst Pattern: Your data reveals a closed, initiating energy field. This pattern suggests you are designed to initiate new things that others then carry forward. Others may feel like you are moving too fast or operating in secret — even when you\'re not. The fix is simple and transformative: inform the people who will be affected by your actions before you act. A quick "I\'m about to do X" dissolves the resistance that builds around your natural energy. Anger signals you\'ve been suppressing your instinct to move.',
+    'Reflector': 'Mirror Pattern: Your chart shows the rarest configuration — all centers open. This pattern suggests you reflect and amplify the energy of your environment. Less than 1% of people share this design. You are the most sensitive barometer in any environment, and your feelings about a place or group are genuinely accurate readings of that community\'s health. Protect your environment fiercely. Never rush major decisions — this pattern works best when you wait the full 28-day lunar cycle, talking to many different people until clarity arrives on its own.'
   };
 
   // Per-authority deeper guidance
   const authorityGuidance = {
-    'Emotional': 'Your Emotional Authority means clarity never arrives in a single moment — it reveals itself over time. Never make a commitment at the peak of excitement or the depth of fear. Sleep on decisions, then sleep on them again. When the emotional wave has settled and you still feel a quiet "yes," that yes is trustworthy. The phrase "I need time to feel this through" is power, not weakness.',
-    'Emotional Authority': 'Your Emotional Authority means clarity never arrives in a single moment — it reveals itself over time. Never make a commitment at the peak of excitement or the depth of fear. Sleep on decisions, then sleep on them again. When the emotional wave has settled and you still feel a quiet "yes," that yes is trustworthy. The phrase "I need time to feel this through" is power, not weakness.',
-    'Sacral': 'Your Sacral Authority is a body-based yes/no signal that speaks before your mind does. Listen for sounds — an "uh-huh" in your throat or chest when life offers something aligned, an "unh-unh" when it doesn\'t. Ask yourself yes/no questions out loud and notice what your body does. The sacral speaks once, in the present tense. It does not debate.',
-    'Sacral Authority': 'Your Sacral Authority is a body-based yes/no signal that speaks before your mind does. Listen for sounds — an "uh-huh" in your throat or chest when life offers something aligned, an "unh-unh" when it doesn\'t. Ask yourself yes/no questions out loud and notice what your body does. The sacral speaks once, in the present tense. It does not debate.',
-    'Splenic': 'Your Splenic Authority is the quietest voice in the system. It speaks once, in the moment, as a faint knowing or a sudden "that\'s off" feeling. It never repeats itself. If you wait to hear it again — it will be gone. Trust the first instinct even when you can\'t explain it logically. Your body\'s survival intelligence is older and faster than your conscious mind.',
-    'Splenic Authority': 'Your Splenic Authority is the quietest voice in the system. It speaks once, in the moment, as a faint knowing or a sudden "that\'s off" feeling. It never repeats itself. If you wait to hear it again — it will be gone. Trust the first instinct even when you can\'t explain it logically. Your body\'s survival intelligence is older and faster than your conscious mind.',
-    'Self-Projected': 'Your Self-Projected Authority means you find your truth by speaking it out loud. Not to get advice — to hear yourself. Talk through important decisions with a trusted person who will listen rather than give opinions. As you speak, your authentic direction reveals itself in your own voice. The answer is always already in you.',
-    'Ego': 'Your Ego Authority is rare. You have consistent willpower, and your "I want" or "I don\'t want" is not selfishness — it is your navigation system. What the heart genuinely wants leads you correctly. What the heart genuinely rejects leads you to depletion. Commit only to what you will actually do.',
-    'Mental': 'As a Projector with Mental/No Inner Authority, your truth comes from your environment, not from within. There\'s no single internal oracle — you need to talk through decisions with many different people and gather perspectives. The answer emerges from the conversation, not from any one voice. Choose your sounding boards wisely.',
-    'Lunar': 'As a Reflector, your authority unfolds across a full 28-day lunar cycle. Live with a decision for a full month before acting on it. Talk to many different people as the moon moves through each gate — each person mirrors back a different facet of the choice. When the cycle completes and the feeling is consistent, you have your answer.'
+    'Emotional': 'Emotional Wave Navigation: Your chart data suggests clarity comes through emotional cycles rather than in a single moment. This pattern works best when you avoid committing at the peak of excitement or the depth of fear. Sleep on decisions, then sleep on them again. When the emotional wave has settled and you still feel a quiet "yes," that yes is trustworthy. The phrase "I need time to feel this through" is power, not weakness.',
+    'Emotional Authority': 'Emotional Wave Navigation: Your chart data suggests clarity comes through emotional cycles rather than in a single moment. This pattern works best when you avoid committing at the peak of excitement or the depth of fear. Sleep on decisions, then sleep on them again. When the emotional wave has settled and you still feel a quiet "yes," that yes is trustworthy. The phrase "I need time to feel this through" is power, not weakness.',
+    'Sacral': 'Life Force Response: Your chart points to a body-based yes/no signal that speaks before your mind does. Listen for sounds — an "uh-huh" in your throat or chest when life offers something aligned, an "unh-unh" when it doesn\'t. Ask yourself yes/no questions out loud and notice what your body does. This pattern suggests the sacral speaks once, in the present tense. It does not debate.',
+    'Sacral Authority': 'Life Force Response: Your chart points to a body-based yes/no signal that speaks before your mind does. Listen for sounds — an "uh-huh" in your throat or chest when life offers something aligned, an "unh-unh" when it doesn\'t. Ask yourself yes/no questions out loud and notice what your body does. This pattern suggests the sacral speaks once, in the present tense. It does not debate.',
+    'Splenic': 'Intuitive Knowing: Your chart reveals one of the quietest inner signals in the system. It speaks once, in the moment, as a faint knowing or a sudden "that\'s off" feeling. It never repeats itself. If you wait to hear it again — it will be gone. This pattern suggests trusting the first instinct even when you can\'t explain it logically. Your body\'s survival intelligence is older and faster than your conscious mind.',
+    'Splenic Authority': 'Intuitive Knowing: Your chart reveals one of the quietest inner signals in the system. It speaks once, in the moment, as a faint knowing or a sudden "that\'s off" feeling. It never repeats itself. If you wait to hear it again — it will be gone. This pattern suggests trusting the first instinct even when you can\'t explain it logically. Your body\'s survival intelligence is older and faster than your conscious mind.',
+    'Self-Projected': 'Voiced Truth: Your data suggests you find clarity by speaking your truth out loud. Not to get advice — to hear yourself. Talk through important decisions with a trusted person who will listen rather than give opinions. As you speak, your authentic direction reveals itself in your own voice. The answer is always already in you.',
+    'Ego': 'Willpower Alignment: Your chart shows a rare consistent willpower center. Your "I want" or "I don\'t want" is not selfishness — this pattern suggests it is your navigation system. What the heart genuinely wants leads you correctly. What the heart genuinely rejects leads you to depletion. Commit only to what you will actually do.',
+    'Mental': 'Your chart suggests your truth comes from your environment, not from within. There\'s no single internal oracle — this pattern works best when you talk through decisions with many different people and gather perspectives. The answer emerges from the conversation, not from any one voice. Choose your sounding boards wisely.',
+    'Lunar': 'Lunar Cycle Awareness: Your chart suggests your clarity unfolds over a full lunar cycle. This pattern works best when you live with a decision for a full month before acting on it. Talk to many different people as the moon moves through each gate — each person mirrors back a different facet of the choice. When the cycle completes and the feeling is consistent, you have your answer.'
   };
 
   // Definition-type social dynamics
   const definitionGuidance = {
-    'Single': 'With a Single Definition, all your defined centers are connected in one continuous circuit. You process information in a consistent, self-contained way — you rarely need others to feel complete. You can be misread as self-sufficient to a fault. Give others time to catch up to your internal processing speed.',
-    'Split': 'With a Split Definition, your chart has two separate areas of definition and a gap between them. You naturally seek people who bridge that gap, often feeling more whole in their presence. This is not weakness — it is your design. Just be aware that bridgers can feel essential even when the relationship isn\'t right for you. Take time to check your sacral response or authority before committing.',
-    'Triple Split': 'With a Triple Split Definition, you have three separate circuitry areas. You need a variety of different people to feel the full range of your chart activated. No single person will ever complete you — and that is perfect. You are designed for rich social ecosystems. Patience is required: your complex inner life needs more time to process and decide.',
-    'Quadruple Split': 'With a Quadruple Split Definition, you have the most complex circuitry in the system. You are deeply fixed in your nature, slow to decide, and thorough. You require great diversity in your social environment to activate all four areas of your chart. Rushing any major life decision will almost always cost you. Your depth is your superpower.',
-    'No Definition': 'As a Reflector with no definition, every person you spend time with activates different parts of your chart temporarily. You are not inconsistent — you are environmental. Your open design gives you the gift of experiencing life through enormous variety. Guard your sleep environment above all else: who you sleep next to literally shapes your biology.'
+    'Single': 'Single Definition: Your chart shows all defined centers connected in one continuous circuit. This pattern suggests you process information in a consistent, self-contained way — you rarely need others to feel complete. You can be misread as self-sufficient to a fault. Give others time to catch up to your internal processing speed.',
+    'Split': 'Bridging Pattern: Your chart shows two separate areas of definition with a gap between them. This pattern suggests you naturally seek people who bridge that gap, often feeling more whole in their presence. This is not weakness — it is your design. Just be aware that bridgers can feel essential even when the relationship isn\'t right for you. Take time to check your authority before committing.',
+    'Triple Split': 'Triple Bridging Pattern: Your chart reveals three separate circuitry areas. This pattern suggests you need a variety of different people to feel the full range of your chart activated. No single person will ever complete you — and that is perfect. This design thrives in rich social ecosystems. Patience is required: your complex inner life needs more time to process and decide.',
+    'Quadruple Split': 'Quadruple Bridging Pattern: Your chart shows the most complex circuitry in the system. This pattern suggests you are deeply fixed in your nature, slow to decide, and thorough. You require great diversity in your social environment to activate all four areas of your chart. Rushing any major life decision will almost always cost you. Your depth is your superpower.',
+    'No Definition': 'Open Flow: Your chart shows no fixed definition — every person you spend time with activates different parts of your chart temporarily. This pattern suggests you are not inconsistent — you are environmental. Your open design gives you the gift of experiencing life through enormous variety. Guard your sleep environment above all else: who you sleep next to literally shapes your biology.'
   };
 
   // Build active channel titles as concrete talent list
@@ -3197,6 +3229,7 @@ async function generateProfile() {
     }
 
     resultEl.innerHTML = renderProfile(data);
+    trackEvent('profile', 'generate');
     markJourneyMilestone('profileGenerated');
     updateStepGuide('profile');
     checkAndShowReferralPrompt(); // Phase 2C
@@ -3284,11 +3317,12 @@ function renderProfile(data) {
   if (qsg) {
     html += `<div class="card">
       <div class="card-title"><span class="icon-star"></span> Your Quick Start Guide</div>
-      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-5)">Beginner-friendly overview — no jargon, just practical insights.</p>`;
+      <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-bottom:var(--space-5)">Beginner-friendly overview — no jargon, just practical insights.</p>
+      <p style="font-size:0.85em;color:#b0b0b0;margin-bottom:16px;padding:10px 14px;border-left:3px solid var(--gold, #c9a84c);background:rgba(201,168,76,0.05);border-radius:0 6px 6px 0">This synthesis is generated from your chart data across multiple systems. It reveals patterns — not fixed truths. Your lived experience is always the final authority.</p>`;
     
     if (qsg.whoYouAre) {
       html += `<div class="profile-section">
-        <h4><span class="icon-profile"></span> Who You Are</h4>
+        <h4><span class="icon-profile"></span> What Your Data Reveals</h4>
         <p style="font-size:var(--font-size-base);line-height:1.7;color:var(--text)">${escapeHtml(qsg.whoYouAre)}</p>
       </div>`;
     }
@@ -3411,7 +3445,7 @@ function renderProfile(data) {
         const lw = gk.lifesWork;
         html += `<div class="profile-section">
           <h4>Life's Work — Frequency Key ${lw.key}</h4>
-          <p style="font-size:var(--font-size-sm);margin-top:var(--space-2)"><strong style="color:#f56565">Shadow:</strong> ${escapeHtml(lw.shadow)}</p>
+          <p style="font-size:var(--font-size-sm);margin-top:var(--space-2)"><strong style="color:#f56565">Shadow Pattern:</strong> ${escapeHtml(lw.shadow)}</p>
           <p style="font-size:var(--font-size-sm)"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(lw.gift)}</p>
           <p style="font-size:var(--font-size-sm)"><strong style="color:var(--gold)">Mastery:</strong> ${escapeHtml(lw.siddhi)}</p>
           ${lw.contemplation ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);font-style:italic;color:var(--text-dim)">${escapeHtml(lw.contemplation)}</p>` : ''}
@@ -3424,7 +3458,7 @@ function renderProfile(data) {
         gk.otherActiveKeys.forEach(k => {
           html += `<div style="margin-top:var(--space-3);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2)">
             <div style="font-weight:600;color:var(--gold)">FK ${escapeHtml(String(k.key))} — ${escapeHtml(k.position)}</div>
-            <p style="font-size:var(--font-size-sm);margin-top:var(--space-1)"><strong>Shadow:</strong> ${escapeHtml(k.shadow)} <strong>→ Gift:</strong> ${escapeHtml(k.gift)}</p>
+            <p style="font-size:var(--font-size-sm);margin-top:var(--space-1)"><strong>Shadow Pattern:</strong> ${escapeHtml(k.shadow)} <strong>→ Gift:</strong> ${escapeHtml(k.gift)}</p>
             ${k.message ? `<p style="font-size:var(--font-size-base);margin-top:var(--space-2);font-style:italic">${escapeHtml(k.message)}</p>` : ''}
           </div>`;
         });
@@ -6402,7 +6436,7 @@ function updateOverview(chartResponse) {
   // Mini Energy Chart
   const _ovBgId = 'overview-bodygraph-' + Date.now();
   html += `<div class="card" style="margin-bottom:var(--space-4);text-align:center">
-    <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Bodygraph</div>
+    <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-3)">Your Energy Chart</div>
     <div id="${_ovBgId}"></div>
     <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap centers and channels to explore</div>
   </div>`;
@@ -7307,12 +7341,14 @@ async function updateTierUI() {
     const tier = userData.user.tier || 'free';
     const tierLimits = {
       free: { profileGenerations: 1, practitionerTools: false },
-      regular: { profileGenerations: 30, practitionerTools: false },
-      practitioner: { profileGenerations: 200, practitionerTools: true },
-      white_label: { profileGenerations: 1000, practitionerTools: true },
-      // Legacy aliases
-      seeker: { profileGenerations: 30, practitionerTools: false },
-      guide: { profileGenerations: 200, practitionerTools: true }
+      individual: { profileGenerations: 10, practitionerTools: false },
+      practitioner: { profileGenerations: 500, practitionerTools: true },
+      agency: { profileGenerations: 2000, practitionerTools: true },
+      // Legacy aliases (match to canonical tiers for backward compat)
+      regular: { profileGenerations: 10, practitionerTools: false },
+      seeker: { profileGenerations: 10, practitionerTools: false },
+      white_label: { profileGenerations: 2000, practitionerTools: true },
+      guide: { profileGenerations: 500, practitionerTools: true },
     };
     
     const limits = tierLimits[tier];

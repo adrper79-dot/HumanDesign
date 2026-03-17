@@ -750,7 +750,7 @@ async function handleGenerateSessionBrief(userId, clientId, query, env) {
     `Authority: ${chart.authority || 'Unknown'}`,
     `Profile: ${chart.profile || 'Unknown'}`,
     `Definition: ${chart.definition || 'Unknown'}`,
-    chart.incarnationCross ? `Incarnation Cross: ${chart.incarnationCross}` : null,
+    chart.incarnationCross ? `Life Purpose Vector: ${chart.incarnationCross}` : null,
     chart.definedCenters?.length ? `Defined centers: ${chart.definedCenters.join(', ')}` : null,
   ].filter(Boolean).join('\n');
 

@@ -57,9 +57,8 @@ function findSunAtLongitude(targetLon, startJDN, tolerance = 0.0001, maxIter = 5
     jdn -= diff / 0.9856;
   }
 
-  // If we didn't converge, return best estimate (should never happen
-  // for well-formed inputs within the 1800–2100 range)
-  return jdn;
+  // Newton-Raphson failed to converge — this is a calculation integrity failure
+  throw new Error(`Design-side sun position solver did not converge after 50 iterations (target: ${targetLon.toFixed(4)}, best estimate JDN: ${jdn.toFixed(6)})`);
 }
 
 /**

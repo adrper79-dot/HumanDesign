@@ -65,7 +65,7 @@ export async function handleValidatePromo(request, env, code) {
   const { rows } = await query(QUERIES.validatePromoCode, [code.toUpperCase()]);
 
   if (!rows || rows.length === 0) {
-    return Response.json({ valid: false, error: 'Code not found or expired' }, { status: 200 });
+    return Response.json({ valid: false, error: 'Code not found or expired' }, { status: 404 });
   }
 
   const promo = rows[0];

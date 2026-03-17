@@ -315,7 +315,7 @@ function buildForgeTeachingNote(forge, chapterIndex) {
     Chronos: ['Recognition of the pattern', 'Ancestral inheritance as information', 'The unconscious Design-side', 'Saturn accountability', 'Claiming the chart with ownership'],
     Eros: ['Sacral recognition', 'Conditioned vs. authentic desire', 'Selective response', 'Integration of past forges'],
     Aether: ['Open center as perception gift', 'Lunar timing as intelligence', 'The conditioned mirror trap', 'Clear perception dissolves false authority', 'Ground state as signal'],
-    Lux: ['The invitation principle', 'Recognition before direction', 'The Projector shadow: bitterness', 'Evidence was always present'],
+    Lux: ['The invitation principle', 'Recognition before direction', 'The Guide Pattern shadow: bitterness', 'Evidence was always present'],
     Phoenix: ['Identity dissolution', 'Chrysalis consciousness', 'New self has different appetites', 'Integration of all five Forges']
   };
   const arr = teachings[forge] || [];

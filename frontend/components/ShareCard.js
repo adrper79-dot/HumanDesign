@@ -22,7 +22,7 @@ export class ShareCard {
   constructor(options = {}) {
     this.username = options.username;
     this.displayName = options.displayName || this.username;
-    this.bio = options.bio || 'Human Design Practitioner';
+    this.bio = options.bio || 'Energy Blueprint Practitioner';
     this.tier = options.tier || 'practitioner';
     this.baseUrl = 'https://selfprime.net';
     this.profileUrl = `${this.baseUrl}/#/practitioner/${this.username}`;

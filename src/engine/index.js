@@ -128,6 +128,16 @@ export function calculateFullChart(params) {
   // Layer 16: Black Moon Lilith (mean apogee) by sign and house
   const lilith = calculateLilith(jdn, astrology?.houses ?? null);
 
+  // Filter out errored supplementary layers — never pass { error: ... } to downstream consumers
+  const supplementary = { vedic, ogham, mayan, bazi, sabian, chiron, lilith };
+  const layerErrors = [];
+  for (const [name, result] of Object.entries(supplementary)) {
+    if (result && typeof result === 'object' && result.error) {
+      layerErrors.push({ layer: name, error: result.error });
+      supplementary[name] = null;
+    }
+  }
+
   return {
     birth: { year, month, day, hour, minute, second, lat, lng, jdn },
     design: {
@@ -141,12 +151,13 @@ export function calculateFullChart(params) {
     transits,
     numerology,
     geneKeys,
-    vedic,
-    ogham,
-    mayan,
-    bazi,
-    sabian,
-    chiron,
-    lilith,
+    vedic: supplementary.vedic,
+    ogham: supplementary.ogham,
+    mayan: supplementary.mayan,
+    bazi: supplementary.bazi,
+    sabian: supplementary.sabian,
+    chiron: supplementary.chiron,
+    lilith: supplementary.lilith,
+    layerErrors,
   };
 }

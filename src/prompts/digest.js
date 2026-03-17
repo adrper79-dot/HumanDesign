@@ -34,6 +34,7 @@ Rules:
 - Tone: ${tone}, grounded, never fluffy
 - No greetings, no sign-offs, no emojis
 - Every word must earn its place
+- Frame all guidance as patterns your chart data suggests — not definitive inner experiences or predictions
 - Use the person's actual chart data — no generic horoscope language`;
 
   const userMessage = `Write today's transit SMS digest for this person:
@@ -81,6 +82,7 @@ Rules:
 - Reference the person's HD strategy and authority
 - Close with one practical suggestion
 - Tone: ${tone}, grounded, actionable
+- Frame all guidance as patterns your chart data suggests — not definitive inner experiences or predictions
 - Never generic — every statement must reference actual chart positions`;
 
   const events = forecastData.events || [];

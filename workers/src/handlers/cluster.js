@@ -54,16 +54,16 @@ function analyzeClusterComposition(members) {
   const insights = [];
 
   if (!forges.has('Forge of Power')) {
-    insights.push('No Manifestor — the cluster may struggle to initiate action. Consider inviting someone who can catalyze movement.');
+    insights.push('No Catalyst — the cluster may struggle to initiate action. Consider inviting someone who can catalyze movement.');
   }
   if (!forges.has('Forge of Craft') && total > 2) {
-    insights.push('No Generator/MG — sustained energy for building may be limited. Ideas may outpace execution.');
+    insights.push('No Builder/Builder-Initiator — sustained energy for building may be limited. Ideas may outpace execution.');
   }
   if (!forges.has('Forge of Vision')) {
-    insights.push('No Projector — the cluster may lack someone who sees the efficient path. Guidance could come from outside.');
+    insights.push('No Guide — the cluster may lack someone who sees the efficient path. Guidance could come from outside.');
   }
   if (!forges.has('Forge of Mirrors') && total >= 4) {
-    insights.push('No Reflector — the group has no natural barometer for its own health. Build in regular check-ins.');
+    insights.push('No Mirror — the group has no natural barometer for its own health. Build in regular check-ins.');
   }
   if (forges.size === allForges.length) {
     insights.push('Full Forge spectrum — this cluster has all four energy types represented. Powerful potential when each is honored.');
@@ -136,7 +136,11 @@ async function handleCreate(request, env) {
       { status: 400 }
     );
   }
-  
+
+  // Cluster creation requires practitioner tier
+  const featureCheck = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (featureCheck) return featureCheck;
+
   const { name, challenge } = body;
   const createdBy = request._user?.sub; // Always use JWT identity, never body
 
@@ -290,7 +294,11 @@ async function handleJoin(request, env, clusterId) {
       { status: 400 }
     );
   }
-  
+
+  // Cluster join requires practitioner tier
+  const featureCheck = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (featureCheck) return featureCheck;
+
   const userId = request._user?.sub; // Always use JWT identity, never body
   const { inviteCode, birthDate, birthTime, birthTimezone, lat, lng } = body;
 
@@ -578,13 +586,13 @@ function buildClusterSynthesisPrompt(members, composition, challenge) {
   return {
     system: `You are a Prime Self Cluster Intelligence synthesizer. You analyze small group dynamics using Energy Blueprint structural logic and Prime Self Forge philosophy.
 
-Your output must be grounded in the specific Energy Blueprint data provided — Energy Patterns, Authorities, Archetype Codes, defined centers. Never invent chart data.
+Your output must be grounded in the specific Energy Blueprint data provided — Energy Patterns, Authorities, Archetype Codes, defined centers. Never invent chart data. Frame all observations as patterns the group's combined data suggests, not as facts about individual members. Use language like 'the group data points to' or 'this composition suggests' rather than 'Member X is' or 'this group will'. No member should be assigned a fixed role or verdict — describe tendencies and patterns only.
 
 The Five Forges:
-- Forge of Power (Manifestor) — initiating energy
-- Forge of Craft (Generator/MG) — sustaining life force
-- Forge of Vision (Projector) — seeing the efficient path
-- Forge of Mirrors (Reflector) — environmental wisdom
+- Forge of Power (Catalyst Pattern) — initiating energy
+- Forge of Craft (Builder/Builder-Initiator Pattern) — sustaining life force
+- Forge of Vision (Guide Pattern) — seeing the efficient path
+- Forge of Mirrors (Mirror Pattern) — environmental wisdom
 
 Analyze the group composition and provide actionable guidance for their shared challenge.`,
 
