@@ -918,6 +918,286 @@ Returns detailed comparison between authenticated user and a specific celebrity.
 
 ---
 
+## Authentication
+
+### Get Current User
+
+```
+GET /api/auth/me
+```
+
+**Auth:** Required (JWT)
+
+Returns the authenticated user's profile information.
+
+**Response 200:**
+
+```json
+{
+  "ok": true,
+  "user": {
+    "id": "user-123",
+    "email": "user@example.com",
+    "name": "Alex",
+    "tier": "individual",
+    "email_verified": true,
+    "totp_enabled": false,
+    "created_at": "2026-01-15T10:30:00Z",
+    "updated_at": "2026-03-17T14:22:00Z"
+  }
+}
+```
+
+**Errors:** 401 Unauthorized · 404 User not found
+
+---
+
+## Chart Management
+
+### Save Chart
+
+```
+POST /api/chart/save
+```
+
+**Auth:** Required (JWT)
+
+Saves the current chart to user's library for later access.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `chart_data` | object | Yes | Full chart object from `/api/chart/calculate` |
+| `label` | string | No | User-friendly name for this chart (e.g., "My Chart", "Partner's Chart", "Client: Sarah") |
+
+**Example:**
+
+```json
+{
+  "chart_data": { "type": "Projector", "profile": "6/2", ... },
+  "label": "My Energy Blueprint"
+}
+```
+
+**Response 201:**
+
+```json
+{
+  "ok": true,
+  "chart_id": "chart-456",
+  "saved_at": "2026-03-17T14:25:00Z"
+}
+```
+
+**Errors:** 400 Invalid chart data · 401 Unauthorized · 507 Storage error
+
+---
+
+### Get Chart History
+
+```
+GET /api/chart/history
+```
+
+**Auth:** Required (JWT)
+
+Returns list of charts saved by the authenticated user.
+
+**Query Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `limit` | number | No | Maximum results (default: 20) |
+| `offset` | number | No | Pagination offset (default: 0) |
+
+**Response 200:**
+
+```json
+{
+  "ok": true,
+  "charts": [
+    {
+      "chart_id": "chart-456",
+      "label": "My Energy Blueprint",
+      "chart_type": "Projector",
+      "profile": "6/2",
+      "saved_at": "2026-03-17T14:25:00Z"
+    },
+    {
+      "chart_id": "chart-457",
+      "label": "Partner's Chart",
+      "chart_type": "Generator",
+      "profile": "3/6",
+      "saved_at": "2026-03-16T09:10:00Z"
+    }
+  ],
+  "total": 2,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+**Errors:** 401 Unauthorized
+
+---
+
+## Cluster Management
+
+### List Clusters
+
+```
+GET /api/cluster/list
+```
+
+**Auth:** Required (JWT)
+
+Returns all clusters the authenticated user is a member of.
+
+**Response 200:**
+
+```json
+{
+  "ok": true,
+  "clusters": [
+    {
+      "cluster_id": "fam-789",
+      "name": "Family Circle",
+      "members_count": 4,
+      "role": "owner",
+      "created_at": "2026-02-01T08:00:00Z"
+    },
+    {
+      "cluster_id": "team-890",
+      "name": "Work Team",
+      "members_count": 12,
+      "role": "member",
+      "created_at": "2026-01-10T11:30:00Z"
+    }
+  ]
+}
+```
+
+**Errors:** 401 Unauthorized
+
+---
+
+### Leave Cluster
+
+```
+POST /api/cluster/leave
+```
+
+**Auth:** Required (JWT)
+
+Removes the authenticated user from a cluster. If user is the owner and cluster has other members, ownership transfers to the longest-standing member.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `cluster_id` | string | Yes | ID of the cluster to leave |
+
+**Example:**
+
+```json
+{
+  "cluster_id": "fam-789"
+}
+```
+
+**Response 200:**
+
+```json
+{
+  "ok": true,
+  "message": "You have left the cluster 'Family Circle'"
+}
+```
+
+**Errors:** 400 cluster_id required · 401 Unauthorized · 404 Cluster not found
+
+---
+
+## SMS Notifications
+
+### Subscribe to SMS
+
+```
+POST /api/sms/subscribe
+```
+
+**Auth:** Required (JWT)
+
+Subscribes user to SMS notifications.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `phone_number` | string | Yes | E.164 format (e.g., `+12015551234`) |
+| `notification_type` | string | No | Type of SMS to receive (e.g., `transit_alerts`, `daily_digest`). Default: all types |
+
+**Example:**
+
+```json
+{
+  "phone_number": "+12015551234",
+  "notification_type": "transit_alerts"
+}
+```
+
+**Response 201:**
+
+```json
+{
+  "ok": true,
+  "phone_number": "+12015551234",
+  "subscribed_at": "2026-03-17T14:30:00Z"
+}
+```
+
+**Errors:** 400 Invalid phone number · 401 Unauthorized · 409 Already subscribed
+
+---
+
+### Unsubscribe from SMS
+
+```
+POST /api/sms/unsubscribe
+```
+
+**Auth:** Required (JWT)
+
+Unsubscribes user from SMS notifications.
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `phone_number` | string | Yes | E.164 format (e.g., `+12015551234`) |
+
+**Example:**
+
+```json
+{
+  "phone_number": "+12015551234"
+}
+```
+
+**Response 200:**
+
+```json
+{
+  "ok": true,
+  "message": "Unsubscribed from SMS notifications"
+}
+```
+
+**Errors:** 400 Invalid phone number · 401 Unauthorized · 404 Not subscribed
+
+---
+
 ## Account Management
 
 ### Delete Account

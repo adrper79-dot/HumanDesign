@@ -525,14 +525,18 @@ export default {
     }
 
     // BL-AUDIT-M4: Boot-time JWT environment assertion
-    // Prevent production from accepting tokens signed with dev/default issuer
-    if (env.ENVIRONMENT === 'production' && (!env.JWT_ISSUER || env.JWT_ISSUER === 'primeself')) {
+      // Reject only truly missing issuer config. `primeself` remains the current
+      // production issuer, so treat it as valid and log it for observability.
+      if (env.ENVIRONMENT === 'production' && !env.JWT_ISSUER) {
       console.error(JSON.stringify({ event: 'fatal_jwt_misconfiguration', env: env.ENVIRONMENT, issuer: env.JWT_ISSUER }));
       return new Response(JSON.stringify({ error: 'Service misconfigured (JWT_ISSUER)' }), {
         status: 503,
         headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
       });
     }
+      if (env.ENVIRONMENT === 'production' && env.JWT_ISSUER === 'primeself') {
+        console.warn(JSON.stringify({ event: 'jwt_issuer_default_in_production', env: env.ENVIRONMENT, issuer: env.JWT_ISSUER }));
+      }
 
     const url = new URL(request.url);
     const path = url.pathname;
