@@ -232,6 +232,9 @@ async function handleRegister(request, env) {
 
     // Hash password first (before any DB calls)
     const passwordHash = await hashPassword(password);
+    if (!passwordHash) {
+      throw new Error('Password hashing failed - no hash returned');
+    }
 
     // CTO-014: Use INSERT ... ON CONFLICT to atomically prevent duplicate
     // registration (no race between SELECT + INSERT).
@@ -256,18 +259,19 @@ async function handleRegister(request, env) {
           { status: 409 }
         );
       }
-      throw dbErr;
+      throw new Error(`Database create user failed: ${dbErr.message || String(dbErr)}`);
     }
 
     if (!userId) {
-      return Response.json(
-        { ok: false, error: 'Failed to create user' },
-        { status: 500 }
-      );
+      throw new Error('Failed to create user - no ID returned from query');
     }
 
     // Record GDPR consent timestamp (SYS-044)
-    await query(QUERIES.recordUserConsent, [userId, new Date().toISOString(), '2026-01-01']);
+    try {
+      await query(QUERIES.recordUserConsent, [userId, new Date().toISOString(), '2026-01-01']);
+    } catch (consentErr) {
+      throw new Error(`Record consent failed: ${consentErr.message || String(consentErr)}`);
+    }
 
     // Issue tokens
     const { accessToken, refreshToken } = await issueTokenPair(env, query, userId, email.toLowerCase());
