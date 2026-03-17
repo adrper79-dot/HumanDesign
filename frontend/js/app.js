@@ -832,7 +832,9 @@ async function processPendingPractitionerInvite(options = {}) {
   const inviteToken = getPendingPractitionerInviteToken();
   if (!inviteToken) return;
 
-  if (!token) {
+  // Check if user is authenticated
+  const isAuthenticated = !!window.token;
+  if (!isAuthenticated) {
     if (options.promptForAuth === true) {
       const preview = await apiFetch(`/api/invitations/practitioner?token=${encodeURIComponent(inviteToken)}`);
       if (preview?.error) {
@@ -848,10 +850,24 @@ async function processPendingPractitionerInvite(options = {}) {
     return;
   }
 
+  // Show loading state while accepting invitation
+  const acceptBtn = document.querySelector('[data-action="practOnbSendInvite"]');
+  const originalText = acceptBtn?.textContent;
+  if (acceptBtn) {
+    acceptBtn.disabled = true;
+    acceptBtn.textContent = 'Processing invitation...';
+  }
+
   const result = await apiFetch('/api/invitations/practitioner/accept', {
     method: 'POST',
     body: JSON.stringify({ token: inviteToken })
   });
+
+  // Restore button state
+  if (acceptBtn) {
+    acceptBtn.disabled = false;
+    acceptBtn.textContent = originalText;
+  }
 
   if (result?.error) {
     if (/expired|not found|no longer active/i.test(result.error)) {
@@ -862,7 +878,13 @@ async function processPendingPractitionerInvite(options = {}) {
   }
 
   clearPendingPractitionerInviteToken();
-  showNotification(`Invitation accepted. You are now linked with ${result?.practitioner?.name || 'your practitioner'}.`, 'success');
+  showNotification(`✅ Invitation accepted! You are now linked with ${result?.practitioner?.name || 'your practitioner'}.`, 'success');
+  
+  // Redirect to practitioner's profile or dashboard after a brief delay
+  setTimeout(() => {
+    window.location.pathname = '/';
+    window.location.hash = '#practitioner-dashboard';
+  }, 1500);
 }
 
 // Persistent banner shown when email is not verified
