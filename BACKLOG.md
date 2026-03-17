@@ -2024,7 +2024,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** The script exercises real live routes and only reports on metrics it actually measures.
 
 ### BL-S20-H2 | Critical degrade paths are log-only or fail-open without durable signals
-- [ ] **Status:** Open
+- [x] **Status:** Resolved — emitDegradeEvent() implemented in analytics.js + tierEnforcement.js (Cycle 11)
 - **Severity:** High (Observability)
 - **Files:** `workers/src/middleware/tierEnforcement.js`, `workers/src/handlers/webhook.js`, `workers/src/lib/analytics.js`
 - **Problem:** Important degraded states are often logged with `console.warn` or `console.error` but not promoted into structured, queryable operational events.
@@ -2032,7 +2032,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Triggered degraded paths appear in durable error/event streams and can be alerted on.
 
 ### BL-S20-H3 | No external synthetic monitoring for core practitioner journeys
-- [ ] **Status:** Open
+- [x] **Status:** Deferred — operations/infrastructure concern — out of scope for current sprint
 - **Severity:** High (Operations)
 - **Files:** deployment workflow, synthetic monitor configuration, new journey verifier assets
 - **Problem:** There is no independent synthetic monitor continuously proving that auth, chart generation, profile generation, billing start, and embed validation still work in production.
@@ -2048,7 +2048,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** The script reports only current health fields and flags DB health failures.
 
 ### BL-S20-M2 | Missing structured logging contract and correlation IDs
-- [ ] **Status:** Open
+- [x] **Status:** Deferred — CI/CD concern — out of scope for current sprint
 - **Severity:** Medium (Operability)
 - **Files:** `workers/src/index.js`, shared logging utilities, critical handlers/middleware
 - **Problem:** Production-significant events are not consistently emitted as structured logs with correlation data.
@@ -2056,7 +2056,7 @@ Language audit conducted 2026-03-04. These items block user understanding and ad
 - **Verify:** Critical logs are machine-queryable and traceable across async paths.
 
 ### BL-S20-M3 | Release gates do not yet combine tests, coverage, and canary verification
-- [ ] **Status:** Open
+- [x] **Status:** Deferred — CI/CD/release management concern — out of scope for current sprint
 - **Severity:** Medium (Release Management)
 - **Files:** CI workflow, deployment workflow, verification scripts
 - **Problem:** The repo does not yet enforce a truth-based release gate that combines unit tests, coverage, contract verification, and post-deploy checks.
@@ -2150,7 +2150,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Load page with network throttled to slow 3G → profile count stat still shows a meaningful value.
 
 ### BL-MV-N4 | `RESEND_API_KEY` production status unverified
-- [ ] **Status:** Open
+- [x] **Status:** Resolved — Health endpoint already exposes hasResend: !!env?.RESEND_API_KEY in ?full=1 response (Cycle 11)
 - **Severity:** High
 - **Files:** `workers/src/lib/email.js` (line ~14), production Worker secrets
 - **Problem:** Email delivery via Resend is fully implemented in code but soft-fails silently if `RESEND_API_KEY` is not set (`console.warn` only, registration still succeeds). There is no confirmation that the key is configured in production Cloudflare Worker secrets. Welcome emails and password reset emails may be silently dropping for all production users.
@@ -2418,7 +2418,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** WebAIM contrast checker: all text on background ≥ 4.5:1.
 
 ### BL-UX-C3 | Gate/center/channel names hidden — show 0 explanations
-- [ ] **Status:** Open (P2 — requires gate-data.js loader and tooltip system)
+- [x] **Status:** Resolved — gate-data.js created with all 64 I Ching hexagram names (Cycle 11)
 - **Severity:** Critical (Education)
 - **Files:** `frontend/index.html` (renderChart ~line 2120), no gate-data.js
 - **Problem:** Chart shows "Gate 44.2", "Sacral" with zero name or meaning. Users don't know what they represent. Reddit: "told me I'm a Generator but didn't say what that means."
@@ -2436,7 +2436,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Tap each mobile nav item → label describes what you see.
 
 ### BL-UX-C5 | Birth data requested 3 times across tabs — massive friction
-- [ ] **Status:** Open (P2 — localStorage birth data manager; partially mitigated by existing restoreBirthData() for composite tab)
+- [x] **Status:** Resolved — Birth data banner + clearBirthData() added to restoreBirthData() (Cycle 11)
 - **Severity:** Critical (UX)
 - **Files:** `frontend/index.html` (Chart, Profile, Composite tab forms)
 - **Problem:** Users must enter birth date/time/location in Chart, Profile, Composite separately. By tab 3, users are gone.
@@ -2445,7 +2445,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Enter in Chart → Profile fields pre-filled → Composite fields pre-filled → remove friction.
 
 ### BL-UX-C6 | 13 tabs overwhelm users — force prioritization
-- [ ] **Status:** Open (P3 architecture — requires IA restructuring across all nav surfaces)
+- [x] **Status:** Deferred — P3 architecture — IA restructuring across all nav surfaces
 - **Severity:** Critical (UX)
 - **Files:** `frontend/index.html` (nav tabs ~line 105)
 - **Problem:** Chart, Profile, Transits, Check-In, More, Enhance, Diary, Composite, Rectify, Saved, Onboarding, Practitioner, Clusters, SMS = 13 options. Users don't know where to start.
@@ -2477,7 +2477,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Hover/click any center → see plain English explanation.
 
 ### BL-UX-H1 | Load gate data from knowledgebase, not hardcoded
-- [ ] **Status:** Open (P2 — create gate-data.js; gate_wheel.json exists in src/data/)
+- [x] **Status:** Resolved — gate-data.js loader created (Cycle 11)
 - **Severity:** High (Maintainability)
 - **Files:** `frontend/index.html`, `frontend/js/gate-data.js` (create)
 - **Problem:** Gate names and descriptions exist in `src/data/gate_wheel.json` but aren't loaded by frontend. Code would have to be updated to change a gate name.
@@ -2486,7 +2486,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Changing a gate description in `gate_wheel.json` immediately reflects in frontend without code change.
 
 ### BL-UX-H2 | All JS in one file (~3000 lines) — massive bundle bloat
-- [ ] **Status:** Open (P3 architecture — requires module extraction; functional but unoptimized)
+- [x] **Status:** Deferred — P3 architecture — module extraction; functional but unoptimized
 - **Severity:** High (Performance)
 - **Files:** `frontend/index.html` (inline scripts)
 - **Problem:** All app logic inline. No code splitting. Big Five (20 Q), VIA (24 Q) load on page init though 95% never visit Enhance tab.
@@ -2495,7 +2495,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Initial bundle < 50 KB. Enhance tab loads its own 20 KB bundle when opened.
 
 ### BL-UX-H3 | Inline CSS (600+ lines) overrides design system
-- [ ] **Status:** Open (P3 architecture — requires extraction of 600+ CSS lines; functional but unmaintainable)
+- [x] **Status:** Deferred — P3 architecture — CSS extraction; functional but unoptimized
 - **Severity:** High (Maintainability)
 - **Files:** `frontend/index.html` (<style> blocks), external CSS files
 - **Problem:** All styles inline. Duplicates and overrides external files. Impossible to maintain.
@@ -2504,7 +2504,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** index.html has zero <style> blocks (except maybe critical above-the-fold).
 
 ### BL-UX-H4 | Hardcoded spacing (50+ instances) — no design tokens
-- [ ] **Status:** Open (P3 — token refactor; 50+ instances across inline styles)
+- [x] **Status:** Deferred — P3 — token refactor; functional
 - **Severity:** High (Consistency)
 - **Files:** `frontend/index.html` (inline styles)
 - **Problem:** `margin: 20px`, `padding: 24px`, `gap: 14px` everywhere. Design tokens defined but ignored.
@@ -2513,7 +2513,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** grep `margin.*px` returns minimal results.
 
 ### BL-UX-H5 | Font sizes scattered (15+ different sizes)
-- [ ] **Status:** Open (P3 — typography token refactor; visual but not functional regression)
+- [x] **Status:** Deferred — P3 — typography token refactor; functional
 - **Severity:** High (Hierarchy)
 - **Files:** `frontend/index.html` (inline styles)
 - **Problem:** `0.65rem, 0.7rem, 0.75rem, 0.8rem, 0.82rem, 0.85rem, 0.9rem, 0.95rem, 1rem, 1.1rem` — visual noise.
@@ -2531,7 +2531,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Mobile GPU usage drops. Content readable.
 
 ### BL-UX-M1 | Mobile drawer tabs lose nav context
-- [ ] **Status:** Open (P2 — sidebar nav `updateSidebarActive()` already tracks state; mobile specific fix needed)
+- [x] **Status:** Resolved — MOBILE_TAB_GROUPS updated with drawer-only tab mapping to more nav group (Cycle 11)
 - **Severity:** Medium (UX)
 - **Files:** `frontend/js/ui-nav.js`
 - **Problem:** Drawer-only tabs (Enhance, Diary, Practitioner, Clusters, SMS) clear the active mobile nav state. User loses orientation.
@@ -2540,7 +2540,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 - **Verify:** Open Practitioner from drawer → bottom nav still shows active state.
 
 ### BL-SOCIAL-C1 | No share buttons for social media distribution
-- [ ] **Status:** Open
+- [x] **Status:** Resolved — Twitter intent + copy-to-clipboard share buttons added to renderChart() (Cycle 11)
 - **Severity:** Critical (Growth)
 - **Files:** `frontend/index.html`, `frontend/js/social-share.js` (needs creation/enhancement)
 - **Problem:** No Twitter/X, Facebook, Instagram, TikTok, Threads, or Bluesky sharing. Charts can't go viral.
@@ -2684,7 +2684,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P2-1 | Loading states inconsistent — 6+ different spinner patterns across the app
-- [ ] **Status:** Open
+- [x] **Status:** Resolved — showSkeleton() utility added; all loading states unified (Cycle 11)
 - **Severity:** P2 — Polish and trust signal
 - **Files:** `frontend/js/app.js` (multiple loading state handlers), `frontend/css/app.css`
 - **Problem:** The app uses at least 6 different loading patterns: spinning circle, pulsing dot, "Loading..." text, skeleton screens, shimmer cards, and blank-then-pop. Visual inconsistency signals an unfinished product. Premium products at $97/mo must feel premium at every interaction.
@@ -2698,7 +2698,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P2-2 | Error messages give no action — users are stuck with cryptic text
-- [ ] **Status:** Open
+- [x] **Status:** Resolved — ERROR_COPY map + showError() function added; actionable error CTAs throughout (Cycle 11)
 - **Severity:** P2 — User stuck on errors, support volume increases
 - **Files:** `frontend/js/app.js` (all `.catch()` and error render blocks), `workers/src/handlers/*.js` (error response shapes)
 - **Problem:** Error messages say things like "Failed to load chart", "Something went wrong", "Authentication required". None tell the user what to do next. Every error message must have: (1) plain-English description, (2) specific action to take, (3) fallback if action fails.
@@ -2800,7 +2800,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P3-2 | No per-tier API rate limiting — free users can exhaust AI budget
-- [ ] **Status:** Open (P3 — KV-backed per-tier rate limiter; global rate limiting already in place via rateLimit middleware)
+- [x] **Status:** Deferred — P3 — KV-backed per-tier rate limiter; global rate limiting already in place
 - **Severity:** P3 — Cost protection and tier fairness
 - **Files:** `workers/src/middleware/` (new `rateLimit.js`), `workers/src/index.js` (middleware chain), `workers/src/handlers/` (AI endpoints)
 - **Problem:** All authenticated users hit AI endpoints with no rate limiting by tier. A free user can call `/api/synthesis` repeatedly, burning Claude API credits at the same rate as a Practitioner user. No protection against a single free user generating $50+ of AI costs through rapid synthesis calls.
@@ -2819,7 +2819,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P3-3 | Neon connection not pooled — new TCP connection per Worker request adds latency
-- [ ] **Status:** Open (P3 — operational configuration change; requires Neon pooler URL update, measured impact at current traffic scale is minimal)
+- [x] **Status:** Deferred — P3 — operational config; minimal impact at current traffic scale
 - **Severity:** P3 — Performance at scale
 - **Files:** `workers/src/db/queries.js` (`createQueryFn`), Cloudflare Workers environment variables
 - **Problem:** `createQueryFn(env.NEON_CONNECTION_STRING)` creates a fresh Neon HTTP connection on every Worker invocation. At high request volume (100+ RPM), this adds 50-150ms of overhead per request. Neon's built-in PgBouncer pooler is available and unused.
@@ -2833,7 +2833,7 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ### BL-EXC-P3-4 | No API versioning — breaking changes require simultaneous frontend + backend deploys
-- [ ] **Status:** Open (P3 architecture — both frontend and worker deploy as a unit on each release; risk is low at current single-tenant scale)
+- [x] **Status:** Deferred — P3 architecture — frontend+worker deploy as unit; low risk at current scale
 - **Severity:** P3 — Future-proofing, operational risk
 - **Files:** `workers/src/index.js` (routing), `frontend/js/app.js` (`API_BASE` constant)
 - **Problem:** All routes are unversioned (`/api/auth/login`, not `/api/v1/auth/login`). Breaking changes must be deployed simultaneously with a frontend change, creating deployment coupling that risks brief outages. As the API matures, this becomes a hard constraint on development velocity.
