@@ -224,6 +224,74 @@ async function silentRefresh() {
 
 let authBackdropClickHandler = null;
 
+/**
+ * ACC-P2-8: Modal Focus Management
+ * Stores trigger element when opening modal, restores focus when closing
+ * Best practice per WCAG 2.4.3 Focus Order
+ */
+const modalFocusMap = new Map();
+
+function storeModalTrigger(modalId) {
+  modalFocusMap.set(modalId, document.activeElement);
+}
+
+function restoreModalFocus(modalId) {
+  const trigger = modalFocusMap.get(modalId);
+  if (trigger && typeof trigger.focus === 'function') {
+    trigger.focus();
+    modalFocusMap.delete(modalId);
+  }
+}
+
+/**
+ * ACC-P2-9: Standardized Loading State Management
+ * Synchronizes aria-busy, button disabled state, and spinner visibility
+ * Best practice: single source of truth for loading state
+ *
+ * @param {Object} options - Configuration
+ * @param {HTMLElement} options.resultEl - Element to set aria-busy on
+ * @param {HTMLElement} options.btnEl - Button to disable
+ * @param {HTMLElement} options.spinnerEl - Spinner to show/hide
+ * @param {boolean} options.isLoading - True to show loading, false to hide
+ * @param {string} options.loadingMessage - Message to announce (optional)
+ */
+function setLoadingState({ resultEl, btnEl, spinnerEl, isLoading = true, loadingMessage = null }) {
+  if (!resultEl) return;
+
+  if (isLoading) {
+    // Show loading state
+    resultEl.setAttribute('aria-busy', 'true');
+    if (btnEl) btnEl.disabled = true;
+    if (spinnerEl) spinnerEl.style.display = '';
+
+    // Optional: Announce what's loading to screen readers
+    if (loadingMessage && resultEl.id) {
+      const statusId = `${resultEl.id}-status`;
+      let statusEl = document.getElementById(statusId);
+      if (!statusEl) {
+        statusEl = document.createElement('div');
+        statusEl.id = statusId;
+        statusEl.className = 'visually-hidden';
+        statusEl.setAttribute('aria-live', 'polite');
+        statusEl.setAttribute('aria-atomic', 'true');
+        resultEl.appendChild(statusEl);
+      }
+      statusEl.textContent = loadingMessage;
+    }
+  } else {
+    // Hide loading state
+    resultEl.removeAttribute('aria-busy');
+    if (btnEl) btnEl.disabled = false;
+    if (spinnerEl) spinnerEl.style.display = 'none';
+
+    // Clear status announcement
+    if (resultEl.id) {
+      const statusEl = document.getElementById(`${resultEl.id}-status`);
+      if (statusEl) statusEl.textContent = '';
+    }
+  }
+}
+
 // ── TOTP helpers ─────────────────────────────────────────────────────────────
 function _resetTOTPStep() {
   const step = document.getElementById('authTOTPStep');
@@ -275,6 +343,9 @@ function cancel2FA() {
 
 // ── Security / 2FA management modal ─────────────────────────────────────────
 function openSecuritySettings() {
+  // ACC-P2-8: Store trigger element for focus restoration on close
+  storeModalTrigger('securityModal');
+
   const modal = document.getElementById('securityModal');
   if (!modal) return;
   modal.classList.remove('hidden');
@@ -284,6 +355,8 @@ function openSecuritySettings() {
 function closeSecurityModal() {
   const modal = document.getElementById('securityModal');
   if (modal) modal.classList.add('hidden');
+  // ACC-P2-8: Restore focus to trigger element
+  restoreModalFocus('securityModal');
 }
 
 async function _renderSecurityModal() {
@@ -377,6 +450,9 @@ async function disable2FA(btn) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function openAuthOverlay() {
+  // ACC-P2-8: Store trigger element for focus restoration on close
+  storeModalTrigger('authOverlay');
+
   // Always reset to login mode when opening
   if (authMode !== 'login') {
     authMode = 'login';
@@ -441,6 +517,8 @@ function closeAuthOverlay() {
     modal.removeEventListener('click', authBackdropClickHandler);
     authBackdropClickHandler = null;
   }
+  // ACC-P2-8: Restore focus to trigger element
+  restoreModalFocus('authOverlay');
 }
 
 function toggleAuthMode() {
@@ -1270,6 +1348,9 @@ async function exportMyData() {
 // These two audiences never see each other's pricing. See IMPLEMENTATION_PLAN.md.
 
 function openPricingModal(suggestedTier = null) {
+  // ACC-P2-8: Store trigger element for focus restoration on close
+  storeModalTrigger('pricingOverlay');
+
   if (!token) {
     openAuthOverlay();
     document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.signInUpgrade') : 'Sign in to upgrade your plan.';
@@ -1294,6 +1375,8 @@ function closePricingModal() {
   const promoResult = document.getElementById('promoCodeResult');
   if (promoInput) promoInput.value = '';
   if (promoResult) promoResult.textContent = '';
+  // ACC-P2-8: Restore focus to trigger element
+  restoreModalFocus('pricingOverlay');
 }
 
 // Sync consumer pricing card button states to match current user tier
@@ -1323,6 +1406,9 @@ function _syncConsumerPricingCards(tier) {
 
 // Professional pricing modal (Guide + Studio)
 function openPractitionerPricingModal() {
+  // ACC-P2-8: Store trigger element for focus restoration on close
+  storeModalTrigger('practitionerPricingOverlay');
+
   if (!token) {
     openAuthOverlay();
     document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.signInUpgrade') : 'Sign in to view professional plans.';
@@ -1335,6 +1421,8 @@ function openPractitionerPricingModal() {
 
 function closePractitionerPricingModal() {
   document.getElementById('practitionerPricingOverlay').classList.add('hidden');
+  // ACC-P2-8: Restore focus to trigger element
+  restoreModalFocus('practitionerPricingOverlay');
 }
 
 // Sync practitioner pricing card button states
@@ -2512,6 +2600,22 @@ async function calculateChart() {
   if (spinner) spinner.style.display = '';
   if (resultEl) {
     resultEl.setAttribute('aria-busy', 'true');
+    // ACC-P2-11: Announce specific operation to screen readers
+    const statusId = 'chartCalcStatus';
+    let statusEl = document.getElementById(statusId);
+    if (!statusEl) {
+      statusEl = document.createElement('div');
+      statusEl.id = statusId;
+      statusEl.className = 'visually-hidden';
+      statusEl.setAttribute('aria-live', 'polite');
+      statusEl.setAttribute('aria-atomic', 'true');
+      resultEl.appendChild(statusEl);
+    }
+    statusEl.textContent = 'Calculating your Energy Blueprint from your birth data...';
+    if (!resultEl.getAttribute('aria-describedby')?.includes(statusId)) {
+      const existing = resultEl.getAttribute('aria-describedby') || '';
+      resultEl.setAttribute('aria-describedby', (existing + ' ' + statusId).trim());
+    }
     resultEl.innerHTML = skeletonChart();
   }
 
@@ -2528,6 +2632,9 @@ async function calculateChart() {
     if (resultEl) {
       resultEl.innerHTML = renderChart(data);
       resultEl.removeAttribute('aria-busy');
+      // Clear the status announcement
+      const statusEl = document.getElementById('chartCalcStatus');
+      if (statusEl) statusEl.textContent = '';
     }
     if (resultEl) _applyChartHeadings(resultEl);
     trackEvent('chart', 'calculate');
@@ -3463,6 +3570,22 @@ async function generateProfile() {
   if (spinner) spinner.style.display = '';
   if (resultEl) {
     resultEl.setAttribute('aria-busy', 'true');
+    // ACC-P2-11: Announce specific operation to screen readers
+    const statusId = 'profileGenStatus';
+    let statusEl = document.getElementById(statusId);
+    if (!statusEl) {
+      statusEl = document.createElement('div');
+      statusEl.id = statusId;
+      statusEl.className = 'visually-hidden';
+      statusEl.setAttribute('aria-live', 'polite');
+      statusEl.setAttribute('aria-atomic', 'true');
+      resultEl.appendChild(statusEl);
+    }
+    statusEl.textContent = 'Generating your personalized energy profile with AI synthesis...';
+    if (!resultEl.getAttribute('aria-describedby')?.includes(statusId)) {
+      const existing = resultEl.getAttribute('aria-describedby') || '';
+      resultEl.setAttribute('aria-describedby', (existing + ' ' + statusId).trim());
+    }
     resultEl.innerHTML = skeletonProfile();
   }
 
@@ -3520,6 +3643,23 @@ async function generateProfile() {
 
     // Abort after 45s — prevents infinite spinner on slow or timed-out AI calls (BL-EXC-P0-3)
     const controller = new AbortController();
+
+    // ACC-P2-10: Timeout warning at 42s (3s before 45s abort)
+    const warningTimeout = setTimeout(() => {
+      if (resultEl && resultEl.getAttribute('aria-busy') === 'true') {
+        const warningEl = document.createElement('div');
+        warningEl.className = 'alert alert-warn';
+        warningEl.setAttribute('role', 'alert');
+        warningEl.setAttribute('aria-live', 'assertive');
+        warningEl.style.padding = '12px 16px';
+        warningEl.style.marginBottom = 'var(--space-4)';
+        warningEl.innerHTML = '⏱️ Taking longer than expected... (will time out in 3 seconds)';
+        const existingWarning = resultEl.querySelector('[aria-live="assertive"]');
+        if (existingWarning) existingWarning.remove();
+        resultEl.insertBefore(warningEl, resultEl.firstChild);
+      }
+    }, 42_000);
+
     const abortTimeout = setTimeout(() => controller.abort(), 45_000);
 
     let data;
@@ -3527,6 +3667,7 @@ async function generateProfile() {
       data = await apiFetch('/api/profile/generate', { method: 'POST', body: JSON.stringify(payload), signal: controller.signal });
     } finally {
       clearTimeout(abortTimeout);
+      clearTimeout(warningTimeout);
     }
 
     // Clear any remaining progress timeouts
@@ -3544,6 +3685,9 @@ async function generateProfile() {
         </div>
       </div>`;
         resultEl.removeAttribute('aria-busy');
+        // Clear the status announcement
+        const statusEl = document.getElementById('profileGenStatus');
+        if (statusEl) statusEl.textContent = '';
       }
       return;
     }
@@ -3551,6 +3695,9 @@ async function generateProfile() {
     if (resultEl) {
       resultEl.innerHTML = renderProfile(data);
       resultEl.removeAttribute('aria-busy');
+      // Clear the status announcement
+      const statusEl = document.getElementById('profileGenStatus');
+      if (statusEl) statusEl.textContent = '';
     }
     trackEvent('profile', 'generate');
     markJourneyMilestone('profileGenerated');
@@ -8151,6 +8298,9 @@ function trackEvent(category, action, label) {
  * Open share modal — fetches real referral code from API for logged-in users
  */
 async function openShareModal() {
+  // ACC-P2-8: Store trigger element for focus restoration on close
+  storeModalTrigger('shareModal');
+
   const modal = document.getElementById('shareModal');
   if (!modal) return;
   modal.classList.remove('hidden');
@@ -8195,6 +8345,8 @@ function closeShareModal() {
   if (modal) {
     modal.classList.add('hidden');
   }
+  // ACC-P2-8: Restore focus to trigger element
+  restoreModalFocus('shareModal');
 }
 
 /**
@@ -8398,6 +8550,9 @@ let _frmCurrentStep = 1;
 const FRM_TOTAL_STEPS = 4;
 
 function frmShow() {
+  // ACC-P2-8: Store trigger element for focus restoration on close
+  storeModalTrigger('first-run-modal');
+
   const modal = document.getElementById('first-run-modal');
   if (modal) modal.style.display = '';
   _frmCurrentStep = 1;
@@ -8409,6 +8564,8 @@ function frmClose() {
   const modal = document.getElementById('first-run-modal');
   if (modal) modal.style.display = 'none';
   try { localStorage.setItem('primeself_frm_seen', '1'); } catch(e) {}
+  // ACC-P2-8: Restore focus to trigger element
+  restoreModalFocus('first-run-modal');
 }
 
 function frmNext() {
@@ -8503,6 +8660,9 @@ let _practOnbStep = 1;
 const PRACT_ONB_TOTAL = 4;
 
 async function showPractitionerOnboarding() {
+  // ACC-P2-8: Store trigger element for focus restoration on close
+  storeModalTrigger('practitionerOnboardingOverlay');
+
   _practOnbStep = 1;
   _practOnbRender();
   document.getElementById('practitionerOnboardingOverlay')?.classList.remove('hidden');
@@ -8543,6 +8703,9 @@ function practOnbFinish() {
   document.getElementById('practitionerOnboardingOverlay')?.classList.add('hidden');
   localStorage.setItem('pract_onb_seen', '1');
   switchTab('practitioner');
+  // ACC-P2-8: Restore focus to trigger element
+  restoreModalFocus('practitionerOnboardingOverlay');
+}
 }
 
 function practOnbCopyLink() {
