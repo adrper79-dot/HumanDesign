@@ -83,6 +83,20 @@ export const keys = Object.freeze({
   /** Onboarding progress — single compound key per user */
   onboarding: (userId) => `onboarding:${userId}`,
 
+  /** User's most recent chart (for /api/chart/history or profile generation handoff) */
+  userChart: (userId) => `user_chart:${userId}`,
+
+  /** User's most recent AI profile (for re-access without re-synthesis) */
+  userProfile: (userId) => `user_profile:${userId}`,
+
+  /** Specific chart by ID (database-backed) */
+  chartById: (chartId) => `chart_by_id:${chartId}`,
+
+  /** Specific profile by ID (database-backed) */
+  profileById: (profileId) => `profile_by_id:${profileId}`,
+
+
+
   /** Rate limit (existing pattern preserved) */
   rateLimit: (clientId, path) => `rl:${clientId}:${path}`,
 });

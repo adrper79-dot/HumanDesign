@@ -248,6 +248,12 @@ export async function handleProfile(request, env) {
           JSON.stringify(validation.parsed.groundingAudit || {})
         ]);
         profileId = profileResult.rows?.[0]?.id || null;
+
+        // Invalidate cache on successful profile save (PER-P2-1: query caching)
+        if (profileId) {
+          await kvCache.del(env, keys.userProfile(userId));
+          await kvCache.del(env, keys.profileById(profileId));
+        }
       }
     } catch (err) {
       // DB save failure is non-fatal — log and continue
@@ -312,11 +318,22 @@ export async function handleGetProfile(request, env, profileId) {
   }
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const result = await query(QUERIES.getProfileById, [profileId]);
-    const profile = result?.rows?.[0];
+
+    // PER-P2-1: Check cache before querying database
+    const cacheKey = keys.profileById(profileId);
+    let profile = await kvCache.get(env, cacheKey);
+
     if (!profile) {
-      return Response.json({ error: 'Profile not found' }, { status: 404 });
+      const result = await query(QUERIES.getProfileById, [profileId]);
+      profile = result?.rows?.[0];
+      if (!profile) {
+        return Response.json({ error: 'Profile not found' }, { status: 404 });
+      }
+
+      // Cache the profile record (24 hours) — TTL.PROFILE
+      await kvCache.put(env, cacheKey, profile, TTL.PROFILE);
     }
+
     if (profile.user_id !== userId) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }

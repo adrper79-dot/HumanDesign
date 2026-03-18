@@ -103,6 +103,12 @@ export async function handleCalculate(request, env) {
       const saved = await query(QUERIES.saveChart, [userId, hdJson, astroJson]);
       chartId = saved?.rows?.[0]?.id || null;
 
+      // Invalidate cache on successful save (PER-P2-1: query caching)
+      if (chartId) {
+        await kvCache.del(env, keys.userChart(userId));
+        await kvCache.del(env, keys.chartById(chartId));
+      }
+
       // CMO-012: Fire-and-forget chart-ready notification to any practitioners for this client
       if (chartId && env.RESEND_API_KEY) {
         request._ctx?.waitUntil((async () => {
@@ -173,11 +179,21 @@ export async function handleGetChart(request, env, chartId) {
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const result = await query(QUERIES.getChartById, [chartId]);
-    const chart = result?.rows?.[0];
+
+    // PER-P2-1: Check cache before querying database
+    const cacheKey = keys.chartById(chartId);
+    let chart = await kvCache.get(env, cacheKey);
 
     if (!chart) {
-      return Response.json({ error: 'Chart not found' }, { status: 404 });
+      const result = await query(QUERIES.getChartById, [chartId]);
+      chart = result?.rows?.[0];
+
+      if (!chart) {
+        return Response.json({ error: 'Chart not found' }, { status: 404 });
+      }
+
+      // Cache the chart record (24 hours)
+      await kvCache.put(env, cacheKey, chart, TTL.CHART);
     }
 
     // Verify ownership
