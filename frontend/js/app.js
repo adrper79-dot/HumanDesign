@@ -2097,6 +2097,17 @@ function switchTab(id, btn) {
     Promise.resolve(loadDiaryTransitContext()).finally(() => switchTab._loading.delete('diary-transits'));
   }
 
+  // UX-007: Update welcome message when overview tab is activated
+  if (id === 'overview' && typeof updateWelcomeMessage === 'function') {
+    updateWelcomeMessage();
+  }
+
+  // UX-008: Auto-load leaderboard when achievements tab is activated
+  if (id === 'achievements' && token && !switchTab._loading.has('leaderboard') && !document.getElementById('leaderboardList')?.innerHTML) {
+    switchTab._loading.add('leaderboard');
+    Promise.resolve(loadLeaderboard()).finally(() => switchTab._loading.delete('leaderboard'));
+  }
+
   // Update mobile nav active state
   if (typeof updateMobileNavForTab === 'function') updateMobileNavForTab(id);
 
