@@ -2000,6 +2000,23 @@
       ]
     },
     {
+      "id": "PRAC-016",
+      "persona": "Practitioner",
+      "severity": "P1",
+      "area": "practitioner-workflow",
+      "title": "Client compatibility workflow stops at a manual handoff — practitioners must re-enter both people into the composite flow after opening it from a client record",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": "frontend/js/app.js, frontend/index.html",
+      "fix": "When a practitioner launches compatibility from a client record, carry real roster context into the composite workflow instead of opening a blank form with instructions. In frontend/js/app.js, upgrade openCompatibilityWithClient() so Person B is prefilled from the selected client's saved birth data and Person A is prefilled from the practitioner's own saved chart/profile data when available. If one side is missing required data, keep the user in the composite flow but surface a precise missing-data prompt for the specific person instead of generic instructions. Update the composite intro copy in frontend/index.html so it explains whether the practitioner is starting from a saved client handoff or from manual entry. Preserve manual editing after prefill, but remove the current requirement that practitioners retype both parties just to continue the promised workflow from the roster.",
+      "notes": [
+        "This is a practitioner-core flow defect, not a polish item, because it breaks the client-prep story after the roster CTA is clicked",
+        "Use saved practitioner birth data if available from the existing chart/profile state rather than requiring a second manual step",
+        "If the client lacks complete birth data, route the practitioner into the same composite surface with a targeted prompt that identifies the missing client fields"
+      ]
+    },
+    {
       "id": "CMO-013",
       "persona": "CMO",
       "severity": "P2",
