@@ -22,13 +22,11 @@ import { parseToUTC } from '../utils/parseToUTC.js';
 import { trackEvent } from './achievements.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+import { mapTypeName } from '../lib/displayNames.js';
 
 // ─── Display-name mapping for HD types ─────────────────────────────
-const TYPE_DISPLAY = {
-  'Generator': 'Builder', 'Manifesting Generator': 'Builder-Initiator',
-  'Projector': 'Guide', 'Manifestor': 'Catalyst', 'Reflector': 'Mirror',
-};
-function dType(t) { return TYPE_DISPLAY[t] || t; }
+// Use canonical mapTypeName from displayNames.js for consistency
+const dType = mapTypeName;
 
 // ─── Channel definitions: [gateA, gateB, centerA, centerB] ──────
 const CHANNELS = [

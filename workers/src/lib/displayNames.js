@@ -48,6 +48,7 @@ const MISC_NAMES = {
   'Bodygraph': 'Energy Chart',
   'Incarnation Cross': 'Life Purpose Vector',
   'Not-Self Theme': 'Not-Self Signal',
+  'Profile': 'Archetype Code',
   'Siddhi': 'Mastery',
 };
 
@@ -61,6 +62,10 @@ export function mapAuthorityName(raw) {
 
 export function mapDefinitionName(raw) {
   return DEFINITION_NAMES[raw] || raw;
+}
+
+export function mapMiscName(raw) {
+  return MISC_NAMES[raw] || raw;
 }
 
 export function mapDisplayTerm(raw) {

@@ -2704,7 +2704,7 @@ function renderChart(data) {
           const sunGate = chart.cross?.gates?.[0] || chart.personalitySunGate;
           const sunLine = chart.cross?.line || chart.personalitySunLine;
           const lookedUp = (!crossName && sunGate && sunLine) ? getCrossName(sunGate, sunLine) : '';
-          return row('Cross', crossName || lookedUp || (chart.cross?.gates ? chart.cross.gates.join(', ') : '—'));
+          return row('Life Purpose Vector', crossName || lookedUp || (chart.cross?.gates ? chart.cross.gates.join(', ') : '—'));
         })()}
         ${row('Type', chart.cross?.type || chart.crossType || '—')}
         ${getExplanation(window.CROSS_TYPE_EXPLANATIONS, chart.cross?.type || chart.crossType || '')}
@@ -7465,17 +7465,42 @@ async function updateTierUI() {
     if (!userData || !userData.user) return;
     
     const tier = userData.user.tier || 'free';
-    const tierLimits = {
-      free: { profileGenerations: 1, practitionerTools: false },
-      individual: { profileGenerations: 10, practitionerTools: false },
-      practitioner: { profileGenerations: 500, practitionerTools: true },
-      agency: { profileGenerations: 2000, practitionerTools: true },
-      // Legacy aliases (match to canonical tiers for backward compat)
-      regular: { profileGenerations: 10, practitionerTools: false },
-      seeker: { profileGenerations: 10, practitionerTools: false },
-      white_label: { profileGenerations: 2000, practitionerTools: true },
-      guide: { profileGenerations: 500, practitionerTools: true },
-    };
+    
+    // SCAN-015: Fetch tier configuration from backend (source of truth)
+    // Fallback to conservative defaults if fetch fails
+    let tierLimits = null;
+    try {
+      const tierConfigRes = await apiFetch('/api/billing/tiers');
+      if (tierConfigRes && tierConfigRes.ok && tierConfigRes.tiers) {
+        // Build tierLimits from fetched config
+        tierLimits = {};
+        for (const [tierName, tierData] of Object.entries(tierConfigRes.tiers)) {
+          tierLimits[tierName] = {
+            profileGenerations: tierData.features?.profileGenerations || 1,
+            practitionerTools: tierData.features?.practitionerTools || false
+          };
+        }
+      }
+    } catch (apiError) {
+      console.warn('Failed to fetch tier config from backend, using fallback:', apiError);
+      // Fallback to conservative frontend defaults
+      tierLimits = null;
+    }
+    
+    // If fetch failed, use fallback tier limits
+    if (!tierLimits) {
+      tierLimits = {
+        free: { profileGenerations: 1, practitionerTools: false },
+        individual: { profileGenerations: 10, practitionerTools: false },
+        practitioner: { profileGenerations: 500, practitionerTools: true },
+        agency: { profileGenerations: 2000, practitionerTools: true },
+        // Legacy aliases (match to canonical tiers for backward compat)
+        regular: { profileGenerations: 10, practitionerTools: false },
+        seeker: { profileGenerations: 10, practitionerTools: false },
+        white_label: { profileGenerations: 2000, practitionerTools: true },
+        guide: { profileGenerations: 500, practitionerTools: true },
+      };
+    }
     
     const limits = tierLimits[tier];
     

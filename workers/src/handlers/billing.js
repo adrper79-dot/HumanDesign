@@ -638,3 +638,43 @@ export async function handleUpgradeSubscription(request, env, ctx) {
   }
 }
 
+/**
+ * GET /api/billing/tiers
+ * Get tier configuration (frontend use)
+ * Returns tier config with feature limits (no sensitive Stripe price IDs)
+ */
+export async function handleGetTierConfig(request, env, ctx) {
+  const log = request._log || createLogger('billing');
+  try {
+    // This endpoint is public — no auth required
+    // It only exposes feature limits, not Stripe price IDs
+    const tierConfig = getTierConfig(env);
+    
+    // Extract only frontend-safe data (omit Stripe price IDs)
+    const frontendConfig = {};
+    for (const [tierName, tierData] of Object.entries(tierConfig)) {
+      frontendConfig[tierName] = {
+        name: tierData.name,
+        price: tierData.price,
+        features: tierData.features
+        // Intentionally omit: priceId, annualPriceId (Stripe-specific)
+      };
+    }
+    
+    return Response.json({
+      ok: true,
+      tiers: frontendConfig,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    return reportHandledRouteError({
+      request,
+      env,
+      error,
+      source: 'billing_get_tier_config',
+      fallbackMessage: 'Failed to fetch tier configuration',
+    });
+  }
+}
+

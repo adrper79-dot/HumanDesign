@@ -169,7 +169,8 @@ import {
   handlePortal,
   handleGetSubscription,
   handleCancelSubscription,
-  handleUpgradeSubscription
+  handleUpgradeSubscription,
+  handleGetTierConfig
   // handleWebhook removed — BL-R-C4: consolidated to handleStripeWebhook in webhook.js
 } from './handlers/billing.js';
 import {
@@ -339,6 +340,7 @@ const EXACT_ROUTES = new Map([
   ['POST /api/billing/checkout-one-time', handleOneTimeCheckout],
   ['POST /api/billing/portal',        handlePortal],
   ['GET /api/billing/subscription',   handleGetSubscription],
+  ['GET /api/billing/tiers',          handleGetTierConfig],
   ['POST /api/billing/cancel',        handleCancelSubscription],
   ['POST /api/billing/upgrade',       handleUpgradeSubscription],
   // Referrals

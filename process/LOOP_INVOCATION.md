@@ -370,6 +370,16 @@ Output: audits/LAUNCH_READINESS_ASSESSMENT_[DATE].md
 
 ---
 
+## 🎪 Demo Readiness Prompt
+
+For a reusable workspace demo-readiness assessment that is separate from true launch readiness, use:
+
+- `.github/prompts/prime-self-demo-readiness.prompt.md`
+
+Use this when you need to decide what is safe to show live, what requires prepared data, what should not be clicked, and how to script around known rough edges.
+
+---
+
 ## 🎪 Pre-Investor Demo Prep
 
 ```
@@ -547,6 +557,35 @@ After EVERY cycle, these must be updated:
 | `process/SESSION_LOG_*.md` | End of cycle | Complete work record |
 | `FEATURE_MATRIX.md` | Phase 4A (Doc Updater) | Feature status changes |
 | `MASTER_BACKLOG_SYSTEM_V2.md` | Phase 4B (Registry Updater) | Synced with registry |
+
+### Running The Prompt Set
+
+Workspace prompts currently available:
+
+- `.github/prompts/prime-self-audit-sync.prompt.md`
+- `.github/prompts/prime-self-practitioner-audit.prompt.md`
+- `.github/prompts/prime-self-launch-readiness.prompt.md`
+- `.github/prompts/prime-self-demo-readiness.prompt.md`
+- `.github/prompts/prime-self-assessment-pack.prompt.md`
+
+How to run all 4:
+
+1. In VS Code chat, prompts are typically run one at a time.
+2. If you want all four at once, the practical approach is to open 4 separate chat sessions and run one prompt in each.
+3. If you want a single command experience, create a fifth orchestration prompt that tells the agent to execute the four assessments in sequence and return one combined report.
+4. If you want the cleanest workflow today, run them in this order:
+  - Audit Sync
+  - Practitioner Audit
+  - Launch Readiness
+  - Demo Readiness
+
+Single-command option now available:
+
+- `.github/prompts/prime-self-assessment-pack.prompt.md`
+
+Recommended note:
+
+- Run the first two before the readiness prompts so newly discovered issues are already synchronized before launch or demo verdicts are computed.
 
 ---
 

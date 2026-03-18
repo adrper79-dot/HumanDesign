@@ -9,6 +9,7 @@
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { mapMiscName } from '../../workers/src/lib/displayNames.js';
 
 // Workers runtime: import.meta.url may be undefined — guard fileURLToPath
 let __dirname_resolved = '';
@@ -364,13 +365,13 @@ export function buildRAGContext(chartData) {
       }
     }
 
-    // Incarnation Cross
+    // Life Purpose Vector (formerly: Incarnation Cross)
     const crossesKB = loadKB('hd', 'crosses.json');
     const crossName = chartData.hdChart?.cross?.name || (typeof chartData.hdChart?.cross === 'string' ? chartData.hdChart.cross : null);
     if (crossName) {
       const crossEntry = Object.values(crossesKB).find(v => v && v.cross === crossName);
       if (crossEntry) {
-        sections.push(`### INCARNATION CROSS: ${crossName}\n${crossEntry.description?.slice(0, 300) || ''}\n${crossEntry.lifeTheme ? `Life Theme: ${crossEntry.lifeTheme}` : ''}`);
+        sections.push(`### ${mapMiscName('Incarnation Cross').toUpperCase()}: ${crossName}\n${crossEntry.description?.slice(0, 300) || ''}\n${crossEntry.lifeTheme ? `Life Theme: ${crossEntry.lifeTheme}` : ''}`);
       }
     }
 

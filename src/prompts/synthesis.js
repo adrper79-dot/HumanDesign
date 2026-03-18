@@ -12,6 +12,7 @@
  */
 
 import { buildRAGContext } from './rag.js';
+import { mapMiscName } from '../../workers/src/lib/displayNames.js';
 
 // ─── KB LOADER (same pattern as rag.js) ────────────────────────
 
@@ -623,13 +624,13 @@ function buildReferenceFacts(data) {
   if (hd.type) sections.push(`Type: ${hd.type}`);
   if (hd.authority) sections.push(`Authority: ${hd.authority}`);
   if (hd.strategy) sections.push(`Strategy: ${hd.strategy}`);
-  if (hd.notSelfTheme) sections.push(`Not-Self Theme: ${hd.notSelfTheme}`);
-  if (hd.profile) sections.push(`Profile: ${hd.profile}`);
+  if (hd.notSelfTheme) sections.push(`${mapMiscName('Not-Self Theme')}: ${hd.notSelfTheme}`);
+  if (hd.profile) sections.push(`${mapMiscName('Profile')}: ${hd.profile}`);
   if (hd.definition) sections.push(`Definition: ${hd.definition}`);
   if (hd.cross) {
     const crossGates = hd.cross.gates ? hd.cross.gates.join(', ') : String(hd.cross);
     const crossType = hd.cross.type || hd.crossType || '';
-    sections.push(`Incarnation Cross: ${crossType} [${crossGates}]`);
+    sections.push(`${mapMiscName('Incarnation Cross')}: ${crossType} [${crossGates}]`);
   }
 
   // Defined centers
