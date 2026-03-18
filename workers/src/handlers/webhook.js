@@ -842,27 +842,38 @@ async function handleInvoicePaid(event, query, stripe, env, log) {
   log.info({ action: 'invoice_paid', subscriptionId, amount: amountPaid, currency: invoice.currency });
 
   // HD_UPDATES3: 25% recurring revenue share — credit referrer on each renewal
-  // Agency tier: cap credit at 50% of subscription cost (per HD_UPDATES3 spec)
+  // SYS-008: All tiers get 25% share; Agency tier has additional 50% credit cap (max $174/mo on $349 plan)
   if (amountPaid > 0 && userId && env.STRIPE_SECRET_KEY) {
     try {
       const refResult = await query(QUERIES.getReferrerForUser, [userId]);
       const referrer = refResult.rows[0];
 
       if (referrer?.referrer_stripe_id) {
-        // SYS-008: Agency subscribers generate 50% revenue share per spec; all other tiers 25%
-        const shareRate = subscriptionRow.tier === 'agency' ? 0.50 : 0.25;
-        const creditAmount = Math.floor(amountPaid * shareRate);
+        // All tiers: 25% base share
+        let creditAmount = Math.floor(amountPaid * 0.25);
+        
+        // Agency tier: cap credit at 50% of subscription cost (financial boundary per spec)
+        if (subscriptionRow.tier === 'agency') {
+          const agencyCap = Math.floor(amountPaid * 0.50);
+          creditAmount = Math.min(creditAmount, agencyCap);
+        }
 
         if (creditAmount > 0) {
           const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
           await stripe.customers.createBalanceTransaction(referrer.referrer_stripe_id, {
             amount: -creditAmount,  // Negative = credit
             currency: invoice.currency || 'usd',
-            description: `Referral revenue share (${shareRate * 100}% of $${(amountPaid / 100).toFixed(2)} payment)`,
+            description: `Referral revenue share (25% of $${(amountPaid / 100).toFixed(2)} payment${subscriptionRow.tier === 'agency' ? ', capped at 50%' : ''})`,
           }, {
             idempotencyKey: `referral-credit-${event.id}`,
           });
-          log.info({ action: 'referral_credit_applied', amount: creditAmount, referrerStripeId: referrer.referrer_stripe_id });
+          log.info({ 
+            action: 'referral_credit_applied', 
+            amount: creditAmount, 
+            referrerStripeId: referrer.referrer_stripe_id,
+            tier: subscriptionRow.tier,
+            baseCreditBefore: Math.floor(amountPaid * 0.25),
+          });
         }
       }
     } catch (refErr) {
