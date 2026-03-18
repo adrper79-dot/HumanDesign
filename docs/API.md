@@ -105,7 +105,71 @@ Runs Layers 1–7 (Julian Day → Planets → Design → Gates → Chart → Ast
 
 ---
 
+### Get Chart History
+
+```
+GET /api/chart/history
+```
+
+**Auth:** Required (JWT)
+
+Retrieves all saved charts for the authenticated user, with caching via Cloudflare KV.
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | int | 20 | Max results |
+| `offset` | int | 0 | Pagination offset |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "chart-uuid",
+      "birth": { "date": "1979-08-05", "time": "18:51:00", "timezone": "America/New_York" },
+      "location": { "lat": 27.9506, "lng": -82.4572, "city": "Tampa, FL" },
+      "chart": { "type": "Projector", "authority": "Emotional", "profile": "6/2", "definition": "Split", "cross": { "gates": [33, 19, 2, 1], "type": "Left Angle" } },
+      "calculatedAt": "2025-01-15T10:30:00Z"
+    }
+  ],
+  "pagination": { "limit": 20, "offset": 0, "total": 45 }
+}
+```
+
+---
+
+### Get Chart by ID
+
+```
+GET /api/chart/:id
+```
+
+**Auth:** Required (JWT) — Owner-only access
+
+Retrieves a specific chart by ID with full detail (cached).
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "chart-uuid",
+    "hdChart": { "type": "Projector", "chart": { ... }, "astrology": { ... }, "transits": { ... } },
+    "astroChart": { "placements": [...], "houses": [...], "aspects": [...] },
+    "calculatedAt": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
 ### Generate Profile
+
 
 ```
 POST /api/profile/generate
@@ -139,6 +203,75 @@ Runs full chart calculation + LLM synthesis via Claude (Opus for full profiles, 
     "validationErrors": [],
     "model": "claude-opus-4-20250514",
     "calculatedAt": "..."
+  }
+}
+```
+
+---
+
+### List Profiles
+
+```
+GET /api/profile/list
+```
+
+**Auth:** Required (JWT)
+
+Retrieve all saved AI profiles for the authenticated user.
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | int | 20 | Max results |
+| `offset` | int | 0 | Pagination offset |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "profile-uuid",
+      "chartId": "chart-uuid",
+      "chart": { "type": "Projector", "authority": "Emotional", "profile": "6/2", "definition": "Split", "cross": { "gates": [33, 19, 2, 1], "type": "Left Angle" } },
+      "createdAt": "2025-01-15T10:30:00Z",
+      "modelUsed": "claude-opus-4-20250514"
+    }
+  ],
+  "pagination": { "limit": 20, "offset": 0, "total": 12 }
+}
+```
+
+---
+
+### Get Profile by ID
+
+```
+GET /api/profile/:id
+```
+
+**Auth:** Required (JWT) — Owner-only access
+
+Retrieve a specific profile with full synthesis data (cached).
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "profile-uuid",
+    "chartId": "chart-uuid",
+    "profile": {
+      "quickStartGuide": { "yourType": "...", "yourAuthority": "...", "yourPurpose": "..." },
+      "technicalInsights": { "activationSequence": [...]  ,"dominantTheme": "..." },
+      "relationships": { "compatibility": "..."  ,"dynamics": "..." }
+    },
+    "modelUsed": "claude-opus-4-20250514",
+    "groundingAudit": { "inconsistencies": [], "confidence": 0.98 },
+    "createdAt": "2025-01-15T10:30:00Z"
   }
 }
 ```
@@ -488,6 +621,69 @@ POST /api/sms/send-digest
 | `userId` | string | No | Send to one user by ID |
 | `phone` | string | No | Send to one user by phone |
 | `all` | boolean | No | Send to all opted-in users |
+
+---
+
+### Subscribe to SMS Digest
+
+```
+POST /api/sms/subscribe
+```
+
+**Auth:** Required (JWT)
+
+Subscribe the authenticated user to daily SMS digests.
+
+**Request Body:**
+
+```json
+{
+  "phone": "+14155551234"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "user-uuid",
+    "phone": "+14155551234",
+    "subscribed": true,
+    "nextDigestAt": "2025-01-16T06:00:00Z"
+  }
+}
+```
+
+**Error Codes:**
+- `400`: Invalid phone number (must be E.164 format)
+- `409`: Already subscribed to this phone
+
+---
+
+### Unsubscribe from SMS Digest
+
+```
+POST /api/sms/unsubscribe
+```
+
+**Auth:** Required (JWT)
+
+Unsubscribe the authenticated user from SMS digests.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "user-uuid",
+    "subscribed": false,
+    "unsubscribedAt": "2025-01-15T14:22:00Z"
+  }
+}
+```
 
 ---
 
