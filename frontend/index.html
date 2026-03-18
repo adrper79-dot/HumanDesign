@@ -128,6 +128,9 @@
 </head>
 <body class="theme-premium">
 
+<!-- Skip Link for Keyboard Navigation (ACC-P3-1) -->
+<a href="#sidebar" class="skip-link">Skip to main navigation</a>
+
 <!-- ─── Fullscreen Background Video (seamless loop) ─── -->
 <video id="bgVideo" class="bg-video" autoplay muted loop playsinline
        poster="bg-video-poster.jpg"
@@ -164,11 +167,11 @@
     <form data-action="submitAuth">
     <div class="form-group">
       <label for="authEmail" data-i18n="auth.email">Email</label>
-      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required aria-required="true" aria-describedby="authError">
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required aria-required="true" aria-describedby="authError" aria-label="Email address">
     </div>
     <div class="form-group">
       <label for="authPassword" data-i18n="auth.password">Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required aria-required="true" minlength="8" aria-describedby="authError">
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required aria-required="true" minlength="8" aria-describedby="authError" aria-label="Password">
     </div>
     <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>
     <button type="submit" class="btn-primary btn-full" id="authSubmit" data-i18n="auth.signIn">Sign In</button>
@@ -183,7 +186,7 @@
       <form data-action="submitTOTP">
         <div class="form-group">
           <label for="authTOTPCode">Authenticator Code</label>
-          <input type="text" id="authTOTPCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" style="letter-spacing:0.3em;font-size:1.25rem;text-align:center">
+          <input type="text" id="authTOTPCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" aria-label="Two-factor authentication code" style="letter-spacing:0.3em;font-size:1.25rem;text-align:center">
         </div>
         <div class="auth-error" id="authTOTPError" role="alert" aria-live="polite"></div>
         <button type="submit" class="btn-primary btn-full" id="authTOTPSubmit">Verify Code</button>
@@ -833,18 +836,18 @@
       <div class="form-grid">
         <div class="form-group">
           <label for="c-date" data-i18n="chart.birthDate">Birth Date</label>
-          <input type="date" id="c-date" value="1990-06-15" required aria-required="true">
+          <input type="date" id="c-date" value="1990-06-15" required aria-required="true" aria-label="Birth date">
         </div>
         <div class="form-group">
           <label for="c-time"><span data-i18n="chart.birthTime">Birth Time</span><span class="icon-info help-icon" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE Energy Chart shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
-          <input type="time" id="c-time" value="14:30" required aria-required="true">
+          <input type="time" id="c-time" value="14:30" required aria-required="true" aria-label="Birth time">
         </div>
         </div>
         <div class="form-group full">
           <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
           <div class="input-row">
             <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
-              data-geocode-target="c">
+              data-geocode-target="c" aria-label="Birth location">
             <button type="button" class="btn-secondary btn-lookup" data-action="geocodeLocation" data-arg0="c" id="c-geoBtn"
               data-i18n="chart.lookupLocation">Look Up</button>
           </div>
@@ -954,17 +957,17 @@
       <div class="form-grid">
         <div class="form-group">
           <label data-i18n="chart.birthDate">Birth Date</label>
-          <input type="date" id="p-date" required aria-required="true">
+          <input type="date" id="p-date" required aria-required="true" aria-label="Birth date">
         </div>
         <div class="form-group">
           <label data-i18n="chart.birthTime">Birth Time</label>
-          <input type="time" id="p-time" required aria-required="true">
+          <input type="time" id="p-time" required aria-required="true" aria-label="Birth time">
         </div>
         <div class="form-group full">
           <label data-i18n="chart.birthLocation">Birth Location</label>
           <div class="input-row">
             <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
-              data-geocode-target="p">
+              data-geocode-target="p" aria-label="Birth location">
             <button type="button" class="btn-secondary btn-lookup" data-action="geocodeLocation" data-arg0="p" id="p-geoBtn"
               data-i18n="chart.lookupLocation">Look Up</button>
           </div>
@@ -1063,7 +1066,7 @@
 
             <div style="margin-top:var(--space-4)">
               <label for="p-question">Specific Question <span class="label-hint">(optional — leave blank for full profile)</span></label>
-              <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder">
+              <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder" aria-label="Your burning question">
             </div>
           </div>
         </div>
@@ -1535,8 +1538,8 @@
       
       <h4 class="card-subheading" data-i18n="composite.personA">Person A</h4>
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" required aria-required="true"></div>
-        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" required aria-required="true" aria-label="Person A birth date"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" required aria-required="true" aria-label="Person A birth time"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
@@ -1544,7 +1547,7 @@
           <div class="input-row">
             <input type="text" id="comp-A-location" placeholder="New York, NY"
               class="input-flex" required aria-required="true"
-              data-geocode-target="comp-A">
+              data-geocode-target="comp-A" aria-label="Person A birth location">
             <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="comp-A" id="comp-A-geoBtn"
               class="btn-lookup-tall" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
@@ -1556,8 +1559,8 @@
 
       <h4 class="card-subheading-lg" data-i18n="composite.personB">Person B</h4>
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" required aria-required="true"></div>
-        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" required aria-required="true" aria-label="Person B birth date"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" required aria-required="true" aria-label="Person B birth time"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
@@ -1565,7 +1568,7 @@
           <div class="input-row">
             <input type="text" id="comp-B-location" placeholder="Los Angeles, CA"
               class="input-flex" required aria-required="true"
-              data-geocode-target="comp-B">
+              data-geocode-target="comp-B" aria-label="Person B birth location">
             <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="comp-B" id="comp-B-geoBtn"
               class="btn-lookup-tall" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
@@ -1596,8 +1599,8 @@
       <p class="card-intro">Analyze how chart changes within a time window to find the most accurate birth time.</p>
       
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="rect-date" value="1990-06-15"></div>
-        <div class="form-group"><label>Approximate Time</label><input type="time" id="rect-time" value="14:30"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="rect-date" value="1990-06-15" aria-label="Birth date"></div>
+        <div class="form-group"><label>Approximate Time</label><input type="time" id="rect-time" value="14:30" aria-label="Birth time"></div>
         <div class="form-group">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
@@ -1605,7 +1608,7 @@
           <div class="input-row">
             <input type="text" id="rect-location" placeholder="New York, NY"
               class="input-flex"
-              data-geocode-target="rect">
+              data-geocode-target="rect" aria-label="Birth location">
             <button type="button" class="btn-secondary" data-action="geocodeLocation" data-arg0="rect" id="rect-geoBtn"
               class="btn-lookup-tall" data-i18n="chart.lookupLocation">Look Up</button>
           </div>
@@ -1617,13 +1620,13 @@
           <label>Search Window (minutes)
             <span class="help-icon" title="How many minutes before and after the approximate time to analyze (e.g., 30 = search from 30 min before to 30 min after).">?</span>
           </label>
-          <input type="number" id="rect-window" value="30" min="5" max="120">
+          <input type="number" id="rect-window" value="30" min="5" max="120" aria-label="Search window minutes">
         </div>
         <div class="form-group">
           <label>Time Steps (minutes)
             <span class="help-icon" title="How often to check within the window (e.g., 5 = check every 5 minutes). Smaller steps = more precise but slower.">?</span>
           </label>
-          <input type="number" id="rect-step" value="5" min="1" max="30">
+          <input type="number" id="rect-step" value="5" min="1" max="30" aria-label="Time step minutes">
         </div>
       </div>
 

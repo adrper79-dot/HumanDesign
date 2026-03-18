@@ -20,6 +20,22 @@ header {
   height: 60px; position: sticky; top: 0; z-index: 100;
   gap: 12px;
 }
+
+/* ── Skip Link (Accessibility) [ACC-P3-1] ── */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--gold, #c9a84c);
+  color: #0a0a0f;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: 600;
+  z-index: 200;
+}
+.skip-link:focus {
+  top: 0;
+}
 .logo { font-size: 1.3rem; font-weight: 700; color: var(--gold, #c9a84c); letter-spacing: 0.05em; }
 .logo span { color: var(--text-dim, #c4c0d8); font-weight: 300; font-size: 0.85rem; margin-left: 8px; }
 .auth-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; } /* [DUP] layout.css */
