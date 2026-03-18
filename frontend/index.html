@@ -1633,6 +1633,19 @@
       </button>
     </div>
     <div id="rectResult"></div>
+
+    <!-- Rectification History -->
+    <div id="rectHistorySection" style="margin-top: var(--space-5);">
+      <h3 style="display: flex; align-items: center; cursor: pointer; margin: var(--space-4) 0 var(--space-2); user-select: none;" id="rectHistoryToggle" onclick="toggleRectificationHistory()">
+        <span id="rectHistoryIcon" style="display: inline-block; margin-right: var(--space-2); transition: transform 0.2s;">▼</span>
+        <span>Past Analyses</span>
+      </h3>
+      <div id="rectHistoryList" style="display: none;">
+        <div id="rectHistoryContent" style="margin-top: var(--space-3);">
+          <!-- Populated by loadRectificationHistory() -->
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ PRACTITIONER TAB ═══ -->

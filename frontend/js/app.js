@@ -4544,6 +4544,103 @@ function renderRectification(data) {
   return html;
 }
 
+/**
+ * Load and display rectification history
+ */
+async function loadRectificationHistory() {
+  const list = document.getElementById('rectHistoryList');
+  const content = document.getElementById('rectHistoryContent');
+
+  // Show loading state
+  content.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading history...</div></div>';
+
+  try {
+    const data = await apiFetch('/api/rectify?limit=5&offset=0', { method: 'GET' });
+
+    if (!data.ok || !data.rectifications || data.rectifications.length === 0) {
+      content.innerHTML = '<div style="color: var(--text-dim); padding: var(--space-3);">No previous analyses yet.</div>';
+      return;
+    }
+
+    let html = '';
+    data.rectifications.forEach((rect, i) => {
+      const date = new Date(rect.createdAt);
+      const dateStr = date.toLocaleDateString();
+      const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const sensitivityColor = rect.sensitivity === 'critical' ? 'var(--alert)' :
+                               rect.sensitivity === 'high' ? 'var(--accent2)' :
+                               rect.sensitivity === 'moderate' ? 'var(--accent)' :
+                               'var(--text-dim)';
+
+      html += `<div style="
+        padding: var(--space-3);
+        background: var(--bg2);
+        border-radius: var(--space-2);
+        margin-bottom: var(--space-2);
+        border-left: 3px solid ${sensitivityColor};
+      ">`;
+      html += `<div style="display: flex; justify-content: space-between; align-items: flex-start;">`;
+      html += `<div>`;
+      html += `<div><strong>${rect.birthDate} @ ${rect.birthTime}</strong></div>`;
+      html += `<div style="font-size: var(--font-size-sm); color: var(--text-dim); margin-top: var(--space-1);">${dateStr} at ${timeStr}</div>`;
+      html += `<div style="font-size: var(--font-size-sm); margin-top: var(--space-1);">Window: ${rect.window} | ${rect.totalSnapshots} snapshots</div>`;
+      html += `</div>`;
+      html += `<div style="text-align: right;">`;
+      html += `<div style="color: ${sensitivityColor}; font-weight: bold; font-size: var(--font-size-sm);">${rect.sensitivity.toUpperCase()}</div>`;
+      html += `<button class="btn-secondary" style="margin-top: var(--space-2); font-size: var(--font-size-sm);" onclick="reloadRectification('${escapeAttr(rect.id)}')">Reload</button>`;
+      html += `</div>`;
+      html += `</div>`;
+      html += `</div>`;
+    });
+
+    content.innerHTML = html;
+  } catch (err) {
+    content.innerHTML = `<div class="alert alert-error">Failed to load history: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+/**
+ * Toggle rectification history visibility
+ */
+function toggleRectificationHistory() {
+  const list = document.getElementById('rectHistoryList');
+  const icon = document.getElementById('rectHistoryIcon');
+  const isHidden = list.style.display === 'none';
+
+  if (isHidden) {
+    list.style.display = 'block';
+    icon.style.transform = 'rotate(180deg)';
+    loadRectificationHistory();
+  } else {
+    list.style.display = 'none';
+    icon.style.transform = 'rotate(0deg)';
+  }
+}
+
+/**
+ * Reload a specific rectification by ID
+ */
+async function reloadRectification(rectificationId) {
+  const resultEl = document.getElementById('rectResult');
+
+  resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading analysis...</div></div>';
+
+  try {
+    const data = await apiFetch(`/api/rectify/${rectificationId}`, { method: 'GET' });
+
+    if (data.status === 'completed' && data.result) {
+      resultEl.innerHTML = renderRectification(data.result);
+    } else if (data.status === 'failed') {
+      resultEl.innerHTML = `<div class="alert alert-error">Analysis failed: ${escapeHtml(data.error || 'Unknown error')}</div>`;
+    } else {
+      resultEl.innerHTML = `<div class="alert alert-warn">Analysis is still in progress or unavailable.</div>`;
+    }
+  } catch (err) {
+    resultEl.innerHTML = `<div class="alert alert-error">Error loading analysis: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
 // ── Practitioner Tools ─────────────────────────────────────────
 
 function togglePracAddForm() {

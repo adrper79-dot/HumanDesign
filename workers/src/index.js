@@ -135,7 +135,7 @@ import { handleTransits } from './handlers/transits.js';
 import { handleForecast } from './handlers/forecast.js';
 import { handleCycles } from './handlers/cycles.js';
 import { handleComposite } from './handlers/composite.js';
-import { handleRectify, handleGetRectify } from './handlers/rectify.js';
+import { handleRectify, handleGetRectify, handleListRectifications } from './handlers/rectify.js';
 import { handleCluster } from './handlers/cluster.js';
 import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
@@ -332,7 +332,7 @@ const EXACT_ROUTES = new Map([
   // Composite & Rectify
   ['POST /api/composite',             handleComposite],
   ['POST /api/rectify',               handleRectify],
-  ['GET /api/rectify/:rectificationId', handleGetRectify],
+  ['GET /api/rectify',                handleListRectifications],
   // Timing
   ['POST /api/timing/find-dates',     handleTiming],
   ['GET /api/timing/templates',       listIntentionTemplates],
@@ -475,6 +475,7 @@ const PREFIX_ROUTES = [
  */
 const PATTERN_ROUTES = [
   [/^\/api\/chart\/([^/]+)$/,                          'GET',  1, handleGetChart],
+  [/^\/api\/rectify\/([^/]+)$/,                        'GET',  1, handleGetRectify],
   [/^\/api\/compare\/celebrities\/([a-z0-9-]+)$/,      'GET',  1, handleGetCelebrityMatchById],
   [/^\/api\/compare\/category\/([a-z0-9-]+)$/,              'GET',  1, handleGetCelebritiesByCategory],
   [/^\/api\/notion\/export\/profile\/([^/]+)$/,        'POST', 1, handleExportProfile],

@@ -280,6 +280,107 @@ export async function handleRectify(request, env) {
 }
 
 /**
+ * GET /api/rectify
+ *
+ * List user's rectification analyses with pagination.
+ *
+ * Query parameters:
+ *   limit (optional, default 10): Number of results to return
+ *   offset (optional, default 0): Pagination offset
+ *
+ * Response:
+ * {
+ *   ok: true,
+ *   rectifications: [
+ *     {
+ *       id: "uuid",
+ *       birthDate: "1979-08-05",
+ *       birthTime: "18:51",
+ *       window: "±30 min",
+ *       totalSnapshots: 13,
+ *       sensitivity: "moderate",
+ *       createdAt: "2026-03-18T14:30:00Z",
+ *       completedAt: "2026-03-18T14:31:30Z"
+ *     }
+ *   ],
+ *   totalCount: 42,
+ *   limit: 10,
+ *   offset: 0
+ * }
+ */
+export async function handleListRectifications(request, env) {
+  const user = await getUserFromRequest(request, env);
+  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+
+  const url = new URL(request.url);
+  const limit = Math.min(50, parseInt(url.searchParams.get('limit') || '10', 10));
+  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
+
+  try {
+    const query = createQueryFn(env);
+
+    // Get total count
+    const countResult = await query(
+      `SELECT COUNT(*) as total FROM birthtime_rectifications WHERE user_id = $1`,
+      [user.id]
+    );
+    const totalCount = parseInt(countResult[0].total, 10);
+
+    // Get paginated results
+    const rows = await query(
+      `SELECT id, birth_date, birth_time, window_minutes, total_steps, status,
+              created_at, completed_at, result
+       FROM birthtime_rectifications
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [user.id, limit, offset]
+    );
+
+    const rectifications = rows.map(row => {
+      let sensitivity = 'unknown';
+      if (row.result) {
+        try {
+          const result = JSON.parse(row.result);
+          if (result.sensitivity) {
+            const changes = result.sensitivity.criticalChangePoints;
+            sensitivity = changes > 0 ? 'critical' : result.sensitivity.highChangePoints > 0 ? 'high' : 'low';
+          }
+        } catch (e) {
+          // Silently ignore parse errors
+        }
+      }
+
+      return {
+        id: row.id,
+        birthDate: row.birth_date,
+        birthTime: row.birth_time,
+        window: `±${row.window_minutes} min`,
+        totalSnapshots: row.total_steps,
+        status: row.status,
+        sensitivity,
+        createdAt: row.created_at,
+        completedAt: row.completed_at
+      };
+    });
+
+    return Response.json({
+      ok: true,
+      rectifications,
+      totalCount,
+      limit,
+      offset
+    });
+  } catch (err) {
+    console.warn('Error listing rectifications:', err.message);
+    return Response.json(
+      { error: 'Failed to retrieve rectification history' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * GET /api/rectify/:rectificationId
  *
  * Retrieve progress and result of a birthtime rectification analysis.

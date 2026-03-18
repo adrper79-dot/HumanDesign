@@ -490,6 +490,63 @@ Initiate a sensitivity analysis across a time window showing which chart element
 }
 ```
 
+#### List Rectifications
+
+```
+GET /api/rectify
+```
+
+**Auth:** Required (JWT)
+
+Retrieve user's historical rectification analyses with pagination.
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 10 | Number of results (max 50) |
+| `offset` | number | 0 | Pagination offset |
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "rectifications": [
+    {
+      "id": "uuid",
+      "birthDate": "1979-08-05",
+      "birthTime": "18:51",
+      "window": "±30 min",
+      "totalSnapshots": 13,
+      "status": "completed",
+      "sensitivity": "moderate",
+      "createdAt": "2026-03-18T14:30:00Z",
+      "completedAt": "2026-03-18T14:31:30Z"
+    },
+    {
+      "id": "uuid",
+      "birthDate": "1985-12-15",
+      "birthTime": "09:25",
+      "window": "±60 min",
+      "totalSnapshots": 25,
+      "status": "completed",
+      "sensitivity": "critical",
+      "createdAt": "2026-03-18T13:00:00Z",
+      "completedAt": "2026-03-18T13:02:45Z"
+    }
+  ],
+  "totalCount": 42,
+  "limit": 10,
+  "offset": 0
+}
+```
+
+Sensitivity levels:
+- `critical` — Type changes within the window (birth time precision critical)
+- `high` — Profile/Cross gates change, Type stable (birth time important)
+- `moderate` or `low` — Chart is stable or minimally changes
+
 #### Get Rectification Progress
 
 ```
