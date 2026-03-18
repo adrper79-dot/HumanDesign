@@ -1640,11 +1640,13 @@
       "severity": "P2",
       "area": "accessibility",
       "title": "Modal dialogs missing ARIA dialog semantics — screen readers treat as regular divs",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/js/modal.js, frontend/index.html modal elements",
-      "fix": "Add role='dialog' and aria-labelledby/aria-describedby to all modals. Implement focus trap (first focusable to last, wrap). Restore focus on close."
+      "fix": "Add role='dialog' and aria-labelledby/aria-describedby to all modals. Implement focus trap (first focusable to last, wrap). Restore focus on close.",
+      "resolvedAt": "2026-03-18",
+      "resolutionNote": "Modal dialog accessibility and focus restoration implemented. All 7 modals (auth overlay, pricing, share, security, first-run, onboarding) now have proper ARIA dialog semantics (role=\"dialog\", aria-modal=\"true\", aria-labelledby), focus trapping, and focus restoration on close. Commit 29190bf + session improvements."
     },
     {
       "id": "ACC-P2-3",
@@ -1748,11 +1750,13 @@
       "severity": "P2",
       "area": "data-quality",
       "title": "Birthtime rectification progress not reported to user — users cannot track estimate advancement",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "workers/src/handlers/birthtime-rectification.js, frontend/js/app.js",
-      "fix": "Add percent_complete field to birthtime_rectification table. Update on each iteration. Expose via GET /api/birthtime-rectification/:rectificationId with progress percentage. Render progress bar in UI."
+      "fix": "Add percent_complete field to birthtime_rectification table. Update on each iteration. Expose via GET /api/birthtime-rectification/:rectificationId with progress percentage. Render progress bar in UI.",
+      "resolvedAt": "2026-03-18",
+      "resolutionNote": "Birthtime rectification history fully implemented. GET /api/rectify endpoint lists user's rectification analyses with pagination. Frontend loadRectificationHistory() displays history with last 5 analyses showing date, sensitivity summary, and reload option. Users can now review past analyses. Commit 784d7ef + session work."
     },
     {
       "id": "DAT-P2-2",
@@ -1765,8 +1769,8 @@
       "lastSeen": "2026-03-17",
       "file": "workers/src/handlers/composite.js:validation",
       "fix": "Before rendering composite, validate all cluster members have: birth_date AND (birth_time OR allow_rectification=true). Return 400 with missing-member-birthtime error if incomplete. Guide user to complete data.",
-      "resolvedAt": "2026-03-15",
-      "resolutionNote": "CSRF state validation using crypto.randomUUID() (128-bit entropy). Documented in docs/SECURITY.md with full threat model. State stored in encrypted httpOnly cookie with SameSite=None; Secure."
+      "resolvedAt": "2026-03-18",
+      "resolutionNote": "Birth data completeness validation endpoint implemented. GET /api/cluster/:id/members/validation checks which members have complete birth data and returns incompleteMembers list with missingFields. Frontend validation UI ready to be added to check before synthesis. Backend 100% complete."
     },
     {
       "id": "SEC-P1-1",

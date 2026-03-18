@@ -6594,9 +6594,41 @@ async function addMemberToCluster() {
 async function synthesizeCluster(clusterId) {
   const container = document.getElementById('synthesisResult');
   if (!container) return;
-  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('profile.generatingAi') + '</div></div>';
+
+  // First, validate member data completeness
+  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Checking member data...</div></div>';
 
   try {
+    const validation = await apiFetch(`/api/cluster/${clusterId}/members/validation`);
+
+    // If members are incomplete, show validation error
+    if (!validation.ok || !validation.canSynthesize) {
+      let html = `<div class="card">`;
+      html += `  <div class="card-title"><span class="icon-warning"></span> Members Need Complete Birth Data</div>`;
+      html += `  <p style="margin-bottom:var(--space-3)">${escapeHtml(validation.message || 'Some members are missing required birth information.')}</p>`;
+
+      if (validation.incompleteMembers && validation.incompleteMembers.length > 0) {
+        html += `  <div class="alert alert-warning">`;
+        html += `    <strong style="display:block;margin-bottom:var(--space-2)">Incomplete Members:</strong>`;
+        html += `    <ul style="margin:0;padding-left:20px">`;
+        validation.incompleteMembers.forEach(member => {
+          const fields = member.missingFields?.join(', ') || 'unknown fields';
+          html += `      <li>${escapeHtml(member.name || 'Member')} — missing: ${escapeHtml(fields)}</li>`;
+        });
+        html += `    </ul>`;
+        html += `  </div>`;
+      }
+
+      html += `  <p style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-3)">Ask these members to rejoin the cluster or update their birth information.</p>`;
+      html += `</div>`;
+
+      container.innerHTML = html;
+      return;
+    }
+
+    // All members are complete, proceed with synthesis
+    container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('profile.generatingAi') + '</div></div>';
+
     const data = await apiFetch(`/api/cluster/${clusterId}/synthesize`, {
       method: 'POST',
       body: JSON.stringify({})

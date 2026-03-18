@@ -1,0 +1,10 @@
+{
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "obsidian/inbox",
+  "attachmentFolderPath": "obsidian/assets",
+  "defaultViewMode": "preview",
+  "showLineNumber": false,
+  "spellcheck": true,
+  "theme": "obsidian"
+}
