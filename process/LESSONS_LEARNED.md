@@ -8,6 +8,35 @@ This document catalogs key learnings from development, debugging, and production
 
 ## Incident Log
 
+### 2026-03-18 | Tab Activation Hooks Complete P1 Fronend UX Pattern
+
+**Context**
+Cycle 20 closed the final 2 P1 frontend polish items (UX-007, UX-008) by adding tab-activation hooks to switchTab() handler. These changes completed pagination patterns that were previously only wired at auth-time (updateAuthUI) or on manual button clicks.
+
+**Pattern Established**
+The switchTab() function now serves as the universal tab-activation lifecycle hook:
+- Call persona-specific helpers when tab is first activated (updateWelcomeMessage on overview)
+- Auto-trigger data loads with switchTab._loading guard Set (loadLeaderboard on achievements)
+- Respect journeyFlag state to avoid re-rendering completed workflows
+- Use Promise.resolve().finally() pattern for non-blocking async loads
+
+**Key Lesson**
+For activation-time UI updates (not just auth-time), embed the call in the tab-switch handler with guards. This ensures the UI state syncs whenever the user navigates, not just once at login. The pattern is cleaner than window.onTabActivated() callbacks — it centralizes all tab activation logic in one place.
+
+**Applied Precedent**
+- Prior patterns: loadClusters, loadRoster, loadCelebrityMatches, loadAchievements all auto-load on tab switch
+- New pattern UX-007: updateWelcomeMessage() now follows the same flow
+- New pattern UX-008: loadLeaderboard() now follows the same flow
+
+**Code Impact**
+- frontend/js/app.js: 11 lines added to switchTab() (2 new tab-activation guards)
+- Zero breaking changes; zero test regressions
+- Commit: 01450bc (Cycle 20)
+
+---
+
+## Incident Log
+
 ### 2026-06-27 | Tier Rename Fallout: 16 Logic Bugs from Incomplete Code Sweep
 
 **Context**

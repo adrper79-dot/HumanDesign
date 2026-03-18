@@ -376,8 +376,16 @@ select option { background: var(--bg3, #111d38); }
 .pill.green { background: rgba(80,200,120,0.15); border-color: rgba(80,200,120,0.3); color: var(--accent2, #4fc8a0); }
 .pill.gold { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.3); color: var(--gold, #c9a84c); }
 
-/* ── Explanation text (Phase 2) [UNIQUE] ── */
-.explanation-text { font-size: 0.82rem; color: var(--text-dim, #c4c0d8); line-height: 1.55; margin: 4px 0 8px 0; padding-left: 12px; border-left: 2px solid var(--gold-dim, #a88840); }
+/* ── Explanation text (Phase 2) [UNIQUE] ── UX-009: Enhanced visibility */
+.explanation-text { 
+  font-size: 0.85rem; 
+  color: var(--text, #e8e6f0); 
+  line-height: 1.6; 
+  margin: 6px 0 10px 0; 
+  padding: 8px 0 8px 12px; 
+  border-left: 3px solid var(--gold, #c9a84c); 
+  background: rgba(201, 168, 76, 0.08);
+}
 .center-explain { font-size: 0.78rem; color: var(--text-dim, #c4c0d8); line-height: 1.5; margin-top: 3px; }
 .center-explain .center-governs { font-weight: 600; color: var(--gold-dim, #a88840); }
 .channel-detail { font-size: 0.78rem; color: var(--text-dim, #c4c0d8); line-height: 1.4; margin-top: 2px; }
