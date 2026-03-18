@@ -446,7 +446,7 @@ describe('Layer 8: Synthesis', () => {
     const content = p.messages[0].content;
     expect(content).toContain('Type: Projector');
     expect(content).toContain('Authority: Emotional');
-    expect(content).toContain('Profile: 6/2');
+    expect(content).toContain('Archetype Code: 6/2');
     expect(content).toContain('Gate 33.6');
     expect(content).toContain('7-31');
   });

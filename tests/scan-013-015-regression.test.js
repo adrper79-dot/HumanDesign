@@ -5,10 +5,14 @@
  * SCAN-015: Tier Quota Sync - Ensures tier quotas are fetched from backend, not hardcoded
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { mapMiscName, mapTypeName, mapAuthorityName } from '../workers/src/lib/displayNames.js';
 import { buildSynthesisPrompt } from '../src/prompts/synthesis.js';
 import { buildRAGContext } from '../src/prompts/rag.js';
+
+function getPromptContent(promptObj) {
+  return promptObj?.messages?.[0]?.content || '';
+}
 
 // ─── SCAN-013: Vocabulary Mapping Tests ──────────────────────────
 
@@ -47,6 +51,12 @@ describe('SCAN-013: Vocabulary Mapping', () => {
     });
   });
 
+  describe('mapAuthorityName - Authority Terminology', () => {
+    it('maps Emotional authority to approved language', () => {
+      expect(mapAuthorityName('Emotional')).toBe('Emotional Wave Navigation');
+    });
+  });
+
   describe('buildSynthesisPrompt - No Forbidden Vocabulary', () => {
     it('uses "Life Purpose Vector" instead of "Incarnation Cross"', async () => {
       const chartData = {
@@ -63,7 +73,7 @@ describe('SCAN-013: Vocabulary Mapping', () => {
       };
 
       const promptObj = await buildSynthesisPrompt(chartData);
-      const promptContent = promptObj.messages?.[0]?.content || '';
+      const promptContent = getPromptContent(promptObj);
       
       // Should use canonical term
       expect(promptContent).toContain('Life Purpose Vector');
@@ -81,7 +91,7 @@ describe('SCAN-013: Vocabulary Mapping', () => {
       };
 
       const promptObj = await buildSynthesisPrompt(chartData);
-      const promptContent = promptObj.messages?.[0]?.content || '';
+      const promptContent = getPromptContent(promptObj);
       
       // Should use canonical term
       expect(promptContent).toContain('Not-Self Signal');
@@ -98,16 +108,16 @@ describe('SCAN-013: Vocabulary Mapping', () => {
       };
 
       const promptObj = await buildSynthesisPrompt(chartData);
-      const promptContent = promptObj.messages?.[0]?.content || '';
+      const promptContent = getPromptContent(promptObj);
       
-      // Should use canonical term (or "Archetype Code")
-      // The prompt should include Profile mapped to Archetype Code
+      // Reference facts should use the mapped field label.
       expect(promptContent).toContain('Archetype Code');
+      expect(promptContent).not.toMatch(/\bProfile:/);
     });
   });
 
   describe('buildRAGContext - No Forbidden Vocabulary', () => {
-    it('uses "Life Purpose Vector" in RAG context', async () => {
+    it('avoids forbidden Incarnation Cross terminology in RAG context', async () => {
       const chartData = {
         hdChart: {
           cross: {
@@ -120,10 +130,8 @@ describe('SCAN-013: Vocabulary Mapping', () => {
       const context = await buildRAGContext(chartData);
       const contextStr = typeof context === 'string' ? context : JSON.stringify(context);
       
-      // RAG context should use canonical vocabulary (or at minimum include gate processing)
-      // Most important: should work without throwing errors
+      // RAG context should remain buildable and avoid the forbidden label.
       expect(contextStr).toBeTruthy();
-      // Should NOT contain forbidden term in section headers
       expect(contextStr.toUpperCase()).not.toMatch(/INCARNATION CROSS:/);
     });
   });
@@ -235,16 +243,18 @@ describe('SCAN-013 & SCAN-015: Combined Regression Check', () => {
       tier: 'individual',
     };
 
-    const promptObj = buildSynthesisPrompt(chartData);
-    const promptContent = promptObj.messages?.[0]?.content || '';
+    const promptObj = await buildSynthesisPrompt(chartData);
+    const promptContent = getPromptContent(promptObj);
     
     // Should include canonical vocabulary
     expect(promptContent).toContain('Life Purpose Vector');
     expect(promptContent).toContain('Not-Self Signal');
+    expect(promptContent).toContain('Archetype Code');
     
     // Should NOT include forbidden terms
     expect(promptContent).not.toMatch(/Incarnation Cross:/);
     expect(promptContent).not.toMatch(/Not-Self Theme:/);
+    expect(promptContent).not.toMatch(/\bProfile:/);
   });
 
   it('tier quota fetch fallback provides reasonable defaults', () => {
