@@ -75,7 +75,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy frontend --project-name=prime-self-ui --branch=main
+          command: pages deploy frontend --project-name=prime-self-ui --branch=main --functions-directory=frontend/functions
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
