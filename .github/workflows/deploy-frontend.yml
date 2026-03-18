@@ -70,12 +70,15 @@ jobs:
             exit 1
           fi
 
+      - name: Stage Pages Functions (copy to root so wrangler pages deploy auto-discovers them)
+        run: cp -r frontend/functions functions
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy frontend --project-name=prime-self-ui --branch=main --functions-directory=frontend/functions
+          command: pages deploy frontend --project-name=prime-self-ui --branch=main
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
