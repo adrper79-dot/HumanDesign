@@ -16,6 +16,7 @@
  *   GET  /api/cycles                   – Major life cycles (Saturn return, etc.)
  *   POST /api/composite                – Relationship / composite chart
  *   POST /api/rectify                  – Birth-time sensitivity analysis
+ *   GET  /api/rectify/:rectificationId – Get rectification progress and result
  *   GET  /api/cluster/list             – List user's clusters
  *   POST /api/cluster/create           – Create a cluster
  *   POST /api/cluster/:id/join         – Add member to cluster
@@ -134,7 +135,7 @@ import { handleTransits } from './handlers/transits.js';
 import { handleForecast } from './handlers/forecast.js';
 import { handleCycles } from './handlers/cycles.js';
 import { handleComposite } from './handlers/composite.js';
-import { handleRectify } from './handlers/rectify.js';
+import { handleRectify, handleGetRectify } from './handlers/rectify.js';
 import { handleCluster } from './handlers/cluster.js';
 import { handleSMS } from './handlers/sms.js';
 import { handleAuth } from './handlers/auth.js';
@@ -331,6 +332,7 @@ const EXACT_ROUTES = new Map([
   // Composite & Rectify
   ['POST /api/composite',             handleComposite],
   ['POST /api/rectify',               handleRectify],
+  ['GET /api/rectify/:rectificationId', handleGetRectify],
   // Timing
   ['POST /api/timing/find-dates',     handleTiming],
   ['GET /api/timing/templates',       listIntentionTemplates],

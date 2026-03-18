@@ -25,11 +25,22 @@
  *   windowMinutes: 30,          // ± window (default 30, max 120)
  *   stepMinutes: 5              // Step interval (default 5, min 1, max 15)
  * }
+ *
+ * Response:
+ * {
+ *   ok: true,
+ *   rectificationId: "uuid",    // Use to poll /api/rectify/:id for progress
+ *   percentComplete: 0          // Initial progress
+ * }
+ *
+ * GET /api/rectify/:rectificationId
+ * Returns current progress and result (when complete)
  */
 
 import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { getUserFromRequest } from '../middleware/auth.js';
+import { createQueryFn, QUERIES } from '../db/queries.js';
 
 /**
  * Extract key chart fingerprint for comparison.
@@ -120,6 +131,31 @@ export async function handleRectify(request, env) {
   const windowMinutes = Math.min(120, Math.max(5, parseInt(body.windowMinutes || '30', 10)));
   const stepMinutes = Math.min(15, Math.max(1, parseInt(body.stepMinutes || '5', 10)));
 
+  // Create rectification record in DB (if available)
+  let rectificationId = null;
+  let query = null;
+  const totalSteps = Math.floor((windowMinutes * 2) / stepMinutes) + 1;
+
+  try {
+    // Only initialize DB if connection string exists (production)
+    if (env.NEON_CONNECTION_STRING && env.NEON_CONNECTION_STRING.includes('postgresql://')) {
+      query = createQueryFn(env);
+      rectificationId = crypto.randomUUID();
+
+      // Insert initial record with status 'in_progress'
+      await query(
+        `INSERT INTO birthtime_rectifications
+          (id, user_id, birth_date, birth_time, birth_timezone, lat, lng, window_minutes, step_minutes, total_steps, percent_complete)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [rectificationId, user.id, birthDate, birthTime, birthTimezone, lat, lng, windowMinutes, stepMinutes, totalSteps, 0]
+      );
+    }
+  } catch (err) {
+    // DB not available — continue with calculation only (test/fallback mode)
+    console.warn('Rectification DB storage unavailable, proceeding with calculation only', err.message);
+    query = null;
+  }
+
   // Calculate the base chart (at the stated birth time)
   const baseUTC = parseToUTC(birthDate, birthTime, birthTimezone);
   const baseChart = calculateFullChart({
@@ -132,9 +168,8 @@ export async function handleRectify(request, env) {
 
   // Calculate charts across the sensitivity window
   const snapshots = [];
-  const totalSteps = Math.floor((windowMinutes * 2) / stepMinutes);
 
-  for (let i = 0; i <= totalSteps; i++) {
+  for (let i = 0; i <= totalSteps - 1; i++) {
     const offsetMinutes = -windowMinutes + (i * stepMinutes);
     const totalMins = baseUTC.hour * 60 + baseUTC.minute + offsetMinutes;
 
@@ -177,6 +212,15 @@ export async function handleRectify(request, env) {
       changes: diffs.length,
       diffs: diffs.length > 0 ? diffs : undefined
     });
+
+    // Update progress in DB every 5 snapshots (avoid excessive DB writes)
+    if (query && (i % 5 === 0 || i === totalSteps - 1)) {
+      const percentComplete = Math.round((i / (totalSteps - 1)) * 100);
+      await query(
+        `UPDATE birthtime_rectifications SET percent_complete = $1 WHERE id = $2`,
+        [percentComplete, rectificationId]
+      );
+    }
   }
 
   // Summarize sensitivity
@@ -184,7 +228,7 @@ export async function handleRectify(request, env) {
   const highChanges = snapshots.filter(s => s.diffs?.some(d => d.severity === 'high'));
   const stableRange = findStableRange(snapshots);
 
-  return Response.json({
+  const result = {
     ok: true,
     baseChart: {
       type: baseFP.type,
@@ -209,7 +253,89 @@ export async function handleRectify(request, env) {
     meta: {
       calculatedAt: new Date().toISOString()
     }
-  });
+  };
+
+  // Store complete result in DB if available
+  if (query && rectificationId) {
+    await query(
+      `UPDATE birthtime_rectifications
+       SET result = $1, percent_complete = 100, status = 'completed', completed_at = now()
+       WHERE id = $2`,
+      [JSON.stringify(result), rectificationId]
+    );
+  }
+
+  const response = {
+    ok: true,
+    ...result
+  };
+
+  // Add rectificationId if DB was available
+  if (rectificationId) {
+    response.rectificationId = rectificationId;
+    response.percentComplete = 100;
+  }
+
+  return Response.json(response);
+}
+
+/**
+ * GET /api/rectify/:rectificationId
+ *
+ * Retrieve progress and result of a birthtime rectification analysis.
+ *
+ * Response:
+ * {
+ *   ok: true,
+ *   rectificationId: "uuid",
+ *   percentComplete: 0-100,
+ *   status: "in_progress" | "completed" | "failed",
+ *   result: { ... },     // Populated when status = "completed"
+ *   error: "..."         // Populated when status = "failed"
+ * }
+ */
+export async function handleGetRectify(request, env) {
+  const user = await getUserFromRequest(request, env);
+  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+
+  // Extract rectificationId from path
+  const url = new URL(request.url);
+  const pathParts = url.pathname.split('/');
+  const rectificationId = pathParts[pathParts.length - 1];
+
+  if (!rectificationId || rectificationId === 'undefined') {
+    return Response.json({ error: 'Missing rectificationId' }, { status: 400 });
+  }
+
+  const query = createQueryFn(env);
+  const rows = await query(
+    `SELECT id, percent_complete, status, result, error_message
+     FROM birthtime_rectifications
+     WHERE id = $1 AND user_id = $2`,
+    [rectificationId, user.id]
+  );
+
+  if (rows.length === 0) {
+    return Response.json({ error: 'Rectification not found' }, { status: 404 });
+  }
+
+  const record = rows[0];
+  const response = {
+    ok: true,
+    rectificationId,
+    percentComplete: record.percent_complete,
+    status: record.status
+  };
+
+  if (record.result) {
+    response.result = JSON.parse(record.result);
+  }
+
+  if (record.error_message) {
+    response.error = record.error_message;
+  }
+
+  return Response.json(response);
 }
 
 /**

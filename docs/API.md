@@ -409,9 +409,9 @@ Overlays two full bodygraphs to identify electromagnetic connections, dominance 
 POST /api/rectify
 ```
 
-**Auth:** None
+**Auth:** Required (JWT)
 
-Sensitivity analysis across a time window showing which chart elements change.
+Initiate a sensitivity analysis across a time window showing which chart elements change. Returns immediately with rectification ID; results are computed and available for polling.
 
 **Request Body:**
 
@@ -429,36 +429,109 @@ Sensitivity analysis across a time window showing which chart elements change.
 
 ```json
 {
-  "success": true,
-  "baseChart": { "type": "Projector", "authority": "...", "profile": "6/2", ... },
-  "sensitivity": {
-    "window": "±30 minutes",
-    "step": "5 minutes",
-    "totalSnapshots": 13,
-    "stableRange": "-15 min to +10 min (6 steps, all chart elements stable)",
-    "criticalChangePoints": 0,
-    "highChangePoints": 1
-  },
-  "snapshots": [
-    {
-      "offset": -30,
-      "label": "-30 min",
-      "time": "22:21 UTC",
-      "type": "Projector",
-      "authority": "...",
+  "ok": true,
+  "rectificationId": "uuid",
+  "percentComplete": 100,
+  "result": {
+    "ok": true,
+    "baseChart": {
+      "type": "Guide Pattern",
+      "authority": "Emotional",
       "profile": "6/2",
-      "changes": 0
+      "definition": "Single",
+      "cross": { "gates": [1, 2, 3], "type": "Right Angle Cross" },
+      "ascendant": "Aries",
+      "sunGate": 1,
+      "moonGate": 2
     },
-    {
-      "offset": 25,
-      "label": "+25 min",
-      "type": "Projector",
-      "profile": "6/3",
-      "changes": 1,
-      "diffs": [{ "field": "profile", "base": "6/2", "test": "6/3", "severity": "high" }]
+    "sensitivity": {
+      "window": "±30 minutes",
+      "step": "5 minutes",
+      "totalSnapshots": 13,
+      "stableRange": "-15 min to +10 min (6 steps, all chart elements stable)",
+      "criticalChangePoints": 0,
+      "highChangePoints": 1
+    },
+    "snapshots": [
+      {
+        "offset": -30,
+        "label": "-30 min",
+        "time": "22:21 UTC",
+        "type": "Guide Pattern",
+        "authority": "Emotional",
+        "profile": "6/2",
+        "changes": 0
+      },
+      {
+        "offset": 25,
+        "label": "+25 min",
+        "time": "23:16 UTC",
+        "type": "Guide Pattern",
+        "profile": "6/3",
+        "changes": 1,
+        "diffs": [
+          {
+            "field": "profile",
+            "base": "6/2",
+            "test": "6/3",
+            "severity": "high"
+          }
+        ]
+      }
+    ],
+    "guidance": [
+      "Your chart is highly time-sensitive...",
+      "Consider: life events that validate your Strategy and Authority..."
+    ],
+    "meta": {
+      "calculatedAt": "2026-03-18T14:30:45.123Z"
     }
-  ],
-  "guidance": ["Your chart is stable across...", "Confidence: HIGH..."]
+  }
+}
+```
+
+#### Get Rectification Progress
+
+```
+GET /api/rectify/:rectificationId
+```
+
+**Auth:** Required (JWT)
+
+Poll for progress and result of an in-flight rectification analysis.
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "rectificationId": "uuid",
+  "percentComplete": 45,
+  "status": "in_progress"
+}
+```
+
+When complete:
+
+```json
+{
+  "ok": true,
+  "rectificationId": "uuid",
+  "percentComplete": 100,
+  "status": "completed",
+  "result": { ... }
+}
+```
+
+If error:
+
+```json
+{
+  "ok": true,
+  "rectificationId": "uuid",
+  "percentComplete": 0,
+  "status": "failed",
+  "error": "Invalid birth data"
 }
 ```
 

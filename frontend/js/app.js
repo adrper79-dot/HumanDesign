@@ -4438,7 +4438,14 @@ async function runRectification() {
 
   try {
     const data = await apiFetch('/api/rectify', { method: 'POST', body: JSON.stringify(body) });
-    resultEl.innerHTML = renderRectification(data);
+
+    // If rectificationId is present, poll for updates
+    if (data.rectificationId) {
+      await pollRectificationProgress(data.rectificationId, resultEl);
+    } else {
+      // Fallback: display result immediately if no ID (test mode)
+      resultEl.innerHTML = renderRectification(data);
+    }
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
@@ -4447,16 +4454,81 @@ async function runRectification() {
   }
 }
 
+/**
+ * Poll for rectification progress until completion
+ */
+async function pollRectificationProgress(rectificationId, resultEl) {
+  let isComplete = false;
+  let pollCount = 0;
+  const maxPolls = 120; // 2 minutes max (1s interval)
+
+  while (!isComplete && pollCount < maxPolls) {
+    pollCount++;
+
+    try {
+      const status = await apiFetch(`/api/rectify/${rectificationId}`, { method: 'GET' });
+
+      // Update progress bar
+      resultEl.innerHTML = `
+        <div class="loading-card">
+          <div class="section-title">Analyzing Birth Time Sensitivity</div>
+          <div style="margin: var(--space-4) 0">
+            <div style="background: var(--bg3); height: 24px; border-radius: var(--space-1); overflow: hidden; position: relative;">
+              <div style="
+                background: linear-gradient(90deg, var(--accent), var(--accent2));
+                height: 100%;
+                width: ${status.percentComplete}%;
+                transition: width 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                color: white;
+                font-weight: bold;
+              ">${status.percentComplete}%</div>
+            </div>
+          </div>
+          <div style="text-align: center; color: var(--text-dim); margin: var(--space-2) 0;">
+            ${status.percentComplete}% complete
+          </div>
+        </div>
+      `;
+
+      if (status.status === 'completed') {
+        isComplete = true;
+        if (status.result) {
+          resultEl.innerHTML = renderRectification(status.result);
+        }
+      } else if (status.status === 'failed') {
+        resultEl.innerHTML = `<div class="alert alert-error">${window.t('error.rectify_failed')}: ${escapeHtml(status.error || 'Unknown error')}</div>`;
+        isComplete = true;
+      }
+    } catch (err) {
+      console.warn('Rectification polling error:', err);
+      // Continue polling on transient errors
+    }
+
+    if (!isComplete) {
+      // Wait before next poll
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  if (!isComplete) {
+    resultEl.innerHTML = `<div class="alert alert-error">${window.t('error.rectify_timeout')}</div>`;
+  }
+}
+
 function renderRectification(data) {
   if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
-  
+
   const sensitivity = Array.isArray(data.sensitivity) ? data.sensitivity : [];
   const guidance = Array.isArray(data.guidance) ? data.guidance : [];
 
   let html = `<div class="card"><div class="card-title"><span class="icon-time"></span> Rectification Analysis</div>`;
   html += `<div class="section-title">Time Window Variations</div>`;
   html += `<div style="font-size:var(--font-size-base);color:var(--text-dim);margin:var(--space-2) 0">Analyzed ${sensitivity.length} time points</div>`;
-  
+
   sensitivity.slice(0, 5).forEach(s => {
     html += `<div style="padding:var(--space-2);background:var(--bg3);border-radius:var(--space-2);margin:var(--space-2) 0">`;
     html += `<strong>${s.time}</strong> → Type: ${s.type}, Profile: ${s.profile}, Authority: ${s.authority}`;
