@@ -115,6 +115,12 @@ export async function handleCluster(request, env, path) {
     return handleGet(request, env, getMatch[1]);
   }
 
+  // GET /api/cluster/:id/members/validation
+  const validMatch = path.match(/^\/api\/cluster\/([^/]+)\/members\/validation$/);
+  if (validMatch && request.method === 'GET') {
+    return handleValidateMembers(request, env, validMatch[1]);
+  }
+
   // POST /api/cluster/:id/synthesize
   const synthMatch = path.match(/^\/api\/cluster\/([^/]+)\/synthesize$/);
   if (synthMatch && request.method === 'POST') {
@@ -422,6 +428,104 @@ async function handleGet(request, env, clusterId) {
     members,
     composition,
     meta: { memberCount: members.length }
+  });
+}
+
+/**
+ * GET /api/cluster/:id/members/validation
+ *
+ * Check which cluster members have complete birth data.
+ * Returns list of members with completeness status.
+ *
+ * Response:
+ * {
+ *   ok: true,
+ *   clusterId: "uuid",
+ *   totalMembers: 5,
+ *   completeMembers: 3,
+ *   incompleteMembers: [
+ *     {
+ *       memberId: "uuid",
+ *       name: "Alice",
+ *       type: "Guide Pattern",
+ *       status: "incomplete",
+ *       missingFields: ["birth_time"]
+ *     }
+ *   ],
+ *   canSynthesize: false,
+ *   message: "2 members missing birth data. Please ask them to re-join with complete information."
+ * }
+ */
+async function handleValidateMembers(request, env, clusterId) {
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const userId = request._user?.sub;
+
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  // Verify user has access to this cluster
+  const memberCheck = await query(
+    QUERIES.checkClusterMembership,
+    [clusterId, userId]
+  );
+  if (!memberCheck.rows?.length) {
+    return Response.json({ error: 'Access denied' }, { status: 403 });
+  }
+
+  // Get all members with their birth data
+  const members = await query(
+    `SELECT id, name, birth_date, birth_time, birth_lat, birth_lng, chart_type
+     FROM cluster_members
+     WHERE cluster_id = $1
+     ORDER BY created_at ASC`,
+    [clusterId]
+  );
+
+  const incompleteMembers = [];
+  let completeCount = 0;
+
+  for (const member of members) {
+    const missingFields = [];
+    if (!member.birth_date) missingFields.push('birth_date');
+    if (!member.birth_time) missingFields.push('birth_time');
+    if (member.birth_lat == null) missingFields.push('birth_lat');
+    if (member.birth_lng == null) missingFields.push('birth_lng');
+
+    if (missingFields.length > 0) {
+      incompleteMembers.push({
+        memberId: member.id,
+        name: member.name || 'Unknown',
+        type: member.chart_type || 'Not calculated',
+        status: 'incomplete',
+        missingFields
+      });
+    } else {
+      completeCount++;
+    }
+  }
+
+  const canSynthesize = members.length >= 2 && incompleteMembers.length === 0;
+  let message = '';
+
+  if (!canSynthesize) {
+    if (members.length < 2) {
+      message = `At least 2 members required to synthesize (you have ${members.length}).`;
+    } else if (incompleteMembers.length > 0) {
+      message = `${incompleteMembers.length} member(s) missing birth data. Ask them to re-join with complete birth information.`;
+    }
+  } else {
+    message = 'All members have complete birth data. Ready to synthesize!';
+  }
+
+  return Response.json({
+    ok: true,
+    clusterId,
+    totalMembers: members.length,
+    completeMembers: completeCount,
+    incompleteMembers,
+    canSynthesize,
+    message
   });
 }
 
