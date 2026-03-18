@@ -91,6 +91,9 @@ function updateAuthUI() {
       upgradeEl.style.display  = cfg.canUpgrade ? '' : 'none';
       // Billing button: visible when user has any subscription
       billingEl.style.display  = (tier !== 'free') ? '' : 'none';
+      
+      // UX-007: Update welcome message based on tier and chart generation status
+      updateWelcomeMessage();
     } else {
       // Profile not loaded yet — hide badge until fetched
       badgeEl.style.display    = 'none';
@@ -110,6 +113,39 @@ function updateAuthUI() {
     upgradeEl.style.display  = 'none';
     billingEl.style.display  = 'none';
   }
+}
+
+// UX-007: Update welcome message based on tier and chart generation status
+function updateWelcomeMessage() {
+  const container = document.getElementById('overviewContent');
+  if (!container) return;
+  
+  // Only update if chart hasn't been generated (welcome card is still visible)
+  if (readJourneyFlag('chartGenerated')) return;
+  
+  const tier = currentUser?.tier || 'free';
+  const isPractitioner = tier === 'practitioner' || tier === 'guide' || tier === 'agency' || tier === 'white_label';
+  
+  let html;
+  if (isPractitioner) {
+    // Practitioner welcome card
+    html = `<div class="card card-welcome">
+      <div class="welcome-icon">👥</div>
+      <h3 class="welcome-title">Welcome to Your Practitioner Workspace</h3>
+      <p class="welcome-text">Manage your client roster, prepare for sessions with AI context, and deliver branded reports. Start by creating your own Energy Blueprint chart, then add your first client and begin tracking their sessions.</p>
+      <button class="btn-primary" data-action="switchTab" data-arg0="chart">Create Your Chart →</button>
+    </div>`;
+  } else {
+    // Consumer welcome card
+    html = `<div class="card card-welcome">
+      <div class="welcome-icon">⚷</div>
+      <h3 class="welcome-title">Discover Your Energy Blueprint</h3>
+      <p class="welcome-text">Your unique energy architecture revealed. Get your Energy Blueprint chart, AI-generated personal synthesis, daily transit insights, and tools for living in alignment with your design. Start with your birth data — we'll calculate everything in seconds.</p>
+      <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
+    </div>`;
+  }
+  
+  container.innerHTML = html;
 }
 
 // Fetch /api/auth/me and populate currentUser, then refresh UI
@@ -453,7 +489,7 @@ async function submitForgotPassword() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
-    const data = await res.json();
+    const data = res.ok ? await res.json() : {};
     errorEl.style.color = 'var(--color-success, #30d158)';
     errorEl.textContent = data.message || 'If an account exists, a reset link has been sent.';
     btn.textContent = 'Email Sent ✓';
@@ -961,6 +997,10 @@ async function resendVerificationEmail() {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include'
     });
+    if (!res.ok) {
+      showNotification('Failed to resend. Please try again.', 'error');
+      return;
+    }
     const data = await res.json();
     if (data.ok) {
       showNotification(data.message || 'Verification email sent!', 'success');
@@ -1420,7 +1460,7 @@ async function startCheckout(tier, event) {
     });
 
     if (result.error) {
-      showNotification('Checkout failed: ' + result.error, 'error');
+      showNotification('Checkout failed: ' + safeErrorMsg(result.error, 'Unable to start checkout'), 'error');
       if (checkoutBtn) {
         checkoutBtn.disabled = false;
         checkoutBtn.innerHTML = originalText;
@@ -1453,7 +1493,7 @@ async function startCheckout(tier, event) {
       }
     }
   } catch (e) {
-    showNotification('Failed to start checkout: ' + e.message, 'error');
+    showNotification('Failed to start checkout. Please try again.', 'error');
   }
 }
 
@@ -1537,7 +1577,7 @@ async function openBillingPortal() {
     });
 
     if (result.error) {
-      showNotification('Failed to open billing portal: ' + result.error, 'error');
+      showNotification('Failed to open billing portal: ' + safeErrorMsg(result.error, 'Unable to open billing portal'), 'error');
       return;
     }
 
@@ -1941,6 +1981,12 @@ function switchTab(id, btn) {
   if (groupBtn) { groupBtn.classList.add('active'); groupBtn.setAttribute('aria-selected', 'true'); }
   else if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
   
+  // ACC-P2-1: Update aria-selected on sub-tabs (chart/profile tabs)
+  document.querySelectorAll('.sub-tabs button[role="tab"]').forEach(tab => {
+    const tabId = tab.getAttribute('data-arg0');
+    tab.setAttribute('aria-selected', tabId === id ? 'true' : 'false');
+  });
+  
   // Update sidebar active states
   updateSidebarActive(id);
 
@@ -1984,6 +2030,48 @@ function switchTab(id, btn) {
   // Auto-load directory on first visit
   if (id === 'directory' && !document.getElementById('directoryResults')?.querySelector('.session-note-item, [style*="background:var(--bg3)"]')) {
     searchDirectory();
+  }
+
+  // UX-008: Auto-load diary entries when tab is activated
+  if (id === 'diary' && token && !switchTab._loading.has('diary-entries')) {
+    switchTab._loading.add('diary-entries');
+    Promise.resolve(typeof loadDiaryEntries === 'function' ? loadDiaryEntries() : Promise.resolve()).finally(() => switchTab._loading.delete('diary-entries'));
+  }
+
+  // UX-008: Auto-load check-in stats when tab is activated
+  if (id === 'checkin' && token && !switchTab._loading.has('checkin-stats')) {
+    switchTab._loading.add('checkin-stats');
+    Promise.resolve(typeof loadCheckinStats === 'function' ? loadCheckinStats() : Promise.resolve()).finally(() => switchTab._loading.delete('checkin-stats'));
+  }
+
+  // UX-005: Auto-sync birth data from Chart tab to Profile tab
+  if (id === 'profile') {
+    const cDate = document.getElementById('c-date')?.value;
+    const cTime = document.getElementById('c-time')?.value;
+    const cLat = document.getElementById('c-lat')?.value;
+    const cLng = document.getElementById('c-lng')?.value;
+    const cTz = document.getElementById('c-tz')?.value;
+    const cLoc = document.getElementById('c-location')?.value;
+    
+    // Only pre-fill if profile fields are empty (don't overwrite user changes)
+    if (cDate && !document.getElementById('p-date').value) {
+      document.getElementById('p-date').value = cDate;
+    }
+    if (cTime && !document.getElementById('p-time').value) {
+      document.getElementById('p-time').value = cTime;
+    }
+    if (cLat && !document.getElementById('p-lat').value) {
+      document.getElementById('p-lat').value = cLat;
+    }
+    if (cLng && !document.getElementById('p-lng').value) {
+      document.getElementById('p-lng').value = cLng;
+    }
+    if (cLoc && !document.getElementById('p-location').value) {
+      document.getElementById('p-location').value = cLoc;
+    }
+    if (cTz && !document.getElementById('p-tz').value) {
+      document.getElementById('p-tz').value = cTz;
+    }
   }
 
   // Pre-fill today's date in timing tool
@@ -2352,14 +2440,14 @@ async function calculateChart() {
       await geocodeLocation('c');
     }
     if (isNaN(parseFloat(document.getElementById('c-lat').value))) {
-      resultEl.innerHTML = '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
+      if (resultEl) resultEl.innerHTML = '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
       return;
     }
   }
 
-  btn.disabled = true;
-  spinner.style.display = '';
-  resultEl.innerHTML = skeletonChart();
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
+  if (resultEl) resultEl.innerHTML = skeletonChart();
 
   try {
     const payload = {
@@ -2371,8 +2459,8 @@ async function calculateChart() {
     };
 
     const data = await apiFetch('/api/chart/calculate', { method: 'POST', body: JSON.stringify(payload) });
-    resultEl.innerHTML = renderChart(data);
-    _applyChartHeadings(resultEl);
+    if (resultEl) resultEl.innerHTML = renderChart(data);
+    if (resultEl) _applyChartHeadings(resultEl);
     trackEvent('chart', 'calculate');
     // Save birth data to localStorage after successful chart calculation
     saveBirthData();
@@ -2388,10 +2476,10 @@ async function calculateChart() {
     // Load chart history for versioning (AUDIT-UX-003)
     if (token) loadChartHistory();
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+    if (resultEl) resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -3078,6 +3166,20 @@ function renderChart(data) {
     html += `<div class="alert alert-success"><span class="icon-check"></span> Chart saved (ID: ${meta.chartId})</div>`;
   }
 
+  // UX-006: CTA card linking chart → AI profile generation
+  html += `<div class="card" style="margin-top:var(--space-5);background:linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(158,107,0,0.05) 100%);border:2px solid var(--gold);border-radius:var(--radius)">
+    <div style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap">
+      <div style="flex:1;min-width:280px">
+        <h3 style="margin:0 0 var(--space-2);font-size:var(--font-size-lg);color:var(--gold);font-weight:700">✦ What's next?</h3>
+        <p style="margin:0 0 var(--space-3);font-size:var(--font-size-base);color:var(--text);line-height:1.6">Your chart is calculated. Now unlock your personalized AI Profile — a synthesis of your gates, channels, and cross tailored to your exact design.</p>
+        <button class="btn-primary" style="font-size:var(--font-size-base);padding:var(--space-2) var(--space-4)" onclick="switchTab('profile');document.getElementById('profileBtn')?.focus()">
+          Generate Your AI Profile →
+        </button>
+      </div>
+      <div style="display:none;flex-shrink:0;text-align:center;font-size:48px" aria-hidden="true">✦</div>
+    </div>
+  </div>`;
+
   html += rawToggle(data);
   return html;
 }
@@ -3148,9 +3250,9 @@ async function generateProfile() {
   const spinner = document.getElementById('profileSpinner');
   const resultEl = document.getElementById('profileResult');
 
-  btn.disabled = true;
-  spinner.style.display = '';
-  resultEl.innerHTML = skeletonProfile();
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
+  if (resultEl) resultEl.innerHTML = skeletonProfile();
 
   // Progress indicator: cycles every 8s, covers 45s timeout window (BL-EXC-P0-3)
   const progressMessages = [
@@ -3180,10 +3282,10 @@ async function generateProfile() {
     if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
       // Clear progress timeouts
       progressTimeouts.forEach(clearTimeout);
-      document.getElementById('profileResult').innerHTML =
+      if (resultEl) resultEl.innerHTML =
         '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
-      document.getElementById('profileBtn').disabled = false;
-      document.getElementById('profileSpinner').style.display = 'none';
+      if (btn) btn.disabled = false;
+      if (spinner) spinner.style.display = 'none';
       return;
     }
   }
@@ -3217,7 +3319,7 @@ async function generateProfile() {
 
     // Detect timeout — show retry and fallback (BL-EXC-P0-3)
     if (data && data.error && /abort/i.test(data.error)) {
-      resultEl.innerHTML = `<div class="alert alert-warn" style="padding:16px">
+      if (resultEl) resultEl.innerHTML = `<div class="alert alert-warn" style="padding:16px">
         <strong>AI synthesis timed out.</strong>
         <p style="margin:8px 0 12px">This can happen when AI is under load. Your chart data is ready.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -3228,7 +3330,7 @@ async function generateProfile() {
       return;
     }
 
-    resultEl.innerHTML = renderProfile(data);
+    if (resultEl) resultEl.innerHTML = renderProfile(data);
     trackEvent('profile', 'generate');
     markJourneyMilestone('profileGenerated');
     updateStepGuide('profile');
@@ -3236,10 +3338,10 @@ async function generateProfile() {
   } catch (e) {
     // Clear progress timeouts on error
     progressTimeouts.forEach(clearTimeout);
-    resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+    if (resultEl) resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -4221,9 +4323,9 @@ async function addClient() {
   const spinner = document.getElementById('pracAddSpinner');
   const statusEl = document.getElementById('pracAddStatus');
 
-  btn.disabled = true;
-  spinner.style.display = '';
-  statusEl.innerHTML = '';
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
+  if (statusEl) statusEl.innerHTML = '';
 
   try {
     const data = await apiFetch('/api/practitioner/clients/invite', {
@@ -4253,10 +4355,10 @@ async function addClient() {
     loadRoster();
     loadPractitionerInvitations();
   } catch (e) {
-    statusEl.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
+    if (statusEl) statusEl.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
   } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -4316,7 +4418,7 @@ async function resendPractitionerInvitation(invitationId, emailLabel) {
   try {
     const result = await apiFetch(`/api/practitioner/clients/invitations/${invitationId}/resend`, { method: 'POST' });
     if (result?.error) {
-      showNotification(result.error, 'error');
+      showNotification(safeErrorMsg(result.error, 'Unable to resend invitation'), 'error');
       return;
     }
 
@@ -4354,6 +4456,7 @@ async function loadRoster() {
   if (!token) { openAuthOverlay(); return; }
 
   const resultEl = document.getElementById('pracResult');
+  if (!resultEl) return;
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your roster…</div></div>';
 
   try {
@@ -4752,6 +4855,7 @@ function renderRoster(data) {
 
 async function viewClientDetail(clientId, emailLabel) {
   const panel = document.getElementById('pracDetailPanel');
+  if (!panel) return;
   panel.style.display = 'block';
   panel.innerHTML = `<div class="loading-card"><div class="spinner"></div><div>Loading ${escapeHtml(emailLabel)}…</div></div>`;
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -4776,7 +4880,7 @@ async function sendClientReminder(clientId, emailLabel) {
   try {
     const result = await apiFetch(`/api/practitioner/clients/${clientId}/remind`, { method: 'POST' });
     if (result.error) {
-      showNotification(result.error, 'error');
+      showNotification(safeErrorMsg(result.error, 'Unable to send reminder'), 'error');
       if (btn) { btn.disabled = false; btn.textContent = 'Send Reminder'; }
     } else {
       showNotification('Reminder sent to ' + escapeHtml(emailLabel), 'success');
@@ -5200,7 +5304,7 @@ async function saveSessionNote(clientId) {
     });
 
     if (result.error) {
-      showNotification('Error saving note: ' + result.error, 'error');
+      showNotification('Error saving note: ' + safeErrorMsg(result.error, 'Unable to save note'), 'error');
       return;
     }
 
@@ -5209,7 +5313,7 @@ async function saveSessionNote(clientId) {
     hideNewNoteForm(clientId);
     await refreshSessionNotes(clientId);
   } catch (e) {
-    showNotification('Error saving note: ' + e.message, 'error');
+    showNotification('Error saving note. Please try again.', 'error');
   }
 }
 
@@ -5258,14 +5362,14 @@ async function updateSessionNote(noteId, clientId) {
     });
 
     if (result.error) {
-      showNotification('Error updating note: ' + result.error, 'error');
+      showNotification('Error updating note: ' + safeErrorMsg(result.error, 'Unable to update note'), 'error');
       return;
     }
 
     showNotification('Note updated', 'success');
     await refreshSessionNotes(clientId);
   } catch (e) {
-    showNotification('Error updating note: ' + e.message, 'error');
+    showNotification('Error updating note. Please try again.', 'error');
   }
 }
 
@@ -5276,14 +5380,14 @@ async function deleteSessionNote(noteId, clientId) {
     const result = await apiFetch(`/api/practitioner/notes/${noteId}`, { method: 'DELETE' });
 
     if (result.error) {
-      showNotification('Error deleting note: ' + result.error, 'error');
+      showNotification('Error deleting note: ' + safeErrorMsg(result.error, 'Unable to delete note'), 'error');
       return;
     }
 
     showNotification('Note deleted', 'success');
     await refreshSessionNotes(clientId);
   } catch (e) {
-    showNotification('Error deleting note: ' + e.message, 'error');
+    showNotification('Error deleting note. Please try again.', 'error');
   }
 }
 
@@ -5505,7 +5609,7 @@ async function saveDirectoryProfile() {
     });
 
     if (result.error) {
-      showNotification('Error saving profile: ' + result.error, 'error');
+      showNotification('Error saving profile: ' + safeErrorMsg(result.error, 'Unable to save profile'), 'error');
       return;
     }
 
@@ -5606,14 +5710,19 @@ async function removeClient(clientId, emailLabel) {
 let currentCluster = null;
 
 function showCreateClusterForm() {
-  document.getElementById('createClusterForm').style.display = 'block';
-  document.getElementById('cluster-name').focus();
+  const form = document.getElementById('createClusterForm');
+  if (form) form.style.display = 'block';
+  const nameInput = document.getElementById('cluster-name');
+  if (nameInput) nameInput.focus();
 }
 
 function hideCreateClusterForm() {
-  document.getElementById('createClusterForm').style.display = 'none';
-  document.getElementById('cluster-name').value = '';
-  document.getElementById('cluster-challenge').value = '';
+  const form = document.getElementById('createClusterForm');
+  if (form) form.style.display = 'none';
+  const nameInput = document.getElementById('cluster-name');
+  if (nameInput) nameInput.value = '';
+  const challengeInput = document.getElementById('cluster-challenge');
+  if (challengeInput) challengeInput.value = '';
 }
 
 async function createCluster() {
@@ -5634,8 +5743,8 @@ async function createCluster() {
   const btn = document.getElementById('clusterCreateBtn');
   const spinner = document.getElementById('clusterCreateSpinner');
 
-  btn.disabled = true;
-  spinner.style.display = '';
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
 
   try {
     const data = await apiFetch('/api/cluster/create', { method: 'POST', body: JSON.stringify({ name, challenge, createdBy: null }) });
@@ -5645,8 +5754,8 @@ async function createCluster() {
   } catch (e) {
     showAlert('clusterListContainer', 'Error creating cluster: ' + e.message, 'error');
   } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -5656,16 +5765,16 @@ async function loadClusters() {
   const spinner = document.getElementById('clusterListSpinner');
   const container = document.getElementById('clusterListContainer');
 
-  spinner.style.display = '';
-  container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('clusters.loading') + '</div></div>';
+  if (spinner) spinner.style.display = '';
+  if (container) container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('clusters.loading') + '</div></div>';
 
   try {
     const data = await apiFetch('/api/cluster/list');
-    container.innerHTML = renderClusterList(data);
+    if (container) container.innerHTML = renderClusterList(data);
   } catch (e) {
-    container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error loading clusters: ${escapeHtml(e.message)}</div>`;
+    if (container) container.innerHTML = `<div class="alert alert-error"><span class="icon-info"></span> Error loading clusters: ${escapeHtml(e.message)}</div>`;
   } finally {
-    spinner.style.display = 'none';
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -5702,8 +5811,9 @@ function renderClusterList(data) {
 async function viewClusterDetail(clusterId) {
   const container = document.getElementById('clusterDetailContainer');
   const listContainer = document.getElementById('clusterListContainer');
-  
-  listContainer.style.display = 'none';
+
+  if (listContainer) listContainer.style.display = 'none';
+  if (!container) return;
   container.style.display = 'block';
   container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading cluster details…</div></div>';
 
@@ -5800,13 +5910,16 @@ function renderClusterDetail(data, clusterId) {
 }
 
 function backToClusterList() {
-  document.getElementById('clusterDetailContainer').style.display = 'none';
-  document.getElementById('clusterListContainer').style.display = 'block';
+  const detail = document.getElementById('clusterDetailContainer');
+  const list = document.getElementById('clusterListContainer');
+  if (detail) detail.style.display = 'none';
+  if (list) list.style.display = 'block';
   currentCluster = null;
 }
 
 function showAddMemberForm() {
   const container = document.getElementById('addMemberFormCard');
+  if (!container) return;
   container.style.display = 'block';
   container.innerHTML = `
     <div class="card">
@@ -5896,26 +6009,28 @@ async function addMemberToCluster() {
 
   const btn = document.getElementById('addMemberBtn');
   const spinner = document.getElementById('addMemberSpinner');
-  btn.disabled = true;
-  spinner.style.display = '';
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = '';
 
   try {
     await apiFetch(`/api/cluster/${currentCluster.id}/join`, { method: 'POST', body: JSON.stringify({
       userId, birthDate, birthTime, birthTimezone, lat, lng
     }) });
     showAlert('synthesisResult', 'Member added successfully!', 'success');
-    document.getElementById('addMemberFormCard').style.display = 'none';
+    const memberForm = document.getElementById('addMemberFormCard');
+    if (memberForm) memberForm.style.display = 'none';
     viewClusterDetail(currentCluster.id); // Refresh
   } catch (e) {
     showAlert('addMemberFormCard', 'Error: ' + e.message, 'error');
   } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
 async function synthesizeCluster(clusterId) {
   const container = document.getElementById('synthesisResult');
+  if (!container) return;
   container.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('profile.generatingAi') + '</div></div>';
 
   try {
@@ -6027,6 +6142,17 @@ function showAlert(containerId, message, type = 'info') {
 
 function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// SCAN-050: Sanitize raw API error messages before displaying to users.
+// Only pass through short, non-technical messages; replace anything that
+// looks like a stack trace, SQL fragment, or internal error with a generic fallback.
+function safeErrorMsg(raw, fallback) {
+  if (!raw || typeof raw !== 'string') return fallback || 'Something went wrong. Please try again.';
+  if (raw.length > 120 || /stack|trace|sql|relation|column|undefined|null|TypeError|Error:/i.test(raw)) {
+    return fallback || 'Something went wrong. Please try again.';
+  }
+  return raw;
 }
 
 // Phase 1B: Source citation helper — renders a collapsible "what this is based on" tag
@@ -6212,7 +6338,7 @@ async function exportProfileToNotion(profileId) {
     const result = await apiFetch(`/api/notion/export/profile/${profileId}`, { method: 'POST' });
 
     if (result?.error) {
-      showNotification(result.error, 'error');
+      showNotification(safeErrorMsg(result.error, 'Unable to export to Notion'), 'error');
       return;
     }
 
@@ -8314,7 +8440,7 @@ async function startOneTimePurchase(product) {
     });
 
     if (result.error) {
-      showNotification('Checkout failed: ' + result.error, 'error');
+      showNotification('Checkout failed: ' + safeErrorMsg(result.error, 'Unable to start checkout'), 'error');
       return;
     }
 
@@ -8331,7 +8457,7 @@ async function startOneTimePurchase(product) {
       }
     }
   } catch (e) {
-    showNotification('Failed to start checkout: ' + e.message, 'error');
+    showNotification('Failed to start checkout. Please try again.', 'error');
   }
 }
 

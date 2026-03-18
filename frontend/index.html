@@ -793,10 +793,10 @@
   </div>
 
   <!-- ═══ CHART TAB ═══ -->
-  <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-blueprint">
-    <div class="sub-tabs">
-      <button class="sub-tab active" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
-      <button class="sub-tab" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
+  <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-blueprint" aria-live="polite">
+    <div class="sub-tabs" role="tablist">
+      <button class="sub-tab active" role="tab" aria-selected="true" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
+      <button class="sub-tab" role="tab" aria-selected="false" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
     </div>
 
     <!-- 5-step journey guide — stays visible as breadcrumb -->
@@ -932,10 +932,10 @@
   </div>
 
   <!-- ═══ PROFILE TAB ═══ -->
-  <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-blueprint">
-    <div class="sub-tabs">
-      <button class="sub-tab" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
-      <button class="sub-tab active" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
+  <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-blueprint" aria-live="polite">
+    <div class="sub-tabs" role="tablist">
+      <button class="sub-tab" role="tab" aria-selected="false" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
+      <button class="sub-tab active" role="tab" aria-selected="true" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
     </div>
 <div class="feature-callout">
   <span class="feature-callout-icon">⬡</span>
