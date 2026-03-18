@@ -465,6 +465,23 @@ window.HOUSE_EXPLANATIONS = {
   12: { name: 'Inner World',          full: 'The 12th House is the hidden realm — solitude, the unconscious, spirituality, and things beneath the surface. Planets here operate quietly, often unseen even by you. This is the space of retreat, healing, and deep inner work.' }
 };
 
+// ── Life Purpose Vector (Cross Type) Explanations ────────────────
+// The three cross types that define the overarching theme of one's purpose vector.
+window.CROSS_TYPE_EXPLANATIONS = {
+  'Right Angle Cross': {
+    short: 'Your purpose comes from direct response to life\'s opportunities.',
+    full: 'You are designed to respond to what appears in your immediate environment. Your theme is discovery through engagement — you understand who you are and what you\'re here to do by DOING, not by planning. Life presents situations, you respond, and in that responding, your purpose reveals itself. Your Guides (mentors and teachers) are essential to your journey.'
+  },
+  'Left Angle Cross': {
+    short: 'Your purpose unfolds through revisiting and refining past lessons.',
+    full: 'You are designed to work with themes across multiple cycles. Your Life Purpose Vector emerges from deep work on patterns — revisiting them, understanding them at deeper levels, integrating what they teach you. You carry wisdom from previous cycles into this one. Your strength is not in responding to the new, but in completing the old with greater mastery and integration.'
+  },
+  'Juxtaposition Cross': {
+    short: 'Your purpose arises from the friction between opposing forces.',
+    full: 'You are designed to hold paradox and navigate the tension between conflicting truths. Your Life Purpose Vector emerges in the space between opposites — you see what others miss because you can exist in the contradiction without needing to resolve it prematurely. Your gift is the wisdom that comes from remaining open to multiple truths at once.'
+  }
+};
+
 // ── Helper: Get explanation HTML for a value ───────────────────
 window.getExplanation = function(map, key) {
   if (!key || !map) return '';

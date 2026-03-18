@@ -1,0 +1,7 @@
+
+> prime-self-engine@0.1.0 test:deterministic
+> vitest run --maxWorkers=1
+
+
+ RUN  v3.2.4 /mnt/c/Users/Ultimate Warrior/My project/HumanDesign
+

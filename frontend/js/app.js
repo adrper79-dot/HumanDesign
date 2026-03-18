@@ -2852,7 +2852,7 @@ function renderChart(data) {
         })()}
       </div>
       <div class="data-block">
-        <h4>Purpose Vector <span class="icon-info help-icon" title="Your life purpose formed by the 4 main gene key activations: conscious Sun/Earth and unconscious Sun/Earth"></span></h4>
+        <h4>Purpose Vector <span class="icon-info help-icon" title="Your purpose vector emerges from your 4 main Frequency Keys activations: conscious Sun/Earth and unconscious Sun/Earth"></span></h4>
         ${(() => {
           const crossName = chart.cross?.name || (typeof chart.cross === 'string' ? chart.cross : null);
           const sunGate = chart.cross?.gates?.[0] || chart.personalitySunGate;
