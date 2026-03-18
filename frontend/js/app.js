@@ -8775,10 +8775,10 @@ function renderSystemsWheel(payload, sysPref) {
   // Legend
   const counts = { active: 0, nodata: 0, off: 0 };
   SYSTEMS.forEach(s => { if (!s.core && counts[s.state] !== undefined) counts[s.state]++; });
-  const legendParts = [`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#F5C842;display:inline-block;flex-shrink:0"></span> Core (always on)</span>`];
-  if (counts.active  > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#38BDF8;display:inline-block;flex-shrink:0"></span> ${counts.active} system${counts.active > 1 ? 's' : ''} active</span>`);
-  if (counts.nodata  > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#64748B;display:inline-block;flex-shrink:0;opacity:0.45"></span> ${counts.nodata} awaiting data</span>`);
-  if (counts.off     > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-dim)"><span style="width:9px;height:9px;border-radius:50%;background:#475569;display:inline-block;flex-shrink:0;opacity:0.25"></span> ${counts.off} excluded</span>`);
+  const legendParts = [`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:500;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:#F5C842;display:inline-block;flex-shrink:0"></span> Core (always on)</span>`];
+  if (counts.active  > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:500;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:#38BDF8;display:inline-block;flex-shrink:0"></span> ${counts.active} system${counts.active > 1 ? 's' : ''} active</span>`);
+  if (counts.nodata  > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:500;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:#64748B;display:inline-block;flex-shrink:0;opacity:0.45"></span> ${counts.nodata} awaiting data</span>`);
+  if (counts.off     > 0) legendParts.push(`<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:500;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:#475569;display:inline-block;flex-shrink:0;opacity:0.25"></span> ${counts.off} excluded</span>`);
 
   return `<div class="card" style="background:radial-gradient(circle at center, var(--bg2) 0%, var(--bg1) 100%)">
     <div class="card-title">⬡ Blueprint Composition</div>
