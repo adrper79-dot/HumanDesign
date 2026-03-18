@@ -524,6 +524,11 @@ async function handleGetClientDetail(userId, clientId, query) {
     id: rawClient.id,
     email: rawClient.email,
     display_name: rawClient.display_name,
+    birth_date: rawClient.birth_date,
+    birth_time: rawClient.birth_time,
+    birth_tz: rawClient.birth_tz,
+    birth_lat: rawClient.birth_lat,
+    birth_lng: rawClient.birth_lng,
     tier: rawClient.tier,
     created_at: rawClient.created_at,
   };

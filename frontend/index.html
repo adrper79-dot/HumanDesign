@@ -816,12 +816,12 @@
         <div class="step-label"><strong>Today's Energy</strong><span>How planets affect you now</span></div>
       </div>
       <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-checkins" data-action="switchTab" data-arg0="checkins" title="Track your daily alignment">
+      <div class="step-item" id="sg-checkins" data-action="switchTab" data-arg0="checkin" title="Track your daily alignment">
         <div class="step-num">4</div>
         <div class="step-label"><strong>Daily Check-ins</strong><span>Track alignment & patterns</span></div>
       </div>
       <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-compatibility" data-action="switchTab" data-arg0="compatibility" title="Check relationship compatibility">
+      <div class="step-item" id="sg-compatibility" data-action="switchTab" data-arg0="composite" title="Check relationship compatibility">
         <div class="step-num">5</div>
         <div class="step-label"><strong>Compatibility</strong><span>Relationship energy analysis</span></div>
       </div>
@@ -954,11 +954,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label data-i18n="chart.birthDate">Birth Date</label>
-          <input type="date" id="p-date" value="1990-06-15" required aria-required="true">
+          <input type="date" id="p-date" required aria-required="true">
         </div>
         <div class="form-group">
           <label data-i18n="chart.birthTime">Birth Time</label>
-          <input type="time" id="p-time" value="14:30" required aria-required="true">
+          <input type="time" id="p-time" required aria-required="true">
         </div>
         <div class="form-group full">
           <label data-i18n="chart.birthLocation">Birth Location</label>
@@ -1009,50 +1009,63 @@
           </select>
         </div>
         <div class="form-group full">
-          <label>Evaluation Type</label>
-          <div class="eval-type-tabs" role="group" aria-label="Evaluation type">
-            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="full-blueprint">⬡ Full Blueprint</button>
-            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="daily-focus">☀ Daily Focus</button>
-            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="relationships">⬡ Relationships</button>
-            <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="career">✦ Career &amp; Purpose</button>
-          </div>
-          <div class="quickpick-row" id="quickpickRow" style="display:none">
-            <span class="quickpick-label">Quick pick:</span>
-            <button type="button" class="quickpick-btn" id="quickpick1" data-action="setQuickPick"></button>
-            <button type="button" class="quickpick-btn" id="quickpick2" data-action="setQuickPick"></button>
-          </div>
-        </div>
-        <div class="form-group full">
-          <label>Systems to Include in Synthesis <span class="label-hint">(toggle to focus or exclude)</span></label>
-          <div class="sys-toggle-group" role="group" aria-label="Systems to synthesize">
-            <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">⬡ Energy Blueprint</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">✦ Forge</button>
-          </div>
-          <p style="font-size:0.78em;color:var(--text-dim);margin:0.25rem 0 0">Starting with core systems — expand to add astrology, Frequency Keys, and more.</p>
-          <details id="sys-expander" style="margin-top:0.5rem">
-            <summary style="cursor:pointer;color:var(--gold);font-size:0.85em;padding:0.25rem 0">Add more depth systems ▾</summary>
-            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem">
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="astrology" onclick="toggleSystem(this)" aria-pressed="true">☉ Astrology</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="geneKeys" onclick="toggleSystem(this)" aria-pressed="true">🔑 Frequency Keys</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="numerology" onclick="toggleSystem(this)" aria-pressed="true"># Numerology</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="vedic" onclick="toggleSystem(this)" aria-pressed="true">☽ Vedic</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="ogham" onclick="toggleSystem(this)" aria-pressed="true">᚛ Ogham</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="mayan" onclick="toggleSystem(this)" aria-pressed="true">◎ Mayan</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="bazi" onclick="toggleSystem(this)" aria-pressed="true">☯ BaZi</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="sabian" onclick="toggleSystem(this)" aria-pressed="true">◉ Sabian</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="chiron" onclick="toggleSystem(this)" aria-pressed="true">⚷ Chiron</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="lilith" onclick="toggleSystem(this)" aria-pressed="true">🌑 Lilith</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="transits" onclick="toggleSystem(this)" aria-pressed="true">↻ Transits</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="psychometrics" onclick="toggleSystem(this)" aria-pressed="true">⬡ Psychology</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="behavioral" onclick="toggleSystem(this)" aria-pressed="true">★ Behavioral</button>
-            <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="diary" onclick="toggleSystem(this)" aria-pressed="true">📖 Life Events</button>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:var(--bg3)">
+            <div style="flex:1;min-width:240px">
+              <div style="font-weight:700;color:var(--text);margin-bottom:6px">Start with one clear action</div>
+              <p id="profileDefaultSummary" style="margin:0;font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.6">Default: Full Blueprint with your core systems. Open advanced options only if you want to target a theme, ask a specific question, or add more depth systems.</p>
             </div>
-          </details>
-          <p class="label-hint" id="sysSummaryHint" style="margin-top:6px">All 13 optional systems active — deepest synthesis.</p>
+            <button type="button" class="btn-secondary btn-sm" id="profileAdvancedToggle" data-action="toggleProfileAdvanced" aria-expanded="false" aria-controls="profileAdvancedPanel">Customize this reading</button>
+          </div>
         </div>
-        <div class="form-group full">
-          <label for="p-question">Specific Question <span class="label-hint">(optional — leave blank for full profile)</span></label>
-          <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder">
+        <div id="profileAdvancedPanel" class="form-group full" style="display:none">
+          <div style="padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:rgba(255,255,255,0.02)">
+            <label>Evaluation Type</label>
+            <div class="eval-type-tabs" role="group" aria-label="Evaluation type">
+              <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="full-blueprint">⬡ Full Blueprint</button>
+              <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="daily-focus">☀ Daily Focus</button>
+              <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="relationships">⬡ Relationships</button>
+              <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="career">✦ Career &amp; Purpose</button>
+            </div>
+            <div class="quickpick-row" id="quickpickRow" style="display:none">
+              <span class="quickpick-label">Quick pick:</span>
+              <button type="button" class="quickpick-btn" id="quickpick1" data-action="setQuickPick"></button>
+              <button type="button" class="quickpick-btn" id="quickpick2" data-action="setQuickPick"></button>
+            </div>
+
+            <div style="margin-top:var(--space-4)">
+              <label>Systems to Include in Synthesis <span class="label-hint">(toggle to focus or exclude)</span></label>
+              <div class="sys-toggle-group" role="group" aria-label="Systems to synthesize">
+                <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">⬡ Energy Blueprint</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">✦ Forge</button>
+              </div>
+              <p style="font-size:0.78em;color:var(--text-dim);margin:0.25rem 0 0">Starting with core systems — expand to add astrology, Frequency Keys, and more.</p>
+              <details id="sys-expander" style="margin-top:0.5rem">
+                <summary style="cursor:pointer;color:var(--gold);font-size:0.85em;padding:0.25rem 0">Add more depth systems ▾</summary>
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem">
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="astrology" onclick="toggleSystem(this)" aria-pressed="true">☉ Astrology</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="geneKeys" onclick="toggleSystem(this)" aria-pressed="true">🔑 Frequency Keys</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="numerology" onclick="toggleSystem(this)" aria-pressed="true"># Numerology</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="vedic" onclick="toggleSystem(this)" aria-pressed="true">☽ Vedic</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="ogham" onclick="toggleSystem(this)" aria-pressed="true">᚛ Ogham</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="mayan" onclick="toggleSystem(this)" aria-pressed="true">◎ Mayan</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="bazi" onclick="toggleSystem(this)" aria-pressed="true">☯ BaZi</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="sabian" onclick="toggleSystem(this)" aria-pressed="true">◉ Sabian</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="chiron" onclick="toggleSystem(this)" aria-pressed="true">⚷ Chiron</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="lilith" onclick="toggleSystem(this)" aria-pressed="true">🌑 Lilith</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="transits" onclick="toggleSystem(this)" aria-pressed="true">↻ Transits</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="psychometrics" onclick="toggleSystem(this)" aria-pressed="true">⬡ Psychology</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="behavioral" onclick="toggleSystem(this)" aria-pressed="true">★ Behavioral</button>
+                <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="diary" onclick="toggleSystem(this)" aria-pressed="true">📖 Life Events</button>
+                </div>
+              </details>
+              <p class="label-hint" id="sysSummaryHint" style="margin-top:6px">All 13 optional systems active — deepest synthesis.</p>
+            </div>
+
+            <div style="margin-top:var(--space-4)">
+              <label for="p-question">Specific Question <span class="label-hint">(optional — leave blank for full profile)</span></label>
+              <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder">
+            </div>
+          </div>
         </div>
       </div>
       <div class="form-actions">
@@ -1517,12 +1530,13 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-partnership"></span> <span data-i18n="composite.title">Composite Chart</span></div>
-      <p class="card-intro">Analyze relationship dynamics between two people.</p>
+      <p class="card-intro">Analyze relationship dynamics between two people. Start manually, or launch from a client workspace to prefill the people already in motion.</p>
+      <div id="compositeLaunchNote" class="alert alert-info" style="display:none;margin-bottom:var(--space-3)"></div>
       
       <h4 class="card-subheading" data-i18n="composite.personA">Person A</h4>
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" value="1990-06-15" required aria-required="true"></div>
-        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" value="14:30" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateA" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" required aria-required="true"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
@@ -1536,14 +1550,14 @@
           </div>
           <div id="comp-A-geo-status" class="geo-status-sm"></div>
         </div>
-        <input type="hidden" id="comp-A-lat" value="40.7128">
-        <input type="hidden" id="comp-A-lng" value="-74.0060">
+        <input type="hidden" id="comp-A-lat">
+        <input type="hidden" id="comp-A-lng">
       </div>
 
       <h4 class="card-subheading-lg" data-i18n="composite.personB">Person B</h4>
       <div class="form-grid">
-        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" value="1988-03-22" required aria-required="true"></div>
-        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" value="09:15" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthDate">Birth Date</label><input type="date" id="comp-dateB" required aria-required="true"></div>
+        <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" required aria-required="true"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
             <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
@@ -1557,8 +1571,8 @@
           </div>
           <div id="comp-B-geo-status" class="geo-status-sm"></div>
         </div>
-        <input type="hidden" id="comp-B-lat" value="40.7128">
-        <input type="hidden" id="comp-B-lng" value="-74.0060">
+        <input type="hidden" id="comp-B-lat">
+        <input type="hidden" id="comp-B-lng">
       </div>
 
       <button class="btn-primary" data-action="generateComposite" id="compBtn">

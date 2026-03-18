@@ -30,16 +30,16 @@
 | Category | P0 | P1 | P2 | P3 | Total | Status |
 |----------|----|----|----|----|-------|--------|
 | Backend API | ✅ 1 | ✅ 2 | ✅ 4 | 2 | 9 | ✅ All fixed |
-| Frontend | 0 | ✅ 2 + 🔄 1 + ⚠️ 4 | ✅ 3 + ⚠️ 4 | 2 | 16 | ⚠️ Activation follow-through still pending |
+| Frontend | 0 | ✅ 5 + 🔄 2 | ✅ 3 + ⚠️ 4 | 2 | 16 | 🔄 Two activation follow-through items remain partial |
 | Engine | 0 | ✅ 1 | ✅ 2 | 1 | 4 | ✅ All closed |
 | Database | 0 | 0 | ✅ 2 | 1 | 3 | ✅ Schema complete |
 | Billing | ✅ 1 | 1 | 1 | 0 | 3 | ⚠️ 1 pending |
-| Practitioners | 0 | ✅ 1 + ⚠️ 1 | ✅ 2 | 1 | 5 | ⚠️ Client compatibility handoff still pending |
+| Practitioners | 0 | ✅ 2 | ✅ 2 | 1 | 5 | ✅ Core handoff restored |
 | Security | 🔴 1 | ✅ 3 | ✅ 2 | 0 | 7 | 🔴 1 blocker (trademark) |
 | Operations | ✅ 1 | ✅ 2 | ✅ 3 | 2 | 7 | ✅ All fixed |
 | Testing | 0 | ✅ 1 | ✅ 3 | 1 | 5 | ✅ Good coverage |
 | Documentation | 0 | 1 | 2 | 1 | 4 | 🔄 Ongoing |
-| **TOTAL** | **3/4** | **14/20** | **24/28** | **11** | **63** | **52/63 = 83% complete** |
+| **TOTAL** | **3/4** | **18/20** | **24/28** | **11** | **63** | **56/63 = 89% complete** |
 
 **Blocking Issues (MUST FIX before launch):**
 - ✅ **BL-BACKEND-P0-1**: FIXED — Sentry error tracking now captures all register errors
@@ -91,9 +91,9 @@
 | **BL-FRONTEND-P1-2** | **Post-chart CTA into AI Profile is live** — Chart results now earn the next step with an explicit "What's next?" card that moves the user into synthesis. | ✅ Fixed (Cycle 17) | — | [Issue Registry: UX-006](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
 | **BL-FRONTEND-P1-3** | **Overview/welcome messaging is split by persona, but the static overview shell still needs alignment with the live dynamic state** — The runtime helper is present, but the first-load experience still depends on practitioner-first markup that can leak the wrong story before state settles. | 🔄 Partial | 15–30 min | [Issue Registry: UX-007](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
 | **BL-FRONTEND-P1-4** | **Leaderboard still hides saved value behind a manual load button** — Diary, check-in stats, and achievements auto-load, but the leaderboard still needs an extra click that creates a false-negative impression about whether the tracking loop is working. | 🔄 Partial | 15 min | [Issue Registry: UX-008](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
-| **BL-FRONTEND-P1-5** | **Step-guide banner routes users to non-existent tabs** — The chart journey banner currently points to `checkins` and `compatibility`, breaking the promised user story at the exact moment the flow should deepen into tracking and relationships. | ⚠️ Pending | 15 min | [Issue Registry: UX-013](audits/issue-registry.json) |
-| **BL-FRONTEND-P1-6** | **AI Profile form ships with example birth date/time defaults that can leak stale sample data into a real user journey** — These defaults also block the intended chart-to-profile sync because the carryover logic only runs when profile fields are blank. | ⚠️ Pending | 15 min | [Issue Registry: UX-014](audits/issue-registry.json) |
-| **BL-FRONTEND-P1-7** | **AI Profile first-run experience presents too many choices before the first synthesis** — Evaluation modes plus 13 optional depth systems violate the one-focus rule and add avoidable friction before value delivery. | ⚠️ Pending | 1–2 hrs | [Issue Registry: UX-015](audits/issue-registry.json) |
+| **BL-FRONTEND-P1-5** | **Step-guide banner now routes to the real tracking and relationship flows** — The chart journey guide points to the live `checkin` and `composite` tabs again, so the guided activation path no longer dead-ends. | ✅ Fixed (2026-03-18) | — | [Issue Registry: UX-013](audits/issue-registry.json) |
+| **BL-FRONTEND-P1-6** | **AI Profile and composite flows no longer ship with seeded sample birth defaults** — The profile handoff can now carry real chart data into synthesis, and practitioner compatibility no longer starts from stale example inputs. | ✅ Fixed (2026-03-18) | — | [Issue Registry: UX-014](audits/issue-registry.json) |
+| **BL-FRONTEND-P1-7** | **AI Profile first-run experience now defaults to one obvious action** — Evaluation type, optional systems, and question targeting remain available, but they are staged behind an optional customize control instead of blocking the first synthesis. | ✅ Fixed (2026-03-18) | — | [Issue Registry: UX-015](audits/issue-registry.json) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -186,7 +186,7 @@
 | ID | Item | Status | Effort | Source |
 |----|------|--------|--------|--------|
 | **BL-PRACTITIONERS-P1-1** | **Gene Keys knowledgebase only 59% complete** — 38 of 64 Gene Keys populated; 26 empty. RAG context forces LLM to hallucinate or skip section. Generate remaining 26 using Opus batch. | ✅ Fixed (2026-03-17) — All 64 Gene Keys fully populated with shadow/gift/siddhi/archetype/message/contemplation | 4 hrs | BACKLOG.md (BL-M5) |
-| **BL-PRACTITIONERS-P1-2** | **Compatibility launch from a client record still drops practitioners into a blank manual-entry flow** — The roster CTA opens the composite tab, but it does not carry the practitioner/client context needed to continue the promised relationship workflow. | ⚠️ Pending | 1–2 hrs | [Issue Registry: PRAC-016](audits/issue-registry.json) |
+| **BL-PRACTITIONERS-P1-2** | **Compatibility launch from a client record now carries the practitioner/client handoff into the composite flow** — Launching from the practitioner workspace prefills available birth data for both sides and points directly to whichever fields are still missing. | ✅ Fixed (2026-03-18) | — | [Issue Registry: PRAC-016](audits/issue-registry.json) |
 
 ### 🟡 P2 — Medium Priority
 

@@ -9,6 +9,9 @@ let token = null;
 let _tokenExpiresAt = 0; // P2-FE-005: epoch ms when access token expires
 let _refreshTimer = null; // P2-FE-005: proactive refresh timer
 let _pracSchedulingEmbedUrl = ''; // PRAC-015: practitioner's scheduling embed URL, set during loadRoster
+let _practitionerRosterClients = [];
+const _practitionerClientDetailCache = new Map();
+let _profileAdvancedPreference = null;
 const PENDING_PRACTITIONER_INVITE_KEY = 'ps_pending_practitioner_invite';
 const POST_CHECKOUT_DESTINATION_KEY = 'ps_post_checkout_destination';
 const POST_CHECKOUT_TIER_KEY = 'ps_post_checkout_tier';
@@ -94,11 +97,13 @@ function updateAuthUI() {
       
       // UX-007: Update welcome message based on tier and chart generation status
       updateWelcomeMessage();
+      updateProfileAdvancedUI();
     } else {
       // Profile not loaded yet — hide badge until fetched
       badgeEl.style.display    = 'none';
       upgradeEl.style.display  = 'none';
       billingEl.style.display  = 'none';
+      updateProfileAdvancedUI();
     }
   } else {
     statusEl.textContent = typeof window.t === 'function' ? window.t('auth.notSignedIn') : 'Not signed in';
@@ -112,6 +117,7 @@ function updateAuthUI() {
     badgeEl.style.display  = 'none';
     upgradeEl.style.display  = 'none';
     billingEl.style.display  = 'none';
+    updateProfileAdvancedUI();
   }
 }
 
@@ -2555,18 +2561,155 @@ function saveBirthData() {
 
 const BIRTH_DATA_TTL_MS = 30 * 24 * 60 * 60 * 1000; // SYS-047: 30-day TTL
 
-function restoreBirthData() {
+function readStoredBirthData() {
   try {
     const raw = localStorage.getItem(BIRTH_DATA_KEY);
-    if (!raw) return false;
+    if (!raw) return null;
     const data = JSON.parse(raw);
-    if (!data.date || !data.time) return false;
-    // SYS-047: Expire stale birth coordinates after 30 days.
+    if (!data?.date || !data?.time) return null;
     if (data.savedAt && (Date.now() - data.savedAt) > BIRTH_DATA_TTL_MS) {
       localStorage.removeItem(BIRTH_DATA_KEY);
-      if (window.DEBUG) console.log('[BirthData] Expired — removed from localStorage');
-      return false;
+      return null;
     }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function getBirthFormSeed(ids) {
+  return {
+    date: document.getElementById(ids.date)?.value || '',
+    time: document.getElementById(ids.time)?.value || '',
+    location: document.getElementById(ids.location)?.value || '',
+    lat: document.getElementById(ids.lat)?.value || '',
+    lng: document.getElementById(ids.lng)?.value || '',
+    tz: ids.tz ? (document.getElementById(ids.tz)?.value || '') : '',
+  };
+}
+
+function hasCoordinatePair(seed) {
+  return seed?.lat !== '' && seed?.lat != null && seed?.lng !== '' && seed?.lng != null
+    && !Number.isNaN(Number(seed.lat)) && !Number.isNaN(Number(seed.lng));
+}
+
+function hasBirthSeed(seed) {
+  return !!(seed && (seed.date || seed.time || seed.location || hasCoordinatePair(seed)));
+}
+
+function getCompositeFormSeed(person) {
+  return getBirthFormSeed({
+    date: `comp-date${person}`,
+    time: `comp-time${person}`,
+    location: `comp-${person}-location`,
+    lat: `comp-${person}-lat`,
+    lng: `comp-${person}-lng`,
+  });
+}
+
+function describeCompositeMissingFields(seed) {
+  const missing = [];
+  if (!seed?.date) missing.push('birth date');
+  if (!seed?.time) missing.push('birth time');
+  if (!hasCoordinatePair(seed)) missing.push(seed?.location ? 'location lookup' : 'birth location');
+  return missing;
+}
+
+function formatFieldList(fields) {
+  if (!fields.length) return '';
+  if (fields.length === 1) return fields[0];
+  if (fields.length === 2) return `${fields[0]} and ${fields[1]}`;
+  return `${fields.slice(0, -1).join(', ')}, and ${fields[fields.length - 1]}`;
+}
+
+function setCompositeLaunchNote(message, tone = 'info') {
+  const note = document.getElementById('compositeLaunchNote');
+  if (!note) return;
+  note.className = `alert ${tone === 'success' ? 'alert-success' : tone === 'warn' ? 'alert-warn' : 'alert-info'}`;
+  note.textContent = message;
+  note.style.display = message ? '' : 'none';
+}
+
+function setCompositeGeoStatus(person, message, tone = 'info') {
+  const statusEl = document.getElementById(`comp-${person}-geo-status`);
+  if (!statusEl) return;
+  if (!message) {
+    statusEl.textContent = '';
+    return;
+  }
+  const color = tone === 'success' ? 'var(--accent2)' : tone === 'warn' ? 'var(--gold)' : 'var(--text-dim)';
+  statusEl.innerHTML = `<span style="color:${color}">${escapeHtml(message)}</span>`;
+}
+
+function applyCompositePersonSeed(person, seed, sourceLabel) {
+  const dateEl = document.getElementById(`comp-date${person}`);
+  const timeEl = document.getElementById(`comp-time${person}`);
+  const locationEl = document.getElementById(`comp-${person}-location`);
+  const latEl = document.getElementById(`comp-${person}-lat`);
+  const lngEl = document.getElementById(`comp-${person}-lng`);
+
+  if (dateEl) dateEl.value = seed?.date || '';
+  if (timeEl) timeEl.value = seed?.time || '';
+  if (locationEl) locationEl.value = seed?.location || '';
+  if (latEl) latEl.value = seed?.lat ?? '';
+  if (lngEl) lngEl.value = seed?.lng ?? '';
+
+  if (!hasBirthSeed(seed)) {
+    setCompositeGeoStatus(person, `${sourceLabel} is not available yet.`, 'warn');
+    return;
+  }
+
+  if (hasCoordinatePair(seed)) {
+    setCompositeGeoStatus(person, seed?.location
+      ? `${sourceLabel} loaded with saved coordinates.`
+      : `${sourceLabel} loaded from saved birth coordinates.`, 'success');
+    return;
+  }
+
+  if (seed?.location) {
+    setCompositeGeoStatus(person, `${sourceLabel} includes a location. Click Look Up to resolve coordinates.`, 'warn');
+    return;
+  }
+
+  setCompositeGeoStatus(person, `${sourceLabel} is partial. Add the missing details below.`, 'warn');
+}
+
+function focusCompositeMissingField(person, missing) {
+  if (!missing?.length) return;
+  const first = missing[0];
+  const id = first === 'birth date'
+    ? `comp-date${person}`
+    : first === 'birth time'
+      ? `comp-time${person}`
+      : `comp-${person}-location`;
+  document.getElementById(id)?.focus({ preventScroll: false });
+}
+
+function getPractitionerCompositeSeed() {
+  const chartSeed = getBirthFormSeed({ date: 'c-date', time: 'c-time', location: 'c-location', lat: 'c-lat', lng: 'c-lng', tz: 'c-tz' });
+  const profileSeed = getBirthFormSeed({ date: 'p-date', time: 'p-time', location: 'p-location', lat: 'p-lat', lng: 'p-lng', tz: 'p-tz' });
+  const storedSeed = readStoredBirthData();
+  return [chartSeed, profileSeed, storedSeed].find(hasBirthSeed) || {};
+}
+
+function getClientCompositeSeed(clientId) {
+  const detail = _practitionerClientDetailCache.get(String(clientId));
+  const rosterClient = _practitionerRosterClients.find(client => String(client.id) === String(clientId));
+  const client = detail?.client || rosterClient || {};
+  return {
+    date: client.birth_date || '',
+    time: client.birth_time || '',
+    location: client.birth_location || '',
+    lat: client.birth_lat ?? '',
+    lng: client.birth_lng ?? '',
+    tz: client.birth_tz || '',
+  };
+}
+
+function restoreBirthData() {
+  try {
+    const data = readStoredBirthData();
+    if (!data) return false;
 
     // Restore into ALL forms that share birth fields: chart (c-*), profile (p-*), composite A (comp-*A)
     const prefixes = ['c', 'p'];
@@ -4145,6 +4288,22 @@ async function generateComposite() {
   const spinner = document.getElementById('compSpinner');
   const resultEl = document.getElementById('compResult');
 
+  const personASeed = getCompositeFormSeed('A');
+  const personBSeed = getCompositeFormSeed('B');
+  const personAMissing = describeCompositeMissingFields(personASeed);
+  const personBMissing = describeCompositeMissingFields(personBSeed);
+
+  if (personAMissing.length || personBMissing.length) {
+    const parts = [];
+    if (personAMissing.length) parts.push(`Person A still needs ${formatFieldList(personAMissing)}.`);
+    if (personBMissing.length) parts.push(`Person B still needs ${formatFieldList(personBMissing)}.`);
+    const message = parts.join(' ');
+    setCompositeLaunchNote(message, 'warn');
+    resultEl.innerHTML = `<div class="alert alert-warn">${escapeHtml(message)}</div>`;
+    focusCompositeMissingField(personAMissing.length ? 'A' : 'B', personAMissing.length ? personAMissing : personBMissing);
+    return;
+  }
+
   const personA = {
     birthDate: document.getElementById('comp-dateA').value,
     birthTime: document.getElementById('comp-timeA').value,
@@ -4487,6 +4646,7 @@ async function loadRoster() {
     renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData });
     renderPractitionerMetrics(metricsData, dirStatsData);
     resultEl.innerHTML = renderRoster(rosterData);
+    _practitionerRosterClients = Array.isArray(rosterData?.clients) ? rosterData.clients : [];
     applyPractitionerInvitations(invitationsData);
     applyDirectoryProfileData(directoryData);
     renderPractitionerReferralStats(referralData);
@@ -4866,6 +5026,7 @@ async function viewClientDetail(clientId, emailLabel) {
       apiFetch(`/api/practitioner/clients/${clientId}/notes?limit=10&offset=0`).catch(() => ({ notes: [], total: 0, hasMore: false })),
       apiFetch(`/api/practitioner/clients/${clientId}/ai-context`).catch(() => ({ ai_context: '', error: 'Unable to load AI context' }))
     ]);
+    _practitionerClientDetailCache.set(String(clientId), data);
     panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData);
     trackEvent('practitioner', 'client_view', clientId);
   } catch (e) {
@@ -7898,15 +8059,46 @@ function scrollToProfile() {
   if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// PRAC-005: Navigate to composite tab to generate a compatibility chart with a client.
-// Scrolls the composite form into view so the practitioner can fill in their own birth data
-// (Person A) alongside the client's birth data (Person B).
+// PRAC-016: Navigate to composite tab with practitioner/client data already carried over.
 function openCompatibilityWithClient(clientId, emailLabel) {
   switchTab('composite');
+  const detail = _practitionerClientDetailCache.get(String(clientId));
+  const clientName = detail?.client?.display_name || emailLabel || 'this client';
+  const practitionerSeed = getPractitionerCompositeSeed();
+  const clientSeed = getClientCompositeSeed(clientId);
+
+  applyCompositePersonSeed('A', practitionerSeed, 'Your saved data');
+  applyCompositePersonSeed('B', clientSeed, `${clientName}'s saved data`);
+
+  if (practitionerSeed.location && !hasCoordinatePair(practitionerSeed)) {
+    geocodeLocation('comp-A').catch(() => {});
+  }
+  if (clientSeed.location && !hasCoordinatePair(clientSeed)) {
+    geocodeLocation('comp-B').catch(() => {});
+  }
+
+  const personAMissing = describeCompositeMissingFields(practitionerSeed);
+  const personBMissing = describeCompositeMissingFields(clientSeed);
+  const parts = [`Compatibility setup started from ${clientName}'s workspace.`];
+  if (personAMissing.length) {
+    parts.push(`Person A still needs ${formatFieldList(personAMissing)}.`);
+  } else {
+    parts.push('Your data is ready as Person A.');
+  }
+  if (personBMissing.length) {
+    parts.push(`${clientName} still needs ${formatFieldList(personBMissing)} as Person B.`);
+  } else {
+    parts.push(`${clientName}'s saved data is ready as Person B.`);
+  }
+  const launchMessage = parts.join(' ');
+  setCompositeLaunchNote(launchMessage, personAMissing.length || personBMissing.length ? 'warn' : 'success');
+
   const compResult = document.getElementById('compResult');
   if (compResult) compResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const name = emailLabel || 'this client';
-  showNotification(`Composite tab opened. Enter your birth data as Person A and ${name}'s birth data as Person B to generate the compatibility chart.`, 'info');
+  showNotification(personAMissing.length || personBMissing.length ? 'Compatibility setup loaded with targeted missing fields.' : 'Compatibility setup loaded from saved birth data.', 'info');
+  if (personAMissing.length || personBMissing.length) {
+    focusCompositeMissingField(personAMissing.length ? 'A' : 'B', personAMissing.length ? personAMissing : personBMissing);
+  }
 }
 function openLastShareCard() { if (typeof showShareCard === 'function') showShareCard(window._lastChart); }
 function openBlueprintCard() { if (typeof showBlueprintCard === 'function') showBlueprintCard(window._lastChart, window._lastForge); }
@@ -8213,6 +8405,40 @@ const EVAL_QUICKPICKS = {
   ],
 };
 
+function isProfilePowerUser() {
+  const tier = currentUser?.tier || 'free';
+  return tier === 'practitioner' || tier === 'guide' || tier === 'agency' || tier === 'white_label';
+}
+
+function updateProfileAdvancedUI() {
+  const panel = document.getElementById('profileAdvancedPanel');
+  const toggle = document.getElementById('profileAdvancedToggle');
+  const summary = document.getElementById('profileDefaultSummary');
+  if (!panel || !toggle || !summary) return;
+
+  const expanded = _profileAdvancedPreference !== null ? _profileAdvancedPreference : isProfilePowerUser();
+  panel.style.display = expanded ? '' : 'none';
+  toggle.setAttribute('aria-expanded', String(expanded));
+  toggle.textContent = expanded ? 'Hide advanced options' : 'Customize this reading';
+  summary.textContent = expanded
+    ? 'Advanced controls are open. Keep the default Full Blueprint path, or tailor the reading by theme, question, and optional systems.'
+    : 'Default: Full Blueprint with your core systems. Open advanced options only if you want to target a theme, ask a specific question, or add more depth systems.';
+}
+
+function toggleProfileAdvanced() {
+  const panel = document.getElementById('profileAdvancedPanel');
+  if (!panel) return;
+  _profileAdvancedPreference = panel.style.display === 'none';
+  updateProfileAdvancedUI();
+}
+
+function initializeProfileComposerUI() {
+  const hasActiveEval = !!document.querySelector('.eval-type-btn.active');
+  if (!hasActiveEval) setEvalType('full-blueprint');
+  _updateSysSummary();
+  updateProfileAdvancedUI();
+}
+
 function setEvalType(type) {
   document.querySelectorAll('.eval-type-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.arg0 === type);
@@ -8392,6 +8618,7 @@ function getSystemPreferences() {
 
 window.setEvalType = setEvalType;
 window.setQuickPick = setQuickPick;
+window.toggleProfileAdvanced = toggleProfileAdvanced;
 window.toggleSystem = toggleSystem;
 window.prefillExample = prefillExample;
 window.expandChartForm = expandChartForm;
@@ -8405,6 +8632,12 @@ window.toggleRaw = toggleRaw;
 window.toggleDetails = toggleDetails;
 window.hideMemberForm = hideMemberForm;
 window.hidePracDetail = hidePracDetail;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeProfileComposerUI, { once: true });
+} else {
+  initializeProfileComposerUI();
+}
 window.openCompatibilityWithClient = openCompatibilityWithClient;
 window.loadPractitionerInvitations = loadPractitionerInvitations;
 window.revokePractitionerInvitation = revokePractitionerInvitation;
