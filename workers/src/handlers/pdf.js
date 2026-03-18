@@ -9,6 +9,9 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('pdf');
 
 export async function handlePdfExport(request, env, profileId) {
   if (!profileId) {
@@ -18,7 +21,13 @@ export async function handlePdfExport(request, env, profileId) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Fetch profile
-  const profileResult = await query(QUERIES.getProfileById, [profileId]);
+  let profileResult;
+  try {
+    profileResult = await query(QUERIES.getProfileById, [profileId]);
+  } catch (err) {
+    log.error('pdf_db_query_failed', { error: err.message });
+    return Response.json({ ok: false, error: 'Failed to retrieve chart data' }, { status: 500 });
+  }
   const profile = profileResult.rows?.[0];
 
   if (!profile) {
@@ -43,9 +52,17 @@ export async function handlePdfExport(request, env, profileId) {
   }
 
   // Parse profile JSON
-  const profileData = typeof profile.profile_json === 'string'
-    ? JSON.parse(profile.profile_json)
-    : profile.profile_json;
+  let profileData;
+  if (typeof profile.profile_json === 'string') {
+    try {
+      profileData = JSON.parse(profile.profile_json);
+    } catch {
+      log.error('pdf_json_parse_failed', { field: 'profile_json' });
+      return Response.json({ ok: false, error: 'Invalid chart data format' }, { status: 500 });
+    }
+  } else {
+    profileData = profile.profile_json;
+  }
 
   // Fetch associated chart
   let chartData = null;
@@ -53,9 +70,16 @@ export async function handlePdfExport(request, env, profileId) {
     const chartResult = await query(QUERIES.getChartById, [profile.chart_id]);
     const chart = chartResult.rows?.[0];
     if (chart) {
-      chartData = typeof chart.hd_json === 'string'
-        ? JSON.parse(chart.hd_json)
-        : chart.hd_json;
+      if (typeof chart.hd_json === 'string') {
+        try {
+          chartData = JSON.parse(chart.hd_json);
+        } catch {
+          log.error('pdf_json_parse_failed', { field: 'hd_json' });
+          return Response.json({ ok: false, error: 'Invalid chart data format' }, { status: 500 });
+        }
+      } else {
+        chartData = chart.hd_json;
+      }
     }
   }
 
@@ -84,13 +108,16 @@ export async function handlePdfExport(request, env, profileId) {
       }
     } catch { /* not in cache */ }
 
-    // Write to R2 cache (don't await)
-    env.R2.put(r2Key, pdfBytes, {
+    // Write to R2 cache (non-blocking via waitUntil)
+    const r2Promise = env.R2.put(r2Key, pdfBytes, {
       httpMetadata: { contentType: 'application/pdf' },
       customMetadata: { profileId, userId: profile.user_id, createdAt: profile.created_at }
     }).catch(e => {
-      console.warn(JSON.stringify({ event: 'r2_put_failed', key: r2Key, error: e.message }));
+      log.warn('r2_cache_write_failed', { error: e.message, key: r2Key });
     });
+    if (request._ctx) {
+      request._ctx.waitUntil(r2Promise);
+    }
   }
 
   return new Response(pdfBytes, {
@@ -147,18 +174,33 @@ export async function handleBrandedPdfExport(request, env, clientId) {
   const brandResult = await query(QUERIES.getPractitionerBranding, [userId]);
   const branding = brandResult.rows?.[0] || null;
 
-  const profileData = typeof profile.profile_json === 'string'
-    ? JSON.parse(profile.profile_json)
-    : profile.profile_json;
+  let profileData;
+  if (typeof profile.profile_json === 'string') {
+    try {
+      profileData = JSON.parse(profile.profile_json);
+    } catch {
+      log.error('pdf_json_parse_failed', { field: 'profile_json' });
+      return Response.json({ ok: false, error: 'Invalid chart data format' }, { status: 500 });
+    }
+  } else {
+    profileData = profile.profile_json;
+  }
 
   let chartData = null;
   if (profile.chart_id) {
     const chartResult = await query(QUERIES.getChartById, [profile.chart_id]);
     const chart = chartResult.rows?.[0];
     if (chart) {
-      chartData = typeof chart.hd_json === 'string'
-        ? JSON.parse(chart.hd_json)
-        : chart.hd_json;
+      if (typeof chart.hd_json === 'string') {
+        try {
+          chartData = JSON.parse(chart.hd_json);
+        } catch {
+          log.error('pdf_json_parse_failed', { field: 'hd_json' });
+          return Response.json({ ok: false, error: 'Invalid chart data format' }, { status: 500 });
+        }
+      } else {
+        chartData = chart.hd_json;
+      }
     }
   }
 
@@ -188,12 +230,15 @@ export async function handleBrandedPdfExport(request, env, clientId) {
   const pdfBytes = generatePDF(profileData, chartData, profile.created_at, branding);
 
   if (env.R2) {
-    env.R2.put(r2Key, pdfBytes, {
+    const r2Promise = env.R2.put(r2Key, pdfBytes, {
       httpMetadata: { contentType: 'application/pdf' },
       customMetadata: { profileId: profile.id, practitionerId, clientId }
     }).catch(e => {
-      console.warn(JSON.stringify({ event: 'r2_put_failed', key: r2Key, error: e.message }));
+      log.warn('r2_cache_write_failed', { error: e.message, key: r2Key });
     });
+    if (request._ctx) {
+      request._ctx.waitUntil(r2Promise);
+    }
   }
 
   return new Response(pdfBytes, {

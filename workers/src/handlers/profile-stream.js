@@ -43,6 +43,9 @@ import { trackEvent, trackFunnel, EVENTS, FUNNELS } from '../lib/analytics.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 import { sendPractitionerClientSessionReady } from '../lib/email.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('profile-stream');
 
 // ─── Stage Definitions ───────────────────────────────────────────────
 
@@ -307,14 +310,14 @@ export async function handleProfileStream(request, env, ctx) {
             }
           }
         } catch (err) {
-          console.warn('[profile-stream] DB save failed (non-fatal):', err.message);
+          log.warn('db_save_failed', { error: err.message });
         }
       }
 
       // BL-DAILY-001: Increment daily counter after successful generation
       // Note: Monthly usage is now recorded atomically inside enforceUsageQuota (BL-RACE-001)
       if (userId) {
-        await incrementDailyCounter(env, userId, 'synthesis').catch(err => console.warn('[profile-stream] Daily counter increment failed (non-fatal):', err.message));
+        await incrementDailyCounter(env, userId, 'synthesis').catch(err => log.warn('daily_counter_increment_failed', { error: err.message }));
       }
 
       // Track analytics
@@ -327,10 +330,10 @@ export async function handleProfileStream(request, env, ctx) {
           partialGrounding: validation.partialGrounding || false,
         },
         request,
-      }).catch(e => console.warn('[profile-stream] trackEvent failed (non-fatal):', e.message));
+      }).catch(e => log.warn('track_event_failed', { error: e.message }));
 
       if (userId) {
-        await trackFunnel(env, userId, 'onboarding', 'first_profile').catch(e => console.warn('[profile-stream] trackFunnel failed (non-fatal):', e.message));
+        await trackFunnel(env, userId, 'onboarding', 'first_profile').catch(e => log.warn('track_funnel_failed', { error: e.message }));
       }
 
       // ── Stage 6: Complete ──────────────────────────────

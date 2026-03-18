@@ -20,6 +20,8 @@ import { sendNotificationToUser } from './push.js';
 import { normalizeTierName } from '../lib/stripe.js';
 import { createLogger } from '../lib/logger.js';
 
+const log = createLogger('alerts');
+
 /**
  * Main handler for alert routes
  */
@@ -165,7 +167,7 @@ async function createAlert(request, env, user) {
     ]);
     const result = insertRows[0];
 
-    console.log(`[ALERTS] Created alert ${result.id} for user ${user.id}: ${type}`);
+    log.info('alert_created', { alertId: result.id, userId: user.id, type });
 
     return Response.json({
       ok: true,
@@ -296,7 +298,7 @@ async function updateAlert(request, env, user, alertId) {
       }, { status: 404 });
     }
 
-    console.log(`[ALERTS] Updated alert ${alertId} for user ${user.id}`);
+    log.info('alert_updated', { alertId, userId: user.id });
 
     return Response.json({
       ok: true,
@@ -326,7 +328,7 @@ async function deleteAlert(request, env, user, alertId) {
       }, { status: 404 });
     }
 
-    console.log(`[ALERTS] Deleted alert ${alertId} for user ${user.id}`);
+    log.info('alert_deleted', { alertId, userId: user.id });
 
     return Response.json({
       ok: true,
@@ -443,7 +445,7 @@ async function createAlertFromTemplate(request, env, user, templateId) {
     // Increment template popularity
     await query(QUERIES.incrementTemplatePopularity, [templateId]);
 
-    console.log(`[ALERTS] Created alert from template ${templateId} for user ${user.id}`);
+    log.info('alert_created_from_template', { templateId, userId: user.id });
 
     return Response.json({
       ok: true,
@@ -757,7 +759,7 @@ export async function evaluateUserAlerts(env, user, transitGates, transitPositio
             await query(QUERIES.markAlertDeliveryWebhook, [delivery.id]);
           }
 
-          console.log(`[ALERTS] Alert ${alert.id} triggered for user ${user.id}: ${alert.alert_type}`);
+          log.info('alert_triggered', { alertId: alert.id, userId: user.id, type: alert.alert_type });
         }
       }
     }

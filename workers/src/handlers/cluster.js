@@ -18,6 +18,9 @@ import { callLLM } from '../lib/llm.js';
 import { trackEvent } from './achievements.js';
 import { enforceFeatureAccess, enforceUsageQuota } from '../middleware/tierEnforcement.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('cluster');
 
 // ─── Forge Role Mapping ─────────────────────────────────────────
 const FORGE_ROLES = {
@@ -175,7 +178,7 @@ async function handleCreate(request, env) {
     await query(QUERIES.addClusterMember, [
       clusterId, createdBy, 'Creator',
       null, null, null, null, null
-    ]).catch(err => console.warn('[cluster] Auto-join creator failed (non-fatal):', err.message));
+    ]).catch(err => log.warn('auto_join_creator_failed', { error: err.message }));
   }
 
   return Response.json({

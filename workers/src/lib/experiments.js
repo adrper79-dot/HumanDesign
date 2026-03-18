@@ -25,6 +25,9 @@
  */
 
 import { createQueryFn } from '../db/queries.js';
+import { createLogger } from './logger.js';
+
+const log = createLogger('experiments');
 
 // ─── Cache ──────────────────────────────────────────────────────────
 // In-memory experiment config cache (per-isolate, cleared on cold start).
@@ -72,7 +75,8 @@ async function getActiveExperiments(env) {
     _cacheTimestamp = now;
     return cache;
   } catch (err) {
-    console.error('[experiments] Failed to load active experiments:', err.message);
+    log.warn('load_active_experiments_failed', { error: err.message });
+    _experimentCache._stale = true;
     return _experimentCache; // Return stale cache on failure
   }
 }
@@ -182,7 +186,7 @@ export async function getVariant(env, userId, experimentName) {
 
     return variant;
   } catch (err) {
-    console.error('[experiments] getVariant error:', err.message);
+    log.warn('get_variant_error', { error: err.message });
     return null; // Graceful degradation — default behavior (no experiment)
   }
 }
@@ -224,7 +228,7 @@ export async function trackConversion(env, userId, experimentName, conversionNam
       [experiment_id, userId, variant, conversionName]
     );
   } catch (err) {
-    console.error('[experiments] trackConversion error:', err.message);
+    log.error('track_conversion_error', { error: err.message });
     // Silent fail — analytics should never break the app
   }
 }
@@ -325,7 +329,7 @@ export async function getResults(env, experimentName) {
       totalConverted: variantResults.reduce((a, v) => a + v.totalConverted, 0),
     };
   } catch (err) {
-    console.error('[experiments] getResults error:', err.message);
+    log.error('get_results_error', { error: err.message });
     return null;
   }
 }
@@ -341,9 +345,6 @@ export async function listExperiments(env, status = null) {
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
-    const where = status ? 'WHERE e.status = $1' : '';
-    const params = status ? [status] : [];
-
     const result = await query(
       `SELECT e.*,
               COUNT(DISTINCT ea.user_id) AS total_assigned,
@@ -351,10 +352,10 @@ export async function listExperiments(env, status = null) {
        FROM experiments e
        LEFT JOIN experiment_assignments ea ON ea.experiment_id = e.id
        LEFT JOIN experiment_conversions ec ON ec.experiment_id = e.id
-       ${where}
+       WHERE ($1::text IS NULL OR e.status = $1)
        GROUP BY e.id
        ORDER BY e.created_at DESC`,
-      params
+      [status]
     );
 
     return (result.rows || []).map((row) => ({
@@ -374,7 +375,7 @@ export async function listExperiments(env, status = null) {
       createdAt: row.created_at,
     }));
   } catch (err) {
-    console.error('[experiments] listExperiments error:', err.message);
+    log.error('list_experiments_error', { error: err.message });
     return [];
   }
 }
@@ -420,7 +421,7 @@ export async function createExperiment(env, opts) {
 
     return result.rows[0];
   } catch (err) {
-    console.error('[experiments] createExperiment error:', err.message);
+    log.error('create_experiment_error', { error: err.message });
     return null;
   }
 }
@@ -450,7 +451,7 @@ export async function updateExperimentStatus(env, experimentName, newStatus) {
 
     return result.rows?.length > 0;
   } catch (err) {
-    console.error('[experiments] updateExperimentStatus error:', err.message);
+    log.error('update_experiment_status_error', { error: err.message });
     return false;
   }
 }

@@ -23,6 +23,9 @@ import { trackEvent } from './achievements.js';
 import { kvCache, keys, TTL, recordCacheAccess } from '../lib/cache.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
 import { sendPractitionerClientChartReady } from '../lib/email.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('calculate');
 
 export async function handleCalculate(request, env) {
   // Enforce usage quota for chart calculation (only if authenticated)
@@ -124,7 +127,7 @@ export async function handleCalculate(request, env) {
       }
     } catch (e) {
       // DB failure is non-fatal — chart still returned; demoted to warn
-      console.warn('[calculate] Chart DB save failed (non-fatal):', e.message);
+      log.warn('chart_db_save_failed', { error: e.message });
     }
   }
 

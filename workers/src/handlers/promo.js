@@ -13,6 +13,9 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getUserFromRequest } from '../middleware/auth.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('promo');
 
 // ─── Admin Guard ─────────────────────────────────────────────
 
@@ -24,9 +27,7 @@ function isAdmin(request, env) {
   // BL-ADMIN-001: Constant-time comparison to prevent timing side-channel attacks
   const result = constantTimeEqual(provided, adminToken);
   if (!result) {
-    console.warn(JSON.stringify({
-      event: 'admin_auth_fail', ip: request.headers.get('CF-Connecting-IP') || 'unknown', path: new URL(request.url).pathname
-    }));
+    log.warn('admin_auth_fail', { ip: request.headers.get('CF-Connecting-IP') || 'unknown', path: new URL(request.url).pathname });
   }
   return result;
 }

@@ -19,6 +19,9 @@
  */
 
 import { createQueryFn } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('apiKey');
 
 /**
  * Middleware to authenticate API key from X-API-Key header
@@ -126,12 +129,12 @@ export async function authenticateApiKey(request, env) {
       SET last_used_at = CURRENT_TIMESTAMP 
       WHERE id = $1
     `, [result.key_id]).catch(err => {
-      console.error('Failed to update API key last_used_at:', err);
+      log.error('api_key_last_used_update_failed', { error: err.message });
     });
 
     // Track API usage (async, don't await)
     trackApiUsage(env, result.key_id, request.url, request.method).catch(err => {
-      console.error('Failed to track API usage:', err);
+      log.error('api_usage_tracking_failed', { error: err.message });
     });
 
     // Return authenticated user and API key info
@@ -152,7 +155,7 @@ export async function authenticateApiKey(request, env) {
     };
 
   } catch (error) {
-    console.error('API key authentication error:', error);
+    log.error('api_key_auth_error', { error: error.message });
     return {
       error: {
         status: 500,
