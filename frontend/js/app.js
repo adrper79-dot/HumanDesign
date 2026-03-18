@@ -1986,18 +1986,21 @@ function switchTab(id, btn) {
   const groupBtn = TAB_GROUPS[id] ? document.getElementById(TAB_GROUPS[id]) : btn;
   if (groupBtn) { groupBtn.classList.add('active'); groupBtn.setAttribute('aria-selected', 'true'); }
   else if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
-  
+
   // ACC-P2-1: Update aria-selected on sub-tabs (chart/profile tabs)
   document.querySelectorAll('.sub-tabs button[role="tab"]').forEach(tab => {
     const tabId = tab.getAttribute('data-arg0');
     tab.setAttribute('aria-selected', tabId === id ? 'true' : 'false');
   });
-  
+
   // Update sidebar active states
   updateSidebarActive(id);
 
   // Update step guide progress
   updateStepGuide(id);
+
+  // Check for tab overflow and update indicator
+  updateTabOverflowIndicator();
 
   if (id === 'transits' || id === 'checkin') {
     markJourneyMilestone('transitsViewed');
@@ -2113,6 +2116,42 @@ function switchTab(id, btn) {
 
   // Recompute guided navigation after tab changes because milestone state may update.
   applyGuidedNavigation();
+}
+
+/**
+ * ACC-P3-2: Tab Overflow Indicator
+ * Detects when tab list overflows and shows a visual fade-right gradient indicator
+ * Also manages shrinking tab text when needed for mobile
+ */
+function updateTabOverflowIndicator() {
+  const tabList = document.querySelector('.tab-list');
+  if (!tabList) return;
+
+  // Check if content overflows
+  const isOverflowing = tabList.scrollWidth > tabList.clientWidth;
+
+  if (isOverflowing) {
+    tabList.classList.add('has-overflow');
+
+    // Add scroll event listener to hide indicator when scrolled to end
+    const handleScroll = () => {
+      const scrollLeft = tabList.scrollLeft;
+      const scrollWidth = tabList.scrollWidth;
+      const clientWidth = tabList.clientWidth;
+      const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 1;
+
+      if (isAtEnd) {
+        tabList.classList.remove('has-overflow');
+        // Remove listener when at end (can add it back if user scrolls left)
+        tabList.removeEventListener('scroll', handleScroll);
+      }
+    };
+
+    // Debounced scroll listener to update overflow state
+    tabList.addEventListener('scroll', handleScroll, { passive: true });
+  } else {
+    tabList.classList.remove('has-overflow');
+  }
 }
 
 // ── Sidebar Navigation ────────────────────────────────────────
@@ -2268,6 +2307,10 @@ document.addEventListener('blur', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   updateStepGuide('chart');
   applyGuidedNavigation();
+  // Initialize tab overflow indicator
+  updateTabOverflowIndicator();
+  // Update tab overflow on window resize
+  window.addEventListener('resize', updateTabOverflowIndicator, { passive: true });
 });
 
 // ── Astrological Chart Wheel ─────────────────────────────────

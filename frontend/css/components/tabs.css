@@ -13,6 +13,7 @@
   position: sticky;
   top: var(--header-height);
   z-index: var(--z-sticky);
+  position: relative;
 }
 
 .tab-list {
@@ -23,6 +24,19 @@
   overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--border-subtle) transparent;
+}
+
+/* Overflow indicator — shows when more tabs exist to the right */
+.tab-list.has-overflow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to right, rgba(0,0,0,0), var(--bg-secondary));
+  pointer-events: none;
+  z-index: 10;
 }
 
 /* Hide scrollbar but keep functionality */
