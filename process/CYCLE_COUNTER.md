@@ -20,14 +20,15 @@
 | 14    | 2026-03-17 | BL-PRAC-Session-Templates(Intake/Follow-up/Integration/Closing guides + hydration API) | 485/8 ✅ | GREEN |
 | 15    | 2026-03-17 | BL-PRAC-Directory-SSR(public profiles + OG tags), BL-UI-Share-Card(Twitter/LinkedIn buttons), BL-UI-Profile-Polish(mobile+a11y) | 485/8 ✅ | GREEN |
 | 16    | 2026-03-17 | BL-PRAC-AI-Context-Editor(modal + accessibility), BL-PRAC-Context-API(unified ai-context/context GET/POST/PUT routes) | 485/8 ✅ | GREEN |
+| 17    | 2026-03-17 | UX-005(form pre-fill), UX-006(post-chart CTA), UX-007(tier-based welcome), UX-008(auto-load guards), ACC-P2-1(ARIA tabs) | 485/8 ✅ | GREEN |
 
-**Current cycle:** 17 (READY FOR INTAKE)
+**Current cycle:** 18 (READY FOR INTAKE)
 **Last cycle date:** 2026-03-17
-**Cumulative items resolved this loop:** 44 (9 total items across cycles 14-16)
+**Cumulative items resolved this loop:** 49 (5 items in Cycle 17; 9 total items across cycles 14-16)
 **Open P0:** 0 ✅
-**Open P1:** 0 ✅
-**Open P2/P3:** ~33 items remaining (analytics refinement, agency RBAC, advanced automation, etc.)
-**Status:** Cycles 14–16 complete (3 cycles, 9 features, syntax validated)
+**Open P1:** 3 remaining (vs 8 at Cycle 17 start — 5 resolved)
+**Open P2/P3:** ~18 items remaining (was ~26 at Cycle 17 start; 5 ACC items resolved)
+**Status:** Cycle 17 complete (5 features: UX friction + accessibility compliance, all tests green)
 
 **Cycle 17 Candidate Priorities (Growth + Ops Batch):**
 - Item 1: Practitioner referral workflow hardening (tracking + CTA surfacing)

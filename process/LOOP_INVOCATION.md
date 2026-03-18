@@ -77,6 +77,11 @@ Create session log: process/SESSION_LOG_[TODAY_DATE]_CYCLE_[N].md
 Begin with the critical first step (reading files), then Phase 1A.
 ```
 
+For recurring product-integrity audits that must check real implementation against `PRODUCT_PRINCIPLES.md` and `FEATURE_MATRIX.md`, then sync findings into both `audits/issue-registry.json` and `MASTER_BACKLOG_SYSTEM_V2.md`, use the workspace prompt:
+
+- `.github/prompts/prime-self-audit-sync.prompt.md`
+- `.github/prompts/prime-self-practitioner-audit.prompt.md` for practitioner-only workflow audits
+
 ---
 
 ## 🚨 Hotfix Cycle (P0 Emergency)
@@ -367,6 +372,10 @@ Output: audits/LAUNCH_READINESS_ASSESSMENT_[DATE].md
   - Estimated cycles to launch
   - VERDICT: READY / NOT READY / CONDITIONALLY READY
 ```
+
+For a reusable workspace launch-readiness assessment that checks actual repository evidence and syncs concrete blockers into both `audits/issue-registry.json` and `MASTER_BACKLOG_SYSTEM_V2.md`, use:
+
+- `.github/prompts/prime-self-launch-readiness.prompt.md`
 
 ---
 

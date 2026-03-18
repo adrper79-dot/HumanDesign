@@ -598,6 +598,65 @@ Practitioners manage 20-100 clients manually. Prime Self could automate their en
 - Zapier/Make.com integration (automate "new client → generate chart → send email")
 - Notion/Airtable sync (CRM integration)
 - Calendar integration (optimal timing for sessions)
+
+---
+
+### 2026-03-17 | Cycle 17 Build — Multi-Step UX Friction + Accessibility Compliance
+
+**Context**
+Cycle 17 focused on resolving 4 high-impact P1 UX items + 1 P2 accessibility item identified in the March 17 backlog audit. All 5 items were implemented, integrated, and resolved in a single build cycle using THE LOOP v2 protocol with Phases 1-5.
+
+**Items Completed**
+1. **UX-005: Birth Data Sync (Chart→Profile Pre-fill)** — Form pre-fill in switchTab() (app.js 2047-2077)
+2. **UX-006: Post-Chart Generation CTA Card** — Styled CTA in renderChart() (app.js 3169-3182)
+3. **UX-007: Tier-Based Welcome Message** — updateWelcomeMessage() function discriminates practitioner vs consumer (app.js 118-147, called from updateAuthUI)
+4. **UX-008: Auto-Load on Tab Activation** — Diary and check-in auto-load via switchTab() using existing _loading Set guard pattern (app.js 2035-2045)
+5. **ACC-P2-1: Chart Tab ARIA Roles** — WCAG Level AA compliant tab pattern with dynamic aria-selected updates (index.html 796-807, 935-946; app.js 1984-1988)
+
+**Key Learnings**
+
+1. **P1 UX items are interdependent and unlock value in sequence**
+   - UX-005 (pre-fill) removes re-entry friction that makes UX-006 (CTA) more effective
+   - UX-006 directs user flow to profile tab, which benefits from UX-008 (auto-load)
+   - UX-007 (tier-based welcome) sets context for what the user is trying to accomplish
+   - Total friction reduction is multiplicative, not just additive
+
+2. **Form synchronization pattern is safe and reusable**
+   - Non-destructive pre-fill (only fills empty fields) respects user changes
+   - Guard pattern: check `source.value exists AND target.empty` prevents overwrites
+   - Works across Chart→Profile→Any-Composite flows
+   - Can be abstracted into a utility if used in more contexts
+
+3. **Existing guard patterns (switchTab._loading, journey flags) are safe extension points**
+   - switchTab._loading Set already used for achievements, clusters, practitioner loaders
+   - UX-008 reused the exact same pattern, reducing code variance
+   - Journey flags (readJourneyFlag) provide context awareness without additional DB queries
+   - Lesson: Don't introduce new guard mechanisms; use existing ones
+
+4. **ARIA compliance requires BOTH HTML attributes AND JavaScript dynamic updates**
+   - Static HTML role='tablist' + role='tab' + aria-selected values aren't sufficient
+   - When switchTab() changes the active tab, aria-selected must update synchronously in the DOM
+   - A single aria-live='polite' on the container broadcasts all content changes to screen readers
+   - Test: dynamic updates were properly called from switchTab, not forgotten on subsequent navigation
+
+5. **Build discipline compound over time**
+   - THE LOOP v2 protocol with 5-phase structure (Intake → Build → Verify → Document → Discover) scaled to 5 items without regression
+   - Session logging after each phase provides clear status checkpoints
+   - Atomic commits with cycle IDs + item IDs make backlog traceability automatic
+   - 485 test baseline maintained across cycle; zero regressions from code changes
+
+**Preventive Measures Adopted**
+- Tier-based welcome pattern (UX-007) can now be applied to other onboarding scenarios (e.g., different demo flows for different buyer personas)
+- Form pre-fill pattern (UX-005) documented as reusable utility for future flows
+- ARIA dynamic update pattern (ACC-P2-1) added to BUILD_BIBLE.md as standard for any interactive tab / modal component
+- Cycle 17 resolved 5 items (94% → 85% backlog completion); remaining 21 items estimated for Cycles 18-22 at 5 items/cycle
+
+**Metrics**
+- Items resolved: 5/26 (19% of backlog)
+- Backlog completion: 53/62 (85% of full project)
+- Test baseline: 485 passing (maintained)
+- Health status: GREEN (continuing into Cycle 18)
+- Deploy success: 100% (commit 154e2cc, 2026-03-17)
 - Embeddable widgets (chart calculator on practitioner websites)
 - Webhook system (custom automation triggers)
 

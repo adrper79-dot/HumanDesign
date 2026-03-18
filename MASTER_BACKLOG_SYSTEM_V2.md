@@ -30,7 +30,7 @@
 | Category | P0 | P1 | P2 | P3 | Total | Status |
 |----------|----|----|----|----|-------|--------|
 | Backend API | ✅ 1 | ✅ 2 | ✅ 4 | 2 | 9 | ✅ All fixed |
-| Frontend | 0 | 0 | ✅ 3 | 2 | 5 | ✅ All closed |
+| Frontend | 0 | ✅ 3 + ⚠️ 4 | ✅ 3 + ⚠️ 4 | 2 | 16 | ⚠️ Activation follow-through still pending |
 | Engine | 0 | ✅ 1 | ✅ 2 | 1 | 4 | ✅ All closed |
 | Database | 0 | 0 | ✅ 2 | 1 | 3 | ✅ Schema complete |
 | Billing | ✅ 1 | 1 | 1 | 0 | 3 | ⚠️ 1 pending |
@@ -39,7 +39,7 @@
 | Operations | ✅ 1 | ✅ 2 | ✅ 3 | 2 | 7 | ✅ All fixed |
 | Testing | 0 | ✅ 1 | ✅ 3 | 1 | 5 | ✅ Good coverage |
 | Documentation | 0 | 1 | 2 | 1 | 4 | 🔄 Ongoing |
-| **TOTAL** | **3/4** | **12/12** | **24/24** | **11** | **51** | **48/51 = 94% complete** |
+| **TOTAL** | **3/4** | **14/19** | **24/28** | **11** | **62** | **52/62 = 84% complete** |
 
 **Blocking Issues (MUST FIX before launch):**
 - ✅ **BL-BACKEND-P0-1**: FIXED — Sentry error tracking now captures all register errors
@@ -85,7 +85,15 @@
 
 ### 🟠 P1 — High Priority
 
-*All P1 items are currently ✅ fixed. See P2 for ongoing work.*
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-FRONTEND-P1-1** | **Birth data entered in Chart tab is now carried into AI Profile generation on tab handoff** — The core `Calculate → Synthesize` handoff is implemented non-destructively in the live tab switch flow. | ✅ Fixed (Cycle 17) | — | [Issue Registry: UX-005](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
+| **BL-FRONTEND-P1-2** | **Post-chart CTA into AI Profile is live** — Chart results now earn the next step with an explicit "What's next?" card that moves the user into synthesis. | ✅ Fixed (Cycle 17) | — | [Issue Registry: UX-006](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
+| **BL-FRONTEND-P1-3** | **Overview/welcome messaging is split by persona** — First-time personal users now see a consumer arrival story instead of practitioner recruitment copy. | ✅ Fixed (Cycle 17) | — | [Issue Registry: UX-007](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
+| **BL-FRONTEND-P1-4** | **Leaderboard still hides saved value behind a manual load button** — Diary, check-in stats, and achievements auto-load, but the leaderboard still needs an extra click that creates a false-negative impression about whether the tracking loop is working. | 🔄 Partial | 15 min | [Issue Registry: UX-008](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
+| **BL-FRONTEND-P1-5** | **Step-guide banner routes users to non-existent tabs** — The chart journey banner currently points to `checkins` and `compatibility`, breaking the promised user story at the exact moment the flow should deepen into tracking and relationships. | ⚠️ Pending | 15 min | [Issue Registry: UX-013](audits/issue-registry.json) |
+| **BL-FRONTEND-P1-6** | **AI Profile form ships with example birth date/time defaults that can leak stale sample data into a real user journey** — These defaults also block the intended chart-to-profile sync because the carryover logic only runs when profile fields are blank. | ⚠️ Pending | 15 min | [Issue Registry: UX-014](audits/issue-registry.json) |
+| **BL-FRONTEND-P1-7** | **AI Profile first-run experience presents too many choices before the first synthesis** — Evaluation modes plus 13 optional depth systems violate the one-focus rule and add avoidable friction before value delivery. | ⚠️ Pending | 1–2 hrs | [Issue Registry: UX-015](audits/issue-registry.json) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -94,6 +102,10 @@
 | **BL-FRONTEND-P2-1** | **Service Worker CACHE_VERSION stale (was v17)** — Multiple CSS/JS changes. Mobile/PWA users get stale layouts. | ✅ Fixed (2026-03-14) — bumped to v18 | — | MASTER_BACKLOG |
 | **BL-FRONTEND-P2-2** | **Service Worker cache.addAll fails entirely if ONE asset 404s** — Use `Promise.allSettled()` for graceful degradation. | ✅ Fixed (2026-03-14) | — | MASTER_BACKLOG |
 | **BL-FRONTEND-P2-3** | **CSS custom properties lack fallback values** — Browsers without CSS var support render nothing. Add `var(--gold, #d4aa57)` fallbacks. | ✅ Fixed (2026-03-14) — 13 tokens across 11 files | — | MASTER_BACKLOG |
+| **BL-FRONTEND-P2-4** | **Chart results still expose key Prime Self terms without plain-language explanation** — Users can reach their chart and still not know what Soul Cross, Not-Self Theme, Split Definition, or Connection Pattern mean. | ⚠️ Pending | 45 min | [Issue Registry: UX-009](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
+| **BL-FRONTEND-P2-5** | **Enhance tab asks for effort without clearly explaining the return** — Assessments materially improve synthesis quality, but the current copy does not make that exchange obvious. | ⚠️ Pending | 30 min | [Issue Registry: UX-010](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
+| **BL-FRONTEND-P2-6** | **Check-in tooltips still contain outdated or inconsistent authority terminology** — Compliance and clarity issue; should be cleaned up without displacing activation-path work. | ⚠️ Pending | 15 min | [Issue Registry: UX-011](audits/issue-registry.json) |
+| **BL-FRONTEND-P2-7** | **Onboarding naming and intro copy still undersell the feature and confuse first-time users** — `Restart Onboarding` implies prior use and the current intro hides the actual story structure. | ⚠️ Pending | 30 min | [Issue Registry: UX-012](audits/issue-registry.json) · [UX Re-Rank](audits/UX_RERANK_2026-03-17.md) |
 
 ### 🟢 P3 — Low Priority
 
