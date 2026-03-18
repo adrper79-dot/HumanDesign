@@ -1864,7 +1864,7 @@ export const QUERIES = {
   `,
 
   cronGetTrialEndingUsers: `
-    SELECT u.id, u.email, s.current_period_end,
+    SELECT u.id, u.email, s.current_period_end, s.tier,
            EXTRACT(DAY FROM (s.current_period_end - NOW())) AS days_remaining
     FROM users u
     JOIN subscriptions s ON u.id = s.user_id

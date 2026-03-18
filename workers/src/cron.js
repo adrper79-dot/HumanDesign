@@ -353,7 +353,7 @@ export async function runDailyTransitCron(env) {
             user.email,
             user.email.split('@')[0],
             daysRemaining,
-            'Practitioner', // BL-TODO: determine tier from subscription if needed
+            user.tier || 'Practitioner',
             env.RESEND_API_KEY,
             env.FROM_EMAIL,
             env.COMPANY_ADDRESS || ''
