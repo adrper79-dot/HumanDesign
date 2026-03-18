@@ -908,7 +908,7 @@
     </div>
 
     <div id="chartBanner"></div>
-    <div id="chartResult">
+    <div id="chartResult" aria-live="polite" aria-atomic="true">
       <div class="empty-state">
         <span class="icon">⊙</span>
         <p class="empty-title">Your blueprint awaits</p>
@@ -1082,7 +1082,7 @@
       </div>
     </div>
     <div id="profileBanner"></div>
-    <div id="profileResult"></div>
+    <div id="profileResult" aria-live="polite" aria-atomic="true"></div>
     
     <!-- Share Modal Overlay -->
     <div class="share-modal-overlay hidden" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
@@ -1476,7 +1476,7 @@
         <span class="icon-transit"></span> See Today's Energy
       </button>
     </div>
-    <div id="transitResult">
+    <div id="transitResult" aria-live="polite" aria-atomic="true">
       <div class="empty-state">
         <span class="icon">☽</span>
         <p class="empty-title">Today's planetary energy</p>
@@ -1499,7 +1499,7 @@
         <button class="btn-secondary btn-sm" id="profileSearchBtn" data-action="searchProfiles" aria-label="Search">🔍</button>
       </div>
     </div>
-    <div id="historyResult">
+    <div id="historyResult" aria-live="polite" aria-atomic="true">
       <div class="empty-state">
         <span class="icon">◎</span>
         <p class="empty-title">No saved profiles yet</p>
@@ -1542,7 +1542,7 @@
         <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeA" required aria-required="true" aria-label="Person A birth time"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
-            <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
+            <span class="help-icon" aria-describedby="help-desc-1">?</span>
           </label>
           <div class="input-row">
             <input type="text" id="comp-A-location" placeholder="New York, NY"
@@ -1563,7 +1563,7 @@
         <div class="form-group"><label data-i18n="chart.birthTime">Birth Time</label><input type="time" id="comp-timeB" required aria-required="true" aria-label="Person B birth time"></div>
         <div class="form-group full">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
-            <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
+            <span class="help-icon" aria-describedby="help-desc-2">?</span>
           </label>
           <div class="input-row">
             <input type="text" id="comp-B-location" placeholder="Los Angeles, CA"
@@ -1583,7 +1583,7 @@
         <span data-i18n="composite.generate">Check Our Compatibility</span>
       </button>
     </div>
-    <div id="compResult">
+    <div id="compResult" aria-live="polite" aria-atomic="true">
       <div class="empty-state">
         <span class="icon">⊕</span>
         <p class="empty-title">Relationship analysis</p>
@@ -1603,7 +1603,7 @@
         <div class="form-group"><label>Approximate Time</label><input type="time" id="rect-time" value="14:30" aria-label="Birth time"></div>
         <div class="form-group">
           <label><span data-i18n="chart.birthLocation">Birth Location</span>
-            <span class="help-icon" title="Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.">?</span>
+            <span class="help-icon" aria-describedby="help-desc-3">?</span>
           </label>
           <div class="input-row">
             <input type="text" id="rect-location" placeholder="New York, NY"
@@ -1618,13 +1618,13 @@
         <input type="hidden" id="rect-lng" value="-74.0060">
         <div class="form-group">
           <label>Search Window (minutes)
-            <span class="help-icon" title="How many minutes before and after the approximate time to analyze (e.g., 30 = search from 30 min before to 30 min after).">?</span>
+            <span class="help-icon" aria-describedby="help-desc-4">?</span>
           </label>
           <input type="number" id="rect-window" value="30" min="5" max="120" aria-label="Search window minutes">
         </div>
         <div class="form-group">
           <label>Time Steps (minutes)
-            <span class="help-icon" title="How often to check within the window (e.g., 5 = check every 5 minutes). Smaller steps = more precise but slower.">?</span>
+            <span class="help-icon" aria-describedby="help-desc-5">?</span>
           </label>
           <input type="number" id="rect-step" value="5" min="1" max="30" aria-label="Time step minutes">
         </div>
@@ -1635,7 +1635,7 @@
         <span data-i18n="rectify.analyze">Find My Birth Time</span>
       </button>
     </div>
-    <div id="rectResult"></div>
+    <div id="rectResult" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Rectification History -->
     <div id="rectHistorySection" style="margin-top: var(--space-5);">
@@ -1717,7 +1717,7 @@
         <button class="btn-primary btn-sm" data-action="inviteAgencySeat" class="btn-row-item">Add Seat</button>
       </div>
       <div id="agencySeatStatus"></div>
-      <div id="agencySeatsResult"></div>
+      <div id="agencySeatsResult" aria-live="polite" aria-atomic="true"></div>
     </div>
 
     <!-- Directory Profile (edit your public listing) -->
@@ -1825,7 +1825,7 @@
         <div class="card-title mb-0"><span class="icon-time"></span> Pending Invitations</div>
         <button class="btn-secondary btn-sm" data-action="loadPractitionerInvitations">Refresh</button>
       </div>
-      <div id="pracInvitesResult"></div>
+      <div id="pracInvitesResult" aria-live="polite" aria-atomic="true"></div>
     </div>
 
     <!-- Referral Performance (auto-loads on tab open) -->
@@ -1835,7 +1835,7 @@
     <div id="pracMetricsCard"></div>
 
     <!-- Roster (auto-loads on tab open) -->
-    <div id="pracResult"></div>
+    <div id="pracResult" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Client detail panel (expands below the tapped client row) -->
     <div id="pracDetailPanel" style="display:none"></div>
@@ -1899,7 +1899,7 @@
       <div class="form-grid">
         <div class="form-group">
           <label><span data-i18n="sms.phone">Phone Number</span>
-            <span class="help-icon" title="Include country code (e.g., +1 for US/Canada, +44 for UK). Example: +1-775-717-2255">?</span>
+            <span class="help-icon" aria-describedby="help-desc-6">?</span>
           </label>
           <input type="tel" id="sms-phone" placeholder="+1-555-123-4567">
         </div>
@@ -1916,7 +1916,7 @@
         </button>
       </div>
 
-      <div id="smsResult"></div>
+      <div id="smsResult" aria-live="polite" aria-atomic="true"></div>
     </div>
   </div>
 
@@ -2260,5 +2260,13 @@
   </div>
 </div>
 
+
+<!-- Help Icon Descriptions (hidden, for ARIA) -->
+<div id="help-desc-1" class="visually-hidden">Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.</div>
+<div id="help-desc-2" class="visually-hidden">Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.</div>
+<div id="help-desc-3" class="visually-hidden">Enter city, state/country (e.g., Portland, OR or London, UK). We'll find coordinates automatically.</div>
+<div id="help-desc-4" class="visually-hidden">How many minutes before and after the approximate time to analyze (e.g., 30 = search from 30 min before to 30 min after).</div>
+<div id="help-desc-5" class="visually-hidden">How often to check within the window (e.g., 5 = check every 5 minutes). Smaller steps = more precise but slower.</div>
+<div id="help-desc-6" class="visually-hidden">Include country code (e.g., +1 for US/Canada, +44 for UK). Example: +1-775-717-2255</div>
 </body>
 </html>

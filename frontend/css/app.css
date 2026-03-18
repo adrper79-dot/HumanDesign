@@ -36,6 +36,20 @@ header {
 .skip-link:focus {
   top: 0;
 }
+
+/* ── Visually Hidden (Accessibility) [ACC-P2-6] ── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 .logo { font-size: 1.3rem; font-weight: 700; color: var(--gold, #c9a84c); letter-spacing: 0.05em; }
 .logo span { color: var(--text-dim, #c4c0d8); font-weight: 300; font-size: 0.85rem; margin-left: 8px; }
 .auth-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; } /* [DUP] layout.css */

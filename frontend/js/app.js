@@ -2457,14 +2457,20 @@ async function calculateChart() {
       await geocodeLocation('c');
     }
     if (isNaN(parseFloat(document.getElementById('c-lat').value))) {
-      if (resultEl) resultEl.innerHTML = '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
+      if (resultEl) {
+        resultEl.innerHTML = '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
+        resultEl.removeAttribute('aria-busy');
+      }
       return;
     }
   }
 
   if (btn) btn.disabled = true;
   if (spinner) spinner.style.display = '';
-  if (resultEl) resultEl.innerHTML = skeletonChart();
+  if (resultEl) {
+    resultEl.setAttribute('aria-busy', 'true');
+    resultEl.innerHTML = skeletonChart();
+  }
 
   try {
     const payload = {
@@ -2476,7 +2482,10 @@ async function calculateChart() {
     };
 
     const data = await apiFetch('/api/chart/calculate', { method: 'POST', body: JSON.stringify(payload) });
-    if (resultEl) resultEl.innerHTML = renderChart(data);
+    if (resultEl) {
+      resultEl.innerHTML = renderChart(data);
+      resultEl.removeAttribute('aria-busy');
+    }
     if (resultEl) _applyChartHeadings(resultEl);
     trackEvent('chart', 'calculate');
     // Save birth data to localStorage after successful chart calculation
@@ -2493,7 +2502,10 @@ async function calculateChart() {
     // Load chart history for versioning (AUDIT-UX-003)
     if (token) loadChartHistory();
   } catch (e) {
-    if (resultEl) resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+    if (resultEl) {
+      resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+      resultEl.removeAttribute('aria-busy');
+    }
   } finally {
     if (btn) btn.disabled = false;
     if (spinner) spinner.style.display = 'none';
@@ -3406,7 +3418,10 @@ async function generateProfile() {
 
   if (btn) btn.disabled = true;
   if (spinner) spinner.style.display = '';
-  if (resultEl) resultEl.innerHTML = skeletonProfile();
+  if (resultEl) {
+    resultEl.setAttribute('aria-busy', 'true');
+    resultEl.innerHTML = skeletonProfile();
+  }
 
   // Progress indicator: cycles every 8s, covers 45s timeout window (BL-EXC-P0-3)
   const progressMessages = [
@@ -3436,8 +3451,11 @@ async function generateProfile() {
     if (isNaN(parseFloat(document.getElementById('p-lat').value))) {
       // Clear progress timeouts
       progressTimeouts.forEach(clearTimeout);
-      if (resultEl) resultEl.innerHTML =
-        '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
+      if (resultEl) {
+        resultEl.innerHTML =
+          '<div class="alert alert-error"><span class="icon-info"></span> ' + window.t('chart.lookUpFirst') + '</div>';
+        resultEl.removeAttribute('aria-busy');
+      }
       if (btn) btn.disabled = false;
       if (spinner) spinner.style.display = 'none';
       return;
@@ -3473,7 +3491,8 @@ async function generateProfile() {
 
     // Detect timeout — show retry and fallback (BL-EXC-P0-3)
     if (data && data.error && /abort/i.test(data.error)) {
-      if (resultEl) resultEl.innerHTML = `<div class="alert alert-warn" style="padding:16px">
+      if (resultEl) {
+        resultEl.innerHTML = `<div class="alert alert-warn" style="padding:16px">
         <strong>AI synthesis timed out.</strong>
         <p style="margin:8px 0 12px">This can happen when AI is under load. Your chart data is ready.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -3481,10 +3500,15 @@ async function generateProfile() {
           <button class="btn-dim btn-sm" onclick="switchTab('chart')">View chart without synthesis</button>
         </div>
       </div>`;
+        resultEl.removeAttribute('aria-busy');
+      }
       return;
     }
 
-    if (resultEl) resultEl.innerHTML = renderProfile(data);
+    if (resultEl) {
+      resultEl.innerHTML = renderProfile(data);
+      resultEl.removeAttribute('aria-busy');
+    }
     trackEvent('profile', 'generate');
     markJourneyMilestone('profileGenerated');
     updateStepGuide('profile');
@@ -3492,7 +3516,10 @@ async function generateProfile() {
   } catch (e) {
     // Clear progress timeouts on error
     progressTimeouts.forEach(clearTimeout);
-    if (resultEl) resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+    if (resultEl) {
+      resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+      resultEl.removeAttribute('aria-busy');
+    }
   } finally {
     if (btn) btn.disabled = false;
     if (spinner) spinner.style.display = 'none';
@@ -4434,6 +4461,7 @@ async function runRectification() {
 
   btn.disabled = true;
   spinner.style.display = '';
+  resultEl.setAttribute('aria-busy', 'true');
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>' + window.t('rectify.analyzing') + '</div></div>';
 
   try {
@@ -4445,9 +4473,11 @@ async function runRectification() {
     } else {
       // Fallback: display result immediately if no ID (test mode)
       resultEl.innerHTML = renderRectification(data);
+      resultEl.removeAttribute('aria-busy');
     }
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+    resultEl.removeAttribute('aria-busy');
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -4499,8 +4529,10 @@ async function pollRectificationProgress(rectificationId, resultEl) {
         if (status.result) {
           resultEl.innerHTML = renderRectification(status.result);
         }
+        resultEl.removeAttribute('aria-busy');
       } else if (status.status === 'failed') {
         resultEl.innerHTML = `<div class="alert alert-error">${window.t('error.rectify_failed')}: ${escapeHtml(status.error || 'Unknown error')}</div>`;
+        resultEl.removeAttribute('aria-busy');
         isComplete = true;
       }
     } catch (err) {
