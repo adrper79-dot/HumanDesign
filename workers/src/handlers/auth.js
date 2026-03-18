@@ -413,20 +413,31 @@ async function handleLogin(request, env) {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Fast-path check: read current failure count before touching the DB further
-    const { rows: checkRows } = await query(QUERIES.getCounterValue, [lockoutKey]);
-    if ((checkRows[0]?.count || 0) >= MAX_LOGIN_ATTEMPTS) {
-      return Response.json(
-        { ok: false, error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
-        { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
-      );
+    // Fast-path lockout check: fail open if counter table is unavailable/missing
+    let counterAvailable = true;
+    try {
+      const { rows: checkRows } = await query(QUERIES.getCounterValue, [lockoutKey]);
+      if ((checkRows[0]?.count || 0) >= MAX_LOGIN_ATTEMPTS) {
+        return Response.json(
+          { ok: false, error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
+          { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
+        );
+      }
+    } catch (counterErr) {
+      log.warn('login_counter_check_failed', { error: counterErr.message });
+      counterAvailable = false;
     }
 
     const result = await query(QUERIES.getUserByEmail, [email.toLowerCase()]);
     const user = result.rows?.[0];
 
     if (!user) {
-      // Atomically increment — PostgreSQL count + 1 is an atomic update, not read-modify-write
-      await query(QUERIES.atomicWindowCounterIncrement, [lockoutKey, windowStart, windowEnd]);
+      // Atomically increment failure counter (best-effort; fail open if table missing)
+      if (counterAvailable) {
+        await query(QUERIES.atomicWindowCounterIncrement, [lockoutKey, windowStart, windowEnd]).catch(err => {
+          log.warn('login_counter_increment_failed', { error: err.message });
+        });
+      }
       return Response.json(
         { ok: false, error: 'Invalid email or password' },
         { status: 401 }
@@ -436,14 +447,20 @@ async function handleLogin(request, env) {
     // Verify password
     const valid = await verifyPassword(password, user.password_hash);
     if (!valid) {
-      // Atomically increment failure counter; lock out if threshold crossed
-      const { rows: incrRows } = await query(QUERIES.atomicWindowCounterIncrement, [lockoutKey, windowStart, windowEnd]);
-      const newCount = incrRows[0]?.count || 1;
-      if (newCount >= MAX_LOGIN_ATTEMPTS) {
-        return Response.json(
-          { ok: false, error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
-          { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
-        );
+      // Atomically increment failure counter; lock out if threshold crossed (fail open if table missing)
+      if (counterAvailable) {
+        try {
+          const { rows: incrRows } = await query(QUERIES.atomicWindowCounterIncrement, [lockoutKey, windowStart, windowEnd]);
+          const newCount = incrRows[0]?.count || 1;
+          if (newCount >= MAX_LOGIN_ATTEMPTS) {
+            return Response.json(
+              { ok: false, error: 'Too many failed login attempts. Please try again in 15 minutes, or reset your password.' },
+              { status: 429, headers: { 'Retry-After': String(LOCKOUT_DURATION) } }
+            );
+          }
+        } catch (counterErr) {
+          log.warn('login_counter_increment_failed', { error: counterErr.message });
+        }
       }
       return Response.json(
         { ok: false, error: 'Invalid email or password' },
@@ -451,9 +468,9 @@ async function handleLogin(request, env) {
       );
     }
 
-    // Successful login — clear the failure counter
+    // Successful login — clear the failure counter (best-effort; fail open)
     await query(QUERIES.resetRateLimitCounter, [lockoutKey]).catch(err => {
-      log.error('reset_login_counter_failed', { error: err.message });
+      log.warn('reset_login_counter_failed', { error: err.message });
     });
 
     // 2FA gate: if user has TOTP enabled, issue a short-lived pending token
