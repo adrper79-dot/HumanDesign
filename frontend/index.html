@@ -2041,7 +2041,7 @@
         </select>
         <button class="btn-primary btn-sm" data-action="searchDirectory">Search</button>
       </div>
-      <div id="directoryResults" aria-live="polite">
+      <div id="directoryResults" aria-live="polite" aria-atomic="true">
         <div class="dir-results-empty">
           Click Search or adjust filters to find practitioners.
         </div>
@@ -2094,11 +2094,11 @@
         <span class="spinner" id="timingSpinner" style="display:none"></span>
         Find Best Dates
       </button>
-      <div id="timingStatus" class="status-output" aria-live="polite" role="status"></div>
+      <div id="timingStatus" class="status-output" aria-live="polite" aria-atomic="true" role="status"></div>
     </div>
     <div class="card" id="timingResultsCard" style="display:none">
       <div class="card-title">✨ Recommended Dates</div>
-      <div id="timingResults"></div>
+      <div id="timingResults" aria-live="polite" aria-atomic="true"></div>
     </div>
   </div>
 

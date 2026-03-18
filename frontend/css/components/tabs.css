@@ -203,28 +203,33 @@
   .tab-list {
     padding: 0 var(--space-4);
   }
-  
+
   .tab-btn {
     padding: var(--space-3);
     font-size: var(--text-sm);
   }
-  
+
+  /* Responsive overflow indicator — narrower on mobile */
+  .tab-list.has-overflow::after {
+    width: 25px;
+  }
+
   /* Stack vertical tabs on mobile */
   .tabs-vertical {
     flex-direction: column;
   }
-  
+
   .tabs-vertical .tab-list {
     border-right: none;
     border-bottom: var(--border-width-thin) solid var(--border-subtle);
     min-width: auto;
   }
-  
+
   .tabs-vertical .tab-btn {
     border-right: none;
     border-bottom: 2px solid transparent;
   }
-  
+
   .tabs-vertical .tab-btn[aria-selected="true"],
   .tabs-vertical .tab-btn.active {
     border-right-color: transparent;
