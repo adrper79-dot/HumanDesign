@@ -632,6 +632,8 @@ async function handleSubscriptionDeleted(event, query, log) {
 
     // BL-R-C4: Also downgrade user tier in users table
     await q(QUERIES.updateUserTier, ['free', userId]);
+    // Sync practitioners.tier so cancelled practitioners lose feature access immediately
+    await q(QUERIES.updatePractitionerTier, [userId, 'free']);
   });
 
   log.info({ action: 'subscription_cancelled', userId });
@@ -660,6 +662,8 @@ async function handleSubscriptionPaused(event, query, log) {
   await query.transaction(async (q) => {
     await q(QUERIES.updateSubscriptionStatus, [subscriptionId, 'paused']);
     await q(QUERIES.updateUserTier, ['free', userId]);
+    // Sync practitioners.tier so paused practitioners lose feature access immediately
+    await q(QUERIES.updatePractitionerTier, [userId, 'free']);
   });
 
   log.info({ action: 'subscription_paused', userId, subscriptionId });

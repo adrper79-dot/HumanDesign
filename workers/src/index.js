@@ -190,7 +190,7 @@ import { handleOnboarding } from './handlers/onboarding.js';
 import { handleValidation } from './handlers/validation.js';
 import { handlePsychometric } from './handlers/psychometric.js';
 import { handleDiary } from './handlers/diary.js';
-import { handleStripeWebhook } from './handlers/webhook.js';
+import { handleStripeWebhook } from './handlers/stripe-webhook.js';
 import { handleWebhooks } from './handlers/webhooks.js';
 import {
   handleCheckout,
