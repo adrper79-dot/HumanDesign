@@ -1,165 +1,0 @@
-[1mdiff --git a/workers/src/handlers/analytics.js b/workers/src/handlers/analytics.js[m
-[1mindex 76983dc..92826d2 100644[m
-[1m--- a/workers/src/handlers/analytics.js[m
-[1m+++ b/workers/src/handlers/analytics.js[m
-[36m@@ -23,37 +23,41 @@[m [mexport async function handleAnalytics(request, env, subpath) {[m
-   const method = request.method;[m
-   const url = new URL(request.url);[m
- [m
-[31m-  // Only admin/practitioner users can access analytics[m
-[32m+[m[32m  // Only practitioner/agency/admin users can access analytics[m[41m[m
-   const userTier = request._user?.tier || 'free';[m
-[31m-  if (!['guide', 'practitioner', 'admin'].includes(userTier)) {[m
-[32m+[m[32m  if (!['practitioner', 'white_label', 'agency', 'admin'].includes(userTier)) {[m[41m[m
-     return Response.json([m
-[31m-      { error: 'Analytics access requires Guide tier or above', upgrade_required: true },[m
-[32m+[m[32m      { error: 'Analytics access requires Practitioner tier or above', upgrade_required: true },[m[41m[m
-       { status: 403 }[m
-     );[m
-   }[m
- [m
-[31m-  if (subpath === '/overview' && method === 'GET') {[m
-[31m-    return getOverview(env, url);[m
-[31m-  }[m
-[31m-  if (subpath === '/events' && method === 'GET') {[m
-[31m-    return getEventTrends(env, url);[m
-[31m-  }[m
-[31m-  if (subpath.startsWith('/funnel/') && method === 'GET') {[m
-[31m-    const funnelName = subpath.replace('/funnel/', '');[m
-[31m-    return getFunnelAnalysis(env, funnelName);[m
-[31m-  }[m
-[31m-  if (subpath === '/retention' && method === 'GET') {[m
-[31m-    return getRetention(env, url);[m
-[31m-  }[m
-[31m-  if (subpath === '/errors' && method === 'GET') {[m
-[31m-    return getErrorAnalytics(env, url);[m
-[31m-  }[m
-[31m-  if (subpath === '/revenue' && method === 'GET') {[m
-[31m-    return getRevenueMetrics(env);[m
-[31m-  }[m
-[32m+[m[32m  try {[m[41m[m
-[32m+[m[32m    if (subpath === '/overview' && method === 'GET') {[m[41m[m
-[32m+[m[32m      return getOverview(env, url);[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    if (subpath === '/events' && method === 'GET') {[m[41m[m
-[32m+[m[32m      return getEventTrends(env, url);[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    if (subpath.startsWith('/funnel/') && method === 'GET') {[m[41m[m
-[32m+[m[32m      const funnelName = subpath.replace('/funnel/', '');[m[41m[m
-[32m+[m[32m      return getFunnelAnalysis(env, funnelName);[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    if (subpath === '/retention' && method === 'GET') {[m[41m[m
-[32m+[m[32m      return getRetention(env, url);[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    if (subpath === '/errors' && method === 'GET') {[m[41m[m
-[32m+[m[32m      return getErrorAnalytics(env, url);[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m    if (subpath === '/revenue' && method === 'GET') {[m[41m[m
-[32m+[m[32m      return getRevenueMetrics(env);[m[41m[m
-[32m+[m[32m    }[m[41m[m
- [m
-[31m-  return Response.json({ error: 'Not found' }, { status: 404 });[m
-[31m-}[m
-[32m+[m[32m    return Response.json({ error: 'Not found' }, { status: 404 });[m[41m[m
-[32m+[m[32m  } catch (err) {[m[41m[m
-[32m+[m[32m    console.error('[Analytics] Unhandled error:', err);[m[41m[m
-[32m+[m[32m    return Response.json({ error: 'Internal server error' }, { status: 500 });[m[41m[m
-[32m+[m[32m  }[m[41m[m
- [m
- // ─── Overview ────────────────────────────────────────────────────────[m
- [m
-[36m@@ -305,10 +309,10 @@[m [masync function getRevenueMetrics(env) {[m
-   ]);[m
- [m
-   const m = mrr.rows[0] || {};[m
-[31m-  const seekerRevenue = Number(m.seeker_count || 0) * 1500;[m
-[31m-  const guideRevenue = Number(m.guide_count || 0) * 9700;[m
-[31m-  const practitionerRevenue = Number(m.practitioner_count || 0) * 50000;[m
-[31m-  const totalMrrCents = seekerRevenue + guideRevenue + practitionerRevenue;[m
-[32m+[m[32m  const regularRevenue = Number(m.regular_count || 0) * 1200;[m[41m[m
-[32m+[m[32m  const practitionerRevenue = Number(m.practitioner_count || 0) * 6000;[m[41m[m
-[32m+[m[32m  const whiteLabelRevenue = Number(m.white_label_count || 0) * 14900;[m[41m[m
-[32m+[m[32m  const totalMrrCents = regularRevenue + practitionerRevenue + whiteLabelRevenue;[m[41m[m
- [m
-   return Response.json({[m
-     ok: true,[m
-[36m@@ -317,9 +321,9 @@[m [masync function getRevenueMetrics(env) {[m
-         totalCents: totalMrrCents,[m
-         totalUsd: `$${(totalMrrCents / 100).toFixed(2)}`,[m
-         breakdown: {[m
-[31m-          seeker: { count: Number(m.seeker_count || 0), revenueCents: seekerRevenue },[m
-[31m-          guide: { count: Number(m.guide_count || 0), revenueCents: guideRevenue },[m
-[32m+[m[32m          regular: { count: Number(m.regular_count || 0), revenueCents: regularRevenue },[m[41m[m
-           practitioner: { count: Number(m.practitioner_count || 0), revenueCents: practitionerRevenue },[m
-[32m+[m[32m          white_label: { count: Number(m.white_label_count || 0), revenueCents: whiteLabelRevenue },[m[41m[m
-         },[m
-       },[m
-       totalActiveSubscriptions: Number(m.total_active || 0),[m
-[1mdiff --git a/workers/src/handlers/onboarding.js b/workers/src/handlers/onboarding.js[m
-[1mindex ad45506..0416e39 100644[m
-[1m--- a/workers/src/handlers/onboarding.js[m
-[1m+++ b/workers/src/handlers/onboarding.js[m
-[36m@@ -81,35 +81,39 @@[m [mexport async function handleOnboarding(request, env, subpath) {[m
-   const query = createQueryFn(env.NEON_CONNECTION_STRING);[m
-   const kv = env.CACHE; // reuse KV namespace for progress tracking[m
- [m
-[31m-  // GET /api/onboarding/forge — personalized forge arc from user's latest profile[m
-[31m-  if (subpath === '/forge' && method === 'GET') {[m
-[31m-    return handlePersonalizedForge(userId, query);[m
-[31m-  }[m
-[32m+[m[32m  try {[m[41m[m
-[32m+[m[32m    // GET /api/onboarding/forge — personalized forge arc from user's latest profile[m[41m[m
-[32m+[m[32m    if (subpath === '/forge' && method === 'GET') {[m[41m[m
-[32m+[m[32m      return handlePersonalizedForge(userId, query);[m[41m[m
-[32m+[m[32m    }[m[41m[m
- [m
-[31m-  // GET /api/onboarding/progress[m
-[31m-  if (subpath === '/progress' && method === 'GET') {[m
-[31m-    return handleProgress(userId, kv);[m
-[31m-  }[m
-[32m+[m[32m    // GET /api/onboarding/progress[m[41m[m
-[32m+[m[32m    if (subpath === '/progress' && method === 'GET') {[m[41m[m
-[32m+[m[32m      return handleProgress(userId, kv);[m[41m[m
-[32m+[m[32m    }[m[41m[m
- [m
-[31m-  // POST /api/onboarding/advance[m
-[31m-  if (subpath === '/advance' && method === 'POST') {[m
-[31m-    return handleAdvance(request, userId, kv);[m
-[31m-  }[m
-[32m+[m[32m    // POST /api/onboarding/advance[m[41m[m
-[32m+[m[32m    if (subpath === '/advance' && method === 'POST') {[m[41m[m
-[32m+[m[32m      return handleAdvance(request, userId, kv);[m[41m[m
-[32m+[m[32m    }[m[41m[m
- [m
-[31m-  // GET /api/onboarding/forge/:key[m
-[31m-  const forgeMatch = subpath.match(/^\/forge\/([A-Za-z]+)$/);[m
-[31m-  if (forgeMatch && method === 'GET') {[m
-[31m-    return handleForgeArc(forgeMatch[1], userId, query);[m
-[31m-  }[m
-[32m+[m[32m    // GET /api/onboarding/forge/:key[m[41m[m
-[32m+[m[32m    const forgeMatch = subpath.match(/^\/forge\/([A-Za-z]+)$/);[m[41m[m
-[32m+[m[32m    if (forgeMatch && method === 'GET') {[m[41m[m
-[32m+[m[32m      return handleForgeArc(forgeMatch[1], userId, query);[m[41m[m
-[32m+[m[32m    }[m[41m[m
- [m
-[31m-  // GET /api/onboarding/chapter/:key/:n[m
-[31m-  const chapterMatch = subpath.match(/^\/chapter\/([A-Za-z]+)\/(\d+)$/);[m
-[31m-  if (chapterMatch && method === 'GET') {[m
-[31m-    return handleChapter(chapterMatch[1], parseInt(chapterMatch[2], 10), userId, query);[m
-[31m-  }[m
-[32m+[m[32m    // GET /api/onboarding/chapter/:key/:n[m[41m[m
-[32m+[m[32m    const chapterMatch = subpath.match(/^\/chapter\/([A-Za-z]+)\/(\d+)$/);[m[41m[m
-[32m+[m[32m    if (chapterMatch && method === 'GET') {[m[41m[m
-[32m+[m[32m      return handleChapter(chapterMatch[1], parseInt(chapterMatch[2], 10), userId, query);[m[41m[m
-[32m+[m[32m    }[m[41m[m
- [m
-[31m-  return Response.json({ error: 'Not Found' }, { status: 404 });[m
-[31m-}[m
-[32m+[m[32m    return Response.json({ error: 'Not Found' }, { status: 404 });[m[41m[m
-[32m+[m[32m  } catch (err) {[m[41m[m
-[32m+[m[32m    console.error('[Onboarding] Unhandled error:', err);[m[41m[m
-[32m+[m[32m    return Response.json({ error: 'Internal server error' }, { status: 500 });[m[41m[m
-[32m+[m[32m  }[m[41m[m
- [m
- // ─── Public: Intro ───────────────────────────────────────────────[m
- [m
