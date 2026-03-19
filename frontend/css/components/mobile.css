@@ -19,6 +19,35 @@
   display: none;
 }
 
+/* Runtime mobile override for large-screen phones detected in JS */
+html.force-mobile-layout .mobile-nav {
+  display: flex;
+}
+
+html.force-mobile-layout .tabs,
+html.force-mobile-layout .sub-tabs {
+  display: none;
+}
+
+html.force-mobile-layout .container {
+  padding-bottom: calc(var(--mobile-nav-height) + var(--space-4));
+}
+
+html.force-mobile-layout .auth-status {
+  display: none;
+}
+
+html.force-mobile-layout .auth-bar {
+  gap: 8px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+html.force-mobile-layout #exportDataBtn,
+html.force-mobile-layout #deleteAccountBtn {
+  display: none !important;
+}
+
 /* ── Responsive Breakpoints ────────────────────────────────── */
 @media (max-width: 768px) {
   

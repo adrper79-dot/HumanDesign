@@ -21,6 +21,34 @@ let authMode = 'login'; // 'login' | 'register'
 let _pendingResetToken = null; // SEC-001: closure-scoped, never on window
 let currentUser = null; // populated by fetchUserProfile() — frozen on set (P2-FE-013); module-scoped (SYS-031)
 
+const MOBILE_LAYOUT_MAX_WIDTH = 900;
+
+function isLikelyMobilePhone() {
+  const ua = navigator.userAgent || '';
+  const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
+  const uaMobile = /Android|iPhone|iPod|Mobile|SamsungBrowser|Silk/i.test(ua);
+  const hasTouch = navigator.maxTouchPoints > 1;
+  return uaDataMobile || uaMobile || hasTouch;
+}
+
+function shouldUseMobileLayout() {
+  const shortestEdge = Math.min(window.innerWidth || 0, window.innerHeight || 0);
+  return shortestEdge <= MOBILE_LAYOUT_MAX_WIDTH && isLikelyMobilePhone();
+}
+
+function syncMobileLayoutClass() {
+  document.documentElement.classList.toggle('force-mobile-layout', shouldUseMobileLayout());
+}
+
+window.shouldUseMobileLayout = shouldUseMobileLayout;
+window.addEventListener('resize', syncMobileLayoutClass, { passive: true });
+window.addEventListener('orientationchange', syncMobileLayoutClass);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', syncMobileLayoutClass, { once: true });
+} else {
+  syncMobileLayoutClass();
+}
+
 // ─── Canonical display-name mapping (PRODUCT_PRINCIPLES.md §8) ───
 const DISPLAY_TYPE = {
   'Generator': 'Builder Pattern', 'Manifesting Generator': 'Builder-Initiator Pattern',
@@ -2297,7 +2325,7 @@ function updateTabOverflowIndicator() {
 function sidebarNav(tabId) {
   switchTab(tabId);
   // Close mobile drawer if open
-  if (window.innerWidth <= 768) closeSidebar();
+  if (shouldUseMobileLayout()) closeSidebar();
 }
 
 function updateSidebarActive(tabId) {
@@ -5106,22 +5134,7 @@ async function loadClientPortal() {
         '</div>' +
       '</div>';
     }).join('');
-toggleDiarySharing(practitionerUserId, share) {
-  if (!token) return;
-  try {
-    await apiFetch('/api/client/diary-sharing', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ practitioner_user_id: practitionerUserId, share_diary: share })
-    });
-    showToast(share ? 'Diary sharing enabled' : 'Diary sharing disabled', 'success');
-  } catch (e) {
-    showToast('Failed to update diary sharing', 'error');
-  }
-}
-window.toggleDiarySharing = toggleDiarySharing;
 
-async function 
     // Show all shared notes card if there are practitioners
     var allNotesCard = document.getElementById('portalAllNotesCard');
     if (allNotesCard) {
@@ -5132,6 +5145,21 @@ async function
     listEl.innerHTML = '<div class="alert alert-error">Error loading portal: ' + escapeHtml(e.message) + '</div>';
   }
 }
+
+async function toggleDiarySharing(practitionerUserId, share) {
+  if (!token) return;
+  try {
+    await apiFetch('/api/client/diary-sharing', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practitioner_user_id: practitionerUserId, share_diary: share })
+    });
+    showNotification(share ? 'Diary sharing enabled' : 'Diary sharing disabled', 'success');
+  } catch (e) {
+    showNotification('Failed to update diary sharing', 'error');
+  }
+}
+window.toggleDiarySharing = toggleDiarySharing;
 
 async function viewPortalPractitioner(practitionerId) {
   if (!token || !practitionerId) return;
@@ -5379,7 +5407,7 @@ function renderPractitionerReferralStats(data) {
                onclick="this.select()" />
         <button class="btn-primary btn-sm" data-action="copyPracReferralLink">Copy Link</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--space-3)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">
         <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
           <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">${total}</div>
           <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Total Referrals</div>
@@ -5389,8 +5417,24 @@ function renderPractitionerReferralStats(data) {
           <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Earned This Month</div>
         </div>
       </div>
+      <div style="border-top:var(--border-width-thin) solid var(--border);padding-top:var(--space-4);display:flex;flex-direction:column;align-items:center;gap:var(--space-3)">
+        <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text)">📲 Your QR Code — share anywhere</div>
+        <div style="background:#fff;padding:var(--space-2);border-radius:var(--space-2);line-height:0">
+          <img id="pracQRImage" src="" alt="Referral QR Code" width="160" height="160" />
+        </div>
+        <button class="btn-secondary btn-sm" data-action="downloadPractitionerQR">⬇ Download QR PNG</button>
+      </div>
     </div>
   `;
+
+  // Generate QR after DOM renders (requires qr.js to be loaded)
+  requestAnimationFrame(() => {
+    const imgEl = document.getElementById('pracQRImage');
+    if (imgEl && window.QRCode) {
+      imgEl.src = window.QRCode.toDataURL(data.referralUrl, 6);
+      trackEvent('practitioner', 'qr_generated', 'referral_card');
+    }
+  });
 }
 
 function copyPracReferralLink() {
@@ -5403,6 +5447,19 @@ function copyPracReferralLink() {
   }
 }
 window.copyPracReferralLink = copyPracReferralLink;
+
+function downloadPractitionerQR() {
+  const imgEl = document.getElementById('pracQRImage');
+  if (!imgEl?.src || imgEl.src === window.location.href) return;
+  const a = document.createElement('a');
+  a.href = imgEl.src;
+  a.download = 'prime-self-referral-qr.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  trackEvent('practitioner', 'qr_downloaded', 'referral_card');
+}
+window.downloadPractitionerQR = downloadPractitionerQR;
 
 // ── Practitioner Earnings Card (ITEM-1.8) ─────────────────────
 function renderPractitionerEarnings(data) {
@@ -9894,7 +9951,6 @@ function practOnbFinish() {
   // ACC-P2-8: Restore focus to trigger element
   restoreModalFocus('practitionerOnboardingOverlay');
 }
-}
 
 function practOnbCopyLink() {
   const val = document.getElementById('pract-onb-reflink')?.value;
@@ -10373,10 +10429,9 @@ function renderCalendar() {
 
   // Show/hide views
   const views = { month: 'calendarMonthView', week: 'calendarWeekView', day: 'calendarDayView' };
-  Object.entries(views).forEach(([key, id]) =>  {
-      const dotColor = _calPractitionerMode && e.client_color ? e.client_color : (e.color || '');
-      return `<span class="event-dot ${e.event_type || 'personal'}" title="${(e.title || '').replace(/"/g, '&quot;')}${e.client_email ? ' — ' + e.client_email : ''}" style="${dotColor ? 'background:' + dotColor : ''}"></span>`;
-    }if (el) el.style.display = key === _calView ? '' : 'none';
+  Object.entries(views).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = key === _calView ? '' : 'none';
   });
 
   if (_calView === 'month') renderMonthView();
@@ -10427,18 +10482,14 @@ function renderWeekView() {
   const container = document.getElementById('calendarWeekContent');
   if (!container) return;
 
-  const today = new Da(_calPractitionerMode && e.client_color) || e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF';
-        const time = e.all_day ? 'All day' : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const clientTag = _calPractitionerMode && e.client_email && !e.is_own
-          ? `<span class="cal-client-tag" style="background:${e.client_color || '#666'}">${e.client_email.split('@')[0]}</span>`
-          : '';
-        html += `<div class="day-event-card">
-          <div class="day-event-color" style="background:${color}"></div>
-          <div class="day-event-info">
-            <div class="day-event-title">${e.title || 'Untitled'}${clientTag}</div>
-            <div class="day-event-time">${time} · ${e.event_type || 'personal'}</div>
-          </div>
-          <div class="day-event-actions">${e.is_own !== false ? `<button class="btn-icon" onclick="calendarDeleteEvent('${e.id}')" title="Delete">🗑</button>` : ''}
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(_calDate);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // Monday start
+
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
     d.setDate(d.getDate() + i);
     const dateStr = d.toISOString().slice(0, 10);
     const isToday = d.getTime() === today.getTime();
@@ -10452,24 +10503,31 @@ function renderWeekView() {
       html += '<div style="color:var(--text-muted);font-size:0.8rem;padding:4px">No events</div>';
     } else {
       dayEvents.forEach(e => {
-        const color = e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF';
-        const time = e.all_day ? 'All day' : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const color = _calPractitionerMode && e.client_color
+          ? e.client_color
+          : (e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF');
+        const time = e.all_day
+          ? 'All day'
+          : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const clientTag = _calPractitionerMode && e.client_email && !e.is_own
+          ? `<span class="cal-client-tag" style="background:${e.client_color || '#666'}">${e.client_email.split('@')[0]}</span>`
+          : '';
         html += `<div class="day-event-card">
           <div class="day-event-color" style="background:${color}"></div>
           <div class="day-event-info">
-            <div cla(_calPractitionerMode && e.client_color) || e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF';
-      const time = e.all_day ? 'All day' : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const clientTag = _calPractitionerMode && e.client_email && !e.is_own
-        ? `<span class="cal-client-tag" style="background:${e.client_color || '#666'}">${e.client_email.split('@')[0]}</span>`
-        : '';
-      html += `<div class="day-event-card">
-        <div class="day-event-color" style="background:${color}"></div>
-        <div class="day-event-info">
-          <div class="day-event-title">${e.title || 'Untitled'}${clientTag}</div>
-          <div class="day-event-time">${time} · ${e.event_type || 'personal'}</div>
-          ${e.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">${e.description}</div>` : ''}
-        </div>
-        <div class="day-event-actions">${e.is_own !== false ? `<button class="btn-icon" onclick="calendarDeleteEvent('${e.id}')" title="Delete">🗑</button>` : ''}
+            <div class="day-event-title">${e.title || 'Untitled'}${clientTag}</div>
+            <div class="day-event-time">${time} · ${e.event_type || 'personal'}</div>
+            ${e.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">${e.description}</div>` : ''}
+          </div>
+          <div class="day-event-actions">${e.is_own !== false ? `<button class="btn-icon" onclick="calendarDeleteEvent('${e.id}')" title="Delete">🗑</button>` : ''}</div>
+        </div>`;
+      });
+    }
+
+    html += '</div></div>';
+  }
+
+  container.innerHTML = html;
 }
 
 function renderDayView() {

@@ -29,9 +29,16 @@ function scrollToTop() {
 })();
 window.scrollToTop = scrollToTop;
 
+function isMobileLayoutActive() {
+  if (typeof window.shouldUseMobileLayout === 'function') {
+    return window.shouldUseMobileLayout();
+  }
+  return window.innerWidth <= 900;
+}
+
 // Update mobile nav active state
 function updateMobileNav(clickedItem) {
-  if (window.innerWidth > 768) return; // Only on mobile
+  if (!isMobileLayoutActive()) return; // Only on mobile
   
   // Remove active class from all items
   document.querySelectorAll('.mobile-nav-item').forEach(item => {
@@ -93,7 +100,7 @@ function updateMobileNavForTab(tabName) {
 let pullStartY = 0;
 let isPulling = false;
 
-if ('ontouchstart' in window && window.innerWidth <= 768) {
+if ('ontouchstart' in window && isMobileLayoutActive()) {
   let refreshIndicator = null;
   
   document.addEventListener('touchstart', (e) => {
@@ -467,7 +474,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Show sticky CTA when chart form card scrolls out of viewport on mobile
   const chartFormCard = document.getElementById('chartFormCard');
   const stickyChartCta = document.getElementById('stickyChartCta');
-  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  const isMobile = isMobileLayoutActive();
 
   if (chartFormCard && stickyChartCta && isMobile) {
     // Keep hidden CTA non-focusable to avoid aria-hidden + focused-descendant violations.
