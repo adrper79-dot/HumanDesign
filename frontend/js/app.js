@@ -70,6 +70,16 @@ function dType(v) { return DISPLAY_TYPE[v] || v; }
 function dAuth(v) { return DISPLAY_AUTH[v] || v; }
 function dDef(v) { return DISPLAY_DEF[v] || v; }
 
+function lowerText(value, fallback = '') {
+  if (typeof value === 'string') return value.toLowerCase();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value).toLowerCase();
+  if (value && typeof value === 'object') {
+    const candidate = value.label ?? value.name ?? value.title ?? value.value ?? fallback;
+    return typeof candidate === 'string' ? candidate.toLowerCase() : String(candidate || fallback).toLowerCase();
+  }
+  return String(fallback || '').toLowerCase();
+}
+
 // Tier display configuration — HD_UPDATES3 naming
 const TIER_DISPLAY = {
   free:         { label: 'FREE',          badge: 'tier-free',         canUpgrade: true,  isPro: false },
@@ -1950,9 +1960,9 @@ function showUpgradePrompt(message, feature) {
 async function apiFetch(path, options = {}) {
   const needsBody = ['POST', 'PUT', 'PATCH'].includes((options.method || 'GET').toUpperCase());
   const headers = { ...(needsBody ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) };
-  // CISO-P0: Do NOT add Authorization header — rely on the ps_access HttpOnly cookie
-  // sent automatically via credentials:'include'. This prevents XSS from forging requests
-  // using an exfiltrated token, since HttpOnly cookies are inaccessible to JavaScript.
+  // Prefer the HttpOnly cookie, but send the in-memory bearer token as a compatibility
+  // fallback for browsers / embedded webviews that block or delay third-party cookies.
+  if (token && !headers.Authorization) headers.Authorization = `Bearer ${token}`;
 
   let res;
   try {
@@ -3514,7 +3524,7 @@ function renderChart(data) {
       if (_centerParts.length > 0) {
         _synergies.push({
           title: `Why ${escapeHtml(chart.notSelfTheme || 'Off-Track')} Keeps Returning: Your Conditioning Terrain`,
-          insight: `Your open center${_relevantOpen.length > 1 ? 's are' : ' is'} the door your not-self most often walks through. This is not a flaw — it is where you are most sensitive and most susceptible to absorbing energy from others as if it were your own signal:<br><br>${_centerParts.join('<br><br>')}<br><br>When you notice ${escapeHtml((chart.notSelfTheme || 'that signal').toLowerCase())}, the first question is: am I running on my own ${escapeHtml((chart.authority || 'authority').replace(' Authority',''))} — or on energy I absorbed through ${_relevantOpen.length > 1 ? 'these centers' : 'this center'}?`
+          insight: `Your open center${_relevantOpen.length > 1 ? 's are' : ' is'} the door your not-self most often walks through. This is not a flaw — it is where you are most sensitive and most susceptible to absorbing energy from others as if it were your own signal:<br><br>${_centerParts.join('<br><br>')}<br><br>When you notice ${escapeHtml(lowerText(chart.notSelfTheme, 'that signal'))}, the first question is: am I running on my own ${escapeHtml((chart.authority || 'authority').replace(' Authority',''))} — or on energy I absorbed through ${_relevantOpen.length > 1 ? 'these centers' : 'this center'}?`
         });
       }
     }
@@ -3681,12 +3691,12 @@ function renderChart(data) {
       <p style="margin:0 0 var(--space-4)">These are not interests or preferences — they are wired-in capacities you carry 24 hours a day: ${channelTalents.join(', ')}. These themes will recur throughout your life in different forms. When others comment on one of these qualities in you⁠ — even unsolicited — pay attention. You are likely in your correct flow.</p>` : ''}
 
       ${crossDisplay ? `<h4 style="font-size:var(--font-size-sm);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 var(--space-2)">Your Life Purpose — ${escapeHtml(crossDisplay)}</h4>
-      <p style="margin:0 0 var(--space-4)">The <strong>${escapeHtml(crossDisplay)}</strong> is the overarching theme your soul is here to live out. It is not a job title or a spiritual mission statement you force — it is the current that runs beneath all your choices when you are in alignment. ${chart.cross?.type ? `As a <strong>${escapeHtml(chart.cross.type)}</strong>, ${(window.CROSS_TYPE_EXPLANATIONS?.[chart.cross.type] || '').toLowerCase()}` : ''}</p>` : ''}
+      <p style="margin:0 0 var(--space-4)">The <strong>${escapeHtml(crossDisplay)}</strong> is the overarching theme your soul is here to live out. It is not a job title or a spiritual mission statement you force — it is the current that runs beneath all your choices when you are in alignment. ${chart.cross?.type ? `As a <strong>${escapeHtml(chart.cross.type)}</strong>, ${lowerText(window.CROSS_TYPE_EXPLANATIONS?.[chart.cross.type])}` : ''}</p>` : ''}
 
       <div style="background:var(--bg3);border-radius:var(--radius);padding:var(--space-4);margin-top:var(--space-2);border-left:3px solid var(--accent)">
         <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">⚡ Your Experiment Starts Here</div>
         <p style="margin:0 0 var(--space-2);font-size:var(--font-size-sm);color:var(--text)">For the next 30 days, commit to one thing: follow your <strong>${escapeHtml(chart.strategy || 'strategy')}</strong> — and nothing else from this chart. Don't think about gates, channels, or profile lines yet.</p>
-        <p style="margin:0;font-size:var(--font-size-sm);color:var(--text-dim)">When you feel <em>${escapeHtml((chart.notSelfTheme || 'out of alignment').toLowerCase())}</em>, treat it as feedback — not failure. That feeling is your chart asking you to return to your strategy. Notice the pattern. The rest of your design becomes clear from there.</p>
+        <p style="margin:0;font-size:var(--font-size-sm);color:var(--text-dim)">When you feel <em>${escapeHtml(lowerText(chart.notSelfTheme, 'out of alignment'))}</em>, treat it as feedback — not failure. That feeling is your chart asking you to return to your strategy. Notice the pattern. The rest of your design becomes clear from there.</p>
       </div>
     </div>
     <button class="btn-primary" style="margin-top:var(--space-4);font-size:var(--font-size-base);padding:var(--space-2) 20px" data-action="openLastShareCard">
@@ -4530,8 +4540,8 @@ function renderTransits(data) {
     };
 
     const parts = [];
-    if (gateName && gateTheme) parts.push(`Gate ${gate} (${gateName}) focuses on ${gateTheme.toLowerCase()}.`);
-    else if (gateTheme) parts.push(`Gate ${gate} focuses on ${gateTheme.toLowerCase()}.`);
+    if (gateName && gateTheme) parts.push(`Gate ${gate} (${gateName}) focuses on ${lowerText(gateTheme)}.`);
+    else if (gateTheme) parts.push(`Gate ${gate} focuses on ${lowerText(gateTheme)}.`);
     if (lineTone[line]) parts.push(lineTone[line]);
     if (planetFocus[planet]) parts.push(planetFocus[planet]);
     if (isNatalHit) parts.push('Because this also touches your natal gate, the effect is usually more personal and noticeable.');
@@ -8692,7 +8702,7 @@ function updateOverview(chartResponse) {
   if (chart.notSelfTheme) {
     html += `<div class="card" style="border-left:var(--space-1) solid var(--red);margin-bottom:var(--space-4)">
       <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">⚠ Watch For</div>
-      <div style="font-size:var(--font-size-base);color:var(--text)">When you feel <em>${chart.notSelfTheme.toLowerCase()}</em>, it's a signal you may be out of alignment with your design.</div>
+      <div style="font-size:var(--font-size-base);color:var(--text)">When you feel <em>${escapeHtml(lowerText(chart.notSelfTheme, 'out of alignment'))}</em>, it's a signal you may be out of alignment with your design.</div>
     </div>`;
   }
 
@@ -9159,7 +9169,7 @@ const VIA_STRENGTHS = [
 const VIA_QUESTIONS = VIA_STRENGTHS.map((strength, i) => ({
   id: i + 1,
   strength,
-  text: `I embody ${strength.toLowerCase()}.`
+  text: `I embody ${lowerText(strength)}.`
 }));
 
 function renderVIAQuestions() {

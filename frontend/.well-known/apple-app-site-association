@@ -1,0 +1,29 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "TEAM_ID.app.primeself.ios"
+        ],
+        "components": [
+          {
+            "/": "/compare/*"
+          },
+          {
+            "/": "/transits*"
+          },
+          {
+            "/": "/pricing*"
+          },
+          {
+            "/": "/signup*"
+          },
+          {
+            "/": "/*"
+          }
+        ]
+      }
+    ]
+  }
+}

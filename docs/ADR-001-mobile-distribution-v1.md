@@ -148,8 +148,14 @@ v1 wrapper is **additive** — no existing web user is affected. Rollback = remo
 1. ~~Scope~~ — ✅ iOS + Android simultaneously
 2. ~~Apple Developer account~~ — ✅ Confirmed active
 3. ~~Wrapper~~ — ✅ Capacitor confirmed
-4. **⚠️ PENDING — Deep link scheme** (choose one; see pros/cons below)
+4. ~~Deep link scheme~~ — ✅ **Option C selected**: Universal / App Links externally, `primeself://` internally
 5. ~~Push bridge~~ — ✅ Wired (`@capacitor/push-notifications` via `_subscribeCapacitorNativePush()`)
+
+Remaining implementation inputs for store verification:
+- Apple Team ID for `apple-app-site-association`
+- Final iOS bundle ID (ADR currently assumes `app.primeself.ios`)
+- Final Android package name
+- Android signing certificate SHA-256 fingerprint for `assetlinks.json`
 
 ---
 
@@ -184,7 +190,7 @@ v1 wrapper is **additive** — no existing web user is affected. Rollback = remo
 
 Universal Links as the primary scheme for everything shared externally (emails, social, QR codes). Custom scheme `primeself://` as an internal fallback for cross-screen navigation within the app only.
 
-**Recommendation: Option C.** Implement both — Universal Links for all external surfaces, custom scheme for in-app routing only. This takes ~1 hour of extra setup and maximises compatibility.
+**Selected.** Implement both — Universal Links for all external surfaces, custom scheme for in-app routing only. This takes ~1 hour of extra setup and maximises compatibility.
 
 ---
 
