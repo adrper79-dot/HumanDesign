@@ -5370,6 +5370,7 @@ async function loadRoster() {
     applyPractitionerInvitations(invitationsData);
     applyDirectoryProfileData(directoryData);
     renderPractitionerReferralStats(referralData);
+    renderPractitionerMarketingKit(referralData);
     renderPractitionerEarnings(earningsData);
     loadPractitionerPromo();
     _pracSchedulingEmbedUrl = directoryData?.profile?.scheduling_embed_url || '';
@@ -5517,6 +5518,102 @@ function shareBodygraph() {
   }
 }
 window.shareBodygraph = shareBodygraph;
+
+// ── Marketing Kit Page (4.5) ──────────────────────────────────
+function renderPractitionerMarketingKit(data) {
+  const el = document.getElementById('pracMarketingKit');
+  if (!el) return;
+  if (!data?.referralUrl) { el.innerHTML = ''; return; }
+
+  const baseUrl = data.referralUrl;
+  const platforms = [
+    { platform: 'Facebook',   id: 'utm-facebook',  icon: '📘', src: 'facebook'  },
+    { platform: 'Twitter/X',  id: 'utm-twitter',   icon: '🐦', src: 'twitter'   },
+    { platform: 'LinkedIn',   id: 'utm-linkedin',  icon: '💼', src: 'linkedin'  },
+    { platform: 'Instagram',  id: 'utm-instagram', icon: '📸', src: 'instagram' },
+    { platform: 'WhatsApp',   id: 'utm-whatsapp',  icon: '💬', src: 'whatsapp'  },
+  ];
+
+  const emailSig =
+    `Discover your soul blueprint (Human Design) at Prime Self:\n` +
+    `${baseUrl}?utm_source=email&utm_medium=signature&utm_campaign=referral`;
+
+  const snippets = [
+    {
+      label: 'Instagram Caption', id: 'snippet-instagram',
+      text: `✨ Curious about your Human Design? Discover who you truly are — your energy type, decision-making strategy, and life purpose — with a personalized reading.\nUse my link for a free chart: ${baseUrl}?utm_source=instagram&utm_medium=social&utm_campaign=referral\n#HumanDesign #PrimeSelf`,
+    },
+    {
+      label: 'Twitter/X Post', id: 'snippet-twitter',
+      text: `Just discovered my Human Design blueprint with @PrimeSelf — mind-blowing insights! Get yours free: ${baseUrl}?utm_source=twitter&utm_medium=social&utm_campaign=referral`,
+    },
+    {
+      label: 'LinkedIn Post', id: 'snippet-linkedin',
+      text: `I've been exploring Human Design as a framework for understanding energy, leadership style, and decision-making. If you're curious about applied self-knowledge for professional growth, check out Prime Self — free chart here: ${baseUrl}?utm_source=linkedin&utm_medium=social&utm_campaign=referral`,
+    },
+  ];
+
+  if (typeof trackEvent === 'function') trackEvent('practitioner', 'marketing_kit_viewed');
+
+  const utmRow = ({ platform, id, icon, src }) => {
+    const url = escapeAttr(`${baseUrl}?utm_source=${src}&utm_medium=social&utm_campaign=referral`);
+    return `
+      <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+        <span style="min-width:110px;font-size:var(--font-size-sm)">${icon} ${escapeHtml(platform)}</span>
+        <input readonly id="${escapeAttr(id)}" value="${url}"
+               style="flex:1;background:var(--bg2);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-1);padding:0.4rem 0.6rem;font-size:var(--font-size-xs);color:var(--text-dim);min-width:0"
+               onclick="this.select()" />
+        <button class="btn-secondary btn-sm" data-action="copyMarketingAsset" data-arg0="${escapeAttr(id)}">Copy</button>
+      </div>`;
+  };
+
+  const snippetBlock = ({ label, id, text }) => `
+    <div style="margin-bottom:var(--space-3)">
+      <div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-bottom:var(--space-1)">${escapeHtml(label)}</div>
+      <textarea id="${escapeAttr(id)}" readonly rows="3"
+                style="width:100%;box-sizing:border-box;background:var(--bg2);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-1);padding:0.5rem;font-size:var(--font-size-xs);color:var(--text-dim);resize:none"
+                onclick="this.select()">${escapeHtml(text)}</textarea>
+      <button class="btn-secondary btn-sm" style="margin-top:var(--space-1)"
+              data-action="copyMarketingAsset" data-arg0="${escapeAttr(id)}">Copy</button>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:var(--space-4)">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">📦</span> Marketing Kit</div>
+      </div>
+      <p class="card-hint">Ready-to-use assets for growing your practice. Each link is tracked so you can see which channels bring clients.</p>
+      <div style="margin-bottom:var(--space-5)">
+        <div style="font-weight:600;margin-bottom:var(--space-3)">📊 Platform Tracked Links</div>
+        ${platforms.map(utmRow).join('')}
+      </div>
+      <div style="margin-bottom:var(--space-5)">
+        <div style="font-weight:600;margin-bottom:var(--space-2)">✉️ Email Signature</div>
+        <textarea id="mkt-email-sig" readonly rows="2"
+                  style="width:100%;box-sizing:border-box;background:var(--bg2);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-1);padding:0.5rem;font-size:var(--font-size-xs);color:var(--text-dim);resize:none;font-family:monospace"
+                  onclick="this.select()">${escapeHtml(emailSig)}</textarea>
+        <button class="btn-secondary btn-sm" style="margin-top:var(--space-1)"
+                data-action="copyMarketingAsset" data-arg0="mkt-email-sig">Copy Signature</button>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:var(--space-2)">📝 Social Share Snippets</div>
+        ${snippets.map(snippetBlock).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function copyMarketingAsset(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = el.value ?? el.textContent ?? '';
+  navigator.clipboard.writeText(text).then(() => {
+    showNotification('Copied!', 'success');
+    const assetType = String(elementId).replace(/^(utm-|snippet-|mkt-)/, '').replace(/-.*$/, '');
+    if (typeof trackEvent === 'function') trackEvent('practitioner', 'marketing_asset_copied', assetType);
+  }).catch(() => showNotification('Copy failed — please select and copy manually', 'error'));
+}
+window.copyMarketingAsset = copyMarketingAsset;
 
 // ── Practitioner Earnings Card (ITEM-1.8) ─────────────────────
 function renderPractitionerEarnings(data) {
