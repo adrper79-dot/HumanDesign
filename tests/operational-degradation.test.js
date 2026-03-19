@@ -25,7 +25,7 @@ vi.mock('../workers/src/lib/analytics.js', async () => {
 
 import { EVENTS } from '../workers/src/lib/analytics.js';
 import { enforceUsageQuota } from '../workers/src/middleware/tierEnforcement.js';
-import { handleSubscriptionUpdated } from '../workers/src/handlers/webhook.js';
+import { handleSubscriptionUpdated } from '../workers/src/handlers/stripe-webhook.js';
 
 describe('operational degradation signals', () => {
   beforeEach(() => {

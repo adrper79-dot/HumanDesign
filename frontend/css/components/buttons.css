@@ -180,6 +180,18 @@ button:disabled {
   min-height: 2rem;
 }
 
+/* ACC-P2-8: Enforce WCAG 2.5.5 44px touch targets on touch screens */
+@media (pointer: coarse) {
+  .btn-sm {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+  }
+  .btn-icon.btn-sm {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+}
+
 
 /* ═══════════════════════════════════════════════════════════
    BUTTON GROUPS

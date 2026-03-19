@@ -36,7 +36,7 @@ vi.mock('../workers/src/lib/analytics.js', async () => {
   };
 });
 
-import { handleCheckoutCompleted } from '../workers/src/handlers/webhook.js';
+import { handleCheckoutCompleted } from '../workers/src/handlers/stripe-webhook.js';
 
 describe('webhook checkout degradation signals', () => {
   beforeEach(() => {

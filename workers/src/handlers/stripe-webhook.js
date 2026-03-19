@@ -353,7 +353,7 @@ export async function handleStripeWebhook(request, env) {
  * Handle checkout.session.completed
  * BL-FIX: Use UPSERT to handle case where subscription row doesn't exist yet
  */
-async function handleCheckoutCompleted(event, query, stripe, env, log) {
+export async function handleCheckoutCompleted(event, query, stripe, env, log) {
   const session = event.data.object;
   const customerId = session.customer;
   const userId = session.metadata?.user_id;
@@ -507,7 +507,7 @@ async function handleOneTimePurchaseCompleted(session, query, userId, log) {
 /**
  * Handle customer.subscription.created/updated
  */
-async function handleSubscriptionUpdated(event, query, env, log) {
+export async function handleSubscriptionUpdated(event, query, env, log) {
   const subscription = event.data.object;
   const customerId = subscription.customer;
   const subscriptionId = subscription.id;

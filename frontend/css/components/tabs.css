@@ -27,7 +27,8 @@
 }
 
 /* Overflow indicator — shows when more tabs exist to the right */
-.tab-list.has-overflow::after {
+.tab-list.has-overflow::after,
+.sub-tabs.has-overflow::after {
   content: '';
   position: absolute;
   right: 0;

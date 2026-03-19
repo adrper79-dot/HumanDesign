@@ -76,7 +76,7 @@ vi.mock('../workers/src/lib/email.js', () => ({
 }));
 
 import { handleCheckout, handleOneTimeCheckout } from '../workers/src/handlers/billing.js';
-import { handleStripeWebhook } from '../workers/src/handlers/webhook.js';
+import { handleStripeWebhook } from '../workers/src/handlers/stripe-webhook.js';
 
 describe('one-time billing runtime', () => {
   beforeEach(() => {

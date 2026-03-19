@@ -130,7 +130,7 @@
 <body class="theme-premium">
 
 <!-- Skip Link for Keyboard Navigation (ACC-P3-1) -->
-<a href="#sidebar" class="skip-link">Skip to main navigation</a>
+<a href="#app-main" class="skip-link">Skip to main content</a>
 
 <!-- ─── Fullscreen Background Video (seamless loop) ─── -->
 <video id="bgVideo" class="bg-video" autoplay muted loop playsinline
@@ -469,12 +469,12 @@
           <li>Session prep AI: know what each client needs before they walk in</li>
           <li>Composite / relationship charts</li>
           <li>Branded PDF reports</li>
-          <li>Your own profile page — clients find you, book directly, and Prime Self sends you referral commissions</li>
-          <li>25% commission every time a referred client subscribes — for life</li>
+          <li>Your own public profile page — share it with clients, let them book directly, earn bill credits for referrals</li>
+          <li>25% of referred subscribers' payments applied as a monthly credit on your bill</li>
         </ul>
         <button class="btn-primary tier-cta" id="priceBtn-practitioner"
                 data-action="startCheckout" data-arg0="practitioner">Upgrade to Practitioner</button>
-        <p style="text-align:center;font-size:0.82em;color:var(--text-dim);margin-top:0.5rem;font-style:italic">Practitioners typically recover their subscription cost with one referred client.</p>
+        <p style="text-align:center;font-size:0.82em;color:var(--text-dim);margin-top:0.5rem;font-style:italic">Included with Practitioner: session notes, AI context per client, composite charts &amp; branded PDF exports.</p>
       </div>
 
       <!-- Agency Tier ($349/mo) -->
@@ -550,7 +550,7 @@
       <button class="btn-icon" data-action="toggleNotifDrawer" aria-label="Close notifications" style="font-size:1rem">✕</button>
     </div>
   </div>
-  <div id="notifDrawerList" class="notif-drawer-list">
+  <div id="notifDrawerList" class="notif-drawer-list" aria-live="polite" aria-label="Notification history">
     <p style="color:var(--text-dim);text-align:center;padding:24px 0">No notifications yet.</p>
   </div>
 </div>
@@ -664,7 +664,7 @@
         <h2 class="frm-step-title">Any specific question?</h2>
         <p class="frm-step-body">Focus the AI on what matters most — or leave blank for a full reading.</p>
         <div id="frm-quickpicks" class="frm-quickpick-grid"></div>
-        <textarea id="frm-question" class="frm-question-input" placeholder="Or type your own question…" rows="3"></textarea>
+        <textarea id="frm-question" class="frm-question-input" aria-label="Optional question to focus AI reading" placeholder="Or type your own question…" rows="3"></textarea>
         <button class="btn-primary frm-btn-next" data-action="frmComplete">
           <span id="frm-gen-spinner" class="spinner" style="display:none"></span>
           Generate My Blueprint →
@@ -812,7 +812,8 @@
   </div>
 </nav>
 
-<div class="app-main">
+<div class="app-main" id="app-main" tabindex="-1">
+<h1 class="visually-hidden">Prime Self — Energy Blueprint Practice Software</h1>
 <!-- Value Proposition Banner -->
 <div class="social-proof-banner" id="socialProofBanner">
   <div class="social-proof-stat">
@@ -851,8 +852,9 @@
       <div class="card card-welcome">
         <div class="welcome-icon">⚷</div>
         <h3 class="welcome-title">Run your Energy Blueprint practice in one place</h3>
-        <p class="welcome-text"><strong>For practitioners:</strong> Client roster, session prep, AI context, branded exports. <strong>For clients:</strong> Self-discovery with AI synthesis. <strong>For teams:</strong> White-label, multi-seat, API access. Powered by Energy Blueprint, Astrology, Frequency Keys, and Numerology.</p>
-        <button class="btn-primary" data-action="switchTab" data-arg0="chart">Create Your Chart →</button>
+        <p class="welcome-text">Client roster, session prep AI, branded PDF exports, composite charts, and a public directory listing so clients can find and book you directly. The complete toolkit for Energy Blueprint practitioners.</p>
+        <button class="btn-primary" data-action="heroPractitionerCta">See Practitioner Plan →</button>
+        <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Or <a href="#" data-action="switchTab" data-arg0="chart" style="color:var(--gold)">calculate your chart first</a></p>
       </div>
     </div>
   </div>
@@ -901,12 +903,12 @@
           <input type="date" id="c-date" value="1990-06-15" required aria-required="true" aria-label="Birth date">
         </div>
         <div class="form-group">
-          <label for="c-time"><span data-i18n="chart.birthTime">Birth Time</span><span class="icon-info help-icon" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE Energy Chart shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
+          <label for="c-time"><span data-i18n="chart.birthTime">Birth Time</span><span class="icon-info help-icon" tabindex="0" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE Energy Chart shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters." aria-label="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE Energy Chart shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
           <input type="time" id="c-time" value="14:30" required aria-required="true" aria-label="Birth time">
         </div>
         </div>
         <div class="form-group full">
-          <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough."></span></label>
+          <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" tabindex="0" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough." aria-label="Enter city and country, for example Tampa FL or London UK. Click Look Up to geocode coordinates. We need latitude and longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is accurate enough."></span></label>
           <div class="input-row">
             <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
               data-geocode-target="c" aria-label="Birth location">
@@ -918,7 +920,7 @@
           <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
-          <label for="c-tz"><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for."></span> <span class="label-hint">(auto-filled by Look Up)</span></label>
+          <label for="c-tz"><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" tabindex="0" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for." aria-label="IANA timezone identifier, for example America/New_York. Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes are accounted for."></span> <span class="label-hint">(auto-filled by Look Up)</span></label>
           <select id="c-tz">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -1170,7 +1172,7 @@
                 📋 Copy
               </button>
             </div>
-            <p class="share-reward-text">🎁 <strong>Earn 25% revenue share</strong> on every friend who subscribes! Share your link and build passive income from your network.</p>
+            <p class="share-reward-text">🎁 <strong>Earn 25% off your bill</strong> for every friend who stays subscribed. Four active referrals on the Individual plan cover a Practitioner subscription.</p>
           </div>
 
           <!-- Social Share Buttons -->
@@ -1243,7 +1245,7 @@
       <p class="card-intro">Answer these questions to validate your chart through actual behavior patterns.</p>
       
       <div class="form-group">
-        <label>How do you make your best decisions?</label>
+        <label for="enhance-decision">How do you make your best decisions?</label>
         <select id="enhance-decision">
           <option value="">-- Select pattern --</option>
           <option value="gut_impulse">Immediate gut impulse (yes/no, can't explain why)</option>
@@ -1256,7 +1258,7 @@
       </div>
 
       <div class="form-group">
-        <label>Which energy pattern feels most like you?</label>
+        <label for="enhance-energy">Which energy pattern feels most like you?</label>
         <select id="enhance-energy">
           <option value="">-- Select pattern --</option>
           <option value="steady_renewing">Steady & self-renewing throughout the day</option>
@@ -1269,7 +1271,7 @@
       </div>
 
       <div class="form-group full">
-        <label>What's your current focus or challenge? (Optional but helpful for personalization)</label>
+        <label for="enhance-focus">What's your current focus or challenge? (Optional but helpful for personalization)</label>
         <textarea id="enhance-focus" rows="3" placeholder="e.g., Deciding whether to leave stable job to start consulting practice..."></textarea>
       </div>
 
@@ -1330,11 +1332,11 @@
       
       <div class="form-grid">
         <div class="form-group">
-          <label data-i18n="diary.eventDate">Event Date</label>
+          <label for="diary-date" data-i18n="diary.eventDate">Event Date</label>
           <input type="date" id="diary-date">
         </div>
         <div class="form-group">
-          <label data-i18n="diary.eventType">Event Type</label>
+          <label for="diary-type" data-i18n="diary.eventType">Event Type</label>
           <select id="diary-type">
             <option value="career">Career</option>
             <option value="relationship">Relationship</option>
@@ -1346,7 +1348,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label data-i18n="diary.significance">Significance</label>
+          <label for="diary-significance" data-i18n="diary.significance">Significance</label>
           <select id="diary-significance">
             <option value="major">Major (life-changing)</option>
             <option value="moderate" selected>Moderate (notable)</option>
@@ -1354,11 +1356,11 @@
           </select>
         </div>
         <div class="form-group full">
-          <label data-i18n="diary.eventTitle">Event Title</label>
+          <label for="diary-title" data-i18n="diary.eventTitle">Event Title</label>
           <input type="text" id="diary-title" placeholder="e.g., Got promoted to Director">
         </div>
         <div class="form-group full">
-          <label data-i18n="diary.eventDescription">Description (Optional)</label>
+          <label for="diary-description" data-i18n="diary.eventDescription">Description (Optional)</label>
           <textarea id="diary-description" rows="3" placeholder="Add context, what happened, how you felt..."></textarea>
         </div>
       </div>
@@ -1380,8 +1382,8 @@
       </div>
       <!-- Filters -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);margin:var(--space-3) 0">
-        <input type="text" id="diarySearchInput" placeholder="Search title or description…" style="grid-column:1/3" />
-        <select id="diaryTypeFilter">
+        <input type="text" id="diarySearchInput" aria-label="Search diary entries" placeholder="Search title or description…" style="grid-column:1/3" />
+        <select id="diaryTypeFilter" aria-label="Filter by event type">
           <option value="">All Types</option>
           <option value="career">Career</option>
           <option value="relationship">Relationship</option>
@@ -1391,14 +1393,14 @@
           <option value="family">Family</option>
           <option value="other">Other</option>
         </select>
-        <select id="diarySignificanceFilter">
+        <select id="diarySignificanceFilter" aria-label="Filter by significance">
           <option value="">All Significance</option>
           <option value="major">Major</option>
           <option value="moderate">Moderate</option>
           <option value="minor">Minor</option>
         </select>
-        <input type="date" id="diaryDateFrom" title="From date" />
-        <input type="date" id="diaryDateTo" title="To date" />
+        <input type="date" id="diaryDateFrom" aria-label="From date" title="From date" />
+        <input type="date" id="diaryDateTo" aria-label="To date" title="To date" />
       </div>
       <button class="btn-secondary" data-action="loadDiaryEntries" id="diaryLoadBtn">
         <span class="spinner" id="diaryLoadSpinner" style="display:none"></span>
@@ -1448,7 +1450,7 @@
 
       <div class="form-grid">
         <div class="form-group full">
-          <label><span data-i18n="checkin.howAligned">How aligned did you feel today?</span> (1-10)<span class="icon-info help-icon" title="1 = Completely off track, not following your design at all. 10 = Perfectly aligned, honoring your strategy and authority all day. Be honest - patterns only emerge with genuine data."></span></label>
+          <label><span data-i18n="checkin.howAligned">How aligned did you feel today?</span> (1-10)<span class="icon-info help-icon" tabindex="0" title="1 = Completely off track, not following your design at all. 10 = Perfectly aligned, honoring your strategy and authority all day. Be honest - patterns only emerge with genuine data." aria-label="Alignment score: 1 means completely off track. 10 means perfectly aligned, honoring your strategy and authority all day. Be honest — patterns only emerge with genuine data."></span></label>
           <div class="alignment-row">
             <button class="alignment-btn" data-score="1" data-action="selectAlignment" data-arg0="1" aria-label="Alignment level 1 out of 10">1</button>
             <button class="alignment-btn" data-score="2" data-action="selectAlignment" data-arg0="2" aria-label="Alignment level 2 out of 10">2</button>
@@ -1467,19 +1469,19 @@
         <div class="form-group">
           <label class="checkbox-wrap">
             <input type="checkbox" id="checkin-followed-strategy" class="form-checkbox">
-            Followed my strategy today<span class="icon-info help-icon" title="Did you honor your energy pattern&apos;s strategy? Builder Pattern: Respond to what lights you up. Catalyst Pattern: Inform before you act. Guide Pattern: Wait for the invitation. Builder-Initiator Pattern: Respond, then act fast. Mirror Pattern: Wait a full lunar cycle (28 days)."></span>
+            Followed my strategy today<span class="icon-info help-icon" tabindex="0" title="Did you honor your energy pattern&apos;s strategy? Builder Pattern: Respond to what lights you up. Catalyst Pattern: Inform before you act. Guide Pattern: Wait for the invitation. Builder-Initiator Pattern: Respond, then act fast. Mirror Pattern: Wait a full lunar cycle (28 days)." aria-label="Did you honor your energy pattern's strategy? Builder: Respond to what lights you up. Catalyst: Inform before you act. Guide: Wait for the invitation. Builder-Initiator: Respond then act fast. Mirror: Wait a full lunar cycle."></span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-wrap">
             <input type="checkbox" id="checkin-followed-authority" class="form-checkbox">
-            Followed my authority today<span class="icon-info help-icon" title="Did you use your inner guidance system? Emotional Wave Navigation: Wait 2-3 days through the wave. Life Force Response: Follow your gut yes/no. Intuitive Knowing: Trust the immediate body signal. Willpower Alignment: Commit from genuine willpower. Voiced Truth: Talk it out to hear your own clarity. Collaborative Clarity: Take time in a new environment."></span>
+            Followed my authority today<span class="icon-info help-icon" tabindex="0" title="Did you use your inner guidance system? Emotional Wave Navigation: Wait 2-3 days through the wave. Life Force Response: Follow your gut yes/no. Intuitive Knowing: Trust the immediate body signal. Willpower Alignment: Commit from genuine willpower. Voiced Truth: Talk it out to hear your own clarity. Collaborative Clarity: Take time in a new environment." aria-label="Did you use your inner guidance system? Emotional Wave: Wait 2 to 3 days. Life Force: Follow your gut yes or no. Intuitive Knowing: Trust the immediate body signal. Willpower: Commit from genuine willpower. Voiced Truth: Talk it out. Collaborative Clarity: Take time in a new environment."></span>
           </label>
         </div>
 
         <div class="form-group">
-          <label>How was your mood today?</label>
+          <label for="checkin-mood">How was your mood today?</label>
           <select id="checkin-mood">
             <option value="">— Select —</option>
             <option value="great">😊 Great (energized, joyful)</option>
@@ -1491,12 +1493,12 @@
         </div>
 
         <div class="form-group">
-          <label>Energy Level (1-10)<span class="icon-info help-icon" title="Optional. 1 = Completely exhausted. 10 = Fully energized and vital. Helps track energy patterns relative to alignment."></span></label>
+          <label for="checkin-energy-level">Energy Level (1-10)<span class="icon-info help-icon" tabindex="0" title="Optional. 1 = Completely exhausted. 10 = Fully energized and vital. Helps track energy patterns relative to alignment." aria-label="Optional. Energy level: 1 means completely exhausted, 10 means fully energized and vital. Helps track energy patterns relative to alignment."></span></label>
           <input type="number" id="checkin-energy-level" min="1" max="10" placeholder="Optional">
         </div>
 
         <div class="form-group full">
-          <label>Notes (Optional)</label>
+          <label for="checkin-notes">Notes (Optional)</label>
           <textarea id="checkin-notes" rows="3" placeholder="What happened today? Any insights, challenges, or wins?"></textarea>
         </div>
       </div>
@@ -2065,7 +2067,7 @@
       <button class="sub-tab active" data-action="switchTab" data-arg0="clusters">⬢ Groups</button>
     </div>
     <div class="card">
-      <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" title="Analyze team, family, or community energy patterns using Energy Blueprint analysis and Prime Self Forge philosophy"></span></div>
+      <div class="card-title"><span class="icon-cluster"></span> Group Dynamics <span class="icon-info help-icon" tabindex="0" title="Analyze team, family, or community energy patterns using Energy Blueprint analysis and Prime Self Forge philosophy" aria-label="Analyze team, family, or community energy patterns using Energy Blueprint analysis and Prime Self Forge philosophy."></span></div>
       <p class="card-intro">Create and analyze group dynamics for teams, families, or communities. Understand how different energy types interact and collaborate.</p>
       
       <div class="input-row">
@@ -2081,11 +2083,11 @@
         <h4 class="card-subheading-xl">Create New Cluster</h4>
         <div class="form-grid">
           <div class="form-group">
-            <label><span data-i18n="clusters.name">Cluster Name</span><span class="icon-info help-icon" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'"></span></label>
+            <label><span data-i18n="clusters.name">Cluster Name</span><span class="icon-info help-icon" tabindex="0" title="Give your cluster a meaningful name like 'Marketing Team' or 'Smith Family'" aria-label="Give your cluster a meaningful name, for example Marketing Team or Smith Family."></span></label>
             <input type="text" id="cluster-name" placeholder="e.g., Product Team Alpha">
           </div>
           <div class="form-group full">
-            <label>Shared Challenge<span class="icon-info help-icon" title="What is this group working on together? This helps the AI generate relevant insights"></span></label>
+            <label>Shared Challenge<span class="icon-info help-icon" tabindex="0" title="What is this group working on together? This helps the AI generate relevant insights" aria-label="What is this group working on together? This helps the AI generate relevant insights."></span></label>
             <textarea id="cluster-challenge" placeholder="e.g., Launching our new product by Q2" rows="2"></textarea>
           </div>
         </div>
@@ -2525,7 +2527,7 @@
       <div class="pract-onb-step" id="pract-onb-step-3" style="display:none">
         <div style="font-size:2.5rem;text-align:center;margin-bottom:1rem">📎</div>
         <h2 style="text-align:center;margin-bottom:0.5rem">Copy your client link</h2>
-        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.25rem">Share this link with clients you want to bring on. When they sign up &amp; subscribe, you receive a 25% recurring commission.</p>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1.25rem">Share this link with clients you want to bring on. When they sign up &amp; subscribe, you earn 25% of their subscription as a monthly credit on your bill.</p>
         <div style="background:var(--bg3);border-radius:8px;padding:1rem;margin-bottom:1rem">
           <p style="margin:0 0 0.5rem;font-size:0.82em;color:var(--text-dim)">Your referral link:</p>
           <div style="display:flex;gap:0.5rem">

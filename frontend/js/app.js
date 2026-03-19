@@ -170,12 +170,13 @@ function updateWelcomeMessage() {
       <button class="btn-primary" data-action="switchTab" data-arg0="chart">Create Your Chart →</button>
     </div>`;
   } else {
-    // Consumer welcome card
+    // Consumer welcome card — drive practitioner upgrade awareness
     html = `<div class="card card-welcome">
       <div class="welcome-icon">⚷</div>
       <h3 class="welcome-title">Discover Your Energy Blueprint</h3>
       <p class="welcome-text">Your unique energy architecture revealed. Get your Energy Blueprint chart, AI-generated personal synthesis, daily transit insights, and tools for living in alignment with your design. Start with your birth data — we'll calculate everything in seconds.</p>
       <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
+      <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Running an HD practice? <a href="#" data-action="heroPractitionerCta" style="color:var(--gold)">See Practitioner Plan →</a></p>
     </div>`;
   }
   
@@ -1578,6 +1579,13 @@ function closePractitionerPricingModal() {
   restoreModalFocus('practitionerPricingOverlay');
 }
 
+// WC-P0-3: Practitioner hero CTA — fires conversion funnel event then opens pricing modal
+function heroPractitionerCta() {
+  trackEvent('landing', 'primary_cta_click', 'practitioner_upgrade');
+  openPricingModal();
+}
+window.heroPractitionerCta = heroPractitionerCta;
+
 // Sync practitioner pricing card button states
 function _syncPractitionerPricingCards(tier) {
   const practBtn    = document.getElementById('priceBtn-practitioner');
@@ -2265,6 +2273,9 @@ function switchTab(id, btn) {
   // Check for tab overflow and update indicator
   updateTabOverflowIndicator();
 
+  // WC-P0-3: Track overview tab views for landing funnel analysis
+  if (id === 'overview') trackEvent('landing', 'hero_view');
+
   if (id === 'transits' || id === 'checkin') {
     markJourneyMilestone('transitsViewed');
   }
@@ -2409,34 +2420,37 @@ function switchTab(id, btn) {
  * Also manages shrinking tab text when needed for mobile
  */
 function updateTabOverflowIndicator() {
-  const tabList = document.querySelector('.tab-list');
-  if (!tabList) return;
+  // ACC-P3-2: Check sub-tab containers for overflow and show gradient indicator
+  const containers = document.querySelectorAll('.tab-list, .sub-tabs');
+  containers.forEach(tabList => {
+    if (!tabList) return;
 
-  // Check if content overflows
-  const isOverflowing = tabList.scrollWidth > tabList.clientWidth;
+    // Check if content overflows
+    const isOverflowing = tabList.scrollWidth > tabList.clientWidth;
 
-  if (isOverflowing) {
-    tabList.classList.add('has-overflow');
+    if (isOverflowing) {
+      tabList.classList.add('has-overflow');
 
-    // Add scroll event listener to hide indicator when scrolled to end
-    const handleScroll = () => {
-      const scrollLeft = tabList.scrollLeft;
-      const scrollWidth = tabList.scrollWidth;
-      const clientWidth = tabList.clientWidth;
-      const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 1;
+      // Add scroll event listener to hide indicator when scrolled to end
+      const handleScroll = () => {
+        const scrollLeft = tabList.scrollLeft;
+        const scrollWidth = tabList.scrollWidth;
+        const clientWidth = tabList.clientWidth;
+        const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 1;
 
-      if (isAtEnd) {
-        tabList.classList.remove('has-overflow');
-        // Remove listener when at end (can add it back if user scrolls left)
-        tabList.removeEventListener('scroll', handleScroll);
-      }
-    };
+        if (isAtEnd) {
+          tabList.classList.remove('has-overflow');
+          // Remove listener when at end (can add it back if user scrolls left)
+          tabList.removeEventListener('scroll', handleScroll);
+        }
+      };
 
-    // Debounced scroll listener to update overflow state
-    tabList.addEventListener('scroll', handleScroll, { passive: true });
-  } else {
-    tabList.classList.remove('has-overflow');
-  }
+      // Debounced scroll listener to update overflow state
+      tabList.addEventListener('scroll', handleScroll, { passive: true });
+    } else {
+      tabList.classList.remove('has-overflow');
+    }
+  });
 }
 
 // ── Sidebar Navigation ────────────────────────────────────────
@@ -2634,7 +2648,7 @@ function renderAstroChart(astro) {
     
     html += `<line x1="200" y1="200" x2="${x1}" y2="${y1}" stroke="var(--bg3)" stroke-width="1" opacity="0.5"/>
              <text x="${textX}" y="${textY}" text-anchor="middle" dominant-baseline="middle" 
-                   font-size="10" fill="var(--text-dim)" opacity="0.7">${zodiacSigns[i].substr(0,3)}</text>`;
+                   font-size="10" fill="var(--text-dim)">${zodiacSigns[i].substr(0,3)}</text>`;
   }
   
   // Middle circle for houses
@@ -2665,7 +2679,7 @@ function renderAstroChart(astro) {
               <text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" 
                     font-size="14" fill="var(--bg1)" font-weight="bold">${symbol}</text>
               <text x="${x}" y="${y + 22}" text-anchor="middle" 
-                    font-size="8" fill="var(--text-dim)">${name}</text>
+                    font-size="10" fill="var(--text-dim)">${name}</text>
             </g>`;
   });
   

@@ -1654,11 +1654,12 @@
       "severity": "P2",
       "area": "accessibility",
       "title": "Form inputs lack aria-labels — text field purpose unclear to screen readers",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/index.html input elements, frontend/js/app.js form rendering",
-      "fix": "Add aria-label or aria-labelledby to all input[type], textarea, select elements. Link labels with <label for='inputId'>. Test in NVDA."
+      "fix": "Add aria-label or aria-labelledby to all input[type], textarea, select elements. Link labels with <label for='inputId'>. Test in NVDA.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "ACC-P2-4",
@@ -1666,11 +1667,12 @@
       "severity": "P2",
       "area": "accessibility",
       "title": "Dynamic content updates lack aria-live announcements — screen reader users miss new information",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/js/app.js:notification updates, chart rendering",
-      "fix": "Add aria-live='polite' containers for notifications, roster updates, and data refreshes. Use role='status' for alerts. Announce changes dynamically."
+      "fix": "Add aria-live='polite' containers for notifications, roster updates, and data refreshes. Use role='status' for alerts. Announce changes dynamically.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "ACC-P2-5",
@@ -1678,11 +1680,12 @@
       "severity": "P2",
       "area": "accessibility",
       "title": "Heading hierarchy broken — <h3> followed directly by <h5> creates navigation confusion",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/index.html, frontend/js/app.js rendering logic",
-      "fix": "Audit all heading tags. Ensure sequential flow: <h1> → <h2> → <h3>. Use CSS classes (e.g., .heading-level-2) instead of tag level when layout requires skip."
+      "fix": "Audit all heading tags. Ensure sequential flow: <h1> → <h2> → <h3>. Use CSS classes (e.g., .heading-level-2) instead of tag level when layout requires skip.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "ACC-P2-6",
@@ -1690,11 +1693,12 @@
       "severity": "P2",
       "area": "accessibility",
       "title": "Interactive help icons use title attribute instead of aria-describedby — tooltips not accessible",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/index.html, frontend/js/app.js:help icons",
-      "fix": "Replace title='...' with <span id='help-foo-description'>...</span> and aria-describedby='help-foo-description' on the button. Use aria-expanded for collapse/expand tooltips."
+      "fix": "Replace title='...' with <span id='help-foo-description'>...</span> and aria-describedby='help-foo-description' on the button. Use aria-expanded for collapse/expand tooltips.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "ACC-P2-7",
@@ -1702,11 +1706,12 @@
       "severity": "P2",
       "area": "accessibility",
       "title": "Color contrast failures — chart legend text at 2.5:1 below WCAG AA 4.5:1 minimum",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/css/app.css:chart colors, frontend/js/chart.js text color rendering",
-      "fix": "Increase font weight or darken legend text. Run axe DevTools contrast check. Target WCAG AAA 7:1 for critical text."
+      "fix": "Increase font weight or darken legend text. Run axe DevTools contrast check. Target WCAG AAA 7:1 for critical text.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "ACC-P2-8",
@@ -1714,11 +1719,12 @@
       "severity": "P2",
       "area": "accessibility",
       "title": "Touch targets below 44×44px minimum — small buttons unreachable on mobile",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/css/app.css button/icon sizing",
-      "fix": "Audit all buttons and icons. Set min-height: 44px, min-width: 44px on interactive elements. Use padding instead of fixed dimensions."
+      "fix": "Audit all buttons and icons. Set min-height: 44px, min-width: 44px on interactive elements. Use padding instead of fixed dimensions.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "ACC-P3-1",
@@ -1726,11 +1732,12 @@
       "severity": "P3",
       "area": "accessibility",
       "title": "No skip link for keyboard users — Tab key starts at logo instead of main content",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/index.html body top, frontend/css/app.css",
-      "fix": "Add <a href='#main' class='skip-link' style='position:absolute;left:-999px;'>Skip to main</a> and id='main' on content container. Show skip link on :focus."
+      "fix": "Add <a href='#main' class='skip-link' style='position:absolute;left:-999px;'>Skip to main</a> and id='main' on content container. Show skip link on :focus.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "ACC-P3-2",
@@ -1738,11 +1745,12 @@
       "severity": "P3",
       "area": "accessibility",
       "title": "Horizontal tab scroll has no visual indicator for more tabs — keyboard users unaware of overflow",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-17",
       "lastSeen": "2026-03-17",
       "file": "frontend/js/chart.js:tab scroll, frontend/css/app.css",
-      "fix": "Add scroll buttons (← →) or visual gradient fade at edges showing overflow. Announce 'More tabs available' with aria-label."
+      "fix": "Add scroll buttons (← →) or visual gradient fade at edges showing overflow. Announce 'More tabs available' with aria-label.",
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "DAT-P2-1",
@@ -2344,7 +2352,7 @@
       "severity": "P0",
       "area": "feature-gap",
       "title": "Claim hygiene: remove or reframe unshipped Agency promises and unsupported proof claims",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2373,7 +2381,8 @@
       "constraints": [
         "No backend behavior changes in this issue; copy/positioning and policy enforcement only.",
         "Preserve existing checkout and tier gating mechanics."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P0-2",
@@ -2381,7 +2390,7 @@
       "severity": "P0",
       "area": "referral",
       "title": "Referral trust contract: align payout messaging with actual claim mechanics",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2410,7 +2419,8 @@
       "constraints": [
         "Do not weaken existing anti-Sybil checks or claim idempotency.",
         "Do not introduce new payout provider dependency in this issue."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P0-3",
@@ -2418,7 +2428,7 @@
       "severity": "P0",
       "area": "retention",
       "title": "Landing focus: one audience, one promise, one CTA for practitioner-first conversion",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2444,7 +2454,8 @@
       ],
       "constraints": [
         "No redesign of app shell required; this is landing and acquisition flow scope only."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P1-1",

@@ -58,7 +58,7 @@ vi.mock('../workers/src/lib/analytics.js', async () => {
   };
 });
 
-import { handleStripeWebhook } from '../workers/src/handlers/webhook.js';
+import { handleStripeWebhook } from '../workers/src/handlers/stripe-webhook.js';
 
 describe('webhook claim lifecycle', () => {
   beforeEach(() => {
