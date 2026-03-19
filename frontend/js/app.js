@@ -24,6 +24,16 @@ let currentUser = null; // populated by fetchUserProfile() — frozen on set (P2
 
 const MOBILE_LAYOUT_MAX_WIDTH = 900;
 
+function hasSeenFirstRunOnboarding() {
+  try {
+    return localStorage.getItem('primeself_frm_seen') === '1' || localStorage.getItem('ps_hasSeenOnboarding') === '1';
+  } catch (_error) {
+    return false;
+  }
+}
+
+window.hasSeenFirstRunOnboarding = hasSeenFirstRunOnboarding;
+
 function isLikelyMobilePhone() {
   const ua = navigator.userAgent || '';
   const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
@@ -3178,7 +3188,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // Show first-run welcome modal for new visitors (slight delay so page renders first)
   try {
-    if (!localStorage.getItem('primeself_frm_seen') && !readJourneyFlag('chartGenerated')) {
+    if (!hasSeenFirstRunOnboarding() && !readJourneyFlag('chartGenerated')) {
       setTimeout(frmShow, 800);
     }
   } catch(e) {}
@@ -10530,6 +10540,7 @@ let _frmCurrentStep = 1;
 const FRM_TOTAL_STEPS = 4;
 
 function frmShow() {
+  if (hasSeenFirstRunOnboarding() || readJourneyFlag('chartGenerated')) return;
   // ACC-P2-8: Store trigger element for focus restoration on close
   storeModalTrigger('first-run-modal');
 
@@ -10543,7 +10554,10 @@ function frmShow() {
 function frmClose() {
   const modal = document.getElementById('first-run-modal');
   if (modal) modal.style.display = 'none';
-  try { localStorage.setItem('primeself_frm_seen', '1'); } catch(e) {}
+  try {
+    localStorage.setItem('primeself_frm_seen', '1');
+    localStorage.setItem('ps_hasSeenOnboarding', '1');
+  } catch(e) {}
   // ACC-P2-8: Restore focus to trigger element
   restoreModalFocus('first-run-modal');
 }

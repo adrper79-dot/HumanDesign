@@ -138,6 +138,11 @@ select option { background: var(--bg3, #111d38); }
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(4px);
 }
+.hidden,
+.overlay.hidden,
+[role="dialog"].hidden {
+  display: none !important;
+}
 .auth-overlay.hidden { display: none; }
 .auth-box {
   background: var(--bg2, #0b1226); border: 1px solid var(--gold-dim, #a88840); border-radius: 12px;

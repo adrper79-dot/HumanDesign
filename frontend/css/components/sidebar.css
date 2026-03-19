@@ -95,6 +95,79 @@
   font-size: 1.3rem;
 }
 
+/* Runtime mobile override for large-screen phones/foldables.
+   JS sets html.force-mobile-layout when the device is phone-like even if the
+   reported viewport width is wider than the raw CSS mobile breakpoint. */
+html.force-mobile-layout .app-main {
+  margin-left: 0 !important;
+}
+
+html.force-mobile-layout .sidebar,
+html.force-mobile-layout .app-layout.sidebar-collapsed .sidebar {
+  transform: translateX(-100%);
+  width: 280px;
+  top: var(--mobile-header-height, 56px);
+  z-index: 300;
+  box-shadow: none;
+}
+
+html.force-mobile-layout .sidebar.open {
+  transform: translateX(0);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6);
+}
+
+html.force-mobile-layout .sidebar-toggle {
+  display: none;
+}
+
+html.force-mobile-layout .app-layout.sidebar-collapsed .sidebar .nav-label,
+html.force-mobile-layout .app-layout.sidebar-collapsed .sidebar .nav-group-title,
+html.force-mobile-layout .app-layout.sidebar-collapsed .sidebar .nav-sub-items,
+html.force-mobile-layout .app-layout.sidebar-collapsed .sidebar .sidebar-footer-text {
+  display: revert;
+}
+
+html.force-mobile-layout .app-layout.sidebar-collapsed .sidebar .nav-item {
+  justify-content: flex-start;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+html.force-mobile-layout .app-layout.sidebar-collapsed .sidebar .nav-icon {
+  margin-right: 12px;
+  font-size: 1rem;
+}
+
+html.force-mobile-layout .sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: var(--mobile-header-height, 56px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 299;
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+
+html.force-mobile-layout .sidebar-backdrop.visible {
+  display: block;
+}
+
+html.force-mobile-layout .sidebar-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+html.force-mobile-layout .hamburger-btn {
+  display: flex;
+  flex-shrink: 0;
+}
+
 
 /* ═══════════════════════════════════════════════════════════
    COLLAPSE TOGGLE BUTTON

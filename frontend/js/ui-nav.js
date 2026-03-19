@@ -406,24 +406,32 @@ async function loadSocialProofStats() {
   try {
     const response = await fetch(API + '/api/stats/activity');
     const data = await response.json();
+    const hideSocialProofStat = (elementId) => {
+      const element = document.getElementById(elementId);
+      const statCard = element ? element.closest('.social-proof-stat') : null;
+      if (statCard) statCard.style.display = 'none';
+    };
+
     if (data.ok && data.stats) {
       const el = document.getElementById('totalProfiles');
       if (el && data.stats.totalProfiles) {
         animateNumber('totalProfiles', 0, data.stats.totalProfiles, 1500);
       } else {
         // API returned success but no count — hide blank element
-        const el2 = document.getElementById('totalProfiles');
-        if (el2) el2.closest('.social-proof-stat').style.display = 'none';
+        hideSocialProofStat('totalProfiles');
       }
     } else {
       // No fake fallback — hide the stat if no real data
-      const el = document.getElementById('totalProfiles');
-      if (el) el.closest('.social-proof-stat').style.display = 'none';
+      hideSocialProofStat('totalProfiles');
     }
   } catch (error) {
     // No fake fallback — hide the stat if API unreachable
-    const el = document.getElementById('totalProfiles');
-    if (el) el.closest('.social-proof-stat').style.display = 'none';
+    const hideSocialProofStat = (elementId) => {
+      const element = document.getElementById(elementId);
+      const statCard = element ? element.closest('.social-proof-stat') : null;
+      if (statCard) statCard.style.display = 'none';
+    };
+    hideSocialProofStat('totalProfiles');
   }
 }
 
@@ -455,7 +463,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // ── Smart Landing Logic ──────────────────────────────────────────────────
   // Route user to the right starting tab based on their session state
   const hasBirthData = !!localStorage.getItem('primeSelf_birthData');
-  const hasSeenOnboarding = !!localStorage.getItem('ps_hasSeenOnboarding');
+  const hasSeenOnboarding = typeof window.hasSeenFirstRunOnboarding === 'function'
+    ? window.hasSeenFirstRunOnboarding()
+    : !!localStorage.getItem('ps_hasSeenOnboarding') || !!localStorage.getItem('primeself_frm_seen');
 
   if (!hasSeenOnboarding && !hasBirthData) {
     // Brand-new user — show first-run modal over the home tab

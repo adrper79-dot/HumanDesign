@@ -31,8 +31,8 @@ import { test, expect, Page } from '@playwright/test';
 async function bypassFirstRun(page: Page) {
   await page.addInitScript(() => {
     try {
-      localStorage.setItem('hasSeenWelcome', 'true');
-      localStorage.setItem('prime_self_first_run', 'false');
+      localStorage.setItem('primeself_frm_seen', '1');
+      localStorage.setItem('ps_hasSeenOnboarding', '1');
       localStorage.setItem('ps_session', '1');
     } catch { /* ignore */ }
   });
