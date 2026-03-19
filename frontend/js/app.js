@@ -9,6 +9,7 @@ let token = null;
 let _tokenExpiresAt = 0; // P2-FE-005: epoch ms when access token expires
 let _refreshTimer = null; // P2-FE-005: proactive refresh timer
 let _pracSchedulingEmbedUrl = ''; // PRAC-015: practitioner's scheduling embed URL, set during loadRoster
+let _practitionerBookingUrl   = ''; // WC-P1-1: practitioner's external booking URL, set during loadRoster
 let _practitionerRosterClients = [];
 const _practitionerClientDetailCache = new Map();
 let _profileAdvancedPreference = null;
@@ -919,6 +920,7 @@ async function showReferralBanner(refSlug) {
   overlay.querySelector('#ref-maybe-btn').addEventListener('click', close);
   overlay.querySelector('#ref-cta-btn').addEventListener('click', () => {
     trackEvent('referral', 'referral_landing_converted', refSlug);
+    trackEvent('viral', 'viral_chain_converted', refSlug); // WC-P1-2
     close();
     const chartSection = document.getElementById('chart-section')
       || document.querySelector('[data-section="chart"]')
@@ -2900,6 +2902,8 @@ function collapseChartForm() {
     if (span) { span.removeAttribute('data-i18n'); span.textContent = '↻ Recalculate'; }
     stickyBtn.onclick = function() { expandChartForm(); };
   }
+  // WC-P1-3: nudge push opt-in after first chart generation
+  setTimeout(_maybeShowPushOptIn, 1500);
 }
 
 function expandChartForm() {
@@ -3919,6 +3923,7 @@ async function generateProfile() {
     markJourneyMilestone('profileGenerated');
     updateStepGuide('profile');
     checkAndShowReferralPrompt(); // Phase 2C
+    setTimeout(() => _maybeShowPushOptIn('profile'), 2000); // WC-P1-3
   } catch (e) {
     // Clear progress timeouts on error
     progressTimeouts.forEach(clearTimeout);
@@ -5660,7 +5665,8 @@ async function loadRoster() {
     loadPractitionerGifts();
     renderPractitionerEarnings(earningsData);
     loadPractitionerPromo();
-    _pracSchedulingEmbedUrl = directoryData?.profile?.scheduling_embed_url || '';
+    _pracSchedulingEmbedUrl    = directoryData?.profile?.scheduling_embed_url || '';
+    _practitionerBookingUrl    = directoryData?.profile?.booking_url || '';
 
     // Show and populate Agency Seats card for Agency-tier users
     const tier = currentUser?.tier || 'free';
@@ -6455,10 +6461,16 @@ function renderRoster(data) {
         </div>
         <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:4px">${escapeHtml(lifecycle.nextStep)}</div>
       </div>
-      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
-        <button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">${c.profile_id ? 'Open Workspace' : 'View Details'}</button>
-        ${chartId && c.profile_id ? `<button class="btn-secondary btn-sm" data-action="exportBrandedPDF" data-arg0="${escapeAttr(clientId)}">Branded PDF</button>` : ''}
-        ${(lifecycle.key === 'needs_birth_data' || lifecycle.key === 'needs_profile') ? `<button class="btn-secondary btn-sm" id="remind-btn-${escapeAttr(clientId)}" data-action="sendClientReminder" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Send Reminder</button>` : ''}
+      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center">
+        ${(lifecycle.key === 'needs_birth_data' || lifecycle.key === 'needs_profile')
+          ? `<button class="btn-primary btn-sm" id="remind-btn-${escapeAttr(clientId)}" data-action="sendClientReminder" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Send Reminder</button>`
+          : lifecycle.key === 'session_ready'
+          ? `<button class="btn-primary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Open Session →</button>`
+          : `<button class="btn-primary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Open Workspace</button>`}
+        ${(lifecycle.key === 'needs_birth_data' || lifecycle.key === 'needs_profile')
+          ? `<button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">View Details</button>` : ''}
+        ${lifecycle.key === 'session_ready' && chartId && c.profile_id
+          ? `<button class="btn-secondary btn-sm" data-action="exportBrandedPDF" data-arg0="${escapeAttr(clientId)}">Branded PDF</button>` : ''}
         <button class="btn-danger btn-sm" data-action="removeClient" data-arg0="${escapeAttr(clientId)}" data-arg1="${emailSafe}">Remove</button>
       </div>
     </div>`;
@@ -6483,7 +6495,7 @@ async function viewClientDetail(clientId, emailLabel) {
       apiFetch(`/api/practitioner/clients/${clientId}/diary`).catch(() => ({ data: [] }))
     ]);
     _practitionerClientDetailCache.set(String(clientId), data);
-    panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData, diaryData);
+    panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData, diaryData, _practitionerBookingUrl);
     loadClientReadings(clientId);
     loadClientActions(clientId);
     loadPractitionerMessages(clientId);
@@ -6573,7 +6585,7 @@ function buildPractitionerFollowUpBrief({ emailLabel, chart, profile, notes, aiC
   return lines.join('\n');
 }
 
-function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData, diaryData) {
+function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData, diaryData, practitionerBookingUrl = '') {
   if (!data || data.error) {
     return `<div class="alert alert-error">${escapeHtml(data?.error || 'Failed to load client detail')}</div>`;
   }
@@ -6644,6 +6656,8 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
           : `There ${incompleteChecklistCount === 1 ? 'is' : 'are'} ${incompleteChecklistCount} step${incompleteChecklistCount === 1 ? '' : 's'} left before this workspace is fully session-ready.`}
       </p>
       <div>${renderPractitionerChecklist(workflowChecklist)}</div>
+      ${practitionerBookingUrl && /^https?:\/\//i.test(practitionerBookingUrl) && incompleteChecklistCount === 0
+        ? `<div style="margin-top:var(--space-4)"><a href="${escapeAttr(practitionerBookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:inline-block;text-decoration:none">📅 Book Next Session ↗</a></div>` : ''}
     </div>`;
 
   if (!chart) {
@@ -9865,6 +9879,7 @@ function shareToSocial(platform) {
   if (urls[platform]) {
     window.open(urls[platform], '_blank', 'width=600,height=400');
     trackEvent('share', 'profile', platform);
+    trackEvent('viral', 'viral_share_sent', platform); // WC-P1-2
   }
 }
 
@@ -10009,6 +10024,19 @@ async function copyShareLink() {
   if (shareLinkInput) {
     await copyToClipboard(shareLinkInput.value);
     showNotification('Link copied! Share it anywhere.', 'success');
+    trackEvent?.('viral', 'viral_link_copied'); // WC-P1-2
+    // WC-P1-2: post-copy compare invite nudge (shown once per modal open)
+    if (!document.getElementById('share-compare-nudge')) {
+      const body = document.querySelector('#shareModal .share-modal-body');
+      if (body) {
+        const nudge = document.createElement('div');
+        nudge.id = 'share-compare-nudge';
+        nudge.className = 'share-section';
+        nudge.style.cssText = 'background:rgba(212,175,55,0.08);border-radius:8px;padding:12px 16px';
+        nudge.innerHTML = `<p style="margin:0 0 8px;font-size:var(--font-size-sm);color:var(--text)">See which famous figures share your blueprint — then invite a friend to compare theirs.</p><button class="btn-secondary btn-sm" data-action="goToCompareAndClose">→ See Famous Matches</button>`;
+        body.appendChild(nudge);
+      }
+    }
   }
 }
 
@@ -10198,6 +10226,118 @@ async function loadNotificationHistory() {
     list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:24px 0">Could not load notifications.</p>';
   }
 }
+
+// ── WC-P1-3: Push opt-in nudge at key moments ──────────────────────────────
+function _maybeShowPushOptIn(context = 'chart') {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'default') return;
+  if (localStorage.getItem('push_optin_offered')) return;
+  localStorage.setItem('push_optin_offered', '1');
+  trackEvent?.('push', 'push_optin_shown');
+
+  const target = context === 'profile'
+    ? document.getElementById('profileResult')
+    : (document.getElementById('overviewContent') || document.getElementById('chartResult'));
+  if (!target) return;
+
+  const card = document.createElement('div');
+  card.id = 'push-optin-nudge';
+  card.className = 'card';
+  card.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);margin-top:16px';
+  card.innerHTML = `<span aria-hidden="true" style="color:var(--gold);font-size:1.125rem">📲</span><p style="flex:1;margin:0;font-size:var(--font-size-sm);color:var(--text)">Get your daily energy insight — transit, gate, and cycle alerts sent each morning.</p><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn-primary btn-sm" id="push-optin-yes">Enable notifications</button><button class="btn-secondary btn-sm" id="push-optin-no">Not now</button></div>`;
+  target.appendChild(card);
+
+  card.querySelector('#push-optin-yes').addEventListener('click', () => {
+    trackEvent?.('push', 'push_optin_accepted');
+    card.remove();
+    requestPushPermission();
+  });
+  card.querySelector('#push-optin-no').addEventListener('click', () => {
+    trackEvent?.('push', 'push_optin_dismissed');
+    card.remove();
+  });
+}
+
+// ── WC-P1-2: Go to celebrity compare tab ─────────────────────────────────────
+function goToCompareAndClose() {
+  trackEvent?.('viral', 'viral_compare_clicked');
+  closeShareModal();
+  if (typeof switchTab === 'function') {
+    const btn = document.querySelector('[data-tab="celebrity"]');
+    switchTab('celebrity', btn);
+  }
+}
+window.goToCompareAndClose = goToCompareAndClose;
+
+// ── WC-P1-5: Trust Proof Block ───────────────────────────────────────────────
+// Content is supplied via window.TRUST_PROOF_ITEMS array.
+// Each item requires: { role, outcome, consentStatus, date }
+// Optional: { name } — use role/title only if name withheld by request.
+// Call renderTrustProof() after DOMContentLoaded once items are available.
+//
+// Content lint: scripts/lint-trust-proof.js will flag items missing required fields
+// or with placeholder text. Run via: node scripts/lint-trust-proof.js
+function renderTrustProof() {
+  const items = window.TRUST_PROOF_ITEMS;
+  if (!Array.isArray(items) || items.length < 1) return;
+
+  const requiredFields = ['role', 'outcome', 'consentStatus', 'date'];
+  const valid = items.filter(item =>
+    requiredFields.every(f => item[f] && String(item[f]).trim().length > 0) &&
+    item.consentStatus === 'confirmed'
+  );
+  if (valid.length === 0) return;
+
+  const css = `
+    .trust-proof-section { padding: 24px 16px; max-width: 1100px; margin: 0 auto; }
+    .trust-proof-heading { text-align: center; color: var(--text-dim, #aaa); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 16px; }
+    .trust-proof-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .trust-proof-card { background: var(--bg2, #16161e); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 10px; padding: 18px 20px; }
+    .trust-proof-quote { font-size: 0.9rem; color: var(--text, #e8e8f0); line-height: 1.6; margin: 0 0 14px; }
+    .trust-proof-meta { font-size: 0.75rem; color: var(--text-dim, #888); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .trust-proof-verified { display: inline-flex; align-items: center; gap: 4px; color: var(--accent2, #2ecc71); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; }
+  `;
+  if (!document.getElementById('trust-proof-styles')) {
+    const style = document.createElement('style');
+    style.id = 'trust-proof-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  const cards = valid.map(item => {
+    const quoteSafe   = escapeHtml(item.outcome);
+    const roleSafe    = escapeHtml(item.role);
+    const dateSafe    = escapeHtml(item.date);
+    const nameSafe    = item.name ? ` · ${escapeHtml(item.name)}` : '';
+    return `<div class="trust-proof-card" role="article">
+      <p class="trust-proof-quote">"${quoteSafe}"</p>
+      <div class="trust-proof-meta">
+        <span>${roleSafe}${nameSafe}</span>
+        <span aria-hidden="true">·</span>
+        <span>${dateSafe}</span>
+        <span class="trust-proof-verified" aria-label="Consent confirmed">✓ Verified</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const html = `<div class="trust-proof-section">
+    <p class="trust-proof-heading">What practitioners &amp; clients say</p>
+    <div class="trust-proof-grid">${cards}</div>
+  </div>`;
+
+  // Populate all proof block slots on the page
+  ['trust-proof-block', 'trust-proof-block-pricing'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.innerHTML = html; el.style.display = ''; }
+  });
+}
+// Auto-render on load if items are pre-defined
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderTrustProof);
+} else {
+  renderTrustProof();
+}
+window.renderTrustProof = renderTrustProof;
 
 // ── Push Notification Preferences ───────────────────────────────────────────
 function openPushPreferences() {

@@ -2463,7 +2463,7 @@
       "severity": "P1",
       "area": "practitioner-value",
       "title": "Practitioner-hosted client experience v1: improve hosted workflow without full multi-tenant hosting stack",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2492,7 +2492,8 @@
       "constraints": [
         "Do not add arbitrary file hosting or CMS requirement in v1.",
         "Do not expand into full agency white-label platform in this issue."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P1-2",
@@ -2500,7 +2501,7 @@
       "severity": "P1",
       "area": "referral",
       "title": "Viral loop v1: connect share cards, compare entry, and invite conversion into one measurable loop",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2524,7 +2525,8 @@
         "All loop stages emit events and can be joined by share/referral ID.",
         "At least one in-app path exists from shared artifact to invite/compare conversion.",
         "Agent can produce a weekly funnel report query spec from implemented events."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P1-3",
@@ -2532,7 +2534,7 @@
       "severity": "P1",
       "area": "retention",
       "title": "Daily engagement hook: activate push subscription journey and high-signal notification defaults",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2556,7 +2558,8 @@
         "Push opt-in flow is reachable and successful from app UI without manual API calls.",
         "Notification settings are persisted and reflected in delivery behavior.",
         "Delivery and click metrics are queryable by notification type."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P1-4",
@@ -2564,7 +2567,7 @@
       "severity": "P1",
       "area": "feature-gap",
       "title": "Mobile distribution v1: ship iOS wrapper path for store discovery while preserving PWA core",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2588,7 +2591,8 @@
         "A release-ready technical plan exists with explicit owner tasks and test matrix.",
         "No unresolved blocker in auth/deep-link/push path before store submission.",
         "Success KPIs are defined and tracked from day one."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P1-5",
@@ -2596,7 +2600,7 @@
       "severity": "P1",
       "area": "feature-gap",
       "title": "Trust proof block: testimonials/case evidence with verification policy and placement standards",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2620,7 +2624,8 @@
         "At least five verified proof items can be rendered with required metadata.",
         "No placeholder proof text remains in production views.",
         "Agent-run content lint flags missing metadata fields."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     },
     {
       "id": "WC-P2-1",
