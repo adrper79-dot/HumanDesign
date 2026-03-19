@@ -376,6 +376,26 @@
 | Attribute | Details |
 |-----------|---------|
 | **Feature Name** | Session Notes & AI Context Storage |
+
+---
+
+### Feature: Client Portal (Reverse View)
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Client Portal — Practitioner Relationship View |
+| **Permission Level** | AUTHENTICATED; Any tier (client must be on a practitioner's roster) |
+| **Workflow Position** | Post-login; client-facing portal accessed from sidebar |
+| **Purpose** | Let clients see which practitioners have them on their roster, view their shared data, and read notes shared by their practitioner |
+| **Files** | `workers/src/handlers/client-portal.js` (~150 lines), `workers/src/db/migrations/054_client_portal.sql` |
+| **Workflow Step** | 1. Client logs in → 2. Navigates to "My Practitioner" in sidebar → 3. Sees list of practitioners who have them as a client → 4. Clicks a practitioner to see portal: practitioner info, own chart/profile data, shared session notes → 5. Can also view all shared notes across practitioners |
+| **API Endpoints** | `GET /api/client/my-practitioners` (list), `GET /api/client/portal/:practitionerId` (portal view), `GET /api/client/shared-notes` (all shared notes) |
+| **Database Tables** | `practitioner_clients` (relationship check), `practitioners` (info display), `practitioner_session_notes` (share_with_client column), `charts`, `profiles` |
+| **Test Elements** | `tests/client-portal.test.js` — 10 tests: auth guards, access denial for non-clients, portal data shape, null chart/profile handling, paginated shared notes |
+| **Analytical Elements** | Events: `client_portal_practitioners_viewed`, `client_portal_viewed` (practitionerId), `client_shared_notes_viewed` |
+| **Error Debugging** | Error codes: 401 (not authenticated), 403 (not a client of this practitioner) |
+| **Key Code** | `handleGetClientPortal()` — parallel fetch of practitioner info, chart, profile, shared notes; `checkClientPractitionerAccess` — reverse access check (client → practitioner) |
+| **Migration** | `054_client_portal.sql` — Adds `share_with_client` column to `practitioner_session_notes` with partial index |
 | **Permission Level** | AUTHENTICATED; Practitioner+ only, per-client access control |
 | **Workflow Position** | Workspace client view; ongoing practitioner documentation |
 | **Purpose** | Store session notes, session dates, AI-enhanced context summaries for client relationship continuity |
@@ -387,6 +407,327 @@
 | **Analytical Elements** | Event: `session_note_created` (practitioner_tier, content_length), `ai_context_generated` (num_notes_processed, themes_extracted), `session_history_viewed` (num_sessions) |
 | **Error Debugging** | Error codes: `ERR_CLIENT_NOT_FOUND`, `ERR_NOTE_NOT_FOUND`, `ERR_ACCESS_DENIED` (cross-practitioner access attempt); AI generation errors: `ERR_LLM_FAILED` (fallback: return raw summary) |
 | **Key Code** | `handleListNotes()` queries `session_notes` where `practitionerId = request._user.id AND clientId = params.clientId`, orders by sessionDate DESC; AI context calls LLM with last 10 notes to extract themes, generate summary |
+
+---
+
+### Feature: Divination Reading Log
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Divination Reading Log |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None (available to all practitioners) |
+| **Permission Level** | AUTHENTICATED; Practitioner+ only, per-client access control |
+| **Workflow Position** | Client detail workspace, between Session Notes and AI Session Brief |
+| **Purpose** | Record and manage divination readings (tarot, oracle, runes, I Ching, pendulum) per client, with optional client sharing |
+| **Files** | `workers/src/handlers/divination-readings.js`, `workers/src/db/migrations/055_divination_readings.sql`, `frontend/js/app.js` |
+| **Workflow Step** | 1. Practitioner opens client detail → 2. Scrolls to Divination Readings section → 3. Clicks "New Reading" → 4. Selects type (tarot/oracle/runes/iching/pendulum/other), optionally enters spread and cards → 5. Writes interpretation → 6. Optionally toggles "Share with client" → 7. Saves reading → 8. Readings appear in reverse-chronological list |
+| **API Endpoints** | `GET /api/practitioner/clients/:id/readings` (list), `POST /api/practitioner/clients/:id/readings` (create), `GET /api/practitioner/readings/:id` (get), `PUT /api/practitioner/readings/:id` (update), `DELETE /api/practitioner/readings/:id` (delete), `GET /api/client/my-readings` (client views shared readings) |
+| **Database Tables** | `divination_readings` (id UUID PK, practitioner_id, client_user_id, reading_type, spread_type, cards JSONB, interpretation TEXT, share_with_ai BOOLEAN, reading_date DATE, created_at, updated_at) |
+| **Test Elements** | `tests/divination-readings.test.js` — 12 tests: CRUD operations, validation (invalid type, max length, max cards), auth (401/403), client shared readings |
+| **Analytical Elements** | Events: `reading_created` (reading_type), `reading_deleted` (readingId) |
+| **Error Debugging** | Error codes: `Unauthorized` (401, no auth), `Access denied` (403, not practitioner or wrong client), `Invalid reading_type` (400), `Interpretation exceeds 10000 characters` (400), `Too many cards (max 78)` (400), `Reading not found` (404) |
+| **Key Code** | `handleCreateReading()` validates reading_type against allowlist, enforces MAX_INTERPRETATION_LENGTH (10000) and MAX_CARDS (78), stores cards as JSONB; `handleClientReadings()` returns only readings with `share_with_ai = true` for authenticated client |
+
+---
+
+### Feature: Session Actions (Practitioner-Assigned Client Actions)
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Session Actions |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None (available to all practitioners) |
+| **Permission Level** | AUTHENTICATED; Practitioner+ for CRUD, authenticated client for view/complete |
+| **Workflow Position** | Client detail workspace, between Divination Readings and AI Session Brief |
+| **Purpose** | Practitioner assigns homework, exercises, or follow-up actions to clients. Clients can view and mark them complete. Supports due dates and linked session notes. |
+| **Files** | `workers/src/handlers/session-actions.js`, `workers/src/db/migrations/056_session_actions.sql`, `frontend/js/app.js` |
+| **Workflow Step** | 1. Practitioner opens client detail → 2. Scrolls to Assigned Actions → 3. Clicks "New Action" → 4. Enters title, optional description, optional due date → 5. Saves action → 6. Client sees pending actions in their portal → 7. Client marks action complete → 8. Practitioner sees completion status |
+| **API Endpoints** | `GET /api/practitioner/clients/:id/actions` (list), `POST /api/practitioner/clients/:id/actions` (create), `PUT /api/practitioner/actions/:id` (update), `DELETE /api/practitioner/actions/:id` (delete), `GET /api/client/my-actions` (client views), `PUT /api/client/actions/:id/complete` (client completes) |
+| **Database Tables** | `session_actions` (id UUID PK, practitioner_id, client_user_id, title, description, due_date, status CHECK pending/completed/cancelled, completed_at, session_note_id FK, created_at, updated_at) |
+| **Test Elements** | `tests/session-actions.test.js` — 15 tests: CRUD, validation (missing title, max title/description), auth (401/403), list, update (+ invalid status + 404), delete, client actions, client complete (+ 404) |
+| **Analytical Elements** | Events: `action_created` (title), `action_completed` (actionId, userId), `action_deleted` (actionId) |
+| **Error Debugging** | Error codes: `Unauthorized` (401), `Access denied` (403), `Title is required` (400), `Title exceeds 200 characters` (400), `Description exceeds 5000 characters` (400), `Invalid status` (400), `Action not found` (404) |
+| **Key Code** | `handleCreateAction()` validates title presence + length, stores with optional due_date and session_note_id FK; `handleCompleteAction()` only completes actions with status='pending' for the authenticated client_user_id; overdue detection in frontend via `new Date(due_date) < new Date()` |
+
+---
+
+### Feature: Verified Testimonials/Reviews
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Practitioner Reviews |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | PUBLIC for approved reviews on directory; AUTHENTICATED for submission (client), moderation (practitioner) |
+| **Workflow Position** | Client portal (submit), practitioner dashboard (moderate), public directory profile (display) |
+| **Purpose** | Client-submitted, practitioner-approved testimonials. Practitioners can approve or hide reviews but cannot edit them. One review per client per practitioner. |
+| **Files** | `workers/src/handlers/reviews.js`, `workers/src/db/migrations/057_practitioner_reviews.sql`, `frontend/js/app.js`, `frontend/index.html` |
+| **Workflow Step** | 1. Client visits practitioner portal → 2. Writes review (1-5 stars + text) → 3. Review saved as "pending" → 4. Practitioner sees pending reviews in moderation panel → 5. Approves or hides review → 6. Approved reviews appear on directory profile |
+| **API Endpoints** | `POST /api/client/reviews` (submit), `GET /api/directory/:slug/reviews` (public), `GET /api/practitioner/reviews` (list all), `PUT /api/practitioner/reviews/:id/approve`, `PUT /api/practitioner/reviews/:id/hide` |
+| **Database Tables** | `practitioner_reviews` (id UUID PK, practitioner_id, client_user_id, rating 1-5, content TEXT, status pending/approved/hidden, approved_at, created_at, updated_at, UNIQUE practitioner+client) |
+| **Test Elements** | `tests/reviews.test.js` — 14 tests: submission (valid, missing prac, invalid rating, short/long content, non-client, no auth), public reviews (valid slug, invalid slug), approve (success + 404), hide, list (practitioner + non-practitioner) |
+| **Analytical Elements** | Events: `review_submitted`, `review_approved`, `review_hidden` |
+| **Error Debugging** | Errors: `Unauthorized` (401), `practitioner_id is required` (400), `Rating must be 1-5` (400), `Review min 10 chars` (400), `Review exceeds 2000 chars` (400), `Not a client` (403), `Already reviewed` (409), `Review not found` (404) |
+| **Key Code** | `handleSubmitReview()` validates relation via `checkClientPractitionerAccess`, enforces UNIQUE constraint; `handleApproveReview/handleHideReview` scoped by practitioner_id; public reviews served via slug join |
+
+---
+
+### Feature: CSV Export (Roster + Notes + Readings)
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | CSV Export |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | AUTHENTICATED (practitioner tier) |
+| **Workflow Position** | Practitioner workspace → Export Data card |
+| **Purpose** | Download client roster, session notes, and divination readings as CSV files for backup or external analysis. |
+| **Files** | `workers/src/handlers/practitioner.js` (export handlers), `workers/src/db/queries.js` (3 queries), `frontend/js/app.js` (`downloadCSV`), `frontend/index.html` (CSV Export card) |
+| **Workflow Step** | 1. Practitioner clicks download button → 2. Browser fetches CSV endpoint → 3. Server queries data for practitioner → 4. CSV returned with Content-Disposition header → 5. Browser triggers download |
+| **API Endpoints** | `GET /api/practitioner/export/roster`, `GET /api/practitioner/export/notes`, `GET /api/practitioner/export/readings` |
+| **Database Tables** | Reads from `practitioner_clients` + `users`, `practitioner_session_notes` + `users`, `divination_readings` + `users` |
+| **Test Elements** | `tests/csv-export.test.js` — 21 tests: escapeCSV (null, plain, commas, quotes, newlines, CR, numbers), toCSV (empty, data, special chars, missing fields), roster/notes/readings column headers + row rendering, query presence verification |
+| **Analytical Elements** | Events: `csv_exported` (with type: roster/notes/readings) |
+| **Error Debugging** | Auth required (401), Feature gate via `enforceFeatureAccess('practitionerTools')` |
+| **Key Code** | `escapeCSV()` handles quoting/escaping; `toCSV()` maps column definitions to rows; `csvResponse()` sets Content-Type + Content-Disposition headers; frontend `downloadCSV()` uses fetch+blob pattern |
+
+---
+
+### Feature: Diary AI Pattern Insights
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Diary AI Pattern Insights |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | AUTHENTICATED (requires 10+ diary entries) |
+| **Workflow Position** | Diary tab → AI Pattern Insights card (below entry list) |
+| **Purpose** | After 10+ diary entries, LLM analyzes life events and transit correlations to surface recurring themes, timing patterns, and actionable insights. |
+| **Files** | `workers/src/handlers/diary.js` (`handleDiaryInsights`), `workers/src/db/queries.js` (`getDiaryEntriesForInsights`), `frontend/js/app.js` (`generateDiaryInsights`), `frontend/index.html` (insights card) |
+| **Workflow Step** | 1. User clicks "Analyze Patterns" → 2. POST /api/diary/insights → 3. Fetch up to 50 entries with transit snapshots → 4. Build prompt with entry summaries + transit aspects → 5. callLLM returns structured analysis → 6. Render insights in card |
+| **API Endpoints** | `POST /api/diary/insights` |
+| **Database Tables** | Reads from `diary_entries` (existing table, no migration needed) |
+| **Test Elements** | `tests/diary-insights.test.js` — 8 tests: query presence (exists, limits/ordering), handler (export, auth, <10 entries rejection, 10+ entries success with LLM mock, transit data in prompt), route wiring |
+| **Analytical Elements** | Events: `diary_insights_generated` |
+| **Error Debugging** | `Authentication required` (401), `Need at least 10 diary entries` (400), LLM provider chain failure (500 via reportHandledRouteError) |
+| **Key Code** | Entries summarized with transit aspects (top 5 per entry); LLM system prompt instructs structured analysis (themes, correlations, transit patterns, recommendation); 800-word limit; temperature 0.7 |
+
+---
+
+### Feature: Practitioner Revenue/Earnings Card
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Practitioner Revenue/Earnings Card |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | AUTHENTICATED (practitioner tier) |
+| **Workflow Position** | Practitioner workspace → Revenue & Earnings card (between Referral Performance and Practice Metrics) |
+| **Purpose** | Display YTD referral credits, pending rewards, total and converted referral counts. Replaces previous stub query with real data from the referrals table. |
+| **Files** | `workers/src/db/queries.js` (`getPractitionerReferralStats` — fixed from stub), `frontend/js/app.js` (`renderPractitionerEarnings`), `frontend/index.html` (`pracEarningsCard` container) |
+| **Workflow Step** | 1. Practitioner opens workspace → 2. loadRoster fetches /api/referrals in parallel → 3. renderPractitionerEarnings renders card with 4 stat tiles → 4. earnings_card_viewed tracked |
+| **API Endpoints** | `GET /api/referrals` (existing, user-level), `GET /api/practitioner/referral-link` (existing, now returns real stats) |
+| **Database Tables** | Reads from `referrals` (existing), `referral_signups` (existing) |
+| **Test Elements** | `tests/practitioner-earnings.test.js` — 8 tests: query no longer stub, referral_count from real data, monthly earnings from reward_value, existing queries intact, handler exports, auth validation, referrals handler export, reward stats columns |
+| **Analytical Elements** | Events: `earnings_card_viewed` |
+| **Error Debugging** | Non-fatal catch on /api/referrals and /api/practitioner/referral-link in loadRoster |
+| **Key Code** | `getPractitionerReferralStats` fixed: COUNT from referrals WHERE referrer_user_id, SUM(reward_value) for current month; Card shows Total Credits Earned (cents→dollars), Total Referrals, Converted, Pending Rewards |
+
+---
+
+### Feature: Practitioner Promo Codes
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Practitioner Promo Codes |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | AUTHENTICATED (practitioner tier via enforceFeatureAccess) |
+| **Workflow Position** | Practitioner workspace → Promo Code card (between Earnings and Practice Metrics) |
+| **Purpose** | Practitioners can create 1 active promo code (10-50% off first month) to share with potential clients. Codes use the existing promo_codes table with a new practitioner_id column. |
+| **Files** | `workers/src/handlers/practitioner.js` (handleGetPractitionerPromo, handleCreatePractitionerPromo, handleDeletePractitionerPromo), `workers/src/db/queries.js` (createPractitionerPromo, getPractitionerActivePromo, deactivatePractitionerPromo), `workers/src/db/migrations/058_practitioner_promo.sql`, `frontend/js/app.js` (loadPractitionerPromo, renderPractitionerPromo, createPractitionerPromo, deactivatePractitionerPromo), `frontend/index.html` (pracPromoCard container) |
+| **Workflow Step** | 1. Practitioner opens workspace → 2. loadPractitionerPromo fetches GET /api/practitioner/promo → 3. If active code: show code, discount, redemptions, expiry with deactivate button → 4. If no code: show creation form (code, discount %, max redemptions, expiry) → 5. POST creates code → 6. DELETE deactivates |
+| **API Endpoints** | `GET /api/practitioner/promo`, `POST /api/practitioner/promo`, `DELETE /api/practitioner/promo/:id` |
+| **Database Tables** | `promo_codes` (existing, extended with `practitioner_id UUID` FK via migration 058) |
+| **Test Elements** | `tests/practitioner-promo.test.js` — 9 tests: query presence (create, get active, deactivate ownership), handler validation (GET returns null, POST rejects empty code, discount <10%, discount >50%, DELETE rejects invalid UUID), migration exists |
+| **Analytical Elements** | Events: `practitioner_promo_created` |
+| **Error Debugging** | `Code must be 3-32 characters` (400), `Discount must be between 10% and 50%` (400), `You already have an active promo code` (409), `Expiry date must be in the future` (400), `Invalid promo ID` (400), `Promo not found or already deactivated` (404) |
+| **Key Code** | 1 active code limit enforced by getPractitionerActivePromo check before create; deactivatePractitionerPromo checks both promo ID and practitioner_id for ownership; code format: uppercase alphanumeric+hyphens+underscores 3-32 chars |
+
+---
+
+### Feature: Diary Search/Filter + Export
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Diary Search/Filter + Export |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | AUTHENTICATED |
+| **Workflow Position** | Diary tab → Filter bar above event list + Export button |
+| **Purpose** | Allow users to search, filter by type/significance/dates, and export diary entries as CSV. Replaces the basic unfiltered list with a rich query interface. |
+| **Files** | `workers/src/handlers/diary.js` (`handleDiaryList` with filter params, `buildDiaryFilterQuery`, `handleDiaryExport`), `frontend/js/app.js` (`loadDiaryEntries` with filter params, `exportDiary`), `frontend/index.html` (filter bar with search/type/significance/date inputs + export button) |
+| **Workflow Step** | 1. User opens Diary tab → 2. Filter bar renders with search input, type/significance dropdowns, date range pickers, export button → 3. Changing any filter auto-reloads entries (350ms debounce) → 4. API receives filter params as query string → 5. `buildDiaryFilterQuery` builds parameterized SQL → 6. Export button triggers GET /api/diary/export → CSV download |
+| **API Endpoints** | `GET /api/diary?search=&type=&significance=&date_from=&date_to=` (filtered list), `GET /api/diary/export` (CSV download) |
+| **Database Tables** | `diary_entries` (id, user_id, event_date, event_title, event_description, event_type, significance, transit_snapshot, created_at, updated_at) |
+| **Test Elements** | `tests/diary-search-export.test.js` — 15 tests: buildDiaryFilterQuery (base query, search ILIKE, valid/invalid type, valid/invalid significance, date range, malformed dates, combined filters), handleDiaryExport (auth, CSV headers/content-type, CSV escaping), handleDiaryList integration (search params, type+significance, /export route) |
+| **Analytical Elements** | Events: `diary_filtered` (frontend, with filter booleans), `diary_exported` (frontend + backend) |
+| **Error Debugging** | Invalid event_type/significance silently ignored; malformed date strings silently ignored; CSV escapes commas/quotes/newlines; 401 on unauthenticated export |
+| **Key Code** | `buildDiaryFilterQuery` builds dynamic parameterized SQL with indexed $N placeholders; valid types: career/relationship/health/spiritual/financial/family/other; valid significance: major/moderate/minor; date regex: `/^\d{4}-\d{2}-\d{2}$/`; CSV uses `escapeCSV()` with double-quote escaping |
+
+---
+
+### Feature: Diary-to-Practitioner Visibility
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Diary-to-Practitioner Visibility |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | AUTHENTICATED (client toggle), PRACTITIONER (read access) |
+| **Workflow Position** | Client: My Practitioner tab → diary sharing checkbox per practitioner. Practitioner: Client detail → Client Diary section (read-only) |
+| **Purpose** | Allow clients to opt-in to sharing their diary entries with their practitioner for deeper session context. Completely read-only for practitioners — no create/edit/delete. |
+| **Files** | `workers/src/handlers/practitioner.js` (`handleGetClientDiary`), `workers/src/handlers/client-portal.js` (`handleGetDiarySharingPrefs`, `handleSetDiarySharing`), `workers/src/db/queries.js` (`getDiaryEntriesForClient`, `getMyDiarySharingPreferences`, `setMyDiarySharing`), `workers/src/db/migrations/059_diary_practitioner_visibility.sql`, `frontend/js/app.js` (`toggleDiarySharing`, diary section in `renderClientDetail`, sharing prefs in `loadClientPortal`) |
+| **Workflow Step** | 1. Client opens My Practitioner tab → 2. Diary sharing checkbox shown per practitioner (default OFF) → 3. Client toggles ON → PUT /api/client/diary-sharing → 4. Practitioner opens client detail → 5. Diary entries loaded via GET /api/practitioner/clients/:id/diary → 6. Read-only diary section renders with type icons + significance badges |
+| **API Endpoints** | `GET /api/practitioner/clients/:id/diary` (practitioner reads client diary), `GET /api/client/diary-sharing` (client views sharing prefs), `PUT /api/client/diary-sharing` (client toggles sharing) |
+| **Database Tables** | `practitioner_clients` (share_diary BOOLEAN DEFAULT false), `diary_entries` (existing, read via join) |
+| **Test Elements** | `tests/diary-practitioner.test.js` — 11 tests: query structure (4: join check, sharing prefs, toggle, no transit_snapshot), practitioner handler (2: valid access, auth rejection), client handler (4: GET prefs, auth rejection, PUT validation, valid toggle), migration (1: file check) |
+| **Analytical Elements** | Events: `practitioner_diary_viewed` (practitioner), `diary_sharing_toggled` (client) |
+| **Error Debugging** | `Client not found on your roster` (404), `Authentication required` (401), `practitioner_user_id and share_diary (boolean) required` (400). If share_diary=false, query returns 0 rows — practitioner sees "No diary entries shared" |
+| **Key Code** | `getDiaryEntriesForClient` joins `diary_entries→practitioner_clients→practitioners` with `share_diary = true` gate; excludes `transit_snapshot` for privacy; consent is per practitioner-client relationship (not global) |
+
+---
+
+### Feature: Check-in Streak Preferences
+
+| Attribute | Details |
+|---|---|
+| **Feature Name** | Check-in Streak Preferences |
+| **Status** | ✅ LIVE |
+| **Feature Flag** | None |
+| **Permission Level** | AUTHENTICATED |
+| **Workflow Position** | Check-in tab → Daily Reminder card (below stats) |
+| **Purpose** | Let users set a daily reminder time and notification method (push/email) for their check-in streak. Cron delivers push notifications at 6 AM UTC sweep to users who haven't checked in yet today. |
+| **Files** | `workers/src/handlers/checkin.js` (`handleSetCheckinReminder`, `handleGetCheckinReminder`), `workers/src/cron.js` (Step 12), `workers/src/db/queries.js` (`cronGetDueCheckinReminders`, `updateReminderLastSent`, `upsertCheckinReminder`, `getCheckinReminder`), `frontend/js/app.js` (`loadCheckinReminder`, `saveCheckinReminder`), `frontend/index.html` (reminder card) |
+| **Workflow Step** | 1. User opens Check-in tab → 2. Reminder preferences load from GET /api/checkin/reminder → 3. User sets time, enables push/email → 4. POST /api/checkin/reminder saves preferences → 5. Daily cron Step 12 queries due reminders (enabled, not sent today, no check-in today) → 6. Sends push notification → 7. Updates last_sent_at |
+| **API Endpoints** | `POST /api/checkin/reminder`, `GET /api/checkin/reminder` |
+| **Database Tables** | `checkin_reminders` (user_id UNIQUE, enabled, reminder_time, timezone, notification_method[], last_sent_at) |
+| **Test Elements** | `tests/checkin-reminder.test.js` — 12 tests: query presence (cronGetDueCheckinReminders structure, updateReminderLastSent, upsertCheckinReminder, getCheckinReminder), handler exports (set/get), auth validation (set/get reject unauthenticated), cron query structure (JOIN users, notification_method) |
+| **Analytical Elements** | Events: `checkin_reminder_sent` (cron), `checkin_reminder_saved` (handler) |
+| **Error Debugging** | `Authentication required` (401), cron step wrapped in try/catch with console.error |
+| **Key Code** | Cron Step 12: 30s timeout, 100ms delay between sends, uses `sendNotificationToUser` from push.js; Frontend auto-detects timezone via `Intl.DateTimeFormat().resolvedOptions().timeZone` |
+
+---
+
+### Feature: Calendar Events Table + Handler
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Calendar Events (CRUD + iCal Feed + Optimal Dates) |
+| **Permission Level** | AUTHENTICATED (all tiers; tier gating in 3.4) |
+| **Workflow Position** | `/api/calendar` prefix — backend-only in 3.1; frontend in 3.3 |
+| **Purpose** | Core calendar infrastructure: store personal, transit, moon, retrograde, session, reminder, and diary events. Expose iCal feed for external calendar subscriptions and proxy to the electional timing engine for optimal date suggestions. |
+| **Files** | `workers/src/handlers/calendar.js` (handleCalendar — CRUD, iCal feed, optimal-dates proxy), `workers/src/db/queries.js` (createCalendarEvent, listCalendarEvents, getCalendarEventsByDateRange, updateCalendarEvent, deleteCalendarEvent, getCalendarEvent), `workers/src/db/migrations/060_calendar_events.sql`, `workers/src/index.js` (PREFIX_ROUTES + AUTH_PREFIXES) |
+| **Workflow Step** | 1. User creates event via POST /api/calendar/events → 2. List events via GET /events (supports date range ?from=&to= or limit/offset) → 3. Update/Delete via PUT/DELETE /events/:id → 4. Subscribe via GET /feed.ics → 5. Find optimal dates via POST /optimal-dates (proxies to timing engine) |
+| **API Endpoints** | `GET /api/calendar/events`, `POST /api/calendar/events`, `PUT /api/calendar/events/:id`, `DELETE /api/calendar/events/:id`, `GET /api/calendar/feed.ics`, `POST /api/calendar/optimal-dates` |
+| **Database Tables** | `calendar_events` (id UUID PK, user_id FK→users, title VARCHAR(500), description TEXT, event_type VARCHAR(50), start_date TIMESTAMPTZ, end_date TIMESTAMPTZ, all_day BOOLEAN, recurrence VARCHAR(50), color VARCHAR(20), source VARCHAR(50), external_id TEXT, metadata JSONB, created_at, updated_at) — 3 indexes: user, user+date, source (partial) |
+| **Test Elements** | `tests/calendar.test.js` — 17 tests: query structure (6 — INSERT RETURNING, ORDER BY, date range, COALESCE, DELETE ownership, single-event user scope), handler (9 — auth 401, missing title 400, title >500 400, create 201, list default, list date range, delete 404, iCal Content-Type + VCALENDAR, unknown route 404, invalid event_type default), migration (1 — file exists + schema checks) |
+| **Analytical Elements** | Events: `calendar_event_created` (with event_type), `calendar_feed_subscribed` (with event count), `calendar_optimal_dates_searched` (with intention) |
+| **Error Debugging** | `Authentication required` (401), `title and start_date are required` (400), `Title must be 500 characters or less` (400), `Event not found` (404), `intention is required` (400 on optimal-dates). All errors routed through `reportHandledRouteError`. |
+| **Key Code** | Default export `handleCalendar(request, env, subpath)`. VALID_EVENT_TYPES: personal, transit, moon, retrograde, session, reminder, diary. iCal: VCALENDAR 2.0 with `escapeICalText` + `toICalDate` helpers, max 500 events. Optimal-dates: dynamic import of timing.js, forwards request with `_user` attachment. |
+
+---
+
+### Feature: Google Calendar 2-Way Sync
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Google Calendar 2-Way Sync |
+| **Permission Level** | AUTHENTICATED (all tiers; tier gating in 3.4) |
+| **Workflow Position** | Calendar settings → Google Calendar integration |
+| **Purpose** | Allow users to connect their Google Calendar via a separate OAuth consent flow (calendar scope). Push local events to Google, pull Google events to local calendar_events. Encrypted refresh token storage via AES-256-GCM (tokenCrypto.js). |
+| **Files** | `workers/src/handlers/google-calendar.js` (handleGoogleCalendar — connect, callback, sync, import, disconnect), `workers/src/handlers/calendar.js` (delegates /google/* subpaths), `workers/src/db/queries.js` (storeGoogleCalendarToken, getGoogleCalendarToken, deleteGoogleCalendarToken, updateGoogleCalSyncToken), `workers/src/db/migrations/061_google_calendar_tokens.sql`, `workers/src/lib/tokenCrypto.js` (AES-256-GCM encryption), `workers/src/index.js` (PUBLIC_ROUTES for callback) |
+| **Workflow Step** | 1. User clicks Connect Google Calendar → 2. POST /api/calendar/google/connect returns OAuth URL → 3. User authorizes calendar scope → 4. Google redirects to /api/calendar/google/callback → 5. Code exchanged for tokens, encrypted and stored → 6. POST /api/calendar/google/sync pushes local events to Google + pulls Google events → 7. POST /api/calendar/google/import for one-way pull → 8. DELETE /api/calendar/google/disconnect removes tokens |
+| **API Endpoints** | `POST /api/calendar/google/connect`, `GET /api/calendar/google/callback`, `POST /api/calendar/google/sync`, `POST /api/calendar/google/import`, `DELETE /api/calendar/google/disconnect` |
+| **Database Tables** | `google_calendar_tokens` (user_id UNIQUE, encrypted_access_token, encrypted_refresh_token, token_expiry, calendar_id, sync_token, last_synced_at) |
+| **Test Elements** | `tests/google-calendar.test.js` — 15 tests: query structure (5 — upsert ON CONFLICT, select, delete RETURNING, sync_token update, encrypted token columns), handler (6 — connect returns OAuth URL with calendar scope, connect 503 without GOOGLE_CLIENT_ID, callback error redirect on missing code, callback invalid state, disconnect deletes tokens, sync 400 when not connected, unknown route 404), delegation (2 — calendar.js delegates /google/connect, callback passes without auth), migration (1) |
+| **Analytical Elements** | Events: `google_calendar_connected`, `google_calendar_synced` (with pushed/pulled counts), `google_calendar_imported`, `google_calendar_disconnected` |
+| **Error Debugging** | `Google integration not configured` (503), `Google Calendar not connected` (400), callback redirects with `?gcal=error&reason=...` for: `missing_params`, `invalid_state`, `token_exchange_failed`, `no_refresh_token`, `internal`. Token refresh failure auto-deletes tokens (user must reconnect). |
+| **Key Code** | Separate OAuth flow: `access_type=offline` + `prompt=consent` for refresh token. `getValidAccessToken()` auto-refreshes with 5-min buffer. `pullGoogleEvents()` uses Google's incremental `syncToken`. `toGoogleEvent()` maps local events to Google Calendar format. Encryption via `GOOGLE_TOKEN_ENCRYPTION_KEY` (falls back to `NOTION_TOKEN_ENCRYPTION_KEY`). |
+
+---
+
+### Feature: Calendar Frontend (Month/Week/Day Views)
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Calendar Frontend (Month/Week/Day Views) |
+| **Permission Level** | AUTHENTICATED |
+| **Workflow Position** | Sidebar → Daily → Calendar (sub-tab under Today's Energy alongside Transits, Check-In, Timing) |
+| **Purpose** | Full calendar UI with month grid, week timeline, and day detail views. Color-coded event dots by type, quick-add event form, mood heatmap placeholder, transit weather bar, and link to electional timing engine. |
+| **Files** | `frontend/js/app.js` (loadCalendar, renderCalendar, renderMonthView, renderWeekView, renderDayView, calendarPrev, calendarNext, calendarSetView, calendarAddEvent, calendarDeleteEvent), `frontend/index.html` (sidebar nav-item, tab-calendar panel), `frontend/css/components/calendar.css` |
+| **Workflow Step** | 1. User clicks Calendar in sidebar → 2. switchTab lazy-loads events via GET /api/calendar/events → 3. Month view renders 7-column grid with event dots → 4. Click day → Day view with event cards → 5. Toggle Week/Day views via header buttons → 6. Quick Add: fill title+date+type+color → POST /api/calendar/events → 7. Delete via trash icon → DELETE /api/calendar/events/:id |
+| **API Endpoints** | `GET /api/calendar/events` (with from/to date range), `POST /api/calendar/events`, `DELETE /api/calendar/events/:id` |
+| **Frontend Components** | Calendar header (nav arrows + title + view toggle), Transit weather bar, Month grid (7-col CSS grid, event dots), Week view (day rows with event cards), Day view (event cards with color bars), Mood heatmap, Quick Add form, Optimal dates link |
+| **Test Elements** | No test file (frontend-only; validated visually) |
+| **Analytical Elements** | Events: `calendar_view_changed` (with view name), `calendar_event_deleted` |
+| **Key Code** | `_calView` state (month/week/day), `_calDate` current focus date, `_calEvents` cached array. `EVENT_TYPE_COLORS` maps 7 types to hex colors. Monday-start grid via `(getDay() + 6) % 7`. Event dots max 5 per cell. |
+
+---
+
+### Feature: Calendar Tier Gating + Practitioner Calendar
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Calendar Tier Gating + Practitioner Unified Calendar |
+| **Permission Level** | AUTHENTICATED; tier-gated (Free → moon/personal/reminder/diary only; Individual → +transits/retrogrades; Practitioner/Agency → +sessions/sync/practitioner calendar) |
+| **Workflow Position** | `/api/calendar` prefix — middleware tier enforcement on all calendar routes; `/api/calendar/practitioner/events` for practitioner unified view |
+| **Purpose** | Gate calendar event types by subscription tier to drive upgrades. Free users see moon/personal/reminder/diary. Individual adds transits/retrogrades. Practitioner+ adds sessions, Google Calendar sync, and a unified calendar showing own + client events with color-coded client attribution. |
+| **Files** | `workers/src/handlers/calendar.js` (tier enforcement + handlePractitionerEvents + getAllowedEventTypes + EVENT_TYPE_TIER_MAP + CLIENT_COLORS), `workers/src/lib/stripe.js` (4 new feature keys: calendarTransits, calendarSync, calendarSessions, calendarPractitioner), `workers/src/db/queries.js` (listPractitionerClientEvents), `frontend/js/app.js` (loadCalendar tier handling, renderCalendar practitioner toggle, lock icons on gated event types, client color-coding in all views), `frontend/index.html` (practitioner toggle button, 7 event types with data-label), `frontend/css/components/calendar.css` (.cal-pract-toggle, .cal-client-tag, locked option styling) |
+| **Workflow Step** | 1. Handler calls `enforceFeatureAccess(request, env, 'calendarTransits')` → populates `request._tier` → 2. `getAllowedEventTypes(request)` returns tier-appropriate types → 3. List events filtered to allowed types; response includes `allowed_types` → 4. Create event checks `EVENT_TYPE_TIER_MAP` — blocked types return 403 with `upgrade_required` → 5. `/google/*` routes enforce `calendarSync` → 6. `/practitioner/events` enforces `calendarPractitioner`, merges own + client events with `CLIENT_COLORS` palette → 7. Frontend shows 🔒 on locked event types, practitioner toggle for unified view, client badges with color-coded dots |
+| **API Endpoints** | `GET /api/calendar/practitioner/events?from=&to=` (new), all existing `/api/calendar/*` endpoints now tier-gated |
+| **Tier Feature Keys** | `calendarTransits` (Individual+), `calendarSync` (Practitioner+), `calendarSessions` (Practitioner+), `calendarPractitioner` (Practitioner+) |
+| **Frontend Components** | Practitioner toggle button (`👥 All Clients`), locked event type options with 🔒 icon, `.cal-client-tag` color-coded badges on client events, client email tooltips on month dots |
+| **Test Elements** | `tests/calendar-tiers.test.js` — 16 tests: 2 query structure, 4 stripe feature keys (per tier), 10 handler tier gating (free/individual/practitioner event filtering, 403 on gated creates, Google sync enforcement, practitioner events with color-coding) |
+| **Analytical Elements** | Events: `calendar_tier_upgrade_prompted` (with feature key: calendarTransits/calendarSync/calendarSessions/calendarPractitioner) |
+| **Key Code** | `EVENT_TYPE_TIER_MAP`: transit→calendarTransits, retrograde→calendarTransits, session→calendarSessions. `getAllowedEventTypes(request)`: Free=['personal','moon','reminder','diary'], Individual+=transit,retrograde, Practitioner+=session. `CLIENT_COLORS`: 15-color hex palette for client color-coding. `handlePractitionerEvents()`: JOINs calendar_events + practitioner_clients + users, assigns unique color per client_email, returns `{ data, client_colors }`. Frontend state: `_calAllowedTypes`, `_calPractitionerMode`, `_calClientColors`. |
+
+---
+
+### Feature: Post-Onboarding Activation Checklist
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Practitioner Activation Plan (5-Step Checklist) |
+| **Permission Level** | AUTHENTICATED; Practitioner+ tier |
+| **Workflow Position** | Practitioner workspace dashboard, shown immediately on load |
+| **Purpose** | Guide new practitioners through 5 activation milestones: Complete Profile → Invite Client → Chart Generated → First Note → First Brief. Persistent, data-driven — auto-updates as the practitioner completes real actions. |
+| **Files** | `frontend/js/app.js` (`renderPractitionerActivationPlan`) |
+| **Workflow Step** | 1. Practitioner opens workspace → 2. Activation Plan card renders with current progress (N/5) → 3. Incomplete steps show CTAs → 4. Steps update automatically on data change → 5. All steps done → celebratory "fully activated" state |
+| **Checklist Steps** | 1. **Complete Profile** (display_name + bio + booking_url), 2. **Invite Client** (≥1 client or invitation), 3. **Chart Generated** (≥1 client with chart_id), 4. **First Note** (totalNotes > 0 from stats), 5. **First Brief** (≥1 client with chart_id + profile_id, enabling AI session brief) |
+| **Data Sources** | `GET /api/practitioner/clients`, `GET /api/practitioner/profile`, `GET /api/practitioner/clients/invitations`, `GET /api/practitioner/directory-profile`, `GET /api/practitioner/stats` |
+| **Test Elements** | `tests/activation-checklist.test.js` — 13 tests: fresh practitioner all incomplete, each step condition, edge cases (null/undefined data), full activation |
+| **Analytical Elements** | Events: `activation_step_completed` (per step key, localStorage-deduped), `activation_checklist_complete` (all 5 done, fired once) |
+| **Key Code** | `renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData, metricsData })` — computes 5 boolean conditions, renders card grid with progress counter, fires analytics on new completions |
+
+---
+
+### Feature: Session Template Picker
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Session Note Template Picker |
+| **Permission Level** | AUTHENTICATED; Practitioner+ tier |
+| **Workflow Position** | Inside client detail view → New Note form |
+| **Purpose** | Pre-fill session note textarea with structured template sections (Intake, Follow-up, Integration, Closing) hydrated with client chart data |
+| **Files** | `workers/src/handlers/session-templates.js` (backend), `frontend/js/app.js` (frontend picker) |
+| **Workflow Step** | 1. Practitioner opens client → 2. Clicks "+ New Note" → 3. Selects template from dropdown → 4. Template hydrated with client data via POST → 5. Textarea pre-filled with section prompts and context hints → 6. Practitioner edits and saves |
+| **API Endpoints** | `GET /api/practitioner/session-templates` (list), `GET /api/practitioner/session-templates/:id` (detail), `POST /api/practitioner/session-templates/:id/hydrate` (hydrate with client data) |
+| **Built-in Templates** | Initial Intake (5 sections), Follow-up Session (5), Integration Check-in (5), Closing/Completion (5) |
+| **Test Elements** | `tests/session-template-picker.test.js` — 8 tests: template listing, summary fields, section detail, 404 handling, hydration with client data, default fields, invalid JSON |
+| **Analytical Elements** | Events: `template_selected` (template ID), `template_hydrated` (template ID after successful hydration) |
+| **Key Code** | `loadNoteTemplates(clientId)` — populates dropdown on first form open with cached API response; `applyNoteTemplate(clientId)` — hydrates template and pre-fills textarea |
 
 ---
 
@@ -1111,8 +1452,8 @@
 | **Workflow Position** | Background notifications; optional engagement feature |
 | **Purpose** | Send push notifications to user's browser/device (even if app not open) for alerts, transit updates, achievements |
 | **Files** | `workers/src/handlers/push.js` (690 lines) |
-| **Workflow Step** | 1. On first app load, request push permission via `Notification.requestPermission()` → 2. If granted, call `/api/push/subscribe` with push subscription object → 3. Backend validates subscription object, stores in `push_subscriptions` table → 4. On trigger event (alert, transit, achievement), backend retrieves subscriptions for that user → 5. Encrypts payload via HKDF-SHA256 (RFC 8291) → 6. Calls Web Push API (e.g., Google Firebase Cloud Messaging) → 7. Service sends push to user's device/browser → 8. Browser receives push, shows browser notification |
-| **API Endpoints** | `POST /api/push/subscribe` (register subscription), `DELETE /api/push/unsubscribe` (remove subscription), `POST /api/push/send` (admin: manual push), `GET /api/push/status` (user: check if subscribed) |
+| **Workflow Step** | 1. On first login, auto-prompt `Notification.requestPermission()` (deferred 3s, once via localStorage) → 2. If granted, subscribe via `pushManager.subscribe()` → 3. POST `/api/push/subscribe` stores subscription → 4. User opens preferences modal (⚙️ in notification drawer) → 5. Toggles: transitDaily, gateActivation, cycleApproaching, transitAlert, weeklyDigest → 6. Quiet hours picker (start/end) → 7. PUT `/api/push/preferences` saves → 8. Test button → POST `/api/push/test` |
+| **API Endpoints** | `GET /api/push/vapid-key` (public), `POST /api/push/subscribe`, `DELETE /api/push/unsubscribe`, `POST /api/push/test`, `GET /api/push/preferences`, `PUT /api/push/preferences`, `GET /api/push/history` |
 | **Push Triggers** | Transit alerts, achievement unlocked, checkin reminder (if opted in), referral conversion, message from friend |
 | **Encryption Details** | RFC 8291 requires HKDF key derivation from subscription keys; Message encrypted with AES-128-GCM; Payload max 4KB |
 | **VAPID Credentials** | Public/private key pair (ES256 curve); Backend includes VAPID Authorization header (JWT) with push request to prove legitimacy |

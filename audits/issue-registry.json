@@ -2337,6 +2337,310 @@
         1061
       ],
       "fix": "Preserve the advanced controls, but stage them behind the first value-delivery moment. For first-run personal users, the default profile flow should present one obvious action: generate the first AI reading from the chart already calculated. Hide evaluation-mode switching and optional system toggles behind a secondary 'Customize this reading' control or collapsed advanced section that expands only on demand. Keep the practitioner or power-user path available, but make the default experience satisfy Principle 9 ('One Point of Focus, One Click at a Time') and protect the chart -> profile user story from avoidable complexity."
+    },
+    {
+      "id": "WC-P0-1",
+      "persona": "Product Council",
+      "severity": "P0",
+      "area": "feature-gap",
+      "title": "Claim hygiene: remove or reframe unshipped Agency promises and unsupported proof claims",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "frontend/index.html",
+        "frontend/pricing.html",
+        "frontend/js/app.js",
+        "frontend/js/pricing-schema.js",
+        "PRODUCT_PRINCIPLES.md"
+      ],
+      "fix": [
+        "Audit all pricing and hero claims for mismatch against shipped capabilities.",
+        "Replace every \"Coming soon\" paid-tier entitlement with either request-access wording or remove it from paid promise surfaces.",
+        "Remove unsupported social-proof numerics unless backed by queryable production metrics.",
+        "Add a small claim-validation checklist section in pricing docs used before deploy."
+      ],
+      "requirements": [
+        "Comply with Principle 10 (Honest Grounding) and anti-pattern False Upgrade.",
+        "Use one source of truth for tier copy and prices across index/pricing/schema.",
+        "Do not advertise entitlement not fully supportable in-product today."
+      ],
+      "acceptanceCriteria": [
+        "No paid plan bullet contains \"Coming soon\" language in public pricing surfaces.",
+        "No unsupported user-count/testimonial-style numeric appears without a source-backed metric.",
+        "All tier claims reconcile with active routes and implemented UI controls."
+      ],
+      "constraints": [
+        "No backend behavior changes in this issue; copy/positioning and policy enforcement only.",
+        "Preserve existing checkout and tier gating mechanics."
+      ]
+    },
+    {
+      "id": "WC-P0-2",
+      "persona": "CFO",
+      "severity": "P0",
+      "area": "referral",
+      "title": "Referral trust contract: align payout messaging with actual claim mechanics",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "workers/src/handlers/referrals.js",
+        "frontend/index.html",
+        "frontend/pricing.html",
+        "frontend/js/app.js",
+        "FEATURE_MATRIX.md"
+      ],
+      "fix": [
+        "Define canonical reward model: account credit only vs external cash payout.",
+        "Align all UI and marketing copy with canonical model.",
+        "If external payout is selected, create implementation plan issue linking to payout rails and compliance checks.",
+        "Add automated regression check for disallowed payout vocabulary on non-supported paths."
+      ],
+      "requirements": [
+        "No mismatch between API behavior and user-visible compensation language.",
+        "Maintain anti-fraud controls and atomic claim behavior already in handler.",
+        "Expose plain-language reward explanation in practitioner workspace."
+      ],
+      "acceptanceCriteria": [
+        "Referral claim response wording, pricing copy, and dashboard copy are contract-consistent.",
+        "No reference to cash transfer if only balance credits are implemented.",
+        "Agent can verify consistency with a single grep across frontend + handler strings."
+      ],
+      "constraints": [
+        "Do not weaken existing anti-Sybil checks or claim idempotency.",
+        "Do not introduce new payout provider dependency in this issue."
+      ]
+    },
+    {
+      "id": "WC-P0-3",
+      "persona": "CMO",
+      "severity": "P0",
+      "area": "retention",
+      "title": "Landing focus: one audience, one promise, one CTA for practitioner-first conversion",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "frontend/index.html",
+        "frontend/pricing.html",
+        "PRODUCT_PRINCIPLES.md"
+      ],
+      "fix": [
+        "Refactor hero and primary above-the-fold narrative to one target audience.",
+        "Demote secondary audiences to lower sections with separate CTAs.",
+        "Insert proof block above fold using verified metrics and practitioner outcomes.",
+        "Ensure post-CTA path lands in a focused practitioner onboarding sequence."
+      ],
+      "requirements": [
+        "Comply with Principle 9 (One Point of Focus) and Principle 4 (Earn the Next Step).",
+        "Primary CTA must map to a measurable practitioner action.",
+        "No mixed audience messaging in first viewport."
+      ],
+      "acceptanceCriteria": [
+        "Single primary CTA above fold with no competing equal-weight CTA.",
+        "Hero copy can be traced to one user story sentence.",
+        "Funnel event naming exists for hero_view -> primary_cta_click -> onboarding_start."
+      ],
+      "constraints": [
+        "No redesign of app shell required; this is landing and acquisition flow scope only."
+      ]
+    },
+    {
+      "id": "WC-P1-1",
+      "persona": "Practitioner",
+      "severity": "P1",
+      "area": "practitioner-value",
+      "title": "Practitioner-hosted client experience v1: improve hosted workflow without full multi-tenant hosting stack",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "frontend/js/app.js",
+        "frontend/index.html",
+        "workers/src/handlers/practitioner-directory.js",
+        "workers/src/handlers/practitioner.js",
+        "FEATURE_MATRIX.md"
+      ],
+      "fix": [
+        "Add practitioner-owned client landing path that preserves client -> practitioner attribution through invite, chart, profile, and booking next step.",
+        "Expose client-space controls practitioners need: session prep context, booking embed, reminder path, and branded deliverable handoff.",
+        "Strengthen practitioner profile trust layer (specialty, credentials, booking clarity, response expectations).",
+        "Add lifecycle states to client cards with one recommended next action per state."
+      ],
+      "requirements": [
+        "Keep Practitioner Commercial Integrity non-negotiable intact; consumer flow must not cannibalize practitioner tier.",
+        "No data isolation regressions: all client access remains scoped to practitioner relationship checks.",
+        "Host clients as a workflow surface, not as arbitrary third-party content hosting."
+      ],
+      "acceptanceCriteria": [
+        "Practitioner can run end-to-end hosted client journey without workaround tabs or manual copy/paste.",
+        "Each client lifecycle state shows exactly one primary next action.",
+        "Client-facing steps hand off to practitioner booking/next-step CTA at the right boundary."
+      ],
+      "constraints": [
+        "Do not add arbitrary file hosting or CMS requirement in v1.",
+        "Do not expand into full agency white-label platform in this issue."
+      ]
+    },
+    {
+      "id": "WC-P1-2",
+      "persona": "CMO",
+      "severity": "P1",
+      "area": "referral",
+      "title": "Viral loop v1: connect share cards, compare entry, and invite conversion into one measurable loop",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "workers/src/handlers/share.js",
+        "workers/src/handlers/referrals.js",
+        "frontend/js/app.js",
+        "FEATURE_MATRIX.md"
+      ],
+      "fix": [
+        "Define loop: share -> open -> compare/intake -> signup/invite acceptance -> referral attribution.",
+        "Add explicit compare/invite CTA at post-share and post-profile moments.",
+        "Track loop stage analytics with consistent event names and required properties.",
+        "Publish loop conversion dashboard fields needed for weekly review."
+      ],
+      "requirements": [
+        "Leverage existing share and referral handlers first; no net-new social graph.",
+        "Preserve privacy controls on shared charts/profiles.",
+        "Keep copy plain language and action-oriented."
+      ],
+      "acceptanceCriteria": [
+        "All loop stages emit events and can be joined by share/referral ID.",
+        "At least one in-app path exists from shared artifact to invite/compare conversion.",
+        "Agent can produce a weekly funnel report query spec from implemented events."
+      ]
+    },
+    {
+      "id": "WC-P1-3",
+      "persona": "Retention",
+      "severity": "P1",
+      "area": "retention",
+      "title": "Daily engagement hook: activate push subscription journey and high-signal notification defaults",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "workers/src/handlers/push.js",
+        "frontend/service-worker.js",
+        "frontend/js/app.js",
+        "workers/src/cron.js"
+      ],
+      "fix": [
+        "Implement explicit permission and preference UX at the right moments (post-chart, post-profile, practitioner client events).",
+        "Enable one daily insight notification and one practitioner-client status notification default.",
+        "Add unsubscribe and quiet-hours controls with clear state feedback.",
+        "Instrument opt-in, delivery, open, and action metrics."
+      ],
+      "requirements": [
+        "Respect user preference and local quiet-hour rules.",
+        "Push failure must degrade gracefully to existing channels (email/SMS where configured).",
+        "No noisy notifications without actionable next step."
+      ],
+      "acceptanceCriteria": [
+        "Push opt-in flow is reachable and successful from app UI without manual API calls.",
+        "Notification settings are persisted and reflected in delivery behavior.",
+        "Delivery and click metrics are queryable by notification type."
+      ]
+    },
+    {
+      "id": "WC-P1-4",
+      "persona": "Distribution",
+      "severity": "P1",
+      "area": "feature-gap",
+      "title": "Mobile distribution v1: ship iOS wrapper path for store discovery while preserving PWA core",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "FEATURE_CHECKLIST.md",
+        "DEPLOY.md",
+        "frontend/manifest.webmanifest",
+        "process/BUILD_LOG.md"
+      ],
+      "fix": [
+        "Create implementation ADR for iOS wrapper scope, acceptance gates, and rollback strategy.",
+        "Define build/release checklist for store assets, deep links, and auth continuity.",
+        "Add instrumentation requirements for install-to-signup and install-to-profile generation conversion.",
+        "Stage as wrapper-first, no full native rewrite in v1."
+      ],
+      "requirements": [
+        "Must not fork business logic from web app in v1.",
+        "Must maintain existing auth/session and push compatibility assumptions.",
+        "Store listing copy must remain claim-safe and feature-accurate."
+      ],
+      "acceptanceCriteria": [
+        "A release-ready technical plan exists with explicit owner tasks and test matrix.",
+        "No unresolved blocker in auth/deep-link/push path before store submission.",
+        "Success KPIs are defined and tracked from day one."
+      ]
+    },
+    {
+      "id": "WC-P1-5",
+      "persona": "CMO",
+      "severity": "P1",
+      "area": "feature-gap",
+      "title": "Trust proof block: testimonials/case evidence with verification policy and placement standards",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "frontend/index.html",
+        "frontend/pricing.html",
+        "docs/",
+        "PRODUCT_PRINCIPLES.md"
+      ],
+      "fix": [
+        "Add testimonial and practitioner case-proof module with verification checklist.",
+        "Require source metadata for each quote (role, outcome, consent status, date).",
+        "Place proof above fold on acquisition surfaces and adjacent to upgrade CTAs.",
+        "Create maintenance process for stale proof rotation."
+      ],
+      "requirements": [
+        "No fabricated or anonymous unverifiable proof on conversion surfaces.",
+        "All social-proof copy must pass Honest Grounding checks.",
+        "Proof language should describe outcomes, not hype claims."
+      ],
+      "acceptanceCriteria": [
+        "At least five verified proof items can be rendered with required metadata.",
+        "No placeholder proof text remains in production views.",
+        "Agent-run content lint flags missing metadata fields."
+      ]
+    },
+    {
+      "id": "WC-P2-1",
+      "persona": "Growth",
+      "severity": "P2",
+      "area": "feature-gap",
+      "title": "Editorial engine v1: weekly practitioner-first content loop for SEO, trust, and retention",
+      "status": "open",
+      "firstSeen": "2026-03-18",
+      "lastSeen": "2026-03-18",
+      "file": [
+        "docs/",
+        "frontend/",
+        "FEATURE_MATRIX.md"
+      ],
+      "fix": [
+        "Define lightweight content model: insight, case note, transit brief, practitioner spotlight.",
+        "Build one publishing path and one in-app discovery module.",
+        "Tie each content artifact to one conversion target and one retention target.",
+        "Add monthly review for top-performing content themes."
+      ],
+      "requirements": [
+        "Keep scope light; avoid full CMS build in v1.",
+        "Every article must map to one journey gate and one measurable action.",
+        "Use plain-language-first writing standard."
+      ],
+      "acceptanceCriteria": [
+        "Content template and publish checklist exist and are used for first four posts.",
+        "Internal links connect content to chart/profile/practitioner conversion flows.",
+        "Organic entry and assisted conversion metrics are trackable."
+      ]
     }
   ],
   "history": [
@@ -2514,7 +2818,7 @@
       "cfErrorRatePct": null
     }
   ],
-  "lastAuditDate": "2026-03-17",
-  "openCount": 35,
-  "resolvedCount": 75
+  "lastAuditDate": "2026-03-18",
+  "openCount": 17,
+  "resolvedCount": 165
 }

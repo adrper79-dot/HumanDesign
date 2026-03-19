@@ -144,8 +144,32 @@ If profiles are SPA-only, add a Cloudflare Worker route that server-renders the 
   - SEO: server-rendered meta tags per profile (see CMO-002)`,
 };
 
-const DEFAULT_PROMPT = (issue) =>
-  `Fix issue ${issue.id}: ${issue.title}\nArea: ${issue.area} | Severity: ${issue.severity}\nReview the relevant files first, then implement the fix and run npm run test:deterministic to verify.`;
+const asBulletedList = (value) => {
+  if (!value) return '';
+  if (Array.isArray(value)) return value.map(item => `- ${item}`).join('\n');
+  return `- ${value}`;
+};
+
+const DEFAULT_PROMPT = (issue) => {
+  const fileScope = issue.file ? `\nFile scope:\n${asBulletedList(issue.file)}` : '';
+  const requirements = issue.requirements ? `\nRequirements:\n${asBulletedList(issue.requirements)}` : '';
+  const acceptance = issue.acceptanceCriteria ? `\nAcceptance Criteria:\n${asBulletedList(issue.acceptanceCriteria)}` : '';
+  const constraints = issue.constraints ? `\nConstraints:\n${asBulletedList(issue.constraints)}` : '';
+  const fixPlan = issue.fix
+    ? `\nImplementation Plan:\n${asBulletedList(issue.fix)}`
+    : '\nImplementation Plan:\n- Review the relevant files first\n- Implement the fix with minimal blast radius\n- Add/adjust tests for the changed behavior';
+
+  return [
+    `Fix issue ${issue.id}: ${issue.title}`,
+    `Area: ${issue.area} | Severity: ${issue.severity}`,
+    fixPlan,
+    fileScope,
+    requirements,
+    acceptance,
+    constraints,
+    '\nVerification Steps:\n- Run npm run test:deterministic\n- Run targeted manual checks for touched user flow\n- Summarize risks and follow-up items if any gate is incomplete'
+  ].join('');
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 

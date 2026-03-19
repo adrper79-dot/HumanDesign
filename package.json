@@ -23,7 +23,12 @@
     "issue:next": "node scripts/next-issue.js",
     "issue:list": "node scripts/next-issue.js --all",
     "issue:summary": "node scripts/next-issue.js --summary",
-    "issue:resolve": "node scripts/mark-resolved.js"
+    "issue:resolve": "node scripts/mark-resolved.js",
+    "pipeline:status": "node scripts/deploy-pipeline.js --status",
+    "pipeline:next": "node scripts/deploy-pipeline.js",
+    "pipeline:dry": "node scripts/deploy-pipeline.js --dry-run",
+    "pipeline:validate": "node scripts/deploy-pipeline.js --validate",
+    "pipeline:stage": "node scripts/deploy-stage.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

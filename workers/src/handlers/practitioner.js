@@ -177,6 +177,12 @@ export async function handlePractitioner(request, env, subpath) {
       return await handleDeleteInvitation(userId, invitationDeleteMatch[1], query);
     }
 
+    // GET /api/practitioner/clients/:id/diary
+    const clientDiaryMatch = subpath.match(/^\/clients\/([a-f0-9-]+)\/diary$/i);
+    if (clientDiaryMatch && method === 'GET') {
+      return await handleGetClientDiary(userId, clientDiaryMatch[1], query, request);
+    }
+
     // POST /api/practitioner/clients/:id/session-brief
     const sessionBriefMatch = subpath.match(/^\/clients\/([a-f0-9-]+)\/session-brief$/i);
     if (sessionBriefMatch && method === 'POST') {
@@ -204,6 +210,29 @@ export async function handlePractitioner(request, env, subpath) {
     // GET /api/practitioner/stats
     if (subpath === '/stats' && method === 'GET') {
       return await handlePractitionerStats(userId, query);
+    }
+
+    // CSV Exports
+    if (subpath === '/export/roster' && method === 'GET') {
+      return await handleExportRoster(userId, query);
+    }
+    if (subpath === '/export/notes' && method === 'GET') {
+      return await handleExportNotes(userId, query);
+    }
+    if (subpath === '/export/readings' && method === 'GET') {
+      return await handleExportReadings(userId, query);
+    }
+
+    // Practitioner Promo Codes (ITEM-1.9)
+    if (subpath === '/promo' && method === 'GET') {
+      return await handleGetPractitionerPromo(userId, query);
+    }
+    if (subpath === '/promo' && method === 'POST') {
+      return await handleCreatePractitionerPromo(request, userId, query, env);
+    }
+    if (subpath.startsWith('/promo/') && method === 'DELETE') {
+      const promoId = subpath.replace('/promo/', '');
+      return await handleDeletePractitionerPromo(promoId, userId, query);
     }
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
@@ -558,6 +587,32 @@ async function handleGetClientDetail(userId, clientId, query) {
   });
 }
 
+/**
+ * GET /api/practitioner/clients/:id/diary
+ * Read-only view of client diary entries (requires client opt-in).
+ */
+async function handleGetClientDiary(userId, clientId, query, request) {
+  // Verify practitioner-client relationship
+  const accessResult = await query(QUERIES.checkPractitionerAccess, [userId, clientId]);
+  if (!accessResult.rows?.length) {
+    return Response.json({ error: 'Client not found on your roster' }, { status: 404 });
+  }
+
+  const url = new URL(request.url);
+  const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200);
+  const offset = Math.max(parseInt(url.searchParams.get('offset')) || 0, 0);
+
+  const result = await query(QUERIES.getDiaryEntriesForClient, [userId, clientId, limit, offset]);
+
+  trackEvent('practitioner', 'practitioner_diary_viewed', `${result.rows?.length || 0} entries`);
+
+  return Response.json({
+    ok: true,
+    data: result.rows || [],
+    pagination: { limit, offset, count: result.rows?.length || 0 }
+  });
+}
+
 async function handleRemoveClient(userId, clientId, query, env) {
   const practResult = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (!practResult.rows?.length) {
@@ -836,6 +891,145 @@ async function handlePractitionerStats(userId, query) {
       aiSharedNotes: parseInt(row.ai_shared_notes ?? 0),
     },
   });
+}
+
+// ─── CSV Export helpers ──────────────────────────────────────
+function escapeCSV(value) {
+  if (value == null) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function toCSV(columns, rows) {
+  const header = columns.map(c => escapeCSV(c.label)).join(',');
+  const lines = rows.map(row =>
+    columns.map(c => escapeCSV(row[c.key])).join(',')
+  );
+  return header + '\n' + lines.join('\n');
+}
+
+function csvResponse(csv, filename) {
+  return new Response(csv, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    },
+  });
+}
+
+async function handleExportRoster(userId, query) {
+  const result = await query(QUERIES.exportRoster, [userId]);
+  const csv = toCSV([
+    { key: 'id', label: 'ID' },
+    { key: 'email', label: 'Email' },
+    { key: 'display_name', label: 'Name' },
+    { key: 'birth_date', label: 'Birth Date' },
+    { key: 'user_joined', label: 'User Joined' },
+    { key: 'added_at', label: 'Added At' },
+  ], result.rows || []);
+  trackEvent?.('practitioner', 'csv_exported', 'roster');
+  return csvResponse(csv, 'client-roster.csv');
+}
+
+async function handleExportNotes(userId, query) {
+  const result = await query(QUERIES.exportNotes, [userId]);
+  const csv = toCSV([
+    { key: 'id', label: 'Note ID' },
+    { key: 'client_email', label: 'Client Email' },
+    { key: 'client_name', label: 'Client Name' },
+    { key: 'session_date', label: 'Session Date' },
+    { key: 'content', label: 'Content' },
+    { key: 'share_with_ai', label: 'Shared with AI' },
+    { key: 'created_at', label: 'Created At' },
+  ], result.rows || []);
+  trackEvent?.('practitioner', 'csv_exported', 'notes');
+  return csvResponse(csv, 'session-notes.csv');
+}
+
+async function handleExportReadings(userId, query) {
+  const result = await query(QUERIES.exportReadings, [userId]);
+  const csv = toCSV([
+    { key: 'id', label: 'Reading ID' },
+    { key: 'client_email', label: 'Client Email' },
+    { key: 'client_name', label: 'Client Name' },
+    { key: 'reading_type', label: 'Reading Type' },
+    { key: 'spread_type', label: 'Spread Type' },
+    { key: 'reading_date', label: 'Reading Date' },
+    { key: 'interpretation', label: 'Interpretation' },
+    { key: 'created_at', label: 'Created At' },
+  ], result.rows || []);
+  trackEvent?.('practitioner', 'csv_exported', 'readings');
+  return csvResponse(csv, 'divination-readings.csv');
+}
+
+// ─── ITEM-1.9: Practitioner Promo Codes ──────────────────────
+
+async function handleGetPractitionerPromo(userId, query) {
+  const result = await query(QUERIES.getPractitionerActivePromo, [userId]);
+  const promo = result.rows?.[0] || null;
+  return Response.json({ ok: true, promo });
+}
+
+async function handleCreatePractitionerPromo(request, userId, query, env) {
+  const body = await request.json();
+  const { code, discount_value, max_redemptions, valid_until } = body;
+
+  // Validate code format
+  const trimmedCode = String(code || '').trim().toUpperCase();
+  if (!trimmedCode || !/^[A-Z0-9_-]{3,32}$/.test(trimmedCode)) {
+    return Response.json({ error: 'Code must be 3-32 characters (letters, numbers, hyphens, underscores)' }, { status: 400 });
+  }
+
+  // Validate discount: 10-50% only
+  const discount = parseInt(discount_value);
+  if (!discount || discount < 10 || discount > 50) {
+    return Response.json({ error: 'Discount must be between 10% and 50%' }, { status: 400 });
+  }
+
+  // Check practitioner doesn't already have an active promo
+  const existing = await query(QUERIES.getPractitionerActivePromo, [userId]);
+  if (existing.rows?.length > 0) {
+    return Response.json({ error: 'You already have an active promo code. Deactivate it first.' }, { status: 409 });
+  }
+
+  // Max redemptions: optional, 1-1000
+  const maxRedemptions = max_redemptions ? Math.min(Math.max(parseInt(max_redemptions) || 100, 1), 1000) : null;
+
+  // Valid until: optional, must be in the future
+  let validUntil = null;
+  if (valid_until) {
+    const d = new Date(valid_until);
+    if (isNaN(d.getTime()) || d <= new Date()) {
+      return Response.json({ error: 'Expiry date must be in the future' }, { status: 400 });
+    }
+    validUntil = d.toISOString();
+  }
+
+  const result = await query(QUERIES.createPractitionerPromo, [
+    trimmedCode, discount, maxRedemptions, validUntil, userId
+  ]);
+
+  trackEvent?.('practitioner', 'practitioner_promo_created', trimmedCode);
+
+  return Response.json({ ok: true, promo: result.rows[0] }, { status: 201 });
+}
+
+async function handleDeletePractitionerPromo(promoId, userId, query) {
+  // Validate UUID format
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(promoId)) {
+    return Response.json({ error: 'Invalid promo ID' }, { status: 400 });
+  }
+
+  const result = await query(QUERIES.deactivatePractitionerPromo, [promoId, userId]);
+  if (!result.rows?.length) {
+    return Response.json({ error: 'Promo not found or already deactivated' }, { status: 404 });
+  }
+
+  return Response.json({ ok: true, deactivated: result.rows[0] });
 }
 
 // ─── PRAC-014: Send client reminder ──────────────────────────

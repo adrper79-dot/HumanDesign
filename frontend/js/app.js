@@ -167,6 +167,8 @@ async function fetchUserProfile() {
       // AUDIT-SEC-003: Show/hide verification banner based on email_verified status
       if (user.email_verified === false) showEmailVerificationBanner();
       else hideEmailVerificationBanner();
+      // Client Portal: show nav item if user is on any practitioner's roster
+      checkClientPortalVisibility();
     }
   } catch (e) {
     // network error — non-fatal
@@ -1223,6 +1225,11 @@ async function submitAuth() {
     if (authMode === 'register') {
       showEmailVerificationBanner();
     }
+    // Prompt for push notifications on first auth (deferred, non-blocking)
+    if ('Notification' in window && Notification.permission === 'default' && !localStorage.getItem('ps_push_prompted')) {
+      localStorage.setItem('ps_push_prompted', '1');
+      setTimeout(() => requestPushPermission(), 3000);
+    }
   } catch (e) {
     errorEl.textContent = _t('auth.connectionError', { message: e.message });
   } finally {
@@ -1730,13 +1737,33 @@ const PRACTITIONER_UPGRADE_COPY = {
     headline: 'Your brand. Your client portal. Your practice.',
     body: 'White-label the entire client experience — your logo, your domain, your voice. Looks like yours, powered by Prime Self.',
     roi: 'Agency plan: 5 practitioner seats means your team scales without extra tooling costs.'
+  },
+  calendarTransits: {
+    headline: 'See transits on your calendar — timing is everything.',
+    body: 'Transit and retrograde events appear right in your calendar so you can plan around planetary influences.',
+    roi: 'Individual plan unlocks transit calendar plus unlimited AI questions. $19/mo.'
+  },
+  calendarSync: {
+    headline: 'Sync your Prime Self calendar with Google Calendar.',
+    body: '2-way sync keeps your sessions, moon phases, and transits visible everywhere — no manual copying.',
+    roi: 'Practitioner plan includes sync, session tools, and unlimited client management.'
+  },
+  calendarSessions: {
+    headline: 'Session events on your calendar.',
+    body: 'Track client sessions alongside transits and moon phases. See everything in one unified view.',
+    roi: 'Practitioner plan: manage clients, run sessions, export PDFs — all for $97/mo.'
+  },
+  calendarPractitioner: {
+    headline: 'See all your clients\' calendars at a glance.',
+    body: 'The unified practitioner calendar shows every client\'s events color-coded and merged with your own. Spot patterns, plan sessions, stay on top of your practice.',
+    roi: '2 clients at $50/session covers it. Join 200+ practitioners already running their practice here.'
   }
 };
 
 // Helper to show upgrade modal on quota/feature errors
 // Routes free → Individual (consumer modal) and Individual → Practitioner (pro modal)
 function showUpgradePrompt(message, feature) {
-  const practitionerFeatures = ['practitionerTools', 'whiteLabel', 'clients', 'composite', 'pdf', 'client_roster', 'session_brief'];
+  const practitionerFeatures = ['practitionerTools', 'whiteLabel', 'clients', 'composite', 'pdf', 'client_roster', 'session_brief', 'calendarSync', 'calendarSessions', 'calendarPractitioner'];
   if (feature && practitionerFeatures.includes(feature)) {
     // Inject context-aware copy before opening (BL-EXC-P1-3)
     const copy = PRACTITIONER_UPGRADE_COPY[feature];
@@ -1870,10 +1897,11 @@ function formatRequestIdSuffix(requestId) {
 const TAB_GROUPS = {
   overview: 'btn-home',
   chart: 'btn-blueprint', profile: 'btn-blueprint',
-  transits: 'btn-today', checkin: 'btn-today', timing: 'btn-today',
+  transits: 'btn-today', checkin: 'btn-today', timing: 'btn-today', calendar: 'btn-today',
   composite: 'btn-connect', clusters: 'btn-connect',
   enhance: 'btn-grow', diary: 'btn-grow',
   practitioner: 'btn-practitioner',
+  'my-practitioner': null,
   celebrity: null, achievements: null,
   // Settings drawer items — no primary tab highlights
   history: null, sms: null, rectify: null, onboarding: null
@@ -1882,7 +1910,7 @@ const TAB_GROUPS = {
 // Sidebar parent mapping: which parent nav items expand for sub-tabs
 const SIDEBAR_PARENTS = {
   chart: 'chart', profile: 'chart',
-  transits: 'transits', checkin: 'transits', timing: 'transits',
+  transits: 'transits', checkin: 'transits', timing: 'transits', calendar: 'transits',
   composite: 'composite', clusters: 'composite',
   enhance: 'enhance', diary: 'enhance'
 };
@@ -2112,6 +2140,12 @@ function switchTab(id, btn) {
     Promise.resolve(loadRoster()).finally(() => switchTab._loading.delete('practitioner'));
   }
 
+  // Auto-load client portal when tab is activated
+  if (id === 'my-practitioner' && token && !switchTab._loading.has('my-practitioner')) {
+    switchTab._loading.add('my-practitioner');
+    Promise.resolve(loadClientPortal()).finally(() => switchTab._loading.delete('my-practitioner'));
+  }
+
   // Auto-load celebrity matches on first visit
   if (id === 'celebrity' && token && !document.getElementById('celebrityGrid')?.innerHTML && !switchTab._loading.has('celebrity')) {
     switchTab._loading.add('celebrity');
@@ -2133,12 +2167,28 @@ function switchTab(id, btn) {
   if (id === 'diary' && token && !switchTab._loading.has('diary-entries')) {
     switchTab._loading.add('diary-entries');
     Promise.resolve(typeof loadDiaryEntries === 'function' ? loadDiaryEntries() : Promise.resolve()).finally(() => switchTab._loading.delete('diary-entries'));
+    // Wire filter inputs once
+    if (!switchTab._diaryFiltersWired) {
+      switchTab._diaryFiltersWired = true;
+      const debounce = (fn, ms) => { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; };
+      const reload = debounce(() => loadDiaryEntries(), 350);
+      ['diaryTypeFilter','diarySignificanceFilter','diaryDateFrom','diaryDateTo'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', reload);
+      });
+      document.getElementById('diarySearchInput')?.addEventListener('input', reload);
+    }
   }
 
   // UX-008: Auto-load check-in stats when tab is activated
   if (id === 'checkin' && token && !switchTab._loading.has('checkin-stats')) {
     switchTab._loading.add('checkin-stats');
     Promise.resolve(typeof loadCheckinStats === 'function' ? loadCheckinStats() : Promise.resolve()).finally(() => switchTab._loading.delete('checkin-stats'));
+  }
+
+  // 3.3: Auto-load calendar events when tab is activated
+  if (id === 'calendar' && token && !switchTab._loading.has('calendar-events')) {
+    switchTab._loading.add('calendar-events');
+    Promise.resolve(typeof loadCalendar === 'function' ? loadCalendar() : Promise.resolve()).finally(() => switchTab._loading.delete('calendar-events'));
   }
 
   // UX-005: Auto-sync birth data from Chart tab to Profile tab
@@ -4556,6 +4606,7 @@ async function generateComposite() {
       body: JSON.stringify({ personA, personB }) 
     });
     resultEl.innerHTML = renderComposite(data);
+    trackEvent?.('composite', 'composite_generated');
   } catch (e) {
     resultEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
   } finally {
@@ -5013,6 +5064,239 @@ async function revokePractitionerInvitation(invitationId, emailLabel) {
   }
 }
 
+// ── Client Portal ──────────────────────────────────────────────────────────
+// Reverse view: client sees their practitioners, shared notes, portal data
+
+let _portalSharedNotesOffset = 0;
+
+async function loadClientPortal() {
+  if (!token) { openAuthOverlay(); return; }
+
+  const listEl = document.getElementById('portalPractitionersList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading practitioners…</div></div>';
+
+  try {
+    const [data, sharingData] = await Promise.all([
+      apiFetch('/api/client/my-practitioners'),
+      apiFetch('/api/client/diary-sharing').catch(() => ({ data: [] }))
+    ]);
+    if (!data.ok || !data.practitioners?.length) {
+      listEl.innerHTML = '<div class="alert alert-info">You are not currently on any practitioner\'s roster. When a practitioner adds you as a client, they\'ll appear here.</div>';
+      return;
+    }
+
+    const sharingMap = {};
+    (sharingData?.data || []).forEach(s => { sharingMap[s.practitioner_user_id] = s.share_diary; });
+
+    listEl.innerHTML = data.practitioners.map(function(p) {
+      const sharing = sharingMap[p.id] || false;
+      return '<div class="card" style="cursor:pointer;margin-bottom:var(--space-3)" data-action="viewPortalPractitioner" data-arg0="' + escapeAttr(p.id) + '">' +
+        '<div class="card-header-row">' +
+          '<div><strong>' + escapeHtml(p.display_name || 'Practitioner') + '</strong>' +
+            (p.specializations ? '<div class="card-hint">' + escapeHtml([].concat(p.specializations).join(', ')) + '</div>' : '') +
+          '</div>' +
+          (p.photo_url ? '<img src="' + escapeAttr(p.photo_url) + '" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover">' : '') +
+        '</div>' +
+        '<div class="card-hint">Client since ' + escapeHtml(p.relationship_since ? new Date(p.relationship_since).toLocaleDateString() : 'N/A') + '</div>' +
+        '<div style="margin-top:var(--space-2);display:flex;align-items:center;gap:var(--space-2)" onclick="event.stopPropagation()">' +
+          '<label style="font-size:var(--font-size-sm);color:var(--text-dim);display:flex;align-items:center;gap:var(--space-1);cursor:pointer">' +
+            '<input type="checkbox" ' + (sharing ? 'checked' : '') + ' onchange="toggleDiarySharing(\'' + escapeAttr(p.id) + '\', this.checked)"> Share diary with this practitioner' +
+          '</label>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+toggleDiarySharing(practitionerUserId, share) {
+  if (!token) return;
+  try {
+    await apiFetch('/api/client/diary-sharing', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practitioner_user_id: practitionerUserId, share_diary: share })
+    });
+    showToast(share ? 'Diary sharing enabled' : 'Diary sharing disabled', 'success');
+  } catch (e) {
+    showToast('Failed to update diary sharing', 'error');
+  }
+}
+window.toggleDiarySharing = toggleDiarySharing;
+
+async function 
+    // Show all shared notes card if there are practitioners
+    var allNotesCard = document.getElementById('portalAllNotesCard');
+    if (allNotesCard) {
+      allNotesCard.style.display = '';
+      loadAllSharedNotes();
+    }
+  } catch (e) {
+    listEl.innerHTML = '<div class="alert alert-error">Error loading portal: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+async function viewPortalPractitioner(practitionerId) {
+  if (!token || !practitionerId) return;
+
+  var detailView = document.getElementById('portalDetailView');
+  var pracInfo = document.getElementById('portalPracInfo');
+  var notesCard = document.getElementById('portalSharedNotes');
+  var notesContent = document.getElementById('portalNotesContent');
+  if (!detailView || !pracInfo) return;
+
+  detailView.style.display = '';
+  pracInfo.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading portal…</div></div>';
+
+  try {
+    var data = await apiFetch('/api/client/portal/' + encodeURIComponent(practitionerId));
+    if (!data.ok) {
+      pracInfo.innerHTML = '<div class="alert alert-error">' + escapeHtml(data.error || 'Unable to load portal') + '</div>';
+      return;
+    }
+
+    var p = data.practitioner || {};
+    var html = '<div class="card-title">🤝 ' + escapeHtml(p.display_name || 'Your Practitioner') + '</div>';
+    if (p.bio) html += '<p>' + escapeHtml(p.bio) + '</p>';
+    if (p.session_format) html += '<div class="card-hint">Session format: ' + escapeHtml(p.session_format) + '</div>';
+    if (p.booking_url) html += '<div style="margin-top:var(--space-3)"><a href="' + escapeAttr(p.booking_url) + '" target="_blank" rel="noopener" class="btn-primary btn-sm">Book a Session</a></div>';
+
+    if (data.chart) {
+      html += '<div class="card-hint" style="margin-top:var(--space-3)">📊 Chart calculated: ' + escapeHtml(new Date(data.chart.calculatedAt).toLocaleDateString()) + '</div>';
+    }
+    if (data.profile) {
+      html += '<div class="card-hint">📋 Profile generated: ' + escapeHtml(new Date(data.profile.createdAt).toLocaleDateString()) + '</div>';
+    }
+
+    pracInfo.innerHTML = html;
+
+    // Review form
+    var reviewHtml = '<div style="margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--border)">' +
+      '<h4 style="color:var(--gold);font-size:var(--font-size-sm);margin:0 0 var(--space-2)">Leave a Review</h4>' +
+      '<div id="reviewFormArea-' + escapeAttr(practitionerId) + '">' +
+        '<div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2)">' +
+          '<select id="reviewRating-' + escapeAttr(practitionerId) + '" style="padding:var(--space-2);background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:var(--radius)">' +
+            '<option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option>' +
+          '</select>' +
+        '</div>' +
+        '<textarea id="reviewContent-' + escapeAttr(practitionerId) + '" placeholder="Share your experience (min 10 chars)…" rows="3" maxlength="2000" style="width:100%;padding:var(--space-2);background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);resize:vertical;margin-bottom:var(--space-2)"></textarea>' +
+        '<button class="btn-primary btn-sm" data-action="submitReview" data-arg0="' + escapeAttr(practitionerId) + '">Submit Review</button>' +
+      '</div>' +
+    '</div>';
+    pracInfo.innerHTML = html + reviewHtml;
+
+    // Shared notes
+    if (data.sharedNotes?.length && notesCard && notesContent) {
+      notesCard.style.display = '';
+      notesContent.innerHTML = data.sharedNotes.map(function(n) {
+        return '<div class="session-note-item" style="padding:var(--space-3);border-bottom:var(--border-width-thin) solid var(--border-subtle)">' +
+          '<div class="card-hint">' + escapeHtml(n.session_date || '') + '</div>' +
+          '<p style="margin:var(--space-1) 0 0">' + escapeHtml(n.content) + '</p>' +
+        '</div>';
+      }).join('');
+    } else if (notesCard) {
+      notesCard.style.display = 'none';
+    }
+  } catch (e) {
+    pracInfo.innerHTML = '<div class="alert alert-error">Error: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+async function submitReview(practitionerId) {
+  const ratingEl = document.getElementById('reviewRating-' + practitionerId);
+  const contentEl = document.getElementById('reviewContent-' + practitionerId);
+  const content = contentEl?.value?.trim();
+  if (!content || content.length < 10) { showNotification('Review must be at least 10 characters.', 'warn'); return; }
+  try {
+    await apiFetch('/api/client/reviews', {
+      method: 'POST',
+      body: JSON.stringify({
+        practitioner_id: practitionerId,
+        rating: parseInt(ratingEl?.value || '5', 10),
+        content
+      })
+    });
+    showNotification('Review submitted! It will appear after practitioner approval.', 'success');
+    trackEvent?.('client', 'review_submitted', practitionerId);
+    const area = document.getElementById('reviewFormArea-' + practitionerId);
+    if (area) area.innerHTML = '<div class="alert alert-success" style="font-size:var(--font-size-sm)">✓ Review submitted — pending approval</div>';
+  } catch (e) {
+    showNotification(e.message?.includes('already') ? 'You have already reviewed this practitioner.' : 'Error: ' + e.message, 'error');
+  }
+}
+
+async function loadAllSharedNotes() {
+  if (!token) return;
+  _portalSharedNotesOffset = 0;
+  var el = document.getElementById('portalAllNotesContent');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    var data = await apiFetch('/api/client/shared-notes?limit=20&offset=0');
+    if (!data.ok || !data.notes?.length) {
+      el.innerHTML = '<div class="card-hint">No shared notes yet. When your practitioner shares session notes with you, they\'ll appear here.</div>';
+      document.getElementById('portalAllNotesMore').style.display = 'none';
+      return;
+    }
+
+    el.innerHTML = data.notes.map(function(n) {
+      return '<div class="session-note-item" style="padding:var(--space-3);border-bottom:var(--border-width-thin) solid var(--border-subtle)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<strong>' + escapeHtml(n.practitioner_name || 'Practitioner') + '</strong>' +
+          '<span class="card-hint">' + escapeHtml(n.session_date || '') + '</span>' +
+        '</div>' +
+        '<p style="margin:var(--space-1) 0 0">' + escapeHtml(n.content) + '</p>' +
+      '</div>';
+    }).join('');
+
+    _portalSharedNotesOffset = data.notes.length;
+    var moreEl = document.getElementById('portalAllNotesMore');
+    if (moreEl) moreEl.style.display = data.hasMore ? '' : 'none';
+  } catch (e) {
+    el.innerHTML = '<div class="alert alert-error">' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+async function loadMoreSharedNotes() {
+  if (!token) return;
+  var el = document.getElementById('portalAllNotesContent');
+  if (!el) return;
+
+  try {
+    var data = await apiFetch('/api/client/shared-notes?limit=20&offset=' + _portalSharedNotesOffset);
+    if (!data.ok || !data.notes?.length) {
+      document.getElementById('portalAllNotesMore').style.display = 'none';
+      return;
+    }
+
+    el.innerHTML += data.notes.map(function(n) {
+      return '<div class="session-note-item" style="padding:var(--space-3);border-bottom:var(--border-width-thin) solid var(--border-subtle)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<strong>' + escapeHtml(n.practitioner_name || 'Practitioner') + '</strong>' +
+          '<span class="card-hint">' + escapeHtml(n.session_date || '') + '</span>' +
+        '</div>' +
+        '<p style="margin:var(--space-1) 0 0">' + escapeHtml(n.content) + '</p>' +
+      '</div>';
+    }).join('');
+
+    _portalSharedNotesOffset += data.notes.length;
+    var moreEl = document.getElementById('portalAllNotesMore');
+    if (moreEl) moreEl.style.display = data.hasMore ? '' : 'none';
+  } catch (e) {
+    // silent — pagination error
+  }
+}
+
+// Show portal nav item when user is on any practitioner's roster
+async function checkClientPortalVisibility() {
+  if (!token) return;
+  try {
+    var data = await apiFetch('/api/client/my-practitioners');
+    var navBtn = document.getElementById('nav-my-practitioner');
+    if (navBtn && data.ok && data.practitioners?.length > 0) {
+      navBtn.style.display = '';
+    }
+  } catch (_) { /* silent */ }
+}
+
 async function loadRoster() {
   if (!token) { openAuthOverlay(); return; }
 
@@ -5021,14 +5305,15 @@ async function loadRoster() {
   resultEl.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Loading your roster…</div></div>';
 
   try {
-    const [rosterData, profileData, invitationsData, directoryData, referralData, metricsData, dirStatsData] = await Promise.all([
+    const [rosterData, profileData, invitationsData, directoryData, referralData, metricsData, dirStatsData, earningsData] = await Promise.all([
       apiFetch('/api/practitioner/clients'),
       apiFetch('/api/practitioner/profile').catch(() => null),
       apiFetch('/api/practitioner/clients/invitations').catch(() => ({ invitations: [] })),
       apiFetch('/api/practitioner/directory-profile').catch(() => ({ error: 'Not yet configured' })),
       apiFetch('/api/practitioner/referral-link').catch(() => null),
       apiFetch('/api/practitioner/stats').catch(() => null),
-      apiFetch('/api/practitioner/directory-stats').catch(() => null)
+      apiFetch('/api/practitioner/directory-stats').catch(() => null),
+      apiFetch('/api/referrals').catch(() => null)
     ]);
 
     // Update limit bar
@@ -5045,13 +5330,15 @@ async function loadRoster() {
       }
     }
 
-    renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData });
+    renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData, metricsData });
     renderPractitionerMetrics(metricsData, dirStatsData);
     resultEl.innerHTML = renderRoster(rosterData);
     _practitionerRosterClients = Array.isArray(rosterData?.clients) ? rosterData.clients : [];
     applyPractitionerInvitations(invitationsData);
     applyDirectoryProfileData(directoryData);
     renderPractitionerReferralStats(referralData);
+    renderPractitionerEarnings(earningsData);
+    loadPractitionerPromo();
     _pracSchedulingEmbedUrl = directoryData?.profile?.scheduling_embed_url || '';
 
     // Show and populate Agency Seats card for Agency-tier users
@@ -5116,6 +5403,152 @@ function copyPracReferralLink() {
   }
 }
 window.copyPracReferralLink = copyPracReferralLink;
+
+// ── Practitioner Earnings Card (ITEM-1.8) ─────────────────────
+function renderPractitionerEarnings(data) {
+  const el = document.getElementById('pracEarningsCard');
+  if (!el) return;
+  const s = data?.stats;
+  if (!s) { el.innerHTML = ''; return; }
+
+  const totalReferrals = parseInt(s.totalReferrals ?? 0);
+  const converted = parseInt(s.convertedReferrals ?? 0);
+  const pendingRewards = parseInt(s.pendingRewards ?? 0);
+  const totalValue = parseInt(s.totalRewardValue ?? 0);
+  const ytdCredits = `$${(totalValue / 100).toFixed(2)}`;
+
+  trackEvent('practitioner', 'earnings_card_viewed', 'dashboard');
+
+  const stat = (value, label) => `
+    <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+      <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">${value}</div>
+      <div style="font-size:var(--font-size-xs);color:var(--text-dim)">${label}</div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:var(--space-4)">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">💰</span> Revenue &amp; Earnings</div>
+      </div>
+      <p class="card-hint">Earn 25% lifetime commission on every referred subscriber. Credits are applied to your Stripe balance automatically.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:var(--space-3);margin-top:var(--space-3)">
+        ${stat(ytdCredits, 'Total Credits Earned')}
+        ${stat(totalReferrals, 'Total Referrals')}
+        ${stat(converted, 'Converted')}
+        ${stat(pendingRewards, 'Pending Rewards')}
+      </div>
+    </div>
+  `;
+}
+
+// ── Practitioner Promo Code (ITEM-1.9) ───────────────────────
+async function loadPractitionerPromo() {
+  const el = document.getElementById('pracPromoCard');
+  if (!el) return;
+  try {
+    const data = await apiFetch('/api/practitioner/promo');
+    renderPractitionerPromo(data?.promo);
+  } catch {
+    renderPractitionerPromo(null);
+  }
+}
+
+function renderPractitionerPromo(promo) {
+  const el = document.getElementById('pracPromoCard');
+  if (!el) return;
+
+  if (promo) {
+    const code = escapeHtml(promo.code);
+    const disc = parseInt(promo.discount_value);
+    const used = parseInt(promo.redemptions || 0);
+    const max = promo.max_redemptions ? parseInt(promo.max_redemptions) : '∞';
+    const expires = promo.valid_until ? new Date(promo.valid_until).toLocaleDateString() : 'Never';
+    el.innerHTML = `
+      <div class="card" style="margin-bottom:var(--space-4)">
+        <div class="card-header-row">
+          <div class="card-title mb-0"><span class="nav-icon">🏷️</span> Your Promo Code</div>
+          <button class="btn-secondary btn-sm" data-action="deactivatePractitionerPromo" data-arg0="${escapeAttr(promo.id)}" style="color:var(--error)">Deactivate</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--space-3);margin-top:var(--space-3)">
+          <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:1.4rem;font-weight:700;color:var(--gold);font-family:monospace">${code}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Code</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">${disc}%</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Discount</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:1.6rem;font-weight:700;color:var(--gold)">${used} / ${max}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Redemptions</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:var(--space-2);padding:var(--space-3);text-align:center">
+            <div style="font-size:1.2rem;font-weight:700;color:var(--gold)">${expires}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-dim)">Expires</div>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="card" style="margin-bottom:var(--space-4)">
+        <div class="card-header-row">
+          <div class="card-title mb-0"><span class="nav-icon">🏷️</span> Create Promo Code</div>
+        </div>
+        <p class="card-hint">Create a discount code for your clients. 10-50% off their first month.</p>
+        <div style="display:grid;gap:var(--space-2);max-width:360px">
+          <input id="pracPromoCode" placeholder="e.g. JANE20" maxlength="32" style="text-transform:uppercase" />
+          <label style="font-size:var(--font-size-sm);color:var(--text-dim)">Discount %</label>
+          <input id="pracPromoDiscount" type="number" min="10" max="50" value="20" />
+          <label style="font-size:var(--font-size-sm);color:var(--text-dim)">Max redemptions (optional)</label>
+          <input id="pracPromoMax" type="number" min="1" max="1000" placeholder="100" />
+          <label style="font-size:var(--font-size-sm);color:var(--text-dim)">Expiry date (optional)</label>
+          <input id="pracPromoExpiry" type="date" />
+          <button class="btn-primary" data-action="createPractitionerPromo" style="margin-top:var(--space-2)">Create Code</button>
+        </div>
+        <div id="pracPromoError" style="color:var(--error);margin-top:var(--space-2);font-size:var(--font-size-sm)"></div>
+      </div>`;
+  }
+}
+
+async function createPractitionerPromo() {
+  const code = document.getElementById('pracPromoCode')?.value?.trim();
+  const discount = document.getElementById('pracPromoDiscount')?.value;
+  const max = document.getElementById('pracPromoMax')?.value;
+  const expiry = document.getElementById('pracPromoExpiry')?.value;
+  const errEl = document.getElementById('pracPromoError');
+
+  if (!code) { if (errEl) errEl.textContent = 'Enter a promo code'; return; }
+
+  try {
+    if (errEl) errEl.textContent = '';
+    const resp = await apiFetch('/api/practitioner/promo', {
+      method: 'POST',
+      body: JSON.stringify({
+        code,
+        discount_value: parseInt(discount) || 20,
+        max_redemptions: max ? parseInt(max) : null,
+        valid_until: expiry || null
+      })
+    });
+    showNotification('Promo code created!', 'success');
+    renderPractitionerPromo(resp.promo);
+  } catch (e) {
+    if (errEl) errEl.textContent = e.message || 'Failed to create promo code';
+  }
+}
+window.createPractitionerPromo = createPractitionerPromo;
+
+async function deactivatePractitionerPromo(promoId) {
+  if (!confirm('Deactivate this promo code? Clients will no longer be able to use it.')) return;
+  try {
+    await apiFetch(`/api/practitioner/promo/${encodeURIComponent(promoId)}`, { method: 'DELETE' });
+    showNotification('Promo code deactivated', 'success');
+    renderPractitionerPromo(null);
+  } catch (e) {
+    showNotification(e.message || 'Failed to deactivate', 'error');
+  }
+}
+window.deactivatePractitionerPromo = deactivatePractitionerPromo;
 
 // ── Practitioner Metrics Card (PRAC-012) ─────────────────────
 function renderPractitionerMetrics(data, dirData) {
@@ -5230,7 +5663,7 @@ async function removeAgencySeat(memberId, emailLabel) {
   }
 }
 
-function renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData }) {
+function renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData, metricsData }) {
   const container = document.getElementById('pracActivationPlan');
   if (!container) return;
 
@@ -5238,14 +5671,17 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
   const invitations = Array.isArray(invitationsData?.invitations) ? invitationsData.invitations : [];
   const directoryProfile = directoryData?.profile || null;
   const practitioner = profileData?.practitioner || null;
+  const stats = metricsData?.stats || {};
 
   const directoryReady = !!(directoryProfile?.display_name && directoryProfile?.bio && directoryProfile?.booking_url);
   const hasClientOrInvite = clients.length > 0 || invitations.length > 0;
   const chartReadyClient = clients.find(client => !!client.chart_id) || null;
-  const sessionReadyClient = clients.find(client => !!client.profile_id) || null;
+  const hasFirstNote = parseInt(stats.totalNotes ?? 0) > 0;
+  const sessionReadyClient = clients.find(client => !!client.chart_id && !!client.profile_id) || null;
 
   const checklist = [
     {
+      key: 'profile',
       done: directoryReady,
       title: 'Complete your public profile',
       description: directoryReady
@@ -5254,6 +5690,7 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
       cta: !directoryReady ? '<button class="btn-secondary btn-sm" data-action="toggleDirectoryForm">Edit Profile</button>' : ''
     },
     {
+      key: 'invite',
       done: hasClientOrInvite,
       title: 'Add or invite your first client',
       description: hasClientOrInvite
@@ -5262,6 +5699,7 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
       cta: !hasClientOrInvite ? '<button class="btn-primary btn-sm" data-action="togglePracAddForm">Invite First Client</button>' : ''
     },
     {
+      key: 'chart',
       done: !!chartReadyClient,
       title: 'Get a client chart into the workspace',
       description: chartReadyClient
@@ -5272,11 +5710,23 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
         : ''
     },
     {
+      key: 'note',
+      done: hasFirstNote,
+      title: 'Write your first session note',
+      description: hasFirstNote
+        ? `You have ${stats.totalNotes} session note${stats.totalNotes === 1 ? '' : 's'} — your practice knowledge base is growing.`
+        : 'Session notes capture your observations and build a running record for each client.',
+      cta: (!hasFirstNote && chartReadyClient)
+        ? `<button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(chartReadyClient.id)}" data-arg1="${escapeAttr(chartReadyClient.email || '')}">Open Client → Add Note</button>`
+        : ''
+    },
+    {
+      key: 'brief',
       done: !!sessionReadyClient,
-      title: 'Reach first session-ready client',
+      title: 'Generate your first session brief',
       description: sessionReadyClient
-        ? 'A client now has both chart and profile available for session preparation and deliverables.'
-        : 'Once a client has both a chart and profile, this portal becomes fully useful for prep, notes, and branded delivery.',
+        ? 'A client has chart and profile ready — you can generate AI session prep briefs for focused, efficient sessions.'
+        : 'Once a client has both a chart and profile, you can generate AI-powered session prep briefs.',
       cta: sessionReadyClient
         ? `<button class="btn-secondary btn-sm" data-action="viewClientDetail" data-arg0="${escapeAttr(sessionReadyClient.id)}" data-arg1="${escapeAttr(sessionReadyClient.email || '')}">Open Session Workspace</button>`
         : ''
@@ -5286,6 +5736,23 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
   const completed = checklist.filter(item => item.done).length;
   const nextStep = checklist.find(item => !item.done) || null;
   const practitionerName = practitioner?.display_name || practitioner?.business_name || 'Practitioner';
+
+  // Analytics: fire activation_step_completed for newly-completed steps
+  const storageKey = 'ps_activation_steps_fired';
+  const firedRaw = localStorage.getItem(storageKey);
+  const fired = firedRaw ? JSON.parse(firedRaw) : [];
+  checklist.forEach(item => {
+    if (item.done && !fired.includes(item.key)) {
+      fired.push(item.key);
+      trackEvent?.('practitioner', 'activation_step_completed', item.key);
+    }
+  });
+  localStorage.setItem(storageKey, JSON.stringify(fired));
+  // Fire activation_checklist_complete once when all steps done
+  if (completed === checklist.length && !localStorage.getItem('ps_activation_complete_fired')) {
+    localStorage.setItem('ps_activation_complete_fired', '1');
+    trackEvent?.('practitioner', 'activation_checklist_complete', `${checklist.length}_steps`);
+  }
 
   container.innerHTML = `
     <div class="card" style="border-top:3px solid var(--gold)">
@@ -5299,7 +5766,7 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
           <div style="font-size:var(--font-size-sm);color:var(--text-dim)">core milestones</div>
         </div>
       </div>
-      ${nextStep ? `<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(212,175,55,0.22);border-radius:var(--space-2);background:rgba(212,175,55,0.08)"><strong style="color:var(--text)">Next step:</strong> <span style="color:var(--text-dim)">${escapeHtml(nextStep.title)}</span></div>` : '<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(82,196,26,0.22);border-radius:var(--space-2);background:rgba(82,196,26,0.08);color:var(--text)">Your practitioner workspace is set up for real client work.</div>'}
+      ${nextStep ? `<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(212,175,55,0.22);border-radius:var(--space-2);background:rgba(212,175,55,0.08)"><strong style="color:var(--text)">Next step:</strong> <span style="color:var(--text-dim)">${escapeHtml(nextStep.title)}</span></div>` : '<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(82,196,26,0.22);border-radius:var(--space-2);background:rgba(82,196,26,0.08);color:var(--text)">Your practitioner workspace is fully activated — every milestone is complete.</div>'}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-3);margin-top:var(--space-4)">
         ${checklist.map(item => `
           <div style="padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:var(--bg3)">
@@ -5423,13 +5890,16 @@ async function viewClientDetail(clientId, emailLabel) {
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   try {
-    const [data, notesData, aiContextData] = await Promise.all([
+    const [data, notesData, aiContextData, diaryData] = await Promise.all([
       apiFetch(`/api/practitioner/clients/${clientId}`),
       apiFetch(`/api/practitioner/clients/${clientId}/notes?limit=10&offset=0`).catch(() => ({ notes: [], total: 0, hasMore: false })),
-      apiFetch(`/api/practitioner/clients/${clientId}/ai-context`).catch(() => ({ ai_context: '', error: 'Unable to load AI context' }))
+      apiFetch(`/api/practitioner/clients/${clientId}/ai-context`).catch(() => ({ ai_context: '', error: 'Unable to load AI context' })),
+      apiFetch(`/api/practitioner/clients/${clientId}/diary`).catch(() => ({ data: [] }))
     ]);
     _practitionerClientDetailCache.set(String(clientId), data);
-    panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData);
+    panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData, diaryData);
+    loadClientReadings(clientId);
+    loadClientActions(clientId);
     trackEvent('practitioner', 'client_view', clientId);
   } catch (e) {
     panel.innerHTML = `<div class="alert alert-error">Error loading client: ${escapeHtml(e.message)}</div>`;
@@ -5516,7 +5986,7 @@ function buildPractitionerFollowUpBrief({ emailLabel, chart, profile, notes, aiC
   return lines.join('\n');
 }
 
-function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData) {
+function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData, diaryData) {
   if (!data || data.error) {
     return `<div class="alert alert-error">${escapeHtml(data?.error || 'Failed to load client detail')}</div>`;
   }
@@ -5691,8 +6161,17 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
       <button class="btn-primary btn-sm" data-action="showNewNoteForm" data-arg0="${safeClientId}">+ New Note</button>
     </div>
     <div id="newNoteForm-${safeClientId}" style="display:none;margin-bottom:var(--space-4)">
-      <div style="margin-bottom:var(--space-2)">
-        <input type="date" id="noteDate-${safeClientId}" style="width:auto" class="form-input">
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2);flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <label style="display:block;font-size:var(--font-size-xs);color:var(--text-dim);margin-bottom:2px">Date</label>
+          <input type="date" id="noteDate-${safeClientId}" style="width:auto" class="form-input">
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="display:block;font-size:var(--font-size-xs);color:var(--text-dim);margin-bottom:2px">Template</label>
+          <select id="noteTemplate-${safeClientId}" class="form-input" style="width:100%">
+            <option value="">Blank note</option>
+          </select>
+        </div>
       </div>
       <textarea id="noteContent-${safeClientId}" placeholder="Write your session notes here…" rows="4"
         style="width:100%;resize:vertical;margin-bottom:var(--space-2)" class="form-input" maxlength="5000"></textarea>
@@ -5723,6 +6202,96 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
   }
 
   html += `</div></div>`;
+
+  // ── Client Diary Entries Section (read-only, opt-in) ──
+  const diaryEntries = Array.isArray(diaryData?.data) ? diaryData.data : [];
+  html += `
+  <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+    <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0 0 var(--space-3) 0">📔 Client Diary</h4>`;
+  if (diaryEntries.length === 0) {
+    html += `<div class="alert alert-info" style="font-size:var(--font-size-sm)">No diary entries shared. The client must opt in to diary sharing from their account.</div>`;
+  } else {
+    const typeIcon = { career: '💼', relationship: '❤️', health: '🏥', spiritual: '✨', financial: '💰', family: '👨‍👩‍👧', other: '📌' };
+    diaryEntries.forEach(entry => {
+      const d = new Date(entry.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      html += `
+      <div class="card" style="padding:var(--space-3);margin:0 0 var(--space-2) 0">
+        <div style="font-size:var(--font-size-md);font-weight:600;color:var(--gold)">${typeIcon[entry.event_type] || '📌'} ${escapeHtml(entry.event_title)}</div>
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)">${d} · ${entry.event_type} · ${entry.significance}</div>
+        ${entry.event_description ? `<div style="font-size:var(--font-size-base);color:var(--text);margin-top:var(--space-2);line-height:1.5">${escapeHtml(entry.event_description)}</div>` : ''}
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  // ── Divination Readings Section ──
+  html += `
+  <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)">
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0">🔮 Divination Readings</h4>
+      <button class="btn-primary btn-sm" data-action="showNewReadingForm" data-arg0="${safeClientId}">+ New Reading</button>
+    </div>
+    <div id="newReadingForm-${safeClientId}" style="display:none;margin-bottom:var(--space-4)">
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-2);flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <label style="display:block;font-size:var(--font-size-xs);color:var(--text-dim);margin-bottom:2px">Date</label>
+          <input type="date" id="readingDate-${safeClientId}" style="width:auto" class="form-input">
+        </div>
+        <div>
+          <label style="display:block;font-size:var(--font-size-xs);color:var(--text-dim);margin-bottom:2px">Type</label>
+          <select id="readingType-${safeClientId}" class="form-input">
+            <option value="tarot">Tarot</option>
+            <option value="oracle">Oracle</option>
+            <option value="runes">Runes</option>
+            <option value="iching">I Ching</option>
+            <option value="pendulum">Pendulum</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:120px">
+          <label style="display:block;font-size:var(--font-size-xs);color:var(--text-dim);margin-bottom:2px">Spread</label>
+          <input type="text" id="readingSpread-${safeClientId}" class="form-input" placeholder="e.g., Celtic Cross, 3-card" style="width:100%">
+        </div>
+      </div>
+      <textarea id="readingInterpretation-${safeClientId}" placeholder="Cards drawn and your interpretation…" rows="4"
+        style="width:100%;resize:vertical;margin-bottom:var(--space-2)" class="form-input" maxlength="10000"></textarea>
+      <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:var(--space-1);font-size:var(--font-size-sm);color:var(--text-dim);cursor:pointer">
+          <input type="checkbox" id="readingShareAi-${safeClientId}"> Share with client
+        </label>
+        <div style="margin-left:auto;display:flex;gap:var(--space-2)">
+          <button class="btn-secondary btn-sm" data-action="hideNewReadingForm" data-arg0="${safeClientId}">Cancel</button>
+          <button class="btn-primary btn-sm" data-action="saveDivinationReading" data-arg0="${safeClientId}">Save Reading</button>
+        </div>
+      </div>
+    </div>
+    <div id="readingsList-${safeClientId}">
+      <div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">Loading readings…</div>
+    </div>
+  </div>`;
+
+  // ── Session Actions ──
+  html += `
+  <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)">
+      <h4 style="color:var(--gold);font-size:var(--font-size-base);margin:0">Assigned Actions</h4>
+      <button class="btn-primary btn-sm" data-action="showNewActionForm" data-arg0="${safeClientId}">+ New Action</button>
+    </div>
+    <div id="newActionForm-${safeClientId}" style="display:none;padding:var(--space-3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:var(--space-3);background:var(--card-bg)">
+      <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)">
+        <input type="text" id="actionTitle-${safeClientId}" placeholder="Action title (required)" maxlength="200" style="flex:1;min-width:200px;padding:var(--space-2);background:var(--card-bg-alt,var(--bg));color:var(--text);border:1px solid var(--border);border-radius:var(--radius)">
+        <input type="date" id="actionDue-${safeClientId}" style="padding:var(--space-2);background:var(--card-bg-alt,var(--bg));color:var(--text);border:1px solid var(--border);border-radius:var(--radius)">
+      </div>
+      <textarea id="actionDescription-${safeClientId}" placeholder="Description (optional)" rows="2" maxlength="5000" style="width:100%;padding:var(--space-2);background:var(--card-bg-alt,var(--bg));color:var(--text);border:1px solid var(--border);border-radius:var(--radius);resize:vertical;margin-bottom:var(--space-3)"></textarea>
+      <div style="display:flex;gap:var(--space-2);justify-content:flex-end">
+        <button class="btn-secondary btn-sm" data-action="hideNewActionForm" data-arg0="${safeClientId}">Cancel</button>
+        <button class="btn-primary btn-sm" data-action="saveSessionAction" data-arg0="${safeClientId}">Save Action</button>
+      </div>
+    </div>
+    <div id="actionsList-${safeClientId}">
+      <div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">Loading actions…</div>
+    </div>
+  </div>`;
 
   // ── AI Session Brief (BL-EXC-P1-1) ──
   html += `
@@ -5837,9 +6406,69 @@ function showNewNoteForm(clientId) {
     // Default date to today
     const dateInput = document.getElementById('noteDate-' + clientId);
     if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+    // Load templates into dropdown on first open
+    loadNoteTemplates(clientId);
     document.getElementById('noteContent-' + clientId)?.focus();
   }
 }
+
+// ── Session Note Template Picker ─────────────────────────────
+let _noteTemplatesCache = null;
+
+async function loadNoteTemplates(clientId) {
+  const sel = document.getElementById('noteTemplate-' + clientId);
+  if (!sel || sel.options.length > 1) return; // already loaded
+  if (!_noteTemplatesCache) {
+    try {
+      const data = await apiFetch('/api/practitioner/session-templates');
+      _noteTemplatesCache = data?.templates || [];
+    } catch { _noteTemplatesCache = []; }
+  }
+  _noteTemplatesCache.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = `${t.name} — ${t.description}`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => applyNoteTemplate(clientId));
+}
+
+async function applyNoteTemplate(clientId) {
+  const sel = document.getElementById('noteTemplate-' + clientId);
+  const textarea = document.getElementById('noteContent-' + clientId);
+  if (!sel || !textarea) return;
+  const templateId = sel.value;
+  if (!templateId) { textarea.placeholder = 'Write your session notes here…'; return; }
+
+  // Find client data from roster cache for hydration
+  const client = (_practitionerRosterClients || []).find(c => c.id === clientId) || {};
+  try {
+    const data = await apiFetch(`/api/practitioner/session-templates/${templateId}/hydrate`, {
+      method: 'POST',
+      body: JSON.stringify({
+        clientId,
+        clientName: client.email || '',
+        clientType: client.type || '',
+        clientProfile: client.profile || '',
+        clientAuthority: client.authority || ''
+      })
+    });
+    if (data?.template?.sections) {
+      const text = data.template.sections.map(s =>
+        `## ${s.label}\n${s.context ? `_${s.context}_\n` : ''}${s.prompt}\n`
+      ).join('\n');
+      textarea.value = text;
+      textarea.rows = Math.max(8, data.template.sections.length * 4);
+      trackEvent?.('practitioner', 'template_hydrated', templateId);
+    }
+  } catch {
+    // Fallback: use cached template sections without hydration
+    const t = _noteTemplatesCache?.find(t => t.id === templateId);
+    if (t) textarea.placeholder = `Template: ${t.name}`;
+  }
+  trackEvent?.('practitioner', 'template_selected', templateId);
+}
+window.applyNoteTemplate = applyNoteTemplate;
 
 function hideNewNoteForm(clientId) {
   const form = document.getElementById('newNoteForm-' + clientId);
@@ -5847,6 +6476,8 @@ function hideNewNoteForm(clientId) {
     form.style.display = 'none';
     const content = document.getElementById('noteContent-' + clientId);
     if (content) content.value = '';
+    const sel = document.getElementById('noteTemplate-' + clientId);
+    if (sel) sel.value = '';
   }
 }
 
@@ -5930,6 +6561,7 @@ async function updateSessionNote(noteId, clientId) {
     }
 
     showNotification('Note updated', 'success');
+    trackEvent?.('practitioner', 'note_edited', noteId);
     await refreshSessionNotes(clientId);
   } catch (e) {
     showNotification('Error updating note. Please try again.', 'error');
@@ -5948,6 +6580,7 @@ async function deleteSessionNote(noteId, clientId) {
     }
 
     showNotification('Note deleted', 'success');
+    trackEvent?.('practitioner', 'note_deleted', noteId);
     await refreshSessionNotes(clientId);
   } catch (e) {
     showNotification('Error deleting note. Please try again.', 'error');
@@ -6031,6 +6664,200 @@ async function loadMoreNotes(clientId, page) {
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = 'Load 10 more'; }
     showNotification('Error loading more notes: ' + e.message, 'error');
+  }
+}
+
+// ── Divination Readings CRUD ─────────────────────────────────────────
+
+function showNewReadingForm(clientId) {
+  const form = document.getElementById('newReadingForm-' + clientId);
+  if (form) {
+    form.style.display = '';
+    const dateEl = document.getElementById('readingDate-' + clientId);
+    if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
+  }
+  loadClientReadings(clientId);
+}
+
+function hideNewReadingForm(clientId) {
+  const form = document.getElementById('newReadingForm-' + clientId);
+  if (form) form.style.display = 'none';
+  const interp = document.getElementById('readingInterpretation-' + clientId);
+  if (interp) interp.value = '';
+  const spread = document.getElementById('readingSpread-' + clientId);
+  if (spread) spread.value = '';
+}
+
+async function saveDivinationReading(clientId) {
+  const dateEl = document.getElementById('readingDate-' + clientId);
+  const typeEl = document.getElementById('readingType-' + clientId);
+  const spreadEl = document.getElementById('readingSpread-' + clientId);
+  const interpEl = document.getElementById('readingInterpretation-' + clientId);
+  const shareEl = document.getElementById('readingShareAi-' + clientId);
+
+  const interpretation = interpEl?.value?.trim();
+  if (!interpretation) { showNotification('Please add an interpretation.', 'warn'); return; }
+
+  try {
+    await apiFetch(`/api/practitioner/clients/${clientId}/readings`, {
+      method: 'POST',
+      body: JSON.stringify({
+        reading_type: typeEl?.value || 'tarot',
+        spread_type: spreadEl?.value?.trim() || null,
+        interpretation,
+        share_with_ai: shareEl?.checked || false,
+        reading_date: dateEl?.value || new Date().toISOString().slice(0, 10)
+      })
+    });
+    showNotification('Reading saved.', 'success');
+    trackEvent?.('practitioner', 'reading_created', typeEl?.value);
+    hideNewReadingForm(clientId);
+    await loadClientReadings(clientId);
+  } catch (e) {
+    showNotification('Error saving reading: ' + e.message, 'error');
+  }
+}
+
+async function loadClientReadings(clientId) {
+  const listEl = document.getElementById('readingsList-' + clientId);
+  if (!listEl) return;
+  try {
+    const data = await apiFetch(`/api/practitioner/clients/${clientId}/readings?limit=10&offset=0`);
+    const readings = data?.readings || [];
+    if (readings.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No readings yet. Record your first divination reading.</div>';
+    } else {
+      listEl.innerHTML = readings.map(r => renderDivinationReading(r, clientId)).join('');
+    }
+  } catch (e) {
+    listEl.innerHTML = `<div class="alert alert-error">Error loading readings: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderDivinationReading(r, clientId) {
+  const date = r.reading_date ? new Date(r.reading_date).toLocaleDateString() : '—';
+  const type = escapeHtml(r.reading_type || 'tarot');
+  const spread = r.spread_type ? escapeHtml(r.spread_type) : '';
+  const interp = escapeHtml(r.interpretation || '').substring(0, 300);
+  const readingId = escapeAttr(r.id);
+  const safeClientId = escapeAttr(clientId);
+  return `
+    <div style="padding:var(--space-3) 0;border-bottom:1px solid var(--border)" data-reading-id="${readingId}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1)">
+        <div style="font-size:var(--font-size-sm);color:var(--text-dim)">${date} · <span style="text-transform:capitalize">${type}</span>${spread ? ' · ' + spread : ''}</div>
+        <div style="display:flex;gap:var(--space-2)">
+          <button class="btn-secondary btn-sm" style="font-size:var(--font-size-xs);padding:2px 8px" data-action="deleteDivinationReading" data-arg0="${readingId}" data-arg1="${safeClientId}">Delete</button>
+        </div>
+      </div>
+      <div style="font-size:var(--font-size-sm);color:var(--text);white-space:pre-wrap;line-height:1.5">${interp}${r.interpretation && r.interpretation.length > 300 ? '…' : ''}</div>
+      ${r.share_with_ai ? '<div style="font-size:var(--font-size-xs);color:var(--gold);margin-top:4px">📤 Shared with client</div>' : ''}
+    </div>`;
+}
+
+async function deleteDivinationReading(readingId, clientId) {
+  if (!confirm('Delete this reading?')) return;
+  try {
+    await apiFetch(`/api/practitioner/readings/${readingId}`, { method: 'DELETE' });
+    showNotification('Reading deleted.', 'success');
+    trackEvent?.('practitioner', 'reading_deleted', readingId);
+    await loadClientReadings(clientId);
+  } catch (e) {
+    showNotification('Error deleting reading: ' + e.message, 'error');
+  }
+}
+
+// ── Session Actions CRUD ────────────────────────────────────────────
+
+function showNewActionForm(clientId) {
+  const form = document.getElementById('newActionForm-' + clientId);
+  if (form) form.style.display = '';
+}
+
+function hideNewActionForm(clientId) {
+  const form = document.getElementById('newActionForm-' + clientId);
+  if (form) form.style.display = 'none';
+  const title = document.getElementById('actionTitle-' + clientId);
+  if (title) title.value = '';
+  const desc = document.getElementById('actionDescription-' + clientId);
+  if (desc) desc.value = '';
+  const due = document.getElementById('actionDue-' + clientId);
+  if (due) due.value = '';
+}
+
+async function saveSessionAction(clientId) {
+  const titleEl = document.getElementById('actionTitle-' + clientId);
+  const descEl = document.getElementById('actionDescription-' + clientId);
+  const dueEl = document.getElementById('actionDue-' + clientId);
+
+  const title = titleEl?.value?.trim();
+  if (!title) { showNotification('Please enter an action title.', 'warn'); return; }
+
+  try {
+    await apiFetch(`/api/practitioner/clients/${clientId}/actions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        title,
+        description: descEl?.value?.trim() || null,
+        due_date: dueEl?.value || null
+      })
+    });
+    showNotification('Action assigned.', 'success');
+    trackEvent?.('practitioner', 'action_created', title);
+    hideNewActionForm(clientId);
+    await loadClientActions(clientId);
+  } catch (e) {
+    showNotification('Error saving action: ' + e.message, 'error');
+  }
+}
+
+async function loadClientActions(clientId) {
+  const listEl = document.getElementById('actionsList-' + clientId);
+  if (!listEl) return;
+  try {
+    const data = await apiFetch(`/api/practitioner/clients/${clientId}/actions?limit=20&offset=0`);
+    const actions = data?.actions || [];
+    if (actions.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3) 0">No actions assigned yet.</div>';
+    } else {
+      listEl.innerHTML = actions.map(a => renderSessionAction(a, clientId)).join('');
+    }
+  } catch (e) {
+    listEl.innerHTML = `<div class="alert alert-error">Error loading actions: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderSessionAction(a, clientId) {
+  const actionId = escapeAttr(a.id);
+  const safeClientId = escapeAttr(clientId);
+  const isDone = a.status === 'completed';
+  const isOverdue = !isDone && a.due_date && new Date(a.due_date) < new Date();
+  const dueStr = a.due_date ? new Date(a.due_date).toLocaleDateString() : '';
+  const statusColor = isDone ? 'var(--accent2)' : isOverdue ? 'var(--error,#e74c3c)' : 'var(--text-dim)';
+  const statusLabel = isDone ? '✓ Completed' : isOverdue ? '⚠ Overdue' : (dueStr ? `Due ${dueStr}` : 'Pending');
+
+  return `
+    <div style="padding:var(--space-3) 0;border-bottom:1px solid var(--border);${isDone ? 'opacity:0.6' : ''}" data-action-id="${actionId}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1)">
+        <div style="font-weight:600;font-size:var(--font-size-sm);color:var(--text);${isDone ? 'text-decoration:line-through' : ''}">${escapeHtml(a.title)}</div>
+        <div style="display:flex;gap:var(--space-2);align-items:center">
+          <span style="font-size:var(--font-size-xs);color:${statusColor}">${statusLabel}</span>
+          ${!isDone ? `<button class="btn-secondary btn-sm" style="font-size:var(--font-size-xs);padding:2px 8px" data-action="deleteSessionAction" data-arg0="${actionId}" data-arg1="${safeClientId}">Delete</button>` : ''}
+        </div>
+      </div>
+      ${a.description ? `<div style="font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.5;white-space:pre-wrap">${escapeHtml(a.description)}</div>` : ''}
+      ${a.completed_at ? `<div style="font-size:var(--font-size-xs);color:var(--accent2);margin-top:4px">Completed ${new Date(a.completed_at).toLocaleDateString()}</div>` : ''}
+    </div>`;
+}
+
+async function deleteSessionAction(actionId, clientId) {
+  if (!confirm('Delete this action?')) return;
+  try {
+    await apiFetch(`/api/practitioner/actions/${actionId}`, { method: 'DELETE' });
+    showNotification('Action deleted.', 'success');
+    trackEvent?.('practitioner', 'action_deleted', actionId);
+    await loadClientActions(clientId);
+  } catch (e) {
+    showNotification('Error deleting action: ' + e.message, 'error');
   }
 }
 
@@ -6189,6 +7016,87 @@ async function saveDirectoryProfile() {
     await loadDirectoryProfile();
   } catch (e) {
     showNotification('Error saving profile: ' + e.message, 'error');
+  }
+}
+
+// ── Practitioner Review Moderation ──
+async function loadPractitionerReviews() {
+  const listEl = document.getElementById('practitionerReviewsList');
+  if (!listEl) return;
+  try {
+    const data = await apiFetch('/api/practitioner/reviews');
+    const reviews = data?.reviews || [];
+    if (!reviews.length) {
+      listEl.innerHTML = '<div style="color:var(--text-dim);font-size:var(--font-size-sm)">No reviews yet.</div>';
+      return;
+    }
+    listEl.innerHTML = reviews.map(r => {
+      const rid = escapeAttr(r.id);
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      const statusPill = r.status === 'approved'
+        ? '<span class="pill green">Approved</span>'
+        : r.status === 'hidden'
+        ? '<span class="pill" style="background:var(--text-dim)">Hidden</span>'
+        : '<span class="pill" style="background:var(--gold);color:#000">Pending</span>';
+      return `<div style="padding:var(--space-3) 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><span style="color:var(--gold)">${stars}</span> · ${escapeHtml(r.client_name || r.client_email || 'Client')} ${statusPill}</div>
+          <div style="display:flex;gap:var(--space-2)">
+            ${r.status !== 'approved' ? `<button class="btn-primary btn-sm" style="font-size:var(--font-size-xs);padding:2px 8px" data-action="approveReview" data-arg0="${rid}">Approve</button>` : ''}
+            ${r.status !== 'hidden' ? `<button class="btn-secondary btn-sm" style="font-size:var(--font-size-xs);padding:2px 8px" data-action="hideReview" data-arg0="${rid}">Hide</button>` : ''}
+          </div>
+        </div>
+        <div style="font-size:var(--font-size-sm);color:var(--text);margin-top:var(--space-1);white-space:pre-wrap">${escapeHtml(r.content)}</div>
+        <div style="font-size:var(--font-size-xs);color:var(--text-dim);margin-top:4px">${new Date(r.created_at).toLocaleDateString()}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = `<div class="alert alert-error">Error: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function approveReview(reviewId) {
+  try {
+    await apiFetch(`/api/practitioner/reviews/${reviewId}/approve`, { method: 'PUT' });
+    showNotification('Review approved — now visible on your directory profile.', 'success');
+    trackEvent?.('practitioner', 'review_approved', reviewId);
+    await loadPractitionerReviews();
+  } catch (e) {
+    showNotification('Error: ' + e.message, 'error');
+  }
+}
+
+async function hideReview(reviewId) {
+  try {
+    await apiFetch(`/api/practitioner/reviews/${reviewId}/hide`, { method: 'PUT' });
+    showNotification('Review hidden.', 'success');
+    trackEvent?.('practitioner', 'review_hidden', reviewId);
+    await loadPractitionerReviews();
+  } catch (e) {
+    showNotification('Error: ' + e.message, 'error');
+  }
+}
+
+// ── CSV Export ──
+async function downloadCSV(type) {
+  const validTypes = ['roster', 'notes', 'readings'];
+  if (!validTypes.includes(type)) return;
+  try {
+    const resp = await fetch(`/api/practitioner/export/${type}`, { credentials: 'include' });
+    if (!resp.ok) throw new Error('Export failed');
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = resp.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] || `${type}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    trackEvent?.('practitioner', 'csv_exported', type);
+    showNotification(`${type} CSV downloaded.`, 'success');
+  } catch (e) {
+    showNotification('Export error: ' + e.message, 'error');
   }
 }
 
@@ -7775,8 +8683,23 @@ async function loadDiaryEntries() {
   }
 
   try {
-    const data = await apiFetch('/api/diary');
+    const params = new URLSearchParams();
+    const search = document.getElementById('diarySearchInput')?.value?.trim();
+    const type = document.getElementById('diaryTypeFilter')?.value;
+    const significance = document.getElementById('diarySignificanceFilter')?.value;
+    const dateFrom = document.getElementById('diaryDateFrom')?.value;
+    const dateTo = document.getElementById('diaryDateTo')?.value;
+    if (search) params.set('search', search);
+    if (type) params.set('type', type);
+    if (significance) params.set('significance', significance);
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
+    const qs = params.toString();
+    const hasFilters = qs.length > 0;
+
+    const data = await apiFetch('/api/diary' + (hasFilters ? '?' + qs : ''));
     if (data?.error) throw new Error(data.error);
+    if (hasFilters) trackEvent('diary_filtered', { search: !!search, type: !!type, significance: !!significance, dateRange: !!(dateFrom || dateTo) });
     const entries = Array.isArray(data?.data) ? data.data : [];
 
     if (entries.length === 0) {
@@ -7820,6 +8743,26 @@ async function loadDiaryEntries() {
       btn.disabled = false;
       spinner.style.display = 'none';
     }
+  }
+}
+
+async function exportDiary() {
+  if (!token) { openAuthOverlay(); return; }
+  try {
+    const resp = await fetch('/api/diary/export', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!resp.ok) throw new Error('Export failed');
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'diary-entries.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    trackEvent('diary_exported');
+  } catch (e) {
+    showToast('Export failed: ' + e.message, 'error');
   }
 }
 
@@ -7870,6 +8813,31 @@ async function deleteDiaryEntry(entryId) {
     loadDiaryEntries();
   } catch (e) {
     showEnhanceStatus('diaryStatus', 'Error deleting: ' + e.message, 'error');
+  }
+}
+
+// ── Diary AI Pattern Insights ──
+async function generateDiaryInsights() {
+  if (!token) { openAuthOverlay(); return; }
+  const btn = document.getElementById('diaryInsightsBtn');
+  const spinner = document.getElementById('diaryInsightsSpinner');
+  const result = document.getElementById('diaryInsightsResult');
+  if (btn) { btn.disabled = true; if (spinner) spinner.style.display = ''; }
+  if (result) result.innerHTML = '<div class="loading-card"><div class="spinner"></div><div>Analyzing patterns…</div></div>';
+
+  try {
+    const data = await apiFetch('/api/diary/insights', { method: 'POST' });
+    if (data?.error) throw new Error(data.error);
+    const md = data.insights || 'No insights generated.';
+    result.innerHTML = `
+      <div style="background:var(--bg3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);padding:var(--space-4);line-height:1.6;white-space:pre-wrap">${escapeHtml(md)}</div>
+      <div style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-2)">${data.entryCount} entries analyzed · ${new Date(data.generatedAt).toLocaleString()}</div>
+    `;
+    trackEvent?.('diary', 'diary_insights_generated');
+  } catch (e) {
+    if (result) result.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
+  } finally {
+    if (btn) { btn.disabled = false; if (spinner) spinner.style.display = 'none'; }
   }
 }
 
@@ -8006,6 +8974,54 @@ async function loadCheckinStats() {
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
+  }
+}
+
+// ── Check-in Reminder Preferences ──
+async function loadCheckinReminder() {
+  if (!token) return;
+  try {
+    const data = await apiFetch('/api/checkin/reminder');
+    if (data?.reminder) {
+      const r = data.reminder;
+      const timeEl = document.getElementById('reminder-time');
+      const enabledEl = document.getElementById('reminder-enabled');
+      const pushEl = document.getElementById('reminder-push');
+      const emailEl = document.getElementById('reminder-email');
+      if (timeEl) timeEl.value = r.reminder_time?.slice(0, 5) || '20:00';
+      if (enabledEl) enabledEl.checked = r.enabled !== false;
+      const methods = Array.isArray(r.notification_method) ? r.notification_method : [];
+      if (pushEl) pushEl.checked = methods.includes('push');
+      if (emailEl) emailEl.checked = methods.includes('email');
+    }
+  } catch (e) {
+    console.warn('Failed to load reminder prefs', e);
+  }
+}
+
+async function saveCheckinReminder() {
+  if (!token) { openAuthOverlay(); return; }
+  const time = document.getElementById('reminder-time')?.value || '20:00';
+  const enabled = document.getElementById('reminder-enabled')?.checked !== false;
+  const methods = [];
+  if (document.getElementById('reminder-push')?.checked) methods.push('push');
+  if (document.getElementById('reminder-email')?.checked) methods.push('email');
+
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    await apiFetch('/api/checkin/reminder', {
+      method: 'POST',
+      body: JSON.stringify({
+        enabled,
+        reminderTime: time + ':00',
+        timezone: tz,
+        notificationMethod: methods,
+      }),
+    });
+    showEnhanceStatus('reminderStatus', enabled ? 'Reminder saved!' : 'Reminder disabled.', 'success');
+    trackEvent?.('checkin', 'checkin_reminder_set', time);
+  } catch (e) {
+    showEnhanceStatus('reminderStatus', 'Error: ' + e.message, 'error');
   }
 }
 
@@ -8577,6 +9593,146 @@ async function loadNotificationHistory() {
     list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:24px 0">Could not load notifications.</p>';
   }
 }
+
+// ── Push Notification Preferences ───────────────────────────────────────────
+function openPushPreferences() {
+  storeModalTrigger('pushPrefsModal');
+  const modal = document.getElementById('pushPrefsModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  _renderPushPrefsState();
+  loadPushPreferences();
+}
+
+function closePushPreferences() {
+  const modal = document.getElementById('pushPrefsModal');
+  if (modal) modal.classList.add('hidden');
+  restoreModalFocus('pushPrefsModal');
+}
+
+function _renderPushPrefsState() {
+  const status = document.getElementById('pushPermissionStatus');
+  const enableBtn = document.getElementById('pushEnableBtn');
+  const toggles = document.getElementById('pushPrefsToggles');
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    if (status) status.textContent = 'Push notifications are not supported in this browser.';
+    if (enableBtn) enableBtn.style.display = 'none';
+    if (toggles) toggles.style.display = 'none';
+    return;
+  }
+  const perm = Notification.permission;
+  if (perm === 'granted') {
+    if (status) status.textContent = 'Push notifications are enabled.';
+    if (enableBtn) enableBtn.style.display = 'none';
+    if (toggles) toggles.style.display = '';
+  } else if (perm === 'denied') {
+    if (status) status.textContent = 'Push notifications are blocked. Please enable them in your browser settings.';
+    if (enableBtn) enableBtn.style.display = 'none';
+    if (toggles) toggles.style.display = 'none';
+  } else {
+    if (status) status.textContent = 'Enable push notifications to receive transit alerts, session reminders, and more.';
+    if (enableBtn) enableBtn.style.display = '';
+    if (toggles) toggles.style.display = 'none';
+  }
+}
+
+async function requestPushPermission() {
+  if (!('Notification' in window)) return;
+  try {
+    const result = await Notification.requestPermission();
+    if (result === 'granted') {
+      trackEvent?.('push', 'push_permission_granted');
+      await _subscribeToPush();
+    } else {
+      trackEvent?.('push', 'push_permission_denied');
+    }
+    _renderPushPrefsState();
+  } catch {
+    showNotification('Could not request notification permission.', 'error');
+  }
+}
+
+async function _subscribeToPush() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const keyRes = await apiFetch('/api/push/vapid-key');
+    if (!keyRes?.vapidKey) return;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlBase64ToUint8Array(keyRes.vapidKey)
+    });
+    await apiFetch('/api/push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ subscription: sub.toJSON() })
+    });
+  } catch (e) {
+    console.warn('Push subscription failed:', e.message);
+  }
+}
+
+function _urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+async function loadPushPreferences() {
+  if (!token) return;
+  try {
+    const data = await apiFetch('/api/push/preferences');
+    const prefs = data.preferences || data;
+    const fields = ['transitDaily', 'gateActivation', 'cycleApproaching', 'transitAlert', 'weeklyDigest'];
+    fields.forEach(f => {
+      const el = document.getElementById(`pushPref-${f}`);
+      if (el) el.checked = prefs[f] !== false;
+    });
+    const qs = document.getElementById('pushPref-quietStart');
+    const qe = document.getElementById('pushPref-quietEnd');
+    if (qs) qs.value = prefs.quietHoursStart != null ? String(prefs.quietHoursStart) : '';
+    if (qe) qe.value = prefs.quietHoursEnd != null ? String(prefs.quietHoursEnd) : '';
+  } catch {
+    // non-fatal
+  }
+}
+
+async function savePushPreferences() {
+  if (!token) return;
+  const fields = ['transitDaily', 'gateActivation', 'cycleApproaching', 'transitAlert', 'weeklyDigest'];
+  const prefs = {};
+  fields.forEach(f => {
+    const el = document.getElementById(`pushPref-${f}`);
+    if (el) prefs[f] = el.checked;
+  });
+  const qs = document.getElementById('pushPref-quietStart');
+  const qe = document.getElementById('pushPref-quietEnd');
+  if (qs?.value) prefs.quietHoursStart = parseInt(qs.value, 10);
+  if (qe?.value) prefs.quietHoursEnd = parseInt(qe.value, 10);
+  try {
+    await apiFetch('/api/push/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(prefs)
+    });
+    showNotification('Notification preferences saved.', 'success');
+    trackEvent?.('push', 'push_preferences_updated');
+    closePushPreferences();
+  } catch (e) {
+    showNotification('Could not save preferences: ' + e.message, 'error');
+  }
+}
+
+async function testPushNotification() {
+  if (!token) return;
+  try {
+    await apiFetch('/api/push/test', { method: 'POST' });
+    showNotification('Test notification sent!', 'info');
+  } catch (e) {
+    showNotification('Could not send test: ' + e.message, 'error');
+  }
+}
+
 // ── First-Run Onboarding Modal ─────────────────────────────────────────────
 let _frmCurrentStep = 1;
 const FRM_TOTAL_STEPS = 4;
@@ -9110,6 +10266,7 @@ window.switchToPracPricingModal = switchToPracPricingModal;
 window.logout = logout;
 window.saveDiaryEntry = saveDiaryEntry;
 window.loadDiaryEntries = loadDiaryEntries;
+window.exportDiary = exportDiary;
 window.editDiaryEntry = editDiaryEntry;
 window.cancelDiaryEdit = cancelDiaryEdit;
 window.deleteDiaryEntry = deleteDiaryEntry;
@@ -9131,6 +10288,281 @@ window.findBestDates = findBestDates;
 window.searchDirectory = searchDirectory;
 window.loadDirectoryPage = loadDirectoryPage;
 window.startOneTimePurchase = startOneTimePurchase;
+window.loadCalendar = loadCalendar;
+window.calendarPrev = calendarPrev;
+window.calendarNext = calendarNext;
+window.calendarSetView = calendarSetView;
+window.calendarAddEvent = calendarAddEvent;
+window.calendarDeleteEvent = calendarDeleteEvent;
+window.calendarTogglePractitioner = calendarTogglePractitioner;
+
+// ─── Calendar (3.3 + 3.4 Tier Gating) ───────────────────────
+
+let _calView = 'month';
+let _calDate = new Date();
+let _calEvents = [];
+let _calAllowedTypes = ['personal', 'moon', 'reminder', 'diary'];
+let _calPractitionerMode = false;
+let _calClientColors = {};
+
+const EVENT_TYPE_COLORS = {
+  personal: '#6C63FF', transit: '#FFD93D', moon: '#C0C0C0',
+  retrograde: '#FF4D4D', session: '#2ECC71', reminder: '#F39C12', diary: '#E056A0'
+};
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+async function loadCalendar() {
+  const first = new Date(_calDate.getFullYear(), _calDate.getMonth(), 1);
+  const last = new Date(_calDate.getFullYear(), _calDate.getMonth() + 1, 0);
+  const from = new Date(first); from.setDate(from.getDate() - 7);
+  const to = new Date(last); to.setDate(to.getDate() + 7);
+
+  try {
+    const endpoint = _calPractitionerMode
+      ? `/api/calendar/practitioner/events?from=${from.toISOString()}&to=${to.toISOString()}`
+      : `/api/calendar/events?from=${from.toISOString()}&to=${to.toISOString()}`;
+    const data = await apiFetch(endpoint);
+
+    if (data?.upgrade_required) {
+      // 403 returned — handled by apiFetch showUpgradePrompt${_calPractitionerMode ? ' (All Clients)' : ''}`;
+
+  // Show/hide practitioner toggle
+  const practToggle = document.getElementById('calPractitionerToggle');
+  const tier = currentUser?.tier || 'free';
+  const isPract = ['practitioner', 'guide', 'agency', 'white_label'].includes(tier);
+  if (practToggle) {
+    practToggle.style.display = isPract ? '' : 'none';
+    practToggle.classList.toggle('active', _calPractitionerMode);
+  }
+
+  // Gate event type selector options
+  const typeSelect = document.getElementById('calEventType');
+  if (typeSelect) {
+    Array.from(typeSelect.options).forEach(opt => {
+      const locked = !_calAllowedTypes.includes(opt.value);
+      opt.disabled = locked;
+      opt.textContent = opt.getAttribute('data-label') || opt.textContent.replace(/ 🔒$/, '');
+      if (!opt.getAttribute('data-label')) opt.setAttribute('data-label', opt.textContent);
+      if (locked) opt.textContent += ' 🔒';
+    });
+  }
+      _calPractitionerMode = false;
+      return;
+    }
+
+    _calEvents = data?.data || [];
+    if (data?.allowed_types) _calAllowedTypes = data.allowed_types;
+    if (data?.client_colors) _calClientColors = data.client_colors;
+  } catch { _calEvents = []; }
+
+  renderCalendar();
+  trackEvent?.('calendar', 'calendar_view_changed', _calView);
+}
+
+function renderCalendar() {
+  const title = document.getElementById('calendarTitle');
+  if (title) title.textContent = `${MONTH_NAMES[_calDate.getMonth()]} ${_calDate.getFullYear()}`;
+
+  // Update view toggle active state
+  ['Month','Week','Day'].forEach(v => {
+    const btn = document.getElementById('calView' + v);
+    if (btn) btn.classList.toggle('active', _calView === v.toLowerCase());
+  });
+
+  // Show/hide views
+  const views = { month: 'calendarMonthView', week: 'calendarWeekView', day: 'calendarDayView' };
+  Object.entries(views).forEach(([key, id]) =>  {
+      const dotColor = _calPractitionerMode && e.client_color ? e.client_color : (e.color || '');
+      return `<span class="event-dot ${e.event_type || 'personal'}" title="${(e.title || '').replace(/"/g, '&quot;')}${e.client_email ? ' — ' + e.client_email : ''}" style="${dotColor ? 'background:' + dotColor : ''}"></span>`;
+    }if (el) el.style.display = key === _calView ? '' : 'none';
+  });
+
+  if (_calView === 'month') renderMonthView();
+  else if (_calView === 'week') renderWeekView();
+  else renderDayView();
+}
+
+function renderMonthView() {
+  const grid = document.getElementById('calendarGrid');
+  if (!grid) return;
+
+  const year = _calDate.getFullYear();
+  const month = _calDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Monday-start: getDay() Sun=0 → offset 6, Mon=1 → offset 0
+  let startOffset = (firstDay.getDay() + 6) % 7;
+  const startDate = new Date(firstDay);
+  startDate.setDate(startDate.getDate() - startOffset);
+
+  let html = '';
+  const totalCells = Math.ceil((startOffset + lastDay.getDate()) / 7) * 7;
+
+  for (let i = 0; i < totalCells; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const isOther = d.getMonth() !== month;
+    const isToday = d.getTime() === today.getTime();
+    const dateStr = d.toISOString().slice(0, 10);
+
+    const dayEvents = _calEvents.filter(e => (e.start_date || '').slice(0, 10) === dateStr);
+    const dots = dayEvents.slice(0, 5).map(e =>
+      `<span class="event-dot ${e.event_type || 'personal'}" title="${(e.title || '').replace(/"/g, '&quot;')}" style="${e.color ? 'background:' + e.color : ''}"></span>`
+    ).join('');
+
+    html += `<div class="calendar-cell${isOther ? ' other-month' : ''}${isToday ? ' today' : ''}" data-date="${dateStr}" onclick="calendarSetView('day','${dateStr}')">
+      <span class="day-num">${d.getDate()}</span>
+      <div class="event-dots">${dots}</div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function renderWeekView() {
+  const container = document.getElementById('calendarWeekContent');
+  if (!container) return;
+
+  const today = new Da(_calPractitionerMode && e.client_color) || e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF';
+        const time = e.all_day ? 'All day' : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const clientTag = _calPractitionerMode && e.client_email && !e.is_own
+          ? `<span class="cal-client-tag" style="background:${e.client_color || '#666'}">${e.client_email.split('@')[0]}</span>`
+          : '';
+        html += `<div class="day-event-card">
+          <div class="day-event-color" style="background:${color}"></div>
+          <div class="day-event-info">
+            <div class="day-event-title">${e.title || 'Untitled'}${clientTag}</div>
+            <div class="day-event-time">${time} · ${e.event_type || 'personal'}</div>
+          </div>
+          <div class="day-event-actions">${e.is_own !== false ? `<button class="btn-icon" onclick="calendarDeleteEvent('${e.id}')" title="Delete">🗑</button>` : ''}
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const isToday = d.getTime() === today.getTime();
+    const dayEvents = _calEvents.filter(e => (e.start_date || '').slice(0, 10) === dateStr);
+
+    html += `<div class="week-day-row">
+      <div class="week-day-label${isToday ? ' today' : ''}">${DAY_NAMES[i]}<br>${d.getDate()}</div>
+      <div class="week-events">`;
+
+    if (dayEvents.length === 0) {
+      html += '<div style="color:var(--text-muted);font-size:0.8rem;padding:4px">No events</div>';
+    } else {
+      dayEvents.forEach(e => {
+        const color = e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF';
+        const time = e.all_day ? 'All day' : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        html += `<div class="day-event-card">
+          <div class="day-event-color" style="background:${color}"></div>
+          <div class="day-event-info">
+            <div cla(_calPractitionerMode && e.client_color) || e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF';
+      const time = e.all_day ? 'All day' : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const clientTag = _calPractitionerMode && e.client_email && !e.is_own
+        ? `<span class="cal-client-tag" style="background:${e.client_color || '#666'}">${e.client_email.split('@')[0]}</span>`
+        : '';
+      html += `<div class="day-event-card">
+        <div class="day-event-color" style="background:${color}"></div>
+        <div class="day-event-info">
+          <div class="day-event-title">${e.title || 'Untitled'}${clientTag}</div>
+          <div class="day-event-time">${time} · ${e.event_type || 'personal'}</div>
+          ${e.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">${e.description}</div>` : ''}
+        </div>
+        <div class="day-event-actions">${e.is_own !== false ? `<button class="btn-icon" onclick="calendarDeleteEvent('${e.id}')" title="Delete">🗑</button>` : ''}
+}
+
+function renderDayView() {
+  const container = document.getElementById('calendarDayContent');
+  if (!container) return;
+
+  const dateStr = _calDate.toISOString().slice(0, 10);
+  const dayEvents = _calEvents.filter(e => (e.start_date || '').slice(0, 10) === dateStr);
+
+  let html = `<h3 style="margin-bottom:var(--space-sm)">${_calDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h3>`;
+
+  if (dayEvents.length === 0) {
+    html += '<p style="color:var(--text-muted)">No events for this day.</p>';
+  } else {
+    dayEvents.forEach(e => {
+      const color = e.color || EVENT_TYPE_COLORS[e.event_type] || '#6C63FF';
+      const time = e.all_day ? 'All day' : new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      html += `<div class="day-event-card">
+        <div class="day-event-color" style="background:${color}"></div>
+        <div class="day-event-info">
+          <div class="day-event-title">${e.title || 'Untitled'}</div>
+          <div class="day-event-time">${time} · ${e.event_type || 'personal'}</div>
+          ${e.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">${e.description}</div>` : ''}
+        </div>
+        <div class="day-event-actions"><button class="btn-icon" onclick="calendarDeleteEvent('${e.id}')" title="Delete">🗑</button></div>
+      </div>`;
+    });
+  }
+  container.innerHTML = html;
+}
+
+function calendarPrev() {
+  if (_calView === 'month') _calDate.setMonth(_calDate.getMonth() - 1);
+  else if (_calView === 'week') _calDate.setDate(_calDate.getDate() - 7);
+  else _calDate.setDate(_calDate.getDate() - 1);
+  loadCalendar();
+}
+
+function calendarNext() {
+  if (_calView === 'month') _calDate.setMonth(_calDate.getMonth() + 1);
+  else if (_calView === 'week') _calDate.setDate(_calDate.getDate() + 7);
+  else _calDate.setDate(_calDate.getDate() + 1);
+  loadCalendar();
+}
+
+function calendarSetView(view, dateStr) {
+  _calView = view;
+  if (dateStr) _calDate = new Date(dateStr + 'T00:00:00');
+  renderCalendar();
+  trackEvent?.('calendar', 'calendar_view_changed', view);
+}
+
+async function calendarAddEvent() {
+  const title = document.getElementById('calEventTitle')?.value?.trim();
+  const date = document.getElementById('calEventDate')?.value;
+  const eventType = document.getElementById('calEventType')?.value || 'personal';
+  const color = document.getElementById('calEventColor')?.value;
+
+  if (!title || !date) {
+    showToast?.('Please enter a title and date', 'error');
+function calendarTogglePractitioner() {
+  _calPractitionerMode = !_calPractitionerMode;
+  loadCalendar();
+  trackEvent?.('calendar', 'calendar_practitioner_toggle', _calPractitionerMode ? 'on' : 'off');
+}
+
+    return;
+  }
+
+  try {
+    await apiFetch('/api/calendar/events', {
+      method: 'POST',
+      body: JSON.stringify({ title, start_date: new Date(date).toISOString(), event_type: eventType, color })
+    });
+    document.getElementById('calEventTitle').value = '';
+    showToast?.('Event added', 'success');
+    loadCalendar();
+  } catch (err) {
+    showToast?.('Failed to add event', 'error');
+  }
+}
+
+async function calendarDeleteEvent(eventId) {
+  if (!eventId) return;
+  try {
+    await apiFetch(`/api/calendar/events/${eventId}`, { method: 'DELETE' });
+    showToast?.('Event deleted', 'success');
+    loadCalendar();
+    trackEvent?.('calendar', 'calendar_event_deleted', eventId);
+  } catch {
+    showToast?.('Failed to delete event', 'error');
+  }
+}
 
 // ─── One-Time Purchases ──────────────────────────────────────
 
@@ -9313,6 +10745,7 @@ async function loadCelebrityMatches() {
     _allCelebrityMatches = data.matches || [];
     if (status) status.textContent = '';
     renderCelebrityGrid(_allCelebrityMatches);
+    trackEvent?.('celebrity', 'celebrity_match_viewed', _allCelebrityMatches.length);
   } catch (e) {
     if (status) status.textContent = 'Error: ' + e.message;
   } finally {
@@ -9381,6 +10814,7 @@ async function shareCelebrityMatch(celebrityId) {
         }
       } catch { /* invalid URL — ignore */ }
     }
+    trackEvent?.('celebrity', 'celebrity_shared', celebrityId);
   } catch (e) {
     alert('Could not generate share: ' + e.message);
   }
@@ -9518,6 +10952,7 @@ async function findBestDates() {
     const dates = data.optimalDates || data.dates || [];
     if (status) status.textContent = '';
     if (resultsCard) resultsCard.style.display = '';
+    trackEvent?.('timing', 'timing_search', intention);
     if (results) results.innerHTML = dates.length
       ? dates.map(d => `
           <div style="padding:var(--space-4) 0;border-bottom:var(--border-width-thin) solid var(--border)">

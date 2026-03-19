@@ -158,6 +158,29 @@ import {
   handleGetAIContext,
   handleUpdateAIContext
 } from './handlers/session-notes.js';
+import {
+  handleListReadings,
+  handleCreateReading,
+  handleGetReading,
+  handleUpdateReading,
+  handleDeleteReading,
+  handleClientReadings
+} from './handlers/divination-readings.js';
+import {
+  handleListActions,
+  handleCreateAction,
+  handleUpdateAction,
+  handleDeleteAction,
+  handleClientActions,
+  handleCompleteAction
+} from './handlers/session-actions.js';
+import {
+  handleSubmitReview,
+  handleGetPublicReviews,
+  handleListPractitionerReviews,
+  handleApproveReview,
+  handleHideReview
+} from './handlers/reviews.js';
 import { handleOnboarding } from './handlers/onboarding.js';
 import { handleValidation } from './handlers/validation.js';
 import { handlePsychometric } from './handlers/psychometric.js';
@@ -231,9 +254,17 @@ import { handleApiKeys } from './handlers/keys.js';
 import { handleTiming, listIntentionTemplates } from './handlers/timing.js';
 import { handleEmbedValidate } from './handlers/embed.js';
 import { handleValidatePromo, handleApplyPromo, handleCreatePromo, handleListPromos } from './handlers/promo.js';
+import {
+  handleGetClientPractitioners,
+  handleGetClientPortal,
+  handleGetClientSharedNotes,
+  handleGetDiarySharingPrefs,
+  handleSetDiarySharing
+} from './handlers/client-portal.js';
 import { handleAdmin } from './handlers/admin.js';
 import { handleAnalytics } from './handlers/analytics.js';
 import { handleExperiments } from './handlers/experiments.js';
+import handleCalendar from './handlers/calendar.js';
 import { trackEvent, trackError, aggregateDaily, EVENTS, captureRequestContext } from './lib/analytics.js';
 import { initSentry, captureSentryRequest } from './lib/sentry.js';
 import { createLogger, generateRequestId } from './lib/logger.js';
@@ -259,7 +290,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/agency/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/agency/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply', '/api/client/', '/api/calendar'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -289,6 +320,7 @@ const PUBLIC_ROUTES = new Set([
   '/api/auth/oauth/google',            // Redirect to Google (public)
   '/api/auth/oauth/apple',             // Redirect to Apple (public)
   '/api/notion/callback',              // Notion OAuth callback (public)
+  '/api/calendar/google/callback',     // Google Calendar OAuth callback (public)
   '/api/auth/oauth/google/callback',   // Google OAuth callback (public)
   '/api/auth/oauth/apple/callback',    // Apple Sign In callback (public, POSTs)
   '/api/auth/oauth/exchange',           // P2-SEC-011: OAuth code exchange (public, POST)
@@ -415,6 +447,15 @@ const EXACT_ROUTES = new Map([
   ['GET /api/practitioner/directory-stats',    handleGetDirectoryStats],
   // Practitioner Referral Link (auth)
   ['GET /api/practitioner/referral-link',      handleGetReferralLink],
+  // Client Portal (auth)
+  ['GET /api/client/my-practitioners',         handleGetClientPractitioners],
+  ['GET /api/client/shared-notes',             handleGetClientSharedNotes],
+  ['GET /api/client/my-readings',              handleClientReadings],
+  ['GET /api/client/my-actions',               handleClientActions],
+  ['POST /api/client/reviews',                 handleSubmitReview],
+  ['GET /api/client/diary-sharing',            handleGetDiarySharingPrefs],
+  ['PUT /api/client/diary-sharing',            handleSetDiarySharing],
+  ['GET /api/practitioner/reviews',            handleListPractitionerReviews],
   // Email marketing unsubscribe (public, CAN-SPAM compliance — AUDIT-SEC-005)
   ['POST /api/email/unsubscribe',     async (request, env) => {
     const body = await request.json().catch(() => null);
@@ -466,6 +507,7 @@ const PREFIX_ROUTES = [
   ['/api/keys',         handleApiKeys,      '/api/keys'],
   ['/api/analytics',    handleAnalytics,    '/api/analytics'],
   ['/api/experiments',  handleExperiments,  '/api/experiments'],
+  ['/api/calendar',     handleCalendar,     '/api/calendar'],
 ];
 
 /**
@@ -497,6 +539,24 @@ const PATTERN_ROUTES = [
   [/^\/api\/practitioner\/clients\/([^/]+)\/context$/,    'GET',  1, (req, env, id) => handleGetAIContext(req, env, id)],
   [/^\/api\/practitioner\/clients\/([^/]+)\/context$/,    'POST', 1, (req, env, id) => handleUpdateAIContext(req, env, id)],
   [/^\/api\/practitioner\/clients\/([^/]+)\/context$/,    'PUT',  1, (req, env, id) => handleUpdateAIContext(req, env, id)],
+  // Client Portal — dynamic practitioner ID
+  [/^\/api\/client\/portal\/([^/]+)$/,                    'GET',  1, (req, env, id) => handleGetClientPortal(req, env, id)],
+  // Divination Readings — CRUD (authenticated, practitioner tier)
+  [/^\/api\/practitioner\/clients\/([^/]+)\/readings$/,   'GET',  1, (req, env, id) => handleListReadings(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/readings$/,   'POST', 1, (req, env, id) => handleCreateReading(req, env, id)],
+  [/^\/api\/practitioner\/readings\/([^/]+)$/,            'GET',  1, (req, env, id) => handleGetReading(req, env, id)],
+  [/^\/api\/practitioner\/readings\/([^/]+)$/,            'PUT',  1, (req, env, id) => handleUpdateReading(req, env, id)],
+  [/^\/api\/practitioner\/readings\/([^/]+)$/,            'DELETE',1, (req, env, id) => handleDeleteReading(req, env, id)],
+  // Session Actions — CRUD (authenticated, practitioner tier) + client completion
+  [/^\/api\/practitioner\/clients\/([^/]+)\/actions$/,    'GET',  1, (req, env, id) => handleListActions(req, env, id)],
+  [/^\/api\/practitioner\/clients\/([^/]+)\/actions$/,    'POST', 1, (req, env, id) => handleCreateAction(req, env, id)],
+  [/^\/api\/practitioner\/actions\/([^/]+)$/,             'PUT',  1, (req, env, id) => handleUpdateAction(req, env, id)],
+  [/^\/api\/practitioner\/actions\/([^/]+)$/,             'DELETE',1, (req, env, id) => handleDeleteAction(req, env, id)],
+  [/^\/api\/client\/actions\/([^/]+)\/complete$/,         'PUT',  1, (req, env, id) => handleCompleteAction(req, env, id)],
+  // Reviews — public directory + practitioner approve/hide
+  [/^\/api\/directory\/([^/]+)\/reviews$/,               'GET',  1, (req, env, slug) => handleGetPublicReviews(req, env, slug)],
+  [/^\/api\/practitioner\/reviews\/([^/]+)\/approve$/,   'PUT',  1, (req, env, id) => handleApproveReview(req, env, id)],
+  [/^\/api\/practitioner\/reviews\/([^/]+)\/hide$/,      'PUT',  1, (req, env, id) => handleHideReview(req, env, id)],
 ];
 
 /**

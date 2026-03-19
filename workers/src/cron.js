@@ -492,6 +492,40 @@ export async function runDailyTransitCron(env) {
       }
     }
 
+    // ─── Step 12: Daily check-in reminders ──────────────────
+    try {
+      await withTimeout((async () => {
+        const { rows: dueReminders } = await query(QUERIES.cronGetDueCheckinReminders);
+        log.info('checkin_reminder_candidates', { count: dueReminders.length });
+
+        let reminderSent = 0, reminderFailed = 0;
+        for (const r of dueReminders) {
+          try {
+            const methods = Array.isArray(r.notification_method) ? r.notification_method : ['push'];
+            if (methods.includes('push')) {
+              await sendNotificationToUser(env, r.user_id, 'checkin_reminder', {
+                title: '♥ Time for your daily check-in',
+                body: 'Track your alignment, strategy, and energy. Keep the streak going!',
+                icon: 'https://primeself.app/icon-192.png',
+                badge: 'https://primeself.app/badge-72.png',
+                tag: `checkin-reminder-${snapshotDate}`,
+                data: { type: 'checkin_reminder', url: '/app/checkin' },
+              });
+            }
+            await query(QUERIES.updateReminderLastSent, [r.user_id]);
+            reminderSent++;
+            await new Promise(resolve => setTimeout(resolve, 100));
+          } catch (remErr) {
+            log.error('checkin_reminder_send_failed', { userId: r.user_id, error: remErr.message });
+            reminderFailed++;
+          }
+        }
+        log.info('checkin_reminders_sent', { sent: reminderSent, failed: reminderFailed });
+      })(), 30000, 'checkin_reminders');
+    } catch (reminderErr) {
+      log.error('checkin_reminder_error', { error: reminderErr?.message });
+    }
+
     return { snapshotDate, userCount: digestUserCount, sent: digestSent, failed: digestFailed };
 
   } catch (err) {

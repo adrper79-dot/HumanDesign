@@ -174,6 +174,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 | `practitioner.js` | 836 | Practitioner registration, client management, analytics, stats, reminders | `handlePractitioner` (router), `handleGetReferralLink`, `handleAcceptInvitation`, `handleGetInvitationDetails` | practitioners, practitioner_clients, users, charts |
 | `practitioner-directory.js` | 310 | Public directory, profile edit, view tracking, scheduling embed | `handleListDirectory`, `handleGetPublicProfile`, `handleGetDirectoryProfile`, `handleUpdateDirectoryProfile`, `handleGetDirectoryStats` | practitioners, users, analytics_events |
 | `session-notes.js` | 277 | Per-client session notes + AI context | `handleListNotes`, `handleCreateNote`, `handleUpdateNote`, `handleDeleteNote`, `handleGetAIContext`, `handleUpdateAIContext` | practitioner_session_notes, practitioner_clients (ai_context column) |
+| `client-portal.js` | 150 | Client-facing reverse view of practitioner relationship | `handleGetClientPractitioners`, `handleGetClientPortal`, `handleGetClientSharedNotes` | practitioner_clients, practitioners, practitioner_session_notes, charts, profiles |
 | `cluster.js` | 514 | Group/cluster management + synthesis | `handleCluster` | clusters, cluster_members, charts, users |
 
 #### Communication

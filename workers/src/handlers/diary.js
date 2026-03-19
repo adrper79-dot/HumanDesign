@@ -14,6 +14,8 @@ import { createQueryFn, QUERIES } from '../db/queries.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { createLogger } from '../lib/logger.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
+import { callLLM } from '../lib/llm.js';
+import { trackEvent } from '../lib/analytics.js';
 
 /**
  * Convert a date string (YYYY-MM-DD) to Julian Day Number for transit calculation.
@@ -167,7 +169,7 @@ export async function handleDiaryCreate(request, env) {
 }
 
 /**
- * Get all diary entries for user.
+ * Get all diary entries for user with optional filters.
  */
 export async function handleDiaryList(request, env) {
   const userId = request._user?.sub;
@@ -178,11 +180,17 @@ export async function handleDiaryList(request, env) {
   const url = new URL(request.url);
   const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200);
   const offset = Math.max(parseInt(url.searchParams.get('offset')) || 0, 0);
+  const search = (url.searchParams.get('search') || '').trim();
+  const eventType = (url.searchParams.get('type') || '').trim();
+  const significance = (url.searchParams.get('significance') || '').trim();
+  const dateFrom = (url.searchParams.get('date_from') || '').trim();
+  const dateTo = (url.searchParams.get('date_to') || '').trim();
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   try {
-    const result = await query(QUERIES.getDiaryEntries, [userId, limit, offset]);
+    const { sql, params } = buildDiaryFilterQuery(userId, { search, eventType, significance, dateFrom, dateTo, limit, offset });
+    const result = await query(sql, params);
 
     return Response.json({
       ok: true,
@@ -191,6 +199,101 @@ export async function handleDiaryList(request, env) {
     });
   } catch (error) {
     return reportHandledRouteError({ request, env, error, source: 'diary-list' });
+  }
+}
+
+const VALID_EVENT_TYPES = ['career', 'relationship', 'health', 'spiritual', 'financial', 'family', 'other'];
+const VALID_SIGNIFICANCE = ['major', 'moderate', 'minor'];
+
+export function buildDiaryFilterQuery(userId, { search, eventType, significance, dateFrom, dateTo, limit, offset }) {
+  const conditions = ['user_id = $1'];
+  const params = [userId];
+  let idx = 2;
+
+  if (search) {
+    conditions.push(`(event_title ILIKE $${idx} OR event_description ILIKE $${idx})`);
+    params.push(`%${search}%`);
+    idx++;
+  }
+  if (eventType && VALID_EVENT_TYPES.includes(eventType)) {
+    conditions.push(`event_type = $${idx}`);
+    params.push(eventType);
+    idx++;
+  }
+  if (significance && VALID_SIGNIFICANCE.includes(significance)) {
+    conditions.push(`significance = $${idx}`);
+    params.push(significance);
+    idx++;
+  }
+  if (dateFrom && /^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) {
+    conditions.push(`event_date >= $${idx}::date`);
+    params.push(dateFrom);
+    idx++;
+  }
+  if (dateTo && /^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+    conditions.push(`event_date <= $${idx}::date`);
+    params.push(dateTo);
+    idx++;
+  }
+
+  params.push(limit, offset);
+  const sql = `SELECT id, user_id, event_date, event_title, event_description, event_type, significance, transit_snapshot, created_at, updated_at
+    FROM diary_entries
+    WHERE ${conditions.join(' AND ')}
+    ORDER BY event_date DESC, created_at DESC
+    LIMIT $${idx} OFFSET $${idx + 1}`;
+
+  return { sql, params };
+}
+
+/**
+ * Export diary entries as CSV.
+ */
+export async function handleDiaryExport(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+  try {
+    const result = await query(QUERIES.exportUserDiary, [userId]);
+    const rows = result.rows || [];
+
+    const columns = [
+      { key: 'event_date', label: 'Date' },
+      { key: 'event_title', label: 'Title' },
+      { key: 'event_description', label: 'Description' },
+      { key: 'event_type', label: 'Type' },
+      { key: 'significance', label: 'Significance' },
+      { key: 'created_at', label: 'Created At' },
+    ];
+
+    const escapeCSV = (val) => {
+      if (val == null) return '';
+      const s = String(val);
+      if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    };
+
+    const header = columns.map(c => c.label).join(',');
+    const lines = rows.map(r => columns.map(c => escapeCSV(r[c.key])).join(','));
+    const csv = [header, ...lines].join('\n');
+
+    trackEvent?.('diary', 'diary_exported', `${rows.length} entries`);
+
+    return new Response(csv, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="diary-entries.csv"',
+      },
+    });
+  } catch (error) {
+    return reportHandledRouteError({ request, env, error, source: 'diary-export' });
   }
 }
 
@@ -332,6 +435,71 @@ export async function handleDiaryDelete(request, env, entryId) {
 }
 
 /**
+ * Generate AI pattern insights from diary entries + transit correlations.
+ * Requires 10+ entries.
+ */
+export async function handleDiaryInsights(request, env) {
+  const userId = request._user?.sub;
+  if (!userId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 });
+  }
+
+  try {
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+    const { rows } = await query(QUERIES.getDiaryEntriesForInsights, [userId]);
+
+    if (rows.length < 10) {
+      return Response.json({
+        error: `Need at least 10 diary entries for pattern analysis (you have ${rows.length})`,
+      }, { status: 400 });
+    }
+
+    // Build entry summaries for the prompt
+    const entrySummaries = rows.map(r => {
+      const transit = r.transit_snapshot
+        ? (typeof r.transit_snapshot === 'string' ? JSON.parse(r.transit_snapshot) : r.transit_snapshot)
+        : null;
+      const transitInfo = transit?.transitData?.aspects?.length
+        ? `Transits: ${transit.transitData.aspects.slice(0, 5).map(a => `${a.transitPlanet} ${a.aspect} natal ${a.natalPlanet}`).join('; ')}`
+        : '';
+      return `[${r.event_date}] ${r.event_type}/${r.significance}: ${r.event_title}${r.event_description ? ' — ' + r.event_description.slice(0, 200) : ''}${transitInfo ? '\n  ' + transitInfo : ''}`;
+    }).join('\n');
+
+    const result = await callLLM({
+      system: `You are an insightful pattern analyst for a personal energy blueprint platform.
+Analyze the user's life diary entries and any transit correlations to find meaningful patterns.
+Return a concise, structured analysis with:
+1. Top 3-5 recurring themes or patterns across entries
+2. Any correlations between event types, significance levels, and timing
+3. Transit pattern correlations (if transit data is available)
+4. One actionable insight or recommendation
+
+Keep the response under 800 words. Use a warm but professional tone. Do not make medical or financial claims.`,
+      messages: [{
+        role: 'user',
+        content: `Analyze these ${rows.length} diary entries for patterns and insights:\n\n${entrySummaries}`
+      }],
+      config: {
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1200,
+        temperature: 0.7,
+      }
+    }, env);
+
+    trackEvent?.('diary', 'diary_insights_generated', userId);
+
+    return Response.json({
+      ok: true,
+      insights: result,
+      entryCount: rows.length,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    return reportHandledRouteError({ request, env, error: err, source: 'diary-insights' });
+  }
+}
+
+/**
  * Route handler for /api/diary/*
  */
 export async function handleDiary(request, env, subpath) {
@@ -346,6 +514,16 @@ export async function handleDiary(request, env, subpath) {
   // GET /api/diary - list entries
   if (normalized === '' && method === 'GET') {
     return handleDiaryList(request, env);
+  }
+
+  // POST /api/diary/insights - AI pattern analysis
+  if (normalized === '/insights' && method === 'POST') {
+    return handleDiaryInsights(request, env);
+  }
+
+  // GET /api/diary/export - CSV download
+  if (normalized === '/export' && method === 'GET') {
+    return handleDiaryExport(request, env);
   }
 
   // GET /api/diary/:id - get entry

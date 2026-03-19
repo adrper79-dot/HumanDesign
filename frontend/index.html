@@ -58,6 +58,7 @@
 <link rel="stylesheet" href="css/components/alerts.css">
 <link rel="stylesheet" href="css/components/layout.css">
 <link rel="stylesheet" href="css/components/sidebar.css">
+<link rel="stylesheet" href="css/components/calendar.css">
 <!-- Premium Overrides (no more @imports — loaded last for cascade) -->
 <link rel="stylesheet" href="css/prime-self-premium.css">
 <!-- Mobile Optimizations -->
@@ -252,6 +253,58 @@
     </div>
     <div class="auth-alt-action" style="margin-top:16px">
       <a class="link-dim" data-action="closeSecurityModal">Close</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Push Notification Preferences Modal ════════════════════════ -->
+<div class="auth-overlay hidden" id="pushPrefsModal" role="dialog" aria-modal="true" aria-labelledby="pushPrefsTitle" style="z-index:1100">
+  <div class="auth-box" style="max-width:440px">
+    <h2 id="pushPrefsTitle">🔔 Notification Preferences</h2>
+    <div id="pushPrefsBody" style="font-size:0.9rem">
+      <p style="color:var(--text-dim);margin-bottom:var(--space-4)" id="pushPermissionStatus"></p>
+      <button class="btn-primary btn-sm" id="pushEnableBtn" data-action="requestPushPermission" style="margin-bottom:var(--space-5);display:none">Enable Push Notifications</button>
+      <div id="pushPrefsToggles" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+            <input type="checkbox" id="pushPref-transitDaily" checked>
+            <span>Daily Transit Updates</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+            <input type="checkbox" id="pushPref-gateActivation" checked>
+            <span>Gate Activations</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+            <input type="checkbox" id="pushPref-cycleApproaching" checked>
+            <span>Approaching Cycles</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+            <input type="checkbox" id="pushPref-transitAlert" checked>
+            <span>Transit Alerts</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer">
+            <input type="checkbox" id="pushPref-weeklyDigest" checked>
+            <span>Weekly Digest</span>
+          </label>
+        </div>
+        <div style="margin-top:var(--space-4);display:flex;gap:var(--space-3);align-items:center">
+          <label style="font-size:var(--font-size-sm);color:var(--text-dim)">Quiet Hours</label>
+          <select id="pushPref-quietStart" style="padding:4px 8px;border-radius:var(--space-2);background:var(--bg3);color:var(--text);border:1px solid var(--border)">
+            <option value="">Off</option>
+            <option value="21">9 PM</option><option value="22">10 PM</option><option value="23">11 PM</option>
+          </select>
+          <span style="color:var(--text-dim)">to</span>
+          <select id="pushPref-quietEnd" style="padding:4px 8px;border-radius:var(--space-2);background:var(--bg3);color:var(--text);border:1px solid var(--border)">
+            <option value="">Off</option>
+            <option value="6">6 AM</option><option value="7">7 AM</option><option value="8">8 AM</option><option value="9">9 AM</option>
+          </select>
+        </div>
+        <button class="btn-primary" data-action="savePushPreferences" style="margin-top:var(--space-5);width:100%">Save Preferences</button>
+        <button class="btn-secondary btn-sm" data-action="testPushNotification" style="margin-top:var(--space-3);width:100%">Send Test Notification</button>
+      </div>
+    </div>
+    <div class="auth-alt-action" style="margin-top:16px">
+      <a class="link-dim" data-action="closePushPreferences">Close</a>
     </div>
   </div>
 </div>
@@ -492,7 +545,10 @@
 <div id="notifDrawer" class="notif-drawer" style="display:none">
   <div class="notif-drawer-header">
     <span style="font-weight:700;color:var(--gold)">🔔 Notifications</span>
-    <button class="btn-icon" data-action="toggleNotifDrawer" aria-label="Close notifications" style="font-size:1rem">✕</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-icon" data-action="openPushPreferences" aria-label="Notification preferences" title="Notification preferences" style="font-size:1rem">⚙️</button>
+      <button class="btn-icon" data-action="toggleNotifDrawer" aria-label="Close notifications" style="font-size:1rem">✕</button>
+    </div>
   </div>
   <div id="notifDrawerList" class="notif-drawer-list">
     <p style="color:var(--text-dim);text-align:center;padding:24px 0">No notifications yet.</p>
@@ -656,6 +712,9 @@
       <button class="nav-item" data-tab="directory" data-action="sidebarNav" data-arg0="directory">
         <span class="nav-icon">🔍</span><span class="nav-label">Find a Practitioner</span>
       </button>
+      <button class="nav-item" data-tab="my-practitioner" data-action="sidebarNav" data-arg0="my-practitioner" id="nav-my-practitioner" style="display:none">
+        <span class="nav-icon">🤝</span><span class="nav-label">My Practitioner</span>
+      </button>
     </div>
 
     <!-- DAILY -->
@@ -673,6 +732,9 @@
         </button>
         <button class="nav-item" data-tab="timing" data-action="sidebarNav" data-arg0="timing">
           <span class="nav-label" data-i18n="nav.timing">Optimal Timing</span>
+        </button>
+        <button class="nav-item" data-tab="calendar" data-action="sidebarNav" data-arg0="calendar">
+          <span class="nav-label">📅 Calendar</span>
         </button>
       </div>
     </div>
@@ -1312,12 +1374,50 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="icon-archive"></span> <span data-i18n="diary.yourEvents">Your Life Events</span></div>
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="icon-archive"></span> <span data-i18n="diary.yourEvents">Your Life Events</span></div>
+        <button class="btn-secondary btn-sm" data-action="exportDiary" title="Export as CSV">📥 Export</button>
+      </div>
+      <!-- Filters -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);margin:var(--space-3) 0">
+        <input type="text" id="diarySearchInput" placeholder="Search title or description…" style="grid-column:1/3" />
+        <select id="diaryTypeFilter">
+          <option value="">All Types</option>
+          <option value="career">Career</option>
+          <option value="relationship">Relationship</option>
+          <option value="health">Health</option>
+          <option value="spiritual">Spiritual</option>
+          <option value="financial">Financial</option>
+          <option value="family">Family</option>
+          <option value="other">Other</option>
+        </select>
+        <select id="diarySignificanceFilter">
+          <option value="">All Significance</option>
+          <option value="major">Major</option>
+          <option value="moderate">Moderate</option>
+          <option value="minor">Minor</option>
+        </select>
+        <input type="date" id="diaryDateFrom" title="From date" />
+        <input type="date" id="diaryDateTo" title="To date" />
+      </div>
       <button class="btn-secondary" data-action="loadDiaryEntries" id="diaryLoadBtn">
         <span class="spinner" id="diaryLoadSpinner" style="display:none"></span>
         Load Events
       </button>
       <div id="diaryList"></div>
+    </div>
+
+    <!-- AI Pattern Insights -->
+    <div class="card" id="diaryInsightsCard">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">🔮</span> AI Pattern Insights</div>
+        <button class="btn-secondary btn-sm" data-action="generateDiaryInsights" id="diaryInsightsBtn">
+          <span class="spinner" id="diaryInsightsSpinner" style="display:none"></span>
+          Analyze Patterns
+        </button>
+      </div>
+      <p class="card-hint">After 10+ diary entries, AI will analyze your life events and transit correlations to reveal recurring themes.</p>
+      <div id="diaryInsightsResult" style="margin-top:var(--space-3)"></div>
     </div>
   </div>
 
@@ -1436,6 +1536,38 @@
           <div id="checkinHistoryList"></div>
         </div>
       </div>
+    </div>
+
+    <!-- Daily Reminder Preferences -->
+    <div class="card" id="checkinReminderCard">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">⏰</span> Daily Reminder</div>
+        <button class="btn-secondary btn-sm" data-action="loadCheckinReminder" id="reminderRefreshBtn">Refresh</button>
+      </div>
+      <p class="card-hint">Get a daily nudge to complete your check-in. Choose when and how.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:flex-end;margin-top:var(--space-3)">
+        <div class="form-group" style="margin:0;min-width:120px">
+          <label for="reminder-time">Reminder Time</label>
+          <input type="time" id="reminder-time" value="20:00" class="form-input">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="reminder-enabled" checked class="form-checkbox"> Enabled
+          </label>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="reminder-push" checked class="form-checkbox"> Push
+          </label>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="reminder-email" class="form-checkbox"> Email
+          </label>
+        </div>
+        <button class="btn-primary btn-sm" data-action="saveCheckinReminder" id="reminderSaveBtn">Save</button>
+      </div>
+      <div id="reminderStatus" class="status-output" style="margin-top:var(--space-2)" aria-live="polite" role="status"></div>
     </div>
   </div>
 
@@ -1803,6 +1935,29 @@
       </div>
     </div>
 
+    <!-- Client Reviews Moderation -->
+    <div class="card" id="reviewsModerationCard">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">⭐</span> Client Reviews</div>
+        <button class="btn-secondary btn-sm" data-action="loadPractitionerReviews">Refresh</button>
+      </div>
+      <p class="card-hint">Approve or hide client testimonials. Approved reviews appear on your public directory profile.</p>
+      <div id="practitionerReviewsList" style="color:var(--text-dim);font-size:var(--font-size-sm)">Click Refresh to load reviews.</div>
+    </div>
+
+    <!-- CSV Export -->
+    <div class="card" id="csvExportCard">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">📥</span> Export Data</div>
+      </div>
+      <p class="card-hint">Download your practice data as CSV files for backup or analysis.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)">
+        <button class="btn-secondary btn-sm" data-action="downloadCSV" data-arg0="roster">Client Roster</button>
+        <button class="btn-secondary btn-sm" data-action="downloadCSV" data-arg0="notes">Session Notes</button>
+        <button class="btn-secondary btn-sm" data-action="downloadCSV" data-arg0="readings">Divination Readings</button>
+      </div>
+    </div>
+
     <!-- Notion Integration (Practitioner/Agency) -->
     <div class="card" id="notionCard">
       <div class="card-header-row">
@@ -1831,6 +1986,12 @@
     <!-- Referral Performance (auto-loads on tab open) -->
     <div id="pracReferralStats"></div>
 
+    <!-- Revenue & Earnings (ITEM-1.8) -->
+    <div id="pracEarningsCard"></div>
+
+    <!-- Practitioner Promo Code (ITEM-1.9) -->
+    <div id="pracPromoCard"></div>
+
     <!-- Practice Metrics (PRAC-012) -->
     <div id="pracMetricsCard"></div>
 
@@ -1839,6 +2000,42 @@
 
     <!-- Client detail panel (expands below the tapped client row) -->
     <div id="pracDetailPanel" style="display:none"></div>
+
+  </div>
+
+  <!-- ═══ MY PRACTITIONER TAB (Client Portal) ═══ -->
+  <div class="tab-content" id="tab-my-practitioner" role="tabpanel" aria-labelledby="nav-my-practitioner">
+
+    <div class="card" id="portalHeaderCard">
+      <div class="card-title">🤝 My Practitioner</div>
+      <p class="card-intro">View your practitioners, shared session notes, and your energy blueprint as seen through your practitioner's lens.</p>
+    </div>
+
+    <!-- Practitioner list (auto-loaded) -->
+    <div id="portalPractitionersList" aria-live="polite" aria-atomic="true">
+      <div class="loading-placeholder">Loading practitioners…</div>
+    </div>
+
+    <!-- Portal detail view (shown when a practitioner is selected) -->
+    <div id="portalDetailView" style="display:none">
+      <div id="portalPracInfo" class="card"></div>
+      <div id="portalSharedNotes" class="card" style="display:none">
+        <div class="card-title">📋 Shared Session Notes</div>
+        <div id="portalNotesContent" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <!-- All shared notes across practitioners -->
+    <div class="card" id="portalAllNotesCard" style="display:none">
+      <div class="card-header-row">
+        <div class="card-title mb-0">📋 All Shared Notes</div>
+        <button class="btn-secondary btn-sm" data-action="loadAllSharedNotes">Refresh</button>
+      </div>
+      <div id="portalAllNotesContent" aria-live="polite"></div>
+      <div id="portalAllNotesMore" style="display:none">
+        <button class="btn-secondary btn-sm" data-action="loadMoreSharedNotes">Load More</button>
+      </div>
+    </div>
 
   </div>
 
@@ -2099,6 +2296,89 @@
     <div class="card" id="timingResultsCard" style="display:none">
       <div class="card-title">✨ Recommended Dates</div>
       <div id="timingResults" aria-live="polite" aria-atomic="true"></div>
+    </div>
+  </div>
+
+  <!-- ═══ CALENDAR ═══ -->
+  <div class="tab-content" id="tab-calendar" role="tabpanel">
+    <div class="calendar-header">
+      <div class="calendar-nav">
+        <button class="btn-icon" data-action="calendarPrev" aria-label="Previous">◀</button>
+        <h2 id="calendarTitle" class="calendar-title">April 2026</h2>
+        <button class="btn-icon" data-action="calendarNext" aria-label="Next">▶</button>
+      </div>
+      <div class="calendar-view-toggle">
+        <button class="btn-sm active" id="calViewMonth" data-action="calendarSetView" data-arg0="month">Month</button>
+        <button class="btn-sm" id="calViewWeek" data-action="calendarSetView" data-arg0="week">Week</button>
+        <button class="btn-sm" id="calViewDay" data-action="calendarSetView" data-arg0="day">Day</button>
+        <button class="btn-sm cal-pract-toggle" id="calPractitionerToggle" data-action="calendarTogglePractitioner" style="display:none" title="Show all clients' events">👥 All Clients</button>
+      </div>
+    </div>
+
+    <!-- Transit Weather Bar -->
+    <div class="transit-weather-bar" id="calendarWeatherBar"></div>
+
+    <!-- Month View -->
+    <div class="calendar-view calendar-month" id="calendarMonthView">
+      <div class="calendar-grid-header">
+        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <!-- Week View -->
+    <div class="calendar-view calendar-week" id="calendarWeekView" style="display:none">
+      <div id="calendarWeekContent"></div>
+    </div>
+
+    <!-- Day View -->
+    <div class="calendar-view calendar-day" id="calendarDayView" style="display:none">
+      <div id="calendarDayContent"></div>
+    </div>
+
+    <!-- Mood Heatmap -->
+    <div class="card" id="calendarMoodCard" style="margin-top:var(--space-md)">
+      <div class="card-title">🌡 Mood Heatmap</div>
+      <div id="calendarMoodHeatmap" class="mood-heatmap"></div>
+    </div>
+
+    <!-- Quick Add Event -->
+    <div class="card" style="margin-top:var(--space-md)">
+      <div class="card-title">➕ Quick Add Event</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="calEventTitle" maxlength="500" placeholder="Event title">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="datetime-local" id="calEventDate">
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select id="calEventType">
+            <option value="personal" data-label="Personal">Personal</option>
+            <option value="moon" data-label="Moon Phase">Moon Phase</option>
+            <option value="transit" data-label="Transit">Transit</option>
+            <option value="retrograde" data-label="Retrograde">Retrograde</option>
+            <option value="session" data-label="Session">Session</option>
+            <option value="reminder" data-label="Reminder">Reminder</option>
+            <option value="diary" data-label="Diary">Diary</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="color" id="calEventColor" value="#6C63FF">
+        </div>
+      </div>
+      <button class="btn-primary" data-action="calendarAddEvent">Add Event</button>
+    </div>
+
+    <!-- Optimal Day Finder (links to timing) -->
+    <div class="card" style="margin-top:var(--space-md)">
+      <div class="card-title">✨ Find Optimal Dates</div>
+      <p style="color:var(--text-muted);margin-bottom:var(--space-sm)">Use the electional timing engine to find your best dates.</p>
+      <button class="btn-secondary" data-action="sidebarNav" data-arg0="timing">Open Timing Engine →</button>
     </div>
   </div>
 

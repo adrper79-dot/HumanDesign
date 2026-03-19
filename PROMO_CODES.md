@@ -195,3 +195,39 @@ GET /api/admin/promo → filter by code → check redemptions field
 // 4. Thank them
 // Once code nears limit (e.g. 18/20 redeemed), send "thank you" email with case study access
 ```
+
+---
+
+## Practitioner Promo Codes (Item 1.9)
+
+Practitioners can create their own promo codes to share with clients.
+
+### Constraints
+- **1 active code** per practitioner at a time
+- **10-50% discount** (percentage only, first month)
+- Code format: 3-32 characters (A-Z, 0-9, hyphens, underscores)
+- Optional max redemptions (1-1000) and expiry date
+
+### API Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/practitioner/promo` | Get practitioner's active promo code |
+| `POST` | `/api/practitioner/promo` | Create a new promo code |
+| `DELETE` | `/api/practitioner/promo/:id` | Deactivate a promo code |
+
+### Create Promo Code
+
+```json
+POST /api/practitioner/promo
+{
+  "code": "JANE20",
+  "discount_value": 20,
+  "max_redemptions": 100,
+  "valid_until": "2026-12-31"
+}
+```
+
+### Database
+- Uses existing `promo_codes` table with new `practitioner_id` FK column (migration 058)
+- `deactivatePractitionerPromo` checks both promo ID and practitioner_id for ownership

@@ -565,6 +565,14 @@ export const QUERIES = {
     WHERE id = $1 AND user_id = $2
   `,
 
+  getDiaryEntriesForInsights: `
+    SELECT event_date, event_title, event_description, event_type, significance, transit_snapshot
+    FROM diary_entries
+    WHERE user_id = $1
+    ORDER BY event_date DESC
+    LIMIT 50
+  `,
+
   // ─── Subscriptions ────────────────────────────────────────
 
   // BL-FIX: UPSERT subscription to handle checkout.session.completed when no row exists
@@ -1512,6 +1520,23 @@ export const QUERIES = {
     FROM checkin_reminders WHERE user_id = $1
   `,
 
+  cronGetDueCheckinReminders: `
+    SELECT cr.user_id, cr.reminder_time, cr.timezone, cr.notification_method,
+           u.email
+    FROM checkin_reminders cr
+    JOIN users u ON u.id = cr.user_id
+    WHERE cr.enabled = true
+      AND (cr.last_sent_at IS NULL OR cr.last_sent_at::date < CURRENT_DATE)
+      AND NOT EXISTS (
+        SELECT 1 FROM daily_checkins dc
+        WHERE dc.user_id = cr.user_id AND dc.checkin_date = CURRENT_DATE
+      )
+  `,
+
+  updateReminderLastSent: `
+    UPDATE checkin_reminders SET last_sent_at = NOW() WHERE user_id = $1
+  `,
+
   // ─── Share Events ─────────────────────────────────────────
 
   insertShareEvent: `
@@ -2101,6 +2126,59 @@ export const QUERIES = {
     WHERE practitioner_id = $1 AND client_user_id = $2
   `,
 
+  // ─── Client Portal (reverse-view for clients) ──────────────────
+
+  getClientPractitioners: `
+    SELECT p.id, p.display_name, p.photo_url, p.specializations,
+           p.bio, p.session_format, p.booking_url, p.slug,
+           pc.created_at AS relationship_since
+    FROM practitioners p
+    JOIN practitioner_clients pc ON pc.practitioner_id = p.id
+    WHERE pc.client_user_id = $1
+    ORDER BY pc.created_at DESC
+  `,
+
+  checkClientPractitionerAccess: `
+    SELECT 1 FROM practitioner_clients pc
+    WHERE pc.client_user_id = $1 AND pc.practitioner_id = $2
+    LIMIT 1
+  `,
+
+  getClientPractitionerInfo: `
+    SELECT id, display_name, photo_url, specializations, bio,
+           session_format, booking_url
+    FROM practitioners
+    WHERE id = $1
+  `,
+
+  getClientSharedNotes: `
+    SELECT id, content, session_date, created_at
+    FROM practitioner_session_notes
+    WHERE practitioner_id = $1
+      AND client_user_id = $2
+      AND share_with_client = true
+    ORDER BY session_date DESC, created_at DESC
+    LIMIT 20
+  `,
+
+  getAllClientSharedNotes: `
+    SELECT sn.id, sn.content, sn.session_date, sn.created_at,
+           p.display_name
+    FROM practitioner_session_notes sn
+    JOIN practitioners p ON p.id = sn.practitioner_id
+    WHERE sn.client_user_id = $1
+      AND sn.share_with_client = true
+    ORDER BY sn.session_date DESC, sn.created_at DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  countAllClientSharedNotes: `
+    SELECT COUNT(*)::int AS total
+    FROM practitioner_session_notes
+    WHERE client_user_id = $1
+      AND share_with_client = true
+  `,
+
   // ─── Practitioner Directory (HD_UPDATES4) ─────────────────────
 
   updatePractitionerProfile: `
@@ -2270,6 +2348,164 @@ export const QUERIES = {
     RETURNING id, code, active
   `,
 
+  // ─── Practitioner Promo Codes (ITEM-1.9) ─────────────────
+
+  createPractitionerPromo: `
+    INSERT INTO promo_codes (code, discount_type, discount_value, max_redemptions, valid_until, practitioner_id, active)
+    VALUES ($1, 'percentage', $2, $3, $4, $5, true)
+    RETURNING id, code, discount_type, discount_value, max_redemptions, valid_until, practitioner_id, active, created_at
+  `,
+
+  getPractitionerActivePromo: `
+    SELECT id, code, discount_type, discount_value, max_redemptions, redemptions,
+           valid_until, active, created_at
+    FROM promo_codes
+    WHERE practitioner_id = $1 AND active = true
+    ORDER BY created_at DESC
+    LIMIT 1
+  `,
+
+  deactivatePractitionerPromo: `
+    UPDATE promo_codes SET active = false, updated_at = NOW()
+    WHERE id = $1 AND practitioner_id = $2 AND active = true
+    RETURNING id, code, active
+  `,
+
+  // Item 1.11: Diary-to-Practitioner Visibility
+  getDiaryEntriesForClient: `
+    SELECT d.id, d.event_date, d.event_title, d.event_description,
+           d.event_type, d.significance, d.created_at
+    FROM diary_entries d
+    JOIN practitioner_clients pc ON pc.client_user_id = d.user_id
+    JOIN practitioners p ON p.id = pc.practitioner_id
+    WHERE p.user_id = $1 AND d.user_id = $2
+      AND pc.share_diary = true
+    ORDER BY d.event_date DESC, d.created_at DESC
+    LIMIT $3 OFFSET $4
+  `,
+
+  getClientDiarySharingStatus: `
+    SELECT pc.share_diary
+    FROM practitioner_clients pc
+    JOIN practitioners p ON p.id = pc.practitioner_id
+    WHERE p.user_id = $1 AND pc.client_user_id = $2
+    LIMIT 1
+  `,
+
+  updateClientDiarySharing: `
+    UPDATE practitioner_clients pc
+    SET share_diary = $3
+    FROM practitioners p
+    WHERE p.id = pc.practitioner_id
+      AND pc.client_user_id = $1
+      AND p.user_id = $2
+    RETURNING pc.share_diary
+  `,
+
+  getMyDiarySharingPreferences: `
+    SELECT pc.share_diary, p.user_id as practitioner_user_id,
+           u.display_name as practitioner_name
+    FROM practitioner_clients pc
+    JOIN practitioners p ON p.id = pc.practitioner_id
+    JOIN users u ON u.id = p.user_id
+    WHERE pc.client_user_id = $1
+  `,
+
+  setMyDiarySharing: `
+    UPDATE practitioner_clients pc
+    SET share_diary = $2
+    FROM practitioners p
+    WHERE p.id = pc.practitioner_id
+      AND pc.client_user_id = $1
+      AND p.user_id = $3
+  `,
+
+  // Item 3.1: Calendar Events
+  createCalendarEvent: `
+    INSERT INTO calendar_events (user_id, title, description, event_type, start_date, end_date, all_day, recurrence, color, source, external_id, metadata)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    RETURNING *
+  `,
+
+  listCalendarEvents: `
+    SELECT id, title, description, event_type, start_date, end_date, all_day, recurrence, color, source, external_id, metadata, created_at
+    FROM calendar_events
+    WHERE user_id = $1
+    ORDER BY start_date ASC
+    LIMIT $2 OFFSET $3
+  `,
+
+  getCalendarEventsByDateRange: `
+    SELECT id, title, description, event_type, start_date, end_date, all_day, recurrence, color, source, external_id, metadata, created_at
+    FROM calendar_events
+    WHERE user_id = $1 AND start_date >= $2::timestamptz AND start_date <= $3::timestamptz
+    ORDER BY start_date ASC
+  `,
+
+  updateCalendarEvent: `
+    UPDATE calendar_events
+    SET title = COALESCE($3, title),
+        description = COALESCE($4, description),
+        event_type = COALESCE($5, event_type),
+        start_date = COALESCE($6, start_date),
+        end_date = $7,
+        all_day = COALESCE($8, all_day),
+        recurrence = $9,
+        color = $10,
+        metadata = COALESCE($11, metadata),
+        updated_at = NOW()
+    WHERE id = $1 AND user_id = $2
+    RETURNING *
+  `,
+
+  deleteCalendarEvent: `
+    DELETE FROM calendar_events WHERE id = $1 AND user_id = $2 RETURNING id
+  `,
+
+  getCalendarEvent: `
+    SELECT * FROM calendar_events WHERE id = $1 AND user_id = $2
+  `,
+
+  // ── Google Calendar tokens (3.2) ──────────────────────────
+  storeGoogleCalendarToken: `
+    INSERT INTO google_calendar_tokens (user_id, encrypted_access_token, encrypted_refresh_token, token_expiry, calendar_id)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (user_id) DO UPDATE SET
+      encrypted_access_token = EXCLUDED.encrypted_access_token,
+      encrypted_refresh_token = EXCLUDED.encrypted_refresh_token,
+      token_expiry = EXCLUDED.token_expiry,
+      calendar_id = COALESCE(EXCLUDED.calendar_id, google_calendar_tokens.calendar_id),
+      updated_at = NOW()
+    RETURNING *
+  `,
+
+  getGoogleCalendarToken: `
+    SELECT * FROM google_calendar_tokens WHERE user_id = $1
+  `,
+
+  deleteGoogleCalendarToken: `
+    DELETE FROM google_calendar_tokens WHERE user_id = $1 RETURNING id
+  `,
+
+  updateGoogleCalSyncToken: `
+    UPDATE google_calendar_tokens
+    SET sync_token = $2, last_synced_at = NOW(), updated_at = NOW()
+    WHERE user_id = $1
+  `,
+
+  listPractitionerClientEvents: `
+    SELECT ce.*, u.email AS client_email,
+           pc.created_at AS client_added_at
+    FROM calendar_events ce
+    JOIN practitioner_clients pc ON pc.client_user_id = ce.user_id
+    JOIN users u ON u.id = ce.user_id
+    WHERE pc.practitioner_id = $1
+      AND ce.start_date >= $2
+      AND ce.start_date <= $3
+    ORDER BY ce.start_date ASC
+    LIMIT 500
+  `,
+
   adminGetOverviewStats: `
     SELECT
       (SELECT COUNT(*) FROM users) AS total_users,
@@ -2387,10 +2623,12 @@ export const QUERIES = {
 
   // ─── Referral System (Phase 2A/2D) ───────────────────────
 
-  // Safe fallback — referral earnings tracking is a future sprint.
-  // Returns zero counts until subscription_credits table is built.
   getPractitionerReferralStats: `
-    SELECT 0::int as referral_count, 0::numeric as earnings_this_month
+    SELECT
+      COALESCE((SELECT COUNT(*)::int FROM referrals WHERE referrer_user_id = $1), 0) AS referral_count,
+      COALESCE((SELECT SUM(reward_value)::numeric FROM referrals
+        WHERE referrer_user_id = $1 AND reward_granted = true
+        AND updated_at >= date_trunc('month', CURRENT_DATE)), 0) AS earnings_this_month
   `,
 
   recordReferralSignup: `
@@ -2421,6 +2659,182 @@ export const QUERIES = {
     WHERE p.tier != 'free'
     GROUP BY p.id, u.email, p.display_name, p.business_name
     HAVING COUNT(DISTINCT pc.client_user_id) > 0
+  `,
+
+  // ─── Divination Readings ───────────────────────────────────────
+
+  createDivinationReading: `
+    INSERT INTO divination_readings
+      (practitioner_id, client_user_id, reading_type, spread_type, cards, interpretation, share_with_ai, reading_date)
+    VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8)
+    RETURNING *
+  `,
+
+  listDivinationReadings: `
+    SELECT id, practitioner_id, client_user_id, reading_type, spread_type,
+           cards, interpretation, share_with_ai, reading_date, created_at, updated_at
+    FROM divination_readings
+    WHERE practitioner_id = $1
+      AND client_user_id = $2
+      AND ($3 = '' OR reading_type = $3)
+    ORDER BY reading_date DESC, created_at DESC
+    LIMIT $4 OFFSET $5
+  `,
+
+  countDivinationReadings: `
+    SELECT COUNT(*)::int AS total
+    FROM divination_readings
+    WHERE practitioner_id = $1
+      AND client_user_id = $2
+      AND ($3 = '' OR reading_type = $3)
+  `,
+
+  getDivinationReading: `
+    SELECT * FROM divination_readings
+    WHERE id = $1 AND practitioner_id = $2
+  `,
+
+  updateDivinationReading: `
+    UPDATE divination_readings
+    SET interpretation = COALESCE($2, interpretation),
+        share_with_ai = COALESCE($3, share_with_ai),
+        cards = COALESCE($4::jsonb, cards),
+        spread_type = COALESCE($5, spread_type),
+        updated_at = NOW()
+    WHERE id = $1 AND practitioner_id = $6
+    RETURNING *
+  `,
+
+  deleteDivinationReading: `
+    DELETE FROM divination_readings WHERE id = $1 AND practitioner_id = $2
+  `,
+
+  getSharedDivinationReadings: `
+    SELECT id, reading_type, spread_type, cards, interpretation, reading_date, created_at
+    FROM divination_readings
+    WHERE client_user_id = $1 AND share_with_ai = true
+    ORDER BY reading_date DESC
+    LIMIT $2 OFFSET $3
+  `,
+
+  // ── Session Actions ──────────────────────────────────────────
+  createSessionAction: `
+    INSERT INTO session_actions (practitioner_id, client_user_id, title, description, due_date, session_note_id)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *
+  `,
+
+  listSessionActions: `
+    SELECT * FROM session_actions
+    WHERE practitioner_id = $1 AND client_user_id = $2
+      AND ($3 = '' OR status = $3)
+    ORDER BY CASE WHEN status = 'pending' THEN 0 ELSE 1 END, due_date ASC NULLS LAST, created_at DESC
+    LIMIT $4 OFFSET $5
+  `,
+
+  countSessionActions: `
+    SELECT COUNT(*)::int AS total FROM session_actions
+    WHERE practitioner_id = $1 AND client_user_id = $2
+      AND ($3 = '' OR status = $3)
+  `,
+
+  updateSessionAction: `
+    UPDATE session_actions
+    SET title = COALESCE($2, title),
+        description = COALESCE($3, description),
+        due_date = COALESCE($4, due_date),
+        status = COALESCE($5, status),
+        completed_at = CASE WHEN $5 = 'completed' THEN now() ELSE completed_at END
+    WHERE id = $1 AND practitioner_id = $6
+    RETURNING *
+  `,
+
+  deleteSessionAction: `
+    DELETE FROM session_actions WHERE id = $1 AND practitioner_id = $2
+  `,
+
+  getClientActions: `
+    SELECT sa.id, sa.title, sa.description, sa.due_date, sa.status, sa.completed_at, sa.created_at,
+           p.display_name AS practitioner_name
+    FROM session_actions sa
+    JOIN practitioners p ON p.id = sa.practitioner_id
+    WHERE sa.client_user_id = $1
+    ORDER BY CASE WHEN sa.status = 'pending' THEN 0 ELSE 1 END, sa.due_date ASC NULLS LAST
+    LIMIT $2 OFFSET $3
+  `,
+
+  completeClientAction: `
+    UPDATE session_actions
+    SET status = 'completed', completed_at = now()
+    WHERE id = $1 AND client_user_id = $2 AND status = 'pending'
+    RETURNING *
+  `,
+
+  // ── Practitioner Reviews ─────────────────────────────────────
+  createReview: `
+    INSERT INTO practitioner_reviews (practitioner_id, client_user_id, rating, content)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *
+  `,
+
+  listApprovedReviews: `
+    SELECT r.id, r.rating, r.content, r.created_at,
+           u.display_name AS reviewer_name
+    FROM practitioner_reviews r
+    JOIN practitioners p ON p.id = r.practitioner_id
+    JOIN users u ON u.id = r.client_user_id
+    WHERE p.slug = $1 AND r.status = 'approved'
+    ORDER BY r.created_at DESC
+  `,
+
+  listPractitionerReviews: `
+    SELECT r.*, u.email AS client_email, u.display_name AS client_name
+    FROM practitioner_reviews r
+    JOIN users u ON u.id = r.client_user_id
+    WHERE r.practitioner_id = $1
+    ORDER BY r.created_at DESC
+  `,
+
+  approveReview: `
+    UPDATE practitioner_reviews
+    SET status = 'approved', approved_at = now()
+    WHERE id = $1 AND practitioner_id = $2
+    RETURNING *
+  `,
+
+  hideReview: `
+    UPDATE practitioner_reviews
+    SET status = 'hidden', approved_at = NULL
+    WHERE id = $1 AND practitioner_id = $2
+    RETURNING *
+  `,
+
+  // ── CSV Exports ──────────────────────────────────────────────
+  exportRoster: `
+    SELECT u.id, u.email, u.display_name, u.birth_date, u.created_at AS user_joined,
+           pc.created_at AS added_at
+    FROM practitioner_clients pc
+    JOIN users u ON u.id = pc.client_user_id
+    WHERE pc.practitioner_id = $1
+    ORDER BY pc.created_at DESC
+  `,
+
+  exportNotes: `
+    SELECT sn.id, u.email AS client_email, u.display_name AS client_name,
+           sn.content, sn.session_date, sn.share_with_ai, sn.created_at
+    FROM practitioner_session_notes sn
+    JOIN users u ON u.id = sn.client_user_id
+    WHERE sn.practitioner_id = $1
+    ORDER BY sn.session_date DESC, sn.created_at DESC
+  `,
+
+  exportReadings: `
+    SELECT dr.id, u.email AS client_email, u.display_name AS client_name,
+           dr.reading_type, dr.spread_type, dr.interpretation, dr.reading_date, dr.created_at
+    FROM divination_readings dr
+    JOIN users u ON u.id = dr.client_user_id
+    WHERE dr.practitioner_id = $1
+    ORDER BY dr.reading_date DESC, dr.created_at DESC
   `,
 };
 

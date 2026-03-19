@@ -50,6 +50,10 @@ export function getTierConfig(env) {
         compositeCharts: false,        // Gated: practitioner+ or $29 one-time
         diaryEntriesPerMonth: Infinity,
         savedProfilesMax: 0,
+        calendarTransits: false,
+        calendarSync: false,
+        calendarSessions: false,
+        calendarPractitioner: false,
         whiteLabel: false,
         agencySeats: false,
         customWebhooks: false
@@ -76,6 +80,10 @@ export function getTierConfig(env) {
         compositeCharts: false,        // Composites removed from individual tier
         diaryEntriesPerMonth: Infinity,
         savedProfilesMax: Infinity,    // HD_UPDATES3: unlimited saved profiles
+        calendarTransits: true,
+        calendarSync: false,
+        calendarSessions: false,
+        calendarPractitioner: false,
         whiteLabel: false,
         agencySeats: false,
         customWebhooks: false
@@ -102,6 +110,10 @@ export function getTierConfig(env) {
         compositeCharts: true,         // Full composite access
         diaryEntriesPerMonth: Infinity,
         savedProfilesMax: Infinity,
+        calendarTransits: true,
+        calendarSync: true,
+        calendarSessions: true,
+        calendarPractitioner: true,
         whiteLabel: false,
         agencySeats: false,
         customWebhooks: false
@@ -128,6 +140,10 @@ export function getTierConfig(env) {
         compositeCharts: true,         // Full composite access
         diaryEntriesPerMonth: Infinity,
         savedProfilesMax: Infinity,
+        calendarTransits: true,
+        calendarSync: true,
+        calendarSessions: true,
+        calendarPractitioner: true,
         whiteLabel: true,
         agencySeats: true,             // HD_UPDATES3: up to 5 sub-account seats
         customWebhooks: true

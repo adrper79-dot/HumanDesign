@@ -1,0 +1,2136 @@
+{
+  "version": "v5-practitioner-revision",
+  "createdAt": "2026-03-18T00:00:00.000Z",
+  "updatedAt": "2026-03-19T03:22:21.300Z",
+  "phases": [
+    {
+      "id": 0,
+      "name": "Foundation",
+      "description": "Client Portal View + Activation Checklist — blocks all subsequent phases",
+      "dependsOn": null,
+      "items": [
+        {
+          "id": "0.1",
+          "title": "Client Portal View (Backend)",
+          "phase": 0,
+          "type": "backend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:43:49.372Z",
+              "files": [
+                "workers/src/handlers/session-notes.js",
+                "workers/src/handlers/practitioner.js",
+                "workers/src/db/queries.js",
+                "workers/src/index.js"
+              ],
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:43:55.434Z",
+              "files": [
+                "workers/src/handlers/client-portal.js",
+                "workers/src/db/queries.js",
+                "workers/src/index.js",
+                "workers/src/db/migrations/054_client_portal.sql"
+              ],
+              "details": "4 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:44:01.843Z",
+              "files": [
+                "tests/client-portal.test.js"
+              ],
+              "details": "10 pass, 0 fail"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:44:08.224Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:44:15.423Z",
+              "docs": [
+                "FEATURE_MATRIX.md",
+                "CODEBASE_MAP.md"
+              ],
+              "details": "Updated: FEATURE_MATRIX.md, CODEBASE_MAP.md"
+            }
+          },
+          "startedAt": "2026-03-18T23:34:46.971Z",
+          "completedAt": "2026-03-18T23:44:21.165Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "API endpoints for client portal — lets clients see their practitioner, shared notes, and own data",
+            "backendFiles": [
+              "workers/src/handlers/practitioner.js",
+              "workers/src/handlers/session-notes.js",
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ],
+            "frontendFiles": [],
+            "newFiles": [
+              "workers/src/handlers/client-portal.js"
+            ],
+            "queries": [
+              "getClientPractitioners",
+              "getClientPortalData",
+              "getSharedSessionNotes"
+            ],
+            "routes": [
+              "GET /api/client/my-practitioners",
+              "GET /api/client/portal/:practitionerId",
+              "GET /api/client/my-notes"
+            ],
+            "migration": null,
+            "testFile": "tests/client-portal.test.js",
+            "analytics": [
+              "client_portal_viewed",
+              "client_portal_practitioner_viewed"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md",
+              "ARCHITECTURE.md",
+              "CODEBASE_MAP.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/session-notes.js",
+              "workers/src/handlers/practitioner.js",
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ]
+          }
+        },
+        {
+          "id": "0.2",
+          "title": "Client Portal View (Frontend)",
+          "phase": 0,
+          "type": "frontend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:50:00.543Z",
+              "files": [
+                "frontend/index.html",
+                "frontend/js/app.js"
+              ],
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:50:00.654Z",
+              "files": [
+                "frontend/index.html",
+                "frontend/js/app.js"
+              ],
+              "details": "2 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:50:00.761Z",
+              "details": "Manual: HTML + JS structure verified"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:50:00.860Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:50:00.961Z",
+              "docs": [
+                "FEATURE_MATRIX.md"
+              ],
+              "details": "Updated: FEATURE_MATRIX.md"
+            }
+          },
+          "startedAt": "2026-03-18T23:44:32.434Z",
+          "completedAt": "2026-03-18T23:50:01.054Z",
+          "failureReason": null,
+          "dependsOn": "0.1",
+          "context": {
+            "description": "SPA #my-practitioner tab — sidebar nav, tab panel, portal view with practitioner header, notes, blueprint read-only",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "portal_tab_opened",
+              "portal_note_viewed"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html",
+              "frontend/css/components/tabs.css",
+              "frontend/css/components/sidebar.css"
+            ]
+          }
+        },
+        {
+          "id": "0.3",
+          "title": "Post-Onboarding Activation Checklist",
+          "phase": 0,
+          "type": "frontend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:59:59.575Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:59:59.830Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "1 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-18T23:59:59.923Z",
+              "files": [
+                "tests/activation-checklist.test.js"
+              ],
+              "details": "13"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:00:00.036Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:00:00.165Z",
+              "docs": [
+                "FEATURE_MATRIX.md"
+              ],
+              "details": "Updated: FEATURE_MATRIX.md"
+            }
+          },
+          "startedAt": "2026-03-18T23:52:27.945Z",
+          "completedAt": "2026-03-19T00:00:00.276Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Persistent activation checklist in practitioner workspace — Complete Profile → Invite Client → Chart Generated → First Note → First Brief",
+            "backendFiles": [
+              "workers/src/handlers/practitioner.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "activation_step_completed",
+              "activation_checklist_complete"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/app.js",
+              "workers/src/handlers/practitioner.js"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Wire Existing Backends",
+      "description": "Zero new infrastructure — 11 items wiring backend features that are 100% built but missing frontend UI",
+      "dependsOn": null,
+      "items": [
+        {
+          "id": "1.1",
+          "title": "Session Template Picker",
+          "phase": 1,
+          "type": "frontend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:05:48.743Z",
+              "files": [
+                "workers/src/handlers/session-templates.js",
+                "frontend/js/app.js"
+              ],
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:05:48.857Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "1 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:05:48.962Z",
+              "files": [
+                "tests/session-template-picker.test.js"
+              ],
+              "details": "8"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:05:49.053Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:05:49.152Z",
+              "docs": [
+                "FEATURE_MATRIX.md"
+              ],
+              "details": "Updated: FEATURE_MATRIX.md"
+            }
+          },
+          "startedAt": "2026-03-19T00:00:12.457Z",
+          "completedAt": "2026-03-19T00:05:49.253Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Add <select> dropdown in New Note form — calls GET /api/practitioner/session-templates → on selection calls /hydrate → pre-fills textarea",
+            "backendFiles": [
+              "workers/src/handlers/session-templates.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "template_selected",
+              "template_hydrated"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/session-templates.js",
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.2",
+          "title": "Edit/Delete Note Buttons",
+          "phase": 1,
+          "type": "frontend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:06:46.413Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:06:46.616Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "1 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:06:46.705Z",
+              "details": "0"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:06:46.831Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "skip",
+              "timestamp": "2026-03-19T00:06:46.950Z",
+              "details": "No doc updates needed"
+            }
+          },
+          "startedAt": "2026-03-19T00:06:02.844Z",
+          "completedAt": "2026-03-19T00:06:47.067Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Surface edit/delete buttons on session note rows — PUT/DELETE handlers already exist in session-notes.js",
+            "backendFiles": [
+              "workers/src/handlers/session-notes.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "note_edited",
+              "note_deleted"
+            ],
+            "docs": [],
+            "dependsOnFiles": [
+              "workers/src/handlers/session-notes.js",
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.3",
+          "title": "Electional Timing Tool",
+          "phase": 1,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:08:43.359Z",
+              "files": [
+                "workers/src/handlers/timing.js",
+                "frontend/js/app.js"
+              ],
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:08:43.459Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "1 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:08:43.570Z",
+              "details": "0"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:08:43.669Z",
+              "files": [
+                "frontend/js/app.js"
+              ],
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "skip",
+              "timestamp": "2026-03-19T00:08:43.780Z",
+              "details": "No doc updates needed"
+            }
+          },
+          "startedAt": "2026-03-19T00:06:54.925Z",
+          "completedAt": "2026-03-19T00:08:43.881Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Wire sidebar Timing tab to timing.js backend — intention selector → date scoring → top 10 dates display",
+            "backendFiles": [
+              "workers/src/handlers/timing.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": "tests/timing-frontend.test.js",
+            "analytics": [
+              "timing_search",
+              "timing_date_selected"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/timing.js",
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.4",
+          "title": "Composite Charts in Client Detail",
+          "phase": 1,
+          "type": "frontend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:12:48.236Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:12:48.378Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "skip",
+              "timestamp": "2026-03-19T00:12:48.466Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:12:48.566Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "skip",
+              "timestamp": "2026-03-19T00:12:48.666Z",
+              "details": "No doc updates needed"
+            }
+          },
+          "startedAt": "2026-03-19T00:08:51.497Z",
+          "completedAt": "2026-03-19T00:12:48.771Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Add 'Compare with Client' button in practitioner client detail → POST /api/composite → display results",
+            "backendFiles": [
+              "workers/src/handlers/composite.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "composite_generated"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/composite.js",
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.5",
+          "title": "Celebrity Comparisons",
+          "phase": 1,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:14:41.450Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:14:41.545Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "skip",
+              "timestamp": "2026-03-19T00:14:41.642Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:14:41.752Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "skip",
+              "timestamp": "2026-03-19T00:14:41.848Z",
+              "details": "No doc updates needed"
+            }
+          },
+          "startedAt": "2026-03-19T00:12:54.949Z",
+          "completedAt": "2026-03-19T00:14:41.954Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Wire sidebar Celebrity nav to famous.js — category filter → match grid → share card option",
+            "backendFiles": [
+              "workers/src/handlers/famous.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "celebrity_match_viewed",
+              "celebrity_shared"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/famous.js",
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.6",
+          "title": "Push Notification Preferences",
+          "phase": 1,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:22:20.804Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:22:21.045Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:22:21.143Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:22:21.296Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:22:21.429Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T00:14:49.147Z",
+          "completedAt": "2026-03-19T00:22:21.541Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Permission prompt on first auth + preferences modal for transit alerts, session reminders, messages, daily check-in",
+            "backendFiles": [
+              "workers/src/handlers/push.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "push_permission_granted",
+              "push_permission_denied",
+              "push_preferences_updated"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/push.js",
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.7",
+          "title": "Check-in Streak Preferences",
+          "phase": 1,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:13:55.441Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:13:55.534Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:13:55.634Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:13:55.751Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:13:55.855Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T01:03:51.446Z",
+          "completedAt": "2026-03-19T01:13:55.960Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Add reminder-time preferences modal to check-in tab. Wire cron trigger for daily reminders.",
+            "backendFiles": [
+              "workers/src/handlers/checkin.js",
+              "workers/src/cron.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "checkin_reminder_set",
+              "checkin_reminder_sent"
+            ],
+            "docs": [],
+            "dependsOnFiles": [
+              "workers/src/handlers/checkin.js",
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.8",
+          "title": "Practitioner Revenue/Earnings Card",
+          "phase": 1,
+          "type": "frontend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:21:47.065Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:21:47.161Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:21:47.274Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:21:47.387Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:21:47.484Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T01:14:03.313Z",
+          "completedAt": "2026-03-19T01:21:47.588Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Add earnings card to practitioner workspace: YTD referral credits, pending rewards, referral count",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "earnings_card_viewed"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "1.9",
+          "title": "Practitioner Promo Codes",
+          "phase": 1,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:34:27.820Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:34:27.906Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:34:28.015Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:34:28.209Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:34:28.312Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T01:22:04.003Z",
+          "completedAt": "2026-03-19T01:34:28.402Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Extend admin-only promo.js to allow practitioner-scoped code creation (1 active code, 10-50% off first month, tied to referral)",
+            "backendFiles": [
+              "workers/src/handlers/promo.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [
+              "createPractitionerPromo",
+              "getPractitionerActivePromo"
+            ],
+            "routes": [
+              "POST /api/practitioner/promo",
+              "GET /api/practitioner/promo",
+              "DELETE /api/practitioner/promo/:id"
+            ],
+            "migration": null,
+            "testFile": "tests/practitioner-promo.test.js",
+            "analytics": [
+              "practitioner_promo_created",
+              "practitioner_promo_redeemed"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md",
+              "PROMO_CODES.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/promo.js",
+              "workers/src/handlers/practitioner.js"
+            ]
+          }
+        },
+        {
+          "id": "1.10",
+          "title": "Diary Search/Filter + Export",
+          "phase": 1,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:50:09.788Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:50:09.880Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:50:09.989Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:50:10.086Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:50:10.199Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T01:34:42.635Z",
+          "completedAt": "2026-03-19T01:50:10.300Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Add date range, event type, significance filters to diary list. Wire export button for CSV download.",
+            "backendFiles": [
+              "workers/src/handlers/diary.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html"
+            ],
+            "newFiles": [],
+            "queries": [
+              "exportUserDiary"
+            ],
+            "routes": [
+              "GET /api/diary/export"
+            ],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "diary_filtered",
+              "diary_exported"
+            ],
+            "docs": [],
+            "dependsOnFiles": [
+              "workers/src/handlers/diary.js",
+              "workers/src/db/queries.js"
+            ]
+          }
+        },
+        {
+          "id": "1.11",
+          "title": "Diary-to-Practitioner Visibility",
+          "phase": 1,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:03:52.182Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:03:52.377Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:03:52.465Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:03:52.560Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:03:52.671Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T02:03:52.098Z",
+          "completedAt": "2026-03-19T02:03:52.794Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Practitioners see client diary entries in client detail (opt-in by client). New query + route + access check.",
+            "backendFiles": [
+              "workers/src/handlers/diary.js",
+              "workers/src/handlers/practitioner.js",
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [
+              "getDiaryEntriesForClient"
+            ],
+            "routes": [
+              "GET /api/practitioner/clients/:id/diary"
+            ],
+            "migration": null,
+            "testFile": "tests/diary-practitioner.test.js",
+            "analytics": [
+              "practitioner_diary_viewed"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/diary.js",
+              "workers/src/handlers/session-notes.js",
+              "workers/src/db/queries.js"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "New Primitives",
+      "description": "Small schema changes, high compound value — divination reading log, action items, testimonials, CSV export, diary AI",
+      "dependsOn": null,
+      "items": [
+        {
+          "id": "2.1",
+          "title": "Divination Reading Log",
+          "phase": 2,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:33:37.753Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:33:44.948Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:33:52.462Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:33:58.539Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:33:58.640Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T00:22:32.377Z",
+          "completedAt": "2026-03-19T00:33:58.749Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Generic divination log — tarot/oracle/runes/iching/pendulum/other. 78 RWS cards, 7+ spreads, CRUD, share_with_ai, AI brief integration.",
+            "backendFiles": [
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [
+              "workers/src/handlers/divination-readings.js",
+              "workers/src/db/migrations/054_divination_readings.sql",
+              "src/knowledgebase/tarot/cards.json",
+              "src/knowledgebase/tarot/spreads.json"
+            ],
+            "queries": [
+              "createDivinationReading",
+              "listDivinationReadings",
+              "getDivinationReading",
+              "updateDivinationReading",
+              "deleteDivinationReading",
+              "getSharedDivinationReadings"
+            ],
+            "routes": [
+              "GET /api/practitioner/clients/:id/readings",
+              "POST /api/practitioner/clients/:id/readings",
+              "GET /api/practitioner/readings/:id",
+              "PUT /api/practitioner/readings/:id",
+              "DELETE /api/practitioner/readings/:id",
+              "GET /api/client/my-readings"
+            ],
+            "migration": "054_divination_readings.sql",
+            "testFile": "tests/divination-readings.test.js",
+            "analytics": [
+              "reading_created",
+              "reading_shared_with_ai",
+              "reading_viewed_by_client"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md",
+              "ARCHITECTURE.md",
+              "CODEBASE_MAP.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/session-notes.js",
+              "workers/src/db/queries.js",
+              "src/knowledgebase/numerology/tarotCards.json"
+            ]
+          }
+        },
+        {
+          "id": "2.2",
+          "title": "Homework / Action Items",
+          "phase": 2,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:40:35.882Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:40:36.136Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:40:36.229Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:40:36.355Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:40:36.480Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T00:34:10.420Z",
+          "completedAt": "2026-03-19T00:40:36.595Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Practitioner assigns actions → client marks complete. CRUD with due dates, linked to session notes.",
+            "backendFiles": [
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [
+              "workers/src/handlers/session-actions.js",
+              "workers/src/db/migrations/055_session_actions.sql"
+            ],
+            "queries": [
+              "createSessionAction",
+              "listSessionActions",
+              "updateSessionAction",
+              "deleteSessionAction",
+              "getClientActions",
+              "completeClientAction"
+            ],
+            "routes": [
+              "GET /api/practitioner/clients/:id/actions",
+              "POST /api/practitioner/clients/:id/actions",
+              "PUT /api/practitioner/actions/:id",
+              "DELETE /api/practitioner/actions/:id",
+              "GET /api/client/my-actions",
+              "PUT /api/client/actions/:id/complete"
+            ],
+            "migration": "055_session_actions.sql",
+            "testFile": "tests/session-actions.test.js",
+            "analytics": [
+              "action_created",
+              "action_completed",
+              "action_overdue"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md",
+              "CODEBASE_MAP.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/session-notes.js",
+              "workers/src/db/queries.js"
+            ]
+          }
+        },
+        {
+          "id": "2.3",
+          "title": "Verified Testimonials/Reviews",
+          "phase": 2,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:48:29.382Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:48:29.474Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:48:29.595Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:48:29.711Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:48:29.878Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T00:40:52.272Z",
+          "completedAt": "2026-03-19T00:48:29.972Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "After N sessions, prompt client for review. Practitioner approve/hide (not edit). Display on directory profile.",
+            "backendFiles": [
+              "workers/src/db/queries.js",
+              "workers/src/index.js",
+              "workers/src/handlers/practitioner-directory.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [
+              "workers/src/handlers/reviews.js",
+              "workers/src/db/migrations/056_practitioner_reviews.sql"
+            ],
+            "queries": [
+              "createReview",
+              "listPractitionerReviews",
+              "approveReview",
+              "hideReview",
+              "getReviewEligibility"
+            ],
+            "routes": [
+              "POST /api/client/reviews",
+              "GET /api/directory/:slug/reviews",
+              "PUT /api/practitioner/reviews/:id/approve",
+              "PUT /api/practitioner/reviews/:id/hide"
+            ],
+            "migration": "056_practitioner_reviews.sql",
+            "testFile": "tests/reviews.test.js",
+            "analytics": [
+              "review_submitted",
+              "review_approved",
+              "review_hidden"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/practitioner-directory.js",
+              "workers/src/db/queries.js"
+            ]
+          }
+        },
+        {
+          "id": "2.4",
+          "title": "CSV Export (Roster + Notes + Readings)",
+          "phase": 2,
+          "type": "backend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:56:42.384Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:56:42.668Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:56:42.754Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:56:42.892Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T00:56:42.981Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T00:48:41.745Z",
+          "completedAt": "2026-03-19T00:56:43.080Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Download buttons for client roster CSV, session notes CSV, readings CSV from practitioner workspace",
+            "backendFiles": [
+              "workers/src/handlers/practitioner.js",
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [
+              "exportRoster",
+              "exportNotes",
+              "exportReadings"
+            ],
+            "routes": [
+              "GET /api/practitioner/export/roster",
+              "GET /api/practitioner/export/notes",
+              "GET /api/practitioner/export/readings"
+            ],
+            "migration": null,
+            "testFile": "tests/csv-export.test.js",
+            "analytics": [
+              "csv_exported"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/practitioner.js"
+            ]
+          }
+        },
+        {
+          "id": "2.5",
+          "title": "Diary AI Patterns",
+          "phase": 2,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:03:26.999Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:03:27.260Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:03:27.366Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:03:27.491Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T01:03:27.619Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T00:56:56.201Z",
+          "completedAt": "2026-03-19T01:03:27.738Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "After 10+ diary entries, LLM summarizes correlations with transits. POST /api/diary/insights → pattern summary card.",
+            "backendFiles": [
+              "workers/src/handlers/diary.js",
+              "workers/src/db/queries.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [
+              "getDiaryEntriesWithTransits"
+            ],
+            "routes": [
+              "POST /api/diary/insights"
+            ],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "diary_insights_generated"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/diary.js",
+              "workers/src/lib/llm.js"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Calendar App",
+      "description": "Full calendar with Google/Apple sync, transit weather, moon phases, retrogrades, optimal timing",
+      "dependsOn": null,
+      "items": [
+        {
+          "id": "3.1",
+          "title": "Calendar Events Table + Handler",
+          "phase": 3,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:17:03.035Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:17:03.244Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:17:03.350Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:17:03.448Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:17:03.547Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T02:17:02.960Z",
+          "completedAt": "2026-03-19T02:17:03.662Z",
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "New calendar_events table + CRUD handler + auto-generated transit/moon/retrograde events + iCal feed",
+            "backendFiles": [
+              "workers/src/handlers/timing.js",
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ],
+            "frontendFiles": [],
+            "newFiles": [
+              "workers/src/handlers/calendar.js",
+              "workers/src/db/migrations/057_calendar_events.sql"
+            ],
+            "queries": [
+              "createCalendarEvent",
+              "listCalendarEvents",
+              "updateCalendarEvent",
+              "deleteCalendarEvent",
+              "getCalendarEventsByDateRange"
+            ],
+            "routes": [
+              "GET /api/calendar/events",
+              "POST /api/calendar/events",
+              "PUT /api/calendar/events/:id",
+              "DELETE /api/calendar/events/:id",
+              "GET /api/calendar/feed.ics",
+              "POST /api/calendar/optimal-dates"
+            ],
+            "migration": "057_calendar_events.sql",
+            "testFile": "tests/calendar.test.js",
+            "analytics": [
+              "calendar_event_created",
+              "calendar_feed_subscribed",
+              "calendar_optimal_dates_searched"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md",
+              "ARCHITECTURE.md",
+              "CODEBASE_MAP.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/timing.js",
+              "workers/src/handlers/diary.js",
+              "workers/src/handlers/checkin.js"
+            ]
+          }
+        },
+        {
+          "id": "3.2",
+          "title": "Google Calendar 2-Way Sync",
+          "phase": 3,
+          "type": "backend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:29:54.184Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:29:54.381Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:29:54.493Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:29:54.625Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:29:54.763Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T02:29:54.102Z",
+          "completedAt": "2026-03-19T02:29:54.982Z",
+          "failureReason": null,
+          "dependsOn": "3.1",
+          "context": {
+            "description": "Expand Google OAuth scopes for calendar, 2-way sync via separate 'Prime Self' calendar, encrypted refresh token storage",
+            "backendFiles": [
+              "workers/src/handlers/auth.js",
+              "workers/src/lib/tokenCrypto.js",
+              "workers/src/db/queries.js"
+            ],
+            "frontendFiles": [],
+            "newFiles": [
+              "workers/src/handlers/google-calendar.js"
+            ],
+            "queries": [
+              "storeGoogleCalendarToken",
+              "getGoogleCalendarToken",
+              "deleteGoogleCalendarToken"
+            ],
+            "routes": [
+              "POST /api/calendar/google/connect",
+              "GET /api/calendar/google/callback",
+              "POST /api/calendar/google/sync",
+              "POST /api/calendar/google/import",
+              "DELETE /api/calendar/google/disconnect"
+            ],
+            "migration": null,
+            "testFile": "tests/google-calendar.test.js",
+            "analytics": [
+              "google_calendar_connected",
+              "google_calendar_synced",
+              "google_calendar_disconnected"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md",
+              "ARCHITECTURE.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/auth.js",
+              "workers/src/lib/tokenCrypto.js"
+            ]
+          }
+        },
+        {
+          "id": "3.3",
+          "title": "Calendar Frontend (Month/Week/Day Views)",
+          "phase": 3,
+          "type": "frontend",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:40:56.530Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:40:56.887Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:40:57.160Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:40:57.410Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T02:40:57.600Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T02:40:56.529Z",
+          "completedAt": "2026-03-19T02:40:57.866Z",
+          "failureReason": null,
+          "dependsOn": "3.1",
+          "context": {
+            "description": "New sidebar Calendar tab with month/week/day views, color-coded event dots, transit weather bar, mood heatmap, optimal day finder",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html"
+            ],
+            "newFiles": [
+              "frontend/css/components/calendar.css"
+            ],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "calendar_view_changed",
+              "calendar_event_clicked"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html",
+              "frontend/css/components/tabs.css"
+            ]
+          }
+        },
+        {
+          "id": "3.4",
+          "title": "Calendar Tier Gating + Practitioner Calendar",
+          "phase": 3,
+          "type": "fullstack",
+          "status": "complete",
+          "currentStage": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T03:22:20.601Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T03:22:20.710Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T03:22:20.943Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T03:22:21.074Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T03:22:21.195Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T03:22:20.600Z",
+          "completedAt": "2026-03-19T03:22:21.298Z",
+          "failureReason": null,
+          "dependsOn": "3.3",
+          "context": {
+            "description": "Tier-based feature gating (Free=moon, Explorer=transits, Guide=sync+sessions). Practitioner unified calendar with client color-coding.",
+            "backendFiles": [
+              "workers/src/handlers/calendar.js",
+              "workers/src/middleware/tierEnforcement.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "calendar_tier_upgrade_prompted"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/middleware/tierEnforcement.js",
+              "workers/src/handlers/calendar.js"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Marketing Toolkit",
+      "description": "QR codes, offer cards, share templates, bodygraph export, gift-a-reading, email signature, referral landing",
+      "dependsOn": null,
+      "items": [
+        {
+          "id": "4.1",
+          "title": "Practitioner QR Code Generator",
+          "phase": 4,
+          "type": "frontend",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Extend existing QR lib for practitioner referral URL → downloadable PNG. Display in marketing kit.",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/qr.js",
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "qr_generated",
+              "qr_downloaded"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/qr.js"
+            ]
+          }
+        },
+        {
+          "id": "4.2",
+          "title": "Bodygraph Chart Export",
+          "phase": 4,
+          "type": "frontend",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Download My Chart + Share My Chart buttons below bodygraph SVG. SVG → canvas → PNG. Practitioner watermark in portal context.",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/bodygraph.js",
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "bodygraph_exported",
+              "bodygraph_shared"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/bodygraph.js",
+              "frontend/js/share-card.js"
+            ]
+          }
+        },
+        {
+          "id": "4.3",
+          "title": "Per-Practitioner OG Images",
+          "phase": 4,
+          "type": "backend",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Extend shareImage.js to generate practitioner OG images (1200×630) with photo+name+specialty. KV-cached 24h.",
+            "backendFiles": [
+              "workers/src/lib/shareImage.js",
+              "workers/src/handlers/practitioner-profile.js"
+            ],
+            "frontendFiles": [],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "practitioner_og_generated"
+            ],
+            "docs": [],
+            "dependsOnFiles": [
+              "workers/src/lib/shareImage.js",
+              "workers/src/handlers/practitioner-profile.js"
+            ]
+          }
+        },
+        {
+          "id": "4.4",
+          "title": "Social Share Platform Templates",
+          "phase": 4,
+          "type": "fullstack",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "New share card templates: transit weather, session summary, reading summary, compatibility, gift. All 5 platform formats + UTM tracking.",
+            "backendFiles": [
+              "workers/src/lib/shareImage.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/share-card.js",
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "share_card_generated",
+              "share_card_platform"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/share-card.js",
+              "workers/src/lib/shareImage.js"
+            ]
+          }
+        },
+        {
+          "id": "4.5",
+          "title": "Marketing Kit Page",
+          "phase": 4,
+          "type": "frontend",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "New section in practitioner workspace: referral link, promo code, QR code, offer card, email signature, UTM links, share snippets",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/app.js",
+              "frontend/index.html"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "marketing_kit_viewed",
+              "marketing_asset_copied"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/app.js"
+            ]
+          }
+        },
+        {
+          "id": "4.6",
+          "title": "Gift-a-Reading Link",
+          "phase": 4,
+          "type": "fullstack",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Practitioner generates gift URL. Recipient gets free chart + profile synthesis + intro session prompt.",
+            "backendFiles": [
+              "workers/src/db/queries.js",
+              "workers/src/index.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [
+              "workers/src/handlers/gift.js",
+              "workers/src/db/migrations/058_gift_tokens.sql"
+            ],
+            "queries": [
+              "createGiftToken",
+              "redeemGiftToken",
+              "listPractitionerGifts"
+            ],
+            "routes": [
+              "POST /api/practitioner/gifts",
+              "GET /api/gift/:token",
+              "POST /api/gift/:token/redeem"
+            ],
+            "migration": "058_gift_tokens.sql",
+            "testFile": "tests/gift.test.js",
+            "analytics": [
+              "gift_created",
+              "gift_redeemed"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/practitioner.js",
+              "workers/src/db/queries.js"
+            ]
+          }
+        },
+        {
+          "id": "4.7",
+          "title": "Referral Landing Upgrade",
+          "phase": 4,
+          "type": "frontend",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "When ?ref=SLUG clicked, show full 'Meet Practitioner' template with photo, bio, CTA, promo field instead of just banner",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "referral_landing_viewed",
+              "referral_landing_converted"
+            ],
+            "docs": [],
+            "dependsOnFiles": [
+              "frontend/js/app.js",
+              "workers/src/handlers/practitioner-directory.js"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Communication Layer",
+      "description": "Practitioner-client messaging, post-session email, client journey timeline",
+      "dependsOn": null,
+      "items": [
+        {
+          "id": "5.1",
+          "title": "Practitioner-Client Messaging",
+          "phase": 5,
+          "type": "fullstack",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Async messaging between practitioner and client. Push notification on new message. Portal messages tab.",
+            "backendFiles": [
+              "workers/src/db/queries.js",
+              "workers/src/index.js",
+              "workers/src/handlers/push.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [
+              "workers/src/handlers/messages.js",
+              "workers/src/db/migrations/059_practitioner_messages.sql"
+            ],
+            "queries": [
+              "createMessage",
+              "listMessages",
+              "markMessageRead",
+              "getUnreadCount"
+            ],
+            "routes": [
+              "GET /api/practitioner/clients/:id/messages",
+              "POST /api/practitioner/clients/:id/messages",
+              "GET /api/client/messages",
+              "POST /api/client/messages",
+              "PUT /api/messages/:id/read"
+            ],
+            "migration": "059_practitioner_messages.sql",
+            "testFile": "tests/messages.test.js",
+            "analytics": [
+              "message_sent",
+              "message_read"
+            ],
+            "docs": [
+              "FEATURE_MATRIX.md",
+              "ARCHITECTURE.md",
+              "CODEBASE_MAP.md"
+            ],
+            "dependsOnFiles": [
+              "workers/src/handlers/session-notes.js",
+              "workers/src/handlers/push.js"
+            ]
+          }
+        },
+        {
+          "id": "5.2",
+          "title": "Post-Session Automated Email",
+          "phase": 5,
+          "type": "fullstack",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Checkbox on note save → email session summary + action items + 'Book next' CTA to client",
+            "backendFiles": [
+              "workers/src/handlers/session-notes.js",
+              "workers/src/lib/email.js"
+            ],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [
+              "session_email_sent"
+            ],
+            "docs": [],
+            "dependsOnFiles": [
+              "workers/src/handlers/session-notes.js",
+              "workers/src/lib/email.js"
+            ]
+          }
+        },
+        {
+          "id": "5.3",
+          "title": "Client Journey Timeline",
+          "phase": 5,
+          "type": "frontend",
+          "status": "pending",
+          "currentStage": null,
+          "stages": {},
+          "startedAt": null,
+          "completedAt": null,
+          "failureReason": null,
+          "dependsOn": null,
+          "context": {
+            "description": "Visual milestone tracker — Joined → Chart → Profile → First Session → First Reading → 3-month mark → Review. Derived from existing timestamps.",
+            "backendFiles": [],
+            "frontendFiles": [
+              "frontend/js/app.js"
+            ],
+            "newFiles": [],
+            "queries": [],
+            "routes": [],
+            "migration": null,
+            "testFile": null,
+            "analytics": [],
+            "docs": [
+              "FEATURE_MATRIX.md"
+            ],
+            "dependsOnFiles": [
+              "frontend/js/app.js"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
