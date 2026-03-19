@@ -10227,10 +10227,44 @@ async function loadNotificationHistory() {
   }
 }
 
+// ── Capacitor native push bridge ────────────────────────────────────────────
+function _isCapacitorNative() {
+  return !!(window.Capacitor?.isNativePlatform?.());
+}
+
+async function _subscribeCapacitorNativePush() {
+  const { PushNotifications } = window.Capacitor.Plugins;
+  try {
+    const permResult = await PushNotifications.requestPermissions();
+    if (permResult.receive !== 'granted') {
+      trackEvent?.('push', 'push_permission_denied');
+      return;
+    }
+    await PushNotifications.register();
+    // Token delivered via 'registration' listener — set up once
+    PushNotifications.addListener('registration', async (token) => {
+      trackEvent?.('push', 'push_permission_granted');
+      const platform = window.Capacitor.getPlatform?.() === 'android' ? 'fcm' : 'apns';
+      await apiFetch('/api/push/native-subscribe', {
+        method: 'POST',
+        body: JSON.stringify({ nativeToken: token.value, platform })
+      });
+      _renderPushPrefsState?.();
+    });
+    PushNotifications.addListener('registrationError', (err) => {
+      console.warn('Capacitor push registration error:', err.error);
+      trackEvent?.('push', 'push_permission_denied');
+    });
+  } catch (e) {
+    console.warn('Capacitor push setup failed:', e.message);
+  }
+}
+
 // ── WC-P1-3: Push opt-in nudge at key moments ──────────────────────────────
 function _maybeShowPushOptIn(context = 'chart') {
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'default') return;
+  const isNative = _isCapacitorNative();
+  if (!isNative && !('Notification' in window)) return;
+  if (!isNative && Notification.permission !== 'default') return;
   if (localStorage.getItem('push_optin_offered')) return;
   localStorage.setItem('push_optin_offered', '1');
   trackEvent?.('push', 'push_optin_shown');
@@ -10382,6 +10416,9 @@ function _renderPushPrefsState() {
 }
 
 async function requestPushPermission() {
+  if (_isCapacitorNative()) {
+    return _subscribeCapacitorNativePush();
+  }
   if (!('Notification' in window)) return;
   try {
     const result = await Notification.requestPermission();

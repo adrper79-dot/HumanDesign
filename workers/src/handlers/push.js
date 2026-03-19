@@ -163,6 +163,8 @@ export async function handlePush(request, env, path) {
   // Route handlers
   if (path === '/subscribe' && method === 'POST') {
     return subscribe(request, env, user);
+  } else if (path === '/native-subscribe' && method === 'POST') {
+    return nativeSubscribe(request, env, user);
   } else if (path === '/unsubscribe' && method === 'DELETE') {
     return unsubscribe(request, env, user);
   } else if (path === '/test' && method === 'POST') {
@@ -205,10 +207,58 @@ async function getVapidKey(env) {
 }
 
 /**
+ * Register a native Capacitor push token (APNs on iOS, FCM on Android).
+ * Stored with a synthetic endpoint so the existing DB schema is reused.
+ * Delivery to APNs/FCM is a TODO — see ADR-001 build step 9.
+ */
+async function nativeSubscribe(request, env, user) {
+  try {
+    const { nativeToken, platform } = await request.json();
+
+    const ALLOWED_PLATFORMS = ['apns', 'fcm'];
+    if (!nativeToken || typeof nativeToken !== 'string') {
+      return Response.json({ ok: false, error: 'Missing required field: nativeToken' }, { status: 400 });
+    }
+    if (!ALLOWED_PLATFORMS.includes(platform)) {
+      return Response.json({ ok: false, error: 'platform must be apns or fcm' }, { status: 400 });
+    }
+    // Tokens are hex or base64 — only allow safe characters, max 512 chars
+    if (!/^[A-Za-z0-9+/=_\-:]+$/.test(nativeToken) || nativeToken.length > 512) {
+      return Response.json({ ok: false, error: 'Invalid nativeToken format' }, { status: 400 });
+    }
+
+    const endpoint = `native:${platform}:${nativeToken}`;
+    const userAgent = request.headers.get('User-Agent') || 'Unknown';
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
+
+    const { rows: existingRows } = await query(QUERIES.getPushSubscriptionByEndpoint, [endpoint]);
+    if (existingRows[0]) {
+      await query(QUERIES.updatePushSubscriptionLastUsed, [endpoint]);
+      return Response.json({ ok: true, message: 'Token already registered', subscriptionId: existingRows[0].id });
+    }
+
+    const { rows: insertRows } = await query(QUERIES.insertPushSubscription, [user.id, endpoint, '', '', userAgent]);
+    const result = insertRows[0];
+
+    const { rows: prefsRows } = await query(QUERIES.getNotificationPrefsById, [user.id]);
+    if (prefsRows.length === 0) {
+      await query(QUERIES.insertDefaultNotificationPrefs, [user.id]);
+    }
+
+    createLogger('push').info('native_token_registered', { userId: user.id, platform, subscriptionId: result.id });
+    return Response.json({ ok: true, subscription: { id: result.id, platform, active: result.active } });
+  } catch (error) {
+    createLogger('push').error('native_subscribe_error', { error: error?.message || String(error) });
+    return Response.json({ ok: false, error: 'Failed to register native token' }, { status: 500 });
+  }
+}
+
+/**
  * Subscribe to push notifications
  * Stores Web Push subscription endpoint and keys
  */
 async function subscribe(request, env, user) {
+
   try {
     const { endpoint, keys } = await request.json();
 

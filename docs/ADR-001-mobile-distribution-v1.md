@@ -1,8 +1,9 @@
 # ADR-001: Mobile Distribution v1 — iOS Wrapper Path
 
 **Issue:** WC-P1-4  
-**Status:** DRAFT — Owner decisions required (marked ⚠️)  
+**Status:** ACTIVE — Partially resolved; deep link scheme pending (see §Open Questions)  
 **Date:** 2026-03-19  
+**Updated:** 2026-03-19  
 **Author:** Prime Self Engineering  
 
 ---
@@ -22,7 +23,9 @@ Distribution gap: PWA install rates on iOS are low and discoverability via the A
 
 ## Decision
 
-**v1 scope: iOS App Store wrapper first, Android TWA as parallel track.**
+**v1 scope: iOS App Store + Android Google Play simultaneously (TWA for Android).**
+
+✅ Owner confirmed: Apple Developer account is active.
 
 - The wrapper must **not fork business logic** from the web app. All logic stays in `workers/` and `frontend/`.
 - The wrapper must maintain existing **auth/session continuity** (HttpOnly cookie must persist across WebView sessions).
@@ -47,10 +50,10 @@ Alternatives considered:
 ### Android — TWA (Trusted Web Activity)
 **Recommended.** TWA wraps the existing PWA in a Chrome Custom Tab verified by Digital Asset Links. Zero JS code changes needed. Push already works via the web push subscription.
 
-⚠️ **Owner decision required:**
-1. Target iOS App Store only, or also Google Play in v1?
-2. Who owns the Apple Developer account ($99/year) and will handle App Review?
-3. Capacitor confirmed, or different wrapper preference?
+✅ **Decisions resolved:**
+1. ~~Target iOS App Store only~~ — **iOS + Android simultaneously confirmed**
+2. Apple Developer account — **confirmed active, owner identified**
+3. Capacitor — **confirmed** (recommended; no alternative needed)
 
 ---
 
@@ -58,11 +61,11 @@ Alternatives considered:
 
 ### Pre-conditions (must resolve before store submission)
 
-- [ ] ⚠️ Apple Developer account active — owner:  ________________
+- [x] ✅ Apple Developer account active — confirmed
 - [ ] ⚠️ Google Play Console account active — owner: ________________
 - [ ] Auth review: confirm `SameSite=None; Secure` HttpOnly cookie persists in WKWebView sessions (test on real device)
-- [ ] Push review: confirm VAPID push subscription flow works inside Capacitor WKWebView without native bridge
-- [ ] Deep link review: define URL scheme (`primeself://`) and configure Universal Links (`/.well-known/apple-app-site-association`)
+- [x] ✅ Push bridge wired — `_isCapacitorNative()` / `_subscribeCapacitorNativePush()` in `frontend/js/app.js`; backend `/api/push/native-subscribe` accepts APNs/FCM tokens (VAPID attempted first; native bridge fires on failure)
+- [ ] ⚠️ Deep link scheme: **pending owner decision** — see Open Questions §4 for pros/cons
 
 ### iOS Build Steps
 
@@ -140,13 +143,48 @@ v1 wrapper is **additive** — no existing web user is affected. Rollback = remo
 
 ---
 
-## Open Questions (Owner Decisions Required)
+## Open Questions
 
-1. **Scope**: iOS only for v1, or iOS + Android TWA simultaneously?
-2. **Apple Developer account**: Who holds it? Is it already active?
-3. **Wrapper confirmation**: Capacitor confirmed, or alternative?
-4. **Deep link scheme**: `primeself://` vs Universal Links only (no custom scheme)?
-5. **Push bridge**: Test if VAPID works in WKWebView before submission — if not, Capacitor's native push plugin (`@capacitor/push-notifications`) may be needed as a thin bridge. This must be resolved before store submission.
+1. ~~Scope~~ — ✅ iOS + Android simultaneously
+2. ~~Apple Developer account~~ — ✅ Confirmed active
+3. ~~Wrapper~~ — ✅ Capacitor confirmed
+4. **⚠️ PENDING — Deep link scheme** (choose one; see pros/cons below)
+5. ~~Push bridge~~ — ✅ Wired (`@capacitor/push-notifications` via `_subscribeCapacitorNativePush()`)
+
+---
+
+### Deep Link Scheme — Pros & Cons
+
+#### Option A: Universal Links only (iOS) / App Links only (Android)
+
+| | |
+|---|---|
+| ✅ | Uses `https://` — same URL works in browser AND in the app |
+| ✅ | If app isn't installed, link opens the website (graceful fallback) |
+| ✅ | Recommended by Apple and Google; required for App Clips / Instant Apps |
+| ✅ | No ambiguous "Open in…?" dialog when following a link |
+| ✅ | Harder to hijack (ownership verified via `/.well-known/` JSON file) |
+| ❌ | Requires deploying `apple-app-site-association` + `assetlinks.json` to the Workers static routes |
+| ❌ | Deep links from inside other apps (cross-app) can fall through to browser if the app isn't running |
+| ❌ | Slightly more setup (~30 min) |
+
+#### Option B: Custom URL scheme only (`primeself://`)
+
+| | |
+|---|---|
+| ✅ | Trivial to implement in Capacitor — one line in `capacitor.config.json` |
+| ✅ | Works from any context, even when app is not the default browser |
+| ✅ | Reliable deep linking between native apps in an ecosystem |
+| ❌ | Any app can claim `primeself://` — link hijacking is possible |
+| ❌ | If app isn't installed, link shows an error dialog (no web fallback) |
+| ❌ | iOS 9+ / Chrome on Android shows an "Open in primeself?" dialog |
+| ❌ | Apple may reject apps that rely solely on custom schemes in App Review |
+
+#### Option C: Both (recommended default)
+
+Universal Links as the primary scheme for everything shared externally (emails, social, QR codes). Custom scheme `primeself://` as an internal fallback for cross-screen navigation within the app only.
+
+**Recommendation: Option C.** Implement both — Universal Links for all external surfaces, custom scheme for in-app routing only. This takes ~1 hour of extra setup and maximises compatibility.
 
 ---
 
