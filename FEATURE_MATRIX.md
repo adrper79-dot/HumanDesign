@@ -695,6 +695,24 @@
 
 ---
 
+### Feature: Practitioner QR Code Generator
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Practitioner QR Code Generator |
+| **Permission Level** | AUTHENTICATED; Practitioner+ tier (controlled by existing `practitionerTools` gate) |
+| **Workflow Position** | Practitioner workspace → Referral Performance card |
+| **Purpose** | Generate a scannable QR code for the practitioner's referral URL. Displayed inline in the Referral Performance card with a one-click PNG download. Enables practitioners to print/share the QR at events, on business cards, in email footers, etc. |
+| **Files** | `frontend/js/app.js` (`renderPractitionerReferralStats` — extended with QR section + `requestAnimationFrame` generation; `downloadPractitionerQR` — PNG download handler), `frontend/js/qr.js` (existing self-contained QR library — no new dependencies) |
+| **Workflow Step** | 1. Practitioner opens workspace → loads `GET /api/practitioner/referral-link` → 2. `renderPractitionerReferralStats(data)` injects HTML including `<img id="pracQRImage">` + Download button → 3. `requestAnimationFrame` fires after DOM render → `window.QRCode.toDataURL(url, 6)` generates 160px QR → 4. `trackEvent('practitioner', 'qr_generated', 'referral_card')` fires → 5. User clicks "⬇ Download QR PNG" → `downloadPractitionerQR()` creates `<a download="prime-self-referral-qr.png">`, triggers click, removes anchor → 6. `trackEvent('practitioner', 'qr_downloaded', 'referral_card')` fires |
+| **API Endpoints** | `GET /api/practitioner/referral-link` (existing — returns `referralUrl`, `stats`) |
+| **Frontend Components** | `<img id="pracQRImage" width="160" height="160">` inside referral card, "⬇ Download QR PNG" button with `data-action="downloadPractitionerQR"` |
+| **Test Elements** | `tests/practitioner-qr.test.js` — 15 tests: HTML output structure (8), QR generation (2), download handler (4), edge cases (missing img src, null element) |
+| **Analytical Elements** | Events: `qr_generated` (on render, referral_card source), `qr_downloaded` (on download click, referral_card source) |
+| **Key Code** | `window.QRCode.toDataURL(referralUrl, 6)` — scale=6 → ~192px canvas output. Download: creates `<a href=dataUrl download="prime-self-referral-qr.png">`, appends to body, clicks, removes. No new dependencies — uses existing `frontend/js/qr.js`. |
+
+---
+
 ### Feature: Post-Onboarding Activation Checklist
 
 | Attribute | Details |
