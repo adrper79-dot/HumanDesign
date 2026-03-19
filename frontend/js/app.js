@@ -5404,7 +5404,6 @@ async function loadPractitionerMessages(clientId) {
     if (el) el.innerHTML = '<div class="alert alert-warn">Could not load messages.</div>';
   }
 }
-window.loadPractitionerMessages = loadPractitionerMessages;
 
 async function sendPractitionerMessage(clientId) {
   var inputEl  = document.getElementById('msgInput-'  + clientId);
@@ -5426,7 +5425,6 @@ async function sendPractitionerMessage(clientId) {
     if (statusEl) statusEl.textContent = '';
   }
 }
-window.sendPractitionerMessage = sendPractitionerMessage;
 
 // Client Messaging (5.1)
 async function loadClientMessages(practitionerId) {
@@ -5462,7 +5460,6 @@ async function loadClientMessages(practitionerId) {
     if (card) card.style.display = 'none';
   }
 }
-window.loadClientMessages = loadClientMessages;
 
 async function sendClientMessage(practitionerId) {
   var inputEl  = document.getElementById('portalMsgInput');
@@ -5485,7 +5482,6 @@ async function sendClientMessage(practitionerId) {
     if (statusEl) statusEl.textContent = '';
   }
 }
-window.sendClientMessage = sendClientMessage;
 
 // Client Journey Timeline (5.3)
 function loadPortalJourney(practitionerId, data) {

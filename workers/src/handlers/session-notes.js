@@ -132,24 +132,24 @@ export async function handleCreateNote(request, env, clientId) {
     if (sendSummary && env.RESEND_API_KEY) {
       (async () => {
         try {
-          const [clientRow, practRow] = await Promise.all([
+          // getPractitionerBranding returns display_name + booking_url from practitioners table
+          const [clientRow, brandingRow] = await Promise.all([
             query(QUERIES.getUserByIdSafe, [clientId]),
-            query(QUERIES.getPractitionerByUserId, [userId]),
+            query(QUERIES.getPractitionerBranding, [userId]),
           ]);
           const clientEmail = clientRow.rows[0]?.email;
           if (!clientEmail) return;
-          const practDisplayName = practRow.rows[0]?.display_name
-            || practRow.rows[0]?.email || 'Your Practitioner';
+          const branding = brandingRow.rows[0] || {};
+          const practDisplayName = branding.display_name || 'Your Practitioner';
           // Extract action items: lines starting with – or - followed by space
           const actionItems = content
             .split('\n')
             .map(l => l.trim())
-            .filter(l => /^[-–]\ /.test(l))
-            .map(l => l.replace(/^[-–]\ /, ''));
-          const bookingUrl = practRow.rows[0]?.booking_url || null;
+            .filter(l => /^[-–] /.test(l))
+            .map(l => l.replace(/^[-–] /, ''));
           await sendSessionSummaryEmail(
             clientEmail, clientEmail, practDisplayName, content, actionItems,
-            bookingUrl, env.RESEND_API_KEY, env.FROM_EMAIL || fromEmail, env.COMPANY_ADDRESS || ''
+            branding.booking_url || null, env.RESEND_API_KEY, env.FROM_EMAIL, env.COMPANY_ADDRESS || ''
           );
           trackEvent(env, 'session_email_sent', { userId, properties: { practitionerId: access.practitionerId, clientId } }).catch(() => {});
         } catch (e) {

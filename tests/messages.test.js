@@ -104,7 +104,8 @@ describe('GET /api/practitioner/clients/:id/messages', () => {
 
   it('returns messages and marks thread read on success', async () => {
     const fakeMsgs = [
-      { id: 1, body: 'Hi', sender_name: 'Doc', created_at: new Date().toISOString() },
+      { id: 1, body: 'Hi', sender_name: 'Doc', sender_is_practitioner: true, created_at: new Date().toISOString() },
+      { id: 2, body: 'Thanks', sender_name: 'Client A', sender_is_practitioner: false, created_at: new Date().toISOString() },
     ];
     const query = vi.fn(async (sql) => {
       if (sql === 'getPractitionerByUserId')  return { rows: [{ id: 'pract-1' }] };
@@ -300,9 +301,10 @@ describe('PUT /api/messages/:id/read', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 404 when message not found or already read', async () => {
+  it('returns 404 when message not found, already read, or user not in conversation', async () => {
+    // The updated query also gates on the user being the intended recipient
     const query = vi.fn(async (sql) => {
-      if (sql === 'markMessageRead') return { rows: [] };
+      if (sql === 'markMessageRead') return { rows: [] }; // 0 rows = not found or not authorised
       throw new Error(`Unexpected: ${sql}`);
     });
     createQueryFnMock.mockReturnValue(query);
