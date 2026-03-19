@@ -151,6 +151,7 @@ import {
   handleGetDirectoryStats
 } from './handlers/practitioner-directory.js';
 import { handlePractitionerOGImage } from './handlers/practitioner-og.js';
+import { handleCreateGift, handleGetGift, handleRedeemGift, handleListGifts } from './handlers/gift.js';
 import {
   handleListNotes,
   handleCreateNote,
@@ -457,6 +458,9 @@ const EXACT_ROUTES = new Map([
   ['GET /api/client/diary-sharing',            handleGetDiarySharingPrefs],
   ['PUT /api/client/diary-sharing',            handleSetDiarySharing],
   ['GET /api/practitioner/reviews',            handleListPractitionerReviews],
+  // Gift-a-Reading (item 4.6)
+  ['POST /api/practitioner/gifts',             handleCreateGift],
+  ['GET /api/practitioner/gifts',              handleListGifts],
   // Email marketing unsubscribe (public, CAN-SPAM compliance — AUDIT-SEC-005)
   ['POST /api/email/unsubscribe',     async (request, env) => {
     const body = await request.json().catch(() => null);
@@ -556,6 +560,9 @@ const PATTERN_ROUTES = [
   [/^\/api\/client\/actions\/([^/]+)\/complete$/,         'PUT',  1, (req, env, id) => handleCompleteAction(req, env, id)],
   // Per-practitioner OG images (public, KV-cached 24h — item 4.3)
   [/^\/api\/og\/practitioner\/([a-z0-9-]+)$/,              'GET',  1, handlePractitionerOGImage],
+  // Gift token routes (item 4.6)
+  [/^\/api\/gift\/([A-Za-z0-9_-]{20,60})\/redeem$/,        'POST', 1, (req, env, t) => handleRedeemGift(req, env, t)],
+  [/^\/api\/gift\/([A-Za-z0-9_-]{20,60})$/,                'GET',  1, (req, env, t) => handleGetGift(req, env, t)],
   // Reviews — public directory + practitioner approve/hide
   [/^\/api\/directory\/([^/]+)\/reviews$/,               'GET',  1, (req, env, slug) => handleGetPublicReviews(req, env, slug)],
   [/^\/api\/practitioner\/reviews\/([^/]+)\/approve$/,   'PUT',  1, (req, env, id) => handleApproveReview(req, env, id)],

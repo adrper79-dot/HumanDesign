@@ -2836,5 +2836,41 @@ export const QUERIES = {
     WHERE dr.practitioner_id = $1
     ORDER BY dr.reading_date DESC, dr.created_at DESC
   `,
+
+  // ── Gift Tokens (4.6) ────────────────────────────────────────
+  createGiftToken: `
+    INSERT INTO gift_tokens (token, practitioner_id, message)
+    VALUES ($1, $2, $3)
+    RETURNING id, token, created_at, expires_at
+  `,
+
+  getGiftToken: `
+    SELECT gt.id, gt.token, gt.message, gt.created_at, gt.expires_at,
+           gt.redeemed_at,
+           p.display_name AS practitioner_name, p.slug AS practitioner_slug,
+           p.photo_url    AS practitioner_photo, p.bio AS practitioner_bio
+    FROM gift_tokens gt
+    JOIN practitioners p ON p.id = gt.practitioner_id
+    WHERE gt.token = $1
+  `,
+
+  redeemGiftToken: `
+    UPDATE gift_tokens
+    SET redeemed_at = now(), redeemed_by = $2
+    WHERE token = $1
+      AND redeemed_at IS NULL
+      AND expires_at > now()
+    RETURNING id, token, practitioner_id, redeemed_at
+  `,
+
+  listPractitionerGifts: `
+    SELECT gt.id, gt.token, gt.message, gt.created_at, gt.expires_at,
+           gt.redeemed_at, u.display_name AS redeemed_by_name
+    FROM gift_tokens gt
+    LEFT JOIN users u ON u.id = gt.redeemed_by
+    WHERE gt.practitioner_id = $1
+    ORDER BY gt.created_at DESC
+    LIMIT 50
+  `,
 };
 

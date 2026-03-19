@@ -933,6 +933,79 @@ function closeReferralModal() {
   document.getElementById('referral-prompt-modal')?.remove();
 }
 
+// ── Gift-a-Reading recipient flow (4.6) ──────────────────────
+function captureGiftFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('gift');
+  if (!token) return;
+
+  // Validate token format before hitting the API
+  if (!/^[A-Za-z0-9_-]{20,60}$/.test(token)) return;
+
+  // Clean URL immediately
+  params.delete('gift');
+  const cleanUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+  window.history.replaceState({}, '', cleanUrl);
+
+  // Show gift modal async
+  (async () => {
+    try {
+      const data = await apiFetch(`/api/gift/${encodeURIComponent(token)}`);
+      if (!data || data.error) return;
+
+      const practName = escapeHtml(data.practitionerName || 'A practitioner');
+      const msg = data.message ? `<p style="text-align:center;font-style:italic;color:var(--text-dim)">"${escapeHtml(data.message)}"</p>` : '';
+
+      if (data.redeemedAt) {
+        showSimpleModal(
+          '🎁 Gift Already Redeemed',
+          `<p style="text-align:center">This gift from <strong style="color:var(--gold)">${practName}</strong> has already been claimed.<br>Ask them for a new gift link!</p>${msg}`,
+          `<button class="btn-secondary" onclick="closeReferralModal()">Close</button>`,
+        );
+        return;
+      }
+
+      if (data.expired) {
+        showSimpleModal(
+          '🎁 Gift Link Expired',
+          `<p style="text-align:center">This gift from <strong style="color:var(--gold)">${practName}</strong> has expired.<br>Ask them for a fresh link!</p>${msg}`,
+          `<button class="btn-secondary" onclick="closeReferralModal()">Close</button>`,
+        );
+        return;
+      }
+
+      // Not yet redeemed — offer to claim
+      const redeemBtn = window._authUser
+        ? `<button class="btn-primary" onclick="redeemGift('${token.replace(/'/g, '')}')">Claim Your Gift</button>`
+        : `<button class="btn-primary" onclick="closeReferralModal();document.getElementById('loginBtn')?.click()">Log in to Claim</button>`;
+
+      showSimpleModal(
+        '🎁 You\'ve Received a Gift!',
+        `<p style="text-align:center"><strong style="color:var(--gold)">${practName}</strong> has gifted you a free chart reading.<br>Claim it to get your personalised Human Design blueprint!</p>${msg}`,
+        `${redeemBtn}<button class="btn-secondary" style="margin-top:0.75rem" onclick="closeReferralModal()">Maybe Later</button>`,
+      );
+
+      if (typeof trackEvent === 'function') trackEvent('gift', 'gift_landing_viewed', token.slice(0, 8));
+    } catch { /* silent — don't interrupt the app for a bad gift link */ }
+  })();
+}
+
+async function redeemGift(token) {
+  closeReferralModal();
+  try {
+    const data = await apiFetch(`/api/gift/${encodeURIComponent(token)}/redeem`, { method: 'POST' });
+    if (data?.ok) {
+      showNotification('🎁 Gift redeemed! Your free reading is ready.', 'success');
+      if (typeof trackEvent === 'function') trackEvent('gift', 'gift_redeemed');
+    } else {
+      showNotification(data?.error || 'Could not redeem gift', 'error');
+    }
+  } catch {
+    showNotification('Error redeeming gift', 'error');
+  }
+}
+window.redeemGift = redeemGift;
+
 function getPendingPractitionerInviteToken() {
   return sessionStorage.getItem(PENDING_PRACTITIONER_INVITE_KEY);
 }
@@ -5371,6 +5444,7 @@ async function loadRoster() {
     applyDirectoryProfileData(directoryData);
     renderPractitionerReferralStats(referralData);
     renderPractitionerMarketingKit(referralData);
+    loadPractitionerGifts();
     renderPractitionerEarnings(earningsData);
     loadPractitionerPromo();
     _pracSchedulingEmbedUrl = directoryData?.profile?.scheduling_embed_url || '';
@@ -5614,6 +5688,94 @@ function copyMarketingAsset(elementId) {
   }).catch(() => showNotification('Copy failed — please select and copy manually', 'error'));
 }
 window.copyMarketingAsset = copyMarketingAsset;
+
+// ── Gift-a-Reading (4.6) ──────────────────────────────────────
+async function loadPractitionerGifts() {
+  const el = document.getElementById('pracGiftLinks');
+  if (!el) return;
+  try {
+    const data = await apiFetch('/api/practitioner/gifts').catch(() => ({ gifts: [] }));
+    renderPractitionerGifts(data?.gifts ?? []);
+  } catch {
+    renderPractitionerGifts([]);
+  }
+}
+
+function renderPractitionerGifts(gifts) {
+  const el = document.getElementById('pracGiftLinks');
+  if (!el) return;
+
+  const giftRows = Array.isArray(gifts) && gifts.length
+    ? gifts.map(g => {
+        const status = g.redeemed_at
+          ? `<span style="color:var(--success,#27ae60)">✓ Redeemed ${escapeHtml(new Date(g.redeemed_at).toLocaleDateString())}</span>`
+          : (new Date(g.expires_at) < new Date()
+              ? `<span style="color:var(--error,#e74c3c)">Expired</span>`
+              : `<span style="color:var(--text-dim)">Pending</span>`);
+        const giftUrl = `${window.location.origin}/?gift=${escapeHtml(g.token)}`;
+        return `
+          <tr>
+            <td style="font-size:var(--font-size-xs);color:var(--text-dim);padding:var(--space-2)">${escapeHtml(new Date(g.created_at).toLocaleDateString())}</td>
+            <td style="font-size:var(--font-size-xs);padding:var(--space-2)">
+              <input readonly value="${escapeAttr(giftUrl)}"
+                     style="background:var(--bg2);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-1);padding:0.2rem 0.4rem;font-size:var(--font-size-xs);color:var(--text-dim);width:100%;min-width:0"
+                     onclick="this.select()" />
+            </td>
+            <td style="font-size:var(--font-size-xs);padding:var(--space-2)">${status}</td>
+          </tr>`;
+      }).join('')
+    : `<tr><td colspan="3" style="text-align:center;color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3)">No gifts yet — create your first one below.</td></tr>`;
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:var(--space-4)">
+      <div class="card-header-row">
+        <div class="card-title mb-0"><span class="nav-icon">🎁</span> Gift-a-Reading</div>
+      </div>
+      <p class="card-hint">Send a free chart + intro session to anyone — great for leads, podcast appearances, or gestures of generosity.</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:var(--space-4)">
+        <thead>
+          <tr style="border-bottom:var(--border-width-thin) solid var(--border)">
+            <th style="text-align:left;font-size:var(--font-size-xs);color:var(--text-dim);padding:var(--space-2)">Created</th>
+            <th style="text-align:left;font-size:var(--font-size-xs);color:var(--text-dim);padding:var(--space-2)">Gift Link</th>
+            <th style="text-align:left;font-size:var(--font-size-xs);color:var(--text-dim);padding:var(--space-2)">Status</th>
+          </tr>
+        </thead>
+        <tbody>${giftRows}</tbody>
+      </table>
+      <div style="display:flex;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:var(--font-size-xs);color:var(--text-dim);display:block;margin-bottom:var(--space-1)">Personal message (optional)</label>
+          <textarea id="giftMessage" rows="2" placeholder="e.g. Enjoy your free Human Design reading!"
+                    style="width:100%;box-sizing:border-box;background:var(--bg2);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-1);padding:0.5rem;font-size:var(--font-size-sm);color:var(--text);resize:none"></textarea>
+        </div>
+        <button class="btn-primary btn-sm" style="align-self:flex-end" data-action="createGiftLink">+ Create Gift Link</button>
+      </div>
+    </div>
+  `;
+}
+
+async function createGiftLink() {
+  const msgEl = document.getElementById('giftMessage');
+  const message = msgEl?.value?.trim() || null;
+  try {
+    const data = await apiFetch('/api/practitioner/gifts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    if (data?.giftUrl) {
+      if (msgEl) msgEl.value = '';
+      showNotification('Gift link created!', 'success');
+      trackEvent('practitioner', 'gift_created', 'dashboard');
+      await loadPractitionerGifts();
+    } else {
+      showNotification('Failed to create gift link', 'error');
+    }
+  } catch (e) {
+    showNotification('Error creating gift link', 'error');
+  }
+}
+window.createGiftLink = createGiftLink;
 
 // ── Practitioner Earnings Card (ITEM-1.8) ─────────────────────
 function renderPractitionerEarnings(data) {
@@ -9681,6 +9843,7 @@ if (!document.getElementById('notificationStyles')) {
 capturePractitionerInviteFromUrl();
 capturePostCheckoutIntentFromUrl();
 captureReferralFromUrl(); // Phase 2B
+captureGiftFromUrl();    // item 4.6
 
 // Restore session from HttpOnly refresh cookie, then boot UI
 (async () => {
