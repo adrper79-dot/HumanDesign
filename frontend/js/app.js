@@ -5345,6 +5345,10 @@ async function viewPortalPractitioner(practitionerId) {
     } else if (notesCard) {
       notesCard.style.display = 'none';
     }
+
+    // 5.1+5.3: messaging + journey
+    loadClientMessages(practitionerId);
+    loadPortalJourney(practitionerId, data);
   } catch (e) {
     pracInfo.innerHTML = '<div class="alert alert-error">Error: ' + escapeHtml(e.message) + '</div>';
   }
@@ -5371,6 +5375,159 @@ async function submitReview(practitionerId) {
   } catch (e) {
     showNotification(e.message?.includes('already') ? 'You have already reviewed this practitioner.' : 'Error: ' + e.message, 'error');
   }
+}
+
+// Practitioner-Client Messaging (5.1)
+async function loadPractitionerMessages(clientId) {
+  var el = document.getElementById('msgThread-' + clientId);
+  if (!el) return;
+  try {
+    var data = await apiFetch('/api/practitioner/clients/' + encodeURIComponent(clientId) + '/messages?limit=50&offset=0');
+    var msgs = data.messages || [];
+    if (!msgs.length) {
+      el.innerHTML = '<div style="color:var(--text-dim);font-size:var(--font-size-sm);padding:var(--space-3)">No messages yet. Start the conversation.</div>';
+      return;
+    }
+    el.innerHTML = msgs.map(function(m) {
+      var isPract = m.sender_is_practitioner;
+      var align   = isPract ? 'right' : 'left';
+      var bg      = isPract ? 'rgba(201,168,76,0.14)' : 'var(--bg3)';
+      return '<div style="padding:8px 12px;margin-bottom:6px;border-radius:6px;background:' + bg + ';max-width:80%;margin-' + align + ':' + (align==='right'?'auto':'0') + '">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px">' +
+          '<span style="font-size:12px;font-weight:600;color:var(--gold)">' + escapeHtml(m.sender_name || '') + '</span>' +
+          '<span style="font-size:11px;color:var(--text-dim)">' + escapeHtml(new Date(m.created_at).toLocaleString()) + '</span>' +
+        '</div>' +
+        '<div style="color:var(--text);word-break:break-word">' + escapeHtml(m.body || '') + '</div></div>';
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  } catch (e) {
+    if (el) el.innerHTML = '<div class="alert alert-warn">Could not load messages.</div>';
+  }
+}
+window.loadPractitionerMessages = loadPractitionerMessages;
+
+async function sendPractitionerMessage(clientId) {
+  var inputEl  = document.getElementById('msgInput-'  + clientId);
+  var statusEl = document.getElementById('msgStatus-' + clientId);
+  var body = inputEl ? inputEl.value.trim() : '';
+  if (!body) { showNotification('Please enter a message.', 'warn'); return; }
+  if (body.length > 2000) { showNotification('Message too long (max 2000 chars).', 'warn'); return; }
+  try {
+    if (statusEl) statusEl.textContent = 'Sending...';
+    await apiFetch('/api/practitioner/clients/' + encodeURIComponent(clientId) + '/messages', {
+      method: 'POST', body: JSON.stringify({ body: body })
+    });
+    if (inputEl)  inputEl.value = '';
+    if (statusEl) statusEl.textContent = 'Sent!';
+    await loadPractitionerMessages(clientId);
+    setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2000);
+  } catch (e) {
+    showNotification('Failed to send: ' + e.message, 'error');
+    if (statusEl) statusEl.textContent = '';
+  }
+}
+window.sendPractitionerMessage = sendPractitionerMessage;
+
+// Client Messaging (5.1)
+async function loadClientMessages(practitionerId) {
+  var card    = document.getElementById('portalMessagesCard');
+  var content = document.getElementById('portalMessagesContent');
+  var sendBtn = document.getElementById('portalMsgSendBtn');
+  if (!card || !content) return;
+  try {
+    var data = await apiFetch('/api/client/messages');
+    var msgs = (data.messages || []).filter(function(m) { return m.practitioner_id === practitionerId; });
+    card.style.display = '';
+    if (msgs.length) {
+      content.innerHTML = msgs.map(function(m) {
+        var isMine = !m.sender_is_practitioner;
+        var align  = isMine ? 'right' : 'left';
+        var bg     = isMine ? 'rgba(201,168,76,0.14)' : 'var(--bg3)';
+        return '<div style="padding:8px 12px;margin-bottom:6px;border-radius:6px;background:' + bg + ';max-width:80%;margin-' + align + ':' + (align==='right'?'auto':'0') + '">' +
+          '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px">' +
+            '<span style="font-size:12px;font-weight:600;color:var(--gold)">' + escapeHtml(m.sender_name || '') + '</span>' +
+            '<span style="font-size:11px;color:var(--text-dim)">' + escapeHtml(new Date(m.created_at).toLocaleString()) + '</span>' +
+          '</div>' +
+          '<div style="color:var(--text);word-break:break-word">' + escapeHtml(m.body || '') + '</div></div>';
+      }).join('');
+      content.scrollTop = content.scrollHeight;
+    } else {
+      content.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:12px">No messages yet. Send your first message below.</div>';
+    }
+    if (sendBtn) {
+      var _pid = practitionerId;
+      sendBtn.onclick = function() { sendClientMessage(_pid); };
+    }
+  } catch (e) {
+    if (card) card.style.display = 'none';
+  }
+}
+window.loadClientMessages = loadClientMessages;
+
+async function sendClientMessage(practitionerId) {
+  var inputEl  = document.getElementById('portalMsgInput');
+  var statusEl = document.getElementById('portalMsgStatus');
+  var body = inputEl ? inputEl.value.trim() : '';
+  if (!body) { showNotification('Please enter a message.', 'warn'); return; }
+  if (body.length > 2000) { showNotification('Message too long (max 2000 chars).', 'warn'); return; }
+  if (!practitionerId) { showNotification('No practitioner selected.', 'warn'); return; }
+  try {
+    if (statusEl) statusEl.textContent = 'Sending...';
+    await apiFetch('/api/client/messages', {
+      method: 'POST', body: JSON.stringify({ practitionerId: practitionerId, body: body })
+    });
+    if (inputEl)  inputEl.value = '';
+    if (statusEl) statusEl.textContent = 'Sent!';
+    await loadClientMessages(practitionerId);
+    setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2000);
+  } catch (e) {
+    showNotification('Failed to send: ' + e.message, 'error');
+    if (statusEl) statusEl.textContent = '';
+  }
+}
+window.sendClientMessage = sendClientMessage;
+
+// Client Journey Timeline (5.3)
+function loadPortalJourney(practitionerId, data) {
+  var card    = document.getElementById('portalJourneyCard');
+  var content = document.getElementById('portalJourneyContent');
+  if (!card || !content) return;
+  content.innerHTML = renderPortalJourneyTimeline(data);
+  card.style.display = '';
+}
+
+function renderPortalJourneyTimeline(data) {
+  if (!data) return '';
+  var p       = data.practitioner || {};
+  var chart   = data.chart;
+  var profile = data.profile;
+  var notes   = data.sharedNotes || [];
+  var milestones = [
+    { label: 'Connected with ' + escapeHtml(p.display_name || 'Practitioner'),
+      date: data.connectedAt || null, icon: '&#x1F91D;', done: true },
+    { label: 'Blueprint Calculated',
+      date: chart ? (chart.calculatedAt || null) : null,
+      icon: '&#x1F4CA;', done: !!chart },
+    { label: 'Prime Self Profile Generated',
+      date: profile ? (profile.createdAt || null) : null,
+      icon: '&#x1F4CB;', done: !!profile },
+    { label: 'First Shared Session Note',
+      date: notes.length ? (notes[notes.length-1].session_date || notes[notes.length-1].created_at || null) : null,
+      icon: '&#x1F4DD;', done: notes.length > 0 },
+    { label: '3-Month Integration Milestone', date: null, icon: '&#x2728;', done: false },
+  ];
+  var html = '<div style="position:relative;padding-left:28px">';
+  milestones.forEach(function(m, i) {
+    var isLast  = i === milestones.length - 1;
+    var dateStr = m.date ? new Date(m.date).toLocaleDateString() : '';
+    var lineColor = m.done ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.08)';
+    html += '<div style="position:relative;padding-bottom:' + (isLast ? '0' : '20px') + '">';
+    if (!isLast) html += '<div style="position:absolute;left:-20px;top:20px;bottom:0;width:2px;background:' + lineColor + '"></div>';
+    html += '<div style="position:absolute;left:-28px;top:4px;width:16px;height:16px;border-radius:50%;background:' + (m.done ? 'var(--gold)' : 'var(--bg3)') + ';border:2px solid ' + (m.done ? 'var(--gold)' : 'var(--text-dim)') + ';display:flex;align-items:center;justify-content:center;font-size:8px;color:#000">' + (m.done ? '\u2713' : '') + '</div>';
+    html += '<div style="padding-left:4px"><div style="font-size:13px;font-weight:600;color:' + (m.done ? 'var(--gold)' : 'var(--text-dim)') + '">' + m.icon + ' ' + m.label + '</div>' + (dateStr ? '<div style="font-size:11px;color:var(--text-dim)">' + escapeHtml(dateStr) + '</div>' : '') + '</div></div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 async function loadAllSharedNotes() {
@@ -6318,6 +6475,7 @@ async function viewClientDetail(clientId, emailLabel) {
     panel.innerHTML = renderClientDetail(data, emailLabel, clientId, notesData, aiContextData, diaryData);
     loadClientReadings(clientId);
     loadClientActions(clientId);
+    loadPractitionerMessages(clientId);
     trackEvent('practitioner', 'client_view', clientId);
   } catch (e) {
     panel.innerHTML = `<div class="alert alert-error">Error loading client: ${escapeHtml(e.message)}</div>`;
@@ -6776,6 +6934,23 @@ function renderClientDetail(data, emailLabel, clientId, notesData, aiContextData
   html += `</div>`;
 
   // ── PRAC-015: Scheduling embed (Cal.com / Calendly) ─────────
+  // Messaging (5.1)
+  html += `
+  <div class="card" style="margin-top:var(--space-5)">
+    <div class="card-header-row">
+      <div class="card-title mb-0">&#x1F4AC; Messages</div>
+      <button class="btn-secondary btn-sm" data-action="loadPractitionerMessages" data-arg0="${safeClientId}">Refresh</button>
+    </div>
+    <div id="msgThread-${safeClientId}" style="max-height:360px;overflow-y:auto;margin-bottom:var(--space-3)">
+      <div class="loading-card"><div class="spinner"></div></div>
+    </div>
+    <div style="display:flex;gap:var(--space-2);align-items:flex-end">
+      <textarea id="msgInput-${safeClientId}" rows="2" class="form-input" placeholder="Write a message..." maxlength="2000" style="flex:1;resize:none"></textarea>
+      <button class="btn-primary btn-sm" data-action="sendPractitionerMessage" data-arg0="${safeClientId}">Send</button>
+    </div>
+    <div id="msgStatus-${safeClientId}" style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)"></div>
+  </div>`;
+
   if (_pracSchedulingEmbedUrl) {
     html += `
   <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
@@ -10656,6 +10831,10 @@ window.toggleRaw = toggleRaw;
 window.toggleDetails = toggleDetails;
 window.hideMemberForm = hideMemberForm;
 window.hidePracDetail = hidePracDetail;
+window.loadPractitionerMessages = loadPractitionerMessages;
+window.sendPractitionerMessage = sendPractitionerMessage;
+window.loadClientMessages = loadClientMessages;
+window.sendClientMessage = sendClientMessage;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeProfileComposerUI, { once: true });

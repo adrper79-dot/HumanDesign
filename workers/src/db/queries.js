@@ -2872,5 +2872,63 @@ export const QUERIES = {
     ORDER BY gt.created_at DESC
     LIMIT 50
   `,
+
+  // ─── Practitioner-Client Messaging (item 5.1) ──────────────
+
+  createMessage: `
+    INSERT INTO practitioner_messages
+      (practitioner_id, client_user_id, sender_id, body)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, practitioner_id, client_user_id, sender_id, body, is_read, created_at
+  `,
+
+  listMessages: `
+    SELECT m.id, m.sender_id, m.body, m.is_read, m.created_at,
+           COALESCE(u.display_name, u.email) AS sender_name
+    FROM practitioner_messages m
+    JOIN users u ON u.id = m.sender_id
+    WHERE m.practitioner_id = $1 AND m.client_user_id = $2
+    ORDER BY m.created_at ASC
+    LIMIT $3 OFFSET $4
+  `,
+
+  markMessageRead: `
+    UPDATE practitioner_messages
+    SET is_read = true
+    WHERE id = $1 AND sender_id != $2
+    RETURNING id, is_read
+  `,
+
+  markThreadRead: `
+    UPDATE practitioner_messages
+    SET is_read = true
+    WHERE practitioner_id = $1 AND client_user_id = $2 AND sender_id != $3
+    RETURNING id
+  `,
+
+  getUnreadCount: `
+    SELECT COUNT(*)::int AS unread
+    FROM practitioner_messages
+    WHERE practitioner_id = $1 AND client_user_id = $2
+      AND sender_id != $3 AND is_read = false
+  `,
+
+  listClientMessages: `
+    SELECT m.id, m.practitioner_id, m.sender_id, m.body, m.is_read, m.created_at,
+           COALESCE(u.display_name, u.email) AS sender_name,
+           p.display_name AS practitioner_display_name
+    FROM practitioner_messages m
+    JOIN users u ON u.id = m.sender_id
+    JOIN practitioners pr ON pr.id = m.practitioner_id
+    LEFT JOIN users p ON p.id = pr.user_id
+    WHERE m.client_user_id = $1
+    ORDER BY m.created_at DESC
+    LIMIT 100
+  `,
+
+  getPractitionerUserIdByPractitionerId: `
+    SELECT user_id FROM practitioners WHERE id = $1
+  `,
+
 };
 

@@ -2029,6 +2029,19 @@
         <div class="card-title">📋 Shared Session Notes</div>
         <div id="portalNotesContent" aria-live="polite"></div>
       </div>
+      <div id="portalMessagesCard" class="card" style="display:none">
+        <div class="card-title">&#x1F4AC; Messages</div>
+        <div id="portalMessagesContent" aria-live="polite"></div>
+        <div style="display:flex;gap:var(--space-2);margin-top:var(--space-3)">
+          <textarea id="portalMsgInput" rows="2" class="form-input" placeholder="Write a message…" maxlength="2000" style="flex:1;resize:none"></textarea>
+          <button class="btn-primary btn-sm" id="portalMsgSendBtn">Send</button>
+        </div>
+        <div id="portalMsgStatus" style="font-size:var(--font-size-sm);color:var(--text-dim);margin-top:var(--space-1)"></div>
+      </div>
+      <div id="portalJourneyCard" class="card" style="display:none">
+        <div class="card-title">&#x1F5FA;&#xFE0F; Your Journey</div>
+        <div id="portalJourneyContent"></div>
+      </div>
     </div>
 
     <!-- All shared notes across practitioners -->

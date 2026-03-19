@@ -16,6 +16,7 @@
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { createLogger } from '../lib/logger.js';
 import { trackEvent } from '../lib/analytics.js';
+import { sendSessionSummaryEmail } from '../lib/email.js';
 
 async function getPractitionerClientAccess(query, userId, clientId) {
   const practitioner = await query(QUERIES.getPractitionerByUserId, [userId]);
@@ -110,6 +111,7 @@ export async function handleCreateNote(request, env, clientId) {
   }
 
   const shareWithAi = body.share_with_ai === true;
+  const sendSummary  = body.send_summary  === true;
   const transitSnapshot = body.transit_snapshot || null;
   const sessionDate = body.session_date || new Date().toISOString().split('T')[0];
 
@@ -125,6 +127,37 @@ export async function handleCreateNote(request, env, clientId) {
 
     log.info({ action: 'session_note_created', practitionerId: access.practitionerId, clientId });
     trackEvent(env, 'session_note_create', { userId, properties: { shareWithAi, clientId } }).catch(() => {});
+
+    // 5.2: Optionally email session summary to client
+    if (sendSummary && env.RESEND_API_KEY) {
+      (async () => {
+        try {
+          const [clientRow, practRow] = await Promise.all([
+            query(QUERIES.getUserByIdSafe, [clientId]),
+            query(QUERIES.getPractitionerByUserId, [userId]),
+          ]);
+          const clientEmail = clientRow.rows[0]?.email;
+          if (!clientEmail) return;
+          const practDisplayName = practRow.rows[0]?.display_name
+            || practRow.rows[0]?.email || 'Your Practitioner';
+          // Extract action items: lines starting with – or - followed by space
+          const actionItems = content
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => /^[-–]\ /.test(l))
+            .map(l => l.replace(/^[-–]\ /, ''));
+          const bookingUrl = practRow.rows[0]?.booking_url || null;
+          await sendSessionSummaryEmail(
+            clientEmail, clientEmail, practDisplayName, content, actionItems,
+            bookingUrl, env.RESEND_API_KEY, env.FROM_EMAIL || fromEmail, env.COMPANY_ADDRESS || ''
+          );
+          trackEvent(env, 'session_email_sent', { userId, properties: { practitionerId: access.practitionerId, clientId } }).catch(() => {});
+        } catch (e) {
+          log.warn({ action: 'session_summary_email_failed', error: e.message });
+        }
+      })();
+    }
+
     return Response.json({ ok: true, note: result.rows[0] }, { status: 201 });
   } catch (err) {
     log.error({ action: 'session_note_create_failed', error: err.message });

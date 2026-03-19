@@ -1018,3 +1018,67 @@ export async function sendPractitionerWeeklyDigest(practitionerEmail, practition
 </div>`;
   return sendEmail({ to: practitionerEmail, subject, html }, apiKey, fromEmail);
 }
+
+/**
+ * Post-session summary email (item 5.2)
+ * Sent to a client after a session note is saved with send_summary: true.
+ *
+ * @param {string} clientEmail - recipient address
+ * @param {string} clientName  - display name
+ * @param {string} practName   - practitioner name
+ * @param {string} noteContent - full note text
+ * @param {string[]} actionItems - action item strings (extracted from note lines starting with –)
+ * @param {string|null} bookingUrl - practitioner booking link
+ * @param {string} apiKey
+ * @param {string} fromEmail
+ * @param {string} companyAddress
+ */
+export async function sendSessionSummaryEmail(
+  clientEmail, clientName, practName, noteContent, actionItems,
+  bookingUrl, apiKey, fromEmail, companyAddress = ''
+) {
+  if (!clientEmail || !apiKey) return null;
+
+  const safeName   = String(clientName  || 'There');
+  const safePract  = String(practName   || 'Your Practitioner');
+  const safeNote   = String(noteContent || '');
+  const safeNote80 = safeNote.length > 600 ? safeNote.slice(0, 600) + '…' : safeNote;
+
+  const actionItemsHtml = Array.isArray(actionItems) && actionItems.length > 0
+    ? `<div style="background:#1a1a24;border-radius:8px;padding:20px;margin:20px 0">
+       <div style="font-weight:600;color:#c9a84c;margin-bottom:12px">📋 Action Items</div>
+       <ul style="margin:0;padding-left:20px;color:#d4cfe0">${actionItems.map(a =>
+         `<li style="margin-bottom:6px">${a.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>`
+       ).join('')}</ul></div>`
+    : '';
+
+  const bookBtn = bookingUrl && /^https?:\/\//i.test(bookingUrl)
+    ? `<div style="text-align:center;margin:28px 0">
+       <a href="${bookingUrl.replace(/"/g, '&quot;')}" style="background:#c9a84c;color:#0d0d14;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block">
+         Book Your Next Session →
+       </a></div>`
+    : '';
+
+  const subject = `Your session summary with ${safePract}`;
+  const html = `
+<div style="max-width:560px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;background:#13131c;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1e1e2e,#2a1a3a);padding:32px;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">✨</div>
+    <h1 style="margin:0;font-size:22px;color:#c9a84c">Your Session Summary</h1>
+    <p style="margin:8px 0 0;color:#8882a0;font-size:14px">with ${safePract}</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="color:#d4cfe0">Hi ${safeName},</p>
+    <p style="color:#d4cfe0">Here are the highlights from your recent session. You can use these notes as a reference as you integrate the insights.</p>
+    <div style="background:#1a1a24;border-radius:8px;padding:20px;margin:20px 0;color:#d4cfe0;white-space:pre-line;font-size:14px;line-height:1.6">${safeNote80.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    ${actionItemsHtml}
+    ${bookBtn}
+    <p style="color:#8882a0;font-size:13px;margin-top:24px">Sent by Prime Self on behalf of ${safePract}</p>
+  </div>
+  <div style="background:#0d0d14;padding:16px 32px;text-align:center">
+    <p style="margin:0;font-size:12px;color:#6a6580">${companyAddress}</p>
+  </div>
+</div>`;
+
+  return sendEmail({ to: clientEmail, subject, html, companyAddress }, apiKey, fromEmail);
+}
