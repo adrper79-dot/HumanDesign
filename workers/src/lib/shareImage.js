@@ -348,6 +348,175 @@ export function generatePractitionerOGImage(practitioner) {
 </svg>`;
 }
 
+// ── Item 4.4: Social Share Platform Templates ──────────────────────────────
+
+/**
+ * Build a URL with UTM tracking parameters.
+ * @param {string} baseUrl  - e.g. 'https://selfprime.net'
+ * @param {string} utmSource - e.g. 'twitter'
+ * @param {string} utmCampaign - e.g. 'chart_share'
+ * @param {string} [path=''] - Optional path suffix
+ * @returns {string}
+ */
+export function buildShareUrl(baseUrl, utmSource, utmCampaign, path = '') {
+  const url = baseUrl + path;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}utm_source=${encodeURIComponent(utmSource)}&utm_medium=social&utm_campaign=${encodeURIComponent(utmCampaign)}`;
+}
+
+/**
+ * Generate transit weather share image (1200×630).
+ * @param {Object} data - { date, sunGate, moonGate, dominant, theme, energy }
+ */
+export function generateTransitWeatherImage(data) {
+  const date = escapeXml(data?.date || new Date().toLocaleDateString());
+  const dominant = escapeXml((data?.dominant || 'Transit Energy').substring(0, 60));
+  const theme = escapeXml((data?.theme || '').substring(0, 80));
+  const sunGate = escapeXml(String(data?.sunGate || ''));
+  const moonGate = escapeXml(String(data?.moonGate || ''));
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c0c1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0f2040;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#tbg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#3b82f6"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="20" font-weight="bold" fill="#3b82f6" letter-spacing="3">TRANSIT WEATHER — PRIME SELF</text>
+  <text x="60" y="150" font-family="Arial,sans-serif" font-size="28" fill="#93c5fd">${date}</text>
+  <text x="60" y="240" font-family="Arial,sans-serif" font-size="64" font-weight="bold" fill="#ffffff">${dominant}</text>
+  <text x="60" y="310" font-family="Arial,sans-serif" font-size="28" fill="#93c5fd">${theme}</text>
+  <line x1="60" y1="350" x2="1140" y2="350" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="60" y="410" font-family="Arial,sans-serif" font-size="24" fill="#cbd5e0">☀ Sun: Gate ${sunGate}</text>
+  <text x="300" y="410" font-family="Arial,sans-serif" font-size="24" fill="#cbd5e0">☽ Moon: Gate ${moonGate}</text>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+  <circle cx="1050" cy="200" r="180" fill="none" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.12"/>
+</svg>`;
+}
+
+/**
+ * Generate session summary share image (1200×630).
+ * @param {Object} data - { practitionerName, sessionDate, themes, insight }
+ */
+export function generateSessionSummaryImage(data) {
+  const prac = escapeXml((data?.practitionerName || 'Your Practitioner').substring(0, 50));
+  const sessionDate = escapeXml(data?.sessionDate || new Date().toLocaleDateString());
+  const themes = Array.isArray(data?.themes) ? data.themes.slice(0, 3).map(escapeXml).join(' · ') : '';
+  const insight = escapeXml((data?.insight || '').substring(0, 100));
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1a2040;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#sbg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#10b981"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="20" font-weight="bold" fill="#10b981" letter-spacing="3">SESSION SUMMARY — PRIME SELF</text>
+  <text x="60" y="170" font-family="Arial,sans-serif" font-size="52" font-weight="bold" fill="#ffffff">Session with ${prac}</text>
+  <text x="60" y="230" font-family="Arial,sans-serif" font-size="26" fill="#6ee7b7">${sessionDate}</text>
+  <line x1="60" y1="260" x2="1140" y2="260" stroke="#10b981" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="60" y="320" font-family="Arial,sans-serif" font-size="24" fill="#a7f3d0">Themes: ${themes}</text>
+  <text x="60" y="390" font-family="Arial,sans-serif" font-size="26" fill="#e2e8f0">${insight}</text>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+</svg>`;
+}
+
+/**
+ * Generate reading summary share image (1200×630).
+ * @param {Object} data - { readingType, clientName, keyTheme, guidance }
+ */
+export function generateReadingSummaryImage(data) {
+  const readingType = escapeXml((data?.readingType || 'Reading').substring(0, 40));
+  const keyTheme = escapeXml((data?.keyTheme || '').substring(0, 60));
+  const guidance = escapeXml((data?.guidance || '').substring(0, 110));
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#130a1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1a0f30;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#rbg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#a78bfa"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="20" font-weight="bold" fill="#a78bfa" letter-spacing="3">READING SUMMARY — PRIME SELF</text>
+  <text x="60" y="170" font-family="Arial,sans-serif" font-size="56" font-weight="bold" fill="#ffffff">${readingType}</text>
+  <text x="60" y="250" font-family="Arial,sans-serif" font-size="32" fill="#c4b5fd">${keyTheme}</text>
+  <line x1="60" y1="285" x2="1140" y2="285" stroke="#a78bfa" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="60" y="360" font-family="Arial,sans-serif" font-size="26" fill="#e2e8f0">${guidance}</text>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+  <circle cx="1050" cy="200" r="160" fill="none" stroke="#a78bfa" stroke-width="1" stroke-opacity="0.1"/>
+</svg>`;
+}
+
+/**
+ * Generate compatibility summary share image (1200×630).
+ * @param {Object} data - { person1: {name, type}, person2: {name, type}, score, channels }
+ */
+export function generateCompatibilityImage(data) {
+  const name1 = escapeXml((data?.person1?.name || 'Person 1').substring(0, 30));
+  const name2 = escapeXml((data?.person2?.name || 'Person 2').substring(0, 30));
+  const type1 = escapeXml(data?.person1?.type || '');
+  const type2 = escapeXml(data?.person2?.type || '');
+  const score = escapeXml(String(data?.score || ''));
+  const channels = Array.isArray(data?.channels) ? data.channels.slice(0, 4).join(' · ') : '';
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0a1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1a1030;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#cbg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#f59e0b"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="20" font-weight="bold" fill="#f59e0b" letter-spacing="3">COMPATIBILITY — PRIME SELF</text>
+  <text x="60" y="180" font-family="Arial,sans-serif" font-size="54" font-weight="bold" fill="#ffffff">${name1}</text>
+  <text x="60" y="240" font-family="Arial,sans-serif" font-size="28" fill="#fcd34d">${type1}</text>
+  <text x="600" y="180" font-family="Arial,sans-serif" font-size="54" font-weight="bold" fill="#ffffff" text-anchor="middle">✦</text>
+  <text x="1140" y="180" font-family="Arial,sans-serif" font-size="54" font-weight="bold" fill="#ffffff" text-anchor="end">${name2}</text>
+  <text x="1140" y="240" font-family="Arial,sans-serif" font-size="28" fill="#fcd34d" text-anchor="end">${type2}</text>
+  ${score ? `<text x="600" y="360" font-family="Arial,sans-serif" font-size="80" font-weight="bold" fill="#f59e0b" text-anchor="middle">${score}%</text>` : ''}
+  <line x1="60" y1="420" x2="1140" y2="420" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="600" y="470" font-family="Arial,sans-serif" font-size="22" fill="#fde68a" text-anchor="middle">${escapeXml(channels)}</text>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+</svg>`;
+}
+
+/**
+ * Generate gift announcement share image (1200×630).
+ * @param {Object} data - { recipientName, gifterName, plan, message }
+ */
+export function generateGiftImage(data) {
+  const recipient = escapeXml((data?.recipientName || 'Someone Special').substring(0, 40));
+  const gifter = escapeXml((data?.gifterName || '').substring(0, 40));
+  const plan = escapeXml((data?.plan || 'Prime Self').substring(0, 40));
+  const message = escapeXml((data?.message || '').substring(0, 100));
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1a1a10;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#gbg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#ec4899"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="20" font-weight="bold" fill="#ec4899" letter-spacing="3">GIFT — PRIME SELF</text>
+  <text x="60" y="180" font-family="Arial,sans-serif" font-size="36" fill="#f9a8d4">🎁 A gift for</text>
+  <text x="60" y="260" font-family="Arial,sans-serif" font-size="64" font-weight="bold" fill="#ffffff">${recipient}</text>
+  <text x="60" y="330" font-family="Arial,sans-serif" font-size="28" fill="#f9a8d4">From ${gifter}</text>
+  <line x1="60" y1="370" x2="1140" y2="370" stroke="#ec4899" stroke-width="1" stroke-opacity="0.4"/>
+  <text x="60" y="430" font-family="Arial,sans-serif" font-size="30" fill="#e2e8f0">${plan}</text>
+  <text x="60" y="490" font-family="Arial,sans-serif" font-size="24" fill="#cbd5e0">${message}</text>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+</svg>`;
+}
+
 /**
  * Generate social share metadata (OG tags)
  * @param {Object} params - Share parameters

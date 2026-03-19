@@ -207,6 +207,11 @@
   window.showShareCard = function(chartData) {
     const canvas = createShareCanvas(chartData);
 
+    // Analytics: share_card_generated (item 4.4)
+    if (typeof window.trackEvent === 'function') {
+      window.trackEvent('share', 'share_card_generated', chartData && chartData.type || 'chart');
+    }
+
     // Create modal
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
@@ -269,7 +274,38 @@
     closeBtn.addEventListener('click', () => overlay.remove());
 
     btnRow.append(dlBtn, shareBtn, closeBtn);
-    modal.append(title, canvas, btnRow);
+
+    // Platform share row with UTM-tracked links (item 4.4)
+    const platformRow = document.createElement('div');
+    platformRow.style.cssText = 'display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap';
+    var _base = 'https://selfprime.net';
+    var _campaign = 'chart_share';
+    var _shareText = encodeURIComponent('Check out my Human Design energy blueprint on Prime Self!');
+    [
+      { label: '𝕏 Twitter', platform: 'twitter', href: 'https://twitter.com/intent/tweet?text=' + _shareText + '&url=' + encodeURIComponent(_base + '?utm_source=twitter&utm_medium=social&utm_campaign=' + _campaign) },
+      { label: 'Facebook', platform: 'facebook', href: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(_base + '?utm_source=facebook&utm_medium=social&utm_campaign=' + _campaign) },
+      { label: 'LinkedIn', platform: 'linkedin', href: 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(_base + '?utm_source=linkedin&utm_medium=social&utm_campaign=' + _campaign) },
+      { label: '💬 WhatsApp', platform: 'whatsapp', href: 'https://api.whatsapp.com/send?text=' + _shareText + '%20' + encodeURIComponent(_base + '?utm_source=whatsapp&utm_medium=social&utm_campaign=' + _campaign) },
+    ].forEach(function(p) {
+      var btn = document.createElement('a');
+      btn.href = p.href;
+      btn.target = '_blank';
+      btn.rel = 'noopener noreferrer';
+      btn.style.cssText = 'font-size:0.78rem;padding:6px 14px;background:var(--surface,#252535);border:1px solid var(--border,#32324a);color:var(--text,#e8e4f4);border-radius:6px;cursor:pointer;text-decoration:none';
+      btn.textContent = p.label;
+      btn.addEventListener('click', function() {
+        if (typeof window.trackEvent === 'function') {
+          window.trackEvent('share', 'share_card_platform', p.platform);
+        }
+      });
+      platformRow.appendChild(btn);
+    });
+
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:0.75rem;color:var(--text-dim,#c4c0d8);margin-top:8px';
+    hint.textContent = 'Download and share on Instagram, Twitter, or any platform';
+
+    modal.append(title, canvas, btnRow, platformRow, hint);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
   };
