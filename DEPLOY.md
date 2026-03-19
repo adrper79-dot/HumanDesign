@@ -53,7 +53,7 @@ curl https://prime-self-api.adrper79.workers.dev/api/health
 }
 ```
 
-If you get a different version number or error, deployment failed. Run `npx wrangler deploy --force` to force a fresh deployment.
+If you get a different version number or error, deployment failed. Re-run `npx wrangler deploy` and verify the endpoint again.
 
 #### Step 3: Test Authenticated Endpoint
 
@@ -168,7 +168,7 @@ curl -H "Authorization: Bearer <token>" \
 **Fix**:
 ```bash
 cd workers
-npx wrangler deploy --force
+npx wrangler deploy
 ```
 
 Then verify again with `curl`.
@@ -288,7 +288,7 @@ If a deployment breaks production:
 2. **Force re-deploy**:
    ```bash
    cd workers
-   npx wrangler deploy --force
+   npx wrangler deploy
    ```
 
 3. **Verify health endpoint** returns to normal.
@@ -336,7 +336,7 @@ curl https://prime-self-api.adrper79.workers.dev/api/health
 **Emergency rollback**:
 ```bash
 git revert HEAD && git push origin main
-cd workers && npx wrangler deploy --force
+cd workers && npx wrangler deploy
 ```
 
 ---
