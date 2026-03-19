@@ -197,7 +197,7 @@ function updateWelcomeMessage() {
       <h3 class="welcome-title">Discover Your Energy Blueprint</h3>
       <p class="welcome-text">Your unique energy architecture revealed. Get your Energy Blueprint chart, AI-generated personal synthesis, daily transit insights, and tools for living in alignment with your design. Start with your birth data — we'll calculate everything in seconds.</p>
       <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
-      <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Running an HD practice? <a href="#" data-action="heroPractitionerCta" style="color:var(--gold)">See Practitioner Plan →</a></p>
+      <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Running an Energy Blueprint practice? <a href="#" data-action="heroPractitionerCta" style="color:var(--gold)">See Practitioner Plan →</a></p>
     </div>`;
   }
   
@@ -1886,12 +1886,12 @@ const PRACTITIONER_UPGRADE_COPY = {
   },
   client_roster: {
     headline: 'Your client list is a practice asset.',
-    body: 'Track every session, store birth data, and prepare before each call — all in one place designed for HD professionals.',
+    body: 'Track every session, store birth data, and prepare before each call — all in one place designed for Energy Blueprint professionals.',
     roi: 'Average practitioner saves 4 hrs/week on session prep. Pays for itself in week 1.'
   },
   clients: {
     headline: 'Your client list is a practice asset.',
-    body: 'Track every session, store birth data, and prepare before each call — all in one place designed for HD professionals.',
+    body: 'Track every session, store birth data, and prepare before each call — all in one place designed for Energy Blueprint professionals.',
     roi: 'Average practitioner saves 4 hrs/week on session prep. Pays for itself in week 1.'
   },
   session_brief: {
@@ -1906,7 +1906,7 @@ const PRACTITIONER_UPGRADE_COPY = {
   },
   practitionerTools: {
     headline: 'The full practitioner toolkit in one place.',
-    body: 'Sessions, clients, composites, reports, and your own referral link — everything a professional HD practice needs.',
+    body: 'Sessions, clients, composites, reports, and your own referral link — everything a professional Energy Blueprint practice needs.',
     roi: '2 clients at $50/session covers it. Join 200+ practitioners already running their practice here.'
   },
   whiteLabel: {

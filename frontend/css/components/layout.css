@@ -304,13 +304,17 @@
   font-size: var(--text-sm);
   font-weight: var(--font-normal);
   white-space: normal;
-  width: 260px;
+  width: min(260px, calc(100vw - 24px));
   max-width: 90vw;
   box-shadow: var(--shadow-xl);
   z-index: var(--z-tooltip);
   pointer-events: none;
   line-height: var(--leading-relaxed);
   text-align: left;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 

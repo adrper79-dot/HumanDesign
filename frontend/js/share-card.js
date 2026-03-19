@@ -280,7 +280,7 @@
     platformRow.style.cssText = 'display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap';
     var _base = 'https://selfprime.net';
     var _campaign = 'chart_share';
-    var _shareText = encodeURIComponent('Check out my Human Design energy blueprint on Prime Self!');
+    var _shareText = encodeURIComponent('Check out my Energy Blueprint on Prime Self!');
     [
       { label: '𝕏 Twitter', platform: 'twitter', href: 'https://twitter.com/intent/tweet?text=' + _shareText + '&url=' + encodeURIComponent(_base + '?utm_source=twitter&utm_medium=social&utm_campaign=' + _campaign) },
       { label: 'Facebook', platform: 'facebook', href: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(_base + '?utm_source=facebook&utm_medium=social&utm_campaign=' + _campaign) },

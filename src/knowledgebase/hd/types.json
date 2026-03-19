@@ -1,47 +1,47 @@
 {
   "manifestor": {
-    "type": "Manifestor",
+    "type": "Catalyst Pattern",
     "strategy": "To Inform",
     "notSelfTheme": "Anger",
     "signature": "Peace",
     "aura": "Closed and repelling",
-    "description": "Manifestors are the initiators. They have a direct connection from a motor center to the Throat, giving them the capacity to act independently and set things in motion. Their natural role is to initiate action and impact the world around them. When operating correctly, they inform those who will be affected before taking action — not asking permission, but giving notice. This creates a field of peace around them rather than the resistance that comes from uninformed surprises.",
-    "inPrimeSelf": "Manifestors often resonate with the Forge of Initiation. Their capacity to act first and catalyze movement makes them natural leaders in launching new ventures, creative projects, or paradigm shifts. The key lesson: informing is not a constraint on power — it is the refinement of power into influence."
+    "description": "Catalyst Pattern people are the initiators. They have a direct connection from a motor center to the Throat, giving them the capacity to act independently and set things in motion. Their natural role is to initiate action and impact the world around them. When operating correctly, they inform those who will be affected before taking action — not asking permission, but giving notice. This creates a field of peace around them rather than the resistance that comes from uninformed surprises.",
+    "inPrimeSelf": "Catalyst Pattern people often resonate with the Forge of Initiation. Their capacity to act first and catalyze movement makes them natural leaders in launching new ventures, creative projects, or paradigm shifts. The key lesson: informing is not a constraint on power — it is the refinement of power into influence."
   },
   "generator": {
-    "type": "Generator",
+    "type": "Builder Pattern",
     "strategy": "To Respond",
     "notSelfTheme": "Frustration",
     "signature": "Satisfaction",
     "aura": "Open and enveloping",
-    "description": "Generators are the life force of humanity, carrying a defined Sacral center that provides sustainable energy for work they love. Their strategy is to respond — waiting for life to present something that generates a gut-level 'uh-huh' or 'un-un' before committing their energy. When following their response, Generators find deep satisfaction in their activities. The Generator aura literally draws life to them; they need not chase or initiate.",
-    "inPrimeSelf": "Generators embody the Forge of Mastery. Their sustainable energy and response mechanism is designed for deep engagement with craft, skill-building, and the patient accumulation of expertise. Satisfaction comes not from the destination but from finding work that lights up their Sacral response — and then mastering it completely."
+    "description": "Builder Pattern people are the life force of humanity, carrying a defined Sacral center that provides sustainable energy for work they love. Their strategy is to respond — waiting for life to present something that generates a gut-level 'uh-huh' or 'un-un' before committing their energy. When following their response, Builder Pattern people find deep satisfaction in their activities. The Builder Pattern aura literally draws life to them; they need not chase or initiate.",
+    "inPrimeSelf": "Builder Pattern people embody the Forge of Mastery. Their sustainable energy and response mechanism is designed for deep engagement with craft, skill-building, and the patient accumulation of expertise. Satisfaction comes not from the destination but from finding work that lights up their Sacral response — and then mastering it completely."
   },
   "manifesting_generator": {
-    "type": "Manifesting Generator",
+    "type": "Builder-Initiator Pattern",
     "strategy": "To Respond, then Inform",
     "notSelfTheme": "Frustration and Anger",
     "signature": "Satisfaction",
     "aura": "Open and enveloping",
-    "description": "Manifesting Generators combine the Sacral life force with a motor-to-Throat connection, creating a multi-talented, fast-moving energy type. Like Generators, they must wait to respond before engaging — but once their Sacral says yes, they can move with Manifestor speed. They are the efficiency experts, often finding shortcuts and faster paths. Their process is non-linear: they skip steps, circle back, and ultimately reach mastery through a seemingly chaotic but deeply efficient path.",
-    "inPrimeSelf": "Manifesting Generators live at the intersection of the Forge of Mastery and the Forge of Initiation. Their gift is synthesizing speed with depth — they can sample many disciplines and rapidly integrate what works. The challenge is patience: waiting for the Sacral response before launching into action prevents the burnout and frustration of chasing every shiny possibility."
+    "description": "Builder-Initiator Pattern people combine the Sacral life force with a motor-to-Throat connection, creating a multi-talented, fast-moving energy type. Like Builder Pattern people, they must wait to respond before engaging — but once their Sacral says yes, they can move with Catalyst Pattern speed. They are the efficiency experts, often finding shortcuts and faster paths. Their process is non-linear: they skip steps, circle back, and ultimately reach mastery through a seemingly chaotic but deeply efficient path.",
+    "inPrimeSelf": "Builder-Initiator Pattern people live at the intersection of the Forge of Mastery and the Forge of Initiation. Their gift is synthesizing speed with depth — they can sample many disciplines and rapidly integrate what works. The challenge is patience: waiting for the Sacral response before launching into action prevents the burnout and frustration of chasing every shiny possibility."
   },
   "projector": {
-    "type": "Projector",
+    "type": "Guide Pattern",
     "strategy": "To Wait for the Invitation",
     "notSelfTheme": "Bitterness",
     "signature": "Success",
     "aura": "Focused and absorbing",
-    "description": "Projectors have a penetrating aura that sees deeply into others' energy and potential. With no defined Sacral center, they are not designed for sustained work but for guiding, managing, and directing the energy of others. Their strategy is to wait for recognition and invitation before sharing their insights. When invited, their guidance is received and valued. Without invitation, their wisdom is often met with resistance.",
-    "inPrimeSelf": "Projectors naturally gravitate to the Forge of Guidance. Their penetrating awareness makes them exceptional coaches, advisors, strategists, and system-seers. The Prime Self path for Projectors is about studying systems deeply, becoming recognized authorities, and then waiting for invitations that match their expertise. Bitterness dissolves when they stop trying to be Generators and embrace their role as navigators of others' energy."
+    "description": "Guide Pattern people have a penetrating aura that sees deeply into others' energy and potential. With no defined Sacral center, they are not designed for sustained work but for guiding, managing, and directing the energy of others. Their strategy is to wait for recognition and invitation before sharing their insights. When invited, their guidance is received and valued. Without invitation, their wisdom is often met with resistance.",
+    "inPrimeSelf": "Guide Pattern people naturally gravitate to the Forge of Guidance. Their penetrating awareness makes them exceptional coaches, advisors, strategists, and system-seers. The Prime Self path for Guide Pattern people is about studying systems deeply, becoming recognized authorities, and then waiting for invitations that match their expertise. Bitterness dissolves when they stop trying to be Builder Pattern people and embrace their role as navigators of others' energy."
   },
   "reflector": {
-    "type": "Reflector",
+    "type": "Mirror Pattern",
     "strategy": "To Wait a Lunar Cycle",
     "notSelfTheme": "Disappointment",
     "signature": "Surprise",
     "aura": "Resistant and sampling",
-    "description": "Reflectors are the rarest type (~1% of the population), with no defined centers at all. They sample and reflect the health of their community. Their completely open design makes them mirrors — amplifying and reflecting whatever environment they're in. Their strategy is to wait a full 28-day lunar cycle before making major decisions, allowing the Moon to transit all 64 gates and give them a complete picture.",
-    "inPrimeSelf": "Reflectors embody the Forge of Perception. They are the seismographs of collective health, able to read environments and communities with extraordinary sensitivity. In Prime Self, Reflectors serve as community barometers and wisdom keepers. Their path is about finding the right environment first — because they become the environment they inhabit. When the community is healthy, the Reflector reflects that health back as surprise and wonder."
+    "description": "Mirror Pattern people are the rarest type (~1% of the population), with no defined centers at all. They sample and reflect the health of their community. Their completely open design makes them mirrors — amplifying and reflecting whatever environment they're in. Their strategy is to wait a full 28-day lunar cycle before making major decisions, allowing the Moon to transit all 64 gates and give them a complete picture.",
+    "inPrimeSelf": "Mirror Pattern people embody the Forge of Perception. They are the seismographs of collective health, able to read environments and communities with extraordinary sensitivity. In Prime Self, Mirror Pattern people serve as community barometers and wisdom keepers. Their path is about finding the right environment first — because they become the environment they inhabit. When the community is healthy, the Mirror Pattern reflects that health back as surprise and wonder."
   }
 }

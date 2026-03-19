@@ -207,32 +207,44 @@ select option { background: var(--bg3, #111d38); }
   display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center;
   background: rgba(74,130,240,0.2); color: var(--accent, #5b8af0); border-radius: 50%;
   font-size: 0.7rem; font-weight: 700; cursor: help; margin-left: 4px;
-  position: relative; user-select: none;
+  position: relative; user-select: none; vertical-align: middle; flex-shrink: 0;
 }
-.help-icon:hover { background: rgba(74,130,240,0.4); }
-.help-icon[title]:hover::after {
+.help-icon:hover,
+.help-icon:focus-visible,
+.help-icon.tooltip-open { background: rgba(74,130,240,0.4); }
+.help-icon[title]:is(:hover, :focus-visible, .tooltip-open)::after {
   content: attr(title); position: fixed;
   left: var(--tooltip-left, calc(50% + 8px)); top: var(--tooltip-top, calc(100% + 8px));
   background: var(--bg2, #0b1226); color: var(--text, #eceaf4);
   padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #1d2f52);
-  font-size: 0.8rem; font-weight: 400; white-space: normal; width: 260px;
+  font-size: 0.8rem; font-weight: 400; white-space: normal; width: min(260px, calc(100vw - 24px)); max-width: calc(100vw - 24px);
   box-shadow: var(--shadow, 0 4px 24px rgba(0,0,0,0.5)); z-index: var(--z-tooltip); pointer-events: none; line-height: 1.4;
+  box-sizing: border-box; overflow-wrap: anywhere; word-break: break-word; hyphens: auto; text-align: left;
   transform: none; /* Remove the translateX(-50%) since we calculate exact position */
 }
-.help-icon[title].tooltip-below:hover::after {
+.help-icon[title].tooltip-below:is(:hover, :focus-visible, .tooltip-open)::after {
   top: var(--tooltip-top, calc(100% + 8px));
 }
-.help-icon[title]:hover::before {
+.help-icon[title]:is(:hover, :focus-visible, .tooltip-open)::before {
   content: ''; position: fixed;
   left: var(--tooltip-left, calc(50% + 8px)); top: var(--tooltip-top, calc(100% + 2px));
   border: 6px solid transparent;
   border-top-color: var(--border, #1d2f52); z-index: var(--z-tooltip);
   transform: none; /* Remove translateX(-50%) */
 }
-.help-icon[title].tooltip-below:hover::before {
+.help-icon[title].tooltip-below:is(:hover, :focus-visible, .tooltip-open)::before {
   border-top-color: transparent;
   border-bottom-color: var(--border, #1d2f52);
   top: var(--tooltip-top, calc(100% + 2px));
+}
+
+@media (max-width: 768px) {
+  .help-icon[title]:is(:hover, :focus-visible, .tooltip-open)::after {
+    width: min(20rem, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
 }
 
 /* ── Loading spinner [DUP] base.css (keyframes) ── */
