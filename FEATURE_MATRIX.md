@@ -731,6 +731,24 @@
 
 ---
 
+### Feature: Per-Practitioner OG Images
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Per-Practitioner OG Images |
+| **Permission Level** | PUBLIC — no authentication required |
+| **Workflow Position** | Served at `GET /api/og/practitioner/:slug` for link unfurling (Facebook, Twitter, Slack, etc.) |
+| **Purpose** | When a practitioner's referral or directory link is shared, social crawlers fetch a branded 1200×630 OG image showing the practitioner's name, specializations, bio, and Prime Self branding. KV-cached for 24 hours to minimize DB load. |
+| **Files** | `workers/src/lib/shareImage.js` (`generatePractitionerOGImage` — pure SVG generator), `workers/src/handlers/practitioner-og.js` (`handlePractitionerOGImage` — KV-cached route handler), `workers/src/index.js` (import + PATTERN_ROUTE registration) |
+| **Workflow Step** | 1. Social crawler hits `GET /api/og/practitioner/jane-doe-hd` → 2. `handlePractitionerOGImage(req, env, 'jane-doe-hd')` validates slug format → 3. Check `env.CACHE.get('og:practitioner:v1:jane-doe-hd')` → HIT: return cached SVG → MISS: → 4. `createQueryFn → QUERIES.getPractitionerBySlug` lookup → 5. `generatePractitionerOGImage(practitioner)` produces 1200×630 SVG → 6. `env.CACHE.put(key, svg, { expirationTtl: 86400 })` → 7. `trackEvent(env, 'practitioner_og_generated', { slug })` (non-blocking) → 8. Return SVG with `Content-Type: image/svg+xml, Cache-Control: public, max-age=86400` |
+| **API Endpoints** | `GET /api/og/practitioner/:slug` — public, no auth |
+| **DB Query** | `QUERIES.getPractitionerBySlug` — returns `display_name, photo_url, bio, specializations, certification, slug, client_count` |
+| **Test Elements** | `tests/practitioner-og.test.js` — 17 tests: SVG structure (11 — dimensions, name, bio truncation, specialization slicing, XSS escaping, cert badge, branding), handler contract (6 — invalid slug, empty slug, 200 flow, KV hit, KV put, 404 not found) |
+| **Analytical Elements** | Event: `practitioner_og_generated` (per slug, on cache miss) |
+| **Key Code** | `escapeXml()` on all user content. Bio capped at 110 chars. Specializations: `slice(0,3).join(' · ')`. KV cache key: `og:practitioner:v1:{slug}`, TTL 86400s. Slug validation: `/^[a-z0-9-]{1,80}$/`. |
+
+---
+
 ### Feature: Post-Onboarding Activation Checklist
 
 | Attribute | Details |

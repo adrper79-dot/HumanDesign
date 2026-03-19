@@ -1,7 +1,7 @@
 {
   "version": "v5-practitioner-revision",
   "createdAt": "2026-03-18T00:00:00.000Z",
-  "updatedAt": "2026-03-19T03:58:28.735Z",
+  "updatedAt": "2026-03-19T11:30:44.000Z",
   "phases": [
     {
       "id": 0,
@@ -1862,11 +1862,37 @@
           "title": "Per-Practitioner OG Images",
           "phase": 4,
           "type": "backend",
-          "status": "pending",
+          "status": "complete",
           "currentStage": null,
-          "stages": {},
-          "startedAt": null,
-          "completedAt": null,
+          "stages": {
+            "prep": {
+              "status": "pass",
+              "timestamp": "2026-03-19T11:30:43.455Z",
+              "details": "Context gathered"
+            },
+            "install": {
+              "status": "pass",
+              "timestamp": "2026-03-19T11:30:43.607Z",
+              "details": "0 files modified"
+            },
+            "validate": {
+              "status": "pass",
+              "timestamp": "2026-03-19T11:30:43.696Z",
+              "details": "Tests passed"
+            },
+            "observe": {
+              "status": "pass",
+              "timestamp": "2026-03-19T11:30:43.789Z",
+              "details": "Analytics wired"
+            },
+            "document": {
+              "status": "pass",
+              "timestamp": "2026-03-19T11:30:43.905Z",
+              "details": "Updated: docs"
+            }
+          },
+          "startedAt": "2026-03-19T11:30:43.381Z",
+          "completedAt": "2026-03-19T11:30:43.999Z",
           "failureReason": null,
           "dependsOn": null,
           "context": {

@@ -301,6 +301,54 @@ export function generateAchievementShareImage(achievement) {
 }
 
 /**
+ * Generate per-practitioner OG image (1200×630 SVG)
+ * @param {Object} practitioner - Practitioner directory record
+ * @returns {string} Raw SVG XML (serve as image/svg+xml)
+ */
+export function generatePractitionerOGImage(practitioner) {
+  const name = escapeXml(practitioner.display_name || 'Prime Self Practitioner');
+  const bio = escapeXml((practitioner.bio || '').substring(0, 110));
+  const specializations = Array.isArray(practitioner.specializations) ? practitioner.specializations : [];
+  const specialty = escapeXml(specializations.slice(0, 3).join(' · ') || 'Human Design Practitioner');
+  const cert = escapeXml(practitioner.certification || '');
+  const certBadge = cert ? `<text x="60" y="578" font-family="Arial,sans-serif" font-size="20" fill="#a78bfa">${cert}</text>` : '';
+
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1a1040;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="6" height="630" fill="url(#accent)"/>
+  <!-- Top label -->
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="#7c3aed" letter-spacing="3">PRIME SELF PRACTITIONER</text>
+  <!-- Practitioner name -->
+  <text x="60" y="200" font-family="Arial,sans-serif" font-size="72" font-weight="bold" fill="#ffffff">${name}</text>
+  <!-- Specialty pills row -->
+  <text x="60" y="270" font-family="Arial,sans-serif" font-size="28" fill="#a78bfa">${specialty}</text>
+  <!-- Divider line -->
+  <line x1="60" y1="310" x2="1140" y2="310" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.4"/>
+  <!-- Bio text (truncated) -->
+  <text x="60" y="360" font-family="Arial,sans-serif" font-size="26" fill="#cbd5e0">${bio}</text>
+  <!-- Certification badge -->
+  ${certBadge}
+  <!-- Bottom branding -->
+  <text x="1140" y="578" font-family="Arial,sans-serif" font-size="22" fill="#4a5568" text-anchor="end">selfprime.net</text>
+  <!-- Decorative circle -->
+  <circle cx="1080" cy="180" r="200" fill="none" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.15"/>
+  <circle cx="1080" cy="180" r="140" fill="none" stroke="#a78bfa" stroke-width="1" stroke-opacity="0.1"/>
+</svg>`;
+}
+
+/**
  * Generate social share metadata (OG tags)
  * @param {Object} params - Share parameters
  * @returns {Object} Meta tags for HTML head

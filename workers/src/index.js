@@ -150,6 +150,7 @@ import {
   handleUpdateDirectoryProfile,
   handleGetDirectoryStats
 } from './handlers/practitioner-directory.js';
+import { handlePractitionerOGImage } from './handlers/practitioner-og.js';
 import {
   handleListNotes,
   handleCreateNote,
@@ -553,6 +554,8 @@ const PATTERN_ROUTES = [
   [/^\/api\/practitioner\/actions\/([^/]+)$/,             'PUT',  1, (req, env, id) => handleUpdateAction(req, env, id)],
   [/^\/api\/practitioner\/actions\/([^/]+)$/,             'DELETE',1, (req, env, id) => handleDeleteAction(req, env, id)],
   [/^\/api\/client\/actions\/([^/]+)\/complete$/,         'PUT',  1, (req, env, id) => handleCompleteAction(req, env, id)],
+  // Per-practitioner OG images (public, KV-cached 24h — item 4.3)
+  [/^\/api\/og\/practitioner\/([a-z0-9-]+)$/,              'GET',  1, handlePractitionerOGImage],
   // Reviews — public directory + practitioner approve/hide
   [/^\/api\/directory\/([^/]+)\/reviews$/,               'GET',  1, (req, env, slug) => handleGetPublicReviews(req, env, slug)],
   [/^\/api\/practitioner\/reviews\/([^/]+)\/approve$/,   'PUT',  1, (req, env, id) => handleApproveReview(req, env, id)],
