@@ -851,34 +851,79 @@ function captureReferralFromUrl() {
   showReferralBanner(ref);
 }
 
+// ── Referral Landing Upgrade (4.7) ── Full “Meet Practitioner” modal ────────
 async function showReferralBanner(refSlug) {
-  // Fetch practitioner name
-  let practName = 'your practitioner';
-  let bookingUrl = null;
+  let p = null;
   try {
     const data = await apiFetch(`/api/directory/${encodeURIComponent(refSlug)}`);
-    if (data?.practitioner?.display_name) {
-      practName = data.practitioner.display_name;
-      bookingUrl = data.practitioner.booking_url;
-    }
+    if (data?.practitioner) p = data.practitioner;
   } catch { /* silent */ }
 
-  // Remove existing banner if any
-  document.getElementById('referral-welcome-banner')?.remove();
+  const practName     = p?.display_name || 'Your Practitioner';
+  const photoUrl      = p?.photo_url;
+  const bio           = p?.bio ? (p.bio.length > 200 ? p.bio.slice(0, 200) + '\u2026' : p.bio) : '';
+  const specs         = Array.isArray(p?.specializations) ? p.specializations.slice(0, 3) : [];
+  const certification = p?.certification || '';
+  const bookingUrl    = p?.booking_url;
 
-  const banner = document.createElement('div');
-  banner.id = 'referral-welcome-banner';
-  banner.style.cssText = 'background:var(--bg3);border-bottom:2px solid var(--gold);padding:0.75rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;position:sticky;top:0;z-index:100';
-  banner.innerHTML = `
-    <p style="margin:0;font-size:0.9rem"><strong style="color:var(--gold)">${escapeHtml(practName)}</strong> sent you here. Generate your free chart below — they can guide you through what it means in a session.</p>
-    <div style="display:flex;gap:0.5rem;flex-shrink:0">
-      ${bookingUrl && /^https?:\/\//i.test(bookingUrl) ? `<a href="${escapeAttr(bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">Book with them →</a>` : ''}
-      <button class="btn-secondary btn-sm" onclick="document.getElementById('referral-welcome-banner').remove()">×</button>
+  trackEvent('referral', 'referral_landing_viewed', refSlug);
+
+  document.getElementById('referral-landing-modal')?.remove();
+
+  const avatarHtml = photoUrl && /^https?:\/\//i.test(photoUrl)
+    ? `<img src="${escapeAttr(photoUrl)}" alt="${escapeAttr(practName)}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);display:block;margin:0 auto" loading="lazy">`
+    : `<div aria-hidden="true" style="width:88px;height:88px;border-radius:50%;background:var(--bg3);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:2rem;color:var(--gold)">${escapeHtml(practName.charAt(0).toUpperCase())}</div>`;
+
+  const certHtml = certification
+    ? `<p style="text-align:center;margin:0.25rem 0"><span style="display:inline-block;background:var(--bg3);border:1px solid var(--gold);border-radius:20px;padding:2px 10px;font-size:0.7rem;color:var(--gold)">${escapeHtml(certification)}</span></p>`
+    : '';
+
+  const specPills = specs
+    .map(s => `<span style="display:inline-block;background:var(--bg3);border-radius:12px;padding:2px 10px;font-size:0.75rem;margin:2px">${escapeHtml(s)}</span>`)
+    .join('');
+  const specHtml = specPills ? `<div style="text-align:center;margin:0.5rem 0">${specPills}</div>` : '';
+
+  const bioHtml = bio
+    ? `<p style="color:var(--text-dim);font-size:0.9rem;text-align:center;margin:0.75rem 0">${escapeHtml(bio)}</p>`
+    : '';
+
+  const bookBtnHtml = bookingUrl && /^https?:\/\//i.test(bookingUrl)
+    ? `<a href="${escapeAttr(bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn-secondary" id="ref-book-btn" style="display:block;text-align:center;text-decoration:none;margin-top:0.5rem">Book a Session with ${escapeHtml(practName)} →</a>`
+    : '';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'referral-landing-modal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', `Meet ${practName}`);
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border-radius:16px;padding:2rem;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;position:relative">
+      <button id="ref-close-x" style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1.25rem;line-height:1" aria-label="Close">×</button>
+      ${avatarHtml}
+      <h2 style="text-align:center;margin:0.75rem 0 0;color:var(--gold)">${escapeHtml(practName)}</h2>
+      ${certHtml}
+      ${specHtml}
+      ${bioHtml}
+      <p style="text-align:center;font-size:0.8rem;color:var(--text-dim);margin:0.5rem 0 1.25rem">Referred by <strong>${escapeHtml(practName)}</strong></p>
+      <button id="ref-cta-btn" class="btn-primary" style="width:100%">Get Your Free Chart →</button>
+      ${bookBtnHtml}
+      <p style="text-align:center;margin-top:1rem"><button id="ref-maybe-btn" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.85rem">Maybe Later</button></p>
     </div>`;
 
-  // Insert at top of main content area
-  const main = document.querySelector('main') || document.querySelector('.app-main') || document.body;
-  main.insertBefore(banner, main.firstChild);
+  document.body.appendChild(overlay);
+
+  const close = () => document.getElementById('referral-landing-modal')?.remove();
+  overlay.querySelector('#ref-close-x').addEventListener('click', close);
+  overlay.querySelector('#ref-maybe-btn').addEventListener('click', close);
+  overlay.querySelector('#ref-cta-btn').addEventListener('click', () => {
+    trackEvent('referral', 'referral_landing_converted', refSlug);
+    close();
+    const chartSection = document.getElementById('chart-section')
+      || document.querySelector('[data-section="chart"]')
+      || document.querySelector('.chart-form');
+    chartSection?.scrollIntoView({ behavior: 'smooth' });
+  });
 }
 
 // Phase 2C: Check and show referral prompt after chart rendering
