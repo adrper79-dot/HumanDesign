@@ -3151,10 +3151,15 @@ function renderChart(data) {
 
   // Interactive Bodygraph (Phase 7)
   const _bgId = 'bodygraph-' + Date.now();
+  const _bgLabel = escapeAttr((chart.type || 'chart') + '-' + (chart.profile || '').replace('/', '-'));
   html += `<div class="section-header">Your Energy Chart <span class="icon-info help-icon" title="Click any center or channel line to learn what it means in your design"></span></div>
   <div class="card" style="padding:var(--space-4);text-align:center">
     <div id="${_bgId}" style="min-height:420px"></div>
     <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-2)">Tap a center or channel to explore</div>
+    <div style="display:flex;justify-content:center;gap:var(--space-2);margin-top:var(--space-3)">
+      <button class="btn-secondary btn-sm" data-action="downloadBodygraph" data-arg0="${_bgId}" data-arg1="${_bgLabel}" title="Save your bodygraph as a PNG image">⬇ Download Chart</button>
+      <button class="btn-secondary btn-sm" data-action="shareBodygraph" title="Share your design as a Blueprint Card">⬆ Share Chart</button>
+    </div>
   </div>`;
   // Deferred render after DOM insertion
   setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_bgId, chart); }, 50);
@@ -5460,6 +5465,58 @@ function downloadPractitionerQR() {
   trackEvent('practitioner', 'qr_downloaded', 'referral_card');
 }
 window.downloadPractitionerQR = downloadPractitionerQR;
+
+// ── Bodygraph Chart Export (4.2) ──────────────────────────────
+function downloadBodygraph(containerId, label) {
+  const container = containerId ? document.getElementById(containerId) : document.querySelector('[id^="bodygraph-"]');
+  const svgEl = container?.querySelector('svg');
+  if (!svgEl) return;
+  const filename = 'prime-self-bodygraph-' + (label || 'chart') + '.png';
+  try {
+    const svgStr = new XMLSerializer().serializeToString(svgEl);
+    const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
+    const img = new Image();
+    img.onload = function () {
+      const scale = 2; // 2× for high-DPI
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth * scale;
+      canvas.height = img.naturalHeight * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#0f0f1a';
+      ctx.fillRect(0, 0, img.naturalWidth, img.naturalHeight);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(function (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        trackEvent('chart', 'bodygraph_exported', 'download');
+      }, 'image/png');
+    };
+    img.onerror = function () { showNotification('Export failed — try again', 'error'); };
+    img.src = dataUrl;
+  } catch (e) {
+    showNotification('Export not supported in this browser', 'error');
+  }
+}
+window.downloadBodygraph = downloadBodygraph;
+
+function shareBodygraph() {
+  const chart = window._lastChart;
+  if (!chart) { showNotification('Load your chart first', 'error'); return; }
+  if (typeof window.showShareCard === 'function') {
+    window.showShareCard(chart);
+    trackEvent('chart', 'bodygraph_shared', 'share_card');
+  } else {
+    showNotification('Share card not available', 'error');
+  }
+}
+window.shareBodygraph = shareBodygraph;
 
 // ── Practitioner Earnings Card (ITEM-1.8) ─────────────────────
 function renderPractitionerEarnings(data) {

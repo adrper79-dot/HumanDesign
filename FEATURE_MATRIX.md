@@ -713,6 +713,24 @@
 
 ---
 
+### Feature: Bodygraph Chart Export
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Bodygraph Chart Export (PNG Download + Share Card) |
+| **Permission Level** | AUTHENTICATED; any tier with chart access |
+| **Workflow Position** | Chart result view — action bar beneath rendered bodygraph |
+| **Purpose** | Let any user download their bodygraph as a full-quality PNG and open the Share Card for social sharing. Two-button action bar appears immediately after chart render. |
+| **Files** | `frontend/js/app.js` (`renderChart` — added export buttons; `downloadBodygraph` — SVG→Canvas→PNG pipeline; `shareBodygraph` — delegates to `showShareCard`) |
+| **Workflow Step** | 1. User receives chart → `renderChart()` injects `<div id="bodygraph-{ts}">` + export buttons (⬇ Download PNG, ⬆ Share Chart) → 2. Click "⬇ Download PNG" → event delegation calls `downloadBodygraph(containerId, label)` → 3. `document.getElementById(containerId).querySelector('svg')` retrieves SVG → 4. `XMLSerializer().serializeToString(svgEl)` → base64 data URL → `<img onload>` → 5. Canvas drawn at 2× scale with `#0f0f1a` fill → `canvas.toBlob()` → `URL.createObjectURL()` → `<a download>` click → 6. `trackEvent('chart', 'bodygraph_exported', 'download')` → OR: Click "⬆ Share Chart" → `shareBodygraph()` checks `window._lastChart`, calls `window.showShareCard(chart)` → `trackEvent('chart', 'bodygraph_shared', 'share_card')` |
+| **API Endpoints** | None — purely client-side |
+| **Frontend Components** | `⬇ Download PNG` button: `data-action="downloadBodygraph" data-arg0="{bgId}" data-arg1="{bgLabel}"` — `⬆ Share Chart` button: `data-action="shareBodygraph"` |
+| **Test Elements** | `tests/bodygraph-export.test.js` — 10 tests: filename generation (2), SVG serialization round-trip (2), blob download flow (2), shareBodygraph analytics (1), error states — no chart (1), no showShareCard (1), undefined showShareCard (1) |
+| **Analytical Elements** | Events: `bodygraph_exported` (on download, category=chart, label=download), `bodygraph_shared` (on share card open, label=share_card) |
+| **Key Code** | Canvas: 2× scale, `ctx.fillStyle='#0f0f1a'` before `drawImage`. Filename: `prime-self-bodygraph-{type}-{profile}.png`. `window._lastChart` used by `shareBodygraph`. |
+
+---
+
 ### Feature: Post-Onboarding Activation Checklist
 
 | Attribute | Details |
