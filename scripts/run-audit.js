@@ -21,6 +21,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs';
 import { resolve, join }    from 'path';
 
 import { collectTestResults }       from './collectors/test-results.js';
+import { collectReleaseGate }       from './collectors/release-gate.js';
 import { collectCloudflareMetrics } from './collectors/cloudflare-metrics.js';
 import { collectAppMetrics }        from './collectors/app-metrics.js';
 import { collectCodeQuality }       from './collectors/code-quality.js';
@@ -64,8 +65,9 @@ async function main() {
 
   // ── Collect all data in parallel ──
   console.log('[Audit] Collecting data...');
-  const [testResults, cfMetrics, appMetrics, codeQuality, knownIssues] = await Promise.all([
+  const [testResults, releaseGate, cfMetrics, appMetrics, codeQuality, knownIssues] = await Promise.all([
     collectTestResults()       .catch(e => ({ error: e.message })),
+    collectReleaseGate()       .catch(e => ({ ok: false, error: e.message, results: [] })),
     collectCloudflareMetrics() .catch(e => ({ available: false, reason: e.message })),
     collectAppMetrics()        .catch(e => ({ available: false, reason: e.message })),
     collectCodeQuality()       .catch(e => ({ error: e.message })),
@@ -75,10 +77,13 @@ async function main() {
   const handlerContent = collectHandlerFiles();
 
   console.log(`[Audit] Tests: ${testResults.passed}/${testResults.total} passed, ${testResults.failed} failed`);
+  const browserSmoke = releaseGate?.results?.find(r => r.name === 'browser smoke');
+  console.log(`[Audit] Browser Smoke: ${browserSmoke ? (browserSmoke.skipped ? 'skipped' : browserSmoke.ok ? 'passed' : 'failed') : 'unknown'}`);
   console.log(`[Audit] CF Metrics: ${cfMetrics.available ? `${cfMetrics.totalRequests} reqs, ${cfMetrics.errorRatePct}% errors` : 'unavailable'}`);
   console.log(`[Audit] App Metrics: ${appMetrics.available ? `DAU=${appMetrics.dau}` : 'unavailable'}`);
   console.log(`[Audit] Code Quality: ${codeQuality.summary?.totalFindings ?? 'error'} findings`);
-  console.log(`[Audit] Known Issues: ${knownIssues.issues?.length ?? 0} open issues from previous audits`);
+  console.log(`[Audit] Current Open Issues: ${knownIssues.currentIssues?.length ?? 0} from issue registry`);
+  console.log(`[Audit] Historical Issue References: ${knownIssues.historicalIssues?.length ?? 0}`);
 
   let auditReport = null;
   let newIssues   = [];
@@ -92,7 +97,11 @@ async function main() {
   }
 
   // ── Update issue registry ──
-  const { merged, delta } = mergeIssues(registry.issues, newIssues, TODAY);
+  // Vitals-only runs do not produce a fresh AI issue set, so they must not
+  // auto-resolve existing open issues by merging against an empty array.
+  const { merged, delta } = runFull
+    ? mergeIssues(registry.issues, newIssues, TODAY)
+    : { merged: registry.issues, delta: { new: 0, resolved: 0, regressions: 0 } };
   const counts = countBySeverity(merged, 'open');
 
   const runRecord = {
@@ -123,7 +132,7 @@ async function main() {
 
   const outputPath = resolve(AUDITS_DIR, filename);
   const outputMd   = buildMarkdown({
-    runFull, mode, TODAY, testResults, cfMetrics, appMetrics, codeQuality,
+    runFull, mode, TODAY, testResults, releaseGate, cfMetrics, appMetrics, codeQuality,
     knownIssues, auditReport, counts, delta, runRecord,
   });
 
@@ -260,11 +269,11 @@ function collectHandlerFiles() {
   return files;
 }
 
-function buildAuditPrompt({ testResults, cfMetrics, appMetrics, codeQuality, knownIssues, handlerContent, registry, mode }) {
+function buildAuditPrompt({ testResults, cfMetrics, appMetrics, codeQuality, knownIssues, handlerContent, registry, mode, releaseGate }) {
   const prevIssues = registry.issues.filter(i => i.status === 'open').slice(0, MAX_REGISTRY_ISSUES_IN_PROMPT);
 
   // Summarise known issues for the prompt (keep size in check)
-  const knownIssuesSummary = (knownIssues?.issues || []).slice(0, MAX_KNOWN_ISSUES_IN_PROMPT)
+  const knownIssuesSummary = (knownIssues?.historicalIssues || []).slice(0, MAX_KNOWN_ISSUES_IN_PROMPT)
     .map(i => `- [${i.severity}] ${i.title} (${i.source})`)
     .join('\n') || '(none)';
 
@@ -283,6 +292,9 @@ Current audit mode: ${mode}
 ### Test Results
 ${JSON.stringify(testResults, null, 2)}
 
+### Release Gate Status
+${JSON.stringify(releaseGate, null, 2)}
+
 ### Cloudflare Worker Metrics (last 7 days)
 ${JSON.stringify(cfMetrics, null, 2)}
 
@@ -292,7 +304,7 @@ ${JSON.stringify(appMetrics, null, 2)}
 ### Code Quality Scan
 ${JSON.stringify(codeQuality?.summary, null, 2)}
 
-### Known Issues from Previous Audits (open)
+### Historical Findings Reference
 ${knownIssuesSummary}
 
 ### Currently Open Issues from Registry
@@ -375,11 +387,23 @@ Every issue MUST include "status": "open".`;
 
 // ─── Markdown Builder ────────────────────────────────────────────────
 
-function buildMarkdown({ runFull, mode, TODAY, testResults, cfMetrics, appMetrics,
+function buildMarkdown({ runFull, mode, TODAY, testResults, releaseGate, cfMetrics, appMetrics,
                          codeQuality, knownIssues, auditReport, counts, delta, runRecord }) {
+  const browserSmoke = releaseGate?.results?.find(r => r.name === 'browser smoke');
+  const browserSmokeStatus = browserSmoke
+    ? browserSmoke.skipped
+      ? `skipped${browserSmoke.stderr ? ` — ${browserSmoke.stderr}` : ''}`
+      : browserSmoke.ok
+        ? 'passed'
+        : 'failed'
+    : releaseGate?.error
+      ? `error — ${releaseGate.error}`
+      : 'unknown';
+
   const header = `# Full Audit — ${TODAY}
 **Mode:** ${mode} | **Full AI Audit:** ${runFull ? 'Yes' : 'No'}
 **Tests:** ${testResults.passed}/${testResults.total} passing${testResults.failed > 0 ? ` — ⚠ ${testResults.failed} FAILING` : ''}
+**Browser Smoke:** ${browserSmokeStatus}
 **Open Issues:** P0: ${counts.P0} | P1: ${counts.P1} | P2: ${counts.P2}
 
 ---
@@ -390,6 +414,13 @@ function buildMarkdown({ runFull, mode, TODAY, testResults, cfMetrics, appMetric
   const testSection = `## Test Results
 \`\`\`json
 ${JSON.stringify(testResults, null, 2)}
+\`\`\`
+
+`;
+
+  const releaseGateSection = `## Release Gate Status
+\`\`\`json
+${JSON.stringify(releaseGate, null, 2)}
 \`\`\`
 
 `;
@@ -405,9 +436,16 @@ ${JSON.stringify(codeQuality?.summary, null, 2)}
 ${topFindings ? '\n### Top Findings\n\n' + topFindings + '\n' : ''}
 `;
 
-  const knownIssuesSection = `## Known Issues Baseline
+  const currentIssuesSection = `## Current Open Issues (Registry)
 \`\`\`json
-${JSON.stringify(knownIssues?.issues || [], null, 2)}
+${JSON.stringify(knownIssues?.currentIssues || [], null, 2)}
+\`\`\`
+
+`;
+
+  const historicalIssuesSection = `## Historical Findings Reference
+\`\`\`json
+${JSON.stringify(knownIssues?.historicalIssues || [], null, 2)}
 \`\`\`
 
 `;
@@ -480,7 +518,7 @@ ${JSON.stringify({ new: delta.new, resolved: delta.resolved, regressions: delta.
 *Generated by Prime Self Audit Bot on ${new Date().toISOString()}*
 `;
 
-  return header + testSection + codeQualitySection + knownIssuesSection + cfSection + aiContent + deltaSection + footer;
+  return header + testSection + releaseGateSection + codeQualitySection + currentIssuesSection + historicalIssuesSection + cfSection + aiContent + deltaSection + footer;
 }
 
 // ─── Run ─────────────────────────────────────────────────────────────

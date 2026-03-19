@@ -29,7 +29,7 @@
         {
           '@type': 'Product',
           name: 'Prime Self Agency',
-          description: 'Up to 5 practitioner seats, 2000 AI syntheses per month, white-label portal, API access, custom webhooks.',
+          description: 'Up to 5 practitioner seats, 2000 AI syntheses per month, with white-label portal, API access, custom webhooks, and dedicated support email coming soon.',
           offers: { '@type': 'Offer', price: '349', priceCurrency: 'USD', billingIncrement: 'Monthly' }
         }
       ]

@@ -1,13 +1,28 @@
-# Backlog Summary — March 17, 2026
+# Backlog Summary — March 19, 2026
 
-## Current State: **0 Open Items**
+## Current State: **1 Open Item**
 
 | Status | Count | Details |
 |--------|-------|---------|
-| **Open** | **0** | ✅ All items resolved or deferred |
+| **Open** | **1** | Release-gate reliability in Playwright auth/onboarding coverage |
 | **Resolved** | 11 | Completed in Cycle 11 (9) + Cycle 12 (2) |
 | **Deferred** | 13 | P3 architecture (8) + ops/infra (5) |
-| **Total** | 24 | |
+| **Total** | 25 | |
+
+---
+
+## Open Items (1)
+
+1. **BL-TEST-P1-2** — Release gate drift between onboarding timing and Playwright auth smoke
+
+---
+
+## Resolved This Intake
+
+1. **BL-OPS-P1-3** — Vitals output now separates current registry issues from historical references, and vitals-only runs no longer auto-resolve open issues
+2. **BL-SEC-P1-4** — Admin token persistence removed from browser storage; admin session is now memory-only in the frontend
+3. **BL-BILLING-P1-2** — Agency JSON-LD now matches the visible pricing page and marks unfinished capabilities as coming soon
+4. **BL-DOCS-P1-2** — Audited public referral, gift, share, and Terms copy now uses Energy Blueprint and Agency naming
 
 ---
 
@@ -61,10 +76,9 @@ Baseline maintained throughout all cycles. No regressions on UI/UX changes.
 
 ## Next Steps
 
-1. **P1-1 deployment validation**: Confirm no conflicts from overlapping sessions
-2. **Synthetic monitoring proof**: Validate BL-S20-H2 `emitDegradeEvent()` fires in production
-3. **P3 refactoring cadence**: Schedule app.js + CSS module extraction (2–3 cycle effort)
+1. **Close the final gate issue**: verify BL-TEST-P1-2 with browser execution using env-backed auth credentials
+2. **Rerun vitals after Playwright verification**: leave the backlog at zero open items only after the final browser gate passes cleanly
 
 ---
 
-**Status**: 🟢 **Ready for deployment** — All active work items complete, deferred items explicit.
+**Status**: 🟠 **Hardening loop active** — deployment should remain gated until the final release-gate issue is verified and closed.

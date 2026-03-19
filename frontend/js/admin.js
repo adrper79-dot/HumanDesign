@@ -16,13 +16,13 @@ function doLogin() {
   const t = document.getElementById('login-token').value.trim();
   if (!t) return toast('Enter your admin token', 'err');
   ADMIN_TOKEN = t;
-  localStorage.setItem('ps_admin_token', t);
+  document.getElementById('login-token').value = '';
   init();
 }
 
 function signOut() {
-  localStorage.removeItem('ps_admin_token');
   ADMIN_TOKEN = '';
+  document.getElementById('login-token').value = '';
   document.getElementById('login').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
@@ -36,8 +36,6 @@ function init() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('ps_admin_token');
-  if (saved) { ADMIN_TOKEN = saved; init(); }
   document.getElementById('login-token').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
@@ -45,6 +43,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // ─── API fetch wrapper ─────────────────────────────────────
 async function api(path, opts = {}) {
+  if (!ADMIN_TOKEN) {
+    signOut();
+    throw new Error('Admin session expired. Sign in again.');
+  }
   const res = await fetch(API + path, {
     ...opts,
     headers: {

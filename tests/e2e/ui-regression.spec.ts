@@ -1,5 +1,9 @@
 import { test, expect, Page } from '@playwright/test';
 
+const PROD_BASE_URL = process.env.PLAYWRIGHT_BASE_URL || process.env.TEST_BASE_URL || 'https://selfprime.net/';
+const E2E_EMAIL = process.env.E2E_TEST_EMAIL || process.env.E2E_EMAIL || '';
+const E2E_PASSWORD = process.env.E2E_TEST_PASSWORD || process.env.E2E_PASSWORD || '';
+
 /**
  * UI REGRESSION TEST PACK — HumanDesign / Prime Self
  * 
@@ -38,6 +42,45 @@ async function bypassFirstRun(page: Page) {
   });
 }
 
+async function clearFirstRun(page: Page) {
+  await page.addInitScript(() => {
+    try {
+      localStorage.removeItem('primeself_frm_seen');
+      localStorage.removeItem('ps_hasSeenOnboarding');
+    } catch { /* ignore */ }
+  });
+}
+
+async function openHome(page: Page) {
+  await page.goto(PROD_BASE_URL);
+  await page.waitForLoadState('networkidle');
+}
+
+async function ensureFirstRunDismissed(page: Page) {
+  await page.waitForTimeout(1000);
+
+  const modal = page.locator('#first-run-modal');
+  const isVisible = await modal.isVisible({ timeout: 250 }).catch(() => false);
+  if (!isVisible) return;
+
+  await page.evaluate(() => {
+    try {
+      localStorage.setItem('primeself_frm_seen', '1');
+      localStorage.setItem('ps_hasSeenOnboarding', '1');
+    } catch { /* ignore */ }
+
+    if (typeof window.frmClose === 'function') {
+      window.frmClose();
+      return;
+    }
+
+    const overlay = document.getElementById('first-run-modal');
+    if (overlay) overlay.style.display = 'none';
+  });
+
+  await expect(modal).toBeHidden({ timeout: 3000 });
+}
+
 /**
  * Dismiss modal if present (first-run, pricing, auth overlays)
  */
@@ -55,6 +98,7 @@ async function dismissAnyDialog(page: Page, timeout = 3000) {
  * Login with credentials
  */
 async function login(page: Page, email: string, password: string) {
+  await ensureFirstRunDismissed(page);
   await page.click('#authBtn');
   await page.fill('#authEmail', email);
   await page.fill('#authPassword', password);
@@ -112,21 +156,22 @@ async function closeMobileSidebar(page: Page) {
 
 test.describe('AUTH-001: Login Flow', () => {
   test('should log in with valid credentials', async ({ page }) => {
+    test.skip(!E2E_EMAIL || !E2E_PASSWORD, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set for auth smoke tests.');
     await bypassFirstRun(page);
-    await page.goto('https://selfprime.net/');
+    await openHome(page);
     await dismissAnyDialog(page);
 
-    await login(page, 'adrper79@gmail.com', '123qweASD');
+    await login(page, E2E_EMAIL, E2E_PASSWORD);
 
     // Verify logged-in state
-    await expect(page.locator('#authStatusText')).toContainText('adrper79', { timeout: 5000 });
+    await expect(page.locator('#authStatusText')).not.toContainText('Not signed in', { timeout: 5000 });
     await expect(page.locator('#tierBadge')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('#logoutBtn')).toBeVisible({ timeout: 5000 });
   });
 
   test('should show error on invalid email', async ({ page }) => {
     await bypassFirstRun(page);
-    await page.goto('https://selfprime.net/');
+    await openHome(page);
     await dismissAnyDialog(page);
 
     await page.click('#authBtn');
@@ -142,12 +187,13 @@ test.describe('AUTH-001: Login Flow', () => {
   });
 
   test('should show error on invalid password', async ({ page }) => {
+    test.skip(!E2E_EMAIL, 'E2E_TEST_EMAIL must be set for auth validation tests.');
     await bypassFirstRun(page);
-    await page.goto('https://selfprime.net/');
+    await openHome(page);
     await dismissAnyDialog(page);
 
     await page.click('#authBtn');
-    await page.fill('#authEmail', 'adrper79@gmail.com');
+    await page.fill('#authEmail', E2E_EMAIL);
     await page.fill('#authPassword', 'wrongpassword');
     await page.click('#authSubmit');
 
@@ -157,7 +203,7 @@ test.describe('AUTH-001: Login Flow', () => {
 
   test('should require email and password fields', async ({ page }) => {
     await bypassFirstRun(page);
-    await page.goto('https://selfprime.net/');
+    await openHome(page);
     await dismissAnyDialog(page);
 
     await page.click('#authBtn');
@@ -171,11 +217,12 @@ test.describe('AUTH-001: Login Flow', () => {
 
 test.describe('AUTH-002: Logout Flow', () => {
   test('should log out and return to sign-in state', async ({ page }) => {
+    test.skip(!E2E_EMAIL || !E2E_PASSWORD, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set for auth smoke tests.');
     await bypassFirstRun(page);
-    await page.goto('https://selfprime.net/');
+    await openHome(page);
     await dismissAnyDialog(page);
 
-    await login(page, 'adrper79@gmail.com', '123qweASD');
+    await login(page, E2E_EMAIL, E2E_PASSWORD);
     await expect(page.locator('#logoutBtn')).toBeVisible({ timeout: 5000 });
 
     // Logout
@@ -190,13 +237,14 @@ test.describe('AUTH-002: Logout Flow', () => {
 
 test.describe('AUTH-003: Session Persistence', () => {
   test('should maintain session across page reload', async ({ page }) => {
+    test.skip(!E2E_EMAIL || !E2E_PASSWORD, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set for auth smoke tests.');
     await bypassFirstRun(page);
-    await page.goto('https://selfprime.net/');
+    await openHome(page);
     await dismissAnyDialog(page);
 
     // Login
-    await login(page, 'adrper79@gmail.com', '123qweASD');
-    await expect(page.locator('#authStatusText')).toContainText('adrper79', { timeout: 5000 });
+    await login(page, E2E_EMAIL, E2E_PASSWORD);
+    await expect(page.locator('#authStatusText')).not.toContainText('Not signed in', { timeout: 5000 });
 
     // Reload page
     await page.reload();
@@ -394,30 +442,27 @@ test.describe('NAV-003: Tab State & Active Indicators', () => {
 
 test.describe('ONBOARD-001: First-Run Modal Flow', () => {
   test('should show welcome modal on first visit', async ({ page }) => {
-    // Don't pre-seed localStorage
-    await page.goto('https://selfprime.net/');
-    await page.waitForLoadState('networkidle');
+    await clearFirstRun(page);
+    await openHome(page);
+    await page.waitForTimeout(1000);
 
-    const modal = page.getByRole('dialog');
-    // Modal might appear — check if it's there
-    const isVisible = await modal.isVisible({ timeout: 3000 }).catch(() => false);
-    // This is soft expectation — modal may be hidden by pre-seeding
-    expect(isVisible || true).toBeTruthy();
+    const modal = page.locator('#first-run-modal');
+    await expect(modal).toBeVisible({ timeout: 5000 });
   });
 
   test('should skip first-run modal', async ({ page }) => {
-    await page.goto('https://selfprime.net/');
-    await page.waitForLoadState('networkidle');
+    await clearFirstRun(page);
+    await openHome(page);
+    await page.waitForTimeout(1000);
 
-    // Find and click skip
-    const skipBtn = page.locator('button:has-text(/skip|continue|maybe later/i)').first();
-    if (await skipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await skipBtn.click();
-      
-      // Modal should close
-      const modal = page.getByRole('dialog');
-      await expect(modal).not.toBeVisible({ timeout: 3000 }).catch(() => true);
-    }
+    const modal = page.locator('#first-run-modal');
+    await expect(modal).toBeVisible({ timeout: 5000 });
+
+    const skipBtn = page.locator('#first-run-modal .frm-skip-btn');
+    await expect(skipBtn).toBeVisible({ timeout: 3000 });
+    await skipBtn.click();
+
+    await expect(modal).toBeHidden({ timeout: 3000 });
   });
 });
 

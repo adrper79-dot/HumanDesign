@@ -3,7 +3,14 @@
  * Reads previous audit files and extracts open/unresolved issues as a
  * structured baseline for the Known Issues section.
  *
- * Returns: { issues: Array<{ id, title, severity, status, source }> }
+ * Returns:
+ * {
+ *   issues: Array<{ id, title, severity, status, source }>,
+ *   currentIssues: Array<{ id, title, severity, status, source }>,
+ *   historicalIssues: Array<{ id, title, severity, status, source }>,
+ *   totalHistoricalRaw: number,
+ *   sources: Record<string, string | number>
+ * }
  */
 
 import { existsSync, readFileSync } from 'fs';
@@ -97,40 +104,39 @@ function extractFromMarkdown(content, sourceName, counter) {
 }
 
 export async function collectKnownIssues() {
-  const issues = [];
   const counter = { value: 0 };  // shared counter for unique IDs across all sources
 
   // 1. Primary source — live issue registry
   const registryIssues = extractFromRegistry();
-  issues.push(...registryIssues);
+  const historicalIssues = [];
 
   // 2. Production Bug Report
   const bugReport = readSafe(resolve(AUDITS_DIR, 'PRODUCTION_BUG_REPORT_2026-03-11.md'));
   if (bugReport) {
-    issues.push(...extractFromMarkdown(bugReport, 'PRODUCTION_BUG_REPORT', counter));
+    historicalIssues.push(...extractFromMarkdown(bugReport, 'PRODUCTION_BUG_REPORT', counter));
   }
 
   // 3. Tier / Billing / White-Label Audit
   const tierAudit = readSafe(resolve(AUDITS_DIR, 'TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md'));
   if (tierAudit) {
-    issues.push(...extractFromMarkdown(tierAudit, 'TIER_BILLING_AUDIT', counter));
+    historicalIssues.push(...extractFromMarkdown(tierAudit, 'TIER_BILLING_AUDIT', counter));
   }
 
   // 4. Workers Audit Report (first 80 lines)
   const workersAudit = readSafe(resolve(AUDITS_DIR, 'WORKERS_AUDIT_REPORT.md'), 80);
   if (workersAudit) {
-    issues.push(...extractFromMarkdown(workersAudit, 'WORKERS_AUDIT', counter));
+    historicalIssues.push(...extractFromMarkdown(workersAudit, 'WORKERS_AUDIT', counter));
   }
 
   // 5. Root BACKLOG.md (first 100 lines) if it exists
   const backlog = readSafe(resolve(process.cwd(), 'BACKLOG.md'), 100);
   if (backlog) {
-    issues.push(...extractFromMarkdown(backlog, 'BACKLOG', counter));
+    historicalIssues.push(...extractFromMarkdown(backlog, 'BACKLOG', counter));
   }
 
-  // Deduplicate by title (keep first occurrence)
+  // Deduplicate historical references by title (keep first occurrence)
   const seen = new Set();
-  const deduped = issues.filter(i => {
+  const dedupedHistorical = historicalIssues.filter(i => {
     const key = i.title.slice(0, DEDUP_KEY_LENGTH).toLowerCase();
     if (seen.has(key)) return false;
     seen.add(key);
@@ -138,8 +144,10 @@ export async function collectKnownIssues() {
   });
 
   return {
-    issues: deduped.slice(0, MAX_KNOWN_ISSUES),
-    totalRaw: issues.length,
+    issues: registryIssues,
+    currentIssues: registryIssues,
+    historicalIssues: dedupedHistorical.slice(0, MAX_KNOWN_ISSUES),
+    totalHistoricalRaw: historicalIssues.length,
     sources: {
       registry:    registryIssues.length,
       bugReport:   bugReport  ? '✓' : 'not found',

@@ -4,7 +4,7 @@
 > **Purpose:** Single source of truth for all backlog items across sprints, audits, and defects  
 > **Organization:** By system/domain, then by priority and status  
 > **Update Frequency:** Daily during active sprints; weekly otherwise  
-> **Last Updated:** 2026-03-18
+> **Last Updated:** 2026-03-19
 
 ---
 
@@ -170,6 +170,7 @@
 | ID | Item | Status | Effort | Source |
 |----|------|--------|--------|--------|
 | **BL-BILLING-P1-1** | **Self-referral via Sybil accounts unmitigated** — Only checks `referrer.id !== user.id`. Attacker creates Account A (gets code) → Account B (applies code) → Account A claims $5. No IP, email domain, or account-age gates. | ✅ Fixed (2026-07-17) — Added IP/email domain/age checks | 2 hrs | [Deep Dive Audit 2026-07-18](audits/AUDIT_REMEDIATION_LOG.md) |
+| **BL-BILLING-P1-2** | **Pricing truth mismatch between visible page and structured data** — The Agency JSON-LD description now matches the live pricing page by marking white-label portal, API access, custom webhooks, and dedicated support as coming soon instead of currently included. | ✅ Fixed (2026-03-19) | 1 hr | World-class hardening intake (2026-03-19) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -220,6 +221,7 @@
 | **BL-SEC-P1-1** | **Wildcard CORS origin with auth** — `Access-Control-Allow-Origin: '*'` allows any website to make authenticated requests with stolen tokens. Set origin to production domain or env var (allow `*` in dev only). | ✅ Fixed (2026-03-04) | — | BACKLOG.md (BL-M4) |
 | **BL-SEC-P1-2** | **Password comparison is timing-attack vulnerable** — Uses `===` string comparison which short-circuits on first mismatch. Leaks timing information about hash. Use constant-time comparison. | ✅ Fixed (2026-07-17) | — | [Deep Dive Audit](audits/AUDIT_REMEDIATION_LOG.md) |
 | **BL-SEC-P1-3** | **Admin token timing-attack vulnerable** — `provided === adminToken` in `promo.js` enables timing side-channel enumeration. Fix: constant-time comparison. | ✅ Fixed (2026-07-17) | — | [Deep Dive 2026-07-17](audits/AUDIT_REMEDIATION_LOG.md) |
+| **BL-SEC-P1-4** | **Admin console persists a long-lived admin token in localStorage** — The admin token is now memory-only in the browser, cleared on refresh and sign-out, and the login UI explicitly documents the shorter-lived session model. The server-side constant-time admin checks remain unchanged. | ✅ Fixed (2026-03-19) | 1 day | World-class hardening intake (2026-03-19) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -245,6 +247,7 @@
 |----|------|--------|--------|--------|
 | **BL-OPS-P1-1** | **No admin dashboard** — Promo codes, experiments, analytics, user management require raw API calls. No internal tools UI. | ✅ Fixed (2026-03-14) — `/admin.html` with stats, user search, promo CRUD; backend `admin.js` handler | — | MASTER_BACKLOG (PRA-OPS-003) |
 | **BL-OPS-P1-2** | **PRIME_SELF_API_SECRET is placeholder** — Value literally `REPLACE_WITH_STRONG_RANDOM_SECRET_...`. Discord Worker ↔ Main API auth uses this. | ✅ Fixed (2026-03-14) — Real secret generated and deployed | 15 min | MASTER_BACKLOG (PRA-OPS-002) |
+| **BL-OPS-P1-3** | **Operational status signals disagree across vitals, known-issues baseline, and summary scripts** — The audit output now separates live registry issues from historical references, and vitals-only runs no longer auto-resolve registry items. Summary counts, current-open sections, and loop scripts now agree on active issue totals. | ✅ Fixed (2026-03-19) | 2 hrs | World-class hardening intake (2026-03-19) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -270,6 +273,7 @@
 | ID | Item | Status | Effort | Source |
 |----|------|--------|--------|--------|
 | **BL-TEST-P1-1** | **Production gate tests incomplete** — Only 15/17 checks passing (register 500 blocker). Once fixed, should add cycles + rectify param validation tests. | ✅ Fixed (2026-03-17) — Added cycles + rectify param validation tests to `verify-money-path.js` | 20 min | [Scan 2026-03-17](audits/SCAN_2026-03-17-FRESH.md) |
+| **BL-TEST-P1-2** | **Release gate not trustworthy — onboarding timing and Playwright auth smoke are out of sync** — The app delays first-run modal display while the end-to-end pack relies on timing-sensitive dismissal around login. Release-safe auth coverage should be deterministic, env-backed, and explicitly part of the gate. | ⚠️ Pending | 1 day | World-class hardening intake (2026-03-19) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -294,6 +298,7 @@
 | ID | Item | Status | Effort | Source |
 |----|------|--------|--------|--------|
 | **BL-DOCS-P1-1** | **API documentation outdated** — 7 endpoints implemented but docs not refreshed. Coverage: 87% (46/53 documented). Gap: chart operations, SMS API. | 🔄 In Progress | 2 hrs | BACKLOG.md (BL-M1 cont.) |
+| **BL-DOCS-P1-2** | **Public terminology and legal plan naming drift remain in active customer copy** — Referral, share, gift, and Terms copy now use Energy Blueprint and Agency naming on the audited customer-facing surfaces that were still drifting. | ✅ Fixed (2026-03-19) | 2 hrs | World-class hardening intake (2026-03-19) |
 
 ### 🟡 P2 — Medium Priority
 

@@ -12,43 +12,63 @@
 
 ## 🔴 CURRENT BLOCKING ISSUES
 
-**Production deployment is blocked by ONE issue. Once fixed, production gate should pass 17/17 tests (100%).**
+**Production deployment should stay gated until the active hardening intake is closed and the release signals are trustworthy again.**
 
 | Issue | System | Status | Effort | Details |
 |------|--------|--------|--------|---------|
-| **Register 500 Error** | Backend API | 🔄 In Progress | 15 min–2 days | Payment path canary failing. Enhanced logging deployed; awaiting error details. See [BL-BACKEND-P0-1](MASTER_BACKLOG_SYSTEM_V2.md#-p0--critical-blockers) |
-| **IP/Trademark Licensing** | Security/Legal | ✅ Resolved (2026-03-17) | — | Rebranded to Energy Blueprint / Frequency Keys. See [BL-SEC-P0-1](MASTER_BACKLOG_SYSTEM_V2.md#-p0--critical-blockers-1) |
+| **Release Gate Drift** | Testing / QA | ⚠️ Pending | 1 day | Auth smoke path is timing-sensitive because first-run modal timing and Playwright bypass behavior are not a deterministic gate. Track in [BL-TEST-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#testing--quality-assurance). |
+| **Terminology + Terms Drift** | Docs / Compliance | ✅ Fixed (2026-03-19) | 2 hrs | Public share/referral copy and Terms now use Energy Blueprint and Agency naming on the audited customer-facing surfaces. See [BL-DOCS-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#documentation--guides). |
+| **Pricing Schema Drift** | Billing / Commercial | ✅ Fixed (2026-03-19) | 1 hr | Agency structured data now matches the visible pricing page and marks unfinished capabilities as coming soon. See [BL-BILLING-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#billing--payments). |
+| **Admin Token Persistence** | Security / Auth | ✅ Fixed (2026-03-19) | 1 day | Admin token persistence was removed from browser storage; admin sessions are now memory-only in the frontend. See [BL-SEC-P1-4](MASTER_BACKLOG_SYSTEM_V2.md#security--authentication). |
+| **Vitals Signal Drift** | Operations / Release | ✅ Fixed (2026-03-19) | 2 hrs | Audit header now matches current registry issues, historical findings are clearly separated, and vitals-only runs no longer auto-resolve open items. See [BL-OPS-P1-3](MASTER_BACKLOG_SYSTEM_V2.md#operations--infrastructure). |
 
 ---
 
-## ⚡ This Sprint (2026-03-17–2026-03-18)
+## ⚡ This Sprint (2026-03-19 Hardening Intake)
 
-> **Order of Operations:** Debug register error → Fix cycles/rectify endpoints → Update prod gate tests → Target 17/17 passing tests
+> **Order of Operations:** Make release gates deterministic → verify browser smoke path → rerun vitals → close the final P1
 
 ### Immediate Actions (Next 1 hour)
 
-1. **DEBUG REGISTER ERROR** — Check Cloudflare logs for detailed error (from enhanced logging deployed ~2 hours ago)
-   - **Files:** `workers/src/handlers/auth.js` (lines 334–341)
-   - **Related:** [BL-BACKEND-P0-1](MASTER_BACKLOG_SYSTEM_V2.md#-p0--critical-blockers)
-   - **Impact:** Money-path canary blocked; production deployment blocked
+1. **FIX RELEASE GATE DRIFT** — Make the login smoke path deterministic and separate onboarding coverage from auth coverage
+  - **Files:** `tests/e2e/ui-regression.spec.ts`, `frontend/js/app.js`
+  - **Related:** [BL-TEST-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#testing--quality-assurance)
+  - **Impact:** Deployment standard requires a trustworthy browser gate, not a flaky auth smoke
 
-2. **FIX CYCLES ENDPOINT** (30 min) — Param validation BEFORE auth check
-   - **File:** `workers/src/handlers/cycles.js` (reorder line 48–60)
-   - **Related:** [BL-BACKEND-P1-1](MASTER_BACKLOG_SYSTEM_V2.md#-p1--high-priority)
-   - **Same fix as:** Forecast endpoint (commit 7c4fbf7)
+2. **CLEAN PUBLIC TERMINOLOGY + TERMS** (45–60 min) — Remove stale user-facing Human Design / Studio copy where the rebrand and plan naming should already be final
+  - **Files:** `frontend/js/app.js`, `frontend/terms.html`
+  - **Related:** [BL-DOCS-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#documentation--guides)
+  - **Impact:** Commercial trust and legal hygiene
 
-3. **FIX RECTIFY ENDPOINT** (30 min) — Param validation BEFORE auth check
-   - **File:** `workers/src/handlers/rectify.js` (reorder line 94–110)
-   - **Related:** [BL-BACKEND-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#-p1--high-priority)
-   - **Same fix as:** Forecast endpoint (commit 7c4fbf7)
+3. **ALIGN PRICING PAGE + JSON-LD** (30 min) — Ensure Agency feature availability is described consistently in visible and machine-readable surfaces
+  - **Files:** `frontend/pricing.html`, `frontend/js/pricing-schema.js`
+  - **Related:** [BL-BILLING-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#billing--payments)
+  - **Impact:** Prevent inaccurate search-facing commercial claims
 
 ### Follow-Up Actions (Next 1 hour)
 
-4. **UPDATE PRODUCTION GATE TESTS** (20 min) — Add cycles + rectify param validation
-   - **File:** `workers/verify-money-path.js`
-   - **Expected result:** 17/17 tests passing (100%)
+4. **HARDEN ADMIN TOKEN HANDLING** (45–60 min) — Remove localStorage persistence from the admin console without weakening existing server-side checks
+  - **Files:** `frontend/js/admin.js`, `workers/src/handlers/admin.js`
+  - **Related:** [BL-SEC-P1-4](MASTER_BACKLOG_SYSTEM_V2.md#security--authentication)
+  - **Expected result:** No raw admin token persisted in browser storage
 
-5. **VERIFY ALL FIXES** (10 min) — Re-run `npm run verify:prod:gate:api`
+### Completed This Sprint
+
+5. **REPAIRED VITALS SIGNALS** — `run-audit.js` and `collectors/known-issues.js` now separate current registry issues from historical references, and vitals-only runs preserve open registry state instead of auto-resolving it.
+  - **Files:** `scripts/run-audit.js`, `scripts/collectors/known-issues.js`
+  - **Resolved:** [BL-OPS-P1-3](MASTER_BACKLOG_SYSTEM_V2.md#operations--infrastructure)
+
+6. **HARDENED ADMIN CONSOLE TOKEN HANDLING** — `frontend/js/admin.js` no longer stores a raw admin token in localStorage, and `frontend/admin.html` now makes the memory-only admin session explicit.
+  - **Files:** `frontend/js/admin.js`, `frontend/admin.html`
+  - **Resolved:** [BL-SEC-P1-4](MASTER_BACKLOG_SYSTEM_V2.md#security--authentication)
+
+7. **ALIGNED AGENCY PRICING SCHEMA WITH LIVE PAGE COPY** — `frontend/js/pricing-schema.js` now marks white-label portal, API access, custom webhooks, and dedicated support as coming soon.
+  - **Files:** `frontend/js/pricing-schema.js`
+  - **Resolved:** [BL-BILLING-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#billing--payments)
+
+8. **CLEANED AUDITED CUSTOMER-FACING TERMINOLOGY DRIFT** — `frontend/js/app.js` and `frontend/terms.html` now use Energy Blueprint and Agency naming on the audited referral, gift, share, and Terms surfaces.
+  - **Files:** `frontend/js/app.js`, `frontend/terms.html`
+  - **Resolved:** [BL-DOCS-P1-2](MASTER_BACKLOG_SYSTEM_V2.md#documentation--guides)
 
 ---
 

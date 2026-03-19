@@ -1049,7 +1049,7 @@ function captureGiftFromUrl() {
 
       showSimpleModal(
         '🎁 You\'ve Received a Gift!',
-        `<p style="text-align:center"><strong style="color:var(--gold)">${practName}</strong> has gifted you a free chart reading.<br>Claim it to get your personalised Human Design blueprint!</p>${msg}`,
+        `<p style="text-align:center"><strong style="color:var(--gold)">${practName}</strong> has gifted you a free chart reading.<br>Claim it to get your personalised Energy Blueprint!</p>${msg}`,
         `${redeemBtn}<button class="btn-secondary" style="margin-top:0.75rem" onclick="closeReferralModal()">Maybe Later</button>`,
       );
 
@@ -5848,21 +5848,21 @@ function renderPractitionerMarketingKit(data) {
   ];
 
   const emailSig =
-    `Discover your soul blueprint (Human Design) at Prime Self:\n` +
+    `Discover your Energy Blueprint at Prime Self:\n` +
     `${baseUrl}?utm_source=email&utm_medium=signature&utm_campaign=referral`;
 
   const snippets = [
     {
       label: 'Instagram Caption', id: 'snippet-instagram',
-      text: `✨ Curious about your Human Design? Discover who you truly are — your energy type, decision-making strategy, and life purpose — with a personalized reading.\nUse my link for a free chart: ${baseUrl}?utm_source=instagram&utm_medium=social&utm_campaign=referral\n#HumanDesign #PrimeSelf`,
+      text: `✨ Curious about your Energy Blueprint? Discover who you truly are — your energy type, decision-making strategy, and life purpose — with a personalized reading.\nUse my link for a free chart: ${baseUrl}?utm_source=instagram&utm_medium=social&utm_campaign=referral\n#EnergyBlueprint #PrimeSelf`,
     },
     {
       label: 'Twitter/X Post', id: 'snippet-twitter',
-      text: `Just discovered my Human Design blueprint with @PrimeSelf — mind-blowing insights! Get yours free: ${baseUrl}?utm_source=twitter&utm_medium=social&utm_campaign=referral`,
+      text: `Just discovered my Energy Blueprint with @PrimeSelf — mind-blowing insights! Get yours free: ${baseUrl}?utm_source=twitter&utm_medium=social&utm_campaign=referral`,
     },
     {
       label: 'LinkedIn Post', id: 'snippet-linkedin',
-      text: `I've been exploring Human Design as a framework for understanding energy, leadership style, and decision-making. If you're curious about applied self-knowledge for professional growth, check out Prime Self — free chart here: ${baseUrl}?utm_source=linkedin&utm_medium=social&utm_campaign=referral`,
+      text: `I've been exploring Energy Blueprint as a framework for understanding energy, leadership style, and decision-making. If you're curious about applied self-knowledge for professional growth, check out Prime Self — free chart here: ${baseUrl}?utm_source=linkedin&utm_medium=social&utm_campaign=referral`,
     },
   ];
 
@@ -5984,7 +5984,7 @@ function renderPractitionerGifts(gifts) {
       <div style="display:flex;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap">
         <div style="flex:1;min-width:200px">
           <label style="font-size:var(--font-size-xs);color:var(--text-dim);display:block;margin-bottom:var(--space-1)">Personal message (optional)</label>
-          <textarea id="giftMessage" rows="2" placeholder="e.g. Enjoy your free Human Design reading!"
+          <textarea id="giftMessage" rows="2" placeholder="e.g. Enjoy your free Energy Blueprint reading!"
                     style="width:100%;box-sizing:border-box;background:var(--bg2);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-1);padding:0.5rem;font-size:var(--font-size-sm);color:var(--text);resize:none"></textarea>
         </div>
         <button class="btn-primary btn-sm" style="align-self:flex-end" data-action="createGiftLink">+ Create Gift Link</button>

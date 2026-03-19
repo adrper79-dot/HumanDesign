@@ -1,6 +1,6 @@
 {
   "version": "2026-03-17-practitioner-workflow-audit",
-  "mode": "ACTIVE",
+  "mode": "MAINTENANCE",
   "consecutiveCleanRuns": 0,
   "issues": [
     {
@@ -758,6 +758,154 @@
       "lastSeen": "2026-03-15",
       "resolvedAt": "2026-03-15",
       "resolutionNote": "Per-client AI context surfaced through session notes with Share with AI checkbox. AI-shared notes passed to profile generation prompts. Dedicated editor panel is future enhancement."
+    },
+    {
+      "id": "BL-TEST-P1-2",
+      "persona": "CTO",
+      "severity": "P1",
+      "area": "testing",
+      "title": "Release gate not trustworthy — onboarding timing and Playwright auth smoke are out of sync",
+      "status": "open",
+      "firstSeen": "2026-03-19",
+      "lastSeen": "2026-03-19",
+      "resolvedAt": null,
+      "file": [
+        "frontend/js/app.js",
+        "tests/e2e/ui-regression.spec.ts"
+      ],
+      "fix": [
+        "Make the first-run bypass deterministic before app scripts execute",
+        "Split onboarding coverage from auth smoke coverage so login is tested without modal timing races",
+        "Move Playwright credentials and environment selection to env-backed test accounts",
+        "Add browser smoke coverage to the release gate instead of relying on unit tests alone"
+      ],
+      "acceptanceCriteria": [
+        "Auth smoke passes without any modal interception in repeated runs",
+        "Onboarding has its own dedicated end-to-end coverage",
+        "Release status distinguishes browser smoke results from Vitest results"
+      ],
+      "constraints": [
+        "Do not weaken first-run onboarding behavior for real users",
+        "Follow existing deployment standards: no release-safe claim without browser validation"
+      ]
+    },
+    {
+      "id": "BL-DOCS-P1-2",
+      "persona": "CMO",
+      "severity": "P1",
+      "area": "compliance",
+      "title": "Public terminology and legal plan naming drift remain in referral copy and Terms",
+      "status": "resolved",
+      "firstSeen": "2026-03-19",
+      "lastSeen": "2026-03-19",
+      "resolvedAt": "2026-03-19",
+      "file": [
+        "frontend/js/app.js",
+        "frontend/terms.html"
+      ],
+      "fix": [
+        "Remove remaining user-facing Human Design wording from referral, share, and gift flows",
+        "Replace Studio and Studio or white-label plan naming with Agency where commercially correct",
+        "Align legal copy with the approved Energy Blueprint terminology map"
+      ],
+      "acceptanceCriteria": [
+        "Public referral and share copy uses approved terminology only",
+        "Terms reflect current Agency naming and entitlement language",
+        "A targeted grep over public frontend surfaces finds no stale plan naming in active customer copy"
+      ],
+      "constraints": [
+        "Preserve internal identifiers where they are intentionally non-user-facing",
+        "Do not ship copy that implies rights or features not currently available"
+      ]
+    },
+    {
+      "id": "BL-BILLING-P1-2",
+      "persona": "CFO",
+      "severity": "P1",
+      "area": "billing",
+      "title": "Pricing truth mismatch — Agency page marks features coming soon while structured data advertises them as live",
+      "status": "resolved",
+      "firstSeen": "2026-03-19",
+      "lastSeen": "2026-03-19",
+      "resolvedAt": "2026-03-19",
+      "file": [
+        "frontend/pricing.html",
+        "frontend/js/pricing-schema.js"
+      ],
+      "fix": [
+        "Make visible pricing copy and JSON-LD draw from the same feature availability source",
+        "Remove live-availability claims for Agency features that are still marked coming soon",
+        "Verify Agency messaging stays consistent across pricing, schema, and upgrade flows"
+      ],
+      "acceptanceCriteria": [
+        "Pricing page and structured data make the same availability claims",
+        "Search-facing schema does not promise unfinished Agency capabilities",
+        "Agency feature availability is defined once and reused across surfaces"
+      ],
+      "constraints": [
+        "Do not expand commercial claims beyond what production currently supports",
+        "Preserve current pricing numbers unless product explicitly changes them"
+      ]
+    },
+    {
+      "id": "BL-SEC-P1-4",
+      "persona": "CISO",
+      "severity": "P1",
+      "area": "auth",
+      "title": "Admin console persists a long-lived admin token in localStorage",
+      "status": "resolved",
+      "firstSeen": "2026-03-19",
+      "lastSeen": "2026-03-19",
+      "resolvedAt": "2026-03-19",
+      "file": [
+        "frontend/js/admin.js",
+        "workers/src/handlers/admin.js"
+      ],
+      "fix": [
+        "Remove persistent localStorage storage for the admin token",
+        "Reduce the browser replay surface with memory-only or short-lived session handling",
+        "Document the interim admin auth posture until a proper admin session model exists"
+      ],
+      "acceptanceCriteria": [
+        "Admin token is not recoverable from localStorage after login",
+        "Admin console still functions with the supported session approach",
+        "Admin auth behavior is documented for operators"
+      ],
+      "constraints": [
+        "Do not bypass existing server-side admin checks",
+        "Follow the main app security standard where practical instead of introducing a weaker exception"
+      ]
+    },
+    {
+      "id": "BL-OPS-P1-3",
+      "persona": "CTO",
+      "severity": "P1",
+      "area": "observability",
+      "title": "Operational status signals disagree — vitals header, known-issues baseline, and issue summary counts are inconsistent",
+      "status": "resolved",
+      "firstSeen": "2026-03-19",
+      "lastSeen": "2026-03-19",
+      "resolvedAt": "2026-03-19",
+      "file": [
+        "audits/VITALS_2026-03-19.md",
+        "scripts/run-audit.js",
+        "scripts/collectors/known-issues.js",
+        "scripts/audit-state.js"
+      ],
+      "fix": [
+        "Make release-summary counts and detailed issue sections derive from the same source of truth",
+        "Separate live open issues from historical baselines in audit output",
+        "Ensure issue-summary scripts and vitals reports agree before any deployment recommendation"
+      ],
+      "acceptanceCriteria": [
+        "Vitals header counts match the issue details it reports",
+        "next-issue summary and audit output agree on open-issue totals",
+        "Historical baselines are clearly labeled and do not masquerade as current release status"
+      ],
+      "constraints": [
+        "Preserve audit history while making current-state signals explicit",
+        "Do not claim deployment readiness from contradictory reporting"
+      ]
     },
     {
       "id": "PRAC-004",
@@ -2633,7 +2781,7 @@
       "severity": "P2",
       "area": "feature-gap",
       "title": "Editorial engine v1: weekly practitioner-first content loop for SEO, trust, and retention",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-18",
       "lastSeen": "2026-03-18",
       "file": [
@@ -2656,7 +2804,8 @@
         "Content template and publish checklist exist and are used for first four posts.",
         "Internal links connect content to chart/profile/practitioner conversion flows.",
         "Organic entry and assisted conversion metrics are trackable."
-      ]
+      ],
+      "resolvedAt": "2026-03-19"
     }
   ],
   "history": [
@@ -2830,6 +2979,132 @@
       "resolved": 0,
       "regressions": 0,
       "testsPassed": 473,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "new": 0,
+      "resolved": 1,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "new": 0,
+      "resolved": 5,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 5,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 4,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 1,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 1,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 983,
+      "testsFailed": 0,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-19",
+      "mode": "MAINTENANCE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 1,
+      "P2": 0,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 983,
       "testsFailed": 0,
       "cfErrorRatePct": null
     }
