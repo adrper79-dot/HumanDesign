@@ -43,6 +43,7 @@ const RATE_LIMITS = {
   '/api/timing/find-dates': { max: 10,  windowSec: 60  },  // P2-BIZ-015: 10/min (CPU-intensive)
   '/api/auth/delete-account': { max: 3, windowSec: 60  },  // 3/min (destructive, irreversible)
   '/api/practitioner/clients/invite': { max: 10, windowSec: 3600 }, // BL-AUDIT-H1: 10/hour max to prevent email quota exhaustion; Resend free tier is 100/day
+  '/api/client/messages':       { max: 30, windowSec: 60  },  // messaging send/list
   default:                  { max: 60,  windowSec: 60  }
 };
 
@@ -50,6 +51,8 @@ const RATE_LIMITS = {
 const PATTERN_RATE_LIMITS = [
   { pattern: /^\/api\/cluster\/[^/]+\/synthesize$/, config: { max: 3, windowSec: 60 }, key: '/api/cluster/*/synthesize' },
   { pattern: /^\/api\/share\//, config: { max: 10, windowSec: 60 }, key: '/api/share/*' },
+  { pattern: /^\/api\/practitioner\/clients\/[^/]+\/messages$/, config: { max: 30, windowSec: 60 }, key: '/api/practitioner/clients/*/messages' },
+  { pattern: /^\/api\/messages\/[^/]+\/read$/, config: { max: 60, windowSec: 60 }, key: '/api/messages/*/read' },
 ];
 
 /**

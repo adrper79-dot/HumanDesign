@@ -295,7 +295,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/agency/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply', '/api/client/', '/api/calendar'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/agency/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply', '/api/client/', '/api/calendar', '/api/messages/'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -464,7 +464,7 @@ const EXACT_ROUTES = new Map([
   // Gift-a-Reading (item 4.6)
   ['POST /api/practitioner/gifts',             handleCreateGift],
   // Messaging (item 5.1)
-  ['GET  /api/client/messages',                handleClientListMessages],
+  ['GET /api/client/messages',                 handleClientListMessages],
   ['POST /api/client/messages',                handleClientSendMessage],
   ['GET /api/practitioner/gifts',              handleListGifts],
   // Email marketing unsubscribe (public, CAN-SPAM compliance — AUDIT-SEC-005)
@@ -479,9 +479,12 @@ const EXACT_ROUTES = new Map([
     if (!token || typeof token !== 'string') {
       return Response.json({ error: 'Unsubscribe token required' }, { status: 400 });
     }
+    if (!env.JWT_SECRET) {
+      return Response.json({ error: 'Service configuration error' }, { status: 500 });
+    }
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
-      'raw', encoder.encode(env.JWT_SECRET || 'fallback'),
+      'raw', encoder.encode(env.JWT_SECRET),
       { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
     );
     const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(email.toLowerCase().trim()));
@@ -638,9 +641,7 @@ export default {
         headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
       });
     }
-      if (env.ENVIRONMENT === 'production' && env.JWT_ISSUER === 'primeself') {
-        console.warn(JSON.stringify({ event: 'jwt_issuer_default_in_production', env: env.ENVIRONMENT, issuer: env.JWT_ISSUER }));
-      }
+      // NOTE: update JWT_ISSUER secret to your production domain once stabilised.
 
     const url = new URL(request.url);
     const path = url.pathname;
@@ -815,13 +816,20 @@ export default {
           response = Response.json(base);
         }
       } else if (path === '/api/cache/invalidate' && request.method === 'POST') {
-        const body = await request.json().catch(() => ({}));
-        const prefix = body.prefix || '';
-        if (!prefix) {
-          response = Response.json({ error: 'Missing "prefix" in body' }, { status: 400 });
+        // Require admin token — any authenticated user can reach this path but
+        // cache invalidation is a privileged operation.
+        const provided = request.headers.get('X-Admin-Token');
+        if (!provided || !env.ADMIN_TOKEN || provided !== env.ADMIN_TOKEN) {
+          response = Response.json({ error: 'Forbidden' }, { status: 403 });
         } else {
-          const deleted = await kvCache.invalidatePrefix(env, prefix, body.limit || 100);
-          response = Response.json({ ok: true, prefix, deleted });
+          const body = await request.json().catch(() => ({}));
+          const prefix = body.prefix || '';
+          if (!prefix) {
+            response = Response.json({ error: 'Missing "prefix" in body' }, { status: 400 });
+          } else {
+            const deleted = await kvCache.invalidatePrefix(env, prefix, body.limit || 100);
+            response = Response.json({ ok: true, prefix, deleted });
+          }
         }
       } else {
         response = Response.json({ error: 'Not Found', path }, { status: 404 });

@@ -1938,7 +1938,8 @@ function showUpgradePrompt(message, feature) {
 
 // ── API Fetch ─────────────────────────────────────────────────
 async function apiFetch(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  const needsBody = ['POST', 'PUT', 'PATCH'].includes((options.method || 'GET').toUpperCase());
+  const headers = { ...(needsBody ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) };
   // CISO-P0: Do NOT add Authorization header — rely on the ps_access HttpOnly cookie
   // sent automatically via credentials:'include'. This prevents XSS from forging requests
   // using an exfiltrated token, since HttpOnly cookies are inaccessible to JavaScript.
@@ -1970,7 +1971,7 @@ async function apiFetch(path, options = {}) {
     const refreshed = await silentRefresh();
     if (refreshed) {
       // Retry original request — new ps_access cookie was set by silentRefresh
-      const retryHeaders = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+      const retryHeaders = { ...(needsBody ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) };
       try {
         const retryRes = await fetch(API + path, { ...options, headers: retryHeaders, credentials: 'include' });
         if (retryRes.status !== 401) {

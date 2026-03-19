@@ -2506,6 +2506,19 @@ export const QUERIES = {
     LIMIT 500
   `,
 
+  listPractitionerClientEventsPaginated: `
+    SELECT ce.*, u.email AS client_email,
+           pc.created_at AS client_added_at
+    FROM calendar_events ce
+    JOIN practitioner_clients pc ON pc.client_user_id = ce.user_id
+    JOIN users u ON u.id = ce.user_id
+    WHERE pc.practitioner_id = $1
+      AND ce.start_date >= $2
+      AND ce.start_date <= $3
+    ORDER BY ce.start_date ASC
+    LIMIT $4 OFFSET $5
+  `,
+
   adminGetOverviewStats: `
     SELECT
       (SELECT COUNT(*) FROM users) AS total_users,
@@ -2931,6 +2944,13 @@ export const QUERIES = {
     WHERE m.client_user_id = $1
     ORDER BY m.created_at ASC
     LIMIT 100
+  `,
+
+  markAllClientMessagesRead: `
+    UPDATE practitioner_messages
+    SET is_read = true
+    WHERE client_user_id = $1 AND sender_id != $1 AND is_read = false
+    RETURNING id
   `,
 
   getPractitionerUserIdByPractitionerId: `

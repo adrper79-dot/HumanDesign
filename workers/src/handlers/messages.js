@@ -113,6 +113,9 @@ export async function handleClientListMessages(request, env) {
 
   const result = await query(QUERIES.listClientMessages, [userId]);
 
+  // Mark all messages sent by the practitioner(s) as read now that the client has viewed them
+  await query(QUERIES.markAllClientMessagesRead, [userId]).catch(() => {});
+
   trackEvent(env, 'message_read', { userId, role: 'client' }).catch(() => {});
 
   return Response.json({ messages: result.rows });

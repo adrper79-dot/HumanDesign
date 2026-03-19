@@ -339,7 +339,8 @@ async function handleAuditMetrics(env) {
       tierDistribution: revenue.data?.tierDistribution || [],
     });
   } catch (err) {
-    return Response.json({ ok: false, error: err.message }, { status: 500 });
+    console.error(JSON.stringify({ event: 'analytics_overview_error', error: err.message }));
+    return Response.json({ ok: false, error: 'Internal error processing analytics' }, { status: 500 });
   }
 }
 
