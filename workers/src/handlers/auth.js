@@ -164,7 +164,7 @@ async function handleGetMe(request, env) {
 
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
-    const result = await query(QUERIES.getUserById, [userId]);
+    const result = await query(QUERIES.getUserByIdSafe, [userId]);
 
     if (!result.rows || result.rows.length === 0) {
       return Response.json(
@@ -173,10 +173,9 @@ async function handleGetMe(request, env) {
       );
     }
 
-    const user = result.rows[0];
-
-    // Remove sensitive fields
-    delete user.password_hash;
+    // Defense in depth: explicitly omit sensitive auth secrets even if a future
+    // query change accidentally broadens the selected columns.
+    const { password_hash, totp_secret, ...user } = result.rows[0];
 
     return Response.json({
       ok: true,

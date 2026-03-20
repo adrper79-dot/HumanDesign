@@ -1,7 +1,17 @@
 // Debug logging: auto-enabled on localhost; set window.DEBUG=true in DevTools to enable on production
 window.DEBUG = /localhost|127\.0\.0\.1/.test(location.hostname);
 
-const API = 'https://prime-self-api.adrper79.workers.dev';
+const API = (() => {
+  const configured = window.__PRIME_SELF_API_ORIGIN__;
+  if (typeof configured === 'string' && configured.trim()) {
+    return configured.replace(/\/$/, '');
+  }
+
+  // Use the same-origin /api proxy in deployed environments so auth cookies
+  // are first-party and survive reloads. Keep the direct Workers origin as the
+  // localhost fallback for local static-file development.
+  return window.DEBUG ? 'https://prime-self-api.adrper79.workers.dev' : '';
+})();
 // Access token is stored in memory only — never in localStorage.
 // The refresh token lives in an HttpOnly cookie set by the API.
 // On page reload, silentRefresh() exchanges the cookie for a new access token.

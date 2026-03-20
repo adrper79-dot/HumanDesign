@@ -37,7 +37,7 @@ export async function handleNotionAuth(request, env, ctx) {
     
     // Notion OAuth URL
     const NOTION_CLIENT_ID = env.NOTION_CLIENT_ID;
-const REDIRECT_URI = `${env.BASE_URL || 'https://primeself.app'}/api/notion/callback`;
+const REDIRECT_URI = `${env.BASE_URL || env.FRONTEND_URL || 'https://selfprime.net'}/api/notion/callback`;
     
     const authUrl = new URL('https://api.notion.com/v1/oauth/authorize');
     authUrl.searchParams.set('client_id', NOTION_CLIENT_ID);
@@ -117,7 +117,7 @@ export async function handleNotionCallback(request, env, ctx) {
     // Exchange code for access token
     const NOTION_CLIENT_ID = env.NOTION_CLIENT_ID;
     const NOTION_CLIENT_SECRET = env.NOTION_CLIENT_SECRET;
-    const REDIRECT_URI = `${env.BASE_URL || 'https://primeself.app'}/api/notion/callback`;
+    const REDIRECT_URI = `${env.BASE_URL || env.FRONTEND_URL || 'https://selfprime.net'}/api/notion/callback`;
     
     const tokenResponse = await fetch('https://api.notion.com/v1/oauth/token', {
       method: 'POST',

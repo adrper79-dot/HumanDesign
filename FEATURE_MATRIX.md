@@ -83,13 +83,13 @@
 | **Workflow Position** | First time = registration; subsequent = login; entry gate for all personal features |
 | **Purpose** | Create user account, authenticate sessions, manage JWT tokens |
 | **Files** | `workers/src/handlers/auth.js` (470 lines), `workers/src/middleware/auth.js`, `workers/src/lib/jwt.js`, `frontend/js/app.js` (lines 906–1000+) |
-| **Workflow Step** | 1. User enters email + password on login modal → 2. Frontend POSTs to `/api/auth/login` → 3. Backend hashes password, compares with DB → 4. If match, return `access_token` + `refresh_token` + user profile → 5. Frontend stores tokens in localStorage → 6. Include `Authorization: Bearer {token}` on all authenticated requests |
+| **Workflow Step** | 1. User enters email + password on login modal → 2. Frontend POSTs to `/api/auth/login` → 3. Backend hashes password, compares with DB → 4. If match, return user profile and set secure auth cookies → 5. Frontend keeps any access token in memory only, scrubs legacy localStorage keys, and uses the HttpOnly `ps_refresh` cookie for silent refresh → 6. Authenticated requests use cookies and, when present, an in-memory `Authorization: Bearer {token}` header |
 | **API Endpoints** | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/refresh` |
 | **Database Tables** | `users` (id, email, password_hash, tier, email_verified, created_at, updated_at) |
 | **Test Elements** | `tests/auth-handler-runtime.test.js` — valid/invalid credentials, token claims, refresh expiry, password hashing (bcrypt), email conflict detection |
 | **Analytical Elements** | Event: `user_signup` (tier, referral_source), `user_login` (tier, session_duration), `auth_failed` (failure_type: invalid_password, user_not_found, etc.) |
 | **Error Debugging** | Error codes: `ERR_USER_EXISTS`, `ERR_INVALID_PASSWORD`, `ERR_EMAIL_NOT_VERIFIED`; password validation: min 8 chars, uppercase+lowercase+digit required; logs auth failures to Sentry (if configured) |
-| **Key Code** | `handleAuth()` → route dispatcher for register/login/logout/refresh; JWT signed with HS256 using `JWT_SECRET` env var; refresh tokens stored separately in `refresh_tokens` table |
+| **Key Code** | `handleAuth()` → route dispatcher for register/login/logout/refresh; JWT signed with HS256 using `JWT_SECRET` env var; refresh tokens stored separately in `refresh_tokens` table; frontend auth state uses memory plus HttpOnly cookies rather than durable localStorage token storage |
 | **Tier Availability** | FREE (public registration) |
 | **Status** | Production ✅ |
 | **External Dependencies** | Resend API (email verification) → **SINGLE POINT OF FAILURE**: if down, signup blocked |
@@ -171,7 +171,7 @@
 | **Test Elements** | `tests/handlers.test.js` — profile update validation, unauthorized updates rejected, timezone in IANA list, avatar URL whitelisted domains |
 | **Analytical Elements** | Event: `profile_updated` (field_changed: timezone, avatar, name), `settings_viewed` |
 | **Error Debugging** | Error codes: `ERR_INVALID_TIMEZONE`, `ERR_INVALID_AVATAR_URL`, `ERR_PROFILE_UPDATE_FAILED`; Frontend form validation (name 2-50 chars, valid IANA timezone) |
-| **Key Code** | `handleGetProfile()` / `handleUpdateProfile()` in `workers/src/handlers/auth.js` or separate `profile.js`; profile cached in localStorage with 1h TTL |
+| **Key Code** | `handleGetProfile()` / `handleUpdateProfile()` in `workers/src/handlers/auth.js` or separate `profile.js`; frontend profile state is refreshed from `/api/auth/me` and any legacy auth tokens are scrubbed from localStorage |
 
 ---
 
@@ -746,6 +746,22 @@
 | **Test Elements** | `tests/practitioner-og.test.js` — 17 tests: SVG structure (11 — dimensions, name, bio truncation, specialization slicing, XSS escaping, cert badge, branding), handler contract (6 — invalid slug, empty slug, 200 flow, KV hit, KV put, 404 not found) |
 | **Analytical Elements** | Event: `practitioner_og_generated` (per slug, on cache miss) |
 | **Key Code** | `escapeXml()` on all user content. Bio capped at 110 chars. Specializations: `slice(0,3).join(' · ')`. KV cache key: `og:practitioner:v1:{slug}`, TTL 86400s. Slug validation: `/^[a-z0-9-]{1,80}$/`. |
+
+---
+
+### Feature: Personalized Social Share OG Images
+
+| Attribute | Details |
+|-----------|---------|
+| **Feature Name** | Personalized Social Share OG Images |
+| **Permission Level** | PUBLIC — no authentication required (social crawlers must be able to fetch these) |
+| **Workflow Position** | Returned in `shareContent.imageUrl` by `POST /api/share/*` endpoints; referenced in dynamic `og:image` meta tags |
+| **Purpose** | Social platform crawlers (Facebook, Twitter/X, LinkedIn, WhatsApp) must fetch `og:image` as an absolute HTTPS URL. Previously share cards were generated as `data:image/svg+xml;base64,...` which crawlers cannot access. These endpoints serve personalized SVG images over HTTP with proper `Cache-Control` headers, enabling rich link previews on every share type. |
+| **Files** | `workers/src/handlers/share-og.js` (4 HTTP handlers), `workers/src/lib/shareImage.js` (4 raw SVG generator functions), `workers/src/handlers/share.js` (updated to return HTTP `imageUrl` + `shareUrls`), `workers/src/index.js` (routes + PUBLIC_ROUTES) |
+| **Workflow Step** | 1. User triggers share (celebrity match, chart, achievement, or referral) → 2. Frontend POSTs to `/api/share/{type}` → 3. Handler builds `ogImageUrl = ${baseUrl}/api/og/{type}?{params}` → 4. Returns `shareContent.imageUrl` (HTTP URL) + `shareContent.shareUrls` (ready-to-open Twitter/Facebook/LinkedIn/WhatsApp URLs) → 5. Frontend opens `shareUrls.twitter` etc. in new tab → 6. When user's friend receives the link, crawler fetches `og:image` URL → 7. `handleOGChart` (or equivalent) checks KV → HIT: returns cached SVG → MISS: calls `generateChartOGSVG(type, profile, authority)` → stores in KV (TTL 24h) → returns `Content-Type: image/svg+xml` |
+| **API Endpoints** | `GET /api/og/chart?type=Builder&profile=2%2F4&authority=Emotional`, `GET /api/og/celebrity?name=Steve+Jobs&pct=78`, `GET /api/og/achievement?name=First+Chart&icon=🌟&tier=gold&points=100`, `GET /api/og/referral?code=ABC123` |
+| **KV Cache Keys** | `og:chart:v1:authority=Emotional&profile=2%2F4&type=Builder`, `og:celebrity:v1:name=Steve+Jobs&pct=78`, etc. (query params sorted, TTL 86400s) |
+| **Key Code** | `generateChartOGSVG`, `generateCelebrityOGSVG`, `generateAchievementOGSVG`, `generateReferralOGSVG` in `shareImage.js` return raw SVG XML (not data URLs). `serveOGImage(env, cacheKey, generateFn)` in `share-og.js` handles KV cache + response headers. |
 
 ---
 

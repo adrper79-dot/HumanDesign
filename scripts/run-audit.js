@@ -78,7 +78,14 @@ async function main() {
 
   console.log(`[Audit] Tests: ${testResults.passed}/${testResults.total} passed, ${testResults.failed} failed`);
   const browserSmoke = releaseGate?.results?.find(r => r.name === 'browser smoke');
-  console.log(`[Audit] Browser Smoke: ${browserSmoke ? (browserSmoke.skipped ? 'skipped' : browserSmoke.ok ? 'passed' : 'failed') : 'unknown'}`);
+  const browserSmokeSummary = browserSmoke
+    ? browserSmoke.ok
+      ? browserSmoke.skipped
+        ? 'skipped'
+        : 'passed'
+      : `failed${browserSmoke.stderr ? ` — ${browserSmoke.stderr}` : ''}`
+    : 'unknown';
+  console.log(`[Audit] Browser Smoke: ${browserSmokeSummary}`);
   console.log(`[Audit] CF Metrics: ${cfMetrics.available ? `${cfMetrics.totalRequests} reqs, ${cfMetrics.errorRatePct}% errors` : 'unavailable'}`);
   console.log(`[Audit] App Metrics: ${appMetrics.available ? `DAU=${appMetrics.dau}` : 'unavailable'}`);
   console.log(`[Audit] Code Quality: ${codeQuality.summary?.totalFindings ?? 'error'} findings`);
@@ -391,11 +398,11 @@ function buildMarkdown({ runFull, mode, TODAY, testResults, releaseGate, cfMetri
                          codeQuality, knownIssues, auditReport, counts, delta, runRecord }) {
   const browserSmoke = releaseGate?.results?.find(r => r.name === 'browser smoke');
   const browserSmokeStatus = browserSmoke
-    ? browserSmoke.skipped
-      ? `skipped${browserSmoke.stderr ? ` — ${browserSmoke.stderr}` : ''}`
-      : browserSmoke.ok
-        ? 'passed'
-        : 'failed'
+    ? browserSmoke.ok
+      ? browserSmoke.skipped
+        ? `skipped${browserSmoke.stderr ? ` — ${browserSmoke.stderr}` : ''}`
+        : 'passed'
+      : `failed${browserSmoke.stderr ? ` — ${browserSmoke.stderr}` : ''}`
     : releaseGate?.error
       ? `error — ${releaseGate.error}`
       : 'unknown';

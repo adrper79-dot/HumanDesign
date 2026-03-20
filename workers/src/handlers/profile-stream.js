@@ -129,9 +129,19 @@ export async function handleProfileStream(request, env, ctx) {
 
   const startTime = Date.now();
 
+  // Wall-clock cap: covers 2× LLM calls (each up to 55 s) + validation overhead.
+  // Without this, a slow re-prompt path could run for 110+ s and orphan the stream.
+  const STREAM_WALL_CLOCK_MS = 85_000;
+
+  let _timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    _timeoutId = setTimeout(() => reject(new Error('stream_timeout')), STREAM_WALL_CLOCK_MS);
+  });
+
   // Run the generation pipeline asynchronously
-  const pipeline = (async () => {
-    try {
+  const pipeline = Promise.race([
+    (async () => {
+      try {
       // ── Stage 1: Chart Calculation ──────────────────────
       await sendProgress('chart');
 
@@ -376,9 +386,23 @@ export async function handleProfileStream(request, env, ctx) {
     } catch (err) {
       reportHandledRouteError({ request, env, error: err, source: 'profile-stream-pipeline', responseFactory: () => new Response(null) });
       await send('error', { error: 'Internal error during profile generation' });
-      await writer.close();
+      await writer.close().catch(() => {});
     }
-  })();
+  })(),
+    timeoutPromise,
+  ]).then(() => {
+    clearTimeout(_timeoutId);
+  }).catch(async (err) => {
+    clearTimeout(_timeoutId);
+    const isTimeout = err?.message === 'stream_timeout';
+    if (isTimeout) {
+      await send('error', { error: 'Generation timed out. Please try again.' });
+    } else {
+      reportHandledRouteError({ request, env, error: err, source: 'profile-stream-race', responseFactory: () => new Response(null) });
+      await send('error', { error: 'Internal error during profile generation' });
+    }
+    await writer.close().catch(() => {});
+  });
 
   // Keep the worker alive until the pipeline finishes writing to the stream
   if (ctx && ctx.waitUntil) {

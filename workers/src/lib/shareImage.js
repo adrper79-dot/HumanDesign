@@ -78,7 +78,7 @@ export function generateCelebrityMatchImage(match, userChart) {
       <!-- Bottom CTA -->
       <text x="600" y="580" font-family="Arial, sans-serif" font-size="24" 
             fill="#cbd5e0" text-anchor="middle">
-        Discover your energy blueprint match → primeself.app
+        Discover your energy blueprint match → selfprime.net
       </text>
     </svg>
   `;
@@ -153,7 +153,7 @@ export function generateChartShareImage(chart) {
       <!-- CTA -->
       <text x="600" y="590" font-family="Arial, sans-serif" font-size="24" 
             fill="#cbd5e0" text-anchor="middle">
-        Get your free energy blueprint → primeself.app
+        Get your free energy blueprint → selfprime.net
       </text>
     </svg>
   `;
@@ -210,7 +210,7 @@ export function generateReferralInviteImage(referrer, referralCode) {
       <!-- CTA -->
       <text x="600" y="590" font-family="Arial, sans-serif" font-size="26" 
             fill="#ffffff" text-anchor="middle">
-        Join me on primeself.app
+        Join me on selfprime.net
       </text>
     </svg>
   `;
@@ -292,7 +292,7 @@ export function generateAchievementShareImage(achievement) {
       <!-- CTA -->
       <text x="600" y="600" font-family="Arial, sans-serif" font-size="24" 
             fill="#cbd5e0" text-anchor="middle">
-        Start your journey → primeself.app
+        Start your journey → selfprime.net
       </text>
     </svg>
   `;
@@ -525,8 +525,8 @@ export function generateGiftImage(data) {
 export function generateShareMetadata(params) {
   const { type, title, description, imageUrl, url } = params;
   
-  const defaultImage = 'https://primeself.app/og-default.png';
-  const defaultUrl = 'https://primeself.app';
+  const defaultImage = 'https://selfprime.net/og-image.png';
+  const defaultUrl = 'https://selfprime.net';
   
   return {
     // Open Graph
@@ -557,7 +557,7 @@ export function generateShareMetadata(params) {
 export function getShareMessages(shareData) {
   const { type, celebrityName, percentage, referralCode, achievementName, chartType } = shareData;
   
-  const baseUrl = 'https://primeself.app';
+  const baseUrl = 'https://selfprime.net';
   const refUrl = referralCode ? `${baseUrl}/signup?ref=${referralCode}` : baseUrl;
   
   const messages = {
@@ -607,4 +607,127 @@ export function getShareMessages(shareData) {
   };
   
   return messages[type] || messages.chart;
+}
+
+// ── HTTP-served OG image variants (raw SVG, no base64 wrapping) ──────────────
+// These are used by /api/og/* endpoints so social crawlers can fetch the image.
+
+/**
+ * Generate chart OG SVG — for GET /api/og/chart?type=&profile=&authority=
+ * @returns {string} Raw SVG XML
+ */
+export function generateChartOGSVG(type, profile, authority) {
+  const t = escapeXml(String(type || 'Energy Blueprint'));
+  const p = escapeXml(String(profile || ''));
+  const a = escapeXml(String(authority || ''));
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#c9a84c"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="#c9a84c" letter-spacing="3">ENERGY BLUEPRINT — PRIME SELF</text>
+  <text x="600" y="200" font-family="Arial,sans-serif" font-size="52" font-weight="bold" fill="#fbbf24" text-anchor="middle">My Energy Blueprint</text>
+  <g transform="translate(300,250)">
+    <rect x="0" y="0" width="600" height="68" fill="#1e293b" rx="8"/>
+    <text x="30" y="44" font-family="Arial,sans-serif" font-size="26" fill="#94a3b8">Type:</text>
+    <text x="570" y="44" font-family="Arial,sans-serif" font-size="30" font-weight="bold" fill="#ffffff" text-anchor="end">${t}</text>
+    <rect x="0" y="88" width="600" height="68" fill="#1e293b" rx="8"/>
+    <text x="30" y="132" font-family="Arial,sans-serif" font-size="26" fill="#94a3b8">Profile:</text>
+    <text x="570" y="132" font-family="Arial,sans-serif" font-size="30" font-weight="bold" fill="#ffffff" text-anchor="end">${p}</text>
+    <rect x="0" y="176" width="600" height="68" fill="#1e293b" rx="8"/>
+    <text x="30" y="220" font-family="Arial,sans-serif" font-size="26" fill="#94a3b8">Authority:</text>
+    <text x="570" y="220" font-family="Arial,sans-serif" font-size="30" font-weight="bold" fill="#ffffff" text-anchor="end">${a}</text>
+  </g>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+  <circle cx="1080" cy="150" r="180" fill="none" stroke="#c9a84c" stroke-width="1" stroke-opacity="0.12"/>
+</svg>`;
+}
+
+/**
+ * Generate celebrity match OG SVG — for GET /api/og/celebrity?name=&pct=
+ * @returns {string} Raw SVG XML
+ */
+export function generateCelebrityOGSVG(celebrityName, percentage) {
+  const name = escapeXml(String(celebrityName || 'a Famous Leader'));
+  const pct = escapeXml(String(parseInt(percentage, 10) || 0));
+  const dashArray = `${(parseInt(pct, 10) / 100) * 754} 754`;
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#48bb78"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="#48bb78" letter-spacing="3">CELEBRITY MATCH — PRIME SELF</text>
+  <circle cx="600" cy="280" r="120" fill="none" stroke="#4a5568" stroke-width="8"/>
+  <circle cx="600" cy="280" r="120" fill="none" stroke="#48bb78" stroke-width="8"
+          stroke-dasharray="${dashArray}" transform="rotate(-90 600 280)" filter="url(#glow)"/>
+  <text x="600" y="300" font-family="Arial,sans-serif" font-size="72" font-weight="bold" fill="#48bb78" text-anchor="middle">${pct}%</text>
+  <text x="600" y="450" font-family="Arial,sans-serif" font-size="40" font-weight="bold" fill="#ffffff" text-anchor="middle">I'm ${pct}% like</text>
+  <text x="600" y="510" font-family="Arial,sans-serif" font-size="52" font-weight="bold" fill="#fbbf24" text-anchor="middle">${name}</text>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+</svg>`;
+}
+
+/**
+ * Generate achievement OG SVG — for GET /api/og/achievement?name=&icon=&tier=&points=
+ * @returns {string} Raw SVG XML
+ */
+export function generateAchievementOGSVG(name, icon, tier, points) {
+  const n = escapeXml(String(name || 'Achievement Unlocked'));
+  const ic = escapeXml(String(icon || '🏅'));
+  // Resolve color BEFORE escaping so the object key is the raw tier value
+  const tierColors = { bronze: '#cd7f32', silver: '#c0c0c0', gold: '#ffd700', platinum: '#e5e4e2' };
+  const color = tierColors[String(tier || 'gold').toLowerCase()] || '#fbbf24';
+  const t = escapeXml(String(tier || 'gold'));
+  const pts = escapeXml(String(parseInt(points, 10) || 0));
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c4a6e;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#075985;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="${color}"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="${color}" letter-spacing="3">ACHIEVEMENT UNLOCKED — PRIME SELF</text>
+  <text x="600" y="220" font-family="Arial,sans-serif" font-size="110" text-anchor="middle">${ic}</text>
+  <text x="600" y="350" font-family="Arial,sans-serif" font-size="52" font-weight="bold" fill="${color}" text-anchor="middle">${n}</text>
+  <text x="600" y="420" font-family="Arial,sans-serif" font-size="32" fill="#ffffff" text-anchor="middle">+${pts} points</text>
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="#4a5568" text-anchor="end">selfprime.net</text>
+</svg>`;
+}
+
+/**
+ * Generate referral invite OG SVG — for GET /api/og/referral?code=
+ * @returns {string} Raw SVG XML
+ */
+export function generateReferralOGSVG(referralCode) {
+  const code = escapeXml(String(referralCode || ''));
+  return `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="6" height="630" fill="#a78bfa"/>
+  <text x="60" y="70" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="#e9d5ff" letter-spacing="3">PRIME SELF — INVITATION</text>
+  <text x="600" y="230" font-family="Arial,sans-serif" font-size="62" font-weight="bold" fill="#ffffff" text-anchor="middle">Discover Your</text>
+  <text x="600" y="310" font-family="Arial,sans-serif" font-size="62" font-weight="bold" fill="#fbbf24" text-anchor="middle">Energy Blueprint</text>
+  <rect x="350" y="360" width="500" height="76" fill="rgba(255,255,255,0.18)" rx="12"/>
+  <text x="600" y="410" font-family="Arial,sans-serif" font-size="36" font-weight="bold" fill="#ffffff" text-anchor="middle">First Month FREE</text>
+  ${code ? `<text x="600" y="500" font-family="Arial,sans-serif" font-size="28" fill="#e0e7ff" text-anchor="middle">Use code: ${code}</text>` : ''}
+  <text x="1140" y="600" font-family="Arial,sans-serif" font-size="20" fill="rgba(255,255,255,0.5)" text-anchor="end">selfprime.net</text>
+</svg>`;
 }

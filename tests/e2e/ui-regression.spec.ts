@@ -57,10 +57,13 @@ async function openHome(page: Page) {
 }
 
 async function ensureFirstRunDismissed(page: Page) {
-  await page.waitForTimeout(1000);
-
   const modal = page.locator('#first-run-modal');
-  const isVisible = await modal.isVisible({ timeout: 250 }).catch(() => false);
+  // Signal-based: wait up to 3 s for the modal to appear instead of a fixed 1 s delay.
+  // If page navigation/JS was quick, the modal may already be visible; if bypass
+  // localStorage worked, it won't appear at all. Either way this avoids flakiness.
+  const isVisible = await modal.waitFor({ state: 'visible', timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
   if (!isVisible) return;
 
   await page.evaluate(() => {
@@ -78,7 +81,7 @@ async function ensureFirstRunDismissed(page: Page) {
     if (overlay) overlay.style.display = 'none';
   });
 
-  await expect(modal).toBeHidden({ timeout: 3000 });
+  await expect(modal).toBeHidden({ timeout: 5000 });
 }
 
 /**

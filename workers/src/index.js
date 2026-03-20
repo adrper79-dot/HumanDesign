@@ -151,6 +151,7 @@ import {
   handleGetDirectoryStats
 } from './handlers/practitioner-directory.js';
 import { handlePractitionerOGImage } from './handlers/practitioner-og.js';
+import { handleOGChart, handleOGCelebrity, handleOGAchievement, handleOGReferral } from './handlers/share-og.js';
 import { handleCreateGift, handleGetGift, handleRedeemGift, handleListGifts } from './handlers/gift.js';
 import { handlePractitionerListMessages, handlePractitionerSendMessage,
          handleClientListMessages, handleClientSendMessage,
@@ -334,6 +335,11 @@ const PUBLIC_ROUTES = new Set([
   '/api/directory',                    // Public practitioner directory listing
   '/api/invitations/practitioner',     // Public practitioner invite preview
   '/api/analytics/audit',             // CIO-006: Audit runner uses X-Audit-Token — no user JWT
+  // Share OG images (public, for social crawler access)
+  '/api/og/chart',
+  '/api/og/celebrity',
+  '/api/og/achievement',
+  '/api/og/referral',
 ]);
 
 function requiresAuth(path) {
@@ -406,6 +412,11 @@ const EXACT_ROUTES = new Map([
   ['POST /api/share/achievement',     handleShareAchievement],
   ['POST /api/share/referral',        handleShareReferral],
   ['GET /api/share/stats',            handleGetShareStats],
+  // OG images — public, query-param driven, KV-cached 24h (social crawlers)
+  ['GET /api/og/chart',               handleOGChart],
+  ['GET /api/og/celebrity',           handleOGCelebrity],
+  ['GET /api/og/achievement',         handleOGAchievement],
+  ['GET /api/og/referral',            handleOGReferral],
   // Social OAuth (Google, Apple)
   ['GET /api/auth/oauth/google',             (req, env) => handleOAuthSocial(req, env, '/google')],
   ['GET /api/auth/oauth/google/callback',    (req, env) => handleOAuthSocial(req, env, '/google/callback')],
@@ -813,7 +824,18 @@ export default {
             { status: allOk ? 200 : 503 }
           );
         } else {
-          response = Response.json(base);
+          // Basic health — include cron liveness so monitors can detect staleness
+          const lastSuccessRaw = env.CACHE ? await env.CACHE.get('cron:last_success', 'text').catch(() => null) : null;
+          const lastSuccessMs = lastSuccessRaw ? parseInt(lastSuccessRaw, 10) : 0;
+          const cronAgeHours = lastSuccessRaw ? ((Date.now() - lastSuccessMs) / 3600000).toFixed(1) : null;
+          const cronHealthy = lastSuccessRaw && (Date.now() - lastSuccessMs) < 25 * 3600 * 1000;
+          response = Response.json(Object.assign(base, {
+            cron: {
+              lastSuccess: lastSuccessRaw ? new Date(lastSuccessMs).toISOString() : null,
+              ageHours: cronAgeHours,
+              healthy: cronHealthy,
+            },
+          }));
         }
       } else if (path === '/api/cache/invalidate' && request.method === 'POST') {
         // Require admin token — any authenticated user can reach this path but

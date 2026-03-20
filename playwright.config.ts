@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import { loadLocalEnv } from './scripts/load-local-env.js';
+
+loadLocalEnv();
 
 const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 const baseURL = process.env.TEST_BASE_URL || 'https://selfprime.net';

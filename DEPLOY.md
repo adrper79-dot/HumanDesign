@@ -155,6 +155,19 @@ curl -H "Authorization: Bearer <token>" \
 
 **All should return 200 OK**. If you get 404 or 500, see troubleshooting below.
 
+### Browser Smoke Credentials
+
+The full production gate now treats browser smoke as required by default. Configure these local-only environment variables before running the browser smoke or full gate locally:
+
+```bash
+E2E_TEST_EMAIL=<production-safe smoke user>
+E2E_TEST_PASSWORD=<production-safe smoke password>
+TEST_BASE_URL=https://selfprime.net
+PROD_API=https://prime-self-api.adrper79.workers.dev
+```
+
+Use `.env.example` as the key reference only. Store real local values in `.env.local` or export them in the shell. Do not store real values in tracked files or ad hoc plaintext secret files.
+
 ---
 
 ## 🐛 Troubleshooting

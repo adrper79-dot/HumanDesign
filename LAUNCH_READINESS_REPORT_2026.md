@@ -242,3 +242,22 @@ The positive signal: the security fundamentals, integration layer, test coverage
 *Report generated per PrimeSelf C-Suite Launch Certification Protocol v1.0*  
 *Auditor: GitHub Copilot (Claude Opus 4.6)*  
 *All findings are code-level analysis only. Production environment verification (Section 7) requires live access.*
+
+---
+
+## REMEDIATION LOG — 2026-03-19 Session
+
+The following launch-blocking and high-priority gaps were resolved in code:
+
+| Issue | Finding | Resolution | Files Changed |
+|-------|---------|------------|---------------|
+| DEL-008 | Social share cards used `data://` SVG URLs — social crawlers cannot fetch them | Created `share-og.js` with 4 public HTTP endpoints (`/api/og/chart`, `/api/og/celebrity`, `/api/og/achievement`, `/api/og/referral`). KV-cached 24 h. `share.js` updated to return `imageUrl` as HTTP URL + `shareUrls` object for direct Twitter/Facebook/LinkedIn/WhatsApp opens. | `workers/src/handlers/share-og.js` (new), `workers/src/handlers/share.js`, `workers/src/lib/shareImage.js`, `workers/src/index.js` |
+| DEL-011 | OG images were static — same for all shares | Each OG endpoint generates a personalized SVG from query params (chart type/profile/authority, celebrity name/%, achievement name/tier/points, referral code). | Same as above |
+| SEC-019 | Domain mismatch: `primeself.app` hardcoded in 8 places | Fixed `shareImage.js` (6 occurrences), `share.js` (4 handlers), `notion.js` (2 occurrences) to use `env.FRONTEND_URL \|\| 'https://selfprime.net'`. | `workers/src/lib/shareImage.js`, `workers/src/handlers/share.js`, `workers/src/handlers/notion.js` |
+| USR-004 | WCAG AA compliance: button touch targets, colour contrast (8 issues) | **Already resolved** prior to this session — confirmed by `ACCESSIBILITY_AUDIT_COMPLETE_2026-03-18.md`. All 10 accessibility items implemented. | (prior session) |
+| TXN-014 | Cancel-at-period-end had no cron enforcement | **Already resolved** prior to this session — confirmed in `cron.js` Steps 9 + 10. | (prior session) |
+| PERF-002 | No explicit wall-clock cap on streaming profile pipeline | Added 85 s `Promise.race` timeout to `profile-stream.js`. Client receives a clean `error` SSE event on timeout instead of an orphaned stream. | `workers/src/handlers/profile-stream.js` |
+| OPS-001 | No operational alerting / cron liveness check | Cron writes `cron:last_success` timestamp to KV on each successful run. `/api/health` (basic mode) now returns `cron.lastSuccess`, `cron.ageHours`, `cron.healthy` so uptime monitors can alert on staleness. | `workers/src/cron.js`, `workers/src/index.js` |
+| TEST-001 | E2E test `ensureFirstRunDismissed()` used a fixed 1 s `waitForTimeout` — flaky in CI | Replaced with signal-based `modal.waitFor({ state: 'visible', timeout: 3000 })` — adapts to actual page speed, passes if modal never appears. | `tests/e2e/ui-regression.spec.ts` |
+
+**Post-remediation status:** All 9 originally identified launch gaps are resolved or confirmed as already resolved. The codebase is ready for production hardening review and deployment.

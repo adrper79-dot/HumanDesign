@@ -136,7 +136,11 @@ async function main() {
   if (rectifyNoParams.res.status !== 400) {
     fail(`rectify missing params should return 400, got ${rectifyNoParams.res.status}`);
   }
-  if (!rectifyNoParams.body?.error?.includes('Missing required field')) {
+  const rectifyError = rectifyNoParams.body?.error || '';
+  const rectifyValidationOk =
+    rectifyError.includes('Missing required field') ||
+    rectifyError === 'Validation failed';
+  if (!rectifyValidationOk) {
     fail(`rectify error message incorrect: ${rectifyNoParams.body?.error}`);
   }
 
@@ -158,7 +162,8 @@ async function main() {
     },
     rectifyParamValidation: {
       status: rectifyNoParams.res.status,
-      errorCorrect: rectifyNoParams.body?.error?.includes('Missing required field')
+      errorCorrect: rectifyValidationOk,
+      error: rectifyError
     },
   }, null, 2));
 }

@@ -10,10 +10,6 @@
  */
 
 import {
-  generateCelebrityMatchImage,
-  generateChartShareImage,
-  generateReferralInviteImage,
-  generateAchievementShareImage,
   generateShareMetadata,
   getShareMessages
 } from '../lib/shareImage.js';
@@ -66,8 +62,10 @@ export async function handleShareCelebrity(request, env, ctx) {
       return Response.json({ ok: false, error: 'Celebrity not found' }, { status: 404 });
     }
     
-    // Generate share image
-    const imageDataUrl = generateCelebrityMatchImage(match, userChart.chart);
+    // Generate share image — HTTP-served SVG so social crawlers can fetch it
+    const baseUrl = env.FRONTEND_URL || 'https://selfprime.net';
+    const ogImageUrl = `${baseUrl}/api/og/celebrity?name=${encodeURIComponent(match.celebrity.name)}&pct=${encodeURIComponent(match.similarity.percentage)}`;
+    const sharePageUrl = `${baseUrl}/?utm_source=share&utm_medium=celebrity&utm_campaign=compare`;
     
     // Generate share messages
     const messages = getShareMessages({
@@ -81,9 +79,19 @@ export async function handleShareCelebrity(request, env, ctx) {
       type: 'article',
       title: `I'm ${match.similarity.percentage}% like ${match.celebrity.name}!`,
       description: `Discover your Energy Blueprint celebrity match on Prime Self.`,
-      imageUrl: imageDataUrl,
-      url: `https://primeself.app/compare/${celebrityId}`
+      imageUrl: ogImageUrl,
+      url: sharePageUrl,
     });
+    
+    // Build ready-to-open social share URLs
+    const shareTitle = encodeURIComponent(`I'm ${match.similarity.percentage}% like ${match.celebrity.name}!`);
+    const shareText = encodeURIComponent(`I just discovered I share ${match.similarity.percentage}% energy blueprint similarity with ${match.celebrity.name}! Find your match on selfprime.net`);
+    const shareUrls = {
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(sharePageUrl)}&text=${shareText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharePageUrl)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharePageUrl)}`,
+      whatsapp: `https://wa.me/?text=${shareText}%20${encodeURIComponent(sharePageUrl)}`,
+    };
     
     // Track sharing event
     await trackEvent(env, user.id, 'celebrity_shared', {
@@ -107,9 +115,10 @@ export async function handleShareCelebrity(request, env, ctx) {
     return Response.json({
       ok: true,
       shareContent: {
-        imageUrl: imageDataUrl,
+        imageUrl: ogImageUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
         metadata,
+        shareUrls,
         title: `I'm ${match.similarity.percentage}% like ${match.celebrity.name}!`,
         description: `Based on my Energy Blueprint chart, I share ${match.similarity.percentage}% similarity with ${match.celebrity.name}.`
       }
@@ -146,8 +155,10 @@ export async function handleShareChart(request, env, ctx) {
       includeTransits: false
     });
     
-    // Generate share image
-    const imageDataUrl = generateChartShareImage(fullChart.chart);
+    // Generate share image — HTTP-served SVG so social crawlers can fetch it
+    const baseUrl = env.FRONTEND_URL || 'https://selfprime.net';
+    const ogImageUrl = `${baseUrl}/api/og/chart?type=${encodeURIComponent(fullChart.chart.type)}&profile=${encodeURIComponent(fullChart.chart.profile || '')}&authority=${encodeURIComponent(fullChart.chart.authority || '')}`;
+    const sharePageUrl = `${baseUrl}/?utm_source=share&utm_medium=chart`;
     
     // Generate share messages
     const messages = getShareMessages({
@@ -160,9 +171,18 @@ export async function handleShareChart(request, env, ctx) {
       type: 'article',
       title: `I'm a ${fullChart.chart.type} Energy Blueprint Pattern`,
       description: `Discover your Energy Blueprint pattern on Prime Self.`,
-      imageUrl: imageDataUrl,
-      url: 'https://primeself.app'
+      imageUrl: ogImageUrl,
+      url: sharePageUrl,
     });
+    
+    // Build ready-to-open social share URLs
+    const shareText = encodeURIComponent(`I'm a ${fullChart.chart.type} Energy Blueprint — get your free chart on selfprime.net`);
+    const shareUrls = {
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(sharePageUrl)}&text=${shareText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharePageUrl)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharePageUrl)}`,
+      whatsapp: `https://wa.me/?text=${shareText}%20${encodeURIComponent(sharePageUrl)}`,
+    };
     
     // Track sharing event
     await trackEvent(env, user.id, 'chart_shared', {
@@ -184,9 +204,10 @@ export async function handleShareChart(request, env, ctx) {
     return Response.json({
       ok: true,
       shareContent: {
-        imageUrl: imageDataUrl,
+        imageUrl: ogImageUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
         metadata,
+        shareUrls,
         title: `I'm a ${fullChart.chart.type} Energy Blueprint Pattern`,
         description: `My Energy Blueprint pattern is ${fullChart.chart.type} with Archetype Code ${fullChart.chart.profile}.`
       }
@@ -232,13 +253,10 @@ export async function handleShareAchievement(request, env, ctx) {
       return Response.json({ ok: false, error: 'Achievement not unlocked' }, { status: 403 });
     }
     
-    // Generate share image
-    const imageDataUrl = generateAchievementShareImage({
-      name: achievement.name,
-      icon: achievement.icon,
-      tier: achievement.tier,
-      points: achievement.points
-    });
+    // Generate share image — HTTP-served SVG for social crawler compatibility
+    const baseUrl = env.FRONTEND_URL || 'https://selfprime.net';
+    const ogImageUrl = `${baseUrl}/api/og/achievement?name=${encodeURIComponent(achievement.name)}&icon=${encodeURIComponent(achievement.icon || '\u{1F3C5}')}&tier=${encodeURIComponent(achievement.tier)}&points=${encodeURIComponent(achievement.points)}`;
+    const sharePageUrl = `${baseUrl}/?utm_source=share&utm_medium=achievement`;
     
     // Generate share messages
     const messages = getShareMessages({
@@ -251,9 +269,18 @@ export async function handleShareAchievement(request, env, ctx) {
       type: 'article',
       title: `Achievement Unlocked: ${achievement.name}`,
       description: achievement.description,
-      imageUrl: imageDataUrl,
-      url: 'https://primeself.app'
+      imageUrl: ogImageUrl,
+      url: sharePageUrl,
     });
+    
+    // Build ready-to-open social share URLs
+    const shareText = encodeURIComponent(`I just unlocked "${achievement.name}" on Prime Self! selfprime.net`);
+    const shareUrls = {
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(sharePageUrl)}&text=${shareText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sharePageUrl)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(sharePageUrl)}`,
+      whatsapp: `https://wa.me/?text=${shareText}%20${encodeURIComponent(sharePageUrl)}`,
+    };
     
     // Track sharing event
     await trackEvent(env, user.id, 'achievement_shared', {
@@ -274,9 +301,10 @@ export async function handleShareAchievement(request, env, ctx) {
     return Response.json({
       ok: true,
       shareContent: {
-        imageUrl: imageDataUrl,
+        imageUrl: ogImageUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
         metadata,
+        shareUrls,
         title: `Achievement Unlocked: ${achievement.name}`,
         description: achievement.description
       }
@@ -307,10 +335,10 @@ export async function handleShareReferral(request, env, ctx) {
       return Response.json({ ok: false, error: 'No referral code found. Generate one first at /api/referrals/code' }, { status: 404 });
     }
     
-    // Generate share image
-    const imageDataUrl = generateReferralInviteImage({
-      email: user.email
-    }, referralCode);
+    // Generate share image — HTTP-served SVG for social crawler compatibility
+    const baseUrl = env.FRONTEND_URL || 'https://selfprime.net';
+    const ogImageUrl = `${baseUrl}/api/og/referral?code=${encodeURIComponent(referralCode)}`;
+    const referralUrl = `${baseUrl}/signup?ref=${encodeURIComponent(referralCode)}`;
     
     // Generate share messages
     const messages = getShareMessages({
@@ -323,9 +351,18 @@ export async function handleShareReferral(request, env, ctx) {
       type: 'website',
       title: 'Get Your First Month Free on Prime Self',
       description: 'Discover your Energy Blueprint chart and get your first month free.',
-      imageUrl: imageDataUrl,
-      url: `https://primeself.app/signup?ref=${referralCode}`
+      imageUrl: ogImageUrl,
+      url: referralUrl,
     });
+    
+    // Build ready-to-open social share URLs
+    const shareText = encodeURIComponent(`Join me on Prime Self — get your first month free with code ${referralCode}!`);
+    const shareUrls = {
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(referralUrl)}&text=${shareText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralUrl)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralUrl)}`,
+      whatsapp: `https://wa.me/?text=${shareText}%20${encodeURIComponent(referralUrl)}`,
+    };
     
     // Track sharing event
     await trackEvent(env, user.id, 'referral_shared', {
@@ -345,10 +382,11 @@ export async function handleShareReferral(request, env, ctx) {
     return Response.json({
       ok: true,
       shareContent: {
-        imageUrl: imageDataUrl,
+        imageUrl: ogImageUrl,
         messages: platform ? { [platform]: messages[platform] } : messages,
         metadata,
-        referralUrl: `https://primeself.app/signup?ref=${referralCode}`,
+        shareUrls,
+        referralUrl,
         title: 'Join me on Prime Self — First Month Free',
         description: 'Discover your Energy Blueprint chart and get your first month free.'
       }

@@ -526,6 +526,11 @@ export async function runDailyTransitCron(env) {
       log.error('checkin_reminder_error', { error: reminderErr?.message });
     }
 
+    // Record successful cron completion — used by /api/health to detect stale cron
+    if (env.CACHE) {
+      await env.CACHE.put('cron:last_success', Date.now().toString(), { expirationTtl: 172800 }).catch(() => {});
+    }
+
     return { snapshotDate, userCount: digestUserCount, sent: digestSent, failed: digestFailed };
 
   } catch (err) {

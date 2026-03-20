@@ -31,7 +31,7 @@
 │                    Cloudflare Workers Edge                       │
 │  ┌──────────┐  ┌────────────┐  ┌──────────┐  ┌──────────────┐ │
 │  │  Router   │→│ Middleware  │→│ Handlers  │→│   Libraries   │ │
-│  │ index.js  │  │ auth/cors/ │  │ 41 route │  │ llm/stripe/  │ │
+│  │ index.js  │  │ auth/cors/ │  │ 53 route │  │ llm/stripe/  │ │
 │  │ (3-tier   │  │ rate/tier/ │  │ handlers │  │ cache/email/ │ │
 │  │  routing) │  │ cache/apiKey│  │          │  │ analytics/   │ │
 │  └──────────┘  └────────────┘  └──────────┘  └──────────────┘ │
@@ -120,7 +120,7 @@ Layer 8: synthesis.js    → LLM prompt builder for Prime Self Profile
 
 ---
 
-### workers/src/handlers/ (37 files, ~12,600 lines total)
+### workers/src/handlers/ (53 files)
 
 #### Core Chart & Profile
 | File | Lines | Purpose | Key Exports | DB Tables |

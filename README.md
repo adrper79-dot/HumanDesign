@@ -299,7 +299,7 @@ HumanDesign/
 ├── ARCHITECTURE.md              # System architecture — the WHY
 ├── process/BUILD_BIBLE.md       # Prompting documentation — the HOW
 ├── PLan-convo                   # Original planning conversation (reference)
-├── Secrets.txt                  # API keys (⚠️ in .gitignore)
+├── .env.local                   # Local-only credentials (ignored; use .env.example as template)
 ├── prime_self_manifesto.docx    # Canonical doc: The Manifesto
 ├── prime_self_canonical_framework.docx  # Canonical doc: Full system
 ├── prime_self_hd_astro_integration.docx # Canonical doc: HD/Astro bridge

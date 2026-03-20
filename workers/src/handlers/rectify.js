@@ -139,7 +139,7 @@ export async function handleRectify(request, env) {
   try {
     // Only initialize DB if connection string exists (production)
     if (env.NEON_CONNECTION_STRING && env.NEON_CONNECTION_STRING.includes('postgresql://')) {
-      query = createQueryFn(env);
+      query = createQueryFn(env.NEON_CONNECTION_STRING);
       rectificationId = crypto.randomUUID();
 
       // Insert initial record with status 'in_progress'
@@ -317,17 +317,17 @@ export async function handleListRectifications(request, env) {
   const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
 
   try {
-    const query = createQueryFn(env);
+    const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
     // Get total count
     const countResult = await query(
       `SELECT COUNT(*) as total FROM birthtime_rectifications WHERE user_id = $1`,
       [user.id]
     );
-    const totalCount = parseInt(countResult[0].total, 10);
+    const totalCount = parseInt(countResult.rows?.[0]?.total || '0', 10);
 
     // Get paginated results
-    const rows = await query(
+    const rowsResult = await query(
       `SELECT id, birth_date, birth_time, window_minutes, total_steps, status,
               created_at, completed_at, result
        FROM birthtime_rectifications
@@ -336,6 +336,8 @@ export async function handleListRectifications(request, env) {
        LIMIT $2 OFFSET $3`,
       [user.id, limit, offset]
     );
+
+    const rows = rowsResult.rows || [];
 
     const rectifications = rows.map(row => {
       let sensitivity = 'unknown';
@@ -408,13 +410,15 @@ export async function handleGetRectify(request, env) {
     return Response.json({ error: 'Missing rectificationId' }, { status: 400 });
   }
 
-  const query = createQueryFn(env);
-  const rows = await query(
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const result = await query(
     `SELECT id, percent_complete, status, result, error_message
      FROM birthtime_rectifications
      WHERE id = $1 AND user_id = $2`,
     [rectificationId, user.id]
   );
+
+  const rows = result.rows || [];
 
   if (rows.length === 0) {
     return Response.json({ error: 'Rectification not found' }, { status: 404 });

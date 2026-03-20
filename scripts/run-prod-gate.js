@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 import { spawn } from 'child_process';
+import { loadLocalEnv } from './load-local-env.js';
+
+loadLocalEnv();
 
 const args = new Set(process.argv.slice(2));
 
 const apiOnly = args.has('--api-only');
 const jsonOnly = args.has('--json');
-const strictBrowser = args.has('--strict-browser');
+const allowSkipBrowser = args.has('--allow-skip-browser');
+const strictBrowser = args.has('--strict-browser') || !allowSkipBrowser;
 
 const testBaseUrl = process.env.TEST_BASE_URL || 'https://selfprime.net';
 const prodApi = process.env.PROD_API || 'https://prime-self-api.adrper79.workers.dev';
@@ -82,6 +86,7 @@ async function main() {
       results.push({ name: 'browser smoke', ok: !strictBrowser, skipped: !strictBrowser, code: strictBrowser ? 1 : 0, stdout: '', stderr: message });
       if (strictBrowser) {
         failed = true;
+        log(`[prod-gate] FAIL browser smoke: ${message}`);
       } else {
         log(`[prod-gate] SKIP browser smoke: ${message}`);
       }
@@ -105,6 +110,7 @@ async function main() {
       prodApi,
       apiOnly,
       strictBrowser,
+      allowSkipBrowser,
       hasBrowserCreds,
       results,
     }, null, 2));

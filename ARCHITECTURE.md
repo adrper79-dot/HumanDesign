@@ -203,13 +203,13 @@ src/knowledgebase/
 
 > **48 tables · 1 materialized view · 8 views · 4 functions · 1 active trigger**
 >
-> Live-verified 2026-06-25 via `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'` → **48**.
+> Live-verified via `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'` → **48**.
 > `usage_tracking` (defined in migration 003) was never materialized in production — all other
 > migration-defined tables are present.
 >
 > Base schema in `workers/src/db/migrate.sql`. Numbered migrations in `workers/src/db/migrations/`.
 > Applied via `npm run migrate` which tracks each migration in `schema_migrations`.
-> **39 migration files (000–041)** currently on disk. All applied to production DB.
+> **59 migration files** currently on disk.
 
 #### Base Schema (`migrate.sql`) — 18 tables
 
