@@ -1,0 +1,564 @@
+/**
+ * Prime Self Design System — Unified Design Tokens
+ * ==================================================
+ * tokens.css — SINGLE SOURCE OF TRUTH for all CSS custom properties.
+ *
+ * Replaces design-tokens.css + design-tokens-premium.css (both now deprecated).
+ * Load only this file: <link rel="stylesheet" href="css/tokens.css">
+ *
+ * Resolution precedence (higher = wins):
+ *   1. tokens.css (this file) — final resolved values, no conflicts possible
+ *   2. app.css / component files — may use var() references to tokens here
+ *
+ * WCAG AA: all text tokens pass ≥4.5:1 on the canonical dark background (#05091a / --bg).
+ * ==================================================
+ */
+
+:root {
+
+  /* ═══════════════════════════════════════════════════════════
+     COLOR PALETTE — Foundation Colors
+     ══════════════════════════════════════════════════════════ */
+
+  /* — Neutrals: Dark Theme Scale — */
+  --color-neutral-50:  #f8f7fa;
+  --color-neutral-100: #e8e6f0;
+  --color-neutral-200: #d0cde0;
+  --color-neutral-300: #b8b4d0;
+  --color-neutral-400: #a8a2c0;   /* WCAG AA on dark backgrounds */
+  --color-neutral-500: #8882a0;
+  --color-neutral-600: #6a6580;
+  --color-neutral-700: #4a4560;
+  --color-neutral-800: #1a2d4a;
+  --color-neutral-850: #111d38;
+  --color-neutral-900: #0b1226;
+  --color-neutral-950: #05091a;
+
+  /* — Premium Neutrals (Apple / Porsche palette) — */
+  --color-black:      #000000;
+  --color-near-black: #0a0a0a;
+  --color-charcoal:   #1c1c1e;
+  --color-graphite:   #2c2c2e;
+  --color-silver:     #8e8e93;
+  --color-aluminum:   #c7c7cc;
+  --color-snow:       #f2f2f7;
+  --color-white:      #ffffff;
+
+  /* — Depth & Dimension — */
+  --color-midnight:   #001219;
+  --color-deep-space: #0d1b2a;
+  --color-slate:      #1b263b;
+  --color-steel:      #415a77;
+  --color-frost:      #778da9;
+
+  /* — Primary: Gold — */
+  --color-gold-50:  #fef9ed;
+  --color-gold-100: #fdf3d7;
+  --color-gold-200: #fae6af;
+  --color-gold-300: #f7d887;
+  --color-gold-400: #f0ca65;
+  --color-gold-500: #c9a84c;   /* THE gold — canonical interactive colour */
+  --color-gold-600: #a88840;
+  --color-gold-700: #7a6030;
+  --color-gold-800: #5a4824;
+  --color-gold-900: #3a3018;
+  --color-gold-dark:  #a88840;  /* alias → --color-gold-600 */
+  --color-gold-light: #f0ca65;  /* alias → --color-gold-400 */
+
+  /* — Accent: Blue (trust) — */
+  --color-purple-50:  #f0f5ff;
+  --color-purple-100: #e0eafe;
+  --color-purple-200: #c0d5fc;
+  --color-purple-300: #a8c8fc;
+  --color-purple-400: #93baf8;
+  --color-purple-500: #4a82f0;
+  --color-purple-600: #3a72e0;
+  --color-purple-700: #2a5fc8;
+  --color-purple-800: #1a4aaa;
+  --color-purple-900: #0e3280;
+
+  /* — Accent 2: Emerald (growth) — */
+  --color-teal-50:  #f0fdf8;
+  --color-teal-100: #ccfbea;
+  --color-teal-200: #99f5d2;
+  --color-teal-300: #5ee8b4;
+  --color-teal-400: #22c78e;
+  --color-teal-500: #10a870;
+  --color-teal-600: #0d9060;
+  --color-teal-700: #0a7550;
+  --color-teal-800: #085c40;
+  --color-teal-900: #064530;
+
+  /* — Porsche Signature Red — */
+  --color-porsche-red:       #d5001c;
+  --color-porsche-red-dark:  #a30015;
+  --color-porsche-red-light: #ff1744;
+
+  /* — Semantic Palette Colors — */
+  --color-success-50:  #f0fdf4;
+  --color-success-500: #50c878;
+  --color-success-700: #15803d;
+  --color-success: #30d158;        /* Apple green (premium alias) */
+
+  --color-error-50:  #fef2f2;
+  --color-error-500: #e05050;
+  --color-error-700: #b91c1c;
+  --color-error: #ff453a;          /* Apple red (premium alias) */
+
+  --color-warning-50:  #fefce8;
+  --color-warning-500: #eab308;
+  --color-warning-700: #a16207;
+  --color-warning: #ff9f0a;        /* Apple orange (premium alias) */
+
+  --color-info-50:  #eff6ff;
+  --color-info-500: #3b82f6;
+  --color-info-700: #1d4ed8;
+  --color-info: #0a84ff;           /* Apple blue (premium alias) */
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SEMANTIC TOKENS — Backgrounds
+     ══════════════════════════════════════════════════════════ */
+
+  /* Canonical dark-mode backgrounds (premium values — load second, win) */
+  --bg-primary:   var(--color-near-black);   /* #0a0a0a */
+  --bg-secondary: var(--color-charcoal);     /* #1c1c1e */
+  --bg-tertiary:  var(--color-graphite);     /* #2c2c2e */
+  --bg-elevated:  rgba(44, 44, 46, 0.95);
+  --bg-glass:     rgba(28, 28, 30, 0.72);
+  --bg-overlay:   rgba(0, 0, 0, 0.8);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SEMANTIC TOKENS — Borders
+     ══════════════════════════════════════════════════════════ */
+
+  --border-subtle:   var(--color-neutral-800);
+  --border-default:  var(--color-neutral-800);
+  --border-emphasis: var(--color-gold-700);
+  --border-focus:    var(--color-gold-500);
+  --border-primary:  rgba(255, 255, 255, 0.15);
+  --border-secondary: rgba(255, 255, 255, 0.08);
+  --border-accent:   var(--color-gold-500);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SEMANTIC TOKENS — Text
+     ══════════════════════════════════════════════════════════ */
+
+  /* Canonical values — premium wins for primary/secondary/tertiary */
+  --text-primary:   var(--color-white);               /* #ffffff */
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --text-tertiary:  rgba(255, 255, 255, 0.55);
+  --text-inverse:   var(--color-neutral-950);
+  --text-link:      var(--color-gold-400);
+  --text-link-hover: var(--color-gold-300);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SEMANTIC TOKENS — Interactive
+     ══════════════════════════════════════════════════════════ */
+
+  --interactive-primary:        var(--color-gold-500);
+  --interactive-primary-hover:  var(--color-gold-400);
+  --interactive-primary-active: var(--color-gold-600);
+
+  --interactive-secondary:        var(--color-neutral-850);
+  --interactive-secondary-hover:  var(--color-neutral-800);
+  --interactive-secondary-active: var(--color-neutral-700);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SEMANTIC TOKENS — Status
+     ══════════════════════════════════════════════════════════ */
+
+  --status-success: var(--color-success-500);
+  --status-error:   var(--color-error-500);
+  --status-warning: var(--color-gold-500);
+  --status-info:    var(--color-teal-400);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SHORTHAND ALIASES — App-wide single-letter tokens
+     Used throughout app.css, components/, and inline styles.
+     All map to tokens defined above.
+     ══════════════════════════════════════════════════════════ */
+
+  --bg:        var(--color-neutral-950);   /* #05091a */
+  --bg2:       var(--color-neutral-900);   /* #0b1226 */
+  --bg3:       var(--color-neutral-850);   /* #111d38 */
+  --border:    #1d2f52;                    /* visible against bg3 */
+  --gold:      var(--color-gold-500);      /* #c9a84c — THE gold */
+  --gold-dim:  var(--color-gold-600);      /* #a88840 */
+  --text:      #eceaf4;                    /* primary text (WCAG: >15:1 on --bg) */
+  --text-dim:  #c4c0d8;                    /* WCAG AA 5.5:1 on #1a1a24 (was #b0acc8 @ 4.2:1) */
+  --text-muted:#8fafc8;                    /* WCAG AA on #05091a — blue-tinted muted */
+  --accent:    #5b8af0;                    /* trust-blue accent */
+  --accent2:   var(--color-teal-400);      /* #22c78e */
+  --red:       var(--color-error-500);     /* #e05050 */
+  --green:     var(--color-success-500);   /* #50c878 */
+  --radius:    var(--radius-xl);           /* 16px */
+  --shadow:    0 4px 24px rgba(0,0,0,0.5);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     TYPOGRAPHY
+     ══════════════════════════════════════════════════════════ */
+
+  /* Font Families */
+  --font-sans:    'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+                  'Segoe UI', system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+                  'Segoe UI', system-ui, sans-serif;
+
+  /* Font Sizes — fluid clamp scale (responsive, WCAG-friendly) */
+  --text-xs:   clamp(0.7rem,  0.65rem + 0.25vw, 0.75rem);   /* 11–12px */
+  --text-sm:   clamp(0.8rem,  0.75rem + 0.25vw, 0.875rem);  /* 13–14px */
+  --text-base: clamp(0.9rem,  0.85rem + 0.25vw, 1rem);      /* 14–16px */
+  --text-md:   1.063rem;                                      /* 17px — Apple body */
+  --text-lg:   clamp(1rem,    0.95rem + 0.25vw, 1.125rem);  /* 16–18px */
+  --text-xl:   clamp(1.125rem, 1rem  + 0.5vw,  1.25rem);   /* 18–20px */
+  --text-2xl:  clamp(1.25rem,  1.1rem + 0.75vw, 1.5rem);   /* 20–24px */
+  --text-3xl:  clamp(1.5rem,   1.3rem + 1vw,    1.875rem); /* 24–30px */
+  --text-4xl:  clamp(1.875rem, 1.5rem + 1.5vw,  2.25rem);  /* 30–36px */
+
+  /* Font Size Backward-Compat Aliases */
+  --font-size-xs:   var(--text-xs);
+  --font-size-sm:   var(--text-sm);
+  --font-size-base: var(--text-base);
+  --font-size-md:   var(--text-lg);
+  --font-size-lg:   var(--text-xl);
+  --font-size-xl:   var(--text-2xl);
+  --font-size-2xl:  var(--text-3xl);
+  --font-size-3xl:  var(--text-4xl);
+
+  /* Font Weights */
+  --font-light:    300;
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+  /* Premium aliases */
+  --weight-thin:     100;
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-heavy:    800;
+
+  /* Line Heights */
+  --leading-none:    1;
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose:   1.75;
+
+  /* Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight:   -0.025em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.025em;
+  --tracking-wider:   0.05em;
+  --tracking-widest:  0.1em;
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SPACING — 4px base unit
+     ══════════════════════════════════════════════════════════ */
+
+  --space-0:   0;
+  --space-px:  1px;
+  --space-0-5: 0.125rem;   /* 2px */
+  --space-1:   0.25rem;    /* 4px */
+  --space-2:   0.5rem;     /* 8px */
+  --space-3:   0.75rem;    /* 12px */
+  --space-4:   1rem;       /* 16px */
+  --space-5:   1.25rem;    /* 20px */
+  --space-6:   1.5rem;     /* 24px */
+  --space-8:   2rem;       /* 32px */
+  --space-10:  2.5rem;     /* 40px */
+  --space-12:  3rem;       /* 48px */
+  --space-16:  4rem;       /* 64px */
+  --space-20:  5rem;       /* 80px */
+  --space-24:  6rem;       /* 96px */
+
+
+  /* ═══════════════════════════════════════════════════════════
+     LAYOUT
+     ══════════════════════════════════════════════════════════ */
+
+  --container-lg: 1024px;
+
+  /* Z-Index Stack */
+  --z-sticky:          20;
+  --z-header:          90;
+  --z-dropdown:        100;
+  --z-mobile-nav:      150;
+  --z-modal-backdrop:  200;
+  --z-modal:           210;
+  --z-tooltip:         300;
+  --z-notification:    400;
+  --z-onboarding:      500;
+
+
+  /* ═══════════════════════════════════════════════════════════
+     BORDERS & RADII
+     ══════════════════════════════════════════════════════════ */
+
+  /* Radii — px values (premium precision) */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  --border-width-thin:   1px;
+  --border-width-medium: 2px;
+
+
+  /* ═══════════════════════════════════════════════════════════
+     SHADOWS & ELEVATION
+     ══════════════════════════════════════════════════════════ */
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2),
+               0 1px 2px 0 rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25),
+               0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+               0 4px 6px -2px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35),
+               0 10px 10px -5px rgba(0, 0, 0, 0.15);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+
+  --shadow-focus:       0 0 0 3px rgba(201, 168, 76, 0.3);
+  --shadow-focus-error: 0 0 0 3px rgba(224, 80, 80, 0.3);
+
+  /* Glow Effects */
+  --glow-red:  0 0 20px rgba(213, 0, 28, 0.4);
+  --glow-gold: 0 0 20px rgba(212, 175, 55, 0.3);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     BLUR & EFFECTS
+     ══════════════════════════════════════════════════════════ */
+
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 16px;
+  --blur-xl: 24px;
+
+  --backdrop-blur-md: blur(12px) saturate(180%);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     TRANSITIONS & ANIMATIONS
+     ══════════════════════════════════════════════════════════ */
+
+  --duration-instant: 100ms;
+  --duration-fast:    150ms;
+  --duration-normal:  200ms;
+  --duration-slow:    300ms;
+  --duration-slower:  500ms;
+
+  --ease-in:     cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --transition-colors:    color var(--duration-normal) var(--ease-in-out),
+                          background-color var(--duration-normal) var(--ease-in-out),
+                          border-color var(--duration-normal) var(--ease-in-out);
+  --transition-transform: transform var(--duration-normal) var(--ease-out);
+  --transition-all:       all var(--duration-normal) var(--ease-in-out);
+
+
+  /* ═══════════════════════════════════════════════════════════
+     GRADIENTS
+     ══════════════════════════════════════════════════════════ */
+
+  --gradient-accent-glow: radial-gradient(
+    rgba(213, 0, 28, 0.15) 0%,
+    rgba(213, 0, 28, 0) 70%
+  );
+
+  --gradient-gold-glow: radial-gradient(
+    rgba(212, 175, 55, 0.1) 0%,
+    rgba(212, 175, 55, 0) 70%
+  );
+
+  --gradient-mesh:
+    radial-gradient(at 0% 0%,   rgba(213, 0, 28, 0.1)  0%, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(10, 132, 255, 0.06) 0%, transparent 50%);
+
+  --gradient-surface: linear-gradient(
+    var(--color-graphite) 0%,
+    var(--color-charcoal) 100%
+  );
+
+
+  /* ═══════════════════════════════════════════════════════════
+     COMPONENT TOKENS
+     ══════════════════════════════════════════════════════════ */
+
+  /* Forms */
+  --input-height-sm: 2rem;
+  --input-height-md: 2.5rem;
+  --input-height-lg: 3rem;
+  --input-padding-x: var(--space-3);
+  --input-padding-y: var(--space-2);
+
+  /* Buttons */
+  --button-height-sm: 2rem;
+  --button-height-md: 2.5rem;
+  --button-height-lg: 3rem;
+
+  /* Touch Targets (WCAG AA minimum) */
+  --touch-target-min: 44px;
+
+  /* Header */
+  --header-height: 60px;
+
+  /* Cards */
+  --card-padding: var(--space-6);
+  --card-radius:  var(--radius-lg);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME — warm celestial parchment
+   Activated by: data-theme="light" on <html> (JS toggle + localStorage)
+   OR: system prefers-color-scheme: light (when no manual override)
+   ══════════════════════════════════════════════════════════ */
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-primary:   #f6f0e8;
+  --bg-secondary: #ede4d6;
+  --bg-tertiary:  #e4d8c8;
+  --bg-elevated:  #ede4d6;
+  --bg-overlay:   rgba(0, 0, 0, 0.55);
+
+  --border-subtle:    #c8b898;
+  --border-default:   #c8b898;
+  --border-emphasis:  var(--color-gold-600);
+
+  --text-primary:    #1c1409;
+  --text-secondary:  #5a4528;
+  --text-tertiary:   #7a6845;
+  --text-inverse:    #f6f0e8;
+  --text-link:       var(--color-gold-700);
+  --text-link-hover: var(--color-gold-600);
+
+  --interactive-secondary:        #ede4d6;
+  --interactive-secondary-hover:  #ddd0be;
+  --interactive-secondary-active: #cdc0ae;
+
+  /* Shorthand overrides for light mode */
+  --bg:        #f6f0e8;
+  --bg2:       #ede4d6;
+  --bg3:       #e4d8c8;
+  --border:    #c8b898;
+  --text:      #1c1409;
+  --text-dim:  #4a3a24;
+  --text-muted:#7a6845;
+  --accent:    #1a50c0;
+  --shadow:    0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* System preference — respected when user hasn't manually toggled */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+
+    --bg-primary:   #f6f0e8;
+    --bg-secondary: #ede4d6;
+    --bg-tertiary:  #e4d8c8;
+    --bg-elevated:  #ede4d6;
+    --bg-overlay:   rgba(0, 0, 0, 0.55);
+
+    --border-subtle:    #c8b898;
+    --border-default:   #c8b898;
+    --border-emphasis:  var(--color-gold-600);
+
+    --text-primary:    #1c1409;
+    --text-secondary:  #5a4528;
+    --text-tertiary:   #7a6845;
+    --text-inverse:    #f6f0e8;
+    --text-link:       var(--color-gold-700);
+    --text-link-hover: var(--color-gold-600);
+
+    --interactive-secondary:        #ede4d6;
+    --interactive-secondary-hover:  #ddd0be;
+    --interactive-secondary-active: #cdc0ae;
+
+    --bg:        #f6f0e8;
+    --bg2:       #ede4d6;
+    --bg3:       #e4d8c8;
+    --border:    #c8b898;
+    --text:      #1c1409;
+    --text-dim:  #4a3a24;
+    --text-muted:#7a6845;
+    --accent:    #1a50c0;
+    --shadow:    0 4px 24px rgba(0, 0, 0, 0.12);
+
+    /* Fix: #c4c0d8 is invisible on light --bg-tertiary (#c7c7cc) */
+    --text-dim:  rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Premium light-mode overlay (inherits from :root:not([data-theme]) above) */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary:    var(--color-white);
+    --bg-secondary:  var(--color-snow);
+    --bg-tertiary:   var(--color-aluminum);
+    --bg-elevated:   rgba(255, 255, 255, 0.95);
+    --bg-glass:      rgba(255, 255, 255, 0.72);
+
+    --text-primary:   var(--color-black);
+    --text-secondary: rgba(0, 0, 0, 0.85);
+    --text-tertiary:  rgba(0, 0, 0, 0.55);
+    --text-dim:       rgba(0, 0, 0, 0.65);
+
+    --border-primary:   rgba(0, 0, 0, 0.12);
+    --border-secondary: rgba(0, 0, 0, 0.06);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES — Common Patterns
+   ══════════════════════════════════════════════════════════ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus-visible-outline {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}

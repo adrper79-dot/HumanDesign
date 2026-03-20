@@ -1,0 +1,25 @@
+{
+  "apiBase": "https://prime-self-api.adrper79.workers.dev",
+  "frontendBase": "https://selfprime.net",
+  "authMode": "register",
+  "email": "gatecheck_1774008410370@example.com",
+  "individualSessionId": "cs_live_b1vI0v6L7IDd53axJoui2CIQJtPNhSrSWoS9zPPLymFnKa6b4EFUiBdTb5",
+  "individualSessionReused": true,
+  "practitionerSessionId": "cs_live_b1pbmHNABKM3Ahy1uLAXkSxRuH2nvNpIBFdcNPzl5wuh9stvF0sNV6YZdj",
+  "agencyContactRequired": true,
+  "portalStatus": 200,
+  "portalOk": true,
+  "portalBody": {
+    "ok": true,
+    "url": "https://billing.stripe.com/p/session/live_YWNjdF8xU2xDY0ZBVzEyMjlUWnRlLF9VQk9jak9EaUxobHFGellwa2NaYlN3UkdUSzlsVm5Y0100J4TXBlBp"
+  },
+  "cyclesParamValidation": {
+    "status": 400,
+    "errorCorrect": true
+  },
+  "rectifyParamValidation": {
+    "status": 400,
+    "errorCorrect": true,
+    "error": "Validation failed"
+  }
+}

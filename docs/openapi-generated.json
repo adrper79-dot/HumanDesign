@@ -1,0 +1,3188 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Prime Self API",
+    "version": "2026-03-20",
+    "description": "Auto-generated from workers/src/index.js on 2026-03-20. Run 'npm run docs:api' to update."
+  },
+  "servers": [
+    {
+      "url": "https://selfprime.net/api",
+      "description": "Production"
+    },
+    {
+      "url": "https://prime-self-api.adrper79.workers.dev/api",
+      "description": "Worker direct"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/achievements": {
+      "get": {
+        "operationId": "handleGetAchievements",
+        "tags": [
+          "achievements"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/achievements/leaderboard": {
+      "get": {
+        "operationId": "handleGetLeaderboard",
+        "tags": [
+          "achievements"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/achievements/progress": {
+      "get": {
+        "operationId": "handleGetProgress",
+        "tags": [
+          "achievements"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/achievements/track": {
+      "post": {
+        "operationId": "handleTrackEvent",
+        "tags": [
+          "achievements"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/promo": {
+      "get": {
+        "operationId": "handleListPromos",
+        "tags": [
+          "admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "handleCreatePromo",
+        "tags": [
+          "admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "summary": "List user's transit alerts",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new transit alert",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/alerts/{id}": {
+      "delete": {
+        "summary": "Delete alert",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get alert details",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update alert",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/alerts/from-template/{id}": {
+      "post": {
+        "summary": "Create alert from template",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/alerts/history": {
+      "get": {
+        "summary": "Get alert delivery history",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/alerts/templates": {
+      "get": {
+        "summary": "List alert templates",
+        "tags": [
+          "alerts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/errors": {
+      "get": {
+        "summary": "Error rate + top errors (admin)",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/events": {
+      "get": {
+        "summary": "Event trends over time (admin)",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/funnel/{name}": {
+      "get": {
+        "summary": "Conversion funnel analysis (admin)",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/overview": {
+      "get": {
+        "summary": "DAU/WAU/MAU + key metrics (admin)",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/retention": {
+      "get": {
+        "summary": "Cohort retention curves (admin)",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/revenue": {
+      "get": {
+        "summary": "Revenue metrics (admin)",
+        "tags": [
+          "analytics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Email-based login, get JWT pair",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Revoke all refresh tokens",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Get current user info",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/oauth/exchange": {
+      "post": {
+        "operationId": "handleOAuthExchange",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "summary": "Rotate refresh token, get new JWT pair",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Create account, get JWT pair",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "summary": "Resend verification email (auth required)",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "summary": "Verify email with token (AUDIT-SEC-003)",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/cancel": {
+      "post": {
+        "operationId": "handleCancelSubscription",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/checkout": {
+      "post": {
+        "operationId": "handleCheckout",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/checkout-one-time": {
+      "post": {
+        "operationId": "handleOneTimeCheckout",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/portal": {
+      "post": {
+        "operationId": "handlePortal",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/subscription": {
+      "get": {
+        "operationId": "handleGetSubscription",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/tiers": {
+      "get": {
+        "operationId": "handleGetTierConfig",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/upgrade": {
+      "post": {
+        "operationId": "handleUpgradeSubscription",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/chart/{id}": {
+      "get": {
+        "summary": "Retrieve saved chart by ID",
+        "tags": [
+          "chart"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/chart/calculate": {
+      "post": {
+        "operationId": "handleCalculate",
+        "summary": "Full chart calculation",
+        "tags": [
+          "chart"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/chart/history": {
+      "get": {
+        "operationId": "handleChartHistory",
+        "summary": "Get user's saved charts",
+        "tags": [
+          "chart"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/chart/save": {
+      "post": {
+        "operationId": "handleSaveChart",
+        "summary": "Save chart to database",
+        "tags": [
+          "chart"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/checkin": {
+      "get": {
+        "operationId": "handleCheckinToday",
+        "summary": "Get today's check-in status (requires auth)",
+        "tags": [
+          "checkin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "handleCheckinCreate",
+        "summary": "Create/update today's daily check-in (requires auth)",
+        "tags": [
+          "checkin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/checkin/history": {
+      "get": {
+        "operationId": "handleCheckinHistory",
+        "summary": "Get check-in history with pagination (requires auth)",
+        "tags": [
+          "checkin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/checkin/reminder": {
+      "get": {
+        "operationId": "handleGetCheckinReminder",
+        "summary": "Get check-in reminder settings (requires auth)",
+        "tags": [
+          "checkin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "handleSetCheckinReminder",
+        "summary": "Set/update check-in reminder preferences (requires auth)",
+        "tags": [
+          "checkin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/checkin/stats": {
+      "get": {
+        "operationId": "handleCheckinStats",
+        "summary": "Get alignment stats, trends, adherence rates (requires auth)",
+        "tags": [
+          "checkin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/checkin/streak": {
+      "get": {
+        "operationId": "handleCheckinStreak",
+        "summary": "Get current check-in streak info (requires auth)",
+        "tags": [
+          "checkin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client/diary-sharing": {
+      "get": {
+        "operationId": "handleGetDiarySharingPrefs",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "handleSetDiarySharing",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client/messages": {
+      "get": {
+        "operationId": "handleClientListMessages",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "handleClientSendMessage",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client/my-actions": {
+      "get": {
+        "operationId": "handleClientActions",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client/my-practitioners": {
+      "get": {
+        "operationId": "handleGetClientPractitioners",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client/my-readings": {
+      "get": {
+        "operationId": "handleClientReadings",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client/reviews": {
+      "post": {
+        "operationId": "handleSubmitReview",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client/shared-notes": {
+      "get": {
+        "operationId": "handleGetClientSharedNotes",
+        "tags": [
+          "client"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cluster/{id}": {
+      "get": {
+        "summary": "Get cluster details",
+        "tags": [
+          "cluster"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cluster/{id}/join": {
+      "post": {
+        "summary": "Add member to cluster",
+        "tags": [
+          "cluster"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cluster/{id}/leave": {
+      "post": {
+        "summary": "Leave a cluster",
+        "tags": [
+          "cluster"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cluster/{id}/synthesize": {
+      "post": {
+        "summary": "Cluster intelligence synthesis",
+        "tags": [
+          "cluster"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cluster/create": {
+      "post": {
+        "summary": "Create a cluster",
+        "tags": [
+          "cluster"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cluster/list": {
+      "get": {
+        "summary": "List user's clusters",
+        "tags": [
+          "cluster"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compare/categories": {
+      "get": {
+        "operationId": "handleGetCategories",
+        "tags": [
+          "compare"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compare/category/{category}": {
+      "get": {
+        "summary": "Get celebrities by category (public)",
+        "tags": [
+          "compare"
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compare/celebrities": {
+      "get": {
+        "operationId": "handleGetCelebrityMatches",
+        "summary": "Get top celebrity matches for user (requires auth)",
+        "tags": [
+          "compare"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compare/celebrities/{id}": {
+      "get": {
+        "operationId": "handleGetCelebrityMatches",
+        "summary": "Get specific celebrity match details (requires auth)",
+        "tags": [
+          "compare"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compare/list": {
+      "get": {
+        "operationId": "handleGetAllCelebrities",
+        "summary": "List all available celebrities (public)",
+        "tags": [
+          "compare"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compare/search": {
+      "get": {
+        "operationId": "handleSearchCelebrities",
+        "tags": [
+          "compare"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compare/search?q=query": {
+      "get": {
+        "summary": "Search celebrities (public)",
+        "tags": [
+          "compare"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/composite": {
+      "post": {
+        "operationId": "handleComposite",
+        "summary": "Relationship / composite chart",
+        "tags": [
+          "composite"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cycles": {
+      "get": {
+        "operationId": "handleCycles",
+        "summary": "Major life cycles (Saturn return, etc.)",
+        "tags": [
+          "cycles"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/diary": {
+      "get": {
+        "summary": "List all diary entries",
+        "tags": [
+          "diary"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create life event diary entry",
+        "tags": [
+          "diary"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/diary/{id}": {
+      "delete": {
+        "summary": "Delete diary entry",
+        "tags": [
+          "diary"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get diary entry",
+        "tags": [
+          "diary"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update diary entry",
+        "tags": [
+          "diary"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/directory": {
+      "get": {
+        "operationId": "handleListDirectory",
+        "tags": [
+          "directory"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/email/unsubscribe": {
+      "post": {
+        "operationId": "async",
+        "tags": [
+          "email"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/embed/validate": {
+      "get": {
+        "operationId": "handleEmbedValidate",
+        "tags": [
+          "embed"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "options": {
+        "operationId": "handleEmbedValidate",
+        "tags": [
+          "embed"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/experiments": {
+      "get": {
+        "summary": "List all A/B experiments (admin)",
+        "tags": [
+          "experiments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new experiment (admin)",
+        "tags": [
+          "experiments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/experiments/{name}": {
+      "get": {
+        "summary": "Get experiment results + significance (admin)",
+        "tags": [
+          "experiments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/experiments/{name}/status": {
+      "patch": {
+        "summary": "Update experiment status (admin)",
+        "tags": [
+          "experiments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/geocode": {
+      "get": {
+        "operationId": "handleGeocode",
+        "summary": "City → lat/lng + timezone",
+        "tags": [
+          "geocode"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "tags": [
+          "health"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/invitations/practitioner": {
+      "get": {
+        "operationId": "handleGetInvitationDetails",
+        "tags": [
+          "invitations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/invitations/practitioner/accept": {
+      "post": {
+        "operationId": "handleAcceptInvitation",
+        "tags": [
+          "invitations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/keys": {
+      "get": {
+        "summary": "List user's API keys",
+        "tags": [
+          "keys"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Generate new API key",
+        "tags": [
+          "keys"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/keys/{id}": {
+      "delete": {
+        "summary": "Deactivate API key",
+        "tags": [
+          "keys"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get API key details",
+        "tags": [
+          "keys"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/keys/{id}/usage": {
+      "get": {
+        "summary": "Get API key usage stats",
+        "tags": [
+          "keys"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notion/auth": {
+      "get": {
+        "operationId": "handleNotionAuth",
+        "summary": "Initiate Notion OAuth flow (requires auth)",
+        "tags": [
+          "notion"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notion/callback": {
+      "get": {
+        "operationId": "handleNotionCallback",
+        "summary": "Notion OAuth callback handler (public)",
+        "tags": [
+          "notion"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notion/disconnect": {
+      "delete": {
+        "operationId": "handleNotionDisconnect",
+        "summary": "Disconnect Notion integration (requires auth)",
+        "tags": [
+          "notion"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notion/export/profile/{id}": {
+      "post": {
+        "summary": "Export profile as rich Notion page (requires auth)",
+        "tags": [
+          "notion"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notion/status": {
+      "get": {
+        "operationId": "handleNotionStatus",
+        "summary": "Get Notion connection status (requires auth)",
+        "tags": [
+          "notion"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notion/sync/clients": {
+      "post": {
+        "operationId": "handleSyncClients",
+        "summary": "Sync practitioner clients to Notion (requires auth)",
+        "tags": [
+          "notion"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/og/achievement": {
+      "get": {
+        "operationId": "handleOGAchievement",
+        "tags": [
+          "og"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/og/celebrity": {
+      "get": {
+        "operationId": "handleOGCelebrity",
+        "tags": [
+          "og"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/og/chart": {
+      "get": {
+        "operationId": "handleOGChart",
+        "tags": [
+          "og"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/og/referral": {
+      "get": {
+        "operationId": "handleOGReferral",
+        "tags": [
+          "og"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/onboarding/advance": {
+      "post": {
+        "summary": "Mark chapter as read",
+        "tags": [
+          "onboarding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/onboarding/forge": {
+      "get": {
+        "summary": "Personalized Savannah arc",
+        "tags": [
+          "onboarding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/onboarding/forge/{key}": {
+      "get": {
+        "summary": "Specific forge arc",
+        "tags": [
+          "onboarding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/onboarding/intro": {
+      "get": {
+        "summary": "Savannah story intro (public)",
+        "tags": [
+          "onboarding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/onboarding/progress": {
+      "get": {
+        "summary": "User chapter progress",
+        "tags": [
+          "onboarding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/clients": {
+      "get": {
+        "summary": "List clients",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/clients/{id}": {
+      "delete": {
+        "summary": "Remove client",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "summary": "Client detail (chart + profile)",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/clients/add": {
+      "post": {
+        "summary": "Add client by email",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/directory-profile": {
+      "get": {
+        "operationId": "handleGetDirectoryProfile",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "operationId": "handleUpdateDirectoryProfile",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/directory-stats": {
+      "get": {
+        "operationId": "handleGetDirectoryStats",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/gifts": {
+      "get": {
+        "operationId": "handleListGifts",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "handleCreateGift",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/profile": {
+      "get": {
+        "summary": "Get practitioner profile",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/referral-link": {
+      "get": {
+        "operationId": "handleGetReferralLink",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/register": {
+      "post": {
+        "summary": "Register as practitioner",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/practitioner/reviews": {
+      "get": {
+        "operationId": "handleListPractitionerReviews",
+        "tags": [
+          "practitioner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile/{id}": {
+      "get": {
+        "summary": "Get saved profile by ID",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile/{id}/pdf": {
+      "get": {
+        "summary": "Export profile as PDF",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile/generate": {
+      "post": {
+        "operationId": "handleProfile",
+        "summary": "Prime Self Profile (LLM synthesis)",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile/generate/stream": {
+      "post": {
+        "operationId": "handleProfileStream",
+        "summary": "Profile generation with SSE progress (BL-OPT-004)",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile/list": {
+      "get": {
+        "operationId": "handleListProfiles",
+        "summary": "List user's saved profiles",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/profile/search": {
+      "get": {
+        "operationId": "handleSearchProfiles",
+        "tags": [
+          "profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/promo/apply": {
+      "post": {
+        "operationId": "handleApplyPromo",
+        "tags": [
+          "promo"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/psychometric": {
+      "get": {
+        "summary": "Get psychometric data",
+        "tags": [
+          "psychometric"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/psychometric/save": {
+      "post": {
+        "summary": "Save Big Five + VIA assessments",
+        "tags": [
+          "psychometric"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/push/history": {
+      "get": {
+        "summary": "Get notification delivery history",
+        "tags": [
+          "push"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/push/preferences": {
+      "get": {
+        "summary": "Get notification preferences",
+        "tags": [
+          "push"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update notification preferences",
+        "tags": [
+          "push"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/push/subscribe": {
+      "post": {
+        "summary": "Subscribe to push notifications",
+        "tags": [
+          "push"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/push/test": {
+      "post": {
+        "summary": "Send test notification",
+        "tags": [
+          "push"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/push/unsubscribe": {
+      "delete": {
+        "summary": "Unsubscribe from push notifications",
+        "tags": [
+          "push"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/push/vapid-key": {
+      "get": {
+        "summary": "Get VAPID public key for push subscription",
+        "tags": [
+          "push"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rectify": {
+      "get": {
+        "operationId": "handleListRectifications",
+        "tags": [
+          "rectify"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "operationId": "handleRectify",
+        "summary": "Birth-time sensitivity analysis",
+        "tags": [
+          "rectify"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rectify/{rectificationId}": {
+      "get": {
+        "operationId": "handleListRectifications",
+        "summary": "Get rectification progress and result",
+        "tags": [
+          "rectify"
+        ],
+        "parameters": [
+          {
+            "name": "rectificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/referrals": {
+      "get": {
+        "operationId": "handleGetStats",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/referrals/apply": {
+      "post": {
+        "operationId": "handleApplyCode",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/referrals/claim": {
+      "post": {
+        "operationId": "handleClaimReward",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/referrals/code": {
+      "post": {
+        "operationId": "handleGenerateCode",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/referrals/history": {
+      "get": {
+        "operationId": "handleGetHistory",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/referrals/rewards": {
+      "get": {
+        "operationId": "handleGetRewards",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/referrals/validate": {
+      "post": {
+        "operationId": "handleValidateCode",
+        "tags": [
+          "referrals"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/share/achievement": {
+      "post": {
+        "operationId": "handleShareAchievement",
+        "summary": "Generate achievement share content (requires auth)",
+        "tags": [
+          "share"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/share/celebrity": {
+      "post": {
+        "operationId": "handleShareCelebrity",
+        "summary": "Generate celebrity match share content (requires auth)",
+        "tags": [
+          "share"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/share/chart": {
+      "post": {
+        "operationId": "handleShareChart",
+        "summary": "Generate chart share content (requires auth)",
+        "tags": [
+          "share"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/share/referral": {
+      "post": {
+        "operationId": "handleShareReferral",
+        "summary": "Generate referral invite share content (requires auth)",
+        "tags": [
+          "share"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/share/stats": {
+      "get": {
+        "operationId": "handleGetShareStats",
+        "summary": "Get user's sharing stats and viral coefficient (requires auth)",
+        "tags": [
+          "share"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sms/send-digest": {
+      "post": {
+        "summary": "Trigger digest send",
+        "tags": [
+          "sms"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sms/subscribe": {
+      "post": {
+        "summary": "Subscribe to SMS digests",
+        "tags": [
+          "sms"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sms/unsubscribe": {
+      "post": {
+        "summary": "Unsubscribe from SMS digests",
+        "tags": [
+          "sms"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sms/webhook": {
+      "post": {
+        "summary": "Telnyx inbound SMS webhook",
+        "tags": [
+          "sms"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/stats/activity": {
+      "get": {
+        "operationId": "handleGetActivityStats",
+        "summary": "Get public activity statistics for social proof (public)",
+        "tags": [
+          "stats"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/stats/leaderboard": {
+      "get": {
+        "operationId": "handleGetStatsLeaderboard",
+        "summary": "Get top users by achievement points (public)",
+        "tags": [
+          "stats"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/timing/find-dates": {
+      "post": {
+        "operationId": "handleTiming",
+        "summary": "Find optimal dates for intention",
+        "tags": [
+          "timing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/timing/templates": {
+      "get": {
+        "operationId": "listIntentionTemplates",
+        "summary": "List intention templates",
+        "tags": [
+          "timing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/transits/forecast": {
+      "get": {
+        "operationId": "handleForecast",
+        "summary": "Transit forecast",
+        "tags": [
+          "transits"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/transits/today": {
+      "get": {
+        "operationId": "handleTransits",
+        "summary": "Current transit positions",
+        "tags": [
+          "transits"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/validation": {
+      "get": {
+        "summary": "Get validation data",
+        "tags": [
+          "validation"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/validation/save": {
+      "post": {
+        "summary": "Save behavioral validation data",
+        "tags": [
+          "validation"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/webhook/stripe": {
+      "post": {
+        "operationId": "handleStripeWebhook",
+        "summary": "Process Stripe webhook events",
+        "tags": [
+          "webhook"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/webhooks": {
+      "get": {
+        "summary": "List user's webhooks",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Register webhook endpoint",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/webhooks/{id}": {
+      "delete": {
+        "summary": "Delete webhook",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get webhook details",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/webhooks/{id}/deliveries": {
+      "get": {
+        "summary": "View delivery history",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/webhooks/{id}/test": {
+      "post": {
+        "summary": "Test webhook delivery",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

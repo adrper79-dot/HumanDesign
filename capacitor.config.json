@@ -1,0 +1,43 @@
+{
+  "appId": "net.selfprime.app",
+  "appName": "Prime Self",
+  "webDir": "frontend",
+  "bundledWebRuntime": false,
+  "server": {
+    "allowNavigation": ["*.primeself.app", "*.selfprime.net"]
+  },
+  "ios": {
+    "scheme": "primeself",
+    "limitsNavigationsToAppBoundDomains": true,
+    "backgroundColor": "#0a0a0f",
+    "preferredContentMode": "mobile",
+    "minVersion": "16.0"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0a0a0f",
+    "minWebViewVersion": "88"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 1000,
+      "backgroundColor": "#0a0a0f",
+      "androidSplashResourceName": "splash",
+      "iosSplashResourceName": "Default",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#0a0a0f",
+      "overlaysWebView": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark"
+    }
+  }
+}

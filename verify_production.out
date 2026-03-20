@@ -1,0 +1,6 @@
+Verifying production endpoints against https://prime-self-api.adrper79.workers.dev
+PASS health -> 200
+PASS geocode -> 200
+PASS register validation -> 400
+PASS forecast validation -> 400
+Verification complete: 4/4 passed

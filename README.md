@@ -287,7 +287,7 @@ All chart calculations verified against two reference charts:
 ## Documentation
 
 - [Architecture overview](ARCHITECTURE.md) — system design and data flow
-- [Documentation index](DOCUMENTATION_INDEX.md) — current documentation map
+- [Documentation overview](docs/OVERVIEW.md) — current documentation map
 - [API reference overview](docs/API.md) — quick API reference
 - [Detailed API spec](docs/API_SPEC.md) — historical detailed spec; verify against router for newer routes
 - [Operations runbook](docs/OPERATION.md) — deployment, secrets, monitoring, rollback

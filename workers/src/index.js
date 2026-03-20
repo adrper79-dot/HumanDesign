@@ -120,6 +120,11 @@
  *   GET  /api/experiments/:name           – Get experiment results + significance (admin)
  *   POST /api/experiments                 – Create new experiment (admin)
  *   PATCH /api/experiments/:name/status   – Update experiment status (admin)
+ *
+ *   POST /api/live-session/invite/:clientId  – Practitioner creates session invite link (auth)
+ *   GET  /api/live-session/join/:token       – Client validates invite token (auth)
+ *   GET  /api/live-session/connect/:sessionId – WebSocket upgrade to Durable Object (auth)
+ *   POST /api/live-session/:sessionId/end    – End session + save transcript note (auth)
  */
 
 // Data injection for Workers runtime — MUST be first import
@@ -192,6 +197,7 @@ import { handleValidation } from './handlers/validation.js';
 import { handlePsychometric } from './handlers/psychometric.js';
 import { handleDiary } from './handlers/diary.js';
 import { handleStripeWebhook } from './handlers/stripe-webhook.js';
+import { handleRevenueCatWebhook } from './handlers/revenuecat-webhook.js';
 import { handleWebhooks } from './handlers/webhooks.js';
 import {
   handleCheckout,
@@ -283,6 +289,13 @@ import { applySecurityHeaders } from './middleware/security.js';
 import { validateRequestBody } from './middleware/validate.js';
 import { getCacheMetrics, kvCache } from './lib/cache.js';
 import { runDailyTransitCron } from './cron.js';
+import {
+  handleCreateInvite,
+  handleJoinSession,
+  handleLiveSessionConnect,
+  handleEndSession,
+} from './handlers/live-session.js';
+export { LiveSession } from './durable-objects/LiveSession.js';
 
 // Routes that require authentication
 const AUTH_ROUTES = new Set([
@@ -296,7 +309,7 @@ const AUTH_ROUTES = new Set([
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
-const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/agency/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply', '/api/client/', '/api/calendar', '/api/messages/'];
+const AUTH_PREFIXES = ['/api/chart/', '/api/cluster/', '/api/profile/', '/api/practitioner/', '/api/agency/', '/api/onboarding/', '/api/validation', '/api/psychometric', '/api/diary', '/api/billing/', '/api/referrals', '/api/achievements', '/api/webhooks', '/api/push/', '/api/alerts', '/api/keys', '/api/timing/', '/api/compare/celebrities', '/api/share/', '/api/notion/', '/api/checkin', '/api/analytics/', '/api/experiments/', '/api/cache/', '/api/promo/apply', '/api/client/', '/api/calendar', '/api/messages/', '/api/live-session/'];
 
 // Onboarding intro is public — exempted after prefix check
 const PUBLIC_ONBOARDING = new Set(['/api/onboarding/intro']);
@@ -312,6 +325,7 @@ const PUBLIC_ROUTES = new Set([
   '/api/push/vapid-key',
   '/api/sms/webhook',
   '/api/webhook/stripe',
+  '/api/billing/revenuecat-webhook',
   '/api/auth/register',
   '/api/auth/login',
   '/api/auth/refresh',
@@ -381,6 +395,7 @@ const EXACT_ROUTES = new Map([
   ['GET /api/timing/templates',       listIntentionTemplates],
   // Billing
   ['POST /api/webhook/stripe',        handleStripeWebhook],
+  ['POST /api/billing/revenuecat-webhook', handleRevenueCatWebhook],
   ['POST /api/billing/checkout',      handleCheckout],
   ['POST /api/billing/checkout-one-time', handleOneTimeCheckout],
   ['POST /api/billing/portal',        handlePortal],
@@ -591,6 +606,11 @@ const PATTERN_ROUTES = [
   [/^\/api\/directory\/([^/]+)\/reviews$/,               'GET',  1, (req, env, slug) => handleGetPublicReviews(req, env, slug)],
   [/^\/api\/practitioner\/reviews\/([^/]+)\/approve$/,   'PUT',  1, (req, env, id) => handleApproveReview(req, env, id)],
   [/^\/api\/practitioner\/reviews\/([^/]+)\/hide$/,      'PUT',  1, (req, env, id) => handleHideReview(req, env, id)],
+  // Live Session — real-time collaborative sessions (GAP-008)
+  [/^\/api\/live-session\/invite\/([^/]+)$/,             'POST', 1, (req, env, id) => handleCreateInvite(req, env, id)],
+  [/^\/api\/live-session\/join\/([^/]+)$/,               'GET',  1, (req, env, tok) => handleJoinSession(req, env, tok)],
+  [/^\/api\/live-session\/connect\/([^/]+)$/,            'GET',  1, (req, env, sid) => handleLiveSessionConnect(req, env, sid)],
+  [/^\/api\/live-session\/([^/]+)\/end$/,                'POST', 1, (req, env, sid) => handleEndSession(req, env, sid)],
 ];
 
 /**

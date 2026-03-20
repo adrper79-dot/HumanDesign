@@ -9,6 +9,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:prod:smoke": "playwright test tests/e2e/prod-smoke.spec.ts --project=chromium",
+    "test:gate": "playwright test --config playwright.gate.config.ts",
+    "test:setup": "node scripts/recreate-e2e-account.js",
     "test:e2e:wsl": "node scripts/run-playwright-wsl-cdp.js",
     "deploy:workers": "cd workers && npx wrangler deploy",
     "verify:prod": "node workers/verify-production.js",
@@ -28,7 +30,9 @@
     "pipeline:next": "node scripts/deploy-pipeline.js",
     "pipeline:dry": "node scripts/deploy-pipeline.js --dry-run",
     "pipeline:validate": "node scripts/deploy-pipeline.js --validate",
-    "pipeline:stage": "node scripts/deploy-stage.js"
+    "pipeline:stage": "node scripts/deploy-stage.js",
+    "docs:api": "node scripts/generate-api-docs.js",
+    "docs:api:check": "node scripts/generate-api-docs.js --check"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

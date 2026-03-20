@@ -1,0 +1,70 @@
+{
+  "ok": true,
+  "steps": [
+    "loaded-home",
+    "dismissed-first-run",
+    "submitted-login",
+    "practitioner-tab-not-found",
+    "practitioner-upgrade-button-not-found",
+    "opened-composite-tab"
+  ],
+  "pageErrors": [
+    "ReferenceError: calendarTogglePractitioner is not defined"
+  ],
+  "consoleMessages": [],
+  "failedRequests": [
+    {
+      "url": "https://selfprime.net/bg-video.webm",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "apiResponses": [
+    {
+      "url": "https://selfprime.net/api/auth/me",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "user": {
+          "id": "6e80336c-1062-4088-bf2d-1a785d82c959",
+          "email": "adrper79@gmail.com",
+          "phone": null,
+          "birth_date": null,
+          "birth_time": null,
+          "birth_tz": null,
+          "birth_lat": null,
+          "birth_lng": null,
+          "sms_opted_in": false,
+          "tier": "individual",
+          "stripe_customer_id": "cus_U8W6rKz5GJylG3",
+          "referral_code": null,
+          "email_verified": true,
+          "last_login_at": "2026-03-20T19:13:38.829Z",
+          "transit_pass_expires": null,
+          "lifetime_access": false,
+          "totp_enabled": false,
+          "created_at": "2026-03-03T17:35:55.278Z",
+          "updated_at": "2026-03-20T19:13:38.829Z",
+          "stored_tier": "practitioner"
+        }
+      }
+    }
+  ],
+  "authStatusText": "adrper79@gmail.com",
+  "practitioner": {
+    "tabVisible": false,
+    "upgradeNoticeVisible": false,
+    "upgradeNoticeText": "Practitioner Tools Locked\n      Client management and session tools require a Practitioner plan.\n      Upgrade to Practitioner →",
+    "reviewsCardVisible": false,
+    "referralStatsVisible": false,
+    "metricsCardVisible": false,
+    "directoryCardVisible": false,
+    "pricingModalVisible": false,
+    "pricingModalHeadline": ""
+  },
+  "composite": {
+    "tabVisible": true,
+    "pricingModalVisible": false,
+    "pricingModalHeadline": "",
+    "activeTabText": "⊕ Relationships\n      ⬢ Groups\n    \n    \n      ⊕\n      \n        Connect\n        Understand relationship dynamics through composite charts (two people) and group field analysis (Clusters). See which new channels activate when your energy fields overlap.\n      \n    \n    \n      What relationship field analysis reveals\n      \n        New channels that activate when you're together (electromagnetic bridges)\n        Definition changes — e.g., an individual gains emotional authority\n        Dominant gates & shared themes in the relationship field\n        Potential blind spots and missing energies\n      \n      Essential for understanding partnership dynamics, business collaborations, and family resonance patterns.\n    \n    \n       Composite Chart\n      Analyze relationship dynamics between two people. Start manually, or launch from a client workspace to prefill the people already in motion.\n      \n      \n      Person A\n      \n        Birth Date\n        Birth Time\n        \n          Birth Location\n            ?\n          \n          \n            \n            Look Up\n          \n          \n        \n        \n        \n      \n\n      Person B\n      \n        Birth Date\n        Birth Time\n        \n          Birth Location\n            ?\n          \n          \n            \n            Look Up\n          \n          \n        \n        \n        \n      \n\n      \n        \n        Generate Composite\n      \n    \n    \n      \n        ⊕\n        Relationship analysis\n        Enter both birth details above and tap Check Our Compatibility to see a relationship field analysis."
+  }
+}

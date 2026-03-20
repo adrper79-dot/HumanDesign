@@ -1,0 +1,9 @@
+Running public canary against https://selfprime.net and https://prime-self-api.adrper79.workers.dev
+PASS frontend home -> 200
+PASS frontend pricing -> 200
+PASS frontend embed -> 200
+PASS api health -> 200
+PASS api geocode -> 200
+PASS api register validation -> 400
+PASS api chart calculate -> 200
+Canary complete: 7/7 passed

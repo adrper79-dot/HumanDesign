@@ -7,6 +7,31 @@ Enable offline support, home screen installation, and app-like experience.
 
 ---
 
+## Implementation Status (Already in Code)
+
+The following PWA infrastructure is already implemented and deployed:
+
+**`frontend/manifest.json`** — App manifest with:
+- Standalone display mode, gold theme color (`#c9a84c`), 8 icon sizes (72px–512px with maskable), shortcuts to Chart and Transit views
+
+**`frontend/service-worker.js`** — Offline-first service worker with:
+- Cache-first strategy for static assets (CSS, HTML, manifest)
+- Network-first strategy for API requests with cache fallback
+- Push notification handler and click handler
+- Background sync for offline actions; periodic sync for transit updates
+- Auto cache cleanup on version bump
+
+**`frontend/index.html`** — PWA meta tags and JS registration including:
+- Manifest link, iOS/Android meta tags, MS Tile config, SEO meta
+- Service worker registration script
+- Install prompt handler (`beforeinstallprompt`)
+- Custom install banner with "Install" button
+- Hourly service worker update checks
+
+**Icon/Screenshot directories** created with README guides at `frontend/icons/` and `frontend/screenshots/`.
+
+---
+
 ## What is a PWA?
 
 A Progressive Web App provides:
@@ -302,6 +327,59 @@ Create `frontend/offline.html`:
 - [ ] Offline mode works
 - [ ] App launches from home screen
 - [ ] Cache version matches current code
+
+---
+
+## Generating Icons
+
+**Required sizes**: 72, 96, 128, 144, 152, 192, 384, 512 px (with maskable variants for 192 and 512)
+
+**Option 1: PWA Builder (easiest)**
+1. Go to https://www.pwabuilder.com/imageGenerator
+2. Upload current favicon or new logo
+3. Download and extract to `frontend/icons/`
+
+**Option 2: ImageMagick**
+```bash
+cd frontend
+for size in 72 96 128 144 152 192 384 512; do
+  convert -background "#0a0a0f" -size ${size}x${size} \
+    -gravity center favicon.svg icons/icon-${size}.png
+done
+```
+
+**Option 3: Manual** — Use Figma/Photoshop with brand colors (`#c9a84c` gold, `#0a0a0f` dark). Ensure maskable icons have 10% safe-zone padding.
+
+---
+
+## Lighthouse PWA Audit
+
+After deploying:
+1. Open deployed URL in Chrome
+2. Open DevTools → **Lighthouse** tab
+3. Select "Progressive Web App"
+4. Click **Generate report**
+5. Target score: **>90/100**
+
+Common issues:
+- ❌ Icons missing → generate and deploy icons
+- ❌ Service worker not registered → check HTTPS, console errors
+- ❌ Manifest errors → validate JSON syntax
+- ❌ Offline support failing → check service worker cache list
+
+---
+
+## Capturing Screenshots (App Store Quality)
+
+Screenshots improve PWA discoverability:
+- **Mobile**: 540×720 (dashboard view)
+- **Desktop**: 1280×720 (bodygraph view)
+
+1. Open Prime Self in Chrome DevTools (F12)
+2. Toggle device toolbar, set custom dimensions
+3. Navigate to target screen
+4. DevTools menu → **Capture screenshot**
+5. Save to `frontend/screenshots/`
 
 ---
 

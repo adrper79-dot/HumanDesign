@@ -12,6 +12,10 @@ const { createQueryFnMock } = vi.hoisted(() => ({
   createQueryFnMock: vi.fn(),
 }));
 
+const { enforceFeatureAccessMock } = vi.hoisted(() => ({
+  enforceFeatureAccessMock: vi.fn(),
+}));
+
 vi.mock('../workers/src/db/queries.js', () => ({
   createQueryFn: createQueryFnMock,
   QUERIES: {
@@ -19,8 +23,15 @@ vi.mock('../workers/src/db/queries.js', () => ({
     searchPublicPractitioners:        'searchPublicPractitioners',
     getPractitionerBySlug:            'getPractitionerBySlug',
     getPractitionerDirectoryProfile:  'getPractitionerDirectoryProfile',
+    getPractitionerDirectoryProfileLegacy: 'getPractitionerDirectoryProfileLegacy',
     updatePractitionerProfile:        'updatePractitionerProfile',
+    getPractitionerByUserId:          'getPractitionerByUserId',
+    getPractitionerDirectoryViewStats:'getPractitionerDirectoryViewStats',
   },
+}));
+
+vi.mock('../workers/src/middleware/tierEnforcement.js', () => ({
+  enforceFeatureAccess: enforceFeatureAccessMock,
 }));
 
 vi.mock('../workers/src/lib/analytics.js', () => ({
@@ -33,6 +44,7 @@ import {
   handleGetPublicProfile,
   handleGetDirectoryProfile,
   handleUpdateDirectoryProfile,
+  handleGetDirectoryStats,
 } from '../workers/src/handlers/practitioner-directory.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -193,7 +205,10 @@ describe('GET /api/directory/:slug', () => {
 // ── handleGetDirectoryProfile ─────────────────────────────────────────────────
 
 describe('GET /api/practitioner/directory-profile', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    enforceFeatureAccessMock.mockResolvedValue(null);
+  });
 
   it('returns 401 when unauthenticated', async () => {
     const res = await handleGetDirectoryProfile(req('GET', 'https://api/test'), ENV);
@@ -219,6 +234,48 @@ describe('GET /api/practitioner/directory-profile', () => {
     const body = await res.json();
     expect(body.ok).toBe(true);
     expect(body.profile).toBeDefined();
+  });
+
+  it('returns tier enforcement response when practitioner tools are not available', async () => {
+    enforceFeatureAccessMock.mockResolvedValue(Response.json({ error: 'locked' }, { status: 403 }));
+    const authedReq = req('GET', 'https://api/test', null, { sub: 'user-1' });
+
+    const res = await handleGetDirectoryProfile(authedReq, ENV);
+    expect(res.status).toBe(403);
+    expect(createQueryFnMock).not.toHaveBeenCalled();
+  });
+
+  it('falls back to legacy practitioner directory query when scheduling embed column is missing', async () => {
+    const legacyErr = Object.assign(new Error('missing column'), { code: '42703' });
+    const query = vi.fn(async (sql) => {
+      if (sql === 'getPractitionerDirectoryProfile') throw legacyErr;
+      if (sql === 'getPractitionerDirectoryProfileLegacy') return { rows: [PUBLIC_PRACTITIONER] };
+      return { rows: [] };
+    });
+    createQueryFnMock.mockReturnValue(query);
+    const authedReq = req('GET', 'https://api/test', null, { sub: 'user-1' });
+
+    const res = await handleGetDirectoryProfile(authedReq, ENV);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.profile).toBeDefined();
+    expect(query).toHaveBeenCalledWith('getPractitionerDirectoryProfileLegacy', ['user-1']);
+  });
+});
+
+describe('GET /api/practitioner/directory-stats', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    enforceFeatureAccessMock.mockResolvedValue(null);
+  });
+
+  it('returns tier enforcement response when practitioner tools are not available', async () => {
+    enforceFeatureAccessMock.mockResolvedValue(Response.json({ error: 'locked' }, { status: 403 }));
+    const authedReq = req('GET', 'https://api/test', null, { sub: 'user-1' });
+
+    const res = await handleGetDirectoryStats(authedReq, ENV);
+    expect(res.status).toBe(403);
+    expect(createQueryFnMock).not.toHaveBeenCalled();
   });
 });
 

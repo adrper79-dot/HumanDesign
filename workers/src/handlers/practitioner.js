@@ -636,10 +636,19 @@ export async function handleGetReferralLink(request, env) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ error: 'Authentication required' }, { status: 401 });
 
+  const access = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (access) return access;
+
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 
   // Get practitioner's directory slug
-  const result = await query(QUERIES.getPractitionerDirectoryProfile, [userId]);
+  let result;
+  try {
+    result = await query(QUERIES.getPractitionerDirectoryProfile, [userId]);
+  } catch (error) {
+    if (error?.code !== '42703') throw error;
+    result = await query(QUERIES.getPractitionerDirectoryProfileLegacy, [userId]);
+  }
   const profile = result?.rows?.[0];
 
   if (!profile) {

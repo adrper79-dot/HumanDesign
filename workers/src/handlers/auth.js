@@ -27,6 +27,7 @@ import { importEncryptionKey, encryptToken, decryptToken } from '../lib/tokenCry
 import { createLogger } from '../lib/logger.js';
 import { hashPassword, verifyPassword } from '../lib/password.js';
 import { initSentry } from '../lib/sentry.js';
+import { getUserTier } from '../middleware/tierEnforcement.js';
 
 // JWT expiry durations
 // Access token is short-lived so that a stolen in-memory token has a small
@@ -176,6 +177,10 @@ async function handleGetMe(request, env) {
     // Defense in depth: explicitly omit sensitive auth secrets even if a future
     // query change accidentally broadens the selected columns.
     const { password_hash, totp_secret, ...user } = result.rows[0];
+    const storedTier = user.tier || 'free';
+    const effectiveTier = await getUserTier(env, userId).catch(() => storedTier);
+    user.stored_tier = storedTier;
+    user.tier = effectiveTier;
 
     return Response.json({
       ok: true,

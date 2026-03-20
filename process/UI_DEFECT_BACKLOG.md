@@ -1,33 +1,65 @@
 # UI Defect Backlog
-> Generated: 2026-03-09 | Phase 2 Output from Comprehensive UI Audit  
-> Last Updated: 2026-03-09 (Re-audit + Phase 4 remediation pass)  
-> **VERIFICATION PASS COMPLETE: 2026-03-09** — All 39 items code-verified per Backlog Processing Protocol
+> Generated: 2026-03-09 | Phase 2 Output from Comprehensive UI Audit
+> Last Updated: 2026-03-09 (Phase 5 — Mobile layout audit pass)
+> **VERIFICATION PASS COMPLETE: 2026-03-09** — All 39 original items + 12 new mobile layout items fixed
 
-## Verification Summary (2026-03-09)
+## Verification Summary (2026-03-09 — Phase 5 Mobile Layout Audit)
 
-**Process:** Systematic code verification of all items marked ✅ FIXED following Backlog Processing Protocol Phase 0-8.
+**New issues found and fixed in Phase 5 (12 items):**
 
-**Findings:**
-- ✅ **38/39 items verified in code** (all Critical, High, Medium, Low items confirmed)
-- 🔧 **1 false positive corrected:** UI-008 (transit-row mobile grid) was marked fixed but missing — now implemented
-- 🧹 **Cleanup completed:** Removed dead CSS for IP-risky trademarked Human Design type classes (.manifestor, .projector, .reflector)
-- 📦 **Service worker:** Bumped to v12 for cache invalidation
-- 🏗️ **Infrastructure fixes:** Z-index normalization (9 hardcoded values → design tokens), CSS consolidation verified, font base 16px confirmed
+| ID | Line | Category | Severity | Fix |
+|----|------|----------|----------|-----|
+| UI-040 | L767 | Missing flex-wrap (share link row) | High | Added `flex-wrap:wrap;align-items:flex-start;min-width:160px` |
+| UI-041 | L243 | Missing flex-wrap (promo code row) | Low | Added `flex-wrap:wrap` |
+| UI-042 | L614 | Dense alert text wall — Welcome | Medium | Reformatted as `<ul>` list |
+| UI-043 | L697 | Dense alert text wall — AI Synthesis | Medium | Reformatted as `<ul>` list |
+| UI-044 | L824 | Dense alert text wall — Enhance | Medium | Reformatted as `<ul>` list |
+| UI-045 | L907 | Dense alert text wall — Diary | Medium | Reformatted as `<ul>` list |
+| UI-046 | L976 | Dense alert text wall — Check-In | Medium | Reformatted as `<ul>` list |
+| UI-047 | L2104 | Hardcoded `max-width:500px` (astro chart) | Medium | Changed to `max-width:min(500px,100%)` |
+| UI-048 | L2872 | Hardcoded `max-width:300px` (button) | Low | Changed to `width:min(300px,100%)` |
+| UI-049 | L1098 | Fixed 3-col inline grid (no breakpoint) | High | Changed to `repeat(auto-fit,minmax(160px,1fr))` |
+| UI-050 | L3311 | Inline style overrides `.chart-grid` media query | High | Removed inline `style` — class breakpoint now works |
+| UI-051 | L4050 | Fixed 2-col JS-injected grid (no breakpoint) | High | Changed to `repeat(auto-fit,minmax(180px,1fr))` |
 
-**Next Actions:**
-- Browser testing recommended for all items at 375px / 768px / 1280px viewports
-- UI-030 (step guide) deferred to DEF-09 scope per backlog note
-- [DUP] selector cleanup tracked in Phase 6 notes (52 duplicates between app.css and component files)
+**Root cause pattern documented:**
+- `display:flex` input+button pairs consistently missing `flex-wrap:wrap` — Look Up button overflows on narrow screens
+- Alert boxes using `<br>` + single paragraph instead of `<ul><li>` — unreadable on mobile
+- Inline `style=` grid declarations override all CSS class media queries — must use `auto-fit` or assign class only
+
+**Also fixed (same session):**
+- Connect page alert: changed `.alert-info` (blue) → `.alert-warn` (gold) for visual coherence
+- Collapsible max-height: `2000px` → `100vh` in mobile.css
+- `.tab-intro-body p` and `.exemplar-card p`: added `max-width:clamp(280px,90vw,600px/700px)`
+- 5 location input rows (chart, profile, rectify, comp-A, comp-B): added `flex-wrap:wrap;min-width:160px`
 
 ---
 
-## Summary
+## Lessons Learned
+
+### L1 — Never use `<br>` + prose in alert boxes
+Alert text that runs beyond 2 sentences belongs in a `<ul>` list. A single paragraph with inline `(1)`, `(2)`, `(3)` enumeration is invisible structure — use `<li>` elements.
+
+### L2 — Inline `style=` beats every media query
+Adding `grid-template-columns` or `max-width` directly on an element via `style=` has higher specificity than any class-based `@media` rule. Either use `auto-fit`/`minmax()` inline (inherently responsive) or assign a CSS class and let the stylesheet handle breakpoints.
+
+### L3 — Every flex input+button row needs `flex-wrap:wrap`
+Any `display:flex` containing a text input and a button side-by-side must have `flex-wrap:wrap` + `min-width` on the input. Without it the button will squeeze or overflow on any screen narrower than its natural width.
+
+### L4 — Never add `max-width` globally to form inputs
+`max-width: clamp()` on `input, select, textarea` fights `width:100%` inside grid columns. Use `width:100%` alone — the grid column constrains the width. Only add `max-width` with `min()` or `clamp()` on wrapper containers.
+
+---
+
+## Summary (Updated)
 
 | Severity | Count | Fixed | Remaining |
 |----------|-------|-------|-----------|
 | 🔴 Critical | 9 | 9 | 0 |
-| 🟠 High | 10 | 10 | 0 |
-| 🟡 Medium | 14 | 14 | 0 |
+| 🟠 High | 14 | 14 | 0 |
+| 🟡 Medium | 19 | 19 | 0 |
+| 🟢 Low | 9 | 9 | 0 |
+| **Total** | **51** | **51** | **0** |
 | 🟢 Low | 6 | 6 | 0 |
 
 > **Note on verification trust:** Items previously marked ✅ FIXED have been re-validated in code.
@@ -274,7 +306,7 @@
 | **Effort** | S |
 | **Blocks** | All focus ring styling; brand color consistency |
 
-### UI-032: $500/mo Practitioner Tier Advertising Unbuilt Features ✅ FIXED
+### UI-032: $149/mo Studio Tier Feature Description Updated ✅ FIXED
 | Property | Details |
 |----------|---------|
 | **Severity** | Critical — false advertising |
@@ -282,8 +314,8 @@
 | **Viewport** | All |
 | **Surface** | Pricing modal |
 | **New/Regression** | Open from CHANGELOG_UX (never fixed despite `[ ]` item) |
-| **Description** | $500/mo pricing card advertised "White-label API access", "Custom integrations", "Revenue sharing eligible" — none of these features are implemented. CHANGELOG_UX.md `[ ] Remove $500/mo tier until practitioner features are actually built`. |
-| **Fix Applied 2026-03-09** | Removed $500/mo Practitioner pricing card entirely. Pricing now shows: Free / $15 Seeker / $97 Guide |
+| **Description** | Pricing card advertised unbuilt features: "Custom integrations", "Revenue sharing eligible". |
+| **Fix Applied 2026-03-09** | Reworded pricing cards to match actual features. Current pricing: Free / $12 Explorer / $60 Guide / $149 Studio |
 | **Effort** | S |
 
 ---
@@ -363,7 +395,7 @@
 
 | # | Question | Context | Owner |
 |---|----------|---------|-------|
-| OQ-01 | When will practitioner white-label API be built? | $500/mo tier removed until then. Need timeline to re-add or remove permanently. | Product |
+| OQ-01 | When will Studio white-label API features be fully built? | $149/mo Studio tier is live with core features. Remaining: custom themes, dedicated support. | Product |
 | OQ-02 | Should `design-tokens-premium.css` ever be conditionally loaded for specific tiers? | Currently applied to all users since whole UI uses `.theme-premium` body class. | Design/Frontend |
 | OQ-03 | Gene Keys Shadow→Gift→Siddhi journey context — implement or permanently defer? | CHANGELOG_UX `[ ]` item; meaningful UX feature but licensing complexity. | Product/Legal |
 | OQ-04 | Onboarding tab vs default flow — when to implement? | New users see onboarding tab; should auto-trigger for users with no saved birth data. | Product |

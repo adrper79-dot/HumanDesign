@@ -1,0 +1,41 @@
+(node:1756) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{
+  "ok": false,
+  "baseUrl": "https://selfprime.net",
+  "prodApi": "https://prime-self-api.adrper79.workers.dev",
+  "apiOnly": false,
+  "strictBrowser": true,
+  "allowSkipBrowser": false,
+  "hasBrowserCreds": true,
+  "results": [
+    {
+      "name": "worker verification",
+      "ok": true,
+      "code": 0,
+      "stdout": "Verifying production endpoints against https://prime-self-api.adrper79.workers.dev\nPASS health -> 200\nPASS geocode -> 200\nPASS register validation -> 400\nPASS forecast validation -> 400\nVerification complete: 4/4 passed\n",
+      "stderr": ""
+    },
+    {
+      "name": "public canary",
+      "ok": true,
+      "code": 0,
+      "stdout": "Running public canary against https://selfprime.net and https://prime-self-api.adrper79.workers.dev\nPASS frontend home -> 200\nPASS frontend pricing -> 200\nPASS frontend embed -> 200\nPASS api health -> 200\nPASS api geocode -> 200\nPASS api register validation -> 400\nPASS api chart calculate -> 200\nCanary complete: 7/7 passed\n",
+      "stderr": ""
+    },
+    {
+      "name": "money path canary",
+      "ok": false,
+      "code": 3221226505,
+      "stdout": "",
+      "stderr": "login failed: 401 {\"ok\":false,\"error\":\"Invalid email or password\"}\nAssertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\\win\\async.c, line 76\r\n"
+    },
+    {
+      "name": "browser smoke",
+      "ok": false,
+      "code": 1,
+      "stdout": "\nRunning 5 tests using 2 workers\n\n\u001b[1A\u001b[2K[1/5] [chromium] › tests\\e2e\\prod-smoke.spec.ts:56:3 › Production smoke › same-origin worker health responds from production\n\u001b[1A\u001b[2K[2/5] [chromium] › tests\\e2e\\prod-smoke.spec.ts:48:3 › Production smoke › public homepage renders on the live site\n\u001b[1A\u001b[2K[3/5] [chromium] › tests\\e2e\\prod-smoke.spec.ts:65:3 › Production smoke › login works on production and can recover after reload\n\u001b[1A\u001b[2K  1) [chromium] › tests\\e2e\\prod-smoke.spec.ts:65:3 › Production smoke › login works on production and can recover after reload \n\n    \u001b[31mTest timeout of 30000ms exceeded.\u001b[39m\n\n    \u001b[31mTearing down \"context\" exceeded the test timeout of 30000ms.\u001b[39m\n\n    Error: page.click: Target page, context or browser has been closed\n\n      38 |\n      39 |   await dismissClosableDialog(page);\n    > 40 |   await page.click('#authBtn');\n         |              ^\n      41 |   await page.fill('#authEmail', e2eEmail);\n      42 |   await page.fill('#authPassword', e2ePassword);\n      43 |   await page.click('#authSubmit');\n        at login (C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\prod-smoke.spec.ts:40:14)\n        at C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\prod-smoke.spec.ts:69:5\n\n\n\u001b[1A\u001b[2K  2) [chromium] › tests\\e2e\\prod-smoke.spec.ts:48:3 › Production smoke › public homepage renders on the live site \n\n    \u001b[31mTest timeout of 30000ms exceeded.\u001b[39m\n\n    \u001b[31mTearing down \"context\" exceeded the test timeout of 30000ms.\u001b[39m\n\n    Error: First-run modal is visible without a user-driven dismiss action. Browser smoke should not bypass onboarding state.\n\n      20 |     }\n      21 |\n    > 22 |     throw new Error('First-run modal is visible without a user-driven dismiss action. Browser smoke should not bypass onboarding state.');\n         |           ^\n      23 |   }\n      24 |\n      25 |   try {\n        at dismissClosableDialog (C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\prod-smoke.spec.ts:22:11)\n        at C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\prod-smoke.spec.ts:50:5\n\n    Error Context: test-results\\prod-smoke-Production-smok-cf868-ge-renders-on-the-live-site-chromium\\error-context.md\n\n\n\u001b[1A\u001b[2K[4/5] [chromium] › tests\\e2e\\prod-smoke.spec.ts:108:3 › Production smoke › mobile viewport renders primary navigation on production\n\u001b[1A\u001b[2K[5/5] [chromium] › tests\\e2e\\prod-smoke.spec.ts:79:3 › Production smoke › directory can drill into a live practitioner profile\n\u001b[1A\u001b[2K  2 failed\n    [chromium] › tests\\e2e\\prod-smoke.spec.ts:48:3 › Production smoke › public homepage renders on the live site \n    [chromium] › tests\\e2e\\prod-smoke.spec.ts:65:3 › Production smoke › login works on production and can recover after reload \n  1 skipped\n  2 passed (1.9m)\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -435,7 +435,17 @@ export function buildRAGContext(chartData) {
         keyLines.push(entry);
       }
       
-      if (keyLines.length) sections.push(`### FREQUENCY KEYS WISDOM (with Line Themes)\n\n${keyLines.join('\n\n')}`);
+      if (keyLines.length) {
+        // GAP-006 scaffolding: append counsel-required attribution when flag is set.
+        // To activate: set globalThis.__PRIME_DATA.GENE_KEYS_DISCLAIMER to the
+        // exact disclaimer text provided by legal counsel.
+        const disclaimer = globalThis.__PRIME_DATA?.GENE_KEYS_DISCLAIMER || null;
+        const sectionHeader = `### FREQUENCY KEYS WISDOM (with Line Themes)\n\n${keyLines.join('\n\n')}`;
+        const sectionBody = disclaimer
+          ? `${sectionHeader}\n\n---\n*${disclaimer}*`
+          : sectionHeader;
+        sections.push(sectionBody);
+      }
     }
 
     // Astrology: Major Planets in Signs

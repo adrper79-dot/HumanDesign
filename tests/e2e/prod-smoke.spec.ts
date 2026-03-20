@@ -9,6 +9,14 @@ function hasAuthCredentials() {
   return Boolean(e2eEmail && e2ePassword);
 }
 
+function collectPageErrors(page) {
+  const pageErrors = [];
+  page.on('pageerror', (error) => {
+    pageErrors.push(String(error));
+  });
+  return pageErrors;
+}
+
 async function dismissClosableDialog(page) {
   const firstRunModal = page.locator('#first-run-modal');
   if (await firstRunModal.isVisible({ timeout: 1500 }).catch(() => false)) {
@@ -46,11 +54,14 @@ async function login(page) {
 
 test.describe('Production smoke', () => {
   test('public homepage renders on the live site', async ({ page }) => {
+    const pageErrors = collectPageErrors(page);
+
     await page.goto(testBaseUrl, { waitUntil: 'domcontentloaded' });
     await dismissClosableDialog(page);
 
     await expect(page).toHaveTitle(/Prime Self/i);
     await expect(page.locator('body')).toContainText(/Prime Self/i);
+    expect(pageErrors).toEqual([]);
   });
 
   test('same-origin worker health responds from production', async ({ request }) => {

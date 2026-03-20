@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "loginResponse": {
+    "url": "https://selfprime.net/api/auth/login",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "ok": true,
+      "user": {
+        "id": "6e80336c-1062-4088-bf2d-1a785d82c959",
+        "email": "adrper79@gmail.com"
+      },
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZTgwMzM2Yy0xMDYyLTQwODgtYmYyZC0xYTc4NWQ4MmM5NTkiLCJlbWFpbCI6ImFkcnBlcjc5QGdtYWlsLmNvbSIsInR5cGUiOiJhY2Nlc3MiLCJpc3MiOiJwcmltZXNlbGYiLCJhdWQiOiJwcmltZXNlbGYtYXBpIiwiaWF0IjoxNzc0MDA5ODMyLCJleHAiOjE3NzQwMTA3MzJ9.CRHeGaHFj9XuI1qMubGlGSikFqDnlUtr_IWEwuk3JYw",
+      "expiresIn": 900
+    }
+  },
+  "beforeReload": "adrper79@gmail.com",
+  "afterReload": "adrper79@gmail.com",
+  "logoutVisible": true,
+  "url": "https://selfprime.net/",
+  "authErrorText": "",
+  "pageErrors": [
+    "calendarTogglePractitioner is not defined",
+    "calendarTogglePractitioner is not defined"
+  ],
+  "consoleMessages": []
+}

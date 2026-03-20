@@ -30,16 +30,27 @@
 | Category | P0 | P1 | P2 | P3 | Total | Status |
 |----------|----|----|----|----|-------|--------|
 | Backend API | ✅ 1 | ✅ 2 | ✅ 4 | 2 | 9 | ✅ All fixed |
-| Frontend | 0 | ✅ 5 + 🔄 2 | ✅ 3 + ⚠️ 4 | 2 | 16 | 🔄 Two activation follow-through items remain partial |
+| Frontend | 0 | ✅ 5 + 🔄 2 + ❌ 2 | ✅ 3 + ⚠️ 4 + ❌ 1 | 2 | 19 | 🔄 3 new gap items open |
 | Engine | 0 | ✅ 1 | ✅ 2 | 1 | 4 | ✅ All closed |
 | Database | 0 | 0 | ✅ 2 | 1 | 3 | ✅ Schema complete |
 | Billing | ✅ 1 | 1 | 1 | 0 | 3 | ⚠️ 1 pending |
-| Practitioners | 0 | ✅ 2 | ✅ 2 | 1 | 5 | ✅ Core handoff restored |
-| Security | 🔴 1 | ✅ 3 | ✅ 2 | 0 | 7 | 🔴 1 blocker (trademark) |
+| Practitioners | 0 | ✅ 2 + ❌ 1 | ✅ 2 | 1 | 6 | ❌ 1 new gap item open |
+| Security | 🔴 1 | ✅ 3 + ❌ 1 | ✅ 2 | 0 | 8 | ❌ Gene Keys legal open |
 | Operations | ✅ 1 | ✅ 2 | ✅ 3 | 2 | 7 | ✅ All fixed |
-| Testing | 0 | ✅ 1 | ✅ 3 | 1 | 5 | ✅ Good coverage |
-| Documentation | 0 | 1 | 2 | 1 | 4 | 🔄 Ongoing |
-| **TOTAL** | **3/4** | **18/20** | **24/28** | **11** | **63** | **56/63 = 89% complete** |
+| Testing | 0 | ✅ 1 + ❌ 1 | ✅ 3 | 1 | 6 | ❌ 1 new gap item open |
+| Documentation | 0 | 1 + ❌ 1 | 2 | 1 | 5 | ❌ 1 new gap item open |
+| **Mobile** | 0 | ❌ 1 | 0 | 0 | 1 | ❌ New section — not started |
+| **TOTAL** | **3/4** | **20/28** | **26/30** | **11** | **71** | **56/71 = 79% complete — 8 new gap items added** |
+
+**New Open Items (2026-03-20 World-Class Gap Assessment):**
+- ❌ **GAP-001** `BL-FRONTEND-P1-8` — Split app.js into modules + lazy-load tabs
+- ❌ **GAP-002** `BL-FRONTEND-P1-9` — Consolidate to one CSS token system
+- ❌ **GAP-003** `BL-FRONTEND-P2-8` — Fix WCAG AA contrast on 6 elements
+- ❌ **GAP-004** `BL-TEST-P1-3` — Deterministic E2E release gate (supersedes BL-TEST-P1-2)
+- ❌ **GAP-005** `BL-MOBILE-P1-1` — Native iOS + Android app (Capacitor)
+- ❌ **GAP-006** `BL-SEC-P1-5` — Gene Keys legal closure
+- ❌ **GAP-007** `BL-DOCS-P1-3` — Machine-generated API docs from router
+- ❌ **GAP-008** `BL-PRACTITIONERS-P1-3` — Real-time collaborative practitioner sessions
 
 **Blocking Issues (MUST FIX before launch):**
 - ✅ **BL-BACKEND-P0-1**: FIXED — Sentry error tracking now captures all register errors
@@ -94,6 +105,8 @@
 | **BL-FRONTEND-P1-5** | **Step-guide banner now routes to the real tracking and relationship flows** — The chart journey guide points to the live `checkin` and `composite` tabs again, so the guided activation path no longer dead-ends. | ✅ Fixed (2026-03-18) | — | [Issue Registry: UX-013](audits/issue-registry.json) |
 | **BL-FRONTEND-P1-6** | **AI Profile and composite flows no longer ship with seeded sample birth defaults** — The profile handoff can now carry real chart data into synthesis, and practitioner compatibility no longer starts from stale example inputs. | ✅ Fixed (2026-03-18) | — | [Issue Registry: UX-014](audits/issue-registry.json) |
 | **BL-FRONTEND-P1-7** | **AI Profile first-run experience now defaults to one obvious action** — Evaluation type, optional systems, and question targeting remain available, but they are staged behind an optional customize control instead of blocking the first synthesis. | ✅ Fixed (2026-03-18) | — | [Issue Registry: UX-015](audits/issue-registry.json) |
+| **BL-FRONTEND-P1-8** | **Split `app.js` (11,819 lines) into tab controllers + lazy loading** — The 11,819-line monolith blocks code-splitting, makes per-tab changes risky, and forces every tab to parse and execute on first load. Extract 10 tab/domain controllers (auth, chart, profile, transit, practitioner, diary, billing, achievements, settings), create `state.js` and `core.js` as orchestrators, implement tab-activation lazy loading, and switch `index.html` to `<script type="module">`. Target: first-load JS payload reduced ≥25%; each controller < 1000 lines. See full plan at [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-001). | ❌ Not Started | 3–5 days | [GAP-001](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
+| **BL-FRONTEND-P1-9** | **Consolidate three competing CSS token systems into one** — `design-tokens.css`, `design-tokens-premium.css`, and an inline `<style>` in `index.html` all define `:root {}` variables that override each other unpredictably. Create a single `frontend/css/tokens.css`, remove the other two files, strip the `:root {}` block from `index.html`, and update all 8 CSS component files to reference canonical token names. Simultaneously bump `--text-dim` to `#c4c0d8` and `--text-muted` to `#918db0` for WCAG compliance. See plan: [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-002). | ❌ Not Started | 1 day | [GAP-002](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -106,6 +119,7 @@
 | **BL-FRONTEND-P2-5** | **Enhance tab asks for effort without clearly explaining the return** — Assessments materially improve synthesis quality, but the current copy does not make that exchange obvious. | ✅ Fixed (2026-03-18, Cycle 23) — Intro paragraph updated to explain assessments feed behavioral data into AI Profile synthesis | 30 min | [Issue Registry: UX-010](audits/issue-registry.json) |
 | **BL-FRONTEND-P2-6** | **Check-in tooltips still contain outdated or inconsistent authority terminology** — Compliance and clarity issue; should be cleaned up without displacing activation-path work. | ✅ Fixed (2026-03-18, Cycle 23) — Tooltips updated with current Energy Blueprint terminology (Emotional Wave Navigation, Life Force Response, etc) | 15 min | [Issue Registry: UX-011](audits/issue-registry.json) |
 | **BL-FRONTEND-P2-7** | **Onboarding naming and intro copy still undersell the feature and confuse first-time users** — `Restart Onboarding` implies prior use and the current intro hides the actual story structure. | ✅ Fixed (2026-03-18, Cycle 23) — Renamed to "The Savannah Arc", updated intro copy, changed nav icon (🧭→⊙), synced i18n across 5 locales | 30 min | [Issue Registry: UX-012](audits/issue-registry.json) |
+| **BL-FRONTEND-P2-8** | **WCAG AA contrast failures on 6 core UI elements** — Six selectors fail the 4.5:1 minimum: `.data-label` (~4.2:1), `.data-block h4` (~4.2:1), `.text-muted` (~3.1:1), `.history-meta` (~2.4:1), `.raw-toggle` (~2.6:1), and transit planet labels (~4.2:1). Fix: bump `--text-dim` from `#b0acc8` → `#c4c0d8`; bump `--text-muted` from `#7a76a0` → `#918db0`. See [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-003). Prerequisite for BL-FRONTEND-P1-9 (CSS consolidation). **Can ship independently in 2 hours.** | ❌ Not Started | 2 hours | [GAP-003](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
 
 ### 🟢 P3 — Low Priority
 
@@ -188,6 +202,7 @@
 |----|------|--------|--------|--------|
 | **BL-PRACTITIONERS-P1-1** | **Gene Keys knowledgebase only 59% complete** — 38 of 64 Gene Keys populated; 26 empty. RAG context forces LLM to hallucinate or skip section. Generate remaining 26 using Opus batch. | ✅ Fixed (2026-03-17) — All 64 Gene Keys fully populated with shadow/gift/siddhi/archetype/message/contemplation | 4 hrs | BACKLOG.md (BL-M5) |
 | **BL-PRACTITIONERS-P1-2** | **Compatibility launch from a client record now carries the practitioner/client handoff into the composite flow** — Launching from the practitioner workspace prefills available birth data for both sides and points directly to whichever fields are still missing. | ✅ Fixed (2026-03-18) | — | [Issue Registry: PRAC-016](audits/issue-registry.json) |
+| **BL-PRACTITIONERS-P1-3** | **Real-time collaborative live session (practitioner + client co-view)** — Practitioners currently deliver readings async via PDF or screen share. Build a native live session feature using Cloudflare Durable Objects: practitioner opens a session from the client detail panel, shares a join link (8-hour TTL), client joins and sees the same chart tab the practitioner is viewing. Phase 1: chart sync + real-time note display. Phase 2: bodygraph pointer overlay, live AI synthesis streaming, session transcript auto-saved to `practitioner_session_notes`. New files: `workers/src/handlers/live-session.js`, `workers/src/durable-objects/LiveSession.js`, `frontend/js/live-session-client.js`. See plan: [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-008). | ❌ Not Started | 4–6 weeks | [GAP-008](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -222,6 +237,7 @@
 | **BL-SEC-P1-2** | **Password comparison is timing-attack vulnerable** — Uses `===` string comparison which short-circuits on first mismatch. Leaks timing information about hash. Use constant-time comparison. | ✅ Fixed (2026-07-17) | — | [Deep Dive Audit](audits/AUDIT_REMEDIATION_LOG.md) |
 | **BL-SEC-P1-3** | **Admin token timing-attack vulnerable** — `provided === adminToken` in `promo.js` enables timing side-channel enumeration. Fix: constant-time comparison. | ✅ Fixed (2026-07-17) | — | [Deep Dive 2026-07-17](audits/AUDIT_REMEDIATION_LOG.md) |
 | **BL-SEC-P1-4** | **Admin console persists a long-lived admin token in localStorage** — The admin token is now memory-only in the browser, cleared on refresh and sign-out, and the login UI explicitly documents the shorter-lived session model. The server-side constant-time admin checks remain unchanged. | ✅ Fixed (2026-03-19) | 1 day | World-class hardening intake (2026-03-19) |
+| **BL-SEC-P1-5** | **Gene Keys IP/trademark legal closure** — The frontend rebrand replaced "Gene Keys" with "Frequency Keys" on customer-facing surfaces (BL-SEC-P0-1 resolved). However the knowledgebase corpus (`src/knowledgebase/genekeys/` — 64 files) and internal synthesis prompts still reference Gene Keys methodology. Three possible outcomes from legal review: (1) fair use — add attribution to Terms; (2) disclaimer sufficient — add footer in synthesis output; (3) license required — negotiate or replace corpus. While review is pending, no additional Gene Keys content should be added. See plan: [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-006). | ❌ Not Started (blocked on legal) | External | [GAP-006](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -273,7 +289,8 @@
 | ID | Item | Status | Effort | Source |
 |----|------|--------|--------|--------|
 | **BL-TEST-P1-1** | **Production gate tests incomplete** — Only 15/17 checks passing (register 500 blocker). Once fixed, should add cycles + rectify param validation tests. | ✅ Fixed (2026-03-17) — Added cycles + rectify param validation tests to `verify-money-path.js` | 20 min | [Scan 2026-03-17](audits/SCAN_2026-03-17-FRESH.md) |
-| **BL-TEST-P1-2** | **Release gate not trustworthy — onboarding timing and Playwright auth smoke are out of sync** — The app delays first-run modal display while the end-to-end pack relies on timing-sensitive dismissal around login. Release-safe auth coverage should be deterministic, env-backed, and explicitly part of the gate. | ⚠️ Pending | 1 day | World-class hardening intake (2026-03-19) |
+| **BL-TEST-P1-2** | **Release gate not trustworthy — onboarding timing and Playwright auth smoke are out of sync** — The app delays first-run modal display while the end-to-end pack relies on timing-sensitive dismissal around login. Release-safe auth coverage should be deterministic, env-backed, and explicitly part of the gate. | ⚠️ Superseded by BL-TEST-P1-3 (2026-03-20) | 1 day | World-class hardening intake (2026-03-19) |
+| **BL-TEST-P1-3** | **Implement deterministic E2E release gate with `?e2e=1` bypass and dedicated gate config** — Create `tests/e2e/auth-gate.spec.ts` and `tests/e2e/smoke-gate.spec.ts` using env-backed credentials (`E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`) and a `?e2e=1` URL param that skips the first-run modal. Create `playwright.gate.config.ts` (runs only the two gate specs; no retries). Add `npm run test:gate` script. Wire CI to block deploy when gate fails. Closes BL-TEST-P1-2. See plan: [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-004). | ❌ Not Started | 1–2 days | [GAP-004](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
 
 ### 🟡 P2 — Medium Priority
 
@@ -298,6 +315,7 @@
 | ID | Item | Status | Effort | Source |
 |----|------|--------|--------|--------|
 | **BL-DOCS-P1-1** | **API documentation outdated** — 7 endpoints implemented but docs not refreshed. Coverage: 87% (46/53 documented). Gap: chart operations, SMS API. | 🔄 In Progress | 2 hrs | BACKLOG.md (BL-M1 cont.) |
+| **BL-DOCS-P1-3** | **Machine-generate API docs from the router as single source of truth** — `docs/API.md` and `docs/openapi.json` drift from `workers/src/index.js` within days of any handler addition. Create `scripts/generate-api-docs.js` that parses the router and outputs `docs/API_GENERATED.md` (Markdown table: Method / Path / Auth / Tier / Handler) and `docs/openapi-generated.json` (OpenAPI 3.0.3 skeleton). Add `npm run docs:api` and `npm run docs:api:check` scripts. Wire `docs:api:check` to CI so out-of-sync docs fail the build. Closes BL-DOCS-P1-1. See plan: [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-007). | ❌ Not Started | 1 day | [GAP-007](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
 | **BL-DOCS-P1-2** | **Public terminology and legal plan naming drift remain in active customer copy** — Referral, share, gift, and Terms copy now use Energy Blueprint and Agency naming on the audited customer-facing surfaces that were still drifting. | ✅ Fixed (2026-03-19) | 2 hrs | World-class hardening intake (2026-03-19) |
 
 ### 🟡 P2 — Medium Priority
@@ -312,6 +330,18 @@
 | ID | Item | Status | Effort | Source |
 |----|------|--------|--------|--------|
 | **BL-DOCS-P3-1** | **Architecture diagram out of sync** — References old database schema, Stripe integration flow needs update post-2FA. | ⚠️ Deferred (Phase 2+) | 2 hrs | — |
+
+---
+
+---
+
+## Mobile & Distribution
+
+### 🟠 P1 — High Priority
+
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-MOBILE-P1-1** | **Native iOS + Android app via Capacitor** — Prime Self competes with Co-Star and Pattern for the D2C spiritual wellness audience — both of which grow primarily through App Store discovery. Build a Capacitor wrapper around the existing SPA: `npx cap init`, add iOS + Android platforms, configure `primeself://` deep links for OAuth, replace VAPID web push with native APNs/FCM via `@capacitor/push-notifications`, integrate RevenueCat for IAP subscriptions (maps to existing 4 tiers), submit to App Store + Google Play. No rewrite needed — Capacitor wraps the current web app in a WebView. Phased: scaffold (wk1-2) → native features (wk2-3) → IAP (wk3-4) → beta with practitioners (wk5-6) → store submission (wk7-8) → launch (wk9-10). New files: `capacitor.config.json`, `frontend/js/native-bridge.js`, `workers/src/handlers/revenuecat-webhook.js`. ADR: [docs/ADR-001-mobile-distribution-v1.md](docs/ADR-001-mobile-distribution-v1.md). See plan: [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md#gap-005). | ❌ Not Started | 6–10 weeks | [GAP-005](docs/GAP_INTEGRATION_PLAN_2026-03-20.md) |
 
 ---
 
@@ -455,7 +485,7 @@ Detailed audit findings and full context available in:
 
 ---
 
-**Document Version:** 2.0  
-**Last Updated:** 2026-03-17 @ 14:22 UTC  
+**Document Version:** 2.1  
+**Last Updated:** 2026-03-20 — 8 gap items added from World-Class Market Assessment  
 **Maintained By:** Agent  
 **Sync:** Automatically from audit discoveries; manual review recommended weekly

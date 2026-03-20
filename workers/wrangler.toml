@@ -98,6 +98,7 @@ crons = ["0 6 * * *"]
 # VAPID_PUBLIC_KEY
 # VAPID_SUBJECT
 # ADMIN_TOKEN          (used by POST /api/admin/promo — set via: wrangler secret put ADMIN_TOKEN)
+# REVENUECAT_WEBHOOK_SECRET (RevenueCat webhook auth token — set in RevenueCat Dashboard → Project → Integrations → Webhooks, then: wrangler secret put REVENUECAT_WEBHOOK_SECRET)
 # PRIME_SELF_API_SECRET (used by the discord/ Worker to auth internal API calls — set on both workers)
 # GOOGLE_CLIENT_ID     (OAuth — wrangler secret put GOOGLE_CLIENT_ID)
 # GOOGLE_CLIENT_SECRET (OAuth — wrangler secret put GOOGLE_CLIENT_SECRET)
@@ -105,6 +106,18 @@ crons = ["0 6 * * *"]
 # APPLE_TEAM_ID        (OAuth — wrangler secret put APPLE_TEAM_ID)
 # APPLE_KEY_ID         (OAuth — wrangler secret put APPLE_KEY_ID)
 # APPLE_PRIVATE_KEY    (OAuth — wrangler secret put APPLE_PRIVATE_KEY)
+
+# ─── Durable Objects — Live Session WebSocket fan-out (GAP-008) ─────────────
+# One DO instance per live session (identified by sessionId UUID).
+# Deploy registers the new class via the migration below.
+[[durable_objects.bindings]]
+name = "LIVE_SESSION"
+class_name = "LiveSession"
+
+# Durable Objects migration — registers LiveSession class with the Workers runtime
+[[migrations]]
+tag = "v1-live-session"
+new_classes = ["LiveSession"]
 
 # ─── Staging Environment (CTO-013/CIO-008) ───────────────────────────────────
 # Deploy to staging with: wrangler deploy --env staging

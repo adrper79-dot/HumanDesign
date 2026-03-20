@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockQueryFn = vi.fn();
+const enforceFeatureAccessMock = vi.fn();
 
 vi.mock('../workers/src/db/queries.js', () => ({
   createQueryFn: () => mockQueryFn,
@@ -16,9 +17,14 @@ vi.mock('../workers/src/db/queries.js', () => ({
     createReview: 'createReview',
     listApprovedReviews: 'listApprovedReviews',
     listPractitionerReviews: 'listPractitionerReviews',
+    listPractitionerReviewsLegacy: 'listPractitionerReviewsLegacy',
     approveReview: 'approveReview',
     hideReview: 'hideReview'
   }
+}));
+
+vi.mock('../workers/src/middleware/tierEnforcement.js', () => ({
+  enforceFeatureAccess: enforceFeatureAccessMock,
 }));
 
 vi.mock('../workers/src/lib/logger.js', () => ({
@@ -49,7 +55,10 @@ function makeRequest(method, path, body, authed = true) {
   return req;
 }
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+  enforceFeatureAccessMock.mockResolvedValue(null);
+});
 
 describe('handleSubmitReview', () => {
   it('creates a review with valid input', async () => {
@@ -222,5 +231,48 @@ describe('handleListPractitionerReviews', () => {
     const req = makeRequest('GET', '/api/practitioner/reviews');
     const res = await handleListPractitionerReviews(req, env);
     expect(res.status).toBe(403);
+  });
+
+  it('returns tier enforcement response when practitioner tools are not available', async () => {
+    enforceFeatureAccessMock.mockResolvedValue(Response.json({ error: 'locked' }, { status: 403 }));
+    const req = makeRequest('GET', '/api/practitioner/reviews');
+
+    const res = await handleListPractitionerReviews(req, env);
+    expect(res.status).toBe(403);
+    expect(mockQueryFn).not.toHaveBeenCalled();
+  });
+
+  it('falls back to legacy review query when display_name is unavailable', async () => {
+    const missingColumn = Object.assign(new Error('missing column'), { code: '42703' });
+    mockQueryFn.mockImplementation((sql) => {
+      if (sql === 'getPractitionerByUserId') return { rows: [PRAC] };
+      if (sql === 'listPractitionerReviews') throw missingColumn;
+      if (sql === 'listPractitionerReviewsLegacy') return { rows: [{ id: 'r1', client_name: 'client@example.com' }] };
+      return { rows: [] };
+    });
+
+    const req = makeRequest('GET', '/api/practitioner/reviews');
+    const res = await handleListPractitionerReviews(req, env);
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.reviews).toHaveLength(1);
+    expect(data.reviews[0].client_name).toBe('client@example.com');
+  });
+
+  it('returns an empty review list when the practitioner_reviews table is not migrated yet', async () => {
+    const missingTable = Object.assign(new Error('missing table'), { code: '42P01' });
+    mockQueryFn.mockImplementation((sql) => {
+      if (sql === 'getPractitionerByUserId') return { rows: [PRAC] };
+      if (sql === 'listPractitionerReviews') throw missingTable;
+      return { rows: [] };
+    });
+
+    const req = makeRequest('GET', '/api/practitioner/reviews');
+    const res = await handleListPractitionerReviews(req, env);
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.reviews).toEqual([]);
   });
 });

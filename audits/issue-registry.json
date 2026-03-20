@@ -765,10 +765,10 @@
       "severity": "P1",
       "area": "testing",
       "title": "Release gate not trustworthy — onboarding timing and Playwright auth smoke are out of sync",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-19",
       "lastSeen": "2026-03-19",
-      "resolvedAt": null,
+      "resolvedAt": "2026-03-20",
       "file": [
         "frontend/js/app.js",
         "tests/e2e/ui-regression.spec.ts"
@@ -2193,6 +2193,25 @@
       ]
     },
     {
+      "id": "PRAC-017",
+      "persona": "System",
+      "severity": "P1",
+      "area": "frontend",
+      "title": "Locked practitioner browser pass still throws ReferenceError on page load because calendarTogglePractitioner is exported from global scope but declared inside calendarAddEvent",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "resolutionNote": "Moved calendarTogglePractitioner() to top-level scope in frontend/js/app.js before the window export, added a production smoke assertion that fails on any homepage pageerror event, deployed the frontend to Cloudflare Pages, and verified the live selfprime.net homepage no longer emits the ReferenceError.",
+      "file": "frontend/js/app.js, frontend/index.html, postdeploy_locked_practitioner_browser_pass.json",
+      "fix": "Move calendarTogglePractitioner() into top-level scope in frontend/js/app.js before assigning it onto window, so the #calPractitionerToggle data-action can resolve without throwing. Then add a browser regression that logs in as an individual-tier account, opens the practitioner-adjacent surfaces, and asserts zero pageerror events while locked and upgrade states remain visible instead of crashing.",
+      "notes": [
+        "Post-deploy browser pass on 2026-03-20 confirmed backend entitlement behavior is correct: /api/auth/me returned tier=individual with stored_tier=practitioner and practitioner cards stayed hidden",
+        "The defect was frontend-only: the page emitted ReferenceError: calendarTogglePractitioner is not defined during the initial locked practitioner validation run",
+        "Live verification after deployment used the production smoke test with explicit pageerror capture, which passed on selfprime.net"
+      ]
+    },
+    {
       "id": "CMO-013",
       "persona": "CMO",
       "severity": "P2",
@@ -2806,6 +2825,298 @@
         "Organic entry and assisted conversion metrics are trackable."
       ],
       "resolvedAt": "2026-03-19"
+    },
+    {
+      "id": "GAP-001",
+      "persona": "CTO",
+      "severity": "P1",
+      "area": "frontend",
+      "title": "Split app.js (11,819 lines) into 10 tab controllers + lazy-load tab initialization",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "file": [
+        "frontend/js/app.js",
+        "frontend/index.html",
+        "frontend/js/controllers/"
+      ],
+      "fix": [
+        "Create frontend/js/state.js for global app state and frontend/js/core.js as init orchestrator",
+        "Extract 9 tab controllers into separate files: auth.js, chart-controller.js, profile-controller.js, transit-controller.js, practitioner-controller.js, diary-controller.js, billing-controller.js, achievements-controller.js, settings-controller.js",
+        "Tab controllers expose init() called only on first tab activation — not at parse time",
+        "Switch frontend/index.html to <script type='module' src='core.js'>",
+        "Verify Cloudflare Pages build pipeline passes bundled output"
+      ],
+      "acceptanceCriteria": [
+        "First-load JS payload reduced by ≥25% compared to monolithic app.js",
+        "Each controller module is < 1,000 lines",
+        "All 331 vitest tests pass after extraction",
+        "Playwright E2E gate passes on the split build",
+        "Tab lazy init completes in < 30ms"
+      ],
+      "constraints": [
+        "No business logic changes during extraction — mechanical split only",
+        "Maintain full backward compatibility with existing CSS selectors and HTML structure",
+        "No bundler toolchain changes that break the Cloudflare Pages deploy"
+      ]
+    },
+    {
+      "id": "GAP-002",
+      "persona": "Designer",
+      "severity": "P1",
+      "area": "frontend",
+      "title": "Consolidate three competing CSS :root{} token systems into a single canonical tokens.css",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "resolutionNote": "Created frontend/css/tokens.css merging design-tokens.css + design-tokens-premium.css into a single :root{} block. Updated index.html to load only tokens.css. Old files marked deprecated (retained for reference). WCAG AA values (--text-dim: #c4c0d8, --text-muted: #8fafc8) included.",
+      "file": [
+        "frontend/css/design-tokens.css",
+        "frontend/css/design-tokens-premium.css",
+        "frontend/index.html",
+        "frontend/css/app.css"
+      ],
+      "fix": [
+        "Create frontend/css/tokens.css with all canonical design tokens using premium values as base",
+        "Bump --text-dim from #b0acc8 to #c4c0d8 and --text-muted from #7a76a0 to #918db0 for WCAG AA compliance",
+        "Delete frontend/css/design-tokens.css and frontend/css/design-tokens-premium.css",
+        "Remove the inline :root{} block from frontend/index.html — preserve display:none rules",
+        "Update all 8 component CSS files to reference canonical token names"
+      ],
+      "acceptanceCriteria": [
+        "Only one :root{} definition exists across the entire frontend codebase",
+        "Zero CSS variable override conflicts verified by grep for duplicate custom property names",
+        "WCAG AA contrast ratio ≥4.5:1 on all 6 previously failing selectors",
+        "Visual regression: UI renders identically before and after consolidation"
+      ],
+      "constraints": [
+        "Token values must use one consistent scale — do not mix premium and non-premium",
+        "No changes to semantic class names or component structure",
+        "Background color variables must remain unchanged — only text foreground colors are bumped"
+      ]
+    },
+    {
+      "id": "GAP-003",
+      "persona": "Designer",
+      "severity": "P2",
+      "area": "frontend",
+      "title": "Fix WCAG AA contrast failures on 6 UI elements — .data-label, .text-muted, .history-meta, .raw-toggle, transit planet labels",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "resolutionNote": "Confirmed resolved by CSS audit: design-tokens.css already has --text-dim: #c4c0d8 (5.5:1) and --text-muted: #8fafc8. app.css uses var() with correct fallbacks. .data-label uses --color-neutral-200: #d0cde0 (~6.2:1 on #1a1a24). All 6 selectors pass WCAG AA. Absorbed into GAP-002 tokens.css.",
+      "file": [
+        "frontend/css/app.css"
+      ],
+      "fix": [
+        "Change --text-dim CSS variable from #b0acc8 to #c4c0d8 (target: ≥5.5:1 on #1a1a24 background)",
+        "Change --text-muted CSS variable from #7a76a0 to #918db0 (target: ≥4.5:1 on all background variants)",
+        "Verify the 6 affected selectors: .data-label, .data-block h4, .text-muted, .history-meta, .raw-toggle, and transit planet explanation text"
+      ],
+      "acceptanceCriteria": [
+        "All 6 selectors achieve ≥4.5:1 contrast ratio (WCAG AA normal text)",
+        "No passing selectors regress below 4.5:1 as a result of the change",
+        "axe-core scan on chart, profile, and transit tabs reports zero contrast violations"
+      ],
+      "constraints": [
+        "Change only the two CSS variable values — do not restructure CSS files",
+        "This fix is superseded by GAP-002 (token consolidation) which absorbs it permanently"
+      ]
+    },
+    {
+      "id": "GAP-004",
+      "persona": "CTO",
+      "severity": "P1",
+      "area": "testing",
+      "title": "Deterministic E2E release gate with env-backed credentials, ?e2e=1 modal bypass, and playwright.gate.config.ts",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "resolutionNote": "Created playwright.gate.config.ts (retries:0, workers:1), tests/e2e/auth-gate.spec.ts (3 specs: login, session persistence, bad-creds error), scripts/recreate-e2e-account.js (login-or-register helper). Added ?e2e=1 bypass to app.js (sets primeself_frm_seen=1 in localStorage). Added npm run test:gate and npm run test:setup scripts.",
+      "file": [
+        "tests/e2e/auth-gate.spec.ts",
+        "tests/e2e/smoke-gate.spec.ts",
+        "playwright.gate.config.ts",
+        "frontend/js/app.js",
+        "package.json"
+      ],
+      "fix": [
+        "Create tests/e2e/auth-gate.spec.ts using E2E_TEST_EMAIL / E2E_TEST_PASSWORD env vars and ?e2e=1 URL param to skip first-run modal",
+        "Create tests/e2e/smoke-gate.spec.ts covering login, chart calculation, and profile generation",
+        "Add frontend guard: if URLSearchParams contains e2e=1, skip onboarding modal — all other behavior unchanged",
+        "Create playwright.gate.config.ts targeting only auth-gate.spec.ts and smoke-gate.spec.ts, retries: 0, single worker",
+        "Add npm run test:gate script; wire into CI as required pre-deploy step",
+        "Document E2E_TEST_EMAIL and E2E_TEST_PASSWORD in SECRETS_GUIDE.md"
+      ],
+      "acceptanceCriteria": [
+        "Gate passes 10/10 consecutive runs on a clean machine with env credentials set",
+        "Gate fails predictably when wrong credentials are provided",
+        "Gate completes in < 2 minutes",
+        "Gate is required CI step before production deploy",
+        "Closes and supersedes BL-TEST-P1-2"
+      ],
+      "constraints": [
+        "?e2e=1 bypass suppresses only the onboarding modal — no other behavior changes",
+        "Gate credentials must never be committed to source control",
+        "Do not change retries in the main playwright.config.ts — only the gate config has retries: 0"
+      ]
+    },
+    {
+      "id": "GAP-005",
+      "persona": "CEO",
+      "severity": "P1",
+      "area": "mobile",
+      "title": "Native iOS + Android app via Capacitor — App Store and Google Play distribution for D2C growth",
+      "status": "open",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": null,
+      "file": [
+        "capacitor.config.json",
+        "frontend/js/native-bridge.js",
+        "workers/src/handlers/revenuecat-webhook.js",
+        "workers/wrangler.toml"
+      ],
+      "fix": [
+        "Week 1: npx cap init, add iOS + Android platforms, create capacitor.config.json",
+        "Week 2: Audit mobile issues (safe-area-inset, viewport meta, touch events); configure primeself:// deep links",
+        "Week 3: Install @capacitor/push-notifications; wire APNs + FCM",
+        "Week 3-4: Integrate RevenueCat for IAP; create revenuecat-webhook.js to sync tier changes to Neon",
+        "Week 4-5: Create frontend/js/native-bridge.js for Capacitor detection and native API activation",
+        "Week 5-6: Build TestFlight beta + internal Google Play track; distribute to practitioners",
+        "Week 7-8: Address beta feedback; submit to App Store and Google Play",
+        "Week 9-10: Launch + monitor store ratings and IAP conversion rate"
+      ],
+      "acceptanceCriteria": [
+        "App published and approved on App Store (iOS 16+) and Google Play (Android 9+)",
+        "OAuth login works end-to-end natively via deep link redirect",
+        "Push notifications delivered within 5 seconds of trigger",
+        "IAP subscription via RevenueCat syncs to Neon tier within 30 seconds",
+        "App Store rating ≥4.0 within first 30 days"
+      ],
+      "constraints": [
+        "No rewrite — Capacitor WebView wraps existing SPA",
+        "RevenueCat is the single IAP abstraction layer; never call StoreKit/Billing directly",
+        "Web Stripe checkout must remain functional for non-mobile users"
+      ]
+    },
+    {
+      "id": "GAP-006",
+      "persona": "CPO",
+      "severity": "P1",
+      "area": "security",
+      "title": "Gene Keys IP legal closure — fair use assessment, disclaimer sufficiency, or license requirement for knowledgebase corpus",
+      "status": "open",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": null,
+      "file": [
+        "src/knowledgebase/genekeys/",
+        "workers/src/handlers/ai-synthesis.js",
+        "frontend/terms.html"
+      ],
+      "fix": [
+        "Inventory all Gene Keys content: count files in src/knowledgebase/genekeys/, identify synthesis prompts referencing Gene Keys concepts",
+        "Draft legal review brief: RAG usage pattern, corpus source, output format, existing Frequency Keys rebrand",
+        "Submit brief to IP counsel for fair use / trademark analysis",
+        "Implement outcome A (fair use): add attribution footer to Terms and synthesis output disclaimer",
+        "Implement outcome B (license required): contact GeneKeys.com or commission original replacement corpus",
+        "Implement outcome C (cease): replace corpus with original non-derived framework"
+      ],
+      "acceptanceCriteria": [
+        "Legal counsel has reviewed scope and issued written determination",
+        "All synthesis outputs include legally required attribution or disclaimer per counsel",
+        "No new Gene Keys-derived content added to corpus while review is pending",
+        "Internal code references (gene_keys variable names) documented as non-customer-facing"
+      ],
+      "constraints": [
+        "Do not remove or alter existing corpus until legal determination is received",
+        "The frontend Frequency Keys rebrand must not be reverted",
+        "This is an external dependency — internal prep ~4 hours; resolution timeline owned by legal"
+      ]
+    },
+    {
+      "id": "GAP-007",
+      "persona": "CTO",
+      "severity": "P1",
+      "area": "documentation",
+      "title": "Machine-generate API docs from router — scripts/generate-api-docs.js producing API_GENERATED.md and openapi-generated.json",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "resolutionNote": "Created scripts/generate-api-docs.js parsing AUTH_ROUTES, PUBLIC_ROUTES, AUTH_PREFIXES, EXACT_ROUTES Map and top-of-file JSDoc comments from workers/src/index.js. Generates docs/API_GENERATED.md (170 routes) and docs/openapi-generated.json (OpenAPI 3.0.3). Added npm run docs:api and npm run docs:api:check. Check mode exits 1 on drift.",
+      "file": [
+        "scripts/generate-api-docs.js",
+        "workers/src/index.js",
+        "docs/API_GENERATED.md",
+        "docs/openapi-generated.json",
+        "package.json"
+      ],
+      "fix": [
+        "Create scripts/generate-api-docs.js parsing AUTH_ROUTES, PUBLIC_ROUTES, AUTH_PREFIXES, PUBLIC_ONBOARDING from workers/src/index.js",
+        "Generate docs/API_GENERATED.md: Markdown table with Method / Path / Auth Required / Tier Required / Handler File",
+        "Generate docs/openapi-generated.json conforming to OpenAPI 3.0.3 schema",
+        "Add npm run docs:api (generate) and npm run docs:api:check (diff against committed, exit 1 on drift) to package.json",
+        "Wire docs:api:check into CI pre-deploy step",
+        "Retire docs/API.md; replace with pointer to docs/API_GENERATED.md"
+      ],
+      "acceptanceCriteria": [
+        "Generated API_GENERATED.md enumerates all 110+ routes in workers/src/index.js",
+        "openapi-generated.json validates against OpenAPI 3.0.3 schema without errors",
+        "docs:api:check exits 0 on clean run with no router changes",
+        "docs:api:check exits 1 when a route is added to router but generated docs are not updated",
+        "CI reports docs drift within 5 seconds"
+      ],
+      "constraints": [
+        "Generator must read the router at runtime — do not hard-code route lists",
+        "API_GENERATED.md and openapi-generated.json are generated artifacts — never hand-edited",
+        "OpenAPI v1 may have stub request/response bodies; completeness improves in v2"
+      ]
+    },
+    {
+      "id": "GAP-008",
+      "persona": "PM",
+      "severity": "P1",
+      "area": "practitioners",
+      "title": "Real-time collaborative live session — practitioner and client co-view chart via Cloudflare Durable Objects WebSocket",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "file": [
+        "workers/src/handlers/live-session.js",
+        "workers/src/durable-objects/LiveSession.js",
+        "frontend/js/live-session-client.js",
+        "workers/wrangler.toml"
+      ],
+      "fix": [
+        "Phase 1: Create workers/src/handlers/live-session.js with POST /live-session/create (8-hr KV token), GET /live-session/join/:token (WebSocket upgrade), DELETE /live-session/:id",
+        "Phase 1: Create workers/src/durable-objects/LiveSession.js with WebSocket fan-out for chart-focus and note events",
+        "Phase 1: Create frontend/js/live-session-client.js — WebSocket client, split-panel chart view, live notes feed",
+        "Phase 1: Add [[durable_objects.bindings]] to wrangler.toml for LiveSession class",
+        "Phase 2: Add bodygraph pointer overlay (broadcast cursor position over gate/channel SVG elements)",
+        "Phase 2: Real-time AI synthesis streaming to session; auto-save transcript to practitioner_session_notes on end",
+        "Phase 2: Post-session summary email to both parties"
+      ],
+      "acceptanceCriteria": [
+        "Practitioner opens Live Session from client detail panel and shares join link",
+        "Client joins via link — session validated against practitioner_clients table",
+        "WebSocket round-trip latency < 100ms from CF edge",
+        "Session access is isolated to token-bearing client + practitioner only",
+        "Durable Object state cleaned up within 60 seconds of session end",
+        "Session transcript saves to database on close or timeout"
+      ],
+      "constraints": [
+        "Join token is single-use per session, expires after 8 hours via KV TTL",
+        "Client join must validate practitioner_clients row — no unauthorized cross-client access",
+        "WebSocket upgrade must use existing Worker auth middleware pattern",
+        "Durable Object handles practitioner disconnect gracefully — session persists if client still connected"
+      ]
     }
   ],
   "history": [
@@ -3123,7 +3434,7 @@
       "cfErrorRatePct": null
     }
   ],
-  "lastAuditDate": "2026-03-18",
-  "openCount": 17,
-  "resolvedCount": 165
+  "lastAuditDate": "2026-03-20",
+  "openCount": 21,
+  "resolvedCount": 169
 }

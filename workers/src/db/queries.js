@@ -2245,6 +2245,15 @@ export const QUERIES = {
     WHERE user_id = $1
   `,
 
+  getPractitionerDirectoryProfileLegacy: `
+    SELECT id, is_public, slug, display_name, photo_url, bio,
+           specializations, certification, languages, session_format,
+           session_info, booking_url, payment_links, synthesis_style,
+           ''::text AS scheduling_embed_url
+    FROM practitioners
+    WHERE user_id = $1
+  `,
+
   // ─── Combined Practitioner AI Context for Client (HD_UPDATES4) ─
 
   /** Fetch all 3 AI vectors for a client in a single query */
@@ -2802,6 +2811,14 @@ export const QUERIES = {
 
   listPractitionerReviews: `
     SELECT r.*, u.email AS client_email, u.display_name AS client_name
+    FROM practitioner_reviews r
+    JOIN users u ON u.id = r.client_user_id
+    WHERE r.practitioner_id = $1
+    ORDER BY r.created_at DESC
+  `,
+
+  listPractitionerReviewsLegacy: `
+    SELECT r.*, u.email AS client_email, u.email AS client_name
     FROM practitioner_reviews r
     JOIN users u ON u.id = r.client_user_id
     WHERE r.practitioner_id = $1

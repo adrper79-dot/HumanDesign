@@ -1,0 +1,228 @@
+#!/usr/bin/env node
+/**
+ * generate-api-docs.js
+ *
+ * Generates API documentation from workers/src/index.js — the single source of
+ * truth for all routes.  Two artefacts are produced every run:
+ *
+ *   docs/API_GENERATED.md        — Markdown table (human-readable)
+ *   docs/openapi-generated.json  — OpenAPI 3.0.3 skeleton (machine-readable)
+ *
+ * Usage:
+ *   node scripts/generate-api-docs.js          # generate + write files
+ *   node scripts/generate-api-docs.js --check  # exit 1 if output would change
+ *   node scripts/generate-api-docs.js --stdout # print markdown to stdout only
+ */
+
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { join, resolve } from 'path';
+
+const ROOT     = resolve(process.cwd());
+const WORKERS  = join(ROOT, 'workers', 'src', 'index.js');
+const OUT_MD   = join(ROOT, 'docs', 'API_GENERATED.md');
+const OUT_JSON = join(ROOT, 'docs', 'openapi-generated.json');
+
+const CHECK_MODE  = process.argv.includes('--check');
+const STDOUT_MODE = process.argv.includes('--stdout');
+
+// ─── Parse source ────────────────────────────────────────────────────────────
+
+const src = readFileSync(WORKERS, 'utf8');
+
+/**
+ * Extract routes from the top-of-file JSDoc comment block.
+ * Format: `*   METHOD /api/path   – description`
+ */
+function parseCommentRoutes(source) {
+  const routes = [];
+  // Path is non-whitespace chars; separator is an en-dash (–) or em-dash (—) preceded by whitespace
+  const routeRe = /^\s*\*\s+(GET|POST|PUT|PATCH|DELETE|OPTIONS)\s+(\/api\/\S+)\s+[–—]+(.*)$/gm;
+  let m;
+  while ((m = routeRe.exec(source)) !== null) {
+    routes.push({
+      method: m[1].trim(),
+      path:   m[2].trim().replace(/\s+$/, ''),
+      desc:   m[3].trim(),
+    });
+  }
+  return routes;
+}
+
+/**
+ * Extract routes from the EXACT_ROUTES Map literal in the source.
+ * Captures: method, path, and handler function name.
+ */
+function parseExactRoutes(source) {
+  const map = new Map();
+  // Match lines like: ['GET /api/foo/bar', handlerName],
+  const lineRe = /\[\s*['"`](GET|POST|PUT|PATCH|DELETE|OPTIONS)\s+(\/api\/[^'"`]+)['"`]\s*,\s*([A-Za-z_][A-Za-z0-9_]*)/g;
+  let m;
+  while ((m = lineRe.exec(source)) !== null) {
+    map.set(`${m[1].trim()} ${m[2].trim()}`, m[3].trim());
+  }
+  return map;
+}
+
+/**
+ * Extract the AUTH_ROUTES, PUBLIC_ROUTES, and AUTH_PREFIXES from the source.
+ * Returns objects with hasAuth(path), isPublic(path), checkPrefix(path).
+ */
+function parseAuthSets(source) {
+  function extractSet(varName) {
+    const re = new RegExp(`const\\s+${varName}\\s*=\\s*new\\s+Set\\s*\\(\\s*\\[([\\s\\S]*?)\\]\\s*\\)`, 'g');
+    const m = re.exec(source);
+    if (!m) return new Set();
+    const items = [...m[1].matchAll(/['"`]([^'"`]+)['"`]/g)].map(x => x[1]);
+    return new Set(items);
+  }
+
+  function extractArray(varName) {
+    const re = new RegExp(`const\\s+${varName}\\s*=\\s*\\[([\\s\\S]*?)\\]\\s*;`, 'g');
+    const m = re.exec(source);
+    if (!m) return [];
+    return [...m[1].matchAll(/['"`]([^'"`]+)['"`]/g)].map(x => x[1]);
+  }
+
+  const authRoutes    = extractSet('AUTH_ROUTES');
+  const publicRoutes  = extractSet('PUBLIC_ROUTES');
+  const authPrefixes  = extractArray('AUTH_PREFIXES');
+
+  return function requiresAuth(path) {
+    if (authRoutes.has(path)) return true;
+    if (publicRoutes.has(path)) return false;
+    for (const prefix of authPrefixes) {
+      if (path.startsWith(prefix)) return true;
+    }
+    return false;  // default: unknown → public
+  };
+}
+
+// ─── Build route list ─────────────────────────────────────────────────────────
+
+const commentRoutes = parseCommentRoutes(src);
+const exactRoutes   = parseExactRoutes(src);
+const requiresAuth  = parseAuthSets(src);
+
+// Merge: comment-derived routes enriched with handler names
+const routes = commentRoutes.map(r => {
+  const key = `${r.method} ${r.path}`;
+  const handler = exactRoutes.get(key) || exactRoutes.get(key.replace(/\/:[\w]+/g, '').replace(/\/$/, '')) || '—';
+  return {
+    method:  r.method,
+    path:    r.path,
+    auth:    requiresAuth(r.path) ? 'Required' : 'Public',
+    desc:    r.desc,
+    handler,
+  };
+});
+
+// Add any EXACT_ROUTES entries not already in the comment block
+for (const [key, handler] of exactRoutes) {
+  const [method, ...pathParts] = key.split(' ');
+  const path = pathParts.join(' ');
+  const exists = routes.some(r => r.method === method && r.path === path);
+  if (!exists) {
+    routes.push({ method, path, auth: requiresAuth(path) ? 'Required' : 'Public', desc: '', handler });
+  }
+}
+
+routes.sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
+
+// ─── Generate Markdown ────────────────────────────────────────────────────────
+
+const NOW = new Date().toISOString().split('T')[0];
+
+const mdRows = routes.map(r =>
+  `| \`${r.method}\` | \`${r.path}\` | ${r.auth} | ${r.desc || '—'} |`
+);
+
+const markdown = `# Prime Self API — Generated Reference
+
+> **Auto-generated** from \`workers/src/index.js\` on ${NOW}.  
+> Do not edit this file manually — run \`npm run docs:api\` to regenerate.  
+> For narrative context, architecture decisions, and examples see [docs/API.md](API.md).
+
+## Endpoints (${routes.length} total)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+${mdRows.join('\n')}
+
+---
+
+## Authentication
+
+Bearer token auth via \`Authorization: Bearer <jwt>\`.  
+Obtain a token from \`POST /api/auth/login\` or \`POST /api/auth/register\`.
+
+## Base URLs
+
+| Environment | URL |
+|-------------|-----|
+| Production  | \`https://selfprime.net/api\` |
+| Worker direct | \`https://prime-self-api.adrper79.workers.dev/api\` |
+`;
+
+// ─── Generate OpenAPI JSON ───────────────────────────────────────────────────
+
+const paths = {};
+for (const r of routes) {
+  const oasPath = r.path.replace(/:([^/]+)/g, '{$1}');
+  if (!paths[oasPath]) paths[oasPath] = {};
+  const method = r.method.toLowerCase();
+  const params = [...r.path.matchAll(/:([^/]+)/g)].map(m => ({
+    name: m[1], in: 'path', required: true, schema: { type: 'string' },
+  }));
+  paths[oasPath][method] = {
+    operationId: r.handler !== '—' ? r.handler : undefined,
+    summary:     r.desc || undefined,
+    tags:        [r.path.split('/')[2] || 'misc'],
+    ...(r.auth === 'Required' ? { security: [{ bearerAuth: [] }] } : {}),
+    ...(params.length ? { parameters: params } : {}),
+    responses: { '200': { description: 'OK' } },
+  };
+}
+
+const openapi = {
+  openapi:  '3.0.3',
+  info: {
+    title:       'Prime Self API',
+    version:     NOW,
+    description: `Auto-generated from workers/src/index.js on ${NOW}. Run 'npm run docs:api' to update.`,
+  },
+  servers: [
+    { url: 'https://selfprime.net/api',                          description: 'Production' },
+    { url: 'https://prime-self-api.adrper79.workers.dev/api',   description: 'Worker direct' },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
+  },
+  paths,
+};
+
+const openapiJson = JSON.stringify(openapi, null, 2);
+
+// ─── Output ───────────────────────────────────────────────────────────────────
+
+if (STDOUT_MODE) {
+  process.stdout.write(markdown);
+  process.exit(0);
+}
+
+if (CHECK_MODE) {
+  const prevMd   = existsSync(OUT_MD)   ? readFileSync(OUT_MD,   'utf8') : '';
+  const prevJson = existsSync(OUT_JSON) ? readFileSync(OUT_JSON, 'utf8') : '';
+  if (prevMd !== markdown || prevJson !== openapiJson) {
+    console.error('[docs:api] Generated output differs from committed files.');
+    console.error('[docs:api] Run `npm run docs:api` and commit the updated docs.');
+    process.exit(1);
+  }
+  console.log(`[docs:api] OK — ${routes.length} routes, docs are up to date.`);
+  process.exit(0);
+}
+
+writeFileSync(OUT_MD,   markdown,    'utf8');
+writeFileSync(OUT_JSON, openapiJson, 'utf8');
+console.log(`[docs:api] Generated ${routes.length} routes → docs/API_GENERATED.md + docs/openapi-generated.json`);

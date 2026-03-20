@@ -349,6 +349,35 @@ If webhooks show red ❌:
 - Verify webhook secret matches: `npx wrangler secret list`
 - Check webhook signature validation in `handlers/webhook.js`
 
+---
+
+## Historical Implementation Notes
+
+Captured from initial Stripe integration (March 2026):
+
+### What Was Completed in Initial Setup
+
+1. **Worker deployed** — `https://prime-self-api.adrper79.workers.dev` (Version `0f68d6e5-84d6-4bb5-9e9d-23c6551f0626`)
+2. **Stripe Secret Key configured** — `STRIPE_SECRET_KEY` set in Cloudflare Workers
+3. **Code fixes applied:**
+   - `stripe.js` updated to use env-based price IDs (not `process.env`)
+   - `checkout.js` updated to use `getTierConfig()`
+   - Price ID placeholders added to `wrangler.toml`
+   - Import error in `diary.js` fixed
+
+### Current Canonical Pricing (as of March 2026)
+
+> Always verify against `workers/src/lib/stripe.js` for the live price IDs.
+
+| Tier | Price | Internal Key |
+|------|-------|--------------|
+| Free | $0 | `free` |
+| Individual | $19 / month | `regular` |
+| Practitioner | $97 / month | `practitioner` |
+| Agency | $349 / month | `white_label` |
+
+Historical product names `Explorer / Guide / Studio` at older price points (`$12 / $60 / $149`) appear in earlier setup docs but are superseded by the above. See `docs/TIER_ENFORCEMENT.md` and `audits/TIER_BILLING_WHITE_LABEL_AUDIT_2026-03-14.md` for commercial consistency audit.
+
 ### "Test mode vs. Live mode confusion"
 - Always use **Test Mode** for development (Stripe dashboard: `test data` toggle)
 - Use test card numbers (4242 4242 4242 4242)

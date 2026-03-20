@@ -13,6 +13,20 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { trackEvent, captureRequestContext } from '../lib/analytics.js';
+import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
+
+function isLegacyDirectorySchemaError(error) {
+  return error?.code === '42703';
+}
+
+async function getDirectoryProfileCompat(query, userId) {
+  try {
+    return await query(QUERIES.getPractitionerDirectoryProfile, [userId]);
+  } catch (error) {
+    if (!isLegacyDirectorySchemaError(error)) throw error;
+    return await query(QUERIES.getPractitionerDirectoryProfileLegacy, [userId]);
+  }
+}
 
 // ─── Slug generation ─────────────────────────────────────────
 
@@ -134,9 +148,11 @@ export async function handleGetPublicProfile(request, env, slug) {
  */
 export async function handleGetDirectoryProfile(request, env) {
   if (!request._user) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+  const access = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (access) return access;
   const userId = request._user.sub;
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
-  const result = await query(QUERIES.getPractitionerDirectoryProfile, [userId]);
+  const result = await getDirectoryProfileCompat(query, userId);
 
   if (result.rows.length === 0) {
     return Response.json({ error: 'Not registered as practitioner' }, { status: 404 });
@@ -290,6 +306,8 @@ function sanitizePublicProfile(row) {
 // ─── PRAC-013: Directory stats for practitioners ─────────────
 export async function handleGetDirectoryStats(request, env) {
   if (!request._user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const access = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (access) return access;
   const userId = request._user.sub;
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
 

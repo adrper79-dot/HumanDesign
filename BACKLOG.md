@@ -72,6 +72,66 @@
 
 ---
 
+## ⚡ Gap Integration Sprint (2026-03-20)
+
+> **Source:** World-Class Market Assessment (B+/8.1/10) — 8 gaps identified for world-class parity
+> **Plan:** [docs/GAP_INTEGRATION_PLAN_2026-03-20.md](docs/GAP_INTEGRATION_PLAN_2026-03-20.md)
+> **Order:** Quick wins first → structural refactors → platform expansion
+
+### Immediate (This week — low effort, high impact)
+
+1. **GAP-003: Fix WCAG AA contrast on 6 elements** `(2 hrs)` — `frontend/css/app.css`
+   - Bump `--text-dim` from `#b0acc8` → `#c4c0d8`; bump `--text-muted` from `#7a76a0` → `#918db0`
+   - Fixes `.data-label`, `.text-muted`, `.history-meta`, `.raw-toggle`, transit planet labels
+   - Resolves: [BL-FRONTEND-P2-8](MASTER_BACKLOG_SYSTEM_V2.md)
+
+2. **GAP-002: Consolidate CSS token system** `(1 day)` — CSS token unification
+   - Create `frontend/css/tokens.css` as single canonical source
+   - Delete `frontend/css/design-tokens.css` + `design-tokens-premium.css`
+   - Strip inline `:root {}` from `frontend/index.html`; update 8 component CSS files
+   - Resolves: [BL-FRONTEND-P1-9](MASTER_BACKLOG_SYSTEM_V2.md)
+
+3. **GAP-007: Machine-generated API docs** `(1 day)` — `scripts/generate-api-docs.js`
+   - Parse `workers/src/index.js` route tables → `docs/API_GENERATED.md` + `docs/openapi-generated.json`
+   - Add `npm run docs:api` and `npm run docs:api:check` (CI-wired)
+   - Resolves: [BL-DOCS-P1-3](MASTER_BACKLOG_SYSTEM_V2.md)
+
+4. **GAP-004: Deterministic E2E release gate** `(1–2 days)` — Playwright gate
+   - Create `tests/e2e/auth-gate.spec.ts` (env credentials, `?e2e=1` modal bypass)
+   - Create `playwright.gate.config.ts` (2 gate specs only, no retries)
+   - Add `npm run test:gate`; wire CI to block deploy on gate failure
+   - Resolves: [BL-TEST-P1-3](MASTER_BACKLOG_SYSTEM_V2.md) — closes BL-TEST-P1-2
+
+### Short Sprint (Structural)
+
+5. **GAP-001: Split `app.js` into 10 modules + lazy-load tabs** `(3–5 days)`
+   - Extract: `auth.js`, `chart-controller.js`, `profile-controller.js`, `transit-controller.js`, `practitioner-controller.js`, `diary-controller.js`, `billing-controller.js`, `achievements-controller.js`, `settings-controller.js`
+   - Create `state.js` + `core.js` as orchestrators; switch `index.html` to `type="module"`
+   - Tabs lazy-init on first activation; first-load JS payload target: -25%
+   - Resolves: [BL-FRONTEND-P1-8](MASTER_BACKLOG_SYSTEM_V2.md)
+
+### Initiate Now (External / Long Lead)
+
+6. **GAP-006: Gene Keys legal brief** `(4 hrs internal prep, then external)`
+   - Draft legal review request: scope of use, RAG corpus exposure, trademark risk
+   - Outcome paths: (a) fair use OK → add attribution; (b) disclaimer sufficient; (c) license required
+   - Resolves: [BL-SEC-P1-5](MASTER_BACKLOG_SYSTEM_V2.md)
+
+### Next Sprint (Platform Expansion)
+
+7. **GAP-008: Real-time collaborative practitioner sessions** `(4–6 weeks)`
+   - Cloudflare Durable Objects WebSocket fan-out (no new infra cost)
+   - New files: `workers/src/handlers/live-session.js`, `workers/src/durable-objects/LiveSession.js`, `frontend/js/live-session-client.js`
+   - Phase 1: chart sync + note display; Phase 2: bodygraph pointer overlay + transcript
+   - Resolves: [BL-PRACTITIONERS-P1-3](MASTER_BACKLOG_SYSTEM_V2.md)
+
+8. **GAP-005: Native iOS + Android app via Capacitor** `(6–10 weeks)`
+   - Capacitor wraps existing SPA — no rewrite; native push via APNs/FCM, IAP via RevenueCat
+   - ADR: [docs/ADR-001-mobile-distribution-v1.md](docs/ADR-001-mobile-distribution-v1.md)
+   - Resolves: [BL-MOBILE-P1-1](MASTER_BACKLOG_SYSTEM_V2.md)
+
+---
+
 ## How to Use This File
 
 ### For Active Sprints
@@ -81,7 +141,7 @@
 
 ### For Complete Context
 - See [MASTER_BACKLOG_SYSTEM_V2.md](MASTER_BACKLOG_SYSTEM_V2.md) for:
-  - All 51 open/closed items across all systems
+  - All items across all systems with full context
   - Historical context and source audits
   - Full notes on why fixes were chosen
   - Archive links for detailed investigation
@@ -3217,3 +3277,94 @@ Cross-referenced with FEATURE_MATRIX.md comprehensive expansion to 57 features (
 ---
 
 *This backlog is the single source of truth for known issues. Reference items by ID in commit messages and PR descriptions.*
+
+---
+
+## Sprint Summary Archive
+
+*Snapshot from March 19, 2026 — recorded from BACKLOG_SUMMARY.md*
+
+# Backlog Summary — March 19, 2026
+
+## Current State: **1 Open Item**
+
+| Status | Count | Details |
+|--------|-------|---------|
+| **Open** | **1** | Release-gate reliability in Playwright auth/onboarding coverage |
+| **Resolved** | 11 | Completed in Cycle 11 (9) + Cycle 12 (2) |
+| **Deferred** | 13 | P3 architecture (8) + ops/infra (5) |
+| **Total** | 25 | |
+
+---
+
+## Open Items (1)
+
+1. **BL-TEST-P1-2** — Release gate drift between onboarding timing and Playwright auth smoke
+
+---
+
+## Resolved This Intake
+
+1. **BL-OPS-P1-3** — Vitals output now separates current registry issues from historical references, and vitals-only runs no longer auto-resolve open issues
+2. **BL-SEC-P1-4** — Admin token persistence removed from browser storage; admin session is now memory-only in the frontend
+3. **BL-BILLING-P1-2** — Agency JSON-LD now matches the visible pricing page and marks unfinished capabilities as coming soon
+4. **BL-DOCS-P1-2** — Audited public referral, gift, share, and Terms copy now uses Energy Blueprint and Agency naming
+
+---
+
+## Resolved Items (11)
+
+### Cycle 11 (9 items)
+1. **BL-SOCIAL-C1** — Twitter intent + clipboard share buttons in chart render
+2. **BL-UX-M1** — Mobile drawer nav tab context via MOBILE_TAB_GROUPS mapping
+3. **BL-EXC-P2-1** — Unified skeleton loading states via `showSkeleton()` utility
+4. **BL-EXC-P2-2** — Actionable error messages via ERROR_COPY map + `showError()` function
+5. **BL-S20-H2** — Structured degradation events via `emitDegradeEvent()` in analytics.js
+6. **BL-MV-N4** — RESEND_API_KEY visibility verified in health endpoint
+7. **BL-UX-C5** — Birth data banner + `clearBirthData()` in restoreBirthData()
+8. **BL-UX-H1** — gate-data.js loader created (64 I Ching names)
+9. **BL-UX-C3** — Gate names now display in chart via getGateName()
+
+### Cycle 12 (2 items)
+10. **BL-M17** — Practitioner-first messaging across home, pricing, onboarding, workspace
+11. **BL-MV-N4 (verified as resolved via health endpoint already exposed)**
+
+---
+
+## Deferred Items (13) — P3/Ops Scope
+
+### UI/CSS Refactoring (5 items)
+- **BL-UX-C6** — 13 tabs consolidation (IA restructuring required)
+- **BL-UX-H2** — app.js module extraction (~3000 lines)
+- **BL-UX-H3** — CSS module extraction (~600 lines)
+- **BL-UX-H4** — Design token refactor (spacing)
+- **BL-UX-H5** — Typography token refactor (font sizes)
+
+### Operations/Infrastructure (5 items)
+- **BL-S20-H3** — External synthetic monitoring for critical journeys
+- **BL-S20-M2** — Structured logging contract + correlation IDs
+- **BL-S20-M3** — Release gates (tests + coverage + canary checks)
+- **BL-EXC-P3-2** — Per-tier API rate limiting (global rate limiting exists)
+- **BL-EXC-P3-3** — Neon connection pooling configuration
+
+### Architecture/Deployment (3 items)
+- **BL-EXC-P3-4** — API versioning (currently frontend + worker deploy as unit)
+- **BL-S20-C1** — Coverage enforcement restoration
+- **BL-S20-C2** — Production verification assertiveness
+
+---
+
+## Tests: 480 Passing | 8 Skipped
+
+Baseline maintained throughout all cycles. No regressions on UI/UX changes.
+
+---
+
+## Next Steps
+
+1. **Close the final gate issue**: verify BL-TEST-P1-2 with browser execution using env-backed auth credentials
+2. **Rerun vitals after Playwright verification**: leave the backlog at zero open items only after the final browser gate passes cleanly
+
+---
+
+**Status**: 🟠 **Hardening loop active** — deployment should remain gated until the final release-gate issue is verified and closed.

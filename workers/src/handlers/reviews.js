@@ -12,6 +12,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { createLogger } from '../lib/logger.js';
+import { enforceFeatureAccess } from '../middleware/tierEnforcement.js';
 
 const log = createLogger('reviews');
 
@@ -74,11 +75,25 @@ export async function handleListPractitionerReviews(request, env) {
   const userId = request._user?.sub;
   if (!userId) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
+  const access = await enforceFeatureAccess(request, env, 'practitionerTools');
+  if (access) return access;
+
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows: pracRows } = await query(QUERIES.getPractitionerByUserId, [userId]);
   if (!pracRows[0]) return Response.json({ ok: false, error: 'Not a practitioner' }, { status: 403 });
 
-  const { rows } = await query(QUERIES.listPractitionerReviews, [pracRows[0].id]);
+  let rows;
+  try {
+    ({ rows } = await query(QUERIES.listPractitionerReviews, [pracRows[0].id]));
+  } catch (error) {
+    if (error?.code === '42P01') {
+      rows = [];
+    } else if (error?.code === '42703') {
+      ({ rows } = await query(QUERIES.listPractitionerReviewsLegacy, [pracRows[0].id]));
+    } else {
+      throw error;
+    }
+  }
   return Response.json({ ok: true, reviews: rows });
 }
 

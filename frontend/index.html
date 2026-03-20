@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- Content Security Policy -->
 <!-- CISO-003: style-src 'unsafe-inline' is required for dynamic inline styles.
      script-src is strict (no unsafe-inline/eval). CSS-only injection risk is accepted. -->
@@ -34,8 +34,7 @@
 <link rel="dns-prefetch" href="https://js.stripe.com">
 <!-- cdn.jsdelivr.net removed: qr.js is self-hosted (BL-M16) -->
 <!-- Preload critical CSS -->
-<link rel="preload" href="css/design-tokens.css" as="style">
-<link rel="preload" href="css/design-tokens-premium.css" as="style">
+<link rel="preload" href="css/tokens.css" as="style">
 <link rel="preload" href="css/base.css" as="style">
 <!-- i18n preload must match fetch() credentials mode to avoid browser mismatch warnings -->
 <link rel="preload" href="locales/en.json" as="fetch" crossorigin="use-credentials">
@@ -45,8 +44,8 @@
 <script src="js/bodygraph.js" defer></script>
 <script src="js/share-card.js" defer></script>
 <!-- Foundation CSS (parallel loading, replaces @import chain in prime-self-premium.css) -->
-<link rel="stylesheet" href="css/design-tokens.css">
-<link rel="stylesheet" href="css/design-tokens-premium.css">
+<!-- tokens.css — single unified design-system (replaces design-tokens.css + design-tokens-premium.css — GAP-002) -->
+<link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/icons.css">
 <link rel="stylesheet" href="css/artwork.css">
 <link rel="stylesheet" href="css/base.css">
@@ -2409,9 +2408,13 @@
 </div><!-- /app-main -->
 </div><!-- /app-layout -->
 
+<!-- GAP-005: Capacitor native bridge — must load before app.js to expose window.NativeBridge -->
+<script src="js/native-bridge.js" defer></script>
 <script src="js/qr.js" defer></script>
 <script src="js/gate-data.js" defer></script>
 <script src="js/app.js" defer></script>
+<!-- GAP-001: Billing controller loaded eagerly so CTAs work before any tab is activated -->
+<script src="js/controllers/billing-controller.js" defer></script>
 
 <!-- Mobile Bottom Navigation -->
 <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Main navigation">
