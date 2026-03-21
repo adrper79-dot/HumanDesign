@@ -420,9 +420,9 @@ export function buildRAGContext(chartData) {
         const sideLabel = isDesign ? 'Design (unconscious)' : 'Personality (conscious)';
         
         let entry = `**Frequency Key ${gate}.${line} — ${key.name}** (${planet.toUpperCase()} ${sideLabel})\n`;
-        entry += `  **Shadow:** ${key.shadow} — ${key.shadowDescription?.slice(0, 120) || ''}\n`;
-        entry += `  **Gift:** ${key.gift} — ${key.giftDescription?.slice(0, 120) || ''}\n`;
-        entry += `  **Mastery:** ${key.siddhi}\n`;
+        entry += `  **Noise:** ${key.noise} — ${key.noiseDescription?.slice(0, 120) || ''}\n`;
+        entry += `  **Signal:** ${key.signal} — ${key.signalDescription?.slice(0, 120) || ''}\n`;
+        entry += `  **Frequency:** ${key.frequency}\n`;
         
         if (lineTheme) {
           entry += `  **Line ${line} Theme (${lineTheme.name}):** ${lineTheme.theme}. Your ${lineTheme.gift.toLowerCase()}.`;
