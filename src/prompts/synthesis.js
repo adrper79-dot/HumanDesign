@@ -265,8 +265,8 @@ OUTPUT SCHEMA (strict JSON)
   },
   "technicalInsights": {
     "geneKeysProfile": {
-      "lifesWork": { "key": "number", "shadow": "string", "gift": "string", "mastery": "string", "contemplation": "string" },
-      "otherActiveKeys": [{ "key": "number", "position": "string", "shadow": "string", "gift": "string", "message": "string" }],
+      "lifesWork": { "key": "number", "noise": "string", "signal": "string", "frequency": "string", "contemplation": "string" },
+      "otherActiveKeys": [{ "key": "number", "position": "string", "noise": "string", "signal": "string", "message": "string" }],
       "_sources": "List the specific gates/Frequency Keys and their positions (e.g., 'Gate 36 conscious Sun, Gate 22 unconscious Earth') that generated these Frequency Keys interpretations. Be specific — cite the actual chart data points."
     },
     "numerologyInsights": {
@@ -759,7 +759,7 @@ function buildReferenceFacts(data) {
   if (data.geneKeys) {
     const gk = data.geneKeys;
     sections.push('\n=== FREQUENCY KEYS PROFILE REFERENCE FACTS ===');
-    sections.push('(Shadow → Gift → Mastery triad for each active gate position)');
+    sections.push('(Noise → Signal → Frequency triad for each active gate position)');
     const gkPositions = [
       { key: 'lifesWork',  label: "Life's Work (Personality Sun)" },
       { key: 'evolution',  label: 'Evolution (Personality Earth)' },

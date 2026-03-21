@@ -4154,11 +4154,14 @@ function renderProfile(data) {
       
       if (gk.lifesWork) {
         const lw = gk.lifesWork;
+          const lifeWorkNoise = lw.noise ?? lw.shadow ?? '';
+          const lifeWorkSignal = lw.signal ?? lw.gift ?? '';
+          const lifeWorkFrequency = lw.frequency ?? lw.siddhi ?? lw.mastery ?? '';
         html += `<div class="profile-section">
           <h4>Life's Work — Frequency Key ${lw.key}</h4>
-          <p style="font-size:var(--font-size-sm);margin-top:var(--space-2)"><strong style="color:#f56565">Shadow Pattern:</strong> ${escapeHtml(lw.shadow)}</p>
-          <p style="font-size:var(--font-size-sm)"><strong style="color:#48c774">Gift:</strong> ${escapeHtml(lw.gift)}</p>
-          <p style="font-size:var(--font-size-sm)"><strong style="color:var(--gold)">Mastery:</strong> ${escapeHtml(lw.siddhi)}</p>
+            <p style="font-size:var(--font-size-sm);margin-top:var(--space-2)"><strong style="color:#f56565">Noise Pattern:</strong> ${escapeHtml(lifeWorkNoise)}</p>
+            <p style="font-size:var(--font-size-sm)"><strong style="color:#48c774">Signal:</strong> ${escapeHtml(lifeWorkSignal)}</p>
+            <p style="font-size:var(--font-size-sm)"><strong style="color:var(--gold)">Frequency:</strong> ${escapeHtml(lifeWorkFrequency)}</p>
           ${lw.contemplation ? `<p style="font-size:var(--font-size-base);line-height:1.6;margin-top:var(--space-2);font-style:italic;color:var(--text-dim)">${escapeHtml(lw.contemplation)}</p>` : ''}
         </div>`;
       }
@@ -4167,9 +4170,11 @@ function renderProfile(data) {
         html += `<div class="profile-section">
           <h4>Other Active Keys</h4>`;
         gk.otherActiveKeys.forEach(k => {
+          const keyNoise = k.noise ?? k.shadow ?? '';
+          const keySignal = k.signal ?? k.gift ?? '';
           html += `<div style="margin-top:var(--space-3);padding:var(--space-3);background:var(--bg3);border-radius:var(--space-2)">
             <div style="font-weight:600;color:var(--gold)">FK ${escapeHtml(String(k.key))} — ${escapeHtml(k.position)}</div>
-            <p style="font-size:var(--font-size-sm);margin-top:var(--space-1)"><strong>Shadow Pattern:</strong> ${escapeHtml(k.shadow)} <strong>→ Gift:</strong> ${escapeHtml(k.gift)}</p>
+            <p style="font-size:var(--font-size-sm);margin-top:var(--space-1)"><strong>Noise Pattern:</strong> ${escapeHtml(keyNoise)} <strong>→ Signal:</strong> ${escapeHtml(keySignal)}</p>
             ${k.message ? `<p style="font-size:var(--font-size-base);margin-top:var(--space-2);font-style:italic">${escapeHtml(k.message)}</p>` : ''}
           </div>`;
         });

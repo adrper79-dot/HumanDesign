@@ -307,7 +307,7 @@ The frontend rebrand replaced "Gene Keys" with "Frequency Keys" on all user-faci
 
 ### Resolution Note
 
-Outcome B adopted. The brief was corrected to distinguish the triad-name layer from the internally authored descriptive prose layer. `frontend/terms.html` now includes attribution and non-affiliation language, `workers/src/engine-compat.js` now sets `GENE_KEYS_DISCLAIMER` so the synthesis disclaimer path is active, and the freeze guard in `tests/genekeys-freeze.test.js` was validated. Courtesy outreach remains recommended but is not blocking closure.
+Outcome A adopted and implemented. The triad-name layer was replaced with original Prime Self Noise/Signal/Frequency vocabulary, `frontend/terms.html` now reflects the Prime Self original-system attribution, the `GENE_KEYS_DISCLAIMER` scaffold remains present but inactive, and the replacement state is validated by `tests/genekeys-freeze.test.js`. Structural rename remains optional follow-on cleanup, not a blocker to closure.
 
 ---
 

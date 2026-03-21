@@ -13,8 +13,8 @@
  *   Attraction   = Personality (Conscious) Moon gate  — what you draw toward you
  *   IQ / Pearl   = Design (Unconscious) Moon gate     — unconscious intelligence
  *
- * Each gate maps to a Shadow/Gift/Mastery triad in the knowledgebase.
- * The knowledgebase lookup (Shadow → Gift → Mastery) happens in rag.js.
+ * Each gate maps to a Noise/Signal/Frequency triad in the knowledgebase.
+ * The knowledgebase lookup (Noise → Signal → Frequency) happens in rag.js.
  *
  * @module genekeys
  */

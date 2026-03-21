@@ -49,7 +49,7 @@ const MISC_NAMES = {
   'Incarnation Cross': 'Life Purpose Vector',
   'Not-Self Theme': 'Not-Self Signal',
   'Profile': 'Archetype Code',
-  'Siddhi': 'Mastery',
+  'Siddhi': 'Frequency',
 };
 
 export function mapTypeName(raw) {

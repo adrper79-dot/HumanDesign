@@ -83,7 +83,7 @@ import derivationChainData from '../../src/knowledgebase/library/derivation_chai
 
 globalThis.__PRIME_DATA = {
   crosses: crossesData,
-  GENE_KEYS_DISCLAIMER: 'The Frequency Keys layer in Prime Self is inspired by the Gene Keys system developed by Richard Rudd. Gene Keys is a registered trademark of Gene Keys Publishing Ltd. Prime Self is not affiliated with or endorsed by Gene Keys Publishing Ltd.',
+  GENE_KEYS_DISCLAIMER: null,
   kb: {
     // Energy Blueprint
     'hd/types.json': typesData,

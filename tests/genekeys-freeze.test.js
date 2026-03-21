@@ -30,7 +30,22 @@ describe('GAP-006 Frequency Keys corpus — vocabulary replacement completion', 
     const engineCompat = read('workers/src/engine-compat.js');
 
     expect(rag).toContain('GENE_KEYS_DISCLAIMER');
-    expect(engineCompat).toContain('GENE_KEYS_DISCLAIMER');
+    expect(engineCompat).toContain('GENE_KEYS_DISCLAIMER: null');
+  });
+
+  it('keeps live Frequency Keys contract and UI on Noise/Signal/Frequency labels', () => {
+    const app = read('frontend/js/app.js');
+    const synthesis = read('src/prompts/synthesis.js');
+    const engine = read('src/engine/genekeys.js');
+
+    expect(app).toContain('Noise Pattern:');
+    expect(app).toContain('Signal:');
+    expect(app).toContain('Frequency:');
+    expect(synthesis).toContain('"lifesWork": { "key": "number", "noise": "string", "signal": "string", "frequency": "string", "contemplation": "string" }');
+    expect(synthesis).toContain('(Noise → Signal → Frequency triad for each active gate position)');
+    expect(engine).toContain('Each gate maps to a Noise/Signal/Frequency triad in the knowledgebase.');
+    expect(synthesis).not.toContain('"lifesWork": { "key": "number", "shadow": "string", "gift": "string", "mastery": "string", "contemplation": "string" }');
+    expect(synthesis).not.toContain('(Shadow → Gift → Mastery triad for each active gate position)');
   });
 
   it('updates terms.html attribution to reflect original Prime Self system', () => {
