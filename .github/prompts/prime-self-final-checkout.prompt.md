@@ -366,7 +366,125 @@ grep -rn "^import " frontend/js/app.js | head -30
 
 ---
 
-### PASS 8 — C-SUITE EXECUTIVE SYNTHESIS
+### PASS 8 — UI / UX AUDIT
+
+**Primary readers:** CPO, CMO, CTO
+**Files to read:**
+- `frontend/index.html` — full structure: semantic HTML, landmark regions, ARIA, form patterns
+- `frontend/pricing.html` — conversion-critical page structure
+- `frontend/js/app.js` — state management, view transitions, error display to user
+- `frontend/js/ui-nav.js` — navigation UX
+- `frontend/js/state.js` — shared state model
+- `frontend/js/core.js` — core UX helpers
+- `frontend/css/tokens.css` — design system tokens (colors, spacing, type scale)
+- `frontend/css/base.css` — base resets and global styles
+- `frontend/css/components/buttons.css` — button system
+- `frontend/css/components/mobile.css` — responsive overrides
+- `frontend/css/share-card.css` — share surface
+- `frontend/js/controllers/billing-controller.js` — billing UX flow
+- `frontend/js/controllers/practitioner-management.js` — practitioner dashboard UX
+- `frontend/js/first-run.js` — onboarding UX
+- `frontend/js/bodygraph.js` — chart rendering UX
+
+**Grep checks to run:**
+```
+# Missing alt text on images
+grep -rn "<img" frontend/ --include="*.html" | grep -v "alt="
+
+# Inline styles (should use tokens)
+grep -rn "style=" frontend/ --include="*.html" | grep -v "<!-- ok\|display:none\|visibility"
+
+# Hard-coded colors not using CSS vars
+grep -rn "color:\|background:" frontend/css/components/ --include="*.css" | grep -v "var(--\|inherit\|transparent\|currentColor"
+
+# Empty error states: catch blocks with no user-facing message
+grep -rn "catch\|\.catch" frontend/js/ --include="*.js" | grep -v "console\|showError\|notify\|toast\|message\|alert"
+
+# Loading states: async calls without spinner/skeleton
+grep -rn "await fetch\|apiFetch" frontend/js/ --include="*.js" | grep -v "setLoading\|spinner\|skeleton\|loadingState\|isLoading"
+
+# Focus traps in modals
+grep -rn "modal\|dialog\|overlay" frontend/js/ --include="*.js" | grep -v "focusTrap\|focus\|trapFocus\|addEventListener.*keydown"
+
+# Buttons without accessible labels
+grep -rn "<button" frontend/ --include="*.html" | grep -v "aria-label\|aria-labelledby\|>[^<]"
+
+# Viewport meta (critical for mobile)
+grep -rn "viewport" frontend/ --include="*.html"
+```
+
+**Evaluate for:**
+
+**Visual Design System**
+- [ ] Single source of truth for tokens — only `tokens.css` defines colors, spacing, type scale; no magic values in components
+- [ ] Type scale is harmonious (no arbitrary font-size values outside the scale)
+- [ ] Spacing follows an 8px grid or defined scale
+- [ ] Brand consistency — gold/dark premium palette used consistently; no off-brand grays or greens leaking in
+- [ ] Button hierarchy — primary / secondary / tertiary / destructive are visually distinct, use token variables
+- [ ] Icon system — consistent icon library; no mixed icon styles (Heroicons + FontAwesome + inline SVG)
+
+**Interaction & Motion**
+- [ ] Loading states — every async action has a skeleton/spinner; no "blank flash" while fetching
+- [ ] Error states — every form field has inline error messaging; API errors surface human-readable copy, not JSON blobs
+- [ ] Empty states — charts, client lists, diary, transit views all have designed empty states (not blank space)
+- [ ] Success feedback — actions (save, purchase, schedule) confirm completion with toast/notification
+- [ ] Destructive actions — delete/cancel flows have a confirmation step
+- [ ] Optimistic UI — does any state update optimistically (before server confirm), and is rollback handled?
+
+**Navigation & Information Architecture**
+- [ ] Primary nav is consistent across all pages/views
+- [ ] Mobile navigation — hamburger or bottom bar pattern used correctly for <768px
+- [ ] Breadcrumbs or back-navigation available on nested views (client detail, session notes)
+- [ ] Active state clearly indicated on nav items
+- [ ] Tab order is logical — keyboard navigation follows visual flow
+- [ ] No orphaned pages — every view is reachable from navigation
+
+**Forms & Data Entry**
+- [ ] All form inputs have visible labels (not placeholder-only)
+- [ ] Birth date/time entry (core UX) — is the date picker accessible and mobile-friendly?
+- [ ] Timezone detection — does the UI detect or prompt for timezone on birth data entry?
+- [ ] Field validation — inline validation fires on blur, not only on submit
+- [ ] Required field indicators present (`*` or aria-required)
+- [ ] Form submission disabled while in-flight (no double-submit)
+
+**Mobile / Responsive UX**
+- [ ] Viewport meta tag `width=device-width, initial-scale=1` present
+- [ ] Touch targets ≥44×44px (WCAG 2.5.5)
+- [ ] No horizontal scroll on any view at 375px width
+- [ ] Practitioner dashboard usable on tablet (768px)
+- [ ] Bodygraph/Energy Chart renders correctly at mobile width
+- [ ] Share card optimized for mobile preview (OG dimensions)
+
+**Practitioner-Specific UX**
+- [ ] Client list is scannable — avatar, name, last session, tier visible at a glance
+- [ ] Session notes editor has autosave or explicit save indicator
+- [ ] PDF export preview before download
+- [ ] Scheduling embed is embeddable without auth (public-safe iframe)
+- [ ] Practitioner directory card shows the right trust signals (cert badges, reading count, specialties)
+- [ ] Onboarding for new practitioner has a clear "next step" at each gate
+
+**First-Run / Onboarding UX**
+- [ ] New user lands on a clear call-to-action (not inside the app immediately)
+- [ ] Birth data entry is the first meaningful action — friction is minimal
+- [ ] Chart generation is near-instant with a delightful loading state
+- [ ] First synthesis paragraph creates a "that's me" moment within 10 seconds of reading
+- [ ] Upgrade prompt appears at the natural value moment (not before it)
+- [ ] Practitioner invite flow is distinct from self-signup (no confusion about account type)
+
+**Output format:**
+| Finding | Category | Severity | File | Fix | Effort |
+|---------|----------|----------|------|-----|--------|
+*(Use: Critical = breaks user flow | High = significant friction | Medium = polish gap | Low = minor)*
+
+**C-Suite Translation (CPO + CMO):**
+- What is the conversion impact of the top 3 UX gaps? (Quantify as "% of users likely to drop")
+- Are any gaps directly preventing practitioner activation?
+- What is the impression a new visitor gets in the first 10 seconds?
+- Which UX improvements have the highest ROI (fix in <1 day, high conversion impact)?
+
+---
+
+### PASS 9 — C-SUITE EXECUTIVE SYNTHESIS
 
 After completing all other passes, produce the executive synthesis.
 
