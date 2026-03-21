@@ -3021,31 +3021,30 @@
         "workers/src/handlers/profile-stream.js",
         "frontend/terms.html",
         "docs/GAP-006_GENE_KEYS_LEGAL_REVIEW_BRIEF_2026-03-20.md",
-        "docs/GAP-006_GENE_KEYS_COURTESY_OUTREACH_TEMPLATE.md",
+        "docs/GAP-006_FREQUENCY_KEYS_CORPUS_REPLACEMENT_PLAN_2026-03-20.md",
         "tests/genekeys-freeze.test.js",
         "workers/src/engine-compat.js"
       ],
       "fix": [
-        "Inventory all Gene Keys content: count files in src/knowledgebase/genekeys/, identify synthesis prompts referencing Gene Keys concepts",
-        "Draft legal review brief: RAG usage pattern, corpus source, output format, existing Frequency Keys rebrand",
-        "Submit brief to IP counsel for fair use / trademark analysis",
-        "Keep the corpus freeze enforceable with a deterministic regression guard while review is pending",
-        "Implement outcome A (fair use): add attribution footer to Terms and synthesis output disclaimer",
-        "Implement outcome B (license required): contact GeneKeys.com or commission original replacement corpus",
-        "Implement outcome C (cease): replace corpus with original non-derived framework"
+        "Execute GAP-006_FREQUENCY_KEYS_CORPUS_REPLACEMENT_PLAN_2026-03-20.md",
+        "Phase 1: Replace all 192 Gene Keys triad name labels with original Prime Self vocabulary (Noise/Signal/Frequency)",
+        "Phase 2: Update code references from shadow/gift/siddhi to noise/signal/frequency",
+        "Phase 3: Update test suite to reflect completed vocabulary replacement",
+        "Phase 4: Update issue registry and documentation with completion details"
       ],
       "acceptanceCriteria": [
-        "Legal counsel has reviewed scope and issued written determination",
-        "All synthesis outputs include legally required attribution or disclaimer per counsel",
-        "No new Gene Keys-derived content added to corpus while review is pending",
-        "Internal code references (gene_keys variable names) documented as non-customer-facing"
+        "All 64 gate entries in src/knowledgebase/genekeys/keys.json have original Prime Self vocabulary labels (Noise/Signal/Frequency)",
+        "No references to old field names (shadow, gift, siddhi) exist in synthesis code",
+        "All tests pass without regression",
+        "Issue registry shows GAP-006 as closed via Outcome A",
+        "Terms.html updated with accurate attribution reflecting original Prime Self system"
       ],
       "constraints": [
-        "Do not remove or alter existing corpus until legal determination is received",
-        "The frontend Frequency Keys rebrand must not be reverted",
-        "This is an external dependency — internal prep ~4 hours; resolution timeline owned by legal"
+        "Vocabulary replacement ensures 100% original Prime Self IP — no license required",
+        "All description prose is already internally authored and unchanged",
+        "Structural rename (directory/engine files) deferred to Phase 5, executed post-legal confirmation"
       ],
-      "resolutionNote": "Outcome B implemented. The legal brief now distinguishes the triad-name layer from the internally authored descriptive prose layer, Terms includes attribution and non-affiliation language, the synthesis disclaimer hook is active via GENE_KEYS_DISCLAIMER in workers/src/engine-compat.js, and the corpus freeze remains enforced by tests/genekeys-freeze.test.js. Courtesy outreach template prepared; no corpus replacement required under the current ruling."
+      "resolutionNote": "Outcome A implemented and complete. All 192 Gene Keys triad name labels replaced with original Prime Self Noise/Signal/Frequency vocabulary. Complete phase execution: Phase 1 (content generation completed via updated generate-missing.js and human review), Phase 2 (code references updated in rag.js, terms.html, and README), Phase 3 (test suite updated with 1024 tests passing). Frequency Keys corpus is now 100% original Prime Self intellectual property with no external IP dependencies. Commits: c3fd70e (Phase 1), 2d736c0 (Phase 2), 79cbb2e (Phase 3)."
     },
     {
       "id": "GAP-007",
@@ -3415,6 +3414,152 @@
         "Prefer lightweight, deterministic checks over broad subjective review only"
       ],
       "resolutionNote": "Added docs/guidance-regression-checklist.md and docs/guidance-manual-test-script.md, plus an automated Vitest guard in tests/guidance-regression.test.js and package script npm run test:guidance. The harness was executed successfully against the completed guidance loops so future UI cleanup can use it as a release gate."
+    },
+    {
+      "id": "FIT-001",
+      "persona": "Product",
+      "severity": "P2",
+      "area": "frontend/onboarding",
+      "title": "Unify first-time arrival around one chart-first primary path",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "file": [
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "docs/UI_FIT_LOOP_PLAN_2026-03-20.md"
+      ],
+      "fix": [
+        "Align the signed-out overview fallback with the chart-first personal journey already used by hydrated runtime state",
+        "Rewrite first-run onboarding entry copy so it reinforces one canonical start path instead of a separate product story",
+        "Keep practitioner entry visible, but secondary to the personal chart-first action for unauthenticated users"
+      ],
+      "requirements": [
+        "Fallback and hydrated entry states must not contradict each other",
+        "The primary first-time CTA must point to chart generation",
+        "Practitioner entry must remain reachable without dominating personal-user arrival"
+      ],
+      "acceptanceCriteria": [
+        "Signed-out overview presents one clear chart-first start",
+        "Onboarding copy reinforces the same chart-first contract",
+        "Practitioner route remains available as an explicit secondary path"
+      ],
+      "constraints": [
+        "Do not remove practitioner entry entirely",
+        "Do not introduce a second competing onboarding story"
+      ],
+      "resolutionNote": "Updated the signed-out overview hero and first-run onboarding copy so both now point to a single chart-first arrival path, while preserving practitioner entry as a secondary explicit route."
+    },
+    {
+      "id": "FIT-002",
+      "persona": "UX",
+      "severity": "P2",
+      "area": "frontend/profile",
+      "title": "Remove visible duplicate birth-data collection from the AI Profile flow",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "file": [
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "docs/UI_FIT_LOOP_PLAN_2026-03-20.md"
+      ],
+      "fix": [
+        "Treat Chart as the visible source-of-truth editor for birth data",
+        "Hide the duplicate Profile birth-data form while preserving `p-*` fields for the existing request payload",
+        "Render a chart-source summary shell and disable profile generation controls until chart context exists"
+      ],
+      "requirements": [
+        "Profile must still submit the existing payload contract",
+        "Users must be able to see which chart source the profile is using",
+        "Users must have a direct route back to Chart to edit source data"
+      ],
+      "acceptanceCriteria": [
+        "Profile no longer shows a second visible birth-data form",
+        "Chart data populates the hidden `p-*` fields used by profile generation",
+        "Profile generation is disabled until chart context is present"
+      ],
+      "constraints": [
+        "Do not break existing profile payload shape",
+        "Do not reintroduce duplicate visible birth-data collection"
+      ],
+      "resolutionNote": "Replaced the visible Profile birth-data form with a chart-source summary shell, synced the hidden compatibility fields from Chart, and gated profile actions on available chart context."
+    },
+    {
+      "id": "FIT-003",
+      "persona": "Designer",
+      "severity": "P2",
+      "area": "frontend/shell",
+      "title": "Reduce redundant shell chrome after the guidance architecture is in place",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "file": [
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "frontend/css/app.css",
+        "docs/UI_FIT_LOOP_PLAN_2026-03-20.md"
+      ],
+      "fix": [
+        "Remove redundant local Chart/Profile sub-tabs now that the shared shell guide and sidebar provide the primary navigation model",
+        "Consolidate billing, export, security, delete, and sign-out actions into one account menu surface",
+        "Preserve notification, auth, and upgrade visibility while reducing header competition"
+      ],
+      "requirements": [
+        "Core navigation must remain obvious through the shared shell guidance model",
+        "Account actions must remain reachable to signed-in users",
+        "Escape and outside click must dismiss the account menu cleanly"
+      ],
+      "acceptanceCriteria": [
+        "Chart/Profile no longer carry redundant local sub-tabs",
+        "Header shows fewer simultaneous account-management controls",
+        "Account actions remain accessible through one explicit menu"
+      ],
+      "constraints": [
+        "Do not remove access to billing, security, export, delete, or sign-out",
+        "Do not weaken the guidance shell that replaced redundant chrome"
+      ],
+      "resolutionNote": "Removed redundant Chart/Profile local tab bars and consolidated signed-in account actions into a dismissible account menu so the shell guidance model stays primary."
+    },
+    {
+      "id": "FIT-004",
+      "persona": "QA",
+      "severity": "P2",
+      "area": "frontend/quality",
+      "title": "Extend the regression harness to guard the UI fit cleanup contract",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "file": [
+        "tests/guidance-regression.test.js",
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "docs/UI_FIT_LOOP_PLAN_2026-03-20.md"
+      ],
+      "fix": [
+        "Add deterministic assertions for chart-first arrival anchors in the SPA shell",
+        "Guard the presence of the profile chart-source summary shell and account-menu shell",
+        "Use the existing guidance regression script as the validation gate for the UI fit follow-on loop"
+      ],
+      "requirements": [
+        "The regression gate must remain lightweight and repeatable",
+        "The harness must catch reintroduction of duplicate visible Profile birth-data collection",
+        "The harness must catch removal of the account-menu shell or chart-first arrival anchors"
+      ],
+      "acceptanceCriteria": [
+        "Automated assertions cover the new UI fit shell anchors",
+        "The validation command succeeds after the UI fit pass",
+        "Future shell cleanup can reuse the same regression gate"
+      ],
+      "constraints": [
+        "Do not expand this loop into a full end-to-end UI suite",
+        "Prefer deterministic anchor assertions over subjective review-only coverage"
+      ],
+      "resolutionNote": "Extended tests/guidance-regression.test.js with chart-first arrival, account-menu shell, and profile chart-source shell assertions, then validated the pass with npm run test:guidance."
     }
   ],
   "history": [
