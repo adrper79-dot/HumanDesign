@@ -48,10 +48,10 @@ const EMBED_COLOR = 0xB8860B;
 
 // CTA footer for every embed
 const EMBED_FOOTER =
-  'Full Technical Insights, Forge Weapons & Priming Recommendations → primeselfengine.com';
+  'Full Technical Insights, Forge Weapons & Priming Recommendations → selfprime.net';
 
 // Prime Self logo (served from frontend assets)
-const THUMBNAIL_URL = 'https://primeselfengine.com/icons/icon-192.png';
+const THUMBNAIL_URL = 'https://selfprime.net/icons/icon-192.png';
 
 // Decision protocol copy, keyed by authority name from chart engine
 const DECISION_PROTOCOLS = {
@@ -124,7 +124,7 @@ async function verifyDiscordSignature(request, rawBody, publicKey) {
 
 // ─── Rate Limiting (KV-backed, rolling 24h window) ───────────────
 
-const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
@@ -279,7 +279,7 @@ function buildWhoYouAre(chart) {
 function buildTransitContext(chart) {
   const transits = chart.transits ?? chart.currentTransits;
   if (!transits) {
-    return 'Transit data unavailable — visit primeselfengine.com for your full monthly forecast.';
+    return 'Transit data unavailable — visit selfprime.net for your full monthly forecast.';
   }
 
   // Surface the top active transit gate if present
@@ -291,12 +291,12 @@ function buildTransitContext(chart) {
   if (moonGate) parts.push(`Moon in Gate ${moonGate}`);
 
   if (parts.length === 0) {
-    return 'Visit primeselfengine.com for your full personalized transit forecast.';
+    return 'Visit selfprime.net for your full personalized transit forecast.';
   }
 
   return (
     `Current transits: ${parts.join(', ')}. ` +
-    'See your full personalized breakdown at primeselfengine.com.'
+    'See your full personalized breakdown at selfprime.net.'
   );
 }
 
@@ -314,7 +314,7 @@ function buildQuickStartEmbed(chart, guildId) {
     'Trust your body\'s signals — slow down and notice your authentic response before committing.';
 
   const ctaUrl =
-    `https://primeselfengine.com` +
+    `https://selfprime.net` +
     `?utm_source=discord&utm_medium=bot&utm_campaign=quickstart` +
     `&utm_content=${encodeURIComponent(guildId || 'unknown')}`;
 
@@ -467,7 +467,7 @@ async function handlePrimself(interaction, env) {
     await sendEphemeralFollowup(
       application_id,
       token,
-      '❌ An unexpected error occurred. Please try again, or visit primeselfengine.com for your full chart.',
+      '❌ An unexpected error occurred. Please try again, or visit selfprime.net for your full chart.',
       env.DISCORD_BOT_TOKEN,
     );
   }
@@ -529,7 +529,7 @@ export default {
               `⏳ You have used all **${RATE_LIMIT_MAX}** free lookups for today. ` +
               `Your limit resets in approximately **${hours} hour${hours !== 1 ? 's' : ''}** ` +
               `(around ${resetTime.toUTCString()}). ` +
-              `Visit [primeselfengine.com](https://primeselfengine.com) for unlimited access.`,
+              `Visit [selfprime.net](https://selfprime.net) for unlimited access.`,
             flags: MessageFlags.EPHEMERAL,
           },
         });

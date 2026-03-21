@@ -16,14 +16,14 @@
   gap: 12px;
   padding: 16px;
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(138, 43, 226, 0.05) 100%);
-  border: 1px solid rgba(255, 215, 0, 0.2);
+  border: 1px solid rgba(255, 215, 0, 0.35);      /* GAP-003: increased opacity from 0.2 for WCAG AA visibility */
   border-radius: 8px;
   backdrop-filter: blur(8px);
   transition: all 0.3s ease;
 }
 
 .share-card:hover {
-  border-color: rgba(255, 215, 0, 0.4);
+  border-color: rgba(255, 215, 0, 0.6);           /* GAP-003: increased opacity from 0.4 */
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(138, 43, 226, 0.08) 100%);
 }
 

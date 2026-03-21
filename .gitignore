@@ -30,6 +30,14 @@ secrets.*
 **/Secrets.txt
 **/secrets.txt
 
+# Env files — explicit entries (belt-and-suspenders; *.env and .env.* patterns above also apply)
+.env.local
+.env.production
+.env.staging
+**/.env.local
+**/.env.production
+**/.env.staging
+
 # Apple Sign In private keys
 *.p8
 AuthKey_*.p8

@@ -13,7 +13,7 @@ PRIME_SELF_API_URL = "https://prime-self-api.adrper79.workers.dev"
 # Then paste the generated id below
 [[kv_namespaces]]
 binding = "DISCORD_RATE_LIMIT"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "dda68c13b892471a941c179aeabe5b5e"
 
 # Secrets (set via: npx wrangler secret put <NAME>)
 # DISCORD_APPLICATION_ID  — Discord Developer Portal → App → General

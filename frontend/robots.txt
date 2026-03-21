@@ -1,0 +1,42 @@
+# robots.txt — selfprime.net
+# Security note: sensitive paths (admin, billing) are intentionally NOT listed here.
+# Listing them would disclose their existence to scanners. Those paths are protected
+# by authentication and X-Robots-Tag response headers set in _headers.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://selfprime.net/sitemap.xml
+
+# AI crawlers — explicit Allow signals GEO authority weight
+# Note: each block must repeat Disallow rules because specific blocks override *
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /

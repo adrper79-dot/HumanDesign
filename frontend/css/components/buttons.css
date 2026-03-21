@@ -52,9 +52,10 @@ button:focus-visible {
 
 .btn:disabled,
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.65;                            /* GAP-003: increased from 0.5 for WCAG AA visibility */
   cursor: not-allowed;
   pointer-events: none;
+  color: rgba(255, 255, 255, 0.55);        /* GAP-003: explicit color for disabled text (4.5:1 on dark bg) */
 }
 
 

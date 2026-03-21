@@ -6,7 +6,7 @@
 /* ── Touch Target Standards ────────────────────────────────── */
 /* All interactive elements minimum 44px (iOS/Android guidelines) */
 :root {
-  /* --touch-target-min inherited from design-tokens.css */
+  /* --touch-target-min inherited from tokens.css */
   --mobile-padding: 16px;
   --mobile-header-height: 56px;
   --mobile-nav-height: 64px;

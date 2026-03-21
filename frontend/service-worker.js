@@ -13,7 +13,7 @@
  * v18 - Audit 2026-03-14: resilient cache install (Promise.allSettled per-asset), DOM cleared on logout
  */
 
-const CACHE_VERSION = 'v19'; // BL-AUDIT-H5: Added billing flow pages to precache
+const CACHE_VERSION = 'v20'; // GAP-002: Replaced deprecated design-tokens.css + design-tokens-premium.css with tokens.css
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
@@ -25,8 +25,7 @@ const STATIC_ASSETS = [
   '/index.html',
   '/pricing.html',
   '/css/base.css',
-  '/css/design-tokens.css',
-  '/css/design-tokens-premium.css',
+  '/css/tokens.css',
   '/css/prime-self.css',
   '/css/prime-self-premium.css',
   '/css/artwork.css',

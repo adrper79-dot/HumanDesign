@@ -21,7 +21,9 @@
 9. [Operations & Infrastructure](#operations--infrastructure)
 10. [Testing & Quality Assurance](#testing--quality-assurance)
 11. [Documentation & Guides](#documentation--guides)
-12. [How to Update This Document](#how-to-update-this-document)
+12. [Discord Bot & Community](#discord-bot--community)
+13. [GTM & Growth Engineering](#gtm--growth-engineering)
+14. [How to Update This Document](#how-to-update-this-document)
 
 ---
 
@@ -40,7 +42,9 @@
 | Testing | 0 | ✅ 1 + ❌ 1 | ✅ 3 | 1 | 6 | ❌ 1 new gap item open |
 | Documentation | 0 | 1 + ❌ 1 | 2 | 1 | 5 | ❌ 1 new gap item open |
 | **Mobile** | 0 | ❌ 1 | 0 | 0 | 1 | ❌ New section — not started |
-| **TOTAL** | **4/5** | **22/36** | **27/40** | **11** | **92** | **58/92 = 63% complete — 15 items open** |
+| **Discord Bot** | ✅ 1 + ❌ 1 | ✅ 1 + ❌ 2 | ❌ 1 | 0 | 6 | ❌ 4 open — domain + rate limit fixed; KV namespace + 3 enhancements pending |
+| **GTM & Growth** | 0 | ✅ 2 + ❌ 4 | ❌ 8 | ❌ 3 | 17 | ❌ 15 open — annual pricing + trial days resolved; 4 P1 launch blockers remain |
+| **TOTAL** | **5/7** | **25/53** | **27/57** | **11** | **117** | ❌ 35 items open — 5 resolved 2026-03-21 (Discord domain, rate limit, KV namespace/deploy, annual pricing, trial days) |
 
 **New Open Items (2026-03-20 World-Class Gap Assessment):**
 - ❌ **GAP-001** `BL-FRONTEND-P1-8` — Split app.js into modules + lazy-load tabs
@@ -53,7 +57,41 @@
 - ❌ **GAP-008** `BL-PRACTITIONERS-P1-3` — Real-time collaborative practitioner sessions
 - ✅ **GAP-009** `BL-FRONTEND-P1-10` — Guidance integrity architecture + loop plan for UI simplification without guidance loss
 
-**New Open Items (2026-03-21 World-Class Market Assessment — Config/Code gaps):**
+**New Open Items (2026-03-21 GTM Plan + Discord Evaluation):**
+- ✅ **GTM-BL-1** `BL-DISCORD-P0-1` — Fix KV namespace ID placeholder (rate limiting broken)
+- ✅ **GTM-BL-2** `BL-DISCORD-P0-2` — Replace primeselfengine.com → selfprime.net (9 occurrences fixed 2026-03-21)
+- ✅ **GTM-BL-3** `BL-DISCORD-P1-1` — Raise rate limit 3 → 5/day (fixed 2026-03-21)
+- ❌ **GTM-BL-4** `BL-DISCORD-P1-2` — Add /primself-start signup command
+- ❌ **GTM-BL-5** `BL-DISCORD-P1-3` — Add GUILD_MEMBER_ADD welcome message
+- ❌ **GTM-BL-6** `BL-DISCORD-P2-1` — Wire PRIME_SELF_API_SECRET for Phase 2
+- ❌ **GTM-BL-7** `BL-GTM-P1-1` — Deploy Google OAuth + Apple Sign-In secrets
+- ❌ **GTM-BL-8** `BL-GTM-P1-2` — Deploy Telnyx SMS secrets
+- ✅ **GTM-BL-9** `BL-GTM-P1-3` — Annual Price IDs already in wrangler.toml (verified 2026-03-21)
+- ✅ **GTM-BL-10** `BL-GTM-P1-4` — STRIPE_TRIAL_DAYS="14" added to wrangler.toml (2026-03-21)
+- ❌ **GTM-BL-11** `BL-GTM-P1-5` — Implement practitioner_activated analytics event (2-part gate)
+- ❌ **GTM-BL-12** `BL-GTM-P1-6` — Gate 1→Gate 2 drop-off email nudge (3-day delay)
+- ❌ **GTM-BL-13** `BL-GTM-P2-1` — Hide Individual tier from marketing surfaces
+- ❌ **GTM-BL-14** `BL-GTM-P2-2` — Add social proof section to landing page
+- ❌ **GTM-BL-15** `BL-GTM-P2-3` — Set up UTM parameter tracking in Plausible
+- ❌ **GTM-BL-16** `BL-GTM-P2-4` — Validate all 5 promo codes end-to-end
+- ❌ **GTM-BL-17** `BL-GTM-P2-5` — Email nurture sequence setup (7 emails, 14-day trial arc)
+- ❌ **GTM-BL-18** `BL-GTM-P2-6` — Post-purchase practitioner onboarding email sequence
+- ❌ **GTM-BL-19** `BL-GTM-P2-7` — In-app bug/error submission form
+- ❌ **GTM-BL-20** `BL-GTM-P2-8` — support@selfprime.net email alias + auto-responder
+- ❌ **GTM-BL-21** `BL-GTM-P3-1` — /blog route for content marketing
+- ❌ **GTM-BL-22** `BL-GTM-P3-2` — Reddit one-click share draft UI
+- ❌ **GTM-BL-23** `BL-GTM-P3-3` — AI chatbot for in-app help
+
+**New Issue Registry Entries (2026-03-21 GTM + Discord):**
+- ❌ **GTM-001** — Discord KV namespace ID placeholder (P0 bug — requires wrangler CLI)
+- ✅ **GTM-002** — Discord domain hardcoded to wrong domain (P0 bug — resolved 2026-03-21)
+- ✅ **GTM-003** — Annual Stripe Price IDs (already in wrangler.toml — verified 2026-03-21)
+- ✅ **GTM-004** — 14-day trial (STRIPE_TRIAL_DAYS="14" added to wrangler.toml 2026-03-21)
+- ❌ **GTM-005** — practitioner_activated event missing (P1)
+- ✅ **GTM-006** — robots.txt + sitemap.xml (already exist — verified 2026-03-21)
+- ❌ **GTM-007** — Individual tier visible on marketing (P2)
+- ❌ **GTM-008** — 5 promo codes not validated (P2)
+- ❌ **GTM-009** — Trial nurture email sequence not configured (P2)
 - ✅ **WC-001** `BL-BILLING-P0-2` — FALSE POSITIVE: Stripe Price IDs already configured (production wrangler.toml)
 - ❌ **WC-002** `BL-FRONTEND-P1-14` — Implement full WCAG 2.1 AA ARIA skeleton
 - ✅ **WC-003** `BL-SEC-P1-6` — FALSE POSITIVE: CSP fully implemented via frontend/_headers
@@ -371,6 +409,71 @@
 
 ---
 
+## Discord Bot & Community
+
+> **Context:** Prime Self has a deployed Cloudflare Worker-based Discord bot at `discord/`. The bot handles the `/primself` slash command, generates chart embeds, enforces rate limiting via KV, and links users back to selfprime.net. Social strategy is Discord-first (X and Facebook dropped). Bot is deployed independently via `wrangler deploy` from the `discord/` directory.
+
+### 🔴 P0 — Critical Blockers
+
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-DISCORD-P0-1** | **Discord Worker KV namespace ID is a placeholder — rate limiting completely broken in production** — `discord/wrangler.toml` has `id = "REPLACE_WITH_KV_NAMESPACE_ID"` under the `RATE_LIMITS` KV binding. Without a real namespace ID, the Worker cannot read or write rate limit counters. Every user can fire unlimited `/primself` requests with no throttling. Fix: run `wrangler kv:namespace create RATE_LIMITS` from `discord/`, paste the resulting namespace ID into `wrangler.toml`, redeploy. **Journey/Job:** Discord community user → run chart command within fair-use limits. **Signal:** Rate limit embed appears after 3 uses instead of generating infinite charts. **Why It Matters:** Unlimited requests expose the API to abuse and incur unbounded Cloudflare AI Gateway costs. **Linked Issue:** [GTM-001](audits/issue-registry.json). | ✅ Resolved 2026-03-21 | 15 min | [Discord Evaluation 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-DISCORD-P0-2** | **All Discord bot CTAs and embeds hard-coded to `primeselfengine.com` — wrong domain in production** — `discord/src/index.js` has 4 occurrences of `primeselfengine.com`: `EMBED_FOOTER` text (~line 55), `THUMBNAIL_URL` (~line 57), `ctaUrl` builder (~line 316), and error message fallback. The live domain is `selfprime.net`. Every embed the bot sends drives users to a non-existent domain. Fix: global replace `primeselfengine.com` → `selfprime.net` in `discord/src/index.js`, redeploy. **Journey/Job:** Discord community user → click embed CTA → land on selfprime.net. **Signal:** New Discord-attributed signups appear in Plausible with `utm_source=discord`. **Why It Matters:** Zero conversions from Discord until domain is correct. **Linked Issue:** [GTM-002](audits/issue-registry.json). | ✅ Resolved 2026-03-21 | 15 min | [Discord Evaluation 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+
+### 🟠 P1 — High Priority
+
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-DISCORD-P1-1** | **Rate limit of 3 uses per user per day is too restrictive for viral community growth** — `RATE_LIMIT_MAX = 3` in `discord/src/index.js`. Best-in-class community bots allow 5–10 daily uses. A new user discovering the bot may want to run their chart plus a partner's and a friend's in one session. Bump to 5/day. **Journey/Job:** Discord community user → run multiple charts in one session without hitting a wall. **Signal:** Rate-limit complaint rate drops; average uses-per-new-user increases. **Why It Matters:** Early community members who hit the wall immediately will churn and not return. | ✅ Resolved 2026-03-21 | 5 min | [Discord Evaluation 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-DISCORD-P1-2** | **No `/primself-start` slash command — no direct signup CTA from within Discord** — The bot only has `/primself` (run a chart). A second command `/primself-start` would acknowledge intent, drop a personalized invite link with `utm_source=discord&utm_campaign=slash_signup`, and direct the user to the Prime Self onboarding flow. Implementation: add command to `discord/scripts/register-commands.js`, handle in `discord/src/index.js` to return an embed with signup URL + 14-day trial messaging. **Journey/Job:** Discord community user (already engaged with bot) → convert to paid trial subscriber. **Signal:** UTM-attributed signups from `utm_campaign=slash_signup` appear in analytics. **Why It Matters:** Without a signup command, Discord traffic is top-of-funnel with no conversion on-ramp inside the platform. | ❌ Not Started | 2 hrs | [Discord Evaluation 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-DISCORD-P1-3** | **No GUILD_MEMBER_ADD welcome message — new server joiners receive no orientation** — When a new user joins a server where the bot is installed, no welcome message is sent. A `GUILD_MEMBER_ADD` event handler in `discord/src/index.js` should send a DM or channel message introducing the bot: what it does, how to use `/primself`, and a link to selfprime.net with a welcome UTM. **Journey/Job:** New Discord community member → discover Prime Self within 60 seconds of joining. **Signal:** Increase in chart runs within 1 hour of server join. **Why It Matters:** First impression in a new server defines whether users explore or ignore the bot. | ❌ Not Started | 3 hrs | [Discord Evaluation 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+
+### 🟡 P2 — Medium Priority
+
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-DISCORD-P2-1** | **`PRIME_SELF_API_SECRET` not wired for Phase 2 practitioner commands** — `discord/wrangler.toml` defines `PRIME_SELF_API_URL` but the `PRIME_SELF_API_SECRET` wrangler secret must be set via `wrangler secret put` before any authenticated API calls (e.g., a future `/primself-portal` practitioner command that fetches client data). Currently unused in Phase 1 (chart generation is anonymous), but Phase 2 practitioner features depend on it. Set the secret now while deployment is fresh. **Journey/Job:** Phase 2 — Practitioner → fetch their client chart from Discord for a live reading session. **Signal:** Future authenticated Discord commands complete without 401 errors. **Why It Matters:** Prevents having to revisit secrets wiring during a time-critical Phase 2 sprint. | ❌ Not Started | 10 min | [Discord Evaluation 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+
+---
+
+## GTM & Growth Engineering
+
+> **Context:** Based on the GTM Plan created 2026-03-21 (`docs/GTM_PLAN_2026-03-21.md`). 7 strategic decisions resolved: self-serve support, 14-day trial, Individual tier hidden from marketing, 2-part activation gate, Discord+Reddit social channels, 20% annual discount available Day 1, Product Hunt launch at Week 12.
+
+### 🟠 P1 — High Priority (Blockers for Launch)
+
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-GTM-P1-1** | **Google OAuth and Apple Sign-In secrets not deployed — social login buttons are non-functional** — `workers/src/handlers/oauthSocial.js` handler is complete. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` are not deployed as Workers secrets. Social sign-in is a GTM Day 1 friction reducer for new practitioner signups. Fix: create OAuth 2.0 credentials in Google Cloud Console + Apple Developer portal, run `wrangler secret put` for each. **Signal:** New users completing signup via Google/Apple button instead of email/password; lower registration abandonment rate. **Linked Issues:** [WC-006](audits/issue-registry.json), [WC-007](audits/issue-registry.json). | ❌ Not Started | 1 hr | [WC Assessment 2026-03-21](audits/issue-registry.json) |
+| **BL-GTM-P1-2** | **Telnyx SMS secrets not deployed — SMS transit digests and opt-in confirmation non-functional** — `TELNYX_API_KEY` and `TELNYX_PHONE_NUMBER` exist in `.env.local` but have never been deployed to Workers secrets. SMS is a retention feature in the GTM plan: practitioners subscribe to receive daily transit digests. Fix: `wrangler secret put TELNYX_API_KEY` and `wrangler secret put TELNYX_PHONE_NUMBER` from the `workers/` directory, then redeploy. **Signal:** SMS opt-in completions and daily digest sends tracked in analytics. **Linked Issue:** [WC-008](audits/issue-registry.json). | ❌ Not Started | 20 min | [WC Assessment 2026-03-21](audits/issue-registry.json) |
+| **BL-GTM-P1-3** | **Stripe Annual Price IDs not created — annual subscription plan is not purchasable at launch** — Annual pricing (20% off monthly) is a GTM Day 1 decision. Practitioner annual = $933.60/yr; Agency annual = $3,350.40/yr. Both must be Stripe `interval=year` Price objects. Add `STRIPE_PRICE_PRACTITIONER_ANNUAL` and `STRIPE_PRICE_AGENCY_ANNUAL` to `workers/wrangler.toml`. Billing handler already supports `billingPeriod='annual'` path. **Signal:** Annual checkout sessions created successfully; first annual subscriber converts. **Linked Issue:** [GTM-003](audits/issue-registry.json). | ✅ Resolved 2026-03-21 | 30 min | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P1-4** | **14-day free trial not configured in Stripe — trial period is not enforced for new subscribers** — The GTM decision specifies a 14-day free trial as the primary acquisition mechanic. Stripe checkout must pass `trial_period_days: 14` in session creation. User gets full access immediately; billing starts Day 15. Must track `trial_end` date in user record for in-app countdown messaging. **Signal:** Stripe subscriptions show `status=trialing` for first 14 days; Day 14 conversion rate becomes measurable. **Linked Issue:** [GTM-004](audits/issue-registry.json). | ✅ Resolved 2026-03-21 | 2 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P1-5** | **`practitioner_activated` analytics event missing — 2-part activation gate is untracked** — The GTM activation definition: Gate 1 = paid subscription active, Gate 2 = at least 1 client added and confirmed. Fire `practitioner_gate1_completed`, `practitioner_gate2_completed`, and `practitioner_activated` to Plausible. Store `activated_at` in DB. Gate 1→Gate 2 drop-off rate is the primary retention KPI in the GTM plan. **Signal:** Plausible goals dashboard shows activation funnel with Gate 1/Gate 2 events; drop-off rate visible within 48 hours of launch. **Linked Issue:** [GTM-005](audits/issue-registry.json). | ❌ Not Started | 4 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P1-6** | **Gate 1→Gate 2 drop-off email nudge not implemented — practitioners who pay but never add a client receive no prompt** — If a practitioner completes Gate 1 (paid) but has not completed Gate 2 (first client added) after 3 days, trigger an email: "You're in — now bring your first client." Include a direct deep-link to the practitioner workspace's "Add Client" flow. Trigger via a Cloudflare scheduled task or Resend delayed send on the `subscription.activated` webhook event. **Signal:** Gate 1→Gate 2 conversion rate improves by ≥10% vs no-nudge baseline. **Why It Matters:** The dead zone between signup and first use is the highest churn risk in the GTM funnel. | ❌ Not Started | 3 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+
+### 🟡 P2 — Medium Priority
+
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-GTM-P2-1** | **Individual tier ($19/mo) visible on marketing landing page — violates GTM positioning decision** — GTM decision: Individual tier hidden from marketing to enforce practitioner-first narrative. The Practitioner ($97) and Agency ($349) tiers should be the only prominently displayed plans. Individual tier remains accessible at `/pricing` for users who navigate directly. Remove Individual card from landing page pricing grid and any marketing email templates. **Signal:** Marketing page shows 2 plans only; no user feedback asking "what happened to the $19 plan." **Linked Issue:** [GTM-007](audits/issue-registry.json). | ❌ Not Started | 1 hr | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P2-2** | **No social proof section on landing page — no testimonials, user counts, or practitioner quotes** — The GTM plan identifies social proof as a Week 2 deliverable. Landing page needs: practitioner count (even if small), 2–3 beta practitioner quotes, and the "used in X sessions" stat from analytics. Placeholder section to be populated as real data arrives. Build the section shell now; copy ships when data is available. **Signal:** Time-on-page and CTA click rate improve when social proof section added above the fold. **Why It Matters:** First impressions without proof signal unproven risk to prospective practitioners. | ❌ Not Started | 2 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P2-3** | **UTM parameter tracking not confirmed in Plausible — Discord/Reddit attribution may be lost** — Prime Self uses Plausible Analytics (privacy-first). UTM parameters (`utm_source`, `utm_medium`, `utm_campaign`) must pass through the SPA router and be captured in Plausible's goal events. Verify the current integration captures UTMs on signup and checkout events. If not, add explicit `plausible('signup', {props: {utm_source: ...}})` calls at key conversion points. **Signal:** Plausible shows source breakdown for signups (Discord, Reddit, direct) within 24 hours of launch. **Why It Matters:** Zero attribution = zero ability to optimize spend or double down on what works. | ❌ Not Started | 2 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P2-4** | **5 launch promo codes not validated end-to-end in Stripe — codes may fail silently at checkout** — GTM promo strategy uses 5 codes: EARLYBIRD30 (30% off, Practitioner, first 100 users), LAUNCH25 (25% off, any tier), WAITLIST20 (20% off, first month), STARTUP30 (30% annual, Practitioner), AGENCY15 (15% off, Agency ongoing). Each must exist as a Stripe Promotion Code, apply the correct discount, and be tested in Stripe test mode before launch. **Signal:** All 5 codes pass verify-money-path.js promo validation step. **Linked Issue:** [GTM-008](audits/issue-registry.json). | ❌ Not Started | 2 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P2-5** | **14-day trial email nurture sequence not built — activation guidance emails will not send** — 7-email sequence triggered by `subscription.trial_started` webhook: Day 0 welcome, Day 1 first-session guide, Day 3 Gate 2 nudge (conditional on client not yet added), Day 5 feature deep-dive, Day 7 mid-trial check-in, Day 11 final reminder, Day 14 trial-end upgrade CTA. Build in Resend with sequence triggers. Separate from post-purchase 5-email arc for paid converts. **Signal:** Trial-to-paid conversion rate measurably higher vs no-email baseline after 30 days. **Linked Issue:** [GTM-009](audits/issue-registry.json). | ❌ Not Started | 1 day | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P2-6** | **Post-purchase practitioner onboarding email sequence not configured** — After a practitioner converts from trial to paid, a 5-email 30-day arc should fire: Day 0 welcome-to-paid, Day 7 intermediate tips, Day 14 advanced usage, Day 21 referral program intro, Day 30 retention check-in + success stories. Configure in Resend as a separate sequence from the trial nurture arc. **Signal:** 30-day practitioner retention rate improves; referral code activations tracked from Day 21 email. | ❌ Not Started | 1 day | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P2-7** | **No in-app bug/error submission form — user-reported issues go unreported** — When users encounter errors, there is no in-app mechanism to report them. Add a floating feedback widget (bottom-right) that captures: description, screenshot (optional), and current page. Submit to the support email alias (`support@selfprime.net`) or a Cloudflare Worker endpoint that creates a support ticket. **Signal:** Support email receives structured bug reports within 24 hours of launch vs zero-report baseline. **Why It Matters:** Real bugs will exist at launch; self-serve reporting keeps the founder informed without requiring 1:1 contact for every issue. | ❌ Not Started | 4 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P2-8** | **Support email alias and auto-responder not configured — no self-serve support channel at launch** — `support@selfprime.net` must exist as an email alias that routes to the founder inbox. An auto-responder should acknowledge every inbound email with: "Received — typical reply time is 24 hours" + link to FAQ. Keeps expectations set and stops users from assuming their message was lost. Configure via Cloudflare Email Routing (free). **Signal:** First support email routed and acknowledged within 24 hours of going live. | ❌ Not Started | 30 min | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+
+### 🟢 P3 — Lower Priority (Post-Launch)
+
+| ID | Item | Status | Effort | Source |
+|----|------|--------|--------|--------|
+| **BL-GTM-P3-1** | **No `/blog` route or content marketing infrastructure** — GTM plan includes a content marketing pillar (SEO + thought leadership). Needs a `/blog` route in the SPA that renders markdown articles from a `frontend/content/blog/` directory. Initial content: 3 posts about Energy Blueprint, design-compatible decision-making, and Human Design basics (renamed). **Signal:** Blog route accessible at selfprime.net/blog; first article indexed in Google Search Console within 2 weeks. | ❌ Not Started | 1 day | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P3-2** | **Reddit one-click draft UI not implemented** — GTM social strategy includes Reddit (r/HumanDesign, r/spirituality, r/selfimprovement). A "Share to Reddit" button in the chart results view should pre-populate a Reddit submit URL with the post title, body, and UTM-tagged link. Button: generates the text → opens `https://reddit.com/submit?url=...&title=...` in a new tab. One-line implementation using `encodeURIComponent`. **Signal:** Reddit-attributed UTM traffic appears in Plausible within first week. | ❌ Not Started | 2 hrs | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+| **BL-GTM-P3-3** | **No AI chatbot for in-app help — users rely entirely on static tooltips** — An in-app FAQ-backed AI assistant would reduce founder support burden for common questions. Build a floating chat widget that queries a curated FAQ corpus via the existing Claude AI integration. Corpus: 30 most common onboarding questions. Phase 1: FAQ-backed response only; Phase 2: escalate to human support. **Signal:** Support email volume decreases by ≥20% after chatbot launch vs pre-chatbot baseline. | ❌ Not Started | 2–3 days | [GTM Plan 2026-03-21](docs/GTM_PLAN_2026-03-21.md) |
+
+---
+
 ## How to Update This Document
 
 ### Tagging Schema
@@ -511,7 +614,7 @@ Detailed audit findings and full context available in:
 
 ---
 
-**Document Version:** 2.2  
-**Last Updated:** 2026-03-21 — 15 new items added: 8 WC config/code gaps from market assessment (WC-001 to WC-008), plus 7 corresponding backlog entries  
+**Document Version:** 2.3  
+**Last Updated:** 2026-03-21 v2 — 4 items resolved: Discord domain fix (BL-DISCORD-P0-2), rate limit raised (BL-DISCORD-P1-1), annual pricing verified in config (BL-GTM-P1-3), 14-day trial wired (BL-GTM-P1-4). GTM Decision Log all 7 decisions marked RESOLVED. 4 registry entries marked resolved (GTM-002, GTM-003, GTM-004, GTM-006).  
 **Maintained By:** Agent  
 **Sync:** Automatically from audit discoveries; manual review recommended weekly

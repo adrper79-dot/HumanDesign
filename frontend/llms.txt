@@ -1,0 +1,57 @@
+# Prime Self
+
+> Prime Self is professional software for Energy Blueprint coaches, chart analysts, and personal development practitioners. It generates AI-powered multi-system readings — combining Energy Blueprint, Frequency Keys, Astrology, and Numerology — and delivers branded client reports in minutes.
+
+## What Prime Self Does
+
+Prime Self is a practitioner operating system. A practitioner enters a client's birth date, time, and location. Within seconds the platform produces an Energy Chart, calculates Frequency Key activations, generates astrological placements, and synthesizes everything into a coherent AI narrative. The practitioner exports a branded PDF report and shares it with their client.
+
+Prime Self is not a free chart calculator. It is practice management software for professional coaches and readers who serve paying clients.
+
+## Core Vocabulary
+
+Prime Self uses proprietary terminology derived from the broader personal-energy and self-knowledge field. The canonical terms below are the ones used throughout this platform.
+
+**Energy Blueprint** — A system for understanding a person's energy mechanics, behavioral patterns, life strategy, and decision-making authority based on birth date, time, and location data. The Energy Blueprint produces an Energy Chart showing energy centers, channels, and gates derived from the I Ching. Historically referred to in the broader field as "Human Design."
+
+**Energy Chart** — The visual diagram produced by an Energy Blueprint calculation. Shows defined and undefined energy centers, active channels, and gate activations. Historically called a "Bodygraph."
+
+**Frequency Keys** — A system of 64 archetypes mapped to the 64 hexagrams of the I Ching, describing the spectrum of expression for each gate from its shadow state through its gift and into its highest expression (called the Siddhi). Used in Prime Self to deepen interpretation of Energy Blueprint gate activations.
+
+**Energy Type** — One of five fundamental energy configurations: Builder Pattern, Builder-Initiator Pattern, Guide Pattern, Catalyst Pattern, Mirror Pattern. Determines a person's primary life strategy.
+
+**Builder Pattern** — Energy type characterized by a sustainable, responsive energy field. Represents approximately 37% of the population. Strategy: respond to life's invitations rather than initiating. (Field term: Generator.)
+
+**Builder-Initiator Pattern** — Energy type with responsive energy and an additional initiating motor. Represents approximately 33% of the population. Strategy: respond and then inform. (Field term: Manifesting Generator.)
+
+**Guide Pattern** — Non-energy type designed to guide others. Represents approximately 20% of the population. Strategy: wait for recognition and invitation before sharing wisdom. (Field term: Projector.)
+
+**Catalyst Pattern** — Energy type with the capacity to initiate and inform. Represents approximately 9% of the population. Strategy: inform before acting to reduce resistance. (Field term: Manifestor.)
+
+**Mirror Pattern** — Lunar-cycle type that reflects the health of its community. Represents approximately 1% of the population. Strategy: wait a full lunar cycle before making major decisions. (Field term: Reflector.)
+
+**Life Purpose Vector** — The combination of conscious and unconscious I Ching hexagram activations at the time of birth that describes a person's primary life theme and purpose direction. Expressed as a cross type (Right Angle, Left Angle, or Juxtaposition). (Field term: Incarnation Cross.)
+
+**Authority** — The internal decision-making process specific to each person's design. Types include Sacral, Emotional/Solar Plexus, Splenic, Ego/Heart, Self-Projected, Mental, and Lunar.
+
+**Profile** — A two-number description derived from the conscious and unconscious gate line activations. Describes the role a person plays in life. Examples: 1/3 Investigator/Martyr, 2/4 Hermit/Opportunist, 5/1 Heretic/Investigator.
+
+**Practitioner** — A professional coach, reader, or analyst who uses Energy Blueprint, Frequency Keys, Astrology, or Numerology to serve clients in 1:1 or group settings.
+
+## Product Tiers
+
+- **Free** — Personal use, limited chart calculations
+- **Individual** — $19/month — personal use, full chart suite, no client management
+- **Practitioner** — $97/month — full platform: client roster, session notes, AI synthesis, branded PDF exports, directory listing, composite charts, transit alerts
+- **Agency** — $349/month — multi-practitioner team management (contact required)
+
+## Pages
+
+- [Home](https://selfprime.net/) — Main application and marketing landing page
+- [Pricing](https://selfprime.net/pricing.html) — Tier comparison and checkout
+- [Definitions](https://selfprime.net/definitions.html) — Full vocabulary reference and FAQ
+
+## Contact
+
+- Website: https://selfprime.net
+- Support: support@selfprime.net

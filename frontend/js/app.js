@@ -2479,6 +2479,7 @@ function updateSidebarActive(tabId) {
   // Remove all active states from nav items
   document.querySelectorAll('.sidebar .nav-item').forEach(el => {
     el.classList.remove('active');
+    if (el.hasAttribute('aria-selected')) el.setAttribute('aria-selected', 'false');
   });
   // Remove expanded from all parents
   document.querySelectorAll('.sidebar .nav-parent').forEach(el => {
@@ -2488,6 +2489,7 @@ function updateSidebarActive(tabId) {
   // Activate the correct nav item(s)
   document.querySelectorAll('.sidebar .nav-item[data-tab="' + tabId + '"]').forEach(el => {
     el.classList.add('active');
+    if (el.hasAttribute('aria-selected')) el.setAttribute('aria-selected', 'true');
   });
 
   // Expand the parent group if this is a sub-tab

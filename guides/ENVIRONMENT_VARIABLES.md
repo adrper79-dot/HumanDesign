@@ -110,6 +110,15 @@ Legacy variable names are still used in config for compatibility, but they map t
 
 > Without `SENTRY_DSN`, all errors are silently no-op (no crash, no tracking). See `docs/OPERATION.md` → Sentry Error Tracking for daily workflow.
 
+### Cloudflare Observability — Analytics & Metrics (WC-005)
+
+| Secret | Used In | How to Get |
+|--------|---------|-----------|
+| `CF_API_TOKEN` | `lib/cloudflare.js`, `handlers/metrics.js` | [Cloudflare Dashboard](https://dash.cloudflare.com) → Account Settings → API Tokens → **Create Token** (template: "Read Account Analytics") |
+| `CF_ACCOUNT_ID` | `lib/cloudflare.js`, `handlers/metrics.js` | [Cloudflare Dashboard](https://dash.cloudflare.com) → Account Settings → Copy **Account ID** (36-char hex) |
+
+> Used for production monitoring: request logs, error rates, error tracking via Cloudflare Logpush. Required for comprehensive observability of deployed Workers. [WC-005 Setup Guide](../docs/IMPLEMENTATION_WC-005_CLOUDFLARE_OBSERVABILITY.md)
+
 ### Notion Integration (Required for Notion export)
 
 | Secret | Used In | How to Get |

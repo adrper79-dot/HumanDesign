@@ -1,0 +1,65 @@
+{
+  "env": {
+    "node": true,
+    "browser": true,
+    "es2022": true,
+    "jest": true
+  },
+  "extends": ["eslint:recommended"],
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": "off",
+    "semi": ["error", "always"],
+    "quotes": ["error", "single", { "avoidEscape": true }],
+    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "no-var": "error",
+    "prefer-const": "warn",
+    "eqeqeq": ["error", "always"],
+    "no-implicit-globals": "warn",
+    "no-new-wrappers": "error",
+    "radix": "error",
+    "prefer-template": "warn",
+    "no-duplicate-imports": "error",
+    "sort-imports": ["warn", { "ignoreCase": true, "ignoreDeclarationSort": true }],
+    "comma-dangle": ["error", "always-multiline"],
+    "object-curly-spacing": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
+    "max-len": ["warn", { "code": 120, "comments": 150, "ignoreUrls": true, "ignorePattern": "^import |^export " }],
+    "no-trailing-spaces": "error",
+    "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 0 }]
+  },
+  "overrides": [
+    {
+      "files": ["workers/**/*.js"],
+      "parserOptions": {
+        "sourceType": "module"
+      },
+      "rules": {
+        "no-undef": "off"
+      }
+    },
+    {
+      "files": ["tests/**/*.js"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["frontend/**/*.js"],
+      "env": {
+        "browser": true,
+        "node": false
+      },
+      "rules": {
+        "no-undef": "off"
+      }
+    }
+  ]
+}

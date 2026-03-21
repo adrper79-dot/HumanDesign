@@ -125,6 +125,106 @@
 <!-- BL-R-L3: fb:app_id removed — add back only when a real Facebook App ID is obtained -->
 <meta name="pinterest-rich-pin" content="true">
 
+<!-- GEO: Structured Data (JSON-LD) — SoftwareApplication + Organization + FAQPage -->
+<!-- Helps AI search engines (Perplexity, ChatGPT, Google SGE) correctly describe Prime Self -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://selfprime.net/#app",
+      "name": "Prime Self",
+      "url": "https://selfprime.net",
+      "description": "Professional practice software for Energy Blueprint coaches and chart analysts. Generate AI-powered multi-system readings (Energy Blueprint, Frequency Keys, Astrology, Numerology), manage clients, and deliver branded reports.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web, iOS, Android (PWA)",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Free",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "name": "Individual",
+          "price": "19",
+          "priceCurrency": "USD",
+          "billingIncrement": "P1M"
+        },
+        {
+          "@type": "Offer",
+          "name": "Practitioner",
+          "price": "97",
+          "priceCurrency": "USD",
+          "billingIncrement": "P1M"
+        }
+      ],
+      "publisher": {
+        "@id": "https://selfprime.net/#org"
+      },
+      "featureList": [
+        "Energy Blueprint calculation from birth data",
+        "Frequency Keys gate interpretations",
+        "AI-powered cross-system synthesis (Energy Blueprint + Astrology + Numerology)",
+        "Client roster and session notes management",
+        "Branded PDF report export",
+        "Composite and relationship charts",
+        "Transit tracking and alerts",
+        "Practitioner public directory listing"
+      ]
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://selfprime.net/#org",
+      "name": "Prime Self",
+      "url": "https://selfprime.net",
+      "logo": "https://selfprime.net/icons/icon-192.png",
+      "description": "Prime Self builds professional software for Energy Blueprint practitioners, coaches, and chart analysts.",
+      "sameAs": []
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Prime Self?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Prime Self is professional practice software for Energy Blueprint coaches, chart analysts, and personal development practitioners. It calculates Energy Blueprints from birth data, synthesizes AI-powered cross-system readings combining Energy Blueprint, Frequency Keys, Astrology, and Numerology, manages client rosters with session notes, and exports branded PDF reports. It replaces a practitioner's stack of separate chart tools with a single platform."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is an Energy Blueprint?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An Energy Blueprint is a map of a person's unique energy mechanics, behavioral patterns, and life strategy, calculated from their birth date, time, and location. It draws on the I Ching's 64-hexagram system combined with astrological planetary positions. The Energy Blueprint reveals a person's Energy Type, Authority (decision-making process), Profile (life role), and Life Purpose Vector. It is sometimes called Human Design in the broader field."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the five Energy Types in the Energy Blueprint system?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The five Energy Types are: Builder Pattern (~37%) — sustainable responsive energy (also called Generator); Builder-Initiator Pattern (~33%) — responsive energy with initiating capacity (also called Manifesting Generator); Guide Pattern (~20%) — non-energy type designed to guide others (also called Projector); Catalyst Pattern (~9%) — initiating type with broad impact (also called Manifestor); Mirror Pattern (~1%) — lunar-cycle type that reflects community health (also called Reflector)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who is Prime Self built for?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Prime Self is built for professional practitioners who use Energy Blueprint (Human Design), Frequency Keys (Gene Keys), Astrology, or Numerology in their client work. It is especially suited to solo coaches and readers who serve 5–50 clients and want to replace manual chart prep and report writing with an AI-powered workflow."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
 </head>
 <body class="theme-premium">
 
@@ -288,12 +388,12 @@
         </div>
         <div style="margin-top:var(--space-4);display:flex;gap:var(--space-3);align-items:center">
           <label style="font-size:var(--font-size-sm);color:var(--text-dim)">Quiet Hours</label>
-          <select id="pushPref-quietStart" style="padding:4px 8px;border-radius:var(--space-2);background:var(--bg3);color:var(--text);border:1px solid var(--border)">
+          <select id="pushPref-quietStart" aria-label="Quiet hours start" style="padding:4px 8px;border-radius:var(--space-2);background:var(--bg3);color:var(--text);border:1px solid var(--border)">
             <option value="">Off</option>
             <option value="21">9 PM</option><option value="22">10 PM</option><option value="23">11 PM</option>
           </select>
           <span style="color:var(--text-dim)">to</span>
-          <select id="pushPref-quietEnd" style="padding:4px 8px;border-radius:var(--space-2);background:var(--bg3);color:var(--text);border:1px solid var(--border)">
+          <select id="pushPref-quietEnd" aria-label="Quiet hours end" style="padding:4px 8px;border-radius:var(--space-2);background:var(--bg3);color:var(--text);border:1px solid var(--border)">
             <option value="">Off</option>
             <option value="6">6 AM</option><option value="7">7 AM</option><option value="8">8 AM</option><option value="9">9 AM</option>
           </select>
@@ -701,19 +801,19 @@
     <!-- DISCOVER -->
     <div class="nav-group">
       <div class="nav-group-title" data-i18n="nav.discover">Discover</div>
-      <button class="nav-item" data-tab="overview" data-action="sidebarNav" data-arg0="overview">
+      <button class="nav-item" id="btn-home" data-tab="overview" data-action="sidebarNav" data-arg0="overview" role="tab" aria-selected="false" aria-controls="tab-overview">
         <span class="nav-icon">✦</span><span class="nav-label" data-i18n="nav.home">Home</span>
       </button>
-      <button class="nav-item active" data-tab="chart" data-action="sidebarNav" data-arg0="chart">
+      <button class="nav-item active" id="btn-blueprint" data-tab="chart" data-action="sidebarNav" data-arg0="chart" role="tab" aria-selected="true" aria-controls="tab-chart">
         <span class="nav-icon">◉</span><span class="nav-label">My Blueprint</span>
       </button>
-      <button class="nav-item" data-tab="celebrity" data-action="sidebarNav" data-arg0="celebrity">
+      <button class="nav-item" id="btn-celebrity" data-tab="celebrity" data-action="sidebarNav" data-arg0="celebrity" role="tab" aria-selected="false" aria-controls="tab-celebrity">
         <span class="nav-icon">⭐</span><span class="nav-label" data-i18n="nav.celebrity">Famous Matches</span>
       </button>
-      <button class="nav-item" data-tab="achievements" data-action="sidebarNav" data-arg0="achievements">
+      <button class="nav-item" id="btn-achievements" data-tab="achievements" data-action="sidebarNav" data-arg0="achievements" role="tab" aria-selected="false" aria-controls="tab-achievements">
         <span class="nav-icon">🏆</span><span class="nav-label" data-i18n="nav.achievements">Achievements</span>
       </button>
-      <button class="nav-item" data-tab="directory" data-action="sidebarNav" data-arg0="directory">
+      <button class="nav-item" id="btn-directory" data-tab="directory" data-action="sidebarNav" data-arg0="directory" role="tab" aria-selected="false" aria-controls="tab-directory">
         <span class="nav-icon">🔍</span><span class="nav-label">Find a Practitioner</span>
       </button>
       <button class="nav-item" data-tab="my-practitioner" data-action="sidebarNav" data-arg0="my-practitioner" id="nav-my-practitioner" style="display:none">
@@ -724,7 +824,7 @@
     <!-- DAILY -->
     <div class="nav-group">
       <div class="nav-group-title" data-i18n="nav.daily">Daily</div>
-      <button class="nav-item nav-parent" data-tab="transits" data-action="sidebarNav" data-arg0="transits">
+      <button class="nav-item nav-parent" id="btn-today" data-tab="transits" data-action="sidebarNav" data-arg0="transits" role="tab" aria-selected="false" aria-controls="tab-transits">
         <span class="nav-icon">☽</span><span class="nav-label" data-i18n="nav.todaysEnergy">Today's Energy</span><span class="nav-expand">▸</span>
       </button>
       <div class="nav-sub-items">
@@ -734,10 +834,10 @@
         <button class="nav-item" data-tab="checkin" data-action="sidebarNav" data-arg0="checkin">
           <span class="nav-label" data-i18n="nav.checkin">Check-In</span>
         </button>
-        <button class="nav-item" data-tab="timing" data-action="sidebarNav" data-arg0="timing">
+        <button class="nav-item" id="btn-timing" data-tab="timing" data-action="sidebarNav" data-arg0="timing" role="tab" aria-selected="false" aria-controls="tab-timing">
           <span class="nav-label" data-i18n="nav.timing">Optimal Timing</span>
         </button>
-        <button class="nav-item" data-tab="calendar" data-action="sidebarNav" data-arg0="calendar">
+        <button class="nav-item" id="btn-calendar" data-tab="calendar" data-action="sidebarNav" data-arg0="calendar" role="tab" aria-selected="false" aria-controls="tab-calendar">
           <span class="nav-label">📅 Calendar</span>
         </button>
       </div>
@@ -746,7 +846,7 @@
     <!-- RELATIONSHIPS -->
     <div class="nav-group">
       <div class="nav-group-title" data-i18n="nav.relationships">Relationships</div>
-      <button class="nav-item nav-parent" data-tab="composite" data-action="sidebarNav" data-arg0="composite">
+      <button class="nav-item nav-parent" id="btn-connect" data-tab="composite" data-action="sidebarNav" data-arg0="composite" role="tab" aria-selected="false" aria-controls="tab-composite">
         <span class="nav-icon">⊕</span><span class="nav-label" data-i18n="nav.connect">Connect</span><span class="nav-expand">▸</span>
       </button>
       <div class="nav-sub-items">
@@ -762,7 +862,7 @@
     <!-- GROWTH -->
     <div class="nav-group">
       <div class="nav-group-title" data-i18n="nav.growth">Growth</div>
-      <button class="nav-item nav-parent" data-tab="enhance" data-action="sidebarNav" data-arg0="enhance">
+      <button class="nav-item nav-parent" id="btn-grow" data-tab="enhance" data-action="sidebarNav" data-arg0="enhance" role="tab" aria-selected="false" aria-controls="tab-enhance">
         <span class="nav-icon">★</span><span class="nav-label" data-i18n="nav.grow">Grow</span><span class="nav-expand">▸</span>
       </button>
       <div class="nav-sub-items">
@@ -780,13 +880,13 @@
     <!-- TOOLS -->
     <div class="nav-group">
       <div class="nav-group-title" data-i18n="nav.tools">Tools</div>
-      <button class="nav-item" data-tab="practitioner" data-action="sidebarNav" data-arg0="practitioner">
+      <button class="nav-item" id="btn-practitioner" data-tab="practitioner" data-action="sidebarNav" data-arg0="practitioner" role="tab" aria-selected="false" aria-controls="tab-practitioner">
         <span class="nav-icon">⚷</span><span class="nav-label" data-i18n="nav.practitioner">Practitioner</span><span class="nav-badge pro">PRO</span>
       </button>
-      <button class="nav-item" data-tab="history" data-action="sidebarNav" data-arg0="history">
+      <button class="nav-item" id="btn-history" data-tab="history" data-action="sidebarNav" data-arg0="history" role="tab" aria-selected="false" aria-controls="tab-history">
         <span class="nav-icon">📂</span><span class="nav-label" data-i18n="nav.savedCharts">Saved Charts</span>
       </button>
-      <button class="nav-item" data-tab="rectify" data-action="sidebarNav" data-arg0="rectify">
+      <button class="nav-item" id="btn-rectify" data-tab="rectify" data-action="sidebarNav" data-arg0="rectify" role="tab" aria-selected="false" aria-controls="tab-rectify">
         <span class="nav-icon">⏱</span><span class="nav-label" data-i18n="nav.rectify">Birth Time Rectify</span>
       </button>
     </div>
@@ -796,10 +896,10 @@
     <!-- SETTINGS -->
     <div class="nav-group">
       <div class="nav-group-title" data-i18n="nav.settings">Settings</div>
-      <button class="nav-item" data-tab="sms" data-action="sidebarNav" data-arg0="sms">
+      <button class="nav-item" id="btn-sms" data-tab="sms" data-action="sidebarNav" data-arg0="sms" role="tab" aria-selected="false" aria-controls="tab-sms">
         <span class="nav-icon">✉</span><span class="nav-label" data-i18n="nav.smsAlerts">SMS Alerts</span>
       </button>
-      <button class="nav-item" data-tab="onboarding" data-action="sidebarNav" data-arg0="onboarding">
+      <button class="nav-item" id="btn-onboarding" data-tab="onboarding" data-action="sidebarNav" data-arg0="onboarding" role="tab" aria-selected="false" aria-controls="tab-onboarding">
         <span class="nav-icon">⊙</span><span class="nav-label" data-i18n="nav.restartOnboarding">Restart Onboarding</span>
       </button>
     </div>
@@ -816,7 +916,7 @@
   </div>
 </nav>
 
-<div class="app-main" id="app-main" tabindex="-1">
+<main class="app-main" id="app-main" tabindex="-1">
 <h1 class="visually-hidden">Prime Self — Energy Blueprint Practice Software</h1>
 <!-- WC-P1-5: Trust proof block — populated by renderTrustProof() when content is available -->
 <section id="trust-proof-block" aria-label="What practitioners and clients say" style="display:none"></section>
@@ -2413,7 +2513,7 @@
   </div>
 
   <!-- ═══ CALENDAR ═══ -->
-  <div class="tab-content" id="tab-calendar" role="tabpanel">
+  <div class="tab-content" id="tab-calendar" role="tabpanel" aria-labelledby="btn-calendar">
     <div class="calendar-header">
       <div class="calendar-nav">
         <button class="btn-icon" data-action="calendarPrev" aria-label="Previous">◀</button>
@@ -2496,7 +2596,7 @@
   </div>
 
 </div><!-- /container -->
-</div><!-- /app-main -->
+</main><!-- /app-main -->
 </div><!-- /app-layout -->
 
 <!-- GAP-005: Capacitor native bridge — must load before core.js to expose window.NativeBridge -->

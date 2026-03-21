@@ -3,6 +3,25 @@ function toggleMobileMore() {
   toggleSidebar();
 }
 
+// WC-002: Arrow-key navigation for sidebar nav tabs (ARIA APG keyboard pattern)
+// ArrowUp/ArrowDown move focus between nav items; ArrowLeft/ArrowRight also supported.
+(function initSidebarArrowNav() {
+  document.addEventListener('keydown', function(e) {
+    const key = e.key;
+    if (key !== 'ArrowUp' && key !== 'ArrowDown' && key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+    const focused = document.activeElement;
+    if (!focused || !focused.matches('.sidebar .nav-item[role="tab"]')) return;
+    e.preventDefault();
+    const allTabs = Array.from(document.querySelectorAll('.sidebar .nav-item[role="tab"]'));
+    const idx = allTabs.indexOf(focused);
+    if (idx === -1) return;
+    const next = (key === 'ArrowDown' || key === 'ArrowRight')
+      ? allTabs[(idx + 1) % allTabs.length]
+      : allTabs[(idx - 1 + allTabs.length) % allTabs.length];
+    next.focus();
+  });
+})();
+
 // DEF-10: Back-to-top button
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });

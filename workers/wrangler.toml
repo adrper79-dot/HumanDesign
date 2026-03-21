@@ -29,6 +29,10 @@ STRIPE_PRICE_PRACTITIONER_ANNUAL = "price_1TAdhqAW1229TZteTfsr8Gba"
 STRIPE_PRICE_AGENCY = "price_1T9DCRAW1229TZteIIPY6CXF"
 # Agency annual — $3,490/yr
 STRIPE_PRICE_AGENCY_ANNUAL = "price_1TAdhqAW1229TZtevt3cZJV2"
+# ─── Trial Period ────────────────────────────────────────────────────────────
+# GTM decision (2026-03-21): 14-day free trial for Practitioner tier.
+# Set to "0" or remove to disable free trials.
+STRIPE_TRIAL_DAYS = "14"
 #
 # One-time add-on products
 STRIPE_PRICE_SINGLE_SYNTHESIS = "price_1TAdiJAW1229TZteivqs350O"
@@ -42,14 +46,57 @@ STRIPE_PRICE_WHITE_LABEL = "price_1T9DCRAW1229TZteIIPY6CXF"
 
 # ─── Secrets (set via: npx wrangler secret put <NAME>) ────────────────────────
 # The following vars are NOT stored here — add them as encrypted Worker secrets:
+#
+# ═══ OBSERVABILITY ═══════════════════════════════════════════════════════════
 #   SENTRY_DSN              - Sentry error tracking DSN (sentry.io project)
 #   SENTRY_RELEASE          - Optional release tag for Sentry error grouping
-#   GOOGLE_CLIENT_ID        - Google OAuth client ID
-#   GOOGLE_CLIENT_SECRET    - Google OAuth client secret
-#   APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY
-#   NOTION_CLIENT_ID, NOTION_CLIENT_SECRET, NOTION_TOKEN_ENCRYPTION_KEY
-#   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT  (push notifications)
-# Full list + setup commands: guides/ENVIRONMENT_VARIABLES.md
+#   CF_API_TOKEN            - Cloudflare API token for observability/analytics [WC-005]
+#   CF_ACCOUNT_ID           - Cloudflare account ID for observability metrics [WC-005]
+#
+# ═══ AUTHENTICATION & OAUTH  ════════════════════════════════════════════════
+#   GOOGLE_CLIENT_ID        - Google OAuth client ID (from Google Console) [WC-006]
+#   GOOGLE_CLIENT_SECRET    - Google OAuth client secret (from Google Console) [WC-006]
+#   APPLE_CLIENT_ID         - Apple Sign-In service ID (from Apple Developer) [WC-007]
+#   APPLE_TEAM_ID           - Apple Developer Team ID (from Apple Developer) [WC-007]
+#   APPLE_KEY_ID            - Apple Auth Key ID (from Apple Developer) [WC-007]
+#   APPLE_PRIVATE_KEY       - Apple Auth Key private key (.p8 file content) [WC-007]
+#                             See: frontend/../AuthKey_V47LW986LS.p8
+#
+# ═══ THIRD-PARTY INTEGRATIONS ═══════════════════════════════════════════════
+#   NEON_CONNECTION_STRING  - PostgreSQL connection string (Neon) [DB]
+#   ANTHROPIC_API_KEY       - Anthropic API key for Claude AI [AI]
+#   GROK_API_KEY            - Grok AI API key (optional fallback) [AI]
+#   GROQ_API_KEY            - Groq AI API key (optional fallback) [AI]
+#
+# ═══ MESSAGING & SMS ════════════════════════════════════════════════════════
+#   TELNYX_API_KEY          - Telnyx API key for SMS delivery [WC-008]
+#   TELNYX_PHONE_NUMBER     - Your Telnyx phone number for SMS from/to [WC-008]
+#   TELNYX_PUBLIC_KEY       - Telnyx Ed25519 public key (webhook signature) [WC-008]
+#   TELNYX_CONNECTION_ID    - Telnyx connection ID for outbound SMS routing [WC-008]
+#   RESEND_API_KEY          - Resend email API key (alternative to TELNYX)
+#   VAPID_PUBLIC_KEY        - VAPID public key for Web Push notifications
+#   VAPID_PRIVATE_KEY       - VAPID private key for Web Push notifications
+#   VAPID_SUBJECT           - VAPID subject (URL for Web Push)
+#
+# ═══ STRIPE PAYMENTS ════════════════════════════════════════════════════════
+#   STRIPE_SECRET_KEY       - Stripe API secret key (production account)
+#   STRIPE_WEBHOOK_SECRET   - Stripe webhook signing secret
+#
+# ═══ APPLICATION STATE ══════════════════════════════════════════════════════
+#   JWT_SECRET              - JWT signing key (generate with: openssl rand -base64 32)
+#   ADMIN_TOKEN             - Admin API token for elevated endpoints
+#   BASE_URL                - Backend API origin (e.g., https://prime-self-api.adrper79.workers.dev)
+#   FRONTEND_URL            - Frontend origin (e.g., https://selfprime.net)
+#   FROM_EMAIL              - Sender email address for transactional emails
+#   AI_GATEWAY_URL          - Cloudflare AI Gateway endpoint (if using)
+#
+# Full setup guide: guides/ENVIRONMENT_VARIABLES.md
+#
+# Quick setup command template:
+#   npx wrangler secret put SENTRY_DSN
+#   npx wrangler secret put CF_API_TOKEN
+#   npx wrangler secret put GOOGLE_CLIENT_ID
+#   ... etc for each secret
 
 # KV namespace for rate limiting + chart cache
 # Create with: wrangler kv namespace create CACHE

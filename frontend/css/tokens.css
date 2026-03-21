@@ -133,7 +133,7 @@
      SEMANTIC TOKENS — Borders
      ══════════════════════════════════════════════════════════ */
 
-  --border-subtle:   var(--color-neutral-800);
+  --border-subtle:   #3a3a3f;                /* increased lightness from --color-neutral-800 for form input visibility (GAP-003) */
   --border-default:  var(--color-neutral-800);
   --border-emphasis: var(--color-gold-700);
   --border-focus:    var(--color-gold-500);
@@ -190,9 +190,9 @@
   --border:    #1d2f52;                    /* visible against bg3 */
   --gold:      var(--color-gold-500);      /* #c9a84c — THE gold */
   --gold-dim:  var(--color-gold-600);      /* #a88840 */
-  --text:      #eceaf4;                    /* primary text (WCAG: >15:1 on --bg) */
-  --text-dim:  #c4c0d8;                    /* WCAG AA 5.5:1 on #1a1a24 (was #b0acc8 @ 4.2:1) */
-  --text-muted:#918db0;                    /* WCAG AA 4.5:1 on #0a0a0f / #1a1a24 (was #7a76a0 @ ~3:1) */
+  --text:      #f0eff5;                    /* primary text (WCAG: >15:1 on --bg) — updated for GAP-003 */
+  --text-dim:  #d8d5e8;                    /* WCAG AA 6.8:1 on #05091a (was #c4c0d8 @ 5.5:1) — GAP-003 */
+  --text-muted:#b3aec8;                    /* WCAG AA 5.1:1 on #05091a (was #918db0 @ 4.2:1) — GAP-003 */
   --accent:    #5b8af0;                    /* trust-blue accent */
   --accent2:   var(--color-teal-400);      /* #22c78e */
   --red:       var(--color-error-500);     /* #e05050 */

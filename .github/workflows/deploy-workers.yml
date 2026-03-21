@@ -52,11 +52,34 @@ jobs:
       - name: Install worker dependencies (needed for vitest to resolve worker imports)
         run: npm ci --prefix workers
 
+      - name: Security audit — dependency vulnerabilities (WC-010)
+        run: |
+          echo "Checking for high-risk CVEs in dependencies..."
+          npm audit --audit-level=high || {
+            echo "::warning::Found high/critical CVEs. Review and patch before merging.";
+            exit 0;
+          }
+
+      - name: Lint code — check for style violations (WC-012)
+        run: |
+          echo "Code style checking..."
+          if command -v npx &> /dev/null && [ -f .eslintrc.json ]; then
+            npx eslint 'workers/**/*.js' 'tests/**/*.js' 'frontend/**/*.js' --max-warnings=10 || {
+              echo "::warning::ESLint found style issues. Run 'npx prettier --write' to auto-fix.";
+              exit 0;
+            }
+          else
+            echo "::notice::ESLint not globally available (WC-012: setup needed). Skipping for now.";
+          fi
+
       - name: Run deterministic tests
         run: npm run test:deterministic
 
       - name: Run coverage
         run: npm run test:coverage
+
+      - name: Generate API docs and check for drift (WC-013)
+        run: npm run docs:api:check
 
       - name: P0 issue gate (block deploy if critical issues open)
         run: |
@@ -91,7 +114,26 @@ jobs:
       - name: Install worker dependencies
         run: npm ci --prefix workers
 
+      - name: Deploy to Staging Environment (WC-009)
+        id: deploy-staging
+        run: |
+          echo "Deploying to staging environment..."
+          cd workers && npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Verify Staging Deployment
+        run: |
+          echo "Verifying staging deployment..."
+          node workers/verify-production.js
+        env:
+          PROD_API: https://prime-self-api-staging.adrper79.workers.dev
+          SKIP_BROWSER_TESTS: 'true'
+        continue-on-error: true
+
       - name: Deploy to Cloudflare Workers
+        id: deploy-prod
         run: npm run deploy --prefix workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -101,6 +143,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run production gate
+        id: prod-gate
         run: npm run verify:prod:gate -- --strict-browser
         env:
           AUDIT_SECRET: ${{ secrets.AUDIT_SECRET }}
@@ -109,6 +152,32 @@ jobs:
           FRONTEND_BASE: https://selfprime.net
           TEST_BASE_URL: https://selfprime.net
           PROD_API: https://prime-self-api.adrper79.workers.dev
+        continue-on-error: true
+
+      - name: Automatic Rollback on Production Gate Failure (WC-011)
+        if: steps.prod-gate.outcome == 'failure'
+        run: |
+          echo "::error::Production gate failed! Initiating automatic rollback..."
+          cd workers
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git log --oneline -1
+          # Revert to previous working commit
+          git revert --no-edit HEAD || {
+            echo "::error::Manual rollback may be necessary. Check deployment status.";
+            exit 1;
+          }
+          echo "Rolling back to stable version..."
+          npx wrangler deploy --env production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Alert on Rollback
+        if: failure() && steps.prod-gate.outcome == 'failure'
+        run: |
+          echo "::error::Deployment rollback occurred due to production gate failures. Review the logs above."
+          exit 1
 
       - name: Upload prod gate artifacts
         if: always()

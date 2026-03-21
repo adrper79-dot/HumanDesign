@@ -30,58 +30,19 @@ const E2E_PASSWORD = process.env.E2E_TEST_PASSWORD || process.env.E2E_PASSWORD |
 // ════════════════════════════════════════════════════════════════════════════════
 
 /**
- * Pre-seed localStorage to bypass first-run welcome modal
+ * Suppress the first-run onboarding modal by injecting localStorage flag
+ * BEFORE any page script runs. This is fully deterministic and eliminates
+ * timing-related flakiness.
+ * 
+ * Must be called on the context BEFORE navigation.
  */
-async function bypassFirstRun(page: Page) {
-  await page.addInitScript(() => {
+async function suppressOnboardingModal(context: any) {
+  await context.addInitScript(() => {
     try {
       localStorage.setItem('primeself_frm_seen', '1');
       localStorage.setItem('ps_hasSeenOnboarding', '1');
-      localStorage.setItem('ps_session', '1');
-    } catch { /* ignore */ }
+    } catch (_) {}
   });
-}
-
-async function clearFirstRun(page: Page) {
-  await page.addInitScript(() => {
-    try {
-      localStorage.removeItem('primeself_frm_seen');
-      localStorage.removeItem('ps_hasSeenOnboarding');
-    } catch { /* ignore */ }
-  });
-}
-
-async function openHome(page: Page) {
-  await page.goto(PROD_BASE_URL);
-  await page.waitForLoadState('networkidle');
-}
-
-async function ensureFirstRunDismissed(page: Page) {
-  const modal = page.locator('#first-run-modal');
-  // Signal-based: wait up to 3 s for the modal to appear instead of a fixed 1 s delay.
-  // If page navigation/JS was quick, the modal may already be visible; if bypass
-  // localStorage worked, it won't appear at all. Either way this avoids flakiness.
-  const isVisible = await modal.waitFor({ state: 'visible', timeout: 3000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!isVisible) return;
-
-  await page.evaluate(() => {
-    try {
-      localStorage.setItem('primeself_frm_seen', '1');
-      localStorage.setItem('ps_hasSeenOnboarding', '1');
-    } catch { /* ignore */ }
-
-    if (typeof window.frmClose === 'function') {
-      window.frmClose();
-      return;
-    }
-
-    const overlay = document.getElementById('first-run-modal');
-    if (overlay) overlay.style.display = 'none';
-  });
-
-  await expect(modal).toBeHidden({ timeout: 5000 });
 }
 
 /**
@@ -158,11 +119,10 @@ async function closeMobileSidebar(page: Page) {
 // ════════════════════════════════════════════════════════════════════════════════
 
 test.describe('AUTH-001: Login Flow', () => {
-  test('should log in with valid credentials', async ({ page }) => {
+  test('should log in with valid credentials', async ({ page, context }) => {
     test.skip(!E2E_EMAIL || !E2E_PASSWORD, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set for auth smoke tests.');
-    await bypassFirstRun(page);
-    await openHome(page);
-    await dismissAnyDialog(page);
+    await suppressOnboardingModal(context);
+    await page.goto(PROD_BASE_URL, { waitUntil: 'domcontentloaded' });
 
     await login(page, E2E_EMAIL, E2E_PASSWORD);
 
@@ -172,10 +132,9 @@ test.describe('AUTH-001: Login Flow', () => {
     await expect(page.locator('#logoutBtn')).toBeVisible({ timeout: 5000 });
   });
 
-  test('should show error on invalid email', async ({ page }) => {
-    await bypassFirstRun(page);
-    await openHome(page);
-    await dismissAnyDialog(page);
+  test('should show error on invalid email', async ({ page, context }) => {
+    await suppressOnboardingModal(context);
+    await page.goto(PROD_BASE_URL, { waitUntil: 'domcontentloaded' });
 
     await page.click('#authBtn');
     await page.fill('#authEmail', 'invalid@example.com');
@@ -189,11 +148,10 @@ test.describe('AUTH-001: Login Flow', () => {
     expect(errorText).toBeTruthy();
   });
 
-  test('should show error on invalid password', async ({ page }) => {
+  test('should show error on invalid password', async ({ page, context }) => {
     test.skip(!E2E_EMAIL, 'E2E_TEST_EMAIL must be set for auth validation tests.');
-    await bypassFirstRun(page);
-    await openHome(page);
-    await dismissAnyDialog(page);
+    await suppressOnboardingModal(context);
+    await page.goto(PROD_BASE_URL, { waitUntil: 'domcontentloaded' });
 
     await page.click('#authBtn');
     await page.fill('#authEmail', E2E_EMAIL);
@@ -204,10 +162,9 @@ test.describe('AUTH-001: Login Flow', () => {
     await expect(errorDiv).toBeVisible({ timeout: 5000 });
   });
 
-  test('should require email and password fields', async ({ page }) => {
-    await bypassFirstRun(page);
-    await openHome(page);
-    await dismissAnyDialog(page);
+  test('should require email and password fields', async ({ page, context }) => {
+    await suppressOnboardingModal(context);
+    await page.goto(PROD_BASE_URL, { waitUntil: 'domcontentloaded' });
 
     await page.click('#authBtn');
     // Try to submit empty form
