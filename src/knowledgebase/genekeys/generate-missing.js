@@ -1,7 +1,16 @@
 /**
- * Generate missing Frequency Keys entries
+ * Generate Prime Self Frequency Keys vocabulary replacement
  *
- * Uses Claude to generate content for the 26 missing Frequency Keys
+ * Replaces Gene Keys triad names (Entropy/Freshness/Beauty, etc.) with original 
+ * Prime Self vocabulary (Noise/Signal/Frequency) to complete GAP-006 corpus replacement.
+ * 
+ * Processes ALL 64 gates to replace field names:
+ * - shadow → noise
+ * - gift → signal  
+ * - siddhi → frequency
+ * - shadowDescription → noiseDescription
+ * - giftDescription → signalDescription
+ * - siddhiDescription → frequencyDescription
  * 
  * Usage: ANTHROPIC_API_KEY=sk-... node generate-missing.js
  */
@@ -15,37 +24,52 @@ const API_KEY = process.env.ANTHROPIC_API_KEY;
 const MODEL = 'claude-opus-4-20250514';
 const MAX_TOKENS = 2048;
 
-const MISSING_KEYS = [28, 29, 30, 31, 32, 33, 34, 35, 36, 38, 39, 41, 42, 43, 44, 48, 49, 50, 52, 53, 54, 55, 56, 60, 61, 63];
+// Process ALL 64 gates for vocabulary replacement
+const ALL_GATES = Array.from({ length: 64 }, (_, i) => i + 1);
 
-const SYSTEM_PROMPT = `You are an expert on the Prime Self Frequency Keys system. You generate concise, accurate Frequency Key descriptions following the Shadow → Gift → Mastery spectrum.
+const SYSTEM_PROMPT = `You are an expert on Prime Self's Frequency Keys system and its native three-tier consciousness model.
 
-Each Frequency Key entry must include:
-- name: "Shadow / Gift / Mastery" (the three frequency states)
-- shadow, gift, siddhi: single words (siddhi = the Mastery state)
-- archetype: "The [name]" (2-3 words)
-- message: one-sentence transformational insight (10-15 words)
-- shadowDescription: 2-3 sentences describing the shadow frequency
-- giftDescription: 2-3 sentences describing the gift frequency
-- siddhiDescription: 2-3 sentences describing the mastery frequency
-- contemplation: one reflective question (15-25 words)
+Your task: Replace Gene Keys triad names with original Prime Self vocabulary derived from the existing descriptions.
 
-Use Prime Self vocabulary: Shadow (unconscious resistance), Gift (embodied talent), Mastery (transcendent realization). Be concise and impactful.`;
+The three-tier consciousness model in Prime Self uses:
+- NOISE: The gate quality when distorted by conditioning — contraction, blocking, misdirection, static
+- SIGNAL: The gate quality in authentic expression — alignment, flow, clarity, gift realized  
+- FREQUENCY: The gate quality at peak coherence — transcendence, luminance, highest expression
 
-async function callClaude(gateNumber) {
-  const userPrompt = `Generate a complete Frequency Key entry for Frequency Key ${gateNumber}. Return ONLY valid JSON with this exact structure:
+Vocabulary standards:
+- Noise words: Armor, Blockage, Collapse, Compression, Contamination, Contraction, Corrosion, Deflection, Depletion, Diffusion, Dislocation, Distortion, Drift, Erosion, Exhaustion, Fixation, Fracture, Fragmentation, Freeze, Friction, Grip, Interference, Inversion, Isolation, Leak, Obstruction, Opacity, Paralysis, Pressure, Reactivity, Regression, Resistance, Rigidity, Scatter, Sedimentation, Shutdown, Siege, Stagnation, Static, Strain, Suppression, Turbulence, Withdrawal
+- Signal words: Alignment, Amplification, Attunement, Calibration, Channeling, Clarity, Coherence, Convergence, Crystallization, Discernment, Embodiment, Emergence, Expression, Facilitation, Flow, Focus, Grounding, Guidance, Harmonization, Incubation, Integrity, Mediation, Momentum, Navigation, Origination, Precision, Presence, Reception, Refinement, Resilience, Resolution, Resourcefulness, Responsiveness, Sensitivity, Stabilization, Stewardship, Synthesis, Translation, Transmission, Transparency, Vitality, Weaving
+- Frequency words: Accord, Actualization, Amplitude, Benediction, Brilliance, Clarity, Coherence, Communion, Completion, Consecration, Convergence, Emanation, Embodiment, Emergence, Equanimity, Grace, Illumination, Integration, Liberation, Luminance, Luminosity, Majesty, Manifestation, Maturation, Omnipresence, Openness, Perfection, Presence, Radiance, Realization, Revelation, Sovereignty, Stillness, Transcendence, Transmission, Unity, Wholeness
 
-{
-  "name": "Shadow / Gift / Mastery",
-  "shadow": "word",
-  "gift": "word",
-  "siddhi": "word",
-  "archetype": "The [name]",
-  "message": "one-sentence insight",
-  "shadowDescription": "2-3 sentences",
-  "giftDescription": "2-3 sentences",
-  "siddhiDescription": "2-3 sentences",
-  "contemplation": "reflective question"
-}`;
+Requirements:
+1. Each label must be 1-2 words maximum
+2. Each label must be meaningfully different from the existing Gene Keys triad name (not synonymous)
+3. Each label must capture the SPECIFIC quality of that gate, not generic tier language
+4. All labels must feel native to Prime Self's voice (resonant, embodied, grounded - not mystical jargon)
+5. Return ONLY the three labels (Noise | Signal | Frequency) as a pipe-separated string`;
+
+async function callClaude(gateNumber, entry) {
+  const userPrompt = `Generate replacement Noise/Signal/Frequency labels for Frequency Key ${gateNumber}.
+
+Currently:
+- name: "${entry.name}"
+- shadow (→ noise): "${entry.shadow}"  
+- gift (→ signal): "${entry.gift}"
+- siddhi (→ frequency): "${entry.siddhi}"
+
+Current descriptions (these will not change, but use them to identify the gate-specific quality):
+- shadowDescription: "${entry.shadowDescription}"
+- giftDescription: "${entry.giftDescription}"
+- siddhiDescription: "${entry.siddhiDescription}"
+
+Generate three replacement words that:
+1. Are meaningfully different from the current triad names: ${entry.shadow} / ${entry.gift} / ${entry.siddhi}
+2. Capture the SPECIFIC quality of this gate (not generic tier language)
+3. Match the three-tier consciousness model: contraction→flow→luminance
+4. Feel native to Prime Self's vocabulary (resonant, grounded, embodied)
+
+Return ONLY: Noise_word | Signal_word | Frequency_word
+Example: Stagnation | Origination | Luminance`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -71,33 +95,68 @@ async function callClaude(gateNumber) {
   const data = await response.json();
   const text = data.content?.[0]?.text || '';
   
-  // Extract JSON from response
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
+  // Extract labels from response (format: Noise | Signal | Frequency)
+  const labelMatch = text.match(/([^\|]+)\s*\|\s*([^\|]+)\s*\|\s*([^\|]+)/);
+  if (!labelMatch) {
     console.error('Response:', text);
-    throw new Error(`No JSON found in response for key ${gateNumber}`);
+    throw new Error(`No valid labels found in response for key ${gateNumber}`);
   }
 
-  return JSON.parse(jsonMatch[0]);
+  const [_, noise, signal, frequency] = labelMatch;
+  
+  return {
+    noise: noise.trim(),
+    signal: signal.trim(),
+    frequency: frequency.trim()
+  };
 }
 
-async function generateAllMissing() {
+async function generateAllVocabulary() {
   const keysPath = join(__dirname, 'keys.json');
   const existing = JSON.parse(readFileSync(keysPath, 'utf8'));
 
-  console.log(`Generating ${MISSING_KEYS.length} missing Frequency Keys...\n`);
+  console.log(`Generating Prime Self Noise/Signal/Frequency labels for all 64 gates...\n`);
+  console.log(`This will replace Gene Keys vocabulary with original Prime Self terminology.\n`);
 
-  for (const keyNum of MISSING_KEYS) {
-    if (existing[keyNum]) {
-      console.log(`  ⊗ Key ${keyNum} already exists, skipping`);
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const gateNum of ALL_GATES) {
+    if (!existing[gateNum]) {
+      console.log(`  ⊗ Gate ${gateNum} does not exist in corpus, skipping`);
       continue;
     }
 
     try {
-      console.log(`  → Generating Key ${keyNum}...`);
-      const entry = await callClaude(keyNum);
-      existing[keyNum] = entry;
-      console.log(`  ✓ Key ${keyNum}: ${entry.name}`);
+      const entry = existing[gateNum];
+      console.log(`  → Gate ${gateNum}: Generating labels...`);
+      
+      const labels = await callClaude(gateNum, entry);
+      
+      // Update field names and values
+      // Old fields → New fields
+      existing[gateNum].noise = labels.noise;
+      existing[gateNum].signal = labels.signal;
+      existing[gateNum].frequency = labels.frequency;
+      
+      // Update description field names (keep content unchanged)
+      existing[gateNum].noiseDescription = entry.shadowDescription;
+      existing[gateNum].signalDescription = entry.giftDescription;
+      existing[gateNum].frequencyDescription = entry.siddhiDescription;
+      
+      // Update name field to new format
+      existing[gateNum].name = `${labels.noise} / ${labels.signal} / ${labels.frequency}`;
+      
+      // Remove old field names (can use object destructuring delete pattern later if needed)
+      delete existing[gateNum].shadow;
+      delete existing[gateNum].gift;
+      delete existing[gateNum].siddhi;
+      delete existing[gateNum].shadowDescription;
+      delete existing[gateNum].giftDescription;
+      delete existing[gateNum].siddhiDescription;
+      
+      console.log(`  ✓ Gate ${gateNum}: ${labels.noise} / ${labels.signal} / ${labels.frequency}`);
+      successCount++;
 
       // Save after each successful generation
       const sorted = Object.keys(existing)
@@ -113,12 +172,16 @@ async function generateAllMissing() {
       // Rate limiting: 1 second between calls
       await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (err) {
-      console.error(`  ✗ Key ${keyNum} failed:`, err.message);
-      // Continue with next key
+      console.error(`  ✗ Gate ${gateNum} failed:`, err.message);
+      errorCount++;
+      // Continue with next gate
     }
   }
 
-  console.log(`\n✓ Complete! Generated ${Object.keys(existing).length}/64 keys`);
+  console.log(`\n✓ Complete! Successfully generated vocabulary for ${successCount}/64 gates`);
+  if (errorCount > 0) {
+    console.log(`⚠ ${errorCount} gates had errors — review above for details`);
+  }
 }
 
 if (!API_KEY) {
@@ -126,7 +189,7 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-generateAllMissing().catch(err => {
+generateAllVocabulary().catch(err => {
   console.error('Fatal error:', err);
   process.exit(1);
 });
