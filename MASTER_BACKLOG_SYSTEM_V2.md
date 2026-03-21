@@ -4,7 +4,7 @@
 > **Purpose:** Single source of truth for all backlog items across sprints, audits, and defects  
 > **Organization:** By system/domain, then by priority and status  
 > **Update Frequency:** Daily during active sprints; weekly otherwise  
-> **Last Updated:** 2026-03-19
+> **Last Updated:** 2026-03-22
 
 ---
 
@@ -31,10 +31,10 @@
 
 | Category | P0 | P1 | P2 | P3 | Total | Status |
 |----------|----|----|----|----|-------|--------|
-| Backend API | ✅ 1 | ✅ 2 | ✅ 4 | 2 | 9 | ✅ All fixed |
-| Frontend | 0 | ✅ 5 + 🔄 2 + ❌ 5 | ✅ 3 + ⚠️ 4 + ❌ 4 | 2 | 25 | ❌ Guidance + gap workstream open |
+| Backend API | ✅ 1 | ✅ 2 | ✅ 4 | 2 + ❌ 1 | 10 | ❌ 1 new P3 quality item |
+| Frontend | 0 | ✅ 5 + 🔄 2 + ❌ 5 | ✅ 3 + ⚠️ 4 + ❌ 4 + ❌ 3 | 2 + ❌ 2 | 30 | ❌ 3 new P2 + 2 new P3 filed |
 | Engine | 0 | ✅ 1 | ✅ 2 | 1 | 4 | ✅ All closed |
-| Database | 0 | 0 | ✅ 2 | 1 | 3 | ✅ Schema complete |
+| Database | 0 | 0 | ✅ 2 + ❌ 1 | 1 | 4 | ❌ 1 new FK / GDPR issue |
 | Billing | ✅ 2 | 1 | 1 | 0 | 4 | ✅ P0 closed — Stripe IDs confirmed real |
 | Practitioners | 0 | ✅ 2 + ❌ 1 | ✅ 2 | 1 | 6 | ❌ 1 new gap item open |
 | Security | ✅ 1 | ✅ 6 | ✅ 2 | 0 | 9 | ✅ All P1 closed — CSP confirmed via _headers |
@@ -44,7 +44,7 @@
 | **Mobile** | 0 | ❌ 1 | 0 | 0 | 1 | ❌ New section — not started |
 | **Discord Bot** | ✅ 1 + ❌ 1 | ✅ 1 + ❌ 2 | ❌ 1 | 0 | 6 | ❌ 4 open — domain + rate limit fixed; KV namespace + 3 enhancements pending |
 | **GTM & Growth** | 0 | ✅ 2 + ❌ 4 | ❌ 8 | ❌ 3 | 17 | ❌ 15 open — annual pricing + trial days resolved; 4 P1 launch blockers remain |
-| **TOTAL** | **5/7** | **25/53** | **27/57** | **11** | **117** | ❌ 35 items open — 5 resolved 2026-03-21 (Discord domain, rate limit, KV namespace/deploy, annual pricing, trial days) |
+| **TOTAL** | **5/7** | **25/53** | **27/57 + ❌ 4** | **11 + ❌ 3** | **125** | ❌ 42 items open — 7 new from 2026-03-22 final checkout audit |
 
 **New Open Items (2026-03-20 World-Class Gap Assessment):**
 - ❌ **GAP-001** `BL-FRONTEND-P1-8` — Split app.js into modules + lazy-load tabs
@@ -81,6 +81,15 @@
 - ❌ **GTM-BL-21** `BL-GTM-P3-1` — /blog route for content marketing
 - ❌ **GTM-BL-22** `BL-GTM-P3-2` — Reddit one-click share draft UI
 - ❌ **GTM-BL-23** `BL-GTM-P3-3` — AI chatbot for in-app help
+
+**New Open Items (2026-03-22 Final Checkout — 9-Pass Audit):**
+- ❌ **ARIA-001** `BL-FRONTEND-P2-12` — Implement modal focus trap (8 modals)
+- ❌ **ARIA-002** `BL-FRONTEND-P2-13` — Add aria-label to 63 unnamed buttons
+- ❌ **UX-016** `BL-FRONTEND-P2-14` — Audit and add empty states to all data views
+- ❌ **DB-001** `BL-DATABASE-P2-3` — Add ON DELETE clauses to 5 FK columns (GDPR erasure)
+- ❌ **CSS-001** `BL-FRONTEND-P3-3` — Replace magic colors in alerts.css/calendar.css with token vars
+- ❌ **ARCH-001** `BL-FRONTEND-P3-4` — app.js at 8,358 lines (+11.4%) — set ceiling + extract modules
+- ❌ **QC-001** `BL-BACKEND-P3-3` — Replace 27 raw console.* calls in handlers with logger.js
 
 **New Issue Registry Entries (2026-03-21 GTM + Discord):**
 - ❌ **GTM-001** — Discord KV namespace ID placeholder (P0 bug — requires wrangler CLI)
@@ -138,6 +147,7 @@
 |----|------|--------|--------|--------|
 | **BL-BACKEND-P3-1** | **Dead code: `_lastChart` and `_lastForge` in logout** — Cleared on logout but chart/profile HTML containers retain previous data until re-render. | ✅ Fixed (2026-03-14) | — | MASTER_BACKLOG |
 | **BL-BACKEND-P3-2** | **7 API endpoints implemented but documentation outdated** — `/api/auth/me`, `/api/chart/save`, `/api/chart/history`, `/api/cluster/list`, `/api/cluster/leave`, `/api/sms/subscribe`, `/api/sms/unsubscribe`. All working; docs need refresh. | 🔄 In Progress | 2 hrs | BACKLOG.md (BL-M1) |
+| **BL-BACKEND-P3-3** | **27 raw console.log/warn/error calls in worker handlers — should route through logger.js (QC-001)** — A search of `workers/src/handlers/` found 27 raw `console.*` calls across 10 files (highest concentration in `sms.js` and `auth.js`). Cloudflare Workers tail logs are harder to filter and query when output is unstructured. Route all handler observability through the existing `workers/src/lib/logger.js` structured logger. Add an ESLint `no-console` rule in `workers/src/handlers/` to prevent regressions. No sensitive data was found in the existing log calls — this is a code quality item, not a security fix. **Linked Issue:** [QC-001](audits/issue-registry.json). | ❌ Not Started | 3 hrs | [Final Checkout 2026-03-22](audits/FINAL_CHECKOUT_2026-03-22.md) |
 
 ---
 
@@ -177,6 +187,9 @@
 | **BL-FRONTEND-P2-9** | **Canonical glossary and term explainer source of truth is missing** — Terms like type, authority, centers, channels, timing concepts, and practitioner workflow labels are explained in multiple ways across the product. Create one canonical term registry with plain-language meaning, why-it-matters sentence, deeper explanation, and approved aliases so guidance compounds instead of drifting by tab. | ✅ Fixed (2026-03-20) — canonical term registry and alias resolution added in `frontend/js/explanations.js`; live chart/profile explanation surfaces now consume the shared glossary source; registry documented in `docs/guidance-glossary-registry.md` | 1 day | [Issue Registry: GUIDE-004](audits/issue-registry.json) · [Loop Plan](docs/GUIDANCE_INTEGRITY_LOOP_PLAN_2026-03-20.md#guide-004--canonical-glossary--term-explainer-source-of-truth) |
 | **BL-FRONTEND-P2-10** | **Guidance is not yet state-aware by persona and journey stage** — First-time personal users, returning users, and practitioners should not all receive the same expanded surfaces. Define deterministic rules for when guidance is expanded, compressed, or replaced with a summary-plus-expand affordance, without ever removing access to meaning or next-step coaching. | ✅ Fixed (2026-03-21) — deterministic guidance state machine now drives overview, chart, profile, and practitioner surfaces; returning practitioners get compressed checklist disclosure; state model documented in `docs/guidance-state-machine.md` | 1–2 days | [Issue Registry: GUIDE-005](audits/issue-registry.json) · [Loop Plan](docs/GUIDANCE_INTEGRITY_LOOP_PLAN_2026-03-20.md#guide-005--state-aware-guidance-by-persona--journey-stage) |
 | **BL-FRONTEND-P2-11** | **No guidance regression harness exists for repeated UI cleanup loops** — Layout changes can currently ship without any check that users still know what a screen is for, what unfamiliar terms mean, or what to do next. Create a guidance regression checklist and deterministic validation protocol for core journeys before the UI cleanup loop expands. | ✅ Fixed (2026-03-21) — added checklist, deterministic manual script, and automated Vitest guard in `tests/guidance-regression.test.js`; validated with `npm run test:guidance` | 1 day | [Issue Registry: GUIDE-006](audits/issue-registry.json) · [Loop Plan](docs/GUIDANCE_INTEGRITY_LOOP_PLAN_2026-03-20.md#guide-006--guidance-regression-harness) |
+| **BL-FRONTEND-P2-12** | **No keyboard focus trap on any of the 8 modal dialogs — Tab key escapes to background content (ARIA-001)** — The app has 8 modals with ARIA markup (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`) but no focus trap prevents Tab from cycling into background content. WCAG 2.1 SC 2.1.2 requires focus stays within a dialog while it is open. Implement a lightweight focus trap utility: on modal open, find all focusable elements inside the dialog and intercept Tab/Shift+Tab to cycle within them; on modal close, return focus to the triggering element. Apply to: authOverlay, securityModal, pushPrefsModal, pricingOverlay, practitionerPricingOverlay, first-run-modal, shareModal, practitionerOnboardingOverlay. **Linked Issue:** [ARIA-001](audits/issue-registry.json). | ❌ Not Started | 3 hrs | [Final Checkout 2026-03-22](audits/FINAL_CHECKOUT_2026-03-22.md) |
+| **BL-FRONTEND-P2-13** | **63 button elements in index.html lack explicit aria-label — screen readers announce unlabelled controls (ARIA-002)** — 63 `<button>` elements lack an `aria-label` attribute or visible text content. WCAG 2.1 SC 4.1.2 requires every UI component to have an accessible name. Audit each unnamed button: if icon-only, add `aria-label` describing the action. Prioritise close buttons, nav hamburger, social share buttons, and action icon buttons in the practitioner dashboard. **Linked Issue:** [ARIA-002](audits/issue-registry.json). | ❌ Not Started | 2 hrs | [Final Checkout 2026-03-22](audits/FINAL_CHECKOUT_2026-03-22.md) |
+| **BL-FRONTEND-P2-14** | **Only 1 empty-state CSS class in 8,358-line app — most empty data views likely show blank content (UX-016)** — A grep for `empty-state`, `noResults`, `no-results`, `emptyState` in `app.js` returned only 1 match. In an app with practitioner client lists, transit digests, diary entries, check-in history, achievements, and leaderboards, most views likely render nothing when the user has no data, rather than a helpful empty state with context and a clear CTA. Audit every data-list view and add a contextual empty-state message + action CTA using the existing `.empty-state` class as the pattern. **Linked Issue:** [UX-016](audits/issue-registry.json). | ❌ Not Started | 1–2 days | [Final Checkout 2026-03-22](audits/FINAL_CHECKOUT_2026-03-22.md) |
 
 ### 🟢 P3 — Low Priority
 
@@ -184,6 +197,8 @@
 |----|------|--------|--------|--------|
 | **BL-FRONTEND-P3-1** | **`window.DEBUG` flag never defined but used in logging** — Dead code; should either define flag or remove debug statements. | ✅ Fixed (2026-03-14) | — | MASTER_BACKLOG |
 | **BL-FRONTEND-P3-2** | **Bodygraph gate badge overlap for 9+ gates on same center** — `GATE_OFFSETS` expanded to 12 positions to cover all 11 Throat gates. | ✅ Fixed (2026-03-14) | — | MASTER_BACKLOG |
+| **BL-FRONTEND-P3-3** | **Magic color values in alerts.css and calendar.css bypass the design token system (CSS-001)** — Hard-coded `rgba` and hex values (`rgba(106,79,200,0.15)`, `#ff6b6b`, `#6C63FF`, `#FFD93D`, etc.) in `frontend/css/components/alerts.css` and `calendar.css` bypass the `tokens.css` design token system. This creates two sources of truth for colours and makes theme changes fragile. Replace all raw rgba/hex values with `var(--token)` references; add alpha-channel token variants to `tokens.css` if needed. **Linked Issue:** [CSS-001](audits/issue-registry.json). | ❌ Not Started | 2 hrs | [Final Checkout 2026-03-22](audits/FINAL_CHECKOUT_2026-03-22.md) |
+| **BL-FRONTEND-P3-4** | **app.js growing unchecked — 8,358 lines (+11.4% since last assessment) (ARCH-001)** — `frontend/js/app.js` grew from ~7,500 to 8,358 lines between the 2026-03-20 and 2026-03-22 assessments. At this rate the file reaches 10,000 lines in 2–3 sprints. Set a hard ceiling at 8,500 lines: any new feature requiring >50 lines must first extract an existing section. Candidates for extraction: `renderPractitionerDashboard`, `renderTransitChart`, `renderCheckinFlow`. Use `dynamic import()` for views not needed on initial load. **Linked Issue:** [ARCH-001](audits/issue-registry.json). | ❌ Not Started | 1 sprint | [Final Checkout 2026-03-22](audits/FINAL_CHECKOUT_2026-03-22.md) |
 
 ---
 
@@ -219,6 +234,7 @@
 |----|------|--------|--------|--------|
 | **BL-DATABASE-P2-1** | **Schema drift between `migrate.js` and `migrate.sql`** — Two migration sources produce incompatible schemas. Designate `migrate.sql` as source of truth. | ✅ Fixed (2026-03-04) — consolidated on `migrate.sql` | — | BACKLOG.md (BL-C3) |
 | **BL-DATABASE-P2-2** | **Dead tables/views cleanup** — 5 unused tables identified; drop from schema and migration. Reduces cognitive load and improves schema hygiene. | ✅ Fixed (2026-03-14) — 37 migrations applied; all 54 tables needed | — | MASTER_BACKLOG |
+| **BL-DATABASE-P2-3** | **5 FK columns missing ON DELETE clause — user deletion leaves orphaned rows (DB-001)** — Five `REFERENCES` declarations across 4 migration files (`009_push_subscriptions.sql`, `010_transit_alerts.sql`, `058_practitioner_promo.sql`, `063_practitioner_messages.sql`, `066_fix_practitioner_messages_uuid_pk.sql`) do not specify ON DELETE behaviour. When a user is deleted, orphaned rows remain in push_subscriptions, transit_alerts, promo_codes, and practitioner_messages — breaking GDPR right-to-erasure compliance. Fix: create migration 068 that re-creates each FK with `ON DELETE CASCADE` (push/transit) or `ON DELETE SET NULL` (messages). Test on a branch DB before applying to production. **Linked Issue:** [DB-001](audits/issue-registry.json). | ❌ Not Started | 2 hrs | [Final Checkout 2026-03-22](audits/FINAL_CHECKOUT_2026-03-22.md) |
 
 ### 🟢 P3 — Low Priority
 
