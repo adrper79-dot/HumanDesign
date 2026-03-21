@@ -568,3 +568,6 @@ async function unsubscribeSMS() {
   }
 }
 
+
+// Expose to global scope for use in other controllers
+window.escapeHtml = escapeHtml;

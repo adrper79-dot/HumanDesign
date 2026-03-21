@@ -258,3 +258,6 @@ async function findBestDates() {
     if (spinner) spinner.style.display = 'none';
   }
 }
+
+// Expose to global scope for HTML event handlers
+window.findBestDates = findBestDates;

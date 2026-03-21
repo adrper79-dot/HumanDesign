@@ -286,6 +286,241 @@ window.DEFINITION_EXPLANATIONS = {
   'No Definition': 'As a Reflector, you have no fixed definition. You\'re completely open to sampling and reflecting the energy around you. Your environment IS your design.'
 };
 
+// ── Canonical Term Registry (GUIDE-004) ───────────────────────
+// One glossary source for live explainer surfaces and approved aliases.
+const CANONICAL_TERM_CATEGORY_BY_MAP = new Map();
+
+function normalizeTermKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function buildAliasIndex(records) {
+  return Object.entries(records).reduce((index, [key, record]) => {
+    [key, record.label, ...(record.aliases || [])]
+      .filter(Boolean)
+      .forEach(alias => {
+        index[normalizeTermKey(alias)] = key;
+      });
+    return index;
+  }, {});
+}
+
+window.CANONICAL_TERM_REGISTRY = {
+  type: {
+    'Generator': {
+      label: 'Builder Pattern',
+      plainMeaning: window.TYPE_EXPLANATIONS['Generator'].short,
+      whyItMatters: 'This pattern shapes how you sustain work, notice what is worth responding to, and measure alignment through satisfaction.',
+      full: window.TYPE_EXPLANATIONS['Generator'].full,
+      aliases: ['Generator', 'Builder']
+    },
+    'Manifesting Generator': {
+      label: 'Builder-Initiator Pattern',
+      plainMeaning: window.TYPE_EXPLANATIONS['Manifesting Generator'].short,
+      whyItMatters: 'This pattern combines gut-led response with fast multi-track momentum, so your process will rarely look linear.',
+      full: window.TYPE_EXPLANATIONS['Manifesting Generator'].full,
+      aliases: ['Manifesting Generator', 'Builder-Initiator']
+    },
+    'Projector': {
+      label: 'Guide Pattern',
+      plainMeaning: window.TYPE_EXPLANATIONS['Projector'].short,
+      whyItMatters: 'This pattern changes how recognition, invitations, and energy management affect whether your guidance lands well.',
+      full: window.TYPE_EXPLANATIONS['Projector'].full,
+      aliases: ['Projector', 'Guide']
+    },
+    'Manifestor': {
+      label: 'Catalyst Pattern',
+      plainMeaning: window.TYPE_EXPLANATIONS['Manifestor'].short,
+      whyItMatters: 'This pattern affects how initiation works for you and why informing reduces unnecessary resistance around your movement.',
+      full: window.TYPE_EXPLANATIONS['Manifestor'].full,
+      aliases: ['Manifestor', 'Initiator', 'Catalyst']
+    },
+    'Reflector': {
+      label: 'Mirror Pattern',
+      plainMeaning: window.TYPE_EXPLANATIONS['Reflector'].short,
+      whyItMatters: 'This pattern changes how environment, timing, and group health influence your clarity more than fixed internal definition.',
+      full: window.TYPE_EXPLANATIONS['Reflector'].full,
+      aliases: ['Reflector', 'Mirror']
+    }
+  },
+  authority: {
+    'Emotional': {
+      label: 'Emotional Wave Navigation',
+      plainMeaning: window.AUTHORITY_EXPLANATIONS['Emotional'].short,
+      whyItMatters: 'Your best decisions emerge over time, so urgency can distort clarity when a wave is still moving.',
+      full: window.AUTHORITY_EXPLANATIONS['Emotional'].full,
+      aliases: ['Emotional', 'Emotional Authority', 'Emotional Wave']
+    },
+    'Sacral': {
+      label: 'Life Force Response',
+      plainMeaning: window.AUTHORITY_EXPLANATIONS['Sacral'].short,
+      whyItMatters: 'Your body gives fast yes-or-no information, which matters more than mental pros-and-cons when the response is genuine.',
+      full: window.AUTHORITY_EXPLANATIONS['Sacral'].full,
+      aliases: ['Sacral', 'Sacral Authority', 'Gut Response']
+    },
+    'Splenic': {
+      label: 'Intuitive Knowing',
+      plainMeaning: window.AUTHORITY_EXPLANATIONS['Splenic'].short,
+      whyItMatters: 'This guidance is quiet and immediate, so over-processing often happens after your clearest signal has already passed.',
+      full: window.AUTHORITY_EXPLANATIONS['Splenic'].full,
+      aliases: ['Splenic', 'Splenic Authority', 'Splenic Instinct']
+    },
+    'Ego': {
+      label: 'Willpower Alignment',
+      plainMeaning: window.AUTHORITY_EXPLANATIONS['Ego'].short,
+      whyItMatters: 'Commitments land well when your heart is actually in them, and misalignment shows up fast when you promise beyond your will.',
+      full: window.AUTHORITY_EXPLANATIONS['Ego'].full,
+      aliases: ['Ego', 'Ego Authority', 'Heart']
+    },
+    'Self-Projected': {
+      label: 'Voiced Truth',
+      plainMeaning: window.AUTHORITY_EXPLANATIONS['Self-Projected'].short,
+      whyItMatters: 'Clarity becomes audible through your own voice, so the right sounding-board matters more than outside advice.',
+      full: window.AUTHORITY_EXPLANATIONS['Self-Projected'].full,
+      aliases: ['Self-Projected', 'Self-Projected Authority', 'Voiced Truth']
+    },
+    'Mental': {
+      label: 'Environmental Clarity',
+      plainMeaning: window.AUTHORITY_EXPLANATIONS['Mental'].short,
+      whyItMatters: 'Your insight sharpens through place and conversation, which means context can be part of the decision process itself.',
+      full: window.AUTHORITY_EXPLANATIONS['Mental'].full,
+      aliases: ['Mental', 'Environmental Clarity']
+    },
+    'Lunar': {
+      label: 'Lunar Cycle Awareness',
+      plainMeaning: window.AUTHORITY_EXPLANATIONS['Lunar'].short,
+      whyItMatters: 'Clarity unfolds across time rather than in one moment, so decisions need a longer rhythm than other authority styles.',
+      full: window.AUTHORITY_EXPLANATIONS['Lunar'].full,
+      aliases: ['Lunar', 'None', 'Outer Authority', 'Lunar Cycle Awareness']
+    }
+  },
+  strategy: {
+    'To Respond': {
+      label: 'To Respond',
+      plainMeaning: window.STRATEGY_EXPLANATIONS['To Respond'].short,
+      whyItMatters: 'It tells you what kind of opportunities to trust rather than pushing from the mind just to make something happen.',
+      full: window.STRATEGY_EXPLANATIONS['To Respond'].full,
+      aliases: ['To Respond']
+    },
+    'Wait for the Invitation': {
+      label: 'Wait for the Invitation',
+      plainMeaning: window.STRATEGY_EXPLANATIONS['Wait for the Invitation'].short,
+      whyItMatters: 'Recognition changes whether your insight feels helpful or intrusive, so timing affects reception as much as accuracy.',
+      full: window.STRATEGY_EXPLANATIONS['Wait for the Invitation'].full,
+      aliases: ['Wait for the Invitation']
+    },
+    'Inform Before Acting': {
+      label: 'Inform Before Acting',
+      plainMeaning: window.STRATEGY_EXPLANATIONS['Inform Before Acting'].short,
+      whyItMatters: 'A simple heads-up reduces friction around your natural momentum and keeps your initiation from feeling disruptive to others.',
+      full: window.STRATEGY_EXPLANATIONS['Inform Before Acting'].full,
+      aliases: ['Inform Before Acting']
+    },
+    'Wait a Lunar Cycle': {
+      label: 'Wait a Lunar Cycle',
+      plainMeaning: window.STRATEGY_EXPLANATIONS['Wait a Lunar Cycle'].short,
+      whyItMatters: 'Your process needs the full arc of changing perspective, so fast certainty is usually less reliable than patient observation.',
+      full: window.STRATEGY_EXPLANATIONS['Wait a Lunar Cycle'].full,
+      aliases: ['Wait a Lunar Cycle']
+    }
+  },
+  definition: {
+    'Single': {
+      label: 'Self-Contained Flow',
+      plainMeaning: 'Your defined centers connect in one continuous circuit.',
+      whyItMatters: 'You process energy in a comparatively self-contained way, so you often feel internally coherent without needing bridge dynamics from others.',
+      full: window.DEFINITION_EXPLANATIONS['Single'],
+      aliases: ['Single', 'Single Definition']
+    },
+    'Split': {
+      label: 'Bridging Pattern',
+      plainMeaning: 'You have two separate areas of definition that do not naturally connect on their own.',
+      whyItMatters: 'Certain people or environments can feel unusually magnetic because they bridge a gap your chart experiences internally.',
+      full: window.DEFINITION_EXPLANATIONS['Split'],
+      aliases: ['Split', 'Split Definition', 'Bridging Pattern']
+    },
+    'Triple Split': {
+      label: 'Triple Bridging Pattern',
+      plainMeaning: 'You have three separate areas of definition.',
+      whyItMatters: 'Clarity often arrives through movement, multiple conversations, and time rather than one closed internal process.',
+      full: window.DEFINITION_EXPLANATIONS['Triple Split'],
+      aliases: ['Triple Split', 'Triple Split Definition', 'Triple Bridging Pattern']
+    },
+    'Quadruple Split': {
+      label: 'Quadruple Bridging Pattern',
+      plainMeaning: 'You have four separate definition areas with a deeply fixed internal structure.',
+      whyItMatters: 'Your process can be slower and more layered, which makes patience and proper pacing part of accuracy rather than a flaw.',
+      full: window.DEFINITION_EXPLANATIONS['Quadruple Split'],
+      aliases: ['Quadruple Split', 'Quad Split', 'Quadruple Bridging Pattern']
+    },
+    'No Definition': {
+      label: 'Open Flow',
+      plainMeaning: 'You do not hold fixed internal definition in the same way as the other patterns.',
+      whyItMatters: 'Environment, timing, and the people around you play a stronger role in how consistent clarity and identity feel day to day.',
+      full: window.DEFINITION_EXPLANATIONS['No Definition'],
+      aliases: ['No Definition', 'Open Flow']
+    }
+  },
+  profile: Object.fromEntries(Object.entries(window.PROFILE_EXPLANATIONS).map(([key, entry]) => [key, {
+    label: key,
+    plainMeaning: entry.short,
+    whyItMatters: 'Your profile describes the role you naturally play in relationships, learning, visibility, and long-term life rhythm.',
+    full: entry.full,
+    aliases: [key, entry.short]
+  }])),
+  concept: {
+    'Energy Blueprint': {
+      label: 'Energy Blueprint',
+      plainMeaning: 'The core pattern map calculated from your birth data.',
+      whyItMatters: 'It anchors later readings to the same underlying design instead of letting each tab invent a new explanation from scratch.',
+      full: 'Energy Blueprint is the foundational pattern layer behind your chart. Type, authority, profile, centers, channels, and later interpretations all become more trustworthy when they are read from this shared source.',
+      aliases: ['Energy Blueprint', 'Chart', 'Energy Chart', 'Bodygraph', 'BodyGraph']
+    },
+    'AI Profile': {
+      label: 'AI Profile',
+      plainMeaning: 'An interpretive reading built on top of your chart and supporting systems.',
+      whyItMatters: 'It translates mechanics into scenarios, patterns, and next actions without replacing the chart data underneath.',
+      full: 'AI Profile is the synthesis layer that turns chart mechanics into plain-language interpretation. It should stay grounded in the chart rather than drifting into generic personality copy.',
+      aliases: ['AI Profile', 'Profile', 'Prime Self Profile']
+    }
+  }
+};
+
+window.CANONICAL_TERM_ALIASES = Object.fromEntries(
+  Object.entries(window.CANONICAL_TERM_REGISTRY).map(([category, records]) => [category, buildAliasIndex(records)])
+);
+
+CANONICAL_TERM_CATEGORY_BY_MAP.set(window.TYPE_EXPLANATIONS, 'type');
+CANONICAL_TERM_CATEGORY_BY_MAP.set(window.AUTHORITY_EXPLANATIONS, 'authority');
+CANONICAL_TERM_CATEGORY_BY_MAP.set(window.STRATEGY_EXPLANATIONS, 'strategy');
+CANONICAL_TERM_CATEGORY_BY_MAP.set(window.PROFILE_EXPLANATIONS, 'profile');
+CANONICAL_TERM_CATEGORY_BY_MAP.set(window.DEFINITION_EXPLANATIONS, 'definition');
+
+window.getCanonicalTermRecord = function(category, key) {
+  if (!category || !key) return null;
+  const records = window.CANONICAL_TERM_REGISTRY?.[category];
+  if (!records) return null;
+  const normalized = normalizeTermKey(key);
+  const canonicalKey = records[key] ? key : window.CANONICAL_TERM_ALIASES?.[category]?.[normalized];
+  return canonicalKey ? records[canonicalKey] || null : null;
+};
+
+window.getCanonicalTermLabel = function(category, key, fallback = '') {
+  const record = window.getCanonicalTermRecord(category, key);
+  if (record?.label) return record.label;
+  return key || fallback || '';
+};
+
+window.getCanonicalTermExplanation = function(category, key, options = {}) {
+  const record = window.getCanonicalTermRecord(category, key);
+  if (!record) return '';
+  const variant = options.variant || 'full';
+  const primaryText = variant === 'short' ? (record.plainMeaning || record.full || '') : (record.full || record.plainMeaning || '');
+  const includeWhyMatters = options.includeWhyMatters !== false;
+  const whyItMatters = includeWhyMatters && record.whyItMatters ? ` <strong>Why it matters:</strong> ${record.whyItMatters}` : '';
+  return primaryText ? `<div class="explanation-text">${primaryText}${whyItMatters}</div>` : '';
+};
+
 // ── Gate Themes (condensed from gates.json) ────────────────────
 window.GATE_THEMES = {
   1: 'Original Creative Expression',
@@ -485,6 +720,10 @@ window.CROSS_TYPE_EXPLANATIONS = {
 // ── Helper: Get explanation HTML for a value ───────────────────
 window.getExplanation = function(map, key) {
   if (!key || !map) return '';
+  const canonicalCategory = CANONICAL_TERM_CATEGORY_BY_MAP.get(map);
+  if (canonicalCategory) {
+    return window.getCanonicalTermExplanation(canonicalCategory, key);
+  }
   const entry = map[key] || map[key.trim()];
   if (!entry) return '';
   const text = typeof entry === 'string' ? entry : entry.full || entry.short || '';
@@ -493,6 +732,11 @@ window.getExplanation = function(map, key) {
 
 window.getShortExplanation = function(map, key) {
   if (!key || !map) return '';
+  const canonicalCategory = CANONICAL_TERM_CATEGORY_BY_MAP.get(map);
+  if (canonicalCategory) {
+    const record = window.getCanonicalTermRecord(canonicalCategory, key);
+    return record?.plainMeaning || record?.full || '';
+  }
   const entry = map[key] || map[key.trim()];
   if (!entry) return '';
   return typeof entry === 'string' ? entry : entry.short || '';

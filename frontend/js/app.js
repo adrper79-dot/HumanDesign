@@ -77,24 +77,21 @@ if (document.readyState === 'loading') {
 }
 
 // ─── Canonical display-name mapping (PRODUCT_PRINCIPLES.md §8) ───
-const DISPLAY_TYPE = {
-  'Generator': 'Builder Pattern', 'Manifesting Generator': 'Builder-Initiator Pattern',
-  'Projector': 'Guide Pattern', 'Manifestor': 'Catalyst Pattern', 'Reflector': 'Mirror Pattern',
-};
-const DISPLAY_AUTH = {
-  'Emotional': 'Emotional Wave Navigation', 'Emotional Authority': 'Emotional Wave Navigation',
-  'Sacral': 'Life Force Response', 'Sacral Authority': 'Life Force Response',
-  'Splenic': 'Intuitive Knowing', 'Splenic Authority': 'Intuitive Knowing',
-  'Ego': 'Willpower Alignment', 'Heart': 'Willpower Alignment',
-  'Self-Projected': 'Voiced Truth', 'Lunar': 'Lunar Cycle Awareness', 'None': 'Outer Authority',
-};
-const DISPLAY_DEF = {
-  'Split': 'Bridging Pattern', 'Triple Split': 'Triple Bridging Pattern',
-  'Quadruple Split': 'Quadruple Bridging Pattern', 'No Definition': 'Open Flow',
-};
-function dType(v) { return DISPLAY_TYPE[v] || v; }
-function dAuth(v) { return DISPLAY_AUTH[v] || v; }
-function dDef(v) { return DISPLAY_DEF[v] || v; }
+function dType(v) {
+  return typeof window.getCanonicalTermLabel === 'function'
+    ? window.getCanonicalTermLabel('type', v, v)
+    : (v || '');
+}
+function dAuth(v) {
+  return typeof window.getCanonicalTermLabel === 'function'
+    ? window.getCanonicalTermLabel('authority', v, v)
+    : (v || '');
+}
+function dDef(v) {
+  return typeof window.getCanonicalTermLabel === 'function'
+    ? window.getCanonicalTermLabel('definition', v, v)
+    : (v || '');
+}
 
 function lowerText(value, fallback = '') {
   if (typeof value === 'string') return value.toLowerCase();
@@ -163,12 +160,14 @@ function updateAuthUI() {
       // UX-007: Update welcome message based on tier and chart generation status
       updateWelcomeMessage();
       updateProfileAdvancedUI();
+      applyGuidanceState();
     } else {
       // Profile not loaded yet — hide badge until fetched
       badgeEl.style.display    = 'none';
       upgradeEl.style.display  = 'none';
       billingEl.style.display  = 'none';
       updateProfileAdvancedUI();
+      applyGuidanceState();
     }
   } else {
     statusEl.textContent = typeof window.t === 'function' ? window.t('auth.notSignedIn') : 'Not signed in';
@@ -183,41 +182,368 @@ function updateAuthUI() {
     upgradeEl.style.display  = 'none';
     billingEl.style.display  = 'none';
     updateProfileAdvancedUI();
+    applyGuidanceState();
   }
 }
 
 // UX-007: Update welcome message based on tier and chart generation status
+function getActiveTabId() {
+  const activePanel = document.querySelector('.tab-content.active')?.id || '';
+  return activePanel.startsWith('tab-') ? activePanel.slice(4) : 'chart';
+}
+
+function isPractitionerTier(tier = currentUser?.tier || 'free') {
+  return tier === 'practitioner' || tier === 'guide' || tier === 'agency' || tier === 'white_label';
+}
+
+function getGuidanceState() {
+  const tier = currentUser?.tier || 'free';
+  const isPractitioner = isPractitionerTier(tier);
+  const hasChart = readJourneyFlag('chartGenerated');
+  const hasProfile = readJourneyFlag('profileGenerated');
+  const hasSeenOnboarding = hasSeenFirstRunOnboarding();
+  const firstTime = !hasSeenOnboarding && !hasChart && !hasProfile;
+  const stage = hasProfile ? 'profile-generated' : (hasChart ? 'chart-generated' : 'no-chart');
+
+  return {
+    tier,
+    isPractitioner,
+    hasChart,
+    hasProfile,
+    hasSeenOnboarding,
+    firstTime,
+    stage,
+    overviewMode: (firstTime || (isPractitioner && !hasChart) || (hasChart && !hasProfile)) ? 'expanded' : 'summary',
+    chartMode: firstTime ? 'expanded' : 'summary',
+    profileMode: !hasChart ? (firstTime ? 'expanded' : 'summary') : (!hasProfile ? 'expanded' : 'summary'),
+    practitionerMode: (isPractitioner && !hasChart) ? 'expanded' : 'summary'
+  };
+}
+
+window.getGuidanceState = getGuidanceState;
+
+function applyGuidanceState() {
+  const state = getGuidanceState();
+  if (document.body) {
+    document.body.dataset.guidanceStage = state.stage;
+    document.body.dataset.guidancePersona = state.isPractitioner ? 'practitioner' : 'personal';
+  }
+
+  const setHidden = (id, hidden) => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !!hidden;
+  };
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  if (state.hasChart) {
+    setText('chartGuidanceStripTitle', 'Your chart is ready and now anchors the rest of the product');
+    setText('chartNextStepTitle', 'Move into AI Profile or refine your chart inputs');
+    setText('profileGuidanceStripTitle', state.hasProfile
+      ? 'Your AI Profile is ready to revisit with a sharper lens'
+      : 'Your chart is ready to turn into a guided reading');
+  } else if (state.firstTime) {
+    setText('chartGuidanceStripTitle', 'Your chart is the source for every later reading');
+    setText('chartNextStepTitle', 'Generate the chart once these three inputs feel solid');
+    setText('profileGuidanceStripTitle', 'The AI Profile turns your chart into a guided reading');
+  } else {
+    setText('chartGuidanceStripTitle', 'Return to your chart when your birth details feel ready');
+    setText('chartNextStepTitle', 'Generate or update your chart when you have the details you trust');
+    setText('profileGuidanceStripTitle', 'Create your chart first, then open AI Profile for synthesis');
+  }
+
+  setText('chartGuidancePanelTitle', state.hasChart
+    ? 'Your core pattern map is already in place'
+    : 'We translate one birth moment into the mechanics of your design');
+  setText('chartNextStepTitle', state.hasChart
+    ? 'Move into AI Profile or refine your chart inputs'
+    : (state.firstTime ? 'Generate the chart once these three inputs feel solid' : 'Generate or update your chart when you have the details you trust'));
+  const chartNextText = document.querySelector('#chartGuidanceNextStep .next-step-card-text');
+  if (chartNextText) {
+    chartNextText.textContent = state.hasChart
+      ? 'Your chart now anchors profile synthesis, transits, and compatibility. Go to AI Profile next, or edit your birth data if you need a more precise baseline.'
+      : (state.firstTime
+        ? 'If your birth time is uncertain, start with your best verified estimate now and refine it later instead of blocking the whole journey.'
+        : 'You can pick up where you left off with your saved birth details, then refine them later if you learn something more precise.');
+  }
+  setHidden('chartGuidancePanel', state.chartMode !== 'expanded');
+  const chartLearnMore = document.getElementById('chartGuidanceLearnMore');
+  if (chartLearnMore) chartLearnMore.open = state.chartMode === 'expanded';
+
+  setText('profileGuidancePanelTitle', !state.hasChart
+    ? 'AI Profile works best after your chart exists'
+    : (state.hasProfile ? 'Use your next synthesis to answer a narrower question' : 'A synthesis that connects your chart to one clear question or life theme'));
+  const profilePanelText = document.querySelector('#profileGuidancePanel .guidance-panel-text');
+  if (profilePanelText) {
+    profilePanelText.textContent = !state.hasChart
+      ? 'The profile reads from your chart data. You can preview the workflow here, but the strongest path is to generate the chart first and then return for synthesis.'
+      : (state.hasProfile
+        ? 'Your first synthesis is already complete. Use advanced controls when you want a follow-up reading focused on a theme, relationship, or specific decision.'
+        : 'The default path is the full blueprint. Use advanced controls only when you want to narrow the reading toward relationships, career, daily focus, or another specific theme.');
+  }
+  setHidden('profileGuidancePanel', state.profileMode !== 'expanded');
+  const profileNextTitle = document.getElementById('profileNextStepTitle');
+  if (profileNextTitle) {
+    profileNextTitle.textContent = !state.hasChart
+      ? 'Generate your chart first, then return here for synthesis'
+      : (state.hasProfile ? 'Use a focused question for your next pass' : 'Start with one clear action');
+  }
+  const profileNextText = document.querySelector('#profileGuidanceNextStep .next-step-card-text');
+  if (profileNextText) {
+    profileNextText.textContent = !state.hasChart
+      ? 'Once your chart exists, AI Profile can interpret the same baseline instead of guessing from a disconnected prompt.'
+      : (state.hasProfile
+        ? 'Your profile is already generated. Open advanced options when you want a narrower follow-up question, a themed reading, or a share-ready refresh.'
+        : 'Default: Full Blueprint with your core systems. Open advanced options only if you want to target a theme, ask a specific question, or add more depth systems.');
+  }
+  const profileLearnMore = document.getElementById('profileGuidanceLearnMore');
+  if (profileLearnMore) profileLearnMore.open = state.profileMode === 'expanded' && state.hasChart && !state.hasProfile;
+
+  const practitionerIntro = document.getElementById('practitionerCardIntro');
+  if (practitionerIntro && state.isPractitioner) {
+    practitionerIntro.textContent = !state.hasChart
+      ? 'Start by creating your own chart so the practitioner workspace has your baseline context, then add your first client and move into session prep.'
+      : (state.hasProfile
+        ? 'Your workspace is live. Keep the next operational action visible, then open the full setup checklist only when you need it.'
+        : 'Your chart is ready. Finish your own profile next so session tools and session prep have a grounded baseline before more client work.');
+  }
+
+  updateShellChrome();
+}
+
+function getShellOrientationConfig(tabId, state = getGuidanceState()) {
+  switch (tabId) {
+    case 'transits':
+      return {
+        context: 'personal',
+        icon: '☽',
+        eyebrow: 'Today',
+        title: 'Today\'s Energy shows how current transits press on your chart right now',
+        text: 'Use this section after your chart is ready so the daily read stays anchored in your actual mechanics rather than generic transit copy.',
+        next: state.hasChart
+          ? 'Review the active themes, then open Check-In to record what matched lived experience.'
+          : 'Generate your chart first so today\'s energy can map to your design instead of staying generic.'
+      };
+    case 'checkin':
+      return {
+        context: 'personal',
+        icon: '✓',
+        eyebrow: 'Pattern tracking',
+        title: 'Check-In turns one day of experience into usable pattern evidence',
+        text: 'This is where daily mood, alignment, and transit reflection become data you can reuse instead of insights you forget by tomorrow.',
+        next: hasCheckinToday()
+          ? 'Today is already logged. Add detail only if something changed, or move to Diary for a fuller event record.'
+          : 'Log one honest check-in after reviewing Today\'s Energy so the pattern trail stays connected to the transit context.'
+      };
+    case 'composite':
+      return {
+        context: 'personal',
+        icon: '⊕',
+        eyebrow: 'Connection',
+        title: 'Composite compares two charts through one shared lens',
+        text: 'Use this section to look at dynamics, tension, and support patterns without treating relationship insight as a detached personality quiz.',
+        next: 'Add the second person\'s birth details, then compare how the connection changes the field between you.'
+      };
+    case 'practitioner':
+      return {
+        context: 'practitioner',
+        icon: '⚷',
+        eyebrow: 'Practitioner workflow',
+        title: state.hasProfile
+          ? 'Practitioner is the operational layer for clients, notes, briefs, and conversion flow'
+          : 'Practitioner becomes fully useful once your own chart and profile baseline exist',
+        text: state.hasProfile
+          ? 'Keep this space focused on the next client action, not broad consumer education. Use the activation plan only when you need to audit setup.'
+          : 'Finish your own baseline first so directory messaging, session prep, and practitioner prompts all stay grounded before more client traffic arrives.',
+        next: state.hasProfile
+          ? 'Open the next operational action in the activation plan or jump into roster work.'
+          : 'Generate your own AI Profile next, then return here to complete the setup sequence.'
+      };
+    case 'enhance':
+      return {
+        context: 'personal',
+        icon: '★',
+        eyebrow: 'Depth layers',
+        title: 'Enhance adds more evidence to the synthesis instead of replacing your chart',
+        text: 'Behavioral data, psychometrics, and supporting systems make later readings sharper because they deepen the same baseline.',
+        next: 'Choose the one assessment or validation layer that will most improve your next synthesis pass.'
+      };
+    case 'diary':
+      return {
+        context: 'personal',
+        icon: '◉',
+        eyebrow: 'Event record',
+        title: 'Diary turns important events into a reusable interpretation trail',
+        text: 'Use Diary when a moment deserves more detail than a check-in so future synthesis can connect themes across time.',
+        next: 'Capture one specific event, then return later to compare it against transits and recurring patterns.'
+      };
+    case 'history':
+      return {
+        context: 'personal',
+        icon: '📂',
+        eyebrow: 'Archive',
+        title: 'Saved Charts is where you reopen prior work without losing continuity',
+        text: 'Use the archive to continue a prior reading, revisit a client or relationship comparison, or confirm what changed since the last session.',
+        next: 'Open the most relevant saved record, then continue from the next unfinished interpretation layer.'
+      };
+    case 'rectify':
+      return {
+        context: 'personal',
+        icon: '⏱',
+        eyebrow: 'Birth time accuracy',
+        title: 'Rectification helps when the chart is useful but the time still feels uncertain',
+        text: 'Use this flow to tighten the birth-time baseline before you over-interpret shifts that may come from an imprecise starting point.',
+        next: 'Compare likely time windows, then return to Chart once you have the strongest candidate.'
+      };
+    default:
+      return null;
+  }
+}
+
+function updateShellChrome(tabId = getActiveTabId()) {
+  const state = getGuidanceState();
+  const socialProofBanner = document.getElementById('socialProofBanner');
+  if (socialProofBanner) socialProofBanner.hidden = tabId !== 'overview';
+
+  const journeyGuide = document.getElementById('step-guide-banner');
+  if (journeyGuide) {
+    const showJourney = CORE_JOURNEY_TABS.has(tabId);
+    journeyGuide.hidden = !showJourney;
+    journeyGuide.classList.toggle('step-guide--summary', showJourney && !state.firstTime && (state.hasChart || state.hasProfile || state.hasSeenOnboarding));
+  }
+
+  const shell = document.getElementById('shellOrientationStrip');
+  const config = getShellOrientationConfig(tabId, state);
+  if (!shell) return;
+  if (!config) {
+    shell.hidden = true;
+    return;
+  }
+
+  shell.hidden = false;
+  shell.dataset.guidanceContext = config.context || 'personal';
+  const icon = document.getElementById('shellOrientationIcon');
+  const eyebrow = document.getElementById('shellOrientationEyebrow');
+  const title = document.getElementById('shellOrientationTitle');
+  const text = document.getElementById('shellOrientationText');
+  const next = document.getElementById('shellOrientationNextText');
+  if (icon) icon.textContent = config.icon || '⊙';
+  if (eyebrow) eyebrow.textContent = config.eyebrow || 'Orientation';
+  if (title) title.textContent = config.title || '';
+  if (text) text.textContent = config.text || '';
+  if (next) next.textContent = config.next || '';
+}
+
+function renderOverviewWelcome(state) {
+  if (state.isPractitioner) {
+    return `
+      <section class="guidance-strip" data-guidance-context="practitioner" aria-labelledby="overviewGuidanceTitle">
+        <div class="guidance-strip-icon" aria-hidden="true">⚷</div>
+        <div class="guidance-strip-body">
+          <p class="guidance-strip-eyebrow">Practitioner orientation</p>
+          <h3 class="guidance-strip-title" id="overviewGuidanceTitle">Set up your practitioner baseline before you expect the workspace to carry sessions</h3>
+          <p class="guidance-strip-text">Your own chart and profile act as the baseline for client session prep, directory messaging, and later workflow guidance.</p>
+        </div>
+      </section>
+      ${state.overviewMode === 'expanded' ? `<div class="guidance-panel guidance-panel--single" data-guidance-context="practitioner">
+        <div class="guidance-panel-main">
+          <p class="guidance-panel-eyebrow">Why this matters</p>
+          <h3 class="guidance-panel-title">The practitioner workspace is operational guidance first, not another consumer education screen</h3>
+          <p class="guidance-panel-text">Create your chart first, then your own profile, so every later client workflow starts from a live baseline rather than a half-configured shell.</p>
+        </div>
+      </div>` : ''}
+      <div class="next-step-card" data-guidance-context="practitioner" aria-labelledby="overviewNextStepTitle">
+        <div class="next-step-card-copy">
+          <p class="next-step-card-label">Next step</p>
+          <h3 class="next-step-card-title" id="overviewNextStepTitle">${state.hasChart ? 'Generate your own profile baseline' : 'Create your own chart baseline'}</h3>
+          <p class="next-step-card-text">${state.hasChart ? 'Once your profile exists, session prep and practitioner-facing coaching can stay grounded in a complete baseline.' : 'The chart is the first operational milestone. After that, invite your first client and move into session prep.'}</p>
+        </div>
+        <div class="next-step-card-actions">
+          <button class="btn-primary" data-action="switchTab" data-arg0="${state.hasChart ? 'profile' : 'chart'}">${state.hasChart ? 'Open AI Profile →' : 'Create Your Chart →'}</button>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <section class="guidance-strip" data-guidance-context="personal" aria-labelledby="overviewGuidanceTitle">
+      <div class="guidance-strip-icon" aria-hidden="true">⊙</div>
+      <div class="guidance-strip-body">
+        <p class="guidance-strip-eyebrow">Orientation</p>
+        <h3 class="guidance-strip-title" id="overviewGuidanceTitle">${state.firstTime ? 'Begin with your chart, not a generic personality reading' : 'Pick up your chart when your birth details feel ready'}</h3>
+        <p class="guidance-strip-text">${state.firstTime ? 'Prime Self starts by calculating your Energy Blueprint from birth data so later synthesis stays grounded in one source.' : 'Your saved workflow is still here. Generate the chart when you are ready, then move into profile, daily energy, and check-ins from the same baseline.'}</p>
+      </div>
+    </section>
+    ${state.overviewMode === 'expanded' ? `<div class="guidance-panel guidance-panel--single" data-guidance-context="personal">
+      <div class="guidance-panel-main">
+        <p class="guidance-panel-eyebrow">How to start</p>
+        <h3 class="guidance-panel-title">One chart first, then interpretation</h3>
+        <p class="guidance-panel-text">Enter birth date, time, and location once. That chart becomes the shared source for profile synthesis, today\'s energy, compatibility, and later guided actions.</p>
+      </div>
+    </div>` : ''}
+    <div class="next-step-card" data-guidance-context="personal" aria-labelledby="overviewNextStepTitle">
+      <div class="next-step-card-copy">
+        <p class="next-step-card-label">Next step</p>
+        <h3 class="next-step-card-title" id="overviewNextStepTitle">Generate your chart</h3>
+        <p class="next-step-card-text">Start with the chart even if one field is approximate. You can refine inputs later without losing the rest of the journey.</p>
+      </div>
+      <div class="next-step-card-actions">
+        <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
+      </div>
+    </div>
+    <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Running an Energy Blueprint practice? <a href="#" data-action="heroPractitionerCta" style="color:var(--gold)">See Practitioner Plan →</a></p>`;
+}
+
+function renderOverviewPostChartGuidance(state) {
+  const practitionerMode = state.isPractitioner;
+  const stripIcon = practitionerMode ? '⚷' : '⊙';
+  const stripEyebrow = practitionerMode ? 'Practitioner overview' : 'Overview';
+  const stripTitle = practitionerMode
+    ? (state.hasProfile ? 'Your practitioner baseline is live' : 'Your chart is ready — finish your practitioner baseline next')
+    : (state.hasProfile ? 'Your core reading is ready to revisit' : 'Your chart is ready — now turn it into a guided reading');
+  const stripText = practitionerMode
+    ? (state.hasProfile ? 'Use your own chart and profile as the baseline before client session prep, notes, and brief generation.' : 'Generate your own profile next so practitioner tools have both mechanics and synthesis context to work from.')
+    : (state.hasProfile ? 'You already have the core synthesis. Use the next step to revisit it with a sharper question or continue into daily energy and check-ins.' : 'The chart gives the mechanics. The AI Profile is the next layer that turns those mechanics into scenarios, patterns, and actions.');
+  const nextTitle = practitionerMode
+    ? (state.hasProfile ? 'Open the practitioner workspace for operational work' : 'Generate your own profile before client sessions')
+    : (state.hasProfile ? 'Choose your next practice layer' : 'Generate your AI Profile next');
+  const nextText = practitionerMode
+    ? (state.hasProfile ? 'Your workspace is ready for roster, notes, directory, and session prep. Keep the next operational action visible and open the full checklist only when needed.' : 'Your chart exists. Add the synthesis layer next so the practitioner workspace can support real session preparation.')
+    : (state.hasProfile ? 'Review today\'s energy, run a check-in, or regenerate the profile with a specific theme if you want a narrower follow-up.' : 'The strongest next step is to generate the profile while the chart is fresh, then move into daily energy or check-ins from that same baseline.');
+  const nextTarget = practitionerMode ? (state.hasProfile ? 'practitioner' : 'profile') : (state.hasProfile ? 'transits' : 'profile');
+  const nextLabel = practitionerMode ? (state.hasProfile ? 'Open Practitioner Workspace →' : 'Generate AI Profile →') : (state.hasProfile ? 'See Today\'s Energy →' : 'Generate AI Profile →');
+
+  return `
+    <section class="guidance-strip" data-guidance-context="${practitionerMode ? 'practitioner' : 'personal'}" aria-labelledby="overviewPostChartGuidanceTitle">
+      <div class="guidance-strip-icon" aria-hidden="true">${stripIcon}</div>
+      <div class="guidance-strip-body">
+        <p class="guidance-strip-eyebrow">${stripEyebrow}</p>
+        <h3 class="guidance-strip-title" id="overviewPostChartGuidanceTitle">${stripTitle}</h3>
+        <p class="guidance-strip-text">${stripText}</p>
+      </div>
+    </section>
+    <div class="next-step-card" data-guidance-context="${practitionerMode ? 'practitioner' : 'personal'}" aria-labelledby="overviewPostChartNextTitle">
+      <div class="next-step-card-copy">
+        <p class="next-step-card-label">Next step</p>
+        <h3 class="next-step-card-title" id="overviewPostChartNextTitle">${nextTitle}</h3>
+        <p class="next-step-card-text">${nextText}</p>
+      </div>
+      <div class="next-step-card-actions">
+        <button class="btn-primary" data-action="switchTab" data-arg0="${nextTarget}">${nextLabel}</button>
+      </div>
+    </div>`;
+}
+
 function updateWelcomeMessage() {
   const container = document.getElementById('overviewContent');
   if (!container) return;
   
   // Only update if chart hasn't been generated (welcome card is still visible)
   if (readJourneyFlag('chartGenerated')) return;
-  
-  const tier = currentUser?.tier || 'free';
-  const isPractitioner = tier === 'practitioner' || tier === 'guide' || tier === 'agency' || tier === 'white_label';
-  
-  let html;
-  if (isPractitioner) {
-    // Practitioner welcome card
-    html = `<div class="card card-welcome">
-      <div class="welcome-icon">👥</div>
-      <h3 class="welcome-title">Welcome to Your Practitioner Workspace</h3>
-      <p class="welcome-text">Manage your client roster, prepare for sessions with AI context, and deliver branded reports. Start by creating your own Energy Blueprint chart, then add your first client and begin tracking their sessions.</p>
-      <button class="btn-primary" data-action="switchTab" data-arg0="chart">Create Your Chart →</button>
-    </div>`;
-  } else {
-    // Consumer welcome card — drive practitioner upgrade awareness
-    html = `<div class="card card-welcome">
-      <div class="welcome-icon">⚷</div>
-      <h3 class="welcome-title">Discover Your Energy Blueprint</h3>
-      <p class="welcome-text">Your unique energy architecture revealed. Get your Energy Blueprint chart, AI-generated personal synthesis, daily transit insights, and tools for living in alignment with your design. Start with your birth data — we'll calculate everything in seconds.</p>
-      <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
-      <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Running an Energy Blueprint practice? <a href="#" data-action="heroPractitionerCta" style="color:var(--gold)">See Practitioner Plan →</a></p>
-    </div>`;
-  }
-  
-  container.innerHTML = html;
+
+  container.innerHTML = renderOverviewWelcome(getGuidanceState());
+  applyGuidanceState();
 }
 
 // Fetch /api/auth/me and populate currentUser, then refresh UI
@@ -1666,6 +1992,7 @@ const JOURNEY_MILESTONE_KEYS = ['chartGenerated', 'profileGenerated', 'transitsV
 const JOURNEY_CHECKIN_META_KEY = 'checkinMeta';
 const GUIDED_CORE_TABS = new Set(['overview', 'chart', 'profile', 'transits', 'checkin', 'composite']);
 const GUIDED_UNLOCK_KEYS = ['chartGenerated', 'profileGenerated', 'transitsViewed'];
+const CORE_JOURNEY_TABS = new Set(['chart', 'profile', 'transits', 'checkin', 'composite']);
 
 function getJourneyScopeId() {
   const userId = currentUser?.id;
@@ -1793,6 +2120,7 @@ function markJourneyMilestone(key) {
   const activeTab = activePanel.startsWith('tab-') ? activePanel.slice(4) : 'chart';
   updateStepGuide(activeTab);
   applyGuidedNavigation();
+  applyGuidanceState();
 }
 
 function isGuidedNavigationUnlocked() {
@@ -2022,6 +2350,7 @@ function switchTab(id, btn) {
 
   // Recompute guided navigation after tab changes because milestone state may update.
   applyGuidedNavigation();
+  applyGuidanceState();
 }
 
 /**
@@ -2216,6 +2545,7 @@ document.addEventListener('blur', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   updateStepGuide('chart');
   applyGuidedNavigation();
+  applyGuidanceState();
   // Initialize tab overflow indicator
   updateTabOverflowIndicator();
   // Update tab overflow on window resize
@@ -2815,15 +3145,15 @@ function renderChart(data) {
     <div class="chart-grid">
       <div class="data-block">
         <h4>Core Energy</h4>
-        ${row('Pattern <span class="icon-info help-icon" title="Your energy type: Builder (consistent energy), Guide (recognition-based), Initiator (spontaneous), Builder-Initiator (hybrid), or Mirror (lunar mirror)"></span>', chart.type)}
+        ${row('Pattern <span class="icon-info help-icon" title="Your energy type: Builder (consistent energy), Guide (recognition-based), Initiator (spontaneous), Builder-Initiator (hybrid), or Mirror (lunar mirror)"></span>', dType(chart.type))}
         ${getExplanation(TYPE_EXPLANATIONS, chart.type)}
-        ${row('Decision Style <span class="icon-info help-icon" title="How you make aligned decisions: Emotional Wave, Sacral Response, Splenic Instinct, Heart Will, etc."></span>', chart.authority)}
+        ${row('Decision Style <span class="icon-info help-icon" title="How you make aligned decisions: Emotional Wave, Sacral Response, Splenic Instinct, Heart Will, etc."></span>', dAuth(chart.authority))}
         ${getExplanation(AUTHORITY_EXPLANATIONS, chart.authority)}
         ${row('Strategy <span class="icon-info help-icon" title="Your interaction approach: To Respond, Wait for Invitation, Inform Before Acting, or Wait a Lunar Cycle"></span>', chart.strategy)}
         ${getExplanation(STRATEGY_EXPLANATIONS, chart.strategy)}
         ${row('Life Role <span class="icon-info help-icon" title="Your personality archetype (e.g., 1/3 Investigator-Martyr, 6/2 Role Model-Hermit). First number is conscious, second is unconscious"></span>', chart.profile)}
         ${getExplanation(PROFILE_EXPLANATIONS, chart.profile)}
-        ${row('Circuit Type <span class="icon-info help-icon" title="How your energy centers connect: Single, Split, Triple Split, or Quad Split. Affects how you process and share energy"></span>', chart.definition)}
+        ${row('Circuit Type <span class="icon-info help-icon" title="How your energy centers connect: Single, Split, Triple Split, or Quad Split. Affects how you process and share energy"></span>', dDef(chart.definition))}
         ${getExplanation(DEFINITION_EXPLANATIONS, chart.definition)}
         ${row('Not-Self Signal <span class="icon-info help-icon" title="The emotional signal that you are out of alignment with your pattern and strategy"></span>', chart.notSelfTheme)}
         ${getExplanation(NOT_SELF_EXPLANATIONS, chart.notSelfTheme)}
@@ -4991,6 +5321,7 @@ function toggleRaw(id) {
 function updateOverview(chartResponse) {
   const container = document.getElementById('overviewContent');
   if (!container) return;
+  const guidanceState = getGuidanceState();
 
   const d = chartResponse.data || chartResponse;
   const chart = d.chart || d;
@@ -5007,10 +5338,12 @@ function updateOverview(chartResponse) {
   // Build the overview
   let html = '';
 
+  html += renderOverviewPostChartGuidance(guidanceState);
+
   // Quick Stats Row
   html += `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:var(--space-3);margin-bottom:var(--space-5)">
     <div class="card" style="padding:var(--space-4);text-align:center">
-      <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${chart.type || '—'}</div>
+      <div style="font-size:var(--font-size-xl);font-weight:700;color:var(--gold)">${dType(chart.type) || '—'}</div>
       <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:var(--space-1)">Energy Pattern</div>
     </div>
     <div class="card" style="padding:var(--space-4);text-align:center">
@@ -5037,7 +5370,7 @@ function updateOverview(chartResponse) {
       </div>
       <div>
         <div style="font-size:var(--font-size-xs);font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--space-2)">Decision Style</div>
-        <div style="font-size:var(--font-size-md);font-weight:600;color:var(--text);margin-bottom:var(--space-1)">${chart.authority || '—'}</div>
+        <div style="font-size:var(--font-size-md);font-weight:600;color:var(--text);margin-bottom:var(--space-1)">${dAuth(chart.authority) || '—'}</div>
         ${typeof getExplanation === 'function' ? getExplanation(AUTHORITY_EXPLANATIONS, chart.authority) : ''}
       </div>
     </div>
@@ -5103,6 +5436,7 @@ function updateOverview(chartResponse) {
   </div>`;
 
   container.innerHTML = html;
+  applyGuidanceState();
 
   // Deferred Energy Chart render
   setTimeout(() => { if (typeof renderBodygraph === 'function') renderBodygraph(_ovBgId, chart); }, 50);
@@ -7177,12 +7511,27 @@ function updateProfileAdvancedUI() {
   const summary = document.getElementById('profileDefaultSummary');
   if (!panel || !toggle || !summary) return;
 
-  const expanded = _profileAdvancedPreference !== null ? _profileAdvancedPreference : isProfilePowerUser();
+  const guidanceState = getGuidanceState();
+  const defaultExpanded = isProfilePowerUser() || (!guidanceState.hasProfile && !guidanceState.hasSeenOnboarding);
+
+  const expanded = _profileAdvancedPreference !== null ? _profileAdvancedPreference : defaultExpanded;
   panel.style.display = expanded ? '' : 'none';
   toggle.setAttribute('aria-expanded', String(expanded));
   toggle.textContent = expanded ? 'Hide advanced options' : 'Customize this reading';
-  summary.textContent = expanded
-    ? 'Advanced controls are open. Keep the default Full Blueprint path, or tailor the reading by theme, question, and optional systems.'
+  if (!guidanceState.hasChart) {
+    summary.textContent = 'Generate your chart first so the profile can build on your actual design data.';
+    return;
+  }
+
+  if (expanded) {
+    summary.textContent = guidanceState.hasProfile
+      ? 'Advanced controls are open so you can refine or regenerate the reading for a specific theme, question, or decision.'
+      : 'Advanced controls are open. Keep the default Full Blueprint path, or tailor the reading by theme, question, and optional systems.';
+    return;
+  }
+
+  summary.textContent = guidanceState.hasProfile
+    ? 'Default: regenerate the Full Blueprint only when you need a refreshed synthesis. Open advanced options to target a theme or question.'
     : 'Default: Full Blueprint with your core systems. Open advanced options only if you want to target a theme, ask a specific question, or add more depth systems.';
 }
 
@@ -7428,7 +7777,7 @@ window.frmCloseChart = frmCloseChart;
 // They are plain global functions so window[action] delegation reaches them automatically.
 // loadCelebrityMatches, filterCelebrities, loadAchievements, loadLeaderboard
 // → achievements-controller.js (lazy — loaded when celebrity/achievements tab opens)
-window.findBestDates = findBestDates;
+// findBestDates is exposed from achievements-controller.js after it loads
 window.searchDirectory = searchDirectory;
 window.loadDirectoryPage = loadDirectoryPage;
 window.startOneTimePurchase = startOneTimePurchase;

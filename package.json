@@ -6,6 +6,7 @@
   "scripts": {
     "test": "vitest run",
     "test:deterministic": "vitest run --maxWorkers=1",
+    "test:guidance": "vitest run tests/guidance-regression.test.js --maxWorkers=1",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:prod:smoke": "playwright test tests/e2e/prod-smoke.spec.ts --project=chromium",

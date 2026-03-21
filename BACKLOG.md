@@ -113,9 +113,9 @@
 ### Initiate Now (External / Long Lead)
 
 6. **GAP-006: Gene Keys legal brief** `(4 hrs internal prep, then external)`
-   - Draft legal review request: scope of use, RAG corpus exposure, trademark risk
-   - Outcome paths: (a) fair use OK → add attribution; (b) disclaimer sufficient; (c) license required
-   - Resolves: [BL-SEC-P1-5](MASTER_BACKLOG_SYSTEM_V2.md)
+  - Complete: Outcome B implemented with corrected legal brief, live attribution/disclaimer, and freeze guard
+  - Artifacts: `docs/GAP-006_GENE_KEYS_LEGAL_REVIEW_BRIEF_2026-03-20.md`, `docs/GAP-006_GENE_KEYS_COURTESY_OUTREACH_TEMPLATE.md`, `tests/genekeys-freeze.test.js`
+  - Validation: `npx vitest run tests/genekeys-freeze.test.js --maxWorkers=1`, `npm run test:deterministic`
 
 ### Next Sprint (Platform Expansion)
 
@@ -129,6 +129,37 @@
    - Capacitor wraps existing SPA — no rewrite; native push via APNs/FCM, IAP via RevenueCat
    - ADR: [docs/ADR-001-mobile-distribution-v1.md](docs/ADR-001-mobile-distribution-v1.md)
    - Resolves: [BL-MOBILE-P1-1](MASTER_BACKLOG_SYSTEM_V2.md)
+
+9. **GAP-009: Guidance integrity architecture + loop plan** `(1 sprint)` — safe UI simplification without guidance loss
+  - Complete: guidance architecture and all loop deliverables are now in place end-to-end
+  - Artifacts: `docs/GUIDANCE_INTEGRITY_LOOP_PLAN_2026-03-20.md`, `docs/guidance-surface-map.md`, `docs/guidance-component-system.md`, `docs/guidance-glossary-registry.md`, `docs/guidance-state-machine.md`, `docs/guidance-regression-checklist.md`, `docs/guidance-manual-test-script.md`
+
+### Guidance Integrity Loop (run repeatedly, one issue per cycle)
+
+10. **GUIDE-001 / BL-FRONTEND-P1-11: Inventory all guidance surfaces** `(1–2 days)`
+  - Create `docs/guidance-surface-map.md`
+  - Classify every guidance node as orientation / inline-help / interpretation / next-step / deep-dive
+  - Identify duplicates and source-of-truth drift before UI cleanup starts
+
+11. **GUIDE-002 / BL-FRONTEND-P1-12: Reusable guidance component system** `(2–3 days)`
+  - Complete: reusable guidance surfaces added to chart + profile flows
+  - Artifact: `docs/guidance-component-system.md`
+
+12. **GUIDE-003 / BL-FRONTEND-P1-13: Navigation simplification without guidance loss** `(2 days)`
+  - Complete: shell chrome reduced by moving the core journey guide into shared shell space and adding one shared orientation strip for workflows that lacked explicit context
+  - Validation: overview-only promo banner + contextual journey guide + shared orientation logic across mobile/desktop
+
+13. **GUIDE-004 / BL-FRONTEND-P2-9: Canonical glossary + term explainer source** `(1 day)`
+  - Complete: canonical term registry and approved alias resolution added for chart/profile glossary terms
+  - Artifact: `docs/guidance-glossary-registry.md`
+
+14. **GUIDE-005 / BL-FRONTEND-P2-10: State-aware guidance orchestration** `(1–2 days)`
+  - Complete: deterministic guidance state now adapts overview, chart, profile, and practitioner surfaces using chart/profile/onboarding/persona state
+  - Artifact: `docs/guidance-state-machine.md`
+
+15. **GUIDE-006 / BL-FRONTEND-P2-11: Guidance regression harness** `(1 day)`
+  - Complete: added checklist, deterministic manual journey script, and automated Vitest harness
+  - Validation: `npm run test:guidance`
 
 ---
 
@@ -2524,6 +2555,73 @@ Found during second-pass market validation review. See `docs/MARKET_VALIDATION_R
 ---
 
 ## Frontend UX & Clarity (13 items)
+
+## Guidance Integrity Loop (6 items)
+
+### BL-FRONTEND-P1-10 | Guidance integrity architecture before UI simplification
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `frontend/index.html`, `frontend/js/app.js`, `frontend/css/app.css`, `frontend/js/explanations.js`, `frontend/js/tooltip.js`, `frontend/locales/en.json`, `PRODUCT_PRINCIPLES.md`
+- **Problem:** The UI currently preserves guidance by scattering it across banners, feature callouts, inline helper copy, tooltips, and intro sections. That keeps explanation present but makes shell simplification dangerous because guidance has no formal architecture.
+- **Impact:** Any navigation or layout cleanup risks deleting meaning for unfamiliar users. Product guidance quality depends on accidental redundancy rather than designed coverage.
+- **Fix:** Establish a guidance architecture with five layers: persistent orientation, inline help, interpretation, next-step prompting, and deep-dive education. Use [docs/GUIDANCE_INTEGRITY_LOOP_PLAN_2026-03-20.md](docs/GUIDANCE_INTEGRITY_LOOP_PLAN_2026-03-20.md) as the execution contract.
+- **Verify:** UI simplification work can proceed without reducing explanatory coverage; every subsequent guidance loop has explicit scope and done criteria.
+
+### BL-FRONTEND-P1-11 | Inventory all guidance surfaces and map each explanation to one source of truth
+- [x] **Status:** Complete (2026-03-20 — `docs/guidance-surface-map.md` created with workflow coverage, classifications, source candidates, tooltip-only risks, and top 20 drift areas)
+- **Severity:** High
+- **Files:** `frontend/index.html`, `frontend/js/app.js`, `frontend/js/explanations.js`, `frontend/js/tooltip.js`, `frontend/locales/en.json`
+- **Problem:** Guidance exists in many places but is not cataloged. Explanations can drift, duplicate, or disappear during refactors because no map exists.
+- **Impact:** Agents cannot safely simplify screens or consolidate components without risking silent instructional regressions.
+- **Fix:** Create `docs/guidance-surface-map.md`; classify each node as orientation / inline-help / interpretation / next-step / deep-dive; identify duplicates, contradictions, and orphaned explanations.
+- **Verify:** Every major workflow has an inventoried guidance map and no high-risk explanatory block is left unclassified.
+
+### BL-FRONTEND-P1-12 | Reusable guidance component system instead of one-off callouts
+- [x] **Status:** Complete (2026-03-20)
+- **Severity:** High
+- **Files:** `frontend/index.html`, `frontend/css/app.css`, `frontend/css/components/*.css`, `frontend/js/app.js`
+- **Problem:** Guidance is delivered through one-off callouts and inline blocks, so explanations are visually inconsistent and difficult to maintain.
+- **Impact:** The product feels dense and uneven even when the underlying instructional content is strong.
+- **Fix:** Build reusable guidance surfaces for persistent orientation, inline help, term explanation, next-step prompting, and optional deep-dive content. Migrate chart and profile flows first.
+- **Resolution:** Chart and profile now use `GuidanceStrip`, `GuidancePanel`, `InlineHint`, `TermExplainer`, `NextStepCard`, and `LearnMoreDisclosure`. The reusable DOM/CSS contract is documented in `docs/guidance-component-system.md`, and chart/profile field guidance now has visible inline support rather than depending only on hover tooltips.
+- **Verify:** Chart and profile use the new components; repeated ad hoc callouts are removed or marked for migration; accessibility remains intact.
+
+### BL-FRONTEND-P1-13 | Simplify navigation chrome without losing persistent guidance
+- [ ] **Status:** Open
+- **Severity:** High
+- **Files:** `frontend/index.html`, `frontend/js/app.js`, `frontend/js/ui-nav.js`, `frontend/css/components/sidebar.css`, `frontend/css/components/mobile.css`
+- **Problem:** The shell currently layers header actions, sidebar, bottom nav, sub-tabs, and a step guide on top of guidance banners and task surfaces.
+- **Impact:** Users face too many competing orientation systems at once, even though explanation coverage is high.
+- **Fix:** Reduce shell competition only after replacement orientation surfaces exist. Make the step guide contextual, consolidate account actions, and keep one explicit orientation line per major section.
+- **Verify:** Navigation chrome is simpler, but first-time users still know what the section is, why it matters, and what to do next.
+
+### BL-FRONTEND-P2-9 | Canonical glossary and term explainer source of truth
+- [x] **Status:** Complete (2026-03-20)
+- **Severity:** Medium
+- **Files:** `frontend/js/explanations.js`, `frontend/locales/en.json`, `frontend/index.html`, `frontend/js/tooltip.js`
+- **Problem:** The same system terms can be explained differently across tabs, tooltips, and help surfaces.
+- **Impact:** Users re-learn terminology repeatedly instead of building confidence through consistent explanation.
+- **Fix:** Create one canonical registry for term, plain-language meaning, why-it-matters sentence, deeper explanation, and approved aliases. All explainer surfaces must consume this source.
+- **Resolution:** `frontend/js/explanations.js` now contains a canonical registry for type, authority, strategy, definition, profile, and core concept terms, plus alias resolution and shared explainer helpers. `frontend/js/app.js` now uses the canonical glossary for live chart/profile display labels and explanation rendering. The contract and approved aliases are documented in `docs/guidance-glossary-registry.md`.
+- **Verify:** A term like authority, center, or profile has the same explanation logic wherever it appears.
+
+### BL-FRONTEND-P2-10 | Guidance should adapt by persona and journey state
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `frontend/js/app.js`, `frontend/index.html`, `frontend/js/controllers/*.js`
+- **Problem:** First-time users, returning users, and practitioners currently receive too much of the same explanatory weight even though their needs differ.
+- **Impact:** New users can still feel overwhelmed, while repeat users can feel slowed down by repeated expanded guidance.
+- **Fix:** Add deterministic state-aware guidance rules: first-time personal users get expanded orientation; returning users get compressed summaries with expand affordances; practitioners get workflow-first operational guidance.
+- **Verify:** Overview, chart, profile, and practitioner flows all render guidance appropriate to state without removing access to deeper meaning.
+
+### BL-FRONTEND-P2-11 | No guidance regression harness for repeated UI cleanup loops
+- [ ] **Status:** Open
+- **Severity:** Medium
+- **Files:** `docs/`, `tests/`, `frontend/index.html`, `frontend/js/app.js`
+- **Problem:** UI cleanup can currently ship without any structured check that users still understand the workflow and terms.
+- **Impact:** The team can improve aesthetics while accidentally weakening comprehension.
+- **Fix:** Create a guidance regression checklist and deterministic validation protocol for the core journeys. Make it part of every UI cleanup loop.
+- **Verify:** Future loops can prove that orientation, term explanation, and next-step coaching remain intact.
 
 ### BL-UX-C1 | Color system conflict — 3 competing token sets fight each other
 - [ ] **Status:** Deferred (P3 architecture — requires 600+ file changes. Tracked but out of scope for current sprint; design tokens already defined and functional)

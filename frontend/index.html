@@ -844,6 +844,44 @@
     <button class="identity-edit-btn" data-action="switchTab" data-arg0="chart" aria-label="Edit birth data" title="Edit birth data">✎</button>
   </div>
 </div>
+<section class="shell-orientation-strip" id="shellOrientationStrip" data-guidance-context="personal" aria-labelledby="shellOrientationTitle" hidden>
+  <div class="shell-orientation-icon" id="shellOrientationIcon" aria-hidden="true">☽</div>
+  <div class="shell-orientation-copy">
+    <p class="shell-orientation-eyebrow" id="shellOrientationEyebrow">Orientation</p>
+    <h2 class="shell-orientation-title" id="shellOrientationTitle">This section connects your chart to the next action</h2>
+    <p class="shell-orientation-text" id="shellOrientationText">Use the active workflow to translate your chart into a daily read, relationship comparison, or practitioner action.</p>
+  </div>
+  <div class="shell-orientation-next" aria-live="polite">
+    <p class="shell-orientation-next-label">Next step</p>
+    <p class="shell-orientation-next-text" id="shellOrientationNextText">Follow the recommended action for this section.</p>
+  </div>
+</section>
+<div class="step-guide" id="step-guide-banner" hidden>
+  <div class="step-item active-step" id="sg-chart" data-action="switchTab" data-arg0="chart" title="Enter your birth details">
+    <div class="step-num">1</div>
+    <div class="step-label"><strong>Your Chart</strong><span>Enter birth date, time &amp; place</span></div>
+  </div>
+  <div class="step-arrow">›</div>
+  <div class="step-item" id="sg-profile" data-action="switchTab" data-arg0="profile" title="Get your AI synthesis">
+    <div class="step-num">2</div>
+    <div class="step-label"><strong>Your Profile</strong><span>AI synthesis of your gates</span></div>
+  </div>
+  <div class="step-arrow">›</div>
+  <div class="step-item" id="sg-transits" data-action="switchTab" data-arg0="transits" title="See today's planetary influence">
+    <div class="step-num">3</div>
+    <div class="step-label"><strong>Today's Energy</strong><span>How planets affect you now</span></div>
+  </div>
+  <div class="step-arrow">›</div>
+  <div class="step-item" id="sg-checkins" data-action="switchTab" data-arg0="checkin" title="Track your daily alignment">
+    <div class="step-num">4</div>
+    <div class="step-label"><strong>Daily Check-ins</strong><span>Track alignment &amp; patterns</span></div>
+  </div>
+  <div class="step-arrow">›</div>
+  <div class="step-item" id="sg-compatibility" data-action="switchTab" data-arg0="composite" title="Check relationship compatibility">
+    <div class="step-num">5</div>
+    <div class="step-label"><strong>Compatibility</strong><span>Relationship energy analysis</span></div>
+  </div>
+</div>
 <!-- Main Content -->
 <div class="container">
 
@@ -867,37 +905,49 @@
       <button class="sub-tab" role="tab" aria-selected="false" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
     </div>
 
-    <!-- 5-step journey guide — stays visible as breadcrumb -->
-    <div class="step-guide" id="step-guide-banner">
-      <div class="step-item active-step" id="sg-chart" data-action="switchTab" data-arg0="chart" title="Enter your birth details">
-        <div class="step-num">1</div>
-        <div class="step-label"><strong>Your Chart</strong><span>Enter birth date, time &amp; place</span></div>
+    <section class="guidance-strip" id="chartGuidanceStrip" data-guidance-context="personal" aria-labelledby="chartGuidanceStripTitle">
+      <div class="guidance-strip-icon" aria-hidden="true">⊙</div>
+      <div class="guidance-strip-body">
+        <p class="guidance-strip-eyebrow">Orientation</p>
+        <h3 class="guidance-strip-title" id="chartGuidanceStripTitle">Your chart is the source for every later reading</h3>
+        <p class="guidance-strip-text">Start here to build the base map behind your profile, current energy, check-ins, and compatibility guidance.</p>
       </div>
-      <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-profile" data-action="switchTab" data-arg0="profile" title="Get your AI synthesis">
-        <div class="step-num">2</div>
-        <div class="step-label"><strong>Your Profile</strong><span>AI synthesis of your gates</span></div>
-      </div>
-      <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-transits" data-action="switchTab" data-arg0="transits" title="See today's planetary influence">
-        <div class="step-num">3</div>
-        <div class="step-label"><strong>Today's Energy</strong><span>How planets affect you now</span></div>
-      </div>
-      <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-checkins" data-action="switchTab" data-arg0="checkin" title="Track your daily alignment">
-        <div class="step-num">4</div>
-        <div class="step-label"><strong>Daily Check-ins</strong><span>Track alignment & patterns</span></div>
-      </div>
-      <div class="step-arrow">›</div>
-      <div class="step-item" id="sg-compatibility" data-action="switchTab" data-arg0="composite" title="Check relationship compatibility">
-        <div class="step-num">5</div>
-        <div class="step-label"><strong>Compatibility</strong><span>Relationship energy analysis</span></div>
-      </div>
-    </div>
+    </section>
 
 
     <div class="card" id="chartFormCard">
       <div class="card-title"><span class="icon-chart"></span> <span data-i18n="chart.birthData">Birth Data</span></div>
+      <div class="guidance-panel" id="chartGuidancePanel" data-guidance-context="personal" aria-labelledby="chartGuidancePanelTitle">
+        <div class="guidance-panel-main">
+          <p class="guidance-panel-eyebrow">How this works</p>
+          <h3 class="guidance-panel-title" id="chartGuidancePanelTitle">We translate one birth moment into the mechanics of your design</h3>
+          <p class="guidance-panel-text">Birth date, time, and place let the system calculate your type, authority, profile, centers, gates, and channels from one shared source. That prevents later readings from drifting away from your actual chart.</p>
+          <div class="guidance-inline-hint-list" aria-label="Chart preparation notes">
+            <p class="guidance-inline-hint">If you know your exact birth time, use it. Gate positions and chart mechanics can shift within a couple of hours.</p>
+            <p class="guidance-inline-hint">Location matters because timezone history and coordinates are part of the calculation, not just display.</p>
+          </div>
+        </div>
+        <aside class="term-explainer" data-guidance-context="personal" aria-label="Energy Blueprint explainer">
+          <p class="term-explainer-label">Term explainer</p>
+          <h4 class="term-explainer-term">Energy Blueprint</h4>
+          <p class="term-explainer-meaning">Your Energy Blueprint is the core map the app reads from before it generates interpretation.</p>
+          <p class="term-explainer-impact">Why it matters: profile synthesis, transit interpretation, and next-step coaching all become more trustworthy when they start from the same chart.</p>
+        </aside>
+      </div>
+      <div class="next-step-card" id="chartGuidanceNextStep" data-guidance-context="personal" aria-labelledby="chartNextStepTitle">
+        <div class="next-step-card-copy">
+          <p class="next-step-card-label">Next step</p>
+          <h3 class="next-step-card-title" id="chartNextStepTitle">Generate the chart once these three inputs feel solid</h3>
+          <p class="next-step-card-text">If your birth time is uncertain, start with your best verified estimate now and refine it later instead of blocking the whole journey.</p>
+        </div>
+      </div>
+      <details class="learn-more-disclosure" id="chartGuidanceLearnMore" data-guidance-context="personal">
+        <summary class="learn-more-summary">Learn what changes when the input is more precise</summary>
+        <div class="learn-more-content">
+          <p>Birth time affects more than the clock label. It can change gates, houses, and the way the later profile synthesis is framed. Exact is best, but a thoughtful estimate still gives you a workable starting point.</p>
+          <p>Once the chart exists, every later tab can explain your results in context instead of making you re-enter the same story from scratch.</p>
+        </div>
+      </details>
       <div class="form-grid">
         <div class="form-group">
           <label for="c-date" data-i18n="chart.birthDate">Birth Date</label>
@@ -905,24 +955,26 @@
         </div>
         <div class="form-group">
           <label for="c-time"><span data-i18n="chart.birthTime">Birth Time</span><span class="icon-info help-icon" tabindex="0" title="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE Energy Chart shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters." aria-label="Enter exact 24-hour time (HH:MM). Sun and Earth gates change every ~4 days. Moon changes every ~2.5 days. Your ENTIRE Energy Chart shifts every ~2 hours as the wheel rotates through different gate positions. Accuracy matters."></span></label>
-          <input type="time" id="c-time" value="14:30" required aria-required="true" aria-label="Birth time">
+          <input type="time" id="c-time" value="14:30" required aria-required="true" aria-label="Birth time" aria-describedby="c-time-hint">
+          <p class="guidance-inline-hint" id="c-time-hint">Exact time is ideal because your chart mechanics can shift within roughly two hours.</p>
         </div>
         </div>
         <div class="form-group full">
           <label for="c-location"><span data-i18n="chart.birthLocation">Birth Location</span><span class="icon-info help-icon" tabindex="0" title="Enter city and country (e.g., 'Tampa, FL' or 'London, UK'). Click Look Up to geocode coordinates. We need latitude/longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is  accurate enough." aria-label="Enter city and country, for example Tampa FL or London UK. Click Look Up to geocode coordinates. We need latitude and longitude to calculate houses for astrology and timezone offset for UTC conversion. Within 50 miles is accurate enough."></span></label>
           <div class="input-row">
             <input type="text" id="c-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
-              data-geocode-target="c" aria-label="Birth location">
+              data-geocode-target="c" aria-label="Birth location" aria-describedby="c-location-hint">
             <button type="button" class="btn-secondary btn-lookup" data-action="geocodeLocation" data-arg0="c" id="c-geoBtn"
               data-i18n="chart.lookupLocation">Look Up</button>
           </div>
+          <p class="guidance-inline-hint" id="c-location-hint">Use the nearest city you trust. The lookup fills coordinates and timezone so later astrology and transit layers stay anchored.</p>
           <div id="c-geo-status" class="geo-status"></div>
           <input type="hidden" id="c-lat">
           <input type="hidden" id="c-lng">
         </div>
         <div class="form-group full">
           <label for="c-tz"><span data-i18n="chart.timezone">Timezone</span><span class="icon-info help-icon" tabindex="0" title="IANA timezone identifier (e.g., 'America/New_York'). Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes ARE accounted for." aria-label="IANA timezone identifier, for example America/New_York. Auto-filled by geocoder. Required to convert local birth time to UTC for planetary ephemeris calculations. Historical timezone changes are accounted for."></span> <span class="label-hint">(auto-filled by Look Up)</span></label>
-          <select id="c-tz">
+          <select id="c-tz" aria-describedby="c-tz-hint">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
             <option value="America/Denver">America/Denver (MST/MDT)</option>
@@ -955,6 +1007,7 @@
             <option value="Pacific/Auckland">Pacific/Auckland</option>
             <option value="UTC">UTC</option>
           </select>
+          <p class="guidance-inline-hint" id="c-tz-hint">Timezone is part of the calculation, not decoration. The lookup usually sets the right historical timezone for you.</p>
         </div>
       </div>
       <div id="chartBtnRow">
@@ -1005,13 +1058,14 @@
       <button class="sub-tab" role="tab" aria-selected="false" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
       <button class="sub-tab active" role="tab" aria-selected="true" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
     </div>
-<div class="feature-callout">
-  <span class="feature-callout-icon">⬡</span>
-  <div class="feature-callout-body">
-    <p class="feature-callout-title">AI-Powered Synthesis</p>
-    <p class="feature-callout-text">Combines 64 energy gates, Frequency Keys, astrology, numerology, Mayan Tzolkin, BaZi, Sabian Symbols, Chiron &amp; Lilith into one deep reading. Takes 15–30 seconds. Sign-in required to save.</p>
-  </div>
-</div>
+    <section class="guidance-strip" id="profileGuidanceStrip" data-guidance-context="personal" aria-labelledby="profileGuidanceStripTitle">
+      <div class="guidance-strip-icon" aria-hidden="true">⬡</div>
+      <div class="guidance-strip-body">
+        <p class="guidance-strip-eyebrow">Orientation</p>
+        <h3 class="guidance-strip-title" id="profileGuidanceStripTitle">The AI Profile turns your chart into a guided reading</h3>
+        <p class="guidance-strip-text">Once your chart exists, this screen synthesizes the major systems into one explanation you can actually act on.</p>
+      </div>
+    </section>
     <div id="profileQuotaNotice" class="alert alert-warn" style="display:none">
       <strong>⚡ Usage Limit</strong><br>
       <span id="profileQuotaText"></span>
@@ -1019,6 +1073,30 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-profile"></span> <span data-i18n="profile.generateTitle">Generate Prime Self Profile</span></div>
+      <div class="guidance-panel" id="profileGuidancePanel" data-guidance-context="personal" aria-labelledby="profileGuidancePanelTitle">
+        <div class="guidance-panel-main">
+          <p class="guidance-panel-eyebrow">What you get</p>
+          <h3 class="guidance-panel-title" id="profileGuidancePanelTitle">A synthesis that connects your chart to one clear question or life theme</h3>
+          <p class="guidance-panel-text">The default path is the full blueprint. Use advanced controls only when you want to narrow the reading toward relationships, career, daily focus, or another specific theme.</p>
+          <div class="guidance-inline-hint-list" aria-label="Profile preparation notes">
+            <p class="guidance-inline-hint">You do not need to fill every option to get value. The strongest first read is usually the default Full Blueprint.</p>
+            <p class="guidance-inline-hint">A specific question helps the synthesis prioritize what matters, but leaving it blank still produces a complete reading.</p>
+          </div>
+        </div>
+        <aside class="term-explainer" data-guidance-context="personal" aria-label="AI Profile explainer">
+          <p class="term-explainer-label">Term explainer</p>
+          <h4 class="term-explainer-term">AI Profile</h4>
+          <p class="term-explainer-meaning">The AI Profile is an interpretive layer built on top of your chart, not a replacement for it.</p>
+          <p class="term-explainer-impact">Why it matters: it turns raw mechanics into plain-language patterns, priorities, and next actions you can test in real life.</p>
+        </aside>
+      </div>
+      <details class="learn-more-disclosure" id="profileGuidanceLearnMore" data-guidance-context="personal">
+        <summary class="learn-more-summary">Learn how the synthesis stays grounded instead of sounding generic</summary>
+        <div class="learn-more-content">
+          <p>The reading starts from your chart, then layers optional systems for extra context. That keeps the guidance anchored to the same underlying design instead of stitching together unrelated personality copy.</p>
+          <p>Use advanced options when you want to sharpen the lens, not because the default path is incomplete.</p>
+        </div>
+      </details>
       <div class="form-grid">
         <div class="form-group">
           <label data-i18n="chart.birthDate">Birth Date</label>
@@ -1042,7 +1120,7 @@
         </div>
         <div class="form-group full">
           <label for="p-tz"><span data-i18n="chart.timezone">Timezone</span> <span class="label-hint">(auto-filled by Look Up)</span></label>
-          <select id="p-tz">
+          <select id="p-tz" aria-describedby="p-tz-hint">
             <option value="America/New_York">America/New_York (EST/EDT)</option>
             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
             <option value="America/Denver">America/Denver (MST/MDT)</option>
@@ -1075,18 +1153,22 @@
             <option value="Pacific/Auckland">Pacific/Auckland</option>
             <option value="UTC">UTC</option>
           </select>
+          <p class="guidance-inline-hint" id="p-tz-hint">Timezone keeps your synthesis anchored to the same chart logic you generated earlier.</p>
         </div>
         <div class="form-group full">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:var(--bg3)">
-            <div style="flex:1;min-width:240px">
-              <div style="font-weight:700;color:var(--text);margin-bottom:6px">Start with one clear action</div>
-              <p id="profileDefaultSummary" style="margin:0;font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.6">Default: Full Blueprint with your core systems. Open advanced options only if you want to target a theme, ask a specific question, or add more depth systems.</p>
+          <div class="next-step-card" id="profileGuidanceNextStep" data-guidance-context="personal" aria-labelledby="profileNextStepTitle">
+            <div class="next-step-card-copy">
+              <p class="next-step-card-label">Recommended path</p>
+              <h3 class="next-step-card-title" id="profileNextStepTitle">Start with one clear action</h3>
+              <p id="profileDefaultSummary" class="next-step-card-text">Default: Full Blueprint with your core systems. Open advanced options only if you want to target a theme, ask a specific question, or add more depth systems.</p>
             </div>
-            <button type="button" class="btn-secondary btn-sm" id="profileAdvancedToggle" data-action="toggleProfileAdvanced" aria-expanded="false" aria-controls="profileAdvancedPanel">Customize this reading</button>
+            <div class="next-step-card-actions">
+              <button type="button" class="btn-secondary btn-sm" id="profileAdvancedToggle" data-action="toggleProfileAdvanced" aria-expanded="false" aria-controls="profileAdvancedPanel">Customize this reading</button>
+            </div>
           </div>
         </div>
         <div id="profileAdvancedPanel" class="form-group full" style="display:none">
-          <div style="padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:rgba(255,255,255,0.02)">
+          <div class="guidance-panel guidance-panel--single guidance-panel--compact" data-guidance-context="personal">
             <label>Evaluation Type</label>
             <div class="eval-type-tabs" role="group" aria-label="Evaluation type">
               <button type="button" class="eval-type-btn" data-action="setEvalType" data-arg0="full-blueprint">⬡ Full Blueprint</button>
@@ -1106,9 +1188,9 @@
                 <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">⬡ Energy Blueprint</button>
                 <button type="button" class="sys-toggle-btn sys-toggle-core" disabled aria-pressed="true">✦ Forge</button>
               </div>
-              <p style="font-size:0.78em;color:var(--text-dim);margin:0.25rem 0 0">Starting with core systems — expand to add astrology, Frequency Keys, and more.</p>
-              <details id="sys-expander" style="margin-top:0.5rem">
-                <summary style="cursor:pointer;color:var(--gold);font-size:0.85em;padding:0.25rem 0">Add more depth systems ▾</summary>
+              <p class="guidance-inline-hint">Starting with core systems gives you the cleanest first synthesis. Add more layers only when you want extra nuance.</p>
+              <details id="sys-expander" class="learn-more-disclosure" data-guidance-context="personal">
+                <summary class="learn-more-summary">Add more depth systems</summary>
                 <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem">
                 <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="astrology" onclick="toggleSystem(this)" aria-pressed="true">☉ Astrology</button>
                 <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="geneKeys" onclick="toggleSystem(this)" aria-pressed="true">🔑 Frequency Keys</button>
@@ -1126,12 +1208,13 @@
                 <button type="button" class="sys-toggle-btn sys-toggle-on" data-system="diary" onclick="toggleSystem(this)" aria-pressed="true">📖 Life Events</button>
                 </div>
               </details>
-              <p class="label-hint" id="sysSummaryHint" style="margin-top:6px">All 13 optional systems active — deepest synthesis.</p>
+              <p class="guidance-inline-hint" id="sysSummaryHint">All 13 optional systems active — deepest synthesis.</p>
             </div>
 
             <div style="margin-top:var(--space-4)">
               <label for="p-question">Specific Question <span class="label-hint">(optional — leave blank for full profile)</span></label>
-              <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder" aria-label="Your burning question">
+              <input type="text" id="p-question" placeholder="e.g. What is my primary Forge? What are my best practices?" data-i18n-placeholder="profile.questionPlaceholder" aria-label="Your burning question" aria-describedby="p-question-hint">
+              <p class="guidance-inline-hint" id="p-question-hint">Ask about one situation, pattern, or decision if you want the synthesis to prioritize a sharper answer.</p>
             </div>
           </div>
         </div>
@@ -1799,7 +1882,7 @@
     <!-- Header card: status + add client -->
     <div class="card" id="pracHeaderCard">
       <div class="card-title"><span class="icon-star"></span> Practice Workspace</div>
-      <p class="card-intro">Your client roster, session tools, and directory listing — everything you need to serve clients and run your practice.</p>
+      <p class="card-intro" id="practitionerCardIntro">Your client roster, session tools, and directory listing — everything you need to serve clients and run your practice.</p>
 
       <!-- Client limit progress bar -->
       <div id="pracLimitBar" style="display:none;margin-bottom:var(--space-5)">

@@ -590,6 +590,7 @@ async function removeAgencySeat(memberId, emailLabel) {
 function renderPractitionerActivationPlan({ rosterData, profileData, invitationsData, directoryData, metricsData }) {
   const container = document.getElementById('pracActivationPlan');
   if (!container) return;
+  const intro = document.getElementById('practitionerCardIntro');
 
   const clients = Array.isArray(rosterData?.clients) ? rosterData.clients : [];
   const invitations = Array.isArray(invitationsData?.invitations) ? invitationsData.invitations : [];
@@ -660,6 +661,14 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
   const completed = checklist.filter(item => item.done).length;
   const nextStep = checklist.find(item => !item.done) || null;
   const practitionerName = practitioner?.display_name || practitioner?.business_name || 'Practitioner';
+  const guidanceState = typeof window.getGuidanceState === 'function' ? window.getGuidanceState() : null;
+  const showExpandedChecklist = !guidanceState || !guidanceState.hasSeenOnboarding || completed <= 1;
+
+  if (intro) {
+    intro.textContent = showExpandedChecklist
+      ? 'Run your setup in order so directory visibility, invitations, client charts, and session prep all become reliable parts of the workflow.'
+      : 'Your workspace is already in motion. Keep the next operational step visible, and expand the full checklist only when you need to audit setup progress.';
+  }
 
   // Analytics: fire activation_step_completed for newly-completed steps
   const storageKey = 'ps_activation_steps_fired';
@@ -678,6 +687,27 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
     trackEvent?.('practitioner', 'activation_checklist_complete', `${checklist.length}_steps`);
   }
 
+  const checklistCards = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-3);margin-top:var(--space-4)">
+        ${checklist.map(item => `
+          <div style="padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:var(--bg3)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-2)">
+              <strong style="font-size:var(--font-size-sm);color:var(--text)">${escapeHtml(item.title)}</strong>
+              ${renderPractitionerLifecycleBadge(item.done ? 'done' : 'next')}
+            </div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.6">${escapeHtml(item.description)}</div>
+            ${item.cta ? `<div style="margin-top:var(--space-3)">${item.cta}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>`;
+
+  const checklistMarkup = showExpandedChecklist
+    ? checklistCards
+    : `<details class="learn-more-disclosure" style="margin-top:var(--space-4)">
+        <summary>Review full activation checklist</summary>
+        ${checklistCards}
+      </details>`;
+
   container.innerHTML = `
     <div class="card" style="border-top:3px solid var(--gold)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3);flex-wrap:wrap">
@@ -691,18 +721,7 @@ function renderPractitionerActivationPlan({ rosterData, profileData, invitations
         </div>
       </div>
       ${nextStep ? `<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(212,175,55,0.22);border-radius:var(--space-2);background:rgba(212,175,55,0.08)"><strong style="color:var(--text)">Next step:</strong> <span style="color:var(--text-dim)">${escapeHtml(nextStep.title)}</span></div>` : '<div style="margin-top:var(--space-3);padding:var(--space-3);border:var(--border-width-thin) solid rgba(82,196,26,0.22);border-radius:var(--space-2);background:rgba(82,196,26,0.08);color:var(--text)">Your practitioner workspace is fully activated — every milestone is complete.</div>'}
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-3);margin-top:var(--space-4)">
-        ${checklist.map(item => `
-          <div style="padding:var(--space-3);border:var(--border-width-thin) solid var(--border);border-radius:var(--space-2);background:var(--bg3)">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-2)">
-              <strong style="font-size:var(--font-size-sm);color:var(--text)">${escapeHtml(item.title)}</strong>
-              ${renderPractitionerLifecycleBadge(item.done ? 'done' : 'next')}
-            </div>
-            <div style="font-size:var(--font-size-sm);color:var(--text-dim);line-height:1.6">${escapeHtml(item.description)}</div>
-            ${item.cta ? `<div style="margin-top:var(--space-3)">${item.cta}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
+      ${checklistMarkup}
     </div>`;
 }
 

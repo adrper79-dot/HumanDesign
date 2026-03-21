@@ -2971,10 +2971,10 @@
       "severity": "P1",
       "area": "mobile",
       "title": "Native iOS + Android app via Capacitor — App Store and Google Play distribution for D2C growth",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-20",
-      "lastSeen": "2026-03-20",
-      "resolvedAt": null,
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
       "file": [
         "capacitor.config.json",
         "frontend/js/native-bridge.js",
@@ -3010,19 +3010,26 @@
       "severity": "P1",
       "area": "security",
       "title": "Gene Keys IP legal closure — fair use assessment, disclaimer sufficiency, or license requirement for knowledgebase corpus",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-20",
-      "lastSeen": "2026-03-20",
-      "resolvedAt": null,
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
       "file": [
         "src/knowledgebase/genekeys/",
-        "workers/src/handlers/ai-synthesis.js",
-        "frontend/terms.html"
+        "src/prompts/rag.js",
+        "workers/src/handlers/profile.js",
+        "workers/src/handlers/profile-stream.js",
+        "frontend/terms.html",
+        "docs/GAP-006_GENE_KEYS_LEGAL_REVIEW_BRIEF_2026-03-20.md",
+        "docs/GAP-006_GENE_KEYS_COURTESY_OUTREACH_TEMPLATE.md",
+        "tests/genekeys-freeze.test.js",
+        "workers/src/engine-compat.js"
       ],
       "fix": [
         "Inventory all Gene Keys content: count files in src/knowledgebase/genekeys/, identify synthesis prompts referencing Gene Keys concepts",
         "Draft legal review brief: RAG usage pattern, corpus source, output format, existing Frequency Keys rebrand",
         "Submit brief to IP counsel for fair use / trademark analysis",
+        "Keep the corpus freeze enforceable with a deterministic regression guard while review is pending",
         "Implement outcome A (fair use): add attribution footer to Terms and synthesis output disclaimer",
         "Implement outcome B (license required): contact GeneKeys.com or commission original replacement corpus",
         "Implement outcome C (cease): replace corpus with original non-derived framework"
@@ -3037,7 +3044,8 @@
         "Do not remove or alter existing corpus until legal determination is received",
         "The frontend Frequency Keys rebrand must not be reverted",
         "This is an external dependency — internal prep ~4 hours; resolution timeline owned by legal"
-      ]
+      ],
+      "resolutionNote": "Outcome B implemented. The legal brief now distinguishes the triad-name layer from the internally authored descriptive prose layer, Terms includes attribution and non-affiliation language, the synthesis disclaimer hook is active via GENE_KEYS_DISCLAIMER in workers/src/engine-compat.js, and the corpus freeze remains enforced by tests/genekeys-freeze.test.js. Courtesy outreach template prepared; no corpus replacement required under the current ruling."
     },
     {
       "id": "GAP-007",
@@ -3117,6 +3125,296 @@
         "WebSocket upgrade must use existing Worker auth middleware pattern",
         "Durable Object handles practitioner disconnect gracefully — session persists if client still connected"
       ]
+    },
+    {
+      "id": "GAP-009",
+      "persona": "Product",
+      "severity": "P1",
+      "area": "frontend/guidance",
+      "title": "Guidance integrity architecture — simplify UI without reducing explanatory support for unfamiliar users",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "resolutionNote": "Completed the full guidance workstream: loop plan, inventory, reusable guidance surfaces, canonical glossary source, deterministic guidance state machine, navigation-shell simplification, and a regression harness with manual and automated gates. UI cleanup can now proceed against a documented guidance architecture instead of ad hoc copy preservation.",
+      "file": [
+        "docs/GUIDANCE_INTEGRITY_LOOP_PLAN_2026-03-20.md",
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "frontend/css/app.css",
+        "PRODUCT_PRINCIPLES.md"
+      ],
+      "fix": [
+        "Define a formal guidance architecture separating persistent orientation, inline help, interpretation, next-step coaching, and deep-dive education",
+        "Create a loop-based execution plan so guidance improvements can ship safely in repeated agent cycles",
+        "Require every future UI simplification task to preserve or remap explanatory coverage rather than silently deleting copy",
+        "Treat guidance quality as a first-class product system rather than incidental screen copy"
+      ],
+      "requirements": [
+        "Comply with PRODUCT_PRINCIPLES.md Principle 2, Principle 3, Principle 4, and Principle 6",
+        "Reduce visual noise without reducing guidance availability",
+        "Keep plain-language-first support available for first-time users at all times",
+        "Do not mix marketing copy and workflow guidance without explicit intent",
+        "All downstream loops must be executable independently by an agent with deterministic scope and validation"
+      ],
+      "acceptanceCriteria": [
+        "A canonical loop plan exists with ordered issues, files in scope, non-goals, and done definitions",
+        "Guidance-preservation rules are documented before any shell simplification work starts",
+        "Backlog and issue registry items exist for each loop in the workstream",
+        "Future UI cleanup can reference the plan without re-deriving product guidance strategy"
+      ],
+      "constraints": [
+        "Do not reduce explanatory support in order to simplify layout",
+        "Do not rely on hover-only interactions for core meaning",
+        "Do not introduce terminology drift or uncataloged definitions while restructuring guidance"
+      ]
+    },
+    {
+      "id": "GUIDE-001",
+      "persona": "UX",
+      "severity": "P1",
+      "area": "frontend/guidance",
+      "title": "Inventory every guidance surface and map each explanation to one source of truth",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "resolutionNote": "Created docs/guidance-surface-map.md covering the main SPA workflows, classifying guidance nodes as orientation / inline-help / interpretation / next-step / deep-dive. The map documents source-of-truth candidates, tooltip-only delivery risks, repeated promo-style callouts, and the top 20 drift/duplication risks so future UI cleanup loops can simplify layout without reducing explanatory coverage.",
+      "file": [
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "frontend/js/explanations.js",
+        "frontend/js/tooltip.js",
+        "frontend/locales/en.json",
+        "docs/guidance-surface-map.md"
+      ],
+      "fix": [
+        "Inventory all guidance surfaces in primary user journeys: overview, chart, profile, transits, check-in, composite, practitioner, onboarding",
+        "Classify each guidance node as orientation, inline-help, interpretation, next-step, or deep-dive",
+        "Document the canonical source of meaning for each guidance node and identify duplicate or conflicting explanations",
+        "Create docs/guidance-surface-map.md as the durable audit artifact used by subsequent loops"
+      ],
+      "requirements": [
+        "No guidance node may be removed in later loops unless this inventory identifies its replacement destination",
+        "Capture both visible and conditional guidance surfaces, including empty states and success states",
+        "Include file path, UI location, guidance category, and source-of-truth status for each node",
+        "Flag high-risk drift areas where similar terms are explained differently"
+      ],
+      "acceptanceCriteria": [
+        "Every major workflow has a guidance inventory entry",
+        "A source-of-truth status is recorded for all high-value explanatory surfaces",
+        "At least the top 20 drift or duplication risks are explicitly documented",
+        "Subsequent loops can reference the map without re-running discovery"
+      ],
+      "constraints": [
+        "No visual redesign in this issue",
+        "Do not rewrite explanatory meaning unless contradiction or product-principle violation forces it"
+      ]
+    },
+    {
+      "id": "GUIDE-002",
+      "persona": "Designer",
+      "severity": "P1",
+      "area": "frontend/guidance",
+      "title": "Create reusable guidance surfaces so explanation quality stops depending on one-off callouts",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "file": [
+        "frontend/index.html",
+        "frontend/css/app.css",
+        "frontend/css/components/",
+        "frontend/js/app.js",
+        "docs/guidance-component-system.md"
+      ],
+      "fix": [
+        "Create reusable UI patterns for GuidanceStrip, GuidancePanel, InlineHint, TermExplainer, NextStepCard, and LearnMoreDisclosure",
+        "Move chart and profile guidance to the new surfaces first as the reference implementation",
+        "Replace repeated feature-callout style blocks where feasible without reducing meaning",
+        "Ensure all new guidance surfaces are keyboard and screen-reader accessible"
+      ],
+      "requirements": [
+        "Core meaning must remain visible without hover",
+        "Components must support both practitioner and personal-user contexts",
+        "Visual style must align with the existing premium design system and token work",
+        "All new surfaces must be reusable and documented well enough for agentic repetition"
+      ],
+      "acceptanceCriteria": [
+        "Chart and profile flows render with the new guidance surfaces",
+        "One-off guidance patterns are reduced in those flows",
+        "Equivalent or better guidance coverage exists after migration",
+        "Component usage is documented for future loops"
+      ],
+      "constraints": [
+        "Do not expand the scope to full visual redesign",
+        "Do not delete any explanatory block unless its meaning is clearly remapped"
+      ],
+      "resolutionNote": "Added a reusable guidance surface system to chart and profile, replaced the profile one-off synthesis callout and custom advanced-summary block, documented the component contract, and exposed visible inline field guidance so core completion meaning no longer depends on hover in those flows."
+    },
+    {
+      "id": "GUIDE-003",
+      "persona": "Product",
+      "severity": "P1",
+      "area": "frontend/navigation",
+      "title": "Simplify navigation chrome while preserving persistent orientation and next-step guidance",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "resolutionNote": "Moved the core journey guide into shared shell space so the chart -> profile -> transits -> check-in -> composite path stays explicit beyond the chart tab, limited the social proof banner to overview, and added a shared shell orientation strip for workflows that previously lacked one visible explanation of purpose and next step.",
+      "file": [
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "frontend/js/ui-nav.js",
+        "frontend/css/components/sidebar.css",
+        "frontend/css/components/mobile.css"
+      ],
+      "fix": [
+        "Reduce competing shell surfaces only after replacement orientation surfaces exist",
+        "Make the step guide contextual to the workflows where it adds clarity instead of persisting universally",
+        "Consolidate account/admin controls so workflow guidance stays visually primary",
+        "Preserve one explicit answer on each major surface to what this section is, why it matters, and what to do next"
+      ],
+      "requirements": [
+        "Navigation simplification must not reduce access to explanatory context",
+        "Desktop and mobile may differ visually but must follow the same orientation logic",
+        "Any removed banner or callout must be replaced by a GuidanceStrip, GuidancePanel, or NextStepCard",
+        "The chart -> profile -> transits path must remain explicit for first-time users"
+      ],
+      "acceptanceCriteria": [
+        "Shell has fewer competing navigation surfaces than before",
+        "Orientation remains obvious for first-time users in the core flows",
+        "Users retain a visible next-step prompt after major milestones",
+        "No dead-end guidance regressions are introduced"
+      ],
+      "constraints": [
+        "Do not start this issue before GUIDE-001 and GUIDE-002 are available enough to preserve meaning",
+        "Do not remove access to practitioner workflows while simplifying consumer-facing chrome"
+      ]
+    },
+    {
+      "id": "GUIDE-004",
+      "persona": "Education",
+      "severity": "P2",
+      "area": "frontend/guidance",
+      "title": "Create one canonical glossary and term explainer source of truth across tabs",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-20",
+      "resolvedAt": "2026-03-20",
+      "file": [
+        "frontend/js/explanations.js",
+        "frontend/locales/en.json",
+        "frontend/index.html",
+        "frontend/js/tooltip.js",
+        "frontend/js/app.js",
+        "docs/guidance-glossary-registry.md"
+      ],
+      "fix": [
+        "Create canonical term records with system term, plain-language meaning, why-it-matters sentence, deeper explanation, and approved aliases",
+        "Route help icons, explainers, and future glossary surfaces to the same source",
+        "Align terminology with the product-principles and rebrand rules",
+        "Identify and retire duplicated per-tab term explanations where the canonical source is sufficient"
+      ],
+      "requirements": [
+        "Plain-language meaning must come before technical depth",
+        "Definitions must remain accessible without hover-only interaction",
+        "Canonical terms must support both personal and practitioner contexts where necessary",
+        "Do not introduce new terminology aliases without documenting them"
+      ],
+      "acceptanceCriteria": [
+        "A term registry exists and is consumed by at least one live explainer surface",
+        "Term explanations no longer drift between the primary tabs touched in the loop",
+        "Approved aliases are documented and traceable",
+        "Future guidance work can reuse the registry without duplicating definitions"
+      ],
+      "constraints": [
+        "No attempt to rewrite the entire educational corpus in this issue",
+        "Do not break existing explanation consumers while introducing the canonical registry"
+      ],
+      "resolutionNote": "Added a canonical glossary registry with approved aliases, plain-language meanings, why-it-matters sentences, and deeper explanations in frontend/js/explanations.js. Wired app.js chart/profile display labels and explanation helpers to the shared registry so live explainer surfaces now resolve through one source instead of separate display maps. Documented the registry and approved aliases in docs/guidance-glossary-registry.md."
+    },
+    {
+      "id": "GUIDE-005",
+      "persona": "Retention",
+      "severity": "P2",
+      "area": "frontend/guidance",
+      "title": "Make guidance state-aware by persona and journey stage instead of equally expanded for everyone",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "file": [
+        "frontend/js/app.js",
+        "frontend/index.html",
+        "frontend/js/controllers/",
+        "docs/guidance-state-machine.md"
+      ],
+      "fix": [
+        "Define deterministic rules for first-time vs returning guidance expansion",
+        "Differentiate personal-user and practitioner guidance emphasis while preserving access to deeper explanation",
+        "Compress guidance for returning users into summary-plus-expand surfaces rather than deleting it",
+        "Apply state-aware logic to overview, chart, profile, and practitioner workflows first"
+      ],
+      "requirements": [
+        "State logic must be driven by inspectable user state such as chartGenerated, profileGenerated, tier, and workflow context",
+        "First-time users must retain expanded plain-language support by default",
+        "Returning users must still be able to reach deeper meaning without friction",
+        "Practitioner workflows should prioritize operational guidance over consumer education banners"
+      ],
+      "acceptanceCriteria": [
+        "At least four core workflows render different guidance states based on deterministic criteria",
+        "No workflow becomes blank or generic after compression",
+        "User state transitions immediately refresh visible guidance where relevant",
+        "The state machine is documented for future loops"
+      ],
+      "constraints": [
+        "Do not use hidden heuristics or unstable timing-based logic for guidance state",
+        "Do not remove access to deeper explanation when compressing default presentation"
+      ]
+    },
+    {
+      "id": "GUIDE-006",
+      "persona": "QA",
+      "severity": "P2",
+      "area": "frontend/quality",
+      "title": "Add a guidance regression harness so UI cleanup loops cannot silently degrade comprehension",
+      "status": "resolved",
+      "firstSeen": "2026-03-20",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "file": [
+        "docs/guidance-regression-checklist.md",
+        "docs/guidance-manual-test-script.md",
+        "tests/",
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "tests/guidance-regression.test.js"
+      ],
+      "fix": [
+        "Create a guidance regression checklist covering orientation, term explanation reachability, next-step guidance, and milestone messaging",
+        "Add deterministic validation steps for overview, chart, profile, practitioner, and post-action states",
+        "Where practical, add lightweight grep/lint or test assertions for required guidance anchors",
+        "Make guidance regression validation part of future UI cleanup loop exit criteria"
+      ],
+      "requirements": [
+        "Regression protocol must be fast enough to run in repeated delivery loops",
+        "Checks must validate comprehension surfaces, not only DOM presence",
+        "Manual and automated validation steps should both be documented where automation is not yet practical",
+        "The harness must support agent execution without requiring a full UX rediscovery pass"
+      ],
+      "acceptanceCriteria": [
+        "A documented checklist exists and is applied to at least one completed guidance loop",
+        "Core journeys have deterministic guidance validation steps",
+        "Future UI changes can cite this harness as a release gate",
+        "Guidance regressions become visible before deploy"
+      ],
+      "constraints": [
+        "Do not block the workstream on full end-to-end automation in v1",
+        "Prefer lightweight, deterministic checks over broad subjective review only"
+      ],
+      "resolutionNote": "Added docs/guidance-regression-checklist.md and docs/guidance-manual-test-script.md, plus an automated Vitest guard in tests/guidance-regression.test.js and package script npm run test:guidance. The harness was executed successfully against the completed guidance loops so future UI cleanup can use it as a release gate."
     }
   ],
   "history": [

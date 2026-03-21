@@ -279,7 +279,7 @@ The entire product is a JavaScript SPA already running in Cloudflare Pages. Capa
 **Issue Registry ID:** GAP-006  
 **Impact:** Removes active IP liability ahead of any paid marketing / press activity  
 **Effort:** External (legal counsel review); internal prep estimated at 4 hours  
-**Status:** Blocked on external legal review  
+**Status:** Resolved — Outcome B implemented  
 
 ### Context
 
@@ -291,6 +291,7 @@ The frontend rebrand replaced "Gene Keys" with "Frequency Keys" on all user-faci
 ### Required Actions
 
 1. **Document the current exposure:** Produce a 1-page memo listing every file containing Gene Keys-derived content, distinguishing: (a) direct quotes, (b) derived descriptions, (c) structural references only.
+   - Completed internally in `docs/GAP-006_GENE_KEYS_LEGAL_REVIEW_BRIEF_2026-03-20.md`
 2. **Brief legal counsel** with the memo. Ask for determination on: (a) whether RAG-based reference to 64 Gene Keys descriptions requires a license; (b) whether a trademark disclaimer is sufficient; (c) whether "Frequency Keys" as a brand is clear of conflict.
 3. **Implement one of three outcomes based on legal decision:**
    - **OK as fair use:** Add attribution notice to Terms + disclaimer in synthesis output footer. Close this item.
@@ -303,6 +304,10 @@ The frontend rebrand replaced "Gene Keys" with "Frequency Keys" on all user-faci
 - Written legal determination on file (even if informal counsel email)
 - One of three outcomes implemented per above
 - No active unresolved IP liability on Gene Keys content
+
+### Resolution Note
+
+Outcome B adopted. The brief was corrected to distinguish the triad-name layer from the internally authored descriptive prose layer. `frontend/terms.html` now includes attribution and non-affiliation language, `workers/src/engine-compat.js` now sets `GENE_KEYS_DISCLAIMER` so the synthesis disclaimer path is active, and the freeze guard in `tests/genekeys-freeze.test.js` was validated. Courtesy outreach remains recommended but is not blocking closure.
 
 ---
 
