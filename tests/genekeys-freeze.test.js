@@ -8,34 +8,47 @@ function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8');
 }
 
-describe('GAP-006 corpus freeze guard', () => {
-  it('keeps the Gene Keys corpus directory frozen to the expected files', () => {
+describe('GAP-006 Frequency Keys corpus — vocabulary replacement completion', () => {
+  it('maintains corpus structure: keys.json, generate-missing.js, and README', () => {
     const dir = path.join(ROOT, 'src/knowledgebase/genekeys');
     const files = fs.readdirSync(dir).sort();
 
     expect(files).toEqual(['README.md', 'generate-missing.js', 'keys.json']);
   });
 
-  it('keeps the corpus freeze notice and counsel hooks in place', () => {
+  it('documents that vocabulary replacement is complete and freeze is lifted', () => {
     const kbReadme = read('src/knowledgebase/genekeys/README.md');
-    const rag = read('src/prompts/rag.js');
-    const terms = read('frontend/terms.html');
-    const engineCompat = read('workers/src/engine-compat.js');
-
-    expect(kbReadme).toContain('STATUS: FROZEN');
+    
+    expect(kbReadme).toContain('REPLACEMENT COMPLETE');
     expect(kbReadme).toContain('GAP-006');
-    expect(rag).toContain('GENE_KEYS_DISCLAIMER');
-    expect(engineCompat).toContain('GENE_KEYS_DISCLAIMER');
-    expect(terms).toContain('Third-Party Framework Notice');
-    expect(terms).toContain('Gene Keys is a registered trademark of Gene Keys Publishing Ltd.');
+    expect(kbReadme).toContain('Noise/Signal/Frequency');
+    expect(kbReadme).toContain('no borrowed content');
   });
 
-  it('documents the legal review packet for counsel', () => {
-    const brief = read('docs/GAP-006_GENE_KEYS_LEGAL_REVIEW_BRIEF_2026-03-20.md');
+  it('maintains GENE_KEYS_DISCLAIMER scaffold as inert infrastructure', () => {
+    const rag = read('src/prompts/rag.js');
+    const engineCompat = read('workers/src/engine-compat.js');
 
-    expect(brief).toContain('Two-Layer IP Distinction');
-    expect(brief).toContain('Outcome B: Attribution + disclaimer sufficient');
-    expect(brief).toContain('triad names');
-    expect(brief).toContain('Courtesy outreach to Gene Keys Publishing Ltd remains recommended');
+    expect(rag).toContain('GENE_KEYS_DISCLAIMER');
+    expect(engineCompat).toContain('GENE_KEYS_DISCLAIMER');
+  });
+
+  it('updates terms.html attribution to reflect original Prime Self system', () => {
+    const terms = read('frontend/terms.html');
+
+    expect(terms).toContain('Framework Attribution');
+    expect(terms).toContain('Frequency Keys');
+    expect(terms).toContain('Noise, Signal, Frequency');
+    expect(terms).not.toContain('Third-Party Framework Notice');
+    expect(terms).not.toContain('inspired by the Gene Keys');
+  });
+
+  it('documents the corpus replacement process', () => {
+    const brief = read('docs/GAP-006_FREQUENCY_KEYS_CORPUS_REPLACEMENT_PLAN_2026-03-20.md');
+
+    expect(brief).toContain('Noise / Signal / Frequency');
+    expect(brief).toContain('Prime Self Philosophical Foundation');
+    expect(brief).toContain('192 replacement labels');
+    expect(brief).toContain('Vocabulary Standard Reference');
   });
 });
