@@ -161,6 +161,21 @@
   - Complete: added checklist, deterministic manual journey script, and automated Vitest harness
   - Validation: `npm run test:guidance`
 
+### UI Fit Loop (completed follow-on pass)
+
+16. **FIT-001: Unify arrival model** `(1 day)`
+  - Complete: signed-out overview and first-run onboarding now align to one chart-first personal path, with practitioner entry preserved as a secondary explicit route
+
+17. **FIT-002: Remove profile birth-data duplication** `(1 day)`
+  - Complete: Profile now renders a chart-source summary shell, keeps existing `p-*` fields for payload compatibility, and disables synthesis controls until chart context exists
+
+18. **FIT-003: Simplify shell chrome** `(1 day)`
+  - Complete: removed redundant Chart/Profile sub-tabs and consolidated signed-in account actions behind one account menu surface
+
+19. **FIT-004: UI fit regression gate** `(0.5 day)`
+  - Complete: strengthened `tests/guidance-regression.test.js` to guard chart-first arrival anchors, profile chart-source shell, and account-menu shell
+  - Validation: `npm run test:guidance`
+
 ---
 
 ## How to Use This File

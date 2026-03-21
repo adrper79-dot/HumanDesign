@@ -116,6 +116,99 @@ const TIER_DISPLAY = {
   guide:        { label: 'PRACTITIONER',  badge: 'tier-practitioner', canUpgrade: true,  isPro: true  },
 };
 
+function closeAccountMenu() {
+  const menuBtn = document.getElementById('accountMenuBtn');
+  const menuPanel = document.getElementById('accountMenuPanel');
+  if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+  if (menuPanel) menuPanel.classList.add('hidden');
+}
+
+function toggleAccountMenu() {
+  const menuBtn = document.getElementById('accountMenuBtn');
+  const menuPanel = document.getElementById('accountMenuPanel');
+  if (!menuBtn || !menuPanel || menuBtn.style.display === 'none') return;
+  const isOpen = !menuPanel.classList.contains('hidden');
+  menuBtn.setAttribute('aria-expanded', String(!isOpen));
+  menuPanel.classList.toggle('hidden', isOpen);
+}
+
+function updateAccountMenuVisibility() {
+  const menuBtn = document.getElementById('accountMenuBtn');
+  const menuPanel = document.getElementById('accountMenuPanel');
+  if (!menuBtn || !menuPanel) return;
+
+  const managedIds = ['billingBtn', 'exportDataBtn', 'securitySettingsBtn', 'deleteAccountBtn', 'logoutBtn'];
+  const hasVisibleItem = managedIds.some((id) => {
+    const el = document.getElementById(id);
+    return el && el.style.display !== 'none';
+  });
+
+  menuBtn.style.display = hasVisibleItem ? '' : 'none';
+  if (!hasVisibleItem) closeAccountMenu();
+}
+
+function syncProfileBirthFieldsFromChart() {
+  const fieldPairs = [
+    ['c-date', 'p-date'],
+    ['c-time', 'p-time'],
+    ['c-location', 'p-location'],
+    ['c-tz', 'p-tz'],
+    ['c-lat', 'p-lat'],
+    ['c-lng', 'p-lng'],
+  ];
+
+  fieldPairs.forEach(([sourceId, targetId]) => {
+    const source = document.getElementById(sourceId);
+    const target = document.getElementById(targetId);
+    if (source && target && source.value) target.value = source.value;
+  });
+}
+
+function formatProfileBirthSummary() {
+  const date = document.getElementById('p-date')?.value || 'Birth date pending';
+  const time = document.getElementById('p-time')?.value || 'Time estimate not set';
+  const location = document.getElementById('p-location')?.value || 'Location pending';
+  const timezone = document.getElementById('p-tz')?.value || 'Timezone pending';
+  return `${date} • ${time} • ${location} • ${timezone}`;
+}
+
+function updateProfileBirthDataShell() {
+  syncProfileBirthFieldsFromChart();
+
+  const state = getGuidanceState();
+  const summaryCard = document.getElementById('profileBirthDataSummaryCard');
+  const summaryTitle = document.getElementById('profileBirthDataSummaryTitle');
+  const summaryText = document.getElementById('profileBirthDataSummaryText');
+  const fields = document.getElementById('profileBirthDataFields');
+  const generateBtn = document.getElementById('profileBtn');
+  const advancedBtn = document.getElementById('profileAdvancedToggle');
+
+  if (fields) fields.hidden = true;
+  if (summaryCard) summaryCard.hidden = false;
+
+  const hasChartContext = !!(
+    state.hasChart
+    && document.getElementById('p-date')?.value
+    && document.getElementById('p-location')?.value
+    && document.getElementById('p-tz')?.value
+  );
+
+  if (summaryTitle) {
+    summaryTitle.textContent = hasChartContext
+      ? 'AI Profile uses the chart you already generated'
+      : 'Generate your chart first, then return for synthesis';
+  }
+
+  if (summaryText) {
+    summaryText.textContent = hasChartContext
+      ? `Using chart source: ${formatProfileBirthSummary()}`
+      : 'The profile now reads from your chart as the canonical source. Build or update the chart first, then this screen will use the same verified data automatically.';
+  }
+
+  if (generateBtn) generateBtn.disabled = !hasChartContext;
+  if (advancedBtn) advancedBtn.disabled = !hasChartContext;
+}
+
 // ── Auth Helpers ──────────────────────────────────────────────
 function updateAuthUI() {
   const statusEl = document.getElementById('authStatusText');
@@ -138,6 +231,7 @@ function updateAuthUI() {
     if (exportDataEl) exportDataEl.style.display = '';
     if (securityBtnEl) securityBtnEl.style.display = '';
     if (notifBellEl) notifBellEl.style.display = '';
+    updateAccountMenuVisibility();
 
     // Update tier badge and billing/upgrade buttons from cached profile
     const user = currentUser;
@@ -156,6 +250,7 @@ function updateAuthUI() {
       upgradeEl.style.display  = cfg.canUpgrade ? '' : 'none';
       // Billing button: visible when user has any subscription
       billingEl.style.display  = (tier !== 'free') ? '' : 'none';
+      updateAccountMenuVisibility();
       
       // UX-007: Update welcome message based on tier and chart generation status
       updateWelcomeMessage();
@@ -166,6 +261,7 @@ function updateAuthUI() {
       badgeEl.style.display    = 'none';
       upgradeEl.style.display  = 'none';
       billingEl.style.display  = 'none';
+      updateAccountMenuVisibility();
       updateProfileAdvancedUI();
       applyGuidanceState();
     }
@@ -181,6 +277,8 @@ function updateAuthUI() {
     badgeEl.style.display  = 'none';
     upgradeEl.style.display  = 'none';
     billingEl.style.display  = 'none';
+    closeAccountMenu();
+    updateAccountMenuVisibility();
     updateProfileAdvancedUI();
     applyGuidanceState();
   }
@@ -244,6 +342,7 @@ function applyGuidanceState() {
     setText('profileGuidanceStripTitle', state.hasProfile
       ? 'Your AI Profile is ready to revisit with a sharper lens'
       : 'Your chart is ready to turn into a guided reading');
+
   } else if (state.firstTime) {
     setText('chartGuidanceStripTitle', 'Your chart is the source for every later reading');
     setText('chartNextStepTitle', 'Generate the chart once these three inputs feel solid');
@@ -310,6 +409,7 @@ function applyGuidanceState() {
         : 'Your chart is ready. Finish your own profile next so session tools and session prep have a grounded baseline before more client work.');
   }
 
+  updateProfileBirthDataShell();
   updateShellChrome();
 }
 
@@ -2293,32 +2393,7 @@ function switchTab(id, btn) {
 
   // UX-005: Auto-sync birth data from Chart tab to Profile tab
   if (id === 'profile') {
-    const cDate = document.getElementById('c-date')?.value;
-    const cTime = document.getElementById('c-time')?.value;
-    const cLat = document.getElementById('c-lat')?.value;
-    const cLng = document.getElementById('c-lng')?.value;
-    const cTz = document.getElementById('c-tz')?.value;
-    const cLoc = document.getElementById('c-location')?.value;
-    
-    // Only pre-fill if profile fields are empty (don't overwrite user changes)
-    if (cDate && !document.getElementById('p-date').value) {
-      document.getElementById('p-date').value = cDate;
-    }
-    if (cTime && !document.getElementById('p-time').value) {
-      document.getElementById('p-time').value = cTime;
-    }
-    if (cLat && !document.getElementById('p-lat').value) {
-      document.getElementById('p-lat').value = cLat;
-    }
-    if (cLng && !document.getElementById('p-lng').value) {
-      document.getElementById('p-lng').value = cLng;
-    }
-    if (cLoc && !document.getElementById('p-location').value) {
-      document.getElementById('p-location').value = cLoc;
-    }
-    if (cTz && !document.getElementById('p-tz').value) {
-      document.getElementById('p-tz').value = cTz;
-    }
+    updateProfileBirthDataShell();
   }
 
   // Pre-fill today's date in timing tool
@@ -2466,7 +2541,10 @@ function toggleSidebarCollapse() {
 
 // Close sidebar on Escape key
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeSidebar();
+  if (e.key === 'Escape') {
+    closeSidebar();
+    closeAccountMenu();
+  }
 });
 
 function toggleMoreMenu(e) {
@@ -2493,6 +2571,7 @@ function closeMoreMenu() {
 // Close more menu when clicking outside
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.more-menu-btn')) closeMoreMenu();
+  if (!e.target.closest('#accountMenuWrap')) closeAccountMenu();
 });
 
 // Step guide: tracks user progress through the 3-step journey
@@ -7510,6 +7589,8 @@ function updateProfileAdvancedUI() {
   const toggle = document.getElementById('profileAdvancedToggle');
   const summary = document.getElementById('profileDefaultSummary');
   if (!panel || !toggle || !summary) return;
+
+  updateProfileBirthDataShell();
 
   const guidanceState = getGuidanceState();
   const defaultExpanded = isProfilePowerUser() || (!guidanceState.hasProfile && !guidanceState.hasSeenOnboarding);

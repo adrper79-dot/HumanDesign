@@ -14,12 +14,18 @@ describe('guidance regression harness', () => {
 
     expect(indexHtml).toContain('id="shellOrientationStrip"');
     expect(indexHtml).toContain('id="step-guide-banner"');
+    expect(indexHtml).toContain('Start with your chart');
+    expect(indexHtml).toContain('id="accountMenuWrap"');
+    expect(indexHtml).toContain('id="accountMenuBtn"');
+    expect(indexHtml).toContain('id="accountMenuPanel"');
     expect(indexHtml).toContain('id="chartGuidanceStrip"');
     expect(indexHtml).toContain('id="chartGuidancePanel"');
     expect(indexHtml).toContain('id="chartGuidanceNextStep"');
     expect(indexHtml).toContain('id="profileGuidanceStrip"');
     expect(indexHtml).toContain('id="profileGuidancePanel"');
     expect(indexHtml).toContain('id="profileGuidanceNextStep"');
+    expect(indexHtml).toContain('id="profileBirthDataSummaryCard"');
+    expect(indexHtml).toContain('id="profileBirthDataFields" hidden');
     expect(indexHtml).toContain('id="pracActivationPlan"');
     expect(indexHtml).toContain('id="practitionerCardIntro"');
   });
@@ -28,10 +34,13 @@ describe('guidance regression harness', () => {
     const appJs = read('frontend/js/app.js');
 
     expect(appJs).toContain('function getGuidanceState()');
+    expect(appJs).toContain('function updateAccountMenuVisibility()');
+    expect(appJs).toContain('function updateProfileBirthDataShell()');
     expect(appJs).toContain('function updateShellChrome(');
     expect(appJs).toContain('const CORE_JOURNEY_TABS = new Set');
     expect(appJs).toContain('journeyGuide.hidden = !showJourney;');
     expect(appJs).toContain('socialProofBanner.hidden = tabId !== \'overview\';');
+    expect(appJs).toContain('if (!e.target.closest(\'#accountMenuWrap\')) closeAccountMenu();');
     expect(appJs).toContain('updateShellChrome();');
   });
 

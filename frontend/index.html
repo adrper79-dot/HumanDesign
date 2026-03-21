@@ -531,12 +531,17 @@
     </button>
     <div class="auth-status" id="authStatusText" data-i18n="auth.notSignedIn">Not signed in</div>
     <button class="btn-secondary btn-sm" id="upgradeBtn" style="display:none" data-action="openPricingModal">⚡ Upgrade</button>
-    <button class="btn-secondary btn-sm" id="billingBtn" style="display:none" data-action="openBillingPortal" data-i18n="auth.billing">Billing</button>
     <button class="btn-secondary btn-sm" id="authBtn" data-action="openAuthOverlay" data-i18n="auth.signIn">Sign In</button>
-    <button class="btn-danger btn-sm" id="logoutBtn" style="display:none" data-action="logout" data-i18n="auth.signOut">Sign Out</button>
-    <button class="btn-secondary btn-sm" id="exportDataBtn" style="display:none" data-action="exportMyData">Export Data</button>
-    <button class="btn-secondary btn-sm" id="securitySettingsBtn" style="display:none" data-action="openSecuritySettings" title="Security settings (2FA)">🔐 Security</button>
-    <button class="btn-danger btn-sm" id="deleteAccountBtn" style="display:none" data-action="deleteAccount">Delete Account</button>
+    <div class="account-menu-wrap" id="accountMenuWrap">
+      <button class="btn-secondary btn-sm" id="accountMenuBtn" style="display:none" data-action="toggleAccountMenu" aria-expanded="false" aria-controls="accountMenuPanel">Account ▾</button>
+      <div class="account-menu-panel hidden" id="accountMenuPanel" role="menu" aria-label="Account actions">
+        <button class="account-menu-item btn-secondary btn-sm" id="billingBtn" style="display:none" data-action="openBillingPortal" data-i18n="auth.billing">Billing</button>
+        <button class="account-menu-item btn-secondary btn-sm" id="exportDataBtn" style="display:none" data-action="exportMyData">Export Data</button>
+        <button class="account-menu-item btn-secondary btn-sm" id="securitySettingsBtn" style="display:none" data-action="openSecuritySettings" title="Security settings (2FA)">🔐 Security</button>
+        <button class="account-menu-item btn-danger btn-sm" id="deleteAccountBtn" style="display:none" data-action="deleteAccount">Delete Account</button>
+        <button class="account-menu-item btn-danger btn-sm" id="logoutBtn" style="display:none" data-action="logout" data-i18n="auth.signOut">Sign Out</button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -562,7 +567,7 @@
       <div class="frm-step active" id="frm-step-1">
         <div class="frm-step-icon" aria-hidden="true">⊙</div>
         <h2 id="frm-title" class="frm-step-title">Welcome to Prime Self</h2>
-        <p class="frm-step-body">Nine ancient systems. One synthesis. Yours alone.<br><br>In the next 60 seconds, enter your birth details. In the next 30 seconds after that, you'll read something about yourself that finally makes sense.</p>
+        <p class="frm-step-body">Start with your chart once, then let the rest of the product build from that same source.<br><br>In the next minute, enter your birth details. After that, Prime Self can turn the same chart into a profile, daily guidance, and compatibility insight.</p>
         <div class="frm-what-you-need">
           <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>exact birth date</strong></span></div>
           <div class="frm-need-item"><span class="frm-check">✓</span><span>Your <strong>birth time</strong> (as precise as possible)</span></div>
@@ -889,22 +894,17 @@
   <div class="tab-content" id="tab-overview" role="tabpanel" aria-labelledby="btn-home">
     <div id="overviewContent">
       <div class="card card-welcome">
-        <div class="welcome-icon">⚷</div>
-        <h3 class="welcome-title">Run your Energy Blueprint practice in one place</h3>
-        <p class="welcome-text">Client roster, session prep AI, branded PDF exports, composite charts, and a public directory listing so clients can find and book you directly. The complete toolkit for Energy Blueprint practitioners.</p>
-        <button class="btn-primary" data-action="heroPractitionerCta">See Practitioner Plan →</button>
-        <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Or <a href="#" data-action="switchTab" data-arg0="chart" style="color:var(--gold)">calculate your chart first</a></p>
+        <div class="welcome-icon">⊙</div>
+        <h3 class="welcome-title">Start with your chart</h3>
+        <p class="welcome-text">Enter your birth data once to build the chart behind your profile, daily energy, and relationship guidance. Prime Self works best when every later reading starts from the same source.</p>
+        <button class="btn-primary" data-action="switchTab" data-arg0="chart">Generate Your Chart →</button>
+        <p style="margin-top:0.6rem;font-size:0.85em;color:var(--text-dim)">Running an Energy Blueprint practice? <a href="#" data-action="heroPractitionerCta" style="color:var(--gold)">See Practitioner Plan →</a></p>
       </div>
     </div>
   </div>
 
   <!-- ═══ CHART TAB ═══ -->
   <div class="tab-content active" id="tab-chart" role="tabpanel" aria-labelledby="btn-blueprint" aria-live="polite">
-    <div class="sub-tabs" role="tablist">
-      <button class="sub-tab active" role="tab" aria-selected="true" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
-      <button class="sub-tab" role="tab" aria-selected="false" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
-    </div>
-
     <section class="guidance-strip" id="chartGuidanceStrip" data-guidance-context="personal" aria-labelledby="chartGuidanceStripTitle">
       <div class="guidance-strip-icon" aria-hidden="true">⊙</div>
       <div class="guidance-strip-body">
@@ -1054,10 +1054,6 @@
 
   <!-- ═══ PROFILE TAB ═══ -->
   <div class="tab-content" id="tab-profile" role="tabpanel" aria-labelledby="btn-blueprint" aria-live="polite">
-    <div class="sub-tabs" role="tablist">
-      <button class="sub-tab" role="tab" aria-selected="false" data-action="switchTab" data-arg0="chart">⊙ Chart</button>
-      <button class="sub-tab active" role="tab" aria-selected="true" data-action="switchTab" data-arg0="profile">⬡ AI Profile</button>
-    </div>
     <section class="guidance-strip" id="profileGuidanceStrip" data-guidance-context="personal" aria-labelledby="profileGuidanceStripTitle">
       <div class="guidance-strip-icon" aria-hidden="true">⬡</div>
       <div class="guidance-strip-body">
@@ -1073,6 +1069,16 @@
     </div>
     <div class="card">
       <div class="card-title"><span class="icon-profile"></span> <span data-i18n="profile.generateTitle">Generate Prime Self Profile</span></div>
+      <div class="guidance-panel guidance-panel--single guidance-panel--compact" id="profileBirthDataSummaryCard" data-guidance-context="personal">
+        <div class="guidance-panel-main">
+          <p class="guidance-panel-eyebrow">Chart source</p>
+          <h3 class="guidance-panel-title" id="profileBirthDataSummaryTitle">AI Profile uses the chart you already generated</h3>
+          <p class="guidance-panel-text" id="profileBirthDataSummaryText">Generate your chart first so the synthesis can build from one verified source instead of a second disconnected form.</p>
+          <div class="next-step-card-actions profile-chart-source-actions">
+            <button type="button" class="btn-secondary btn-sm" data-action="switchTab" data-arg0="chart">Edit Chart Data</button>
+          </div>
+        </div>
+      </div>
       <div class="guidance-panel" id="profileGuidancePanel" data-guidance-context="personal" aria-labelledby="profileGuidancePanelTitle">
         <div class="guidance-panel-main">
           <p class="guidance-panel-eyebrow">What you get</p>
@@ -1098,62 +1104,64 @@
         </div>
       </details>
       <div class="form-grid">
-        <div class="form-group">
-          <label data-i18n="chart.birthDate">Birth Date</label>
-          <input type="date" id="p-date" required aria-required="true" aria-label="Birth date">
-        </div>
-        <div class="form-group">
-          <label data-i18n="chart.birthTime">Birth Time</label>
-          <input type="time" id="p-time" required aria-required="true" aria-label="Birth time">
-        </div>
-        <div class="form-group full">
-          <label data-i18n="chart.birthLocation">Birth Location</label>
-          <div class="input-row">
-            <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
-              data-geocode-target="p" aria-label="Birth location">
-            <button type="button" class="btn-secondary btn-lookup" data-action="geocodeLocation" data-arg0="p" id="p-geoBtn"
-              data-i18n="chart.lookupLocation">Look Up</button>
+        <div id="profileBirthDataFields" hidden>
+          <div class="form-group">
+            <label data-i18n="chart.birthDate">Birth Date</label>
+            <input type="date" id="p-date" required aria-required="true" aria-label="Birth date">
           </div>
-          <div id="p-geo-status" class="geo-status"></div>
-          <input type="hidden" id="p-lat">
-          <input type="hidden" id="p-lng">
-        </div>
-        <div class="form-group full">
-          <label for="p-tz"><span data-i18n="chart.timezone">Timezone</span> <span class="label-hint">(auto-filled by Look Up)</span></label>
-          <select id="p-tz" aria-describedby="p-tz-hint">
-            <option value="America/New_York">America/New_York (EST/EDT)</option>
-            <option value="America/Chicago">America/Chicago (CST/CDT)</option>
-            <option value="America/Denver">America/Denver (MST/MDT)</option>
-            <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
-            <option value="America/Phoenix">America/Phoenix (MST no DST)</option>
-            <option value="America/Anchorage">America/Anchorage</option>
-            <option value="Pacific/Honolulu">Pacific/Honolulu</option>
-            <option value="America/Toronto">America/Toronto</option>
-            <option value="America/Vancouver">America/Vancouver</option>
-            <option value="America/Mexico_City">America/Mexico_City</option>
-            <option value="America/Sao_Paulo">America/Sao_Paulo</option>
-            <option value="America/Buenos_Aires">America/Buenos_Aires</option>
-            <option value="Europe/London">Europe/London (GMT/BST)</option>
-            <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
-            <option value="Europe/Berlin">Europe/Berlin</option>
-            <option value="Europe/Moscow">Europe/Moscow</option>
-            <option value="Europe/Istanbul">Europe/Istanbul</option>
-            <option value="Africa/Cairo">Africa/Cairo</option>
-            <option value="Africa/Johannesburg">Africa/Johannesburg</option>
-            <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-            <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-            <option value="Asia/Dhaka">Asia/Dhaka</option>
-            <option value="Asia/Bangkok">Asia/Bangkok</option>
-            <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
-            <option value="Asia/Shanghai">Asia/Shanghai</option>
-            <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-            <option value="Asia/Seoul">Asia/Seoul</option>
-            <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
-            <option value="Australia/Melbourne">Australia/Melbourne</option>
-            <option value="Pacific/Auckland">Pacific/Auckland</option>
-            <option value="UTC">UTC</option>
-          </select>
-          <p class="guidance-inline-hint" id="p-tz-hint">Timezone keeps your synthesis anchored to the same chart logic you generated earlier.</p>
+          <div class="form-group">
+            <label data-i18n="chart.birthTime">Birth Time</label>
+            <input type="time" id="p-time" required aria-required="true" aria-label="Birth time">
+          </div>
+          <div class="form-group full">
+            <label data-i18n="chart.birthLocation">Birth Location</label>
+            <div class="input-row">
+              <input type="text" id="p-location" placeholder="City, State, Country — e.g. Tampa, FL, USA" data-i18n-placeholder="chart.birthLocationPlaceholder" class="input-flex" required aria-required="true"
+                data-geocode-target="p" aria-label="Birth location">
+              <button type="button" class="btn-secondary btn-lookup" data-action="geocodeLocation" data-arg0="p" id="p-geoBtn"
+                data-i18n="chart.lookupLocation">Look Up</button>
+            </div>
+            <div id="p-geo-status" class="geo-status"></div>
+            <input type="hidden" id="p-lat">
+            <input type="hidden" id="p-lng">
+          </div>
+          <div class="form-group full">
+            <label for="p-tz"><span data-i18n="chart.timezone">Timezone</span> <span class="label-hint">(auto-filled by Look Up)</span></label>
+            <select id="p-tz" aria-describedby="p-tz-hint">
+              <option value="America/New_York">America/New_York (EST/EDT)</option>
+              <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+              <option value="America/Denver">America/Denver (MST/MDT)</option>
+              <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+              <option value="America/Phoenix">America/Phoenix (MST no DST)</option>
+              <option value="America/Anchorage">America/Anchorage</option>
+              <option value="Pacific/Honolulu">Pacific/Honolulu</option>
+              <option value="America/Toronto">America/Toronto</option>
+              <option value="America/Vancouver">America/Vancouver</option>
+              <option value="America/Mexico_City">America/Mexico_City</option>
+              <option value="America/Sao_Paulo">America/Sao_Paulo</option>
+              <option value="America/Buenos_Aires">America/Buenos_Aires</option>
+              <option value="Europe/London">Europe/London (GMT/BST)</option>
+              <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+              <option value="Europe/Berlin">Europe/Berlin</option>
+              <option value="Europe/Moscow">Europe/Moscow</option>
+              <option value="Europe/Istanbul">Europe/Istanbul</option>
+              <option value="Africa/Cairo">Africa/Cairo</option>
+              <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+              <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+              <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+              <option value="Asia/Dhaka">Asia/Dhaka</option>
+              <option value="Asia/Bangkok">Asia/Bangkok</option>
+              <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+              <option value="Asia/Shanghai">Asia/Shanghai</option>
+              <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+              <option value="Asia/Seoul">Asia/Seoul</option>
+              <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+              <option value="Australia/Melbourne">Australia/Melbourne</option>
+              <option value="Pacific/Auckland">Pacific/Auckland</option>
+              <option value="UTC">UTC</option>
+            </select>
+            <p class="guidance-inline-hint" id="p-tz-hint">Timezone keeps your synthesis anchored to the same chart logic you generated earlier.</p>
+          </div>
         </div>
         <div class="form-group full">
           <div class="next-step-card" id="profileGuidanceNextStep" data-guidance-context="personal" aria-labelledby="profileNextStepTitle">

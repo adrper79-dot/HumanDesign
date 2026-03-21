@@ -55,6 +55,51 @@ header {
 .auth-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; } /* [DUP] layout.css */
 .auth-status { font-size: 0.8rem; color: var(--text-dim, #c4c0d8); white-space: nowrap; } /* [DUP] layout.css */
 .auth-status.logged-in { color: var(--accent2, #4fc8a0); } /* [DUP] layout.css */
+.account-menu-wrap {
+  position: relative;
+}
+
+.account-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  background: rgba(11, 18, 38, 0.98);
+  border: 1px solid var(--border, #1d2f52);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+  z-index: 140;
+}
+
+.account-menu-item {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.profile-birth-summary-card {
+  margin-bottom: var(--space-4);
+}
+
+.profile-birth-summary-copy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.profile-birth-summary-title {
+  margin: 0;
+  color: var(--text, #eceaf4);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+.profile-birth-summary-text {
+  margin: 0;
+  color: var(--text-dim, #c4c0d8);
+  line-height: 1.6;
+}
 
 /* Header mobile adjustments */
 @media (max-width: 768px) {
@@ -68,6 +113,10 @@ header {
   .auth-bar .btn-sm { 
     padding: 4px 8px; 
     font-size: 0.72rem; 
+  }
+  .account-menu-panel {
+    right: -4px;
+    min-width: 170px;
   }
 }
 
