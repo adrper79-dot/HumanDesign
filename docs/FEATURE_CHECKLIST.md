@@ -118,7 +118,7 @@
 | Grandfather subscriptions | ✅ | Migration 028 — 90-day grace period for legacy subscribers at price lock |
 | Stripe price IDs | ✅ | All 12 price IDs configured in `wrangler.toml` (individual, practitioner, agency, annual variants, 4 one-time products) |
 | Promo codes | ✅ | `GET /api/promo/validate`, `POST /api/promo/apply` — admin-created codes with discount/free-tier grants |
-| Admin promo management | 🔶 | `POST/GET /api/admin/promo` — create and list codes. No admin UI exists |
+| Admin promo management | ✅ | `POST/GET /api/admin/promo` plus `/admin.html` UI for listing, creating, and deactivating promo codes |
 
 ---
 
@@ -295,7 +295,7 @@ These are gaps identified by comparing current build against best-in-class apps 
 | Gap | Impact | Notes |
 |-----|--------|-------|
 | **Email verification on signup** | 🔴 High | No email confirmation step — any email address can register without verification. Enables spam accounts and lost-password deadends |
-| **Admin dashboard** | 🔴 High | No internal UI for user management, promo codes, experiment results, revenue metrics. Currently operator-only via API |
+| **Admin dashboard** | 🔶 Medium | `/admin.html` exists for overview stats, user management, and promo management, but experiments, revenue analytics, recent errors, and manual ops are still not surfaced there |
 | **Transactional email flows** | 🔶 Medium | `RESEND_API_KEY` active in prod (2026-03-15). Billing failure emails functional. No welcome email, no onboarding drip, no digest email |
 | **In-app notification feed** | ✅ Done | Notification bell in header + slide-out drawer with `GET /api/push/history` integration |
 | **Search across saved profiles** | ✅ Done | `GET /api/profile/search?q=` endpoint with ILIKE search + debounced frontend search input |

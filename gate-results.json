@@ -1,0 +1,449 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\playwright.gate.config.ts",
+    "rootDir": "C:/Users/Ultimate Warrior/My project/HumanDesign/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Ultimate Warrior/My project/HumanDesign/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/Ultimate Warrior/My project/HumanDesign/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/auth-gate.spec.ts",
+          "**/smoke-gate.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "gate-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "auth-gate.spec.ts",
+      "file": "auth-gate.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Auth gate — login / session persistence",
+          "file": "auth-gate.spec.ts",
+          "line": 34,
+          "column": 6,
+          "specs": [
+            {
+              "title": "login succeeds with valid credentials",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5217,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:17.889Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f73b7337032a8bc54306-4c8e68c0e71485b47473",
+              "file": "auth-gate.spec.ts",
+              "line": 37,
+              "column": 3
+            },
+            {
+              "title": "session persists across page reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4171,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:23.338Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f73b7337032a8bc54306-fe47ff8a954ac9870144",
+              "file": "auth-gate.spec.ts",
+              "line": 54,
+              "column": 3
+            },
+            {
+              "title": "wrong password returns an auth error",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1977,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:27.547Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f73b7337032a8bc54306-51b5adf967d2f843b904",
+              "file": "auth-gate.spec.ts",
+              "line": 69,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "smoke-gate.spec.ts",
+      "file": "smoke-gate.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Browser smoke — no auth required",
+          "file": "smoke-gate.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "public homepage loads with correct title",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1235,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:29.593Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6b4b32a0c0558422777d-07c1d948e54101ff3099",
+              "file": "smoke-gate.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "API health endpoint returns 200 + ok status",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 798,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:30.863Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6b4b32a0c0558422777d-d6538bce2faa619e13bc",
+              "file": "smoke-gate.spec.ts",
+              "line": 30,
+              "column": 3
+            },
+            {
+              "title": "same-origin health endpoint is reachable via the frontend domain",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 545,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:31.695Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6b4b32a0c0558422777d-9e18eb53936bed377e3c",
+              "file": "smoke-gate.spec.ts",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "navigation header is visible on page load",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 1603,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header, [role=\"banner\"]')\nExpected: visible\nError: strict mode violation: locator('header, [role=\"banner\"]') resolved to 2 elements:\n    1) <header>…</header> aka getByText('☰ Prime Self v2.1 🇺🇸')\n    2) <div role=\"banner\" id=\"identity-strip\" aria-label=\"Your energy identity\">…</div> aka getByLabel('Your energy identity')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header, [role=\"banner\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header, [role=\"banner\"]')\nExpected: visible\nError: strict mode violation: locator('header, [role=\"banner\"]') resolved to 2 elements:\n    1) <header>…</header> aka getByText('☰ Prime Self v2.1 🇺🇸')\n    2) <div role=\"banner\" id=\"identity-strip\" aria-label=\"Your energy identity\">…</div> aka getByLabel('Your energy identity')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header, [role=\"banner\"]')\u001b[22m\n\n    at C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts:56:26",
+                        "location": {
+                          "file": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts",
+                          "column": 26,
+                          "line": 56
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 54 |\u001b[39m     \u001b[90m// Main header / nav must be present — confirms core HTML rendered correctly.\u001b[39m\n \u001b[90m 55 |\u001b[39m     \u001b[36mconst\u001b[39m header \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'header, [role=\"banner\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m expect(header)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 57 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 58 |\u001b[39m\n \u001b[90m 59 |\u001b[39m   test(\u001b[32m'Sign In button is reachable without authentication'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page\u001b[33m,\u001b[39m context }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts",
+                            "column": 26,
+                            "line": 56
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header, [role=\"banner\"]')\nExpected: visible\nError: strict mode violation: locator('header, [role=\"banner\"]') resolved to 2 elements:\n    1) <header>…</header> aka getByText('☰ Prime Self v2.1 🇺🇸')\n    2) <div role=\"banner\" id=\"identity-strip\" aria-label=\"Your energy identity\">…</div> aka getByLabel('Your energy identity')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header, [role=\"banner\"]')\u001b[22m\n\n\n\u001b[0m \u001b[90m 54 |\u001b[39m     \u001b[90m// Main header / nav must be present — confirms core HTML rendered correctly.\u001b[39m\n \u001b[90m 55 |\u001b[39m     \u001b[36mconst\u001b[39m header \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'header, [role=\"banner\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m expect(header)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 57 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 58 |\u001b[39m\n \u001b[90m 59 |\u001b[39m   test(\u001b[32m'Sign In button is reachable without authentication'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page\u001b[33m,\u001b[39m context }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts:56:26\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:32.276Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\test-results\\smoke-gate-Browser-smoke-—-e2029-der-is-visible-on-page-load-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\test-results\\smoke-gate-Browser-smoke-—-e2029-der-is-visible-on-page-load-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts",
+                        "column": 26,
+                        "line": 56
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6b4b32a0c0558422777d-d4a1c61dc8fd943ca8e6",
+              "file": "smoke-gate.spec.ts",
+              "line": 47,
+              "column": 3
+            },
+            {
+              "title": "Sign In button is reachable without authentication",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 6635,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#authBtn, button:text(\"Sign In\")').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('#authBtn, button:text(\"Sign In\")').first()\u001b[22m\n\u001b[2m    8 × locator resolved to <button type=\"submit\" id=\"authSubmit\" data-i18n=\"auth.signIn\" class=\"btn-primary btn-full\">Sign In</button>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#authBtn, button:text(\"Sign In\")').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('#authBtn, button:text(\"Sign In\")').first()\u001b[22m\n\u001b[2m    8 × locator resolved to <button type=\"submit\" id=\"authSubmit\" data-i18n=\"auth.signIn\" class=\"btn-primary btn-full\">Sign In</button>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n\n    at C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts:67:29",
+                        "location": {
+                          "file": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts",
+                          "column": 29,
+                          "line": 67
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 65 |\u001b[39m\n \u001b[90m 66 |\u001b[39m     \u001b[36mconst\u001b[39m signInBtn \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'#authBtn, button:text(\"Sign In\")'\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 67 |\u001b[39m     \u001b[36mawait\u001b[39m expect(signInBtn)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 68 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 69 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 70 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts",
+                            "column": 29,
+                            "line": 67
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('#authBtn, button:text(\"Sign In\")').first()\nExpected: visible\nReceived: hidden\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('#authBtn, button:text(\"Sign In\")').first()\u001b[22m\n\u001b[2m    8 × locator resolved to <button type=\"submit\" id=\"authSubmit\" data-i18n=\"auth.signIn\" class=\"btn-primary btn-full\">Sign In</button>\u001b[22m\n\u001b[2m      - unexpected value \"hidden\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 65 |\u001b[39m\n \u001b[90m 66 |\u001b[39m     \u001b[36mconst\u001b[39m signInBtn \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'#authBtn, button:text(\"Sign In\")'\u001b[39m)\u001b[33m.\u001b[39mfirst()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 67 |\u001b[39m     \u001b[36mawait\u001b[39m expect(signInBtn)\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 68 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 69 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 70 |\u001b[39m\u001b[0m\n\u001b[2m    at C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts:67:29\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-03-21T04:58:37.346Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\test-results\\smoke-gate-Browser-smoke-—-0281a-able-without-authentication-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\test-results\\smoke-gate-Browser-smoke-—-0281a-able-without-authentication-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Ultimate Warrior\\My project\\HumanDesign\\tests\\e2e\\smoke-gate.spec.ts",
+                        "column": 29,
+                        "line": 67
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "6b4b32a0c0558422777d-4fb6e6706f0100e09629",
+              "file": "smoke-gate.spec.ts",
+              "line": 59,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-03-21T04:58:14.189Z",
+    "duration": 30256.333000000002,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

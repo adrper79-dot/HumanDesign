@@ -17,6 +17,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { EVENTS, captureRequestContext, trackEvent } from '../lib/analytics.js';
 
 // ─── Admin Auth Guard ─────────────────────────────────────────
 
@@ -34,6 +35,11 @@ function requireAdmin(request, env) {
   if (!token) return Response.json({ error: 'Admin not configured' }, { status: 503 });
   const provided = request.headers.get('X-Admin-Token') || '';
   if (!provided || !constantTimeEqual(provided, token)) {
+    recordAdminEvent(env, EVENTS.ADMIN_AUTH_FAIL, request, {
+      actionType: 'auth_failed',
+      path: new URL(request.url).pathname,
+      method: request.method,
+    });
     console.warn(JSON.stringify({
       event: 'admin_auth_fail',
       ip: request.headers.get('CF-Connecting-IP') || 'unknown',
@@ -46,6 +52,13 @@ function requireAdmin(request, env) {
 
 const VALID_TIERS = ['free', 'individual', 'practitioner', 'agency'];
 
+function recordAdminEvent(env, eventName, request, properties = {}) {
+  void trackEvent(env, eventName, {
+    requestContext: captureRequestContext(request),
+    properties,
+  }).catch(() => {});
+}
+
 // ─── Route Dispatcher ─────────────────────────────────────────
 
 export async function handleAdmin(request, env, subpath) {
@@ -56,7 +69,7 @@ export async function handleAdmin(request, env, subpath) {
 
   // GET /api/admin/stats
   if (method === 'GET' && subpath === '/stats') {
-    return getStats(env);
+    return getStats(request, env);
   }
 
   // GET /api/admin/users
@@ -67,7 +80,7 @@ export async function handleAdmin(request, env, subpath) {
   // GET /api/admin/users/:id
   const userMatch = subpath.match(/^\/users\/([^/]+)$/);
   if (method === 'GET' && userMatch) {
-    return getUser(env, userMatch[1]);
+    return getUser(request, env, userMatch[1]);
   }
 
   // PATCH /api/admin/users/:id/tier
@@ -85,7 +98,7 @@ export async function handleAdmin(request, env, subpath) {
   // PATCH /api/admin/promo/:id/deactivate
   const promoMatch = subpath.match(/^\/promo\/([^/]+)\/deactivate$/);
   if (method === 'PATCH' && promoMatch) {
-    return deactivatePromo(env, promoMatch[1]);
+    return deactivatePromo(request, env, promoMatch[1]);
   }
 
   // GET /api/admin/analytics/funnel?name=...
@@ -98,7 +111,11 @@ export async function handleAdmin(request, env, subpath) {
 
 // ─── Handlers ────────────────────────────────────────────────
 
-async function getStats(env) {
+async function getStats(request, env) {
+  recordAdminEvent(env, EVENTS.ADMIN_ACCESS, request, {
+    actionType: 'view_stats',
+    path: new URL(request.url).pathname,
+  });
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows } = await query(QUERIES.adminGetOverviewStats);
   return Response.json({ ok: true, stats: rows[0] });
@@ -115,6 +132,11 @@ async function getFunnelMetrics(request, env) {
 
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows } = await query(QUERIES.getAnalyticsFunnelSteps, [funnelName]);
+
+  recordAdminEvent(env, EVENTS.ADMIN_ACTION, request, {
+    actionType: 'view_funnel_metrics',
+    funnelName,
+  });
   
   if (!rows.length) {
     return Response.json({ ok: true, funnel: funnelName, steps: [] });
@@ -157,6 +179,13 @@ async function listUsers(request, env) {
     query(QUERIES.adminCountUsers, [email]),
   ]);
 
+  recordAdminEvent(env, EVENTS.ADMIN_ACTION, request, {
+    actionType: 'list_users',
+    hasEmailFilter: Boolean(email),
+    limit,
+    offset,
+  });
+
   return Response.json({
     ok: true,
     users,
@@ -166,13 +195,17 @@ async function listUsers(request, env) {
   });
 }
 
-async function getUser(env, userId) {
+async function getUser(request, env, userId) {
   if (!/^[0-9a-f-]{36}$/i.test(userId)) {
     return Response.json({ error: 'Invalid user ID format' }, { status: 400 });
   }
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows } = await query(QUERIES.adminGetUser, [userId]);
   if (!rows.length) return Response.json({ error: 'User not found' }, { status: 404 });
+  recordAdminEvent(env, EVENTS.ADMIN_ACTION, request, {
+    actionType: 'get_user',
+    targetUserId: userId,
+  });
   return Response.json({ ok: true, user: rows[0] });
 }
 
@@ -194,6 +227,11 @@ async function setUserTier(request, env, userId) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows } = await query(QUERIES.adminSetTier, [tier, userId]);
   if (!rows.length) return Response.json({ error: 'User not found' }, { status: 404 });
+  recordAdminEvent(env, EVENTS.ADMIN_ACTION, request, {
+    actionType: 'set_user_tier',
+    targetUserId: userId,
+    tier,
+  });
   return Response.json({ ok: true, user: rows[0] });
 }
 
@@ -211,15 +249,24 @@ async function setEmailVerified(request, env, userId) {
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows } = await query(QUERIES.adminSetEmailVerified, [verified, userId]);
   if (!rows.length) return Response.json({ error: 'User not found' }, { status: 404 });
+  recordAdminEvent(env, EVENTS.ADMIN_ACTION, request, {
+    actionType: 'set_email_verified',
+    targetUserId: userId,
+    verified,
+  });
   return Response.json({ ok: true, user: rows[0] });
 }
 
-async function deactivatePromo(env, promoId) {
+async function deactivatePromo(request, env, promoId) {
   if (!/^[0-9a-f-]{36}$/i.test(promoId)) {
     return Response.json({ error: 'Invalid promo ID format' }, { status: 400 });
   }
   const query = createQueryFn(env.NEON_CONNECTION_STRING);
   const { rows } = await query(QUERIES.adminDeactivatePromo, [promoId]);
   if (!rows.length) return Response.json({ error: 'Promo code not found' }, { status: 404 });
+  recordAdminEvent(env, EVENTS.ADMIN_ACTION, request, {
+    actionType: 'deactivate_promo',
+    promoId,
+  });
   return Response.json({ ok: true, promo: rows[0] });
 }

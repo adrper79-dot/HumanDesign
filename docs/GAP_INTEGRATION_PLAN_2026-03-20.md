@@ -163,11 +163,11 @@ There are three competing `:root {}` token systems that override each other unpr
 
 ---
 
-## GAP-004 — Deterministic E2E Release Gate
+## GAP-004 — Deterministic Browser Gate + Live Production Gate
 
 **Backlog ID:** BL-TEST-P1-3 (supersedes BL-TEST-P1-2)  
 **Issue Registry ID:** GAP-004  
-**Impact:** Deployments can only merge when the gate passes; removes "deploy and hope" for the auth flow  
+**Impact:** Launch confidence comes from deterministic browser checks plus live production verification; removes "deploy and hope" for auth, response contracts, and telemetry  
 **Effort:** 1–2 days  
 **Files in Scope:**  
 - `playwright.config.ts`  
@@ -178,7 +178,7 @@ There are three competing `:root {}` token systems that override each other unpr
 
 ### Why
 
-The current Playwright gate is blocked by a timing race in the first-run onboarding modal. The modal appears before login, and the test dismisses it with a time-based wait rather than a deterministic signal — so test results depend on machine load. This makes the release gate untrustworthy.
+The current Playwright gate was blocked by a timing race in the first-run onboarding modal. That made browser confidence untrustworthy and left deploy truth split between local confidence and ad hoc production checks.
 
 ### Implementation Steps
 
@@ -198,14 +198,15 @@ The current Playwright gate is blocked by a timing race in the first-run onboard
    - Asserts synthesis form is present
 5. **Create `playwright.gate.config.ts`:** Config file that only runs `auth-gate.spec.ts` and `smoke-gate.spec.ts`. `fullyParallel: false`, retries: 0 (gate must be deterministic, not retried).
 6. **Add npm script** `"test:gate": "playwright test --config playwright.gate.config.ts"`
-7. **Update CI** (`.github/workflows/ci.yml`): add `npm run test:gate` as a required step before `npm run deploy:workers`.
-8. **(Phase 2)** Expand gate to include: billing checkout, practitioner session notes.
+7. **Canonicalize launch enforcement:** use `npm run verify:prod:gate -- --strict-browser` as the deploy/canary launch gate; keep `npm run test:gate` as the focused deterministic browser component.
+8. **Expand live gate:** include production-safe negative checks, request-correlation checks, and analytics audit verification when `AUDIT_SECRET` is present.
+9. **(Phase 2)** Expand live gate to include practitioner session notes, practitioner analytics, and additional billing/operator checks.
 
 ### Done Definition
 
-- `npm run test:gate` succeeds 10/10 consecutive runs on clean machine
-- Gate fails if login is broken (auth regression detected immediately)
-- CI prevents deploy when gate fails
+- `npm run test:gate` succeeds consistently as the focused deterministic browser pack
+- `npm run verify:prod:gate -- --strict-browser` is enforced on deploy and scheduled production canary runs
+- Live gate fails if production login, public flows, negative contracts, or analytics audit visibility regress
 - `BL-TEST-P1-2` officially closed
 
 ---

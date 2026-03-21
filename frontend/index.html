@@ -2499,10 +2499,13 @@
 </div><!-- /app-main -->
 </div><!-- /app-layout -->
 
-<!-- GAP-005: Capacitor native bridge — must load before app.js to expose window.NativeBridge -->
+<!-- GAP-005: Capacitor native bridge — must load before core.js to expose window.NativeBridge -->
 <script src="js/native-bridge.js" defer></script>
 <script src="js/qr.js" defer></script>
 <script src="js/gate-data.js" defer></script>
+<!-- GAP-001: Core app module (ES6) — loads state.js + router; controllers lazy-load on tab activation -->
+<script type="module" src="js/core.js" defer></script>
+<!-- Retain app.js temporarily for backward compatibility (legacy functions) — will be removed in Phase 2 -->
 <script src="js/app.js" defer></script>
 <!-- GAP-001: Billing controller loaded eagerly so CTAs work before any tab is activated -->
 <script src="js/controllers/billing-controller.js" defer></script>

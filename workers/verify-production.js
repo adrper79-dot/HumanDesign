@@ -5,6 +5,7 @@
   Usage: node workers/verify-production.js
 */
 const BASE = process.env.PROD_API || 'https://prime-self-api.adrper79.workers.dev';
+const AUDIT_SECRET = process.env.AUDIT_SECRET || '';
 
 function fail(message) {
   throw new Error(message);
@@ -39,6 +40,11 @@ async function check(name, path, opts = {}, assertResponse) {
   }
 }
 
+function requireRequestId(res, name) {
+  const requestId = res.headers.get('x-request-id');
+  if (!requestId) fail(`${name}: missing X-Request-ID header`);
+}
+
 async function main() {
   console.log('Verifying production endpoints against', BASE);
 
@@ -67,6 +73,7 @@ async function main() {
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' },
     ({ res, body }) => {
       if (res.status !== 400) fail(`expected 400, got ${res.status}`);
+      requireRequestId(res, 'register validation');
       if (!isObject(body) || typeof body.error !== 'string') fail('missing validation error');
       if (!/email and password|validation failed/i.test(body.error)) fail(`unexpected error message: ${body.error}`);
     }
@@ -74,9 +81,41 @@ async function main() {
 
   results.push(await check('forecast validation', '/api/transits/forecast', {}, ({ res, body }) => {
     if (res.status !== 400) fail(`expected 400, got ${res.status}`);
+    requireRequestId(res, 'forecast validation');
     if (!isObject(body) || typeof body.error !== 'string') fail('missing validation error');
     if (!/required params|validation failed/i.test(body.error)) fail(`unexpected error message: ${body.error}`);
   }));
+
+  results.push(await check('auth me unauthorized', '/api/auth/me', {}, ({ res, body }) => {
+    if (res.status !== 401) fail(`expected 401, got ${res.status}`);
+    requireRequestId(res, 'auth me unauthorized');
+    if (!isObject(body) || typeof body.error !== 'string') fail('missing auth error');
+    if (!/auth|token|required/i.test(body.error)) fail(`unexpected auth error message: ${body.error}`);
+  }));
+
+  results.push(await check('analytics audit unauthorized', '/api/analytics/audit', {}, ({ res, body }) => {
+    if (res.status !== 401) fail(`expected 401, got ${res.status}`);
+    requireRequestId(res, 'analytics audit unauthorized');
+    if (!isObject(body) || typeof body.error !== 'string') fail('missing audit auth error');
+  }));
+
+  if (AUDIT_SECRET) {
+    results.push(await check(
+      'analytics audit',
+      '/api/analytics/audit',
+      { headers: { 'X-Audit-Token': AUDIT_SECRET } },
+      ({ res, body }) => {
+        if (res.status !== 200) fail(`expected 200, got ${res.status}`);
+        if (!isObject(body) || body.ok !== true) fail('expected ok=true JSON payload');
+        if (!isObject(body.activeUsers)) fail('missing activeUsers');
+        if (!Array.isArray(body.topErrors)) fail('missing topErrors array');
+        if (typeof body.errorRate !== 'string') fail('missing errorRate string');
+        if (!Array.isArray(body.tierDistribution)) fail('missing tierDistribution array');
+      }
+    ));
+  } else {
+    console.log('SKIP analytics audit -> AUDIT_SECRET not configured');
+  }
 
   const failed = results.filter(result => !result.ok);
   console.log(`Verification complete: ${results.length - failed.length}/${results.length} passed`);

@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Prime Self API",
-    "version": "2026-03-20",
-    "description": "Auto-generated from workers/src/index.js on 2026-03-20. Run 'npm run docs:api' to update."
+    "version": "2026-03-21",
+    "description": "Auto-generated from workers/src/index.js on 2026-03-21. Run 'npm run docs:api' to update."
   },
   "servers": [
     {
@@ -600,6 +600,19 @@
           {
             "bearerAuth": []
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/billing/revenuecat-webhook": {
+      "post": {
+        "operationId": "handleRevenueCatWebhook",
+        "tags": [
+          "billing"
         ],
         "responses": {
           "200": {
@@ -1738,6 +1751,118 @@
         "parameters": [
           {
             "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/live-session/{sessionId}/end": {
+      "post": {
+        "summary": "End session + save transcript note (auth)",
+        "tags": [
+          "live-session"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/live-session/connect/{sessionId}": {
+      "get": {
+        "summary": "WebSocket upgrade to Durable Object (auth)",
+        "tags": [
+          "live-session"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/live-session/invite/{clientId}": {
+      "post": {
+        "summary": "Practitioner creates session invite link (auth)",
+        "tags": [
+          "live-session"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/live-session/join/{token}": {
+      "get": {
+        "summary": "Client validates invite token (auth)",
+        "tags": [
+          "live-session"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "token",
             "in": "path",
             "required": true,
             "schema": {

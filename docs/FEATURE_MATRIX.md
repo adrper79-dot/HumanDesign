@@ -1142,18 +1142,18 @@
 | Attribute | Details |
 |-----------|---------|
 | **Feature Name** | Admin Dashboard (Observability & System Health) |
-| **Permission Level** | ADMIN only; role-based access control |
+| **Permission Level** | ADMIN only via `X-Admin-Token` |
 | **Workflow Position** | Internal tool; not user-facing |
-| **Purpose** | Monitor system health, view real-time metrics, trigger manual jobs, manage users |
-| **Files** | `workers/src/handlers/admin.js` (500+ lines), `workers/src/handlers/analytics.js` |
-| **Workflow Step** | 1. Admin logs in with admin flag in JWT → 2. Accesses `/admin` dashboard → 3. Views real-time metrics (active users, API response times, error rates, LLM cost, webhook queue depth) → 4. Can trigger manual tasks (cron job, data export, user lookup) → 5. Can view recent errors, webhook replay queue |
-| **Metrics Displayed** | Active users (24h), API latency (p50/p95/p99), error rate (%), LLM cost (today/month), Stripe revenue (today/month), transit calculation times, cache hit rates |
-| **API Endpoints** | `GET /api/admin/metrics` (real-time), `GET /api/admin/users` (search/list), `POST /api/admin/trigger-cron` (manual job), `GET /api/admin/errors` (recent errors), `GET /api/admin/webhook-queue` (failed webhooks) |
+| **Purpose** | Manage users and promo codes, and view lightweight operator stats/funnel data |
+| **Files** | `frontend/admin.html`, `frontend/js/admin.js`, `workers/src/handlers/admin.js`, `workers/src/handlers/promo.js` |
+| **Workflow Step** | 1. Operator opens `/admin.html` → 2. Enters `ADMIN_TOKEN` into the in-memory sign-in form → 3. Views overview stats from `/api/admin/stats` → 4. Searches users and changes tier/verification state → 5. Manages promo codes |
+| **Metrics Displayed** | Total users, new users (24h/7d), verified users, tier counts, active subscriptions, charts (24h), profiles (24h) |
+| **API Endpoints** | `GET /api/admin/stats`, `GET /api/admin/users`, `GET /api/admin/users/:id`, `PATCH /api/admin/users/:id/tier`, `PATCH /api/admin/users/:id/verify`, `GET /api/admin/analytics/funnel`, `GET /api/admin/promo`, `POST /api/admin/promo`, `PATCH /api/admin/promo/:id/deactivate` |
 | **Database Tables** | `analytics_events` (eventType, userId, properties JSON, createdAt, indexed on (eventType, createdAt)) |
-| **Test Elements** | `tests/admin.test.js` — admin role verified before access, metrics data accurate, manual job triggers execute correctly |
-| **Analytical Elements** | Event: `admin_action` (action_type: user_lookup, cron_trigger, etc.), `admin_accessed_dashboard` (duration) |
-| **Error Debugging** | Error codes: `ERR_UNAUTHORIZED_ADMIN`, `ERR_METRIC_CALCULATION_FAILED`; All admin actions logged to audit table for compliance |
-| **Key Code** | Metrics aggregated via `SELECT event_type, COUNT(*) FROM analytics_events WHERE created_at > NOW() - interval '24h' GROUP BY event_type`; Real-time via KV cache updated every 60s |
+| **Test Elements** | `tests/admin.test.js` — invalid token rejected, stats endpoint returns overview payload, tier changes recorded as admin actions |
+| **Analytical Elements** | Events: `admin_auth_fail`, `admin_accessed_dashboard`, `admin_action` |
+| **Error Debugging** | Invalid/missing token returns 403; unexpected 5xx paths fall through the shared worker error pipeline with `X-Request-ID`, analytics `trackError`, and Sentry capture |
+| **Key Code** | `handleAdmin()` dispatches token-guarded admin routes; `recordAdminEvent()` writes lightweight operator events without blocking admin responses |
 
 ---
 
@@ -1165,15 +1165,15 @@
 | **Permission Level** | SYSTEM (automatic); admin view in dashboard |
 | **Workflow Position** | Background; triggered on unhandled errors |
 | **Purpose** | Capture errors, stack traces, context; alert on-call engineer if critical |
-| **Files** | `workers/src/lib/error-handler.js`, `workers/src/sentry.js`, all handlers call `reportError()` on catch |
-| **Workflow Step** | 1. Unhandled error occurs in handler → 2. Catch block calls `reportError(error, context)` → 3. Function sends error to Sentry via `Sentry.captureException(error)` → 4. Sentry groups similar errors, sends alert email/Slack if count > threshold (e.g., 10 errors/min) → 5. Engineer reviews in Sentry dashboard → 6. If critical, triggers incident response (page on-call, rollback to previous version) |
+| **Files** | `workers/src/lib/routeErrors.js`, `workers/src/lib/sentry.js`, `workers/src/index.js` |
+| **Workflow Step** | 1. A route throws or calls `reportHandledRouteError()` → 2. Request context and request ID are captured → 3. Analytics `trackError` and `initSentry(...).captureException(...)` are dispatched via `waitUntil` when possible → 4. User receives a safe error response with request correlation |
 | **API Endpoints** | Sentry ingest (no Prime Self endpoint; self-contained) |
 | **Context Captured** | User ID (if authenticated), request path, query params (sanitized), response status, LLM model/cost, DB query latency, browser UA (frontend) |
-| **Alert Rules** | Critical: Error rate > 5% OR LLM failures > 10/min; Warning: New error rate > 2/min; Info: New unique error type |
-| **Test Elements** | `tests/error-tracking.test.js` — errors captured with correct context, sensitive data sanitized (no PII, passwords), Sentry SDK initialization verified |
+| **Alert Rules** | Controlled in Sentry project configuration; worker code emits structured context but does not hard-code policy thresholds |
+| **Test Elements** | `tests/sentry.test.js`, `tests/handled-route-errors.test.js`, `tests/observability-runtime.test.js`, `tests/error-pipeline.test.js` |
 | **Analytical Elements** | Error events sent to Sentry with structured metadata for dashboard visualization |
 | **Error Debugging** | Error codes categorized: AUTH (4xx), SERVER (5xx), LLM (timeout, rate limit, schema), DB (connection, query); Stack traces include source maps (JS) or line numbers (Workers) |
-| **Key Code** | Error handler: `try { ... } catch (e) { reportError(e, { userId, path, status }); return error response }`; Sentry init: `Sentry.init({ dsn: env.SENTRY_DSN, environment: env.ENVIRONMENT, tracesSampleRate: 0.1 })` |
+| **Key Code** | Shared handler path: `reportHandledRouteError({ ... })`; top-level path: Worker `fetch()` catch calls `trackError(...)` and `initSentry(env).captureException(...)` |
 
 ---
 

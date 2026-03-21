@@ -895,10 +895,10 @@ select option { background: var(--bg3, #111d38); }
   cursor: pointer; transition: border-color 0.15s;
 }
 .history-item:hover { border-color: var(--gold-dim, #a88840); }
-.history-meta { font-size: 0.78rem; color: var(--text-muted, #8fafc8); margin-top: 3px; }
+.history-meta { font-size: 0.78rem; color: var(--text-muted, #918db0); margin-top: 3px; }
 
 /* ── Raw JSON toggler [DUP] prime-self.css ── */
-.raw-toggle { font-size: 0.75rem; color: var(--text-muted, #8fafc8); cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
+.raw-toggle { font-size: 0.75rem; color: var(--text-muted, #918db0); cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
 .raw-json { display: none; background: var(--bg, #05091a); border: 1px solid var(--border, #1d2f52); border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.72rem; overflow-x: auto; margin-top: 8px; white-space: pre-wrap; color: #90c890; max-height: 400px; overflow-y: auto; word-break: break-all; }
 .raw-json.open { display: block; }
 

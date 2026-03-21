@@ -320,7 +320,7 @@
   --gold-dim:  var(--color-gold-600);      /* #a88840 */
   --text:      #eceaf4;                    /* primary text */
   --text-dim:  #c4c0d8;                    /* WCAG AA 5.5:1 on #1a1a24 (was #b0acc8 @ 4.2:1) */
-  --text-muted:#8fafc8;                    /* WCAG AA on #05091a — blue-tinted muted text */
+  --text-muted:#918db0;                    /* WCAG AA 4.5:1 on #0a0a0f / #1a1a24 (was #7a76a0 @ ~3:1) */
   --accent:    #5b8af0;                    /* trust-blue accent */
   --accent2:   var(--color-teal-400);      /* #4fc8a0 */
   --red:       var(--color-error-500);     /* #e05050 */

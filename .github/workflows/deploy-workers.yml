@@ -103,6 +103,7 @@ jobs:
       - name: Run production gate
         run: npm run verify:prod:gate -- --strict-browser
         env:
+          AUDIT_SECRET: ${{ secrets.AUDIT_SECRET }}
           E2E_TEST_EMAIL: ${{ secrets['E2E_TEST_EMAIL'] }}
           E2E_TEST_PASSWORD: ${{ secrets['E2E_TEST_PASSWORD'] }}
           FRONTEND_BASE: https://selfprime.net

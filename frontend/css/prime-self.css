@@ -14,7 +14,8 @@
    Load tokens and base styles first
    ══════════════════════════════════════════════════════════ */
 
-@import url('design-tokens.css');
+/* Unified design tokens — single source of truth (GAP-002) */
+@import url('tokens.css');
 @import url('base.css');
 
 

@@ -75,6 +75,8 @@ export const EVENTS = Object.freeze({
   DAILY_CEILING_HIT:   'daily_ceiling_hit',
   RATE_LIMITED:         'rate_limited',
   ADMIN_AUTH_FAIL:     'admin_auth_fail',
+  ADMIN_ACCESS:        'admin_accessed_dashboard',
+  ADMIN_ACTION:        'admin_action',
   PASSWORD_RESET:      'password_reset',
 
   // Operational — degraded / fail-open paths (BL-S20-H2)

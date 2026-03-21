@@ -4,6 +4,8 @@
 **Audience**: Developers deploying to production  
 **Last Updated**: March 14, 2026
 
+**Canonical launch/testing standard**: [docs/LAUNCH_TESTING_PHILOSOPHY_2026-03-21.md](docs/LAUNCH_TESTING_PHILOSOPHY_2026-03-21.md)
+
 ---
 
 ## 🎯 Pre-Deployment Checklist
@@ -14,6 +16,7 @@ Before deploying, verify:
 - [ ] No TypeScript/lint errors: Review with Copilot or run linter
 - [ ] Database migration planned (if schema changes)
 - [ ] Environment secrets configured (see "Required Secrets" below)
+- [ ] Production gate credentials configured: `E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`, `AUDIT_SECRET`
 - [ ] Code committed and pushed to `main` branch
 
 ---
@@ -162,6 +165,7 @@ The full production gate now treats browser smoke as required by default. Config
 ```bash
 E2E_TEST_EMAIL=<production-safe smoke user>
 E2E_TEST_PASSWORD=<production-safe smoke password>
+AUDIT_SECRET=<worker audit token>
 TEST_BASE_URL=https://selfprime.net
 PROD_API=https://prime-self-api.adrper79.workers.dev
 ```

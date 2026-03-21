@@ -18,6 +18,18 @@ const hasBrowserCreds = Boolean(process.env.E2E_TEST_EMAIL && process.env.E2E_TE
 
 const results = [];
 
+function resolveCommand(command) {
+  if (command === 'node') {
+    return process.execPath;
+  }
+
+  if (process.platform === 'win32' && command === 'npx') {
+    return 'npx.cmd';
+  }
+
+  return command;
+}
+
 function log(message) {
   if (!jsonOnly) {
     console.log(message);
@@ -28,7 +40,7 @@ function runStep(name, command, commandArgs, extraEnv = {}) {
   return new Promise((resolve) => {
     log(`\n[prod-gate] ${name}`);
 
-    const child = spawn(command, commandArgs, {
+    const child = spawn(resolveCommand(command), commandArgs, {
       cwd: process.cwd(),
       env: {
         ...process.env,
@@ -37,7 +49,7 @@ function runStep(name, command, commandArgs, extraEnv = {}) {
         ...extraEnv,
       },
       stdio: jsonOnly ? ['ignore', 'pipe', 'pipe'] : 'inherit',
-      shell: process.platform === 'win32',
+      shell: false,
     });
 
     let stdout = '';

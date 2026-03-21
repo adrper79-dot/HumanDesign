@@ -52,7 +52,8 @@ test.describe('Browser smoke — no auth required', () => {
     await page.goto(`${baseUrl}/`, { waitUntil: 'domcontentloaded' });
 
     // Main header / nav must be present — confirms core HTML rendered correctly.
-    const header = page.locator('header, [role="banner"]');
+    // Note: [role="banner"] also matches #identity-strip; use the <header> element directly.
+    const header = page.locator('header').first();
     await expect(header).toBeVisible({ timeout: 5000 });
   });
 
@@ -63,7 +64,8 @@ test.describe('Browser smoke — no auth required', () => {
 
     await page.goto(`${baseUrl}/`, { waitUntil: 'domcontentloaded' });
 
-    const signInBtn = page.locator('#authBtn, button:text("Sign In")').first();
+    // #authBtn is the header CTA; #authSubmit is the hidden form submit — target the header button specifically.
+    const signInBtn = page.locator('#authBtn');
     await expect(signInBtn).toBeVisible({ timeout: 5000 });
   });
 });

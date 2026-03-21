@@ -28,6 +28,8 @@
 
 *(Deployment health should be verified separately before marketing or release use.)*
 
+**Canonical launch standard:** [docs/LAUNCH_TESTING_PHILOSOPHY_2026-03-21.md](docs/LAUNCH_TESTING_PHILOSOPHY_2026-03-21.md)
+
 ---
 
 ## What Prime Self Supports

@@ -96,11 +96,11 @@
    - Add `npm run docs:api` and `npm run docs:api:check` (CI-wired)
    - Resolves: [BL-DOCS-P1-3](MASTER_BACKLOG_SYSTEM_V2.md)
 
-4. **GAP-004: Deterministic E2E release gate** `(1–2 days)` — Playwright gate
-   - Create `tests/e2e/auth-gate.spec.ts` (env credentials, `?e2e=1` modal bypass)
-   - Create `playwright.gate.config.ts` (2 gate specs only, no retries)
-   - Add `npm run test:gate`; wire CI to block deploy on gate failure
-   - Resolves: [BL-TEST-P1-3](MASTER_BACKLOG_SYSTEM_V2.md) — closes BL-TEST-P1-2
+4. **GAP-004: Deterministic browser gate + live production gate** `(completed)`
+  - `tests/e2e/auth-gate.spec.ts` and `playwright.gate.config.ts` exist for focused deterministic browser checks
+  - `npm run verify:prod:gate -- --strict-browser` is the canonical launch gate against `https://selfprime.net`
+  - Deploy and scheduled canary workflows enforce the live gate
+  - Resolves: [BL-TEST-P1-3](MASTER_BACKLOG_SYSTEM_V2.md) — closes BL-TEST-P1-2
 
 ### Short Sprint (Structural)
 
