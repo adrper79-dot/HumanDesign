@@ -8,6 +8,38 @@ This document catalogs key learnings from development, debugging, and production
 
 ## Incident Log
 
+### 2026-03-21 | Recurring Frontend Regression — Helper Alias Drift and Unsafe Device Normalization
+
+**Context**
+Users reported two recurring regressions that had both been fixed previously: city lookup failed with `escapeHTML is not defined`, and an intermittent `toLowerCase is not a function` error reappeared in live flows. A Samsung Z Flip test device was also being classified as desktop in some paths.
+
+**Key Findings**
+
+1. **Helper naming drift can resurrect old browser errors when cached assets survive**
+   - The current app uses `escapeHtml`, but older code paths still expected `escapeHTML`
+   - If a stale asset or older browser path calls the previous helper name, city lookup fails even though geocoding itself is healthy
+   - Lesson: **When renaming global browser helpers, keep a compatibility alias until the service-worker cache generation that depended on the old name is gone.**
+
+2. **Header values must be normalized before string methods in Workers code**
+   - `getDeviceType()` lowercased a chained header expression directly
+   - If a header adapter returned a non-string shape, the chain threw before analytics completed
+   - Lesson: **Always coerce request metadata to strings before calling `toLowerCase()`, `trim()`, or regex checks.**
+
+3. **Foldables need explicit handling in responsive heuristics**
+   - Generic mobile detection did not reliably cover Samsung foldables in every runtime path
+   - Lesson: **Treat foldables as an explicit mobile class in both frontend layout logic and backend analytics heuristics.**
+
+**Resolution**
+- Added an `escapeHTML` compatibility alias in the frontend runtime alongside `escapeHtml`
+- Hardened backend device detection by normalizing header values before lowercasing
+- Expanded frontend and backend mobile heuristics to recognize Samsung foldables more reliably
+- Bumped the service-worker cache version so cached clients refresh to the fixed runtime bundle
+
+**Preventive Measures**
+- [ ] Keep compatibility aliases for renamed global helpers through at least one cache-version rollover
+- [ ] Add a small normalization helper before string operations on request metadata
+- [ ] Include at least one foldable-device scenario in responsive validation
+
 ### 2026-03-14 | Comprehensive Production Readiness Audit — Multi-Perspective Deep Validation
 
 **Context**

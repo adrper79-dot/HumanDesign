@@ -209,6 +209,7 @@ import {
   handleGetTierConfig
   // handleWebhook removed — BL-R-C4: consolidated to handleStripeWebhook in webhook.js
 } from './handlers/billing.js';
+import { handleBugReport } from './handlers/bugs.js';
 import {
   handleGenerateCode,
   handleGetStats,
@@ -306,6 +307,7 @@ const AUTH_ROUTES = new Set([
   '/api/sms/send-digest',
   '/api/composite',          // HD_UPDATES3: composites gated to practitioner+ tier
   '/api/invitations/practitioner/accept',
+  '/api/bugs',
 ]);
 
 // Prefix-based auth routes (cluster endpoints, profile export, practitioner, onboarding, validation, psychometric, diary, checkout, billing, referrals, achievements, webhooks, push, alerts, api keys, timing, compare, share, notion)
@@ -399,6 +401,7 @@ const EXACT_ROUTES = new Map([
   ['POST /api/billing/checkout',      handleCheckout],
   ['POST /api/billing/checkout-one-time', handleOneTimeCheckout],
   ['POST /api/billing/portal',        handlePortal],
+  ['POST /api/bugs',                  handleBugReport],
   ['GET /api/billing/subscription',   handleGetSubscription],
   ['GET /api/billing/tiers',          handleGetTierConfig],
   ['POST /api/billing/cancel',        handleCancelSubscription],

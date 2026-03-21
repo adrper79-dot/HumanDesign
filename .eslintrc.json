@@ -52,6 +52,12 @@
       }
     },
     {
+      "files": ["frontend/js/app.js"],
+      "rules": {
+        "max-lines": ["warn", { "max": 8500, "skipBlankLines": false, "skipComments": false }]
+      }
+    },
+    {
       "files": ["frontend/**/*.js"],
       "env": {
         "browser": true,

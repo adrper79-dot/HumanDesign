@@ -79,7 +79,11 @@ function httpsRequest(options, data = null) {
     req.on('error', reject);
 
     if (data) {
-      req.write(JSON.stringify(data));
+      if (typeof data === 'string' || Buffer.isBuffer(data)) {
+        req.write(data);
+      } else {
+        req.write(JSON.stringify(data));
+      }
     }
 
     req.end();
@@ -90,8 +94,8 @@ async function testCloudflareMetrics(env) {
   log('\n🔍 Testing Cloudflare Analytics API (WC-005)', 'cyan');
   log('─'.repeat(50), 'dim');
 
-  const token = env['CLOUDFLARE_API'];
-  const accountId = env['CLOUFLARE_ACCOUNT_ID'];
+  const token = env['CLOUDFLARE_API'] || env['CF_API_TOKEN'];
+  const accountId = env['CLOUDFLARE_ACCOUNT_ID'] || env['CLOUFLARE_ACCOUNT_ID'] || env['CF_ACCOUNT_ID'];
 
   if (!token || !accountId) {
     log('⊘ Skipped: Missing CF_API_TOKEN or CF_ACCOUNT_ID', 'yellow');
@@ -101,7 +105,7 @@ async function testCloudflareMetrics(env) {
   try {
     const response = await httpsRequest({
       hostname: 'api.cloudflare.com',
-      path: `/client/v4/accounts/${accountId}/zones`,
+      path: `/client/v4/accounts/${accountId}`,
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -111,8 +115,8 @@ async function testCloudflareMetrics(env) {
 
     if (response.status === 200) {
       log('✅ Cloudflare API token is valid', 'green');
-      if (response.body?.result?.length > 0) {
-        log(`   Found ${response.body.result.length} zones`, 'dim');
+      if (response.body?.result?.name) {
+        log(`   Account: ${response.body.result.name}`, 'dim');
       }
       return true;
     } else {
@@ -184,6 +188,14 @@ async function testGoogleOAuth(env) {
   }
 
   try {
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: 'INVALID_TEST_CODE',
+      grant_type: 'authorization_code',
+      redirect_uri: 'http://localhost:3000/callback',
+    }).toString();
+
     // Test by exchanging a dummy code (will fail but shows API works)
     const response = await httpsRequest({
       hostname: 'oauth2.googleapis.com',
@@ -191,14 +203,9 @@ async function testGoogleOAuth(env) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(body),
       },
-    }, {
-      client_id: clientId,
-      client_secret: clientSecret,
-      code: 'INVALID_TEST_CODE',
-      grant_type: 'authorization_code',
-      redirect_uri: 'http://localhost:3000/callback',
-    });
+    }, body);
 
     // Expected to fail with invalid code, but 400 means API responded
     if (response.status === 400 && response.body?.error === 'invalid_grant') {

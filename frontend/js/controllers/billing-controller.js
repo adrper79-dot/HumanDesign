@@ -12,6 +12,13 @@
  * relevant tab is first activated.  Do not add <script> tags for this
  * file to index.html — the loader handles it.
  */
+
+function getAttributionPayload() {
+  if (typeof window.getStoredAttribution !== 'function') return null;
+  const attribution = window.getStoredAttribution();
+  return attribution && Object.keys(attribution).length ? attribution : null;
+}
+
 // ── Pricing Modals ─────────────────────────────────────────
 // Consumer modal (Free + Explorer) — for free/regular tier users
 // Professional modal (Guide + Studio) — for practitioner/white_label users
@@ -20,7 +27,6 @@
 function openPricingModal(suggestedTier = null) {
   // ACC-P2-8: Store trigger element for focus restoration on close
   storeModalTrigger('pricingOverlay');
-
   if (!token) {
     openAuthOverlay();
     document.getElementById('authError').textContent = typeof window.t === 'function' ? window.t('auth.signInUpgrade') : 'Sign in to upgrade your plan.';
@@ -34,17 +40,28 @@ function openPricingModal(suggestedTier = null) {
   }
   // Update card states based on current tier
   _syncConsumerPricingCards(tier);
-  document.getElementById('pricingOverlay').classList.remove('hidden');
+  // GTM-007: Show Individual card only if user is already on that plan
+  if (typeof syncPricingModalToUserTier === 'function') syncPricingModalToUserTier();
+  const _pricingEl = document.getElementById('pricingOverlay');
+  _pricingEl.classList.remove('hidden');
+  if (typeof trapFocus === 'function') trapFocus(_pricingEl, closePricingModal);
 }
 
 function closePricingModal() {
-  document.getElementById('pricingOverlay').classList.add('hidden');
+  const _pricingEl = document.getElementById('pricingOverlay');
+  _pricingEl.classList.add('hidden');
+  if (typeof releaseFocusTrap === 'function') releaseFocusTrap(_pricingEl);
   // P2-FE-001: Clear stale promo code when modal closes
   activePromoCode = null;
   const promoInput = document.getElementById('promoCodeInput');
   const promoResult = document.getElementById('promoCodeResult');
   if (promoInput) promoInput.value = '';
   if (promoResult) promoResult.textContent = '';
+  // GTM-007: Reset Individual tier visibility for next open
+  const grid = document.querySelector('#pricingOverlay .pricing-grid--2col');
+  if (grid) grid.classList.remove('show-all-tiers');
+  const link = document.querySelector('.pricing-all-plans-link');
+  if (link) link.style.display = '';
   // ACC-P2-8: Restore focus to trigger element
   restoreModalFocus('pricingOverlay');
 }
@@ -86,11 +103,15 @@ function openPractitionerPricingModal() {
   }
   const tier = currentUser?.tier || 'free';
   _syncPractitionerPricingCards(tier);
-  document.getElementById('practitionerPricingOverlay').classList.remove('hidden');
+  const _practPricingEl = document.getElementById('practitionerPricingOverlay');
+  _practPricingEl.classList.remove('hidden');
+  if (typeof trapFocus === 'function') trapFocus(_practPricingEl, closePractitionerPricingModal);
 }
 
 function closePractitionerPricingModal() {
-  document.getElementById('practitionerPricingOverlay').classList.add('hidden');
+  const _practPricingEl = document.getElementById('practitionerPricingOverlay');
+  _practPricingEl.classList.add('hidden');
+  if (typeof releaseFocusTrap === 'function') releaseFocusTrap(_practPricingEl);
   // ACC-P2-8: Restore focus to trigger element
   restoreModalFocus('practitionerPricingOverlay');
 }
@@ -222,6 +243,8 @@ async function startCheckout(tier, event) {
     const checkoutBody = { tier };
     if (activePromoCode) checkoutBody.promoCode = activePromoCode;
     if (activeBillingPeriod === 'annual') checkoutBody.billingPeriod = 'annual';
+  const attribution = getAttributionPayload();
+  if (attribution) checkoutBody.attribution = attribution;
 
     trackEvent('billing', 'checkout_start', tier);
 

@@ -357,6 +357,11 @@ export async function handleCheckoutCompleted(event, query, stripe, env, log) {
   const session = event.data.object;
   const customerId = session.customer;
   const userId = session.metadata?.user_id;
+  const attribution = Object.fromEntries(
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'landing_path', 'referrer']
+      .map((key) => [key, session.metadata?.[key] || null])
+      .filter(([, value]) => Boolean(value))
+  );
 
   if (!userId) {
     log.error({ action: 'checkout_missing_user_id', sessionId: session.id });
@@ -426,8 +431,30 @@ export async function handleCheckoutCompleted(event, query, stripe, env, log) {
     } catch (e) { log.warn({ action: 'subscription_email_lookup_failed', error: e.message }); }
   }
 
+  // GTM-005: Gate 1 — paid practitioner/agency subscription activated
+  if (tier === 'practitioner' || tier === 'agency' || tier === 'white_label') {
+    trackEvent(env, EVENTS.PRACTITIONER_GATE1_COMPLETED, {
+      userId,
+      properties: { tier, source: 'checkout' }
+    }).catch(e => log.warn({ action: 'track_event_failed', event: 'practitioner_gate1_completed', error: e.message }));
+
+    // GTM-009: Record trial start for nurture email scheduling
+    if (subscription.status === 'trialing') {
+      query(QUERIES.setPractitionerTrialStartedAt, [userId]).catch(e =>
+        log.warn({ action: 'trial_started_at_failed', userId, error: e.message })
+      );
+    }
+  }
+
   log.info({ action: 'checkout_completed', userId, tier });
-  trackEvent(env, EVENTS.CHECKOUT_COMPLETE, { userId, tier }).catch(e => log.warn({ action: 'track_event_failed', event: 'checkout_complete', error: e.message }));
+  trackEvent(env, EVENTS.CHECKOUT_COMPLETE, {
+    userId,
+    properties: {
+      tier,
+      billing_period: session.metadata?.billing_period || null,
+      ...attribution,
+    }
+  }).catch(e => log.warn({ action: 'track_event_failed', event: 'checkout_complete', error: e.message }));
   await finalizeEventRecord(query, event, {
     subscriptionId,
     status: 'succeeded',

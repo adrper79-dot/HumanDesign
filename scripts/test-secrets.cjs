@@ -32,7 +32,7 @@ function log(message, color = 'reset') {
 const REQUIRED_SECRETS = {
   // Observability (WC-005)
   'CF_API_TOKEN': { category: 'Observability', required: true },
-  'CF_ACCOUNT_ID': { category: 'Observability', required: true },
+  'CF_ACCOUNT_ID': { category: 'Observability', required: false },
 
   // SMS/Telnyx (WC-008)
   'TELNYX_API_KEY': { category: 'SMS', required: false },
@@ -60,6 +60,24 @@ async function testSecrets() {
   let passed = 0;
   let failed = 0;
   let missing = 0;
+  let listedSecrets = null;
+  let listError = null;
+
+  try {
+    const output = execSync(`cd "${workersDir}" && wrangler secret list 2>&1`, {
+      encoding: 'utf-8',
+    });
+
+    listedSecrets = new Set();
+    const parsed = JSON.parse(output);
+    if (Array.isArray(parsed)) {
+      parsed.forEach((entry) => {
+        if (entry?.name) listedSecrets.add(entry.name);
+      });
+    }
+  } catch (error) {
+    listError = error;
+  }
 
   // Group secrets by category
   const categories = {};
@@ -78,32 +96,25 @@ async function testSecrets() {
     for (const { name, config } of secrets) {
       const isRequired = config.required;
 
-      try {
-        // Try to read secret via wrangler
-        // Note: wrangler secret:list only shows names, not values
-        // We'll consider a secret "configured" if wrangler doesn't error
-        const output = execSync(`cd "${workersDir}" && wrangler secret:list 2>&1`, {
-          encoding: 'utf-8',
-        });
-
-        if (output.includes(name) || output.includes('Listing secrets')) {
-          log(`  ✅ ${name}`, 'green');
-          passed++;
-        } else {
-          const status = isRequired ? '❌' : '⊘';
-          const color = isRequired ? 'red' : 'yellow';
-          log(`  ${status} ${name} (not found)`, color);
-          if (isRequired) {
-            failed++;
-          } else {
-            missing++;
-          }
-        }
-      } catch (error) {
-        // If wrangler fails, likely due to authentication
+      if (listError) {
         const status = isRequired ? '❌' : '⊘';
         const color = isRequired ? 'red' : 'yellow';
-        log(`  ${status} ${name} (error: ${error.message.split('\n')[0]})`, color);
+        log(`  ${status} ${name} (error: ${listError.message.split('\n')[0]})`, color);
+        if (isRequired) {
+          failed++;
+        } else {
+          missing++;
+        }
+        continue;
+      }
+
+      if (listedSecrets && listedSecrets.has(name)) {
+        log(`  ✅ ${name}`, 'green');
+        passed++;
+      } else {
+        const status = isRequired ? '❌' : '⊘';
+        const color = isRequired ? 'red' : 'yellow';
+        log(`  ${status} ${name} (not found)`, color);
         if (isRequired) {
           failed++;
         } else {

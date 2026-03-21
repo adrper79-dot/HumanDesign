@@ -1082,3 +1082,255 @@ export async function sendSessionSummaryEmail(
 
   return sendEmail({ to: clientEmail, subject, html, companyAddress }, apiKey, fromEmail);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GTM-009: Practitioner Trial Nurture Sequence (7 emails over 14 days)
+// Triggered by cron.js Step 7c when a practitioner subscription enters trial.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const NURTURE_DOMAIN = 'https://selfprime.net';
+
+function _nurtureWrap(emoji, title, body, ctaText, ctaUrl) {
+  const cta = ctaUrl
+    ? `<div style="text-align:center;margin:28px 0"><a href="${ctaUrl}" style="background:#c9a84c;color:#0d0d14;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block">${ctaText} →</a></div>`
+    : '';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0a12;font-family:'Segoe UI',Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;background:#13131c;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1e1e2e,#2a1a3a);padding:32px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">${emoji}</div>
+    <h1 style="margin:0;font-size:22px;color:#c9a84c">${title}</h1>
+    <p style="margin:8px 0 0;color:#8882a0;font-size:13px">Prime Self Practitioner Trial</p>
+  </div>
+  <div style="padding:28px 32px;color:#d4cfe0;font-size:15px;line-height:1.7">${body}${cta}</div>
+  <div style="background:#0d0d14;padding:16px 32px;text-align:center">
+    <p style="margin:0;font-size:12px;color:#6a6580">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</p>
+    <p style="margin:6px 0 0;font-size:12px;color:#6a6580"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+  </div>
+</div>
+</body></html>`;
+}
+
+/** Day 0 — Welcome + activation checklist (sent immediately on trial start) */
+export async function sendNurtureDay0(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _nurtureWrap('🌟', "You're in. Let's activate your practice.",
+    `<p>Hi ${n},</p>
+<p>Welcome to your Prime Self Practitioner trial! You have <strong>14 days</strong> to explore everything — and we want to make sure you get the most out of it.</p>
+<p><strong>Your activation checklist:</strong></p>
+<ul>
+  <li>✅ Generate your own Energy Blueprint chart (if you haven't already)</li>
+  <li>✅ Invite your first client from the <strong>Connect</strong> tab</li>
+  <li>✅ Run a Session Prep brief before your next client call</li>
+  <li>✅ Set up your public Practitioner Directory profile</li>
+</ul>
+<p>Practitioners who complete all four steps in their first 24 hours are far more likely to see the full value of the platform. Let's get you there.</p>`,
+    'Open Prime Self', NURTURE_DOMAIN);
+  return sendEmail({ to: userEmail, subject: "Welcome to your Prime Self Practitioner trial 🌟", html, companyAddress }, apiKey, fromEmail);
+}
+
+/** Day 1 — How to run your first client session */
+export async function sendNurtureDay1(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _nurtureWrap('🎯', "Your first client session, unlocked.",
+    `<p>Hi ${n},</p>
+<p>Day 1 tip: before your next client call, use <strong>Session Prep AI</strong> for a personalised briefing on what your client is working with today — their active channels, transits, and open centres.</p>
+<p><strong>How to use it:</strong></p>
+<ol>
+  <li>Go to <strong>Connect → your client's name</strong></li>
+  <li>Tap <strong>Session Brief</strong></li>
+  <li>Get a 60-second AI synthesis you can reference live on the call</li>
+</ol>
+<p>Practitioners who arrive prepared with this context consistently report more impactful sessions. Try it before your next appointment.</p>`,
+    'Open Session Prep', `${NURTURE_DOMAIN}/?tab=practitioner`);
+  return sendEmail({ to: userEmail, subject: "Day 1: Run your first AI-powered client session", html, companyAddress }, apiKey, fromEmail);
+}
+
+/** Day 3 — Nudge to add first client (skipped by cron if Gate 2 already complete) */
+export async function sendNurtureDay3(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _nurtureWrap('🤝', "One step away from your full toolkit.",
+    `<p>Hi ${n},</p>
+<p>You're 3 days into your trial — have you added your first client yet?</p>
+<p>Inviting a client takes under 60 seconds. Once they join, you unlock:</p>
+<ul>
+  <li>🗒️ Session notes linked directly to their chart</li>
+  <li>🤝 Composite / relationship chart generation</li>
+  <li>📊 AI context per client — know what they're working with before every call</li>
+</ul>
+<p>Add your first client now and see the difference in your very next session.</p>`,
+    'Add a Client', `${NURTURE_DOMAIN}/?tab=practitioner`);
+  return sendEmail({ to: userEmail, subject: "Day 3: Have you added your first client yet?", html, companyAddress }, apiKey, fromEmail);
+}
+
+/** Day 5 — Feature deep-dive */
+export async function sendNurtureDay5(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _nurtureWrap('✨', "Going deeper with Prime Self.",
+    `<p>Hi ${n},</p>
+<p>You're five days in. Here are the three features practitioners tell us changed how they work:</p>
+<p><strong>1. Transit Digests</strong> — Daily personalised energy forecasts for each client. No more answering "what's happening for me right now?" cold.</p>
+<p><strong>2. AI Synthesis</strong> — 500 synthesis sessions per month on the Practitioner plan. Use it to prep reports, answer questions between sessions, or deepen your own study.</p>
+<p><strong>3. PDF Branded Reports</strong> — Export a client's full blueprint as a PDF with your practice branding. Perfect for first sessions.</p>
+<p>Which feature are you most curious about? Hit reply — we'd love to know.</p>`,
+    'Explore Features', NURTURE_DOMAIN);
+  return sendEmail({ to: userEmail, subject: "Day 5: 3 features practitioners love most", html, companyAddress }, apiKey, fromEmail);
+}
+
+/** Day 7 — Mid-trial check-in */
+export async function sendNurtureDay7(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _nurtureWrap('🌗', "One week in. How are you feeling?",
+    `<p>Hi ${n},</p>
+<p>You're one week into your trial — exactly halfway. How's it going?</p>
+<p>If life got busy and you haven't explored much yet — no problem. You have 7 days left. Here's the one thing worth doing today:</p>
+<div style="background:#1a1a24;border-radius:8px;padding:16px;border-left:3px solid #c9a84c">
+  <strong>Run one Session Brief for a real client you have a call with this week.</strong> That's all. One session. You'll know immediately whether this tool belongs in your practice.
+</div>
+<p style="margin-top:20px">Any questions? Just reply to this email — we read every one.</p>`,
+    'Open Prime Self', NURTURE_DOMAIN);
+  return sendEmail({ to: userEmail, subject: "Day 7: Halfway through your trial — a quick check-in", html, companyAddress }, apiKey, fromEmail);
+}
+
+/** Day 11 — Final reminder, 3 days left */
+export async function sendNurtureDay11(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _nurtureWrap('⏳', "3 days to decide.",
+    `<p>Hi ${n},</p>
+<p>Your trial ends in <strong>3 days</strong>. If you decide to continue, here's what's included in the Practitioner plan:</p>
+<ul>
+  <li>500 AI synthesis sessions / month</li>
+  <li>Unlimited client management</li>
+  <li>Session prep AI + client notes</li>
+  <li>Composite / relationship charts</li>
+  <li>Branded PDF exports</li>
+  <li>Practitioner Directory listing</li>
+  <li>25% referral credit on every client you bring in</li>
+</ul>
+<p>The Practitioner plan is <strong>$97/month</strong> (or $970/year — save 17%).</p>
+<p>Questions before your trial ends? Reply here — happy to help.</p>`,
+    'Continue with Practitioner', `${NURTURE_DOMAIN}/?action=openPractitionerPricing`);
+  return sendEmail({ to: userEmail, subject: "Day 11: 3 days left on your trial", html, companyAddress }, apiKey, fromEmail);
+}
+
+/** Day 14 — Trial ending, upgrade CTA */
+export async function sendNurtureDay14(userEmail, userName, tierName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const tier = String(tierName || 'Practitioner');
+  const html = _nurtureWrap('🔔', "Today is the day.",
+    `<p>Hi ${n},</p>
+<p>Your Prime Self Practitioner trial <strong>ends today</strong>.</p>
+<p>To keep all your client data, session notes, and AI access without interruption, upgrade now:</p>
+<div style="background:#1a1a24;border-radius:8px;padding:20px;margin:20px 0">
+  <p style="margin:0;font-weight:700;color:#c9a84c;font-size:18px">${tier} Plan — $97/month</p>
+  <p style="margin:6px 0 0;color:#d4cfe0;font-size:14px">or $970/year (save 17%)</p>
+</div>
+<p>If you don't upgrade today, your account reverts to the free tier and your practitioner workspace will be paused.</p>
+<p>Questions before you decide? Reply here — available right now.</p>`,
+    'Upgrade Now', `${NURTURE_DOMAIN}/?action=openPractitionerPricing`);
+  return sendEmail({ to: userEmail, subject: "Your trial ends today — upgrade to keep your practice running", html, companyAddress }, apiKey, fromEmail);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GTM-012: Post-purchase practitioner onboarding sequence (5 emails / 30 days)
+// Triggered by cron.js after subscription start for practitioner and agency tiers.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function _paidOnboardingWrap(emoji, title, body, ctaText, ctaUrl) {
+  const cta = ctaUrl
+    ? `<div style="text-align:center;margin:28px 0"><a href="${ctaUrl}" style="background:#7db4ff;color:#08101d;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block">${ctaText} →</a></div>`
+    : '';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0a12;font-family:'Segoe UI',Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;background:#13131c;border-radius:12px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#132033,#203252);padding:32px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">${emoji}</div>
+    <h1 style="margin:0;font-size:22px;color:#7db4ff">${title}</h1>
+    <p style="margin:8px 0 0;color:#9bb6d8;font-size:13px">Prime Self Practitioner Onboarding</p>
+  </div>
+  <div style="padding:28px 32px;color:#d4cfe0;font-size:15px;line-height:1.7">${body}${cta}</div>
+  <div style="background:#0d0d14;padding:16px 32px;text-align:center">
+    <p style="margin:0;font-size:12px;color:#6a6580">Prime Self · 8 The Green, Suite A, Dover, DE 19901, USA</p>
+    <p style="margin:6px 0 0;font-size:12px;color:#6a6580"><a href="{{unsubscribe_url}}" style="color:#6a6580">Unsubscribe</a></p>
+  </div>
+</div>
+</body></html>`;
+}
+
+export async function sendPaidOnboardingDay0(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _paidOnboardingWrap('🚀', 'Your practitioner workspace is live.',
+    `<p>Hi ${n},</p>
+<p>Your paid practitioner workspace is active. The next move is simple: set up the assets that remove friction before your next session.</p>
+<ul>
+  <li>Update your practitioner directory profile so referrals land on a complete page</li>
+  <li>Save one branded export you can reuse with clients</li>
+  <li>Confirm your billing and practice details while the setup is fresh</li>
+</ul>
+<p>If you do those three things now, the rest of the system compounds around a clean baseline.</p>`,
+    'Open Practitioner Workspace', `${NURTURE_DOMAIN}/?tab=practitioner`);
+  return sendEmail({ to: userEmail, subject: 'Your Prime Self practitioner workspace is live', html, companyAddress }, apiKey, fromEmail);
+}
+
+export async function sendPaidOnboardingDay7(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _paidOnboardingWrap('🧭', 'Build one repeatable client workflow.',
+    `<p>Hi ${n},</p>
+<p>One week in, the highest-leverage move is turning one successful session into a repeatable workflow.</p>
+<ol>
+  <li>Create a client record</li>
+  <li>Run Session Prep before the call</li>
+  <li>Save notes and export a branded takeaway after the session</li>
+</ol>
+<p>That loop gives you a real before-and-after view of what Prime Self is replacing in your current process.</p>`,
+    'Open Session Workflow', `${NURTURE_DOMAIN}/?tab=practitioner`);
+  return sendEmail({ to: userEmail, subject: 'Day 7: Build one repeatable client workflow', html, companyAddress }, apiKey, fromEmail);
+}
+
+export async function sendPaidOnboardingDay14(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _paidOnboardingWrap('🛠️', 'Tighten the practice, not just the software.',
+    `<p>Hi ${n},</p>
+<p>At two weeks, the platform should be serving a clearer business rhythm, not just more features.</p>
+<p>Use this checkpoint:</p>
+<ul>
+  <li>Which client workflow is fastest now?</li>
+  <li>Where are you still doing manual prep outside Prime Self?</li>
+  <li>What question do clients keep asking that could become a reusable asset?</li>
+</ul>
+<p>Answering those three questions usually reveals the next system to tighten.</p>`,
+    'Review Your Workflow', `${NURTURE_DOMAIN}/pricing`);
+  return sendEmail({ to: userEmail, subject: 'Day 14: Tighten the practice, not just the software', html, companyAddress }, apiKey, fromEmail);
+}
+
+export async function sendPaidOnboardingDay21(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _paidOnboardingWrap('📈', 'Let referrals compound for you.',
+    `<p>Hi ${n},</p>
+<p>Three weeks in is the right time to make referrals part of the workflow instead of an afterthought.</p>
+<ul>
+  <li>Send your referral link to one warm client or collaborator</li>
+  <li>Export one branded artifact that shows how you work</li>
+  <li>Keep your practitioner profile current so the next introduction has somewhere credible to land</li>
+</ul>
+<p>You do not need a big campaign. You need one clean proof path that turns trust into the next booked conversation.</p>`,
+    'Open Referral Tools', `${NURTURE_DOMAIN}/?tab=practitioner`);
+  return sendEmail({ to: userEmail, subject: 'Day 21: Let referrals compound for you', html, companyAddress }, apiKey, fromEmail);
+}
+
+export async function sendPaidOnboardingDay30(userEmail, userName, apiKey, fromEmail, companyAddress = '') {
+  const n = String(userName || 'there');
+  const html = _paidOnboardingWrap('🏁', 'Thirty days in: keep what compounds.',
+    `<p>Hi ${n},</p>
+<p>You now have a month of real usage. The goal is not to use every feature. It is to keep the parts that compound for your practice.</p>
+<p>Most durable setups at this stage have:</p>
+<ul>
+  <li>A consistent pre-session prep ritual</li>
+  <li>One follow-up asset clients recognize as part of your process</li>
+  <li>A referral or directory surface bringing in the next conversation</li>
+</ul>
+<p>If one of those is still missing, that is the next system worth fixing.</p>`,
+    'Open Prime Self', NURTURE_DOMAIN);
+  return sendEmail({ to: userEmail, subject: 'Day 30: Keep what compounds', html, companyAddress }, apiKey, fromEmail);
+}
+

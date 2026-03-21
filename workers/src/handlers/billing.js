@@ -76,6 +76,29 @@ function isSafeRedirectUrl(url, env) {
   }
 }
 
+function sanitizeAttribution(input) {
+  if (!input || typeof input !== 'object') return null;
+
+  const sanitizeValue = (value, maxLength = 240) => {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return trimmed.slice(0, maxLength);
+  };
+
+  const attribution = {
+    utm_source: sanitizeValue(input.utm_source, 120),
+    utm_medium: sanitizeValue(input.utm_medium, 120),
+    utm_campaign: sanitizeValue(input.utm_campaign, 120),
+    utm_term: sanitizeValue(input.utm_term, 120),
+    utm_content: sanitizeValue(input.utm_content, 120),
+    landing_path: sanitizeValue(input.landing_path),
+    referrer: sanitizeValue(input.referrer),
+  };
+
+  return Object.values(attribution).some(Boolean) ? attribution : null;
+}
+
 async function findReusableOpenCheckoutSession(stripe, customerId, predicate) {
   if (!customerId) return null;
 
@@ -110,7 +133,7 @@ export async function handleCheckout(request, env, ctx) {
     }
     
     const body = await request.json();
-    const { tier, successUrl, cancelUrl, promoCode, billingPeriod } = body;
+    const { tier, successUrl, cancelUrl, promoCode, billingPeriod, attribution } = body;
     
     // Validate tier
     const VALID_TIERS = ['individual', 'practitioner', 'agency'];
@@ -130,6 +153,7 @@ export async function handleCheckout(request, env, ctx) {
 
     // Validate billing period
     const period = billingPeriod === 'annual' ? 'annual' : 'monthly';
+    const sanitizedAttribution = sanitizeAttribution(attribution);
 
     // Validate redirect URLs — must be valid https URLs on the same origin to prevent open-redirect
     if (!isSafeRedirectUrl(successUrl, env)) {
@@ -226,12 +250,20 @@ export async function handleCheckout(request, env, ctx) {
       metadata: {
         user_id: user.id,
         tier: tier,
-        billing_period: period
+        billing_period: period,
+        ...(sanitizedAttribution || {})
       },
       trialDays
     }));
     
-    trackEvent(env, EVENTS.CHECKOUT_START, { userId: user.id, tier, period }).catch(e => log.error('track_checkout_start_failed', { error: e.message }));
+    trackEvent(env, EVENTS.CHECKOUT_START, {
+      userId: user.id,
+      properties: {
+        tier,
+        period,
+        ...(sanitizedAttribution || {}),
+      }
+    }).catch(e => log.error('track_checkout_start_failed', { error: e.message }));
     return Response.json({ ok: true, sessionId: session.id, url: session.url });
     
   } catch (error) {

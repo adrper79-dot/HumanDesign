@@ -397,6 +397,36 @@ export const QUERIES = {
     WHERE practitioner_id = $1 AND email_day = $2
   `,
 
+  // GTM-012: Fetch paid practitioner subscriptions for post-purchase onboarding.
+  cronGetPaidOnboardingPractitioners: `
+    SELECT p.id AS practitioner_id, p.user_id, u.email,
+           s.tier,
+           s.current_period_start,
+           EXTRACT(DAY FROM (NOW() - s.current_period_start)) AS days_since_paid_start
+    FROM practitioners p
+    JOIN users u ON u.id = p.user_id
+    JOIN subscriptions s ON s.user_id = p.user_id
+    WHERE s.status IN ('active', 'trialing')
+      AND s.tier IN ('practitioner', 'agency')
+      AND s.current_period_start IS NOT NULL
+      AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
+  `,
+
+  // GTM-012: Record paid onboarding emails separately from trial nurture.
+  insertPaidOnboardingEmailSent: `
+    INSERT INTO practitioner_paid_onboarding_emails (practitioner_id, email_day)
+    VALUES ($1, $2)
+    ON CONFLICT (practitioner_id, email_day) DO NOTHING
+    RETURNING id
+  `,
+
+  // GTM-012: Check whether a paid onboarding email has already been sent.
+  getPaidOnboardingEmailSent: `
+    SELECT 1 FROM practitioner_paid_onboarding_emails
+    WHERE practitioner_id = $1 AND email_day = $2
+  `,
+
   getPractitionerByUserId: `
     -- Keep this query compatible with older production schemas that may not
     -- yet include Discord integration columns.

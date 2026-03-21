@@ -18,6 +18,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { EVENTS, captureRequestContext, trackEvent } from '../lib/analytics.js';
+import { createLogger } from '../lib/logger.js';
 
 // ─── Admin Auth Guard ─────────────────────────────────────────
 
@@ -40,11 +41,10 @@ function requireAdmin(request, env) {
       path: new URL(request.url).pathname,
       method: request.method,
     });
-    console.warn(JSON.stringify({
-      event: 'admin_auth_fail',
+    createLogger('admin').warn('admin_auth_fail', {
       ip: request.headers.get('CF-Connecting-IP') || 'unknown',
       path: new URL(request.url).pathname,
-    }));
+    });
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
   return null; // Authorized

@@ -44,7 +44,7 @@
 
 .calendar-view-toggle .btn-sm.active {
   background: var(--accent, #6C63FF);
-  color: #fff;
+  color: var(--color-white);
 }
 
 /* ── Transit Weather Bar ────────────────────────────── */
@@ -67,7 +67,7 @@
 
 .transit-weather-bar .weather-pill.retrograde {
   background: rgba(255, 77, 77, 0.15);
-  color: #ff6b6b;
+  color: var(--red);
 }
 
 /* ── Month Grid ─────────────────────────────────────── */
@@ -129,12 +129,12 @@
   flex-shrink: 0;
 }
 
-.event-dot.personal   { background: #6C63FF; }
-.event-dot.transit    { background: #FFD93D; }
-.event-dot.moon       { background: #C0C0C0; }
-.event-dot.retrograde { background: #FF4D4D; }
-.event-dot.session    { background: #2ECC71; }
-.event-dot.reminder   { background: #F39C12; }
+.event-dot.personal   { background: var(--accent); }
+.event-dot.transit    { background: var(--color-gold-300); }
+.event-dot.moon       { background: var(--color-silver); }
+.event-dot.retrograde { background: var(--red); }
+.event-dot.session    { background: var(--accent2); }
+.event-dot.reminder   { background: var(--color-gold-400); }
 .event-dot.diary      { background: #E056A0; }
 
 /* ── Week View ──────────────────────────────────────── */
@@ -154,7 +154,7 @@
 }
 
 .week-day-label.today {
-  color: var(--accent, #6C63FF);
+  color: var(--accent);
 }
 
 .week-events {

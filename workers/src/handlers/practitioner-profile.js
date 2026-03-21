@@ -12,6 +12,7 @@
  */
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -150,7 +151,7 @@ export async function handleGetPractitionerProfileSSR(request, env, username) {
       },
     });
   } catch (err) {
-    console.error(JSON.stringify({ event: 'practitioner_profile_ssr_error', error: err.message }));
+    createLogger('practitioner-profile').error('practitioner_profile_ssr_error', { error: err.message });
     return Response.json(
       { error: 'Service temporarily unavailable' },
       { status: 500 }
@@ -200,7 +201,7 @@ export async function handleGetPractitionerProfileJSON(request, env, username) {
       },
     });
   } catch (err) {
-    console.error(JSON.stringify({ event: 'practitioner_profile_json_error', error: err.message }));
+    createLogger('practitioner-profile').error('practitioner_profile_json_error', { error: err.message });
     return Response.json(
       { error: 'Service temporarily unavailable' },
       { status: 500 }

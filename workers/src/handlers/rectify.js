@@ -41,6 +41,7 @@ import { calculateFullChart } from '../../../src/engine/index.js';
 import { parseToUTC } from '../utils/parseToUTC.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
 
 /**
  * Extract key chart fingerprint for comparison.
@@ -152,7 +153,7 @@ export async function handleRectify(request, env) {
     }
   } catch (err) {
     // DB not available — continue with calculation only (test/fallback mode)
-    console.warn('Rectification DB storage unavailable, proceeding with calculation only', err.message);
+    createLogger('rectify').warn('rectify_db_unavailable', { error: err.message });
     query = null;
   }
 
@@ -374,7 +375,7 @@ export async function handleListRectifications(request, env) {
       offset
     });
   } catch (err) {
-    console.warn('Error listing rectifications:', err.message);
+    createLogger('rectify').warn('rectify_list_error', { error: err.message });
     return Response.json(
       { error: 'Failed to retrieve rectification history' },
       { status: 500 }

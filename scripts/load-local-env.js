@@ -1,6 +1,20 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
+function applyEnvAlias(targetKey, sourceKeys) {
+  if (process.env[targetKey] !== undefined) {
+    return;
+  }
+
+  for (const sourceKey of sourceKeys) {
+    const value = process.env[sourceKey];
+    if (value !== undefined && value !== '') {
+      process.env[targetKey] = value;
+      return;
+    }
+  }
+}
+
 export function loadLocalEnv(filename = '.env.local') {
   const envPath = resolve(process.cwd(), filename);
   if (!existsSync(envPath)) {
@@ -27,6 +41,12 @@ export function loadLocalEnv(filename = '.env.local') {
     }
     process.env[key] = value;
   }
+
+  applyEnvAlias('CF_API_TOKEN', ['CLOUDFLARE_API']);
+  applyEnvAlias('CLOUDFLARE_API', ['CF_API_TOKEN']);
+  applyEnvAlias('CF_ACCOUNT_ID', ['CLOUDFLARE_ACCOUNT_ID', 'CLOUFLARE_ACCOUNT_ID']);
+  applyEnvAlias('CLOUDFLARE_ACCOUNT_ID', ['CF_ACCOUNT_ID', 'CLOUFLARE_ACCOUNT_ID']);
+  applyEnvAlias('CLOUFLARE_ACCOUNT_ID', ['CF_ACCOUNT_ID', 'CLOUDFLARE_ACCOUNT_ID']);
 
   return true;
 }

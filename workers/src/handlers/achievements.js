@@ -321,7 +321,7 @@ export async function trackEvent(env, userId, eventType, eventData = null, userT
     for (const achievement of newlyUnlocked) {
       await query(QUERIES.insertUserAchievement, [userId, achievement.id, achievement.points]);
       
-      console.log(`Achievement unlocked:`, {
+      createLogger('achievements').info('achievement_unlocked', {
         userId,
         achievementId: achievement.id,
         points: achievement.points
@@ -459,7 +459,7 @@ async function checkPointMilestones(env, userId, userProgress, ctx = null) {
         const achievement = ACHIEVEMENTS[milestone.id];
         await query(QUERIES.insertUserAchievement, [userId, milestone.id, achievement.points]);
         
-        console.log(`Milestone unlocked:`, {
+        createLogger('achievements').info('milestone_unlocked', {
           userId,
           milestoneId: milestone.id,
           totalPoints

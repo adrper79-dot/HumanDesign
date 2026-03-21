@@ -980,6 +980,13 @@ select option { background: var(--bg3, #111d38); }
 @media(max-width: 580px) { .pricing-grid--2col { grid-template-columns: 1fr; } }
 @media(max-width: 850px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
 @media(max-width: 500px) { .pricing-grid { grid-template-columns: 1fr; } }
+/* GTM-007: Individual tier hidden from marketing surfaces by default.
+   Shown only when JS adds .show-all-tiers to the grid, or when user is
+   already on the Individual plan (populated by app.js renderPricingModal). */
+.pricing-card[data-marketing-hidden="true"] { display: none; }
+.pricing-grid.show-all-tiers .pricing-card[data-marketing-hidden="true"] { display: flex; }
+/* Collapse 2-col to 1-col when the hidden card is the only non-free option */
+.pricing-grid--2col:not(.show-all-tiers) { grid-template-columns: 1fr; max-width: 380px; margin-left: auto; margin-right: auto; }
 .pricing-card {
   background: var(--bg3, #111d38); border: 2px solid var(--border, #1d2f52); border-radius: 8px;
   padding: 24px; display: flex; flex-direction: column; transition: all 0.2s;

@@ -43,6 +43,11 @@ import {
   sendNurtureDay7,
   sendNurtureDay11,
   sendNurtureDay14,
+  sendPaidOnboardingDay0,
+  sendPaidOnboardingDay7,
+  sendPaidOnboardingDay14,
+  sendPaidOnboardingDay21,
+  sendPaidOnboardingDay30,
 } from './lib/email.js';
 import { createCronLogger } from './lib/logger.js';
 import { initSentry } from './lib/sentry.js';
@@ -501,6 +506,50 @@ export async function runDailyTransitCron(env) {
     } catch (nurtureErr) {
       log.error('nurture_error', { error: nurtureErr?.message });
       sentry.captureException(nurtureErr, { tags: { source: 'cron', step: 'practitioner_nurture' } });
+    }
+
+    // ─── Step 7d: Paid Practitioner Onboarding Sequence (GTM-012) ───────────
+    try {
+      await withTimeout((async () => {
+      const PAID_ONBOARDING_DAYS = [0, 7, 14, 21, 30];
+      const PAID_ONBOARDING_FNS = {
+        0:  (e, n, k, f, a) => sendPaidOnboardingDay0(e, n, k, f, a),
+        7:  (e, n, k, f, a) => sendPaidOnboardingDay7(e, n, k, f, a),
+        14: (e, n, k, f, a) => sendPaidOnboardingDay14(e, n, k, f, a),
+        21: (e, n, k, f, a) => sendPaidOnboardingDay21(e, n, k, f, a),
+        30: (e, n, k, f, a) => sendPaidOnboardingDay30(e, n, k, f, a),
+      };
+
+      const { rows: onboardingRows } = await query(QUERIES.cronGetPaidOnboardingPractitioners);
+      log.info('paid_onboarding_practitioners', { count: onboardingRows.length });
+
+      let onboardingSent = 0, onboardingSkipped = 0, onboardingFailed = 0;
+
+      for (const pract of onboardingRows) {
+        const day = Math.floor(Number(pract.days_since_paid_start));
+        if (!PAID_ONBOARDING_DAYS.includes(day)) continue;
+
+        try {
+          const { rows: alreadySent } = await query(QUERIES.getPaidOnboardingEmailSent, [pract.practitioner_id, day]);
+          if (alreadySent.length > 0) { onboardingSkipped++; continue; }
+
+          const fn = PAID_ONBOARDING_FNS[day];
+          const displayName = pract.name || pract.email.split('@')[0];
+          await fn(pract.email, displayName, env.RESEND_API_KEY, env.FROM_EMAIL, env.COMPANY_ADDRESS || '');
+
+          await query(QUERIES.insertPaidOnboardingEmailSent, [pract.practitioner_id, day]);
+          onboardingSent++;
+        } catch (err) {
+          log.error('paid_onboarding_email_failed', { practitionerId: pract.practitioner_id, day, error: err.message });
+          onboardingFailed++;
+        }
+      }
+
+      log.info('paid_onboarding_complete', { sent: onboardingSent, skipped: onboardingSkipped, failed: onboardingFailed });
+      })(), 45000, 'paid_practitioner_onboarding');
+    } catch (onboardingErr) {
+      log.error('paid_onboarding_error', { error: onboardingErr?.message });
+      sentry.captureException(onboardingErr, { tags: { source: 'cron', step: 'paid_practitioner_onboarding' } });
     }
 
     // ─── Step 8: Purge expired / old revoked refresh tokens ─

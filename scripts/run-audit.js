@@ -35,6 +35,7 @@ import {
   appendHistory,
   countBySeverity,
 } from './audit-state.js';
+import { loadLocalEnv } from './load-local-env.js';
 
 const AUDITS_DIR   = resolve(process.cwd(), 'audits');
 const TODAY        = new Date().toISOString().slice(0, 10);
@@ -50,6 +51,7 @@ const MAX_REGISTRY_ISSUES_IN_PROMPT = 30; // open registry issues to include in 
 
 mkdirSync(resolve(AUDITS_DIR, '../tests/results'), { recursive: true });
 mkdirSync(AUDITS_DIR, { recursive: true });
+loadLocalEnv();
 
 // ─── Main ────────────────────────────────────────────────────────────
 

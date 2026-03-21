@@ -326,7 +326,7 @@ async function handleRegister(request, env) {
             await query(QUERIES.recordReferralSignup, [userId, practitioner.id]);
           }
         } catch (err) {
-          console.warn('[auth] Referral capture failed (non-fatal):', err.message);
+          createLogger('auth').warn('referral_capture_failed', { error: err.message });
         }
       })());
     }
@@ -1259,7 +1259,7 @@ async function handle2FAVerify(request, env) {
 
   // Update last login
   await query(QUERIES.updateLastLogin, [user.id]).catch(e => {
-    console.warn(JSON.stringify({ event: 'update_last_login_failed', userId: user.id, error: e.message }));
+    createLogger('auth').warn('update_last_login_failed', { error: e.message });
   });
 
   const headers = new Headers({ 'Content-Type': 'application/json' });

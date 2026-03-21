@@ -13,7 +13,7 @@
  * v18 - Audit 2026-03-14: resilient cache install (Promise.allSettled per-asset), DOM cleared on logout
  */
 
-const CACHE_VERSION = 'v20'; // GAP-002: Replaced deprecated design-tokens.css + design-tokens-premium.css with tokens.css
+const CACHE_VERSION = 'v21'; // 2026-03-21: runtime helper and device-detection fixes
 const CACHE_NAME = `prime-self-${CACHE_VERSION}`;
 const MAX_API_CACHE_ENTRIES = 50;
 const MAX_STATIC_CACHE_ENTRIES = 80;
@@ -48,6 +48,8 @@ const STATIC_ASSETS = [
   '/js/hd-data.js',
   '/js/bodygraph.js',
   '/js/share-card.js',
+  '/js/core.js',
+  '/js/trust-proof-content.js',
   '/js/app.js',
   '/js/ui-nav.js',
   '/js/pwa.js',

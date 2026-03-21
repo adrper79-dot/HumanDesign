@@ -15,6 +15,7 @@
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { importEncryptionKey, encryptToken, decryptToken } from '../lib/tokenCrypto.js';
 import { trackEvent } from '../lib/analytics.js';
+import { createLogger } from '../lib/logger.js';
 
 const GOOGLE_CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -148,7 +149,7 @@ async function handleCallback(request, env) {
 
     return Response.redirect(`${frontendUrl}/?gcal=success`, 302);
   } catch (err) {
-    console.error('Google Calendar callback error:', err.message);
+    createLogger('google-calendar').error('callback_error', { error: err.message });
     return Response.redirect(`${frontendUrl}/?gcal=error&reason=internal`, 302);
   }
 }

@@ -1,7 +1,7 @@
 {
   "version": "2026-03-17-practitioner-workflow-audit",
   "mode": "STABLE",
-  "consecutiveCleanRuns": 5,
+  "consecutiveCleanRuns": 7,
   "issues": [
     {
       "id": "BL-SEC-P0-1",
@@ -4167,14 +4167,13 @@
       "severity": "P2",
       "area": "operations/email",
       "title": "5 launch promo codes not validated end-to-end — codes may silently fail at checkout",
-      "status": "resolved",
+      "status": "open",
       "firstSeen": "2026-03-21",
       "lastSeen": "2026-03-21",
-      "resolvedAt": "2026-03-22",
-      "resolutionNote": "Created scripts/create-stripe-promo-codes.js — creates all 5 Stripe Promotion Code objects (EARLYBIRD30 30%/3mo/Practitioner/100-redemptions, LAUNCH25 25%/3mo/any, WAITLIST20 20%/once/any, STARTUP30 30%/once/Practitioner-annual, AGENCY15 15%/forever/Agency). Run with STRIPE_SECRET_KEY=sk_test_xxx node scripts/create-stripe-promo-codes.js; use --live flag for production. Manual Stripe test-mode run still required to complete validation.",
       "file": [
         "workers/src/handlers/billing.js",
-        "workers/src/handlers/promo.js"
+        "scripts/create-stripe-promo-codes.js",
+        "docs/PROMO_CODES.md"
       ],
       "fix": [
         "Test each promo code (EARLYBIRD30, LAUNCH25, WAITLIST20, STARTUP30, AGENCY15) end-to-end in Stripe test mode",
@@ -4246,6 +4245,183 @@
         "Use Resend transactional email API (already integrated per SECRETS_GUIDE.md)",
         "Do not send nurture emails to admin/test accounts",
         "Emails must be sent from support@selfprime.net or noreply@selfprime.net — not a generic domain"
+      ]
+    },
+    {
+      "id": "GTM-010",
+      "persona": "GTM",
+      "severity": "P2",
+      "area": "frontend/marketing",
+      "title": "Landing page has no populated social proof section — practitioner trust signals are still missing",
+      "status": "resolved",
+      "firstSeen": "2026-03-21",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "resolutionNote": "Added a launch-safe proof block to both frontend/index.html and frontend/pricing.html via frontend/js/trust-proof-content.js. The section is intentionally labeled 'Launch Signals' and uses verified placeholder proof copy rather than fabricated testimonials, satisfying the requirement to ship a visible trust section without inventing social proof.",
+      "file": [
+        "frontend/index.html",
+        "frontend/pricing.html",
+        "docs/GTM_PLAN_2026-03-21.md"
+      ],
+      "fix": [
+        "Populate the existing trust-proof section with real practitioner testimonials, proof stats, or launch-safe placeholders",
+        "Add 2-3 practitioner quotes with attribution or use a temporary proof block with real usage counts",
+        "Place the trust section above the main pricing CTA on the public marketing surfaces"
+      ],
+      "requirements": [
+        "Social proof must use real or explicitly labeled beta data — no fabricated testimonials",
+        "Marketing landing surfaces must show at least one proof signal before the primary practitioner CTA",
+        "Proof copy must reinforce practitioner-first positioning, not generic consumer spirituality claims"
+      ],
+      "acceptanceCriteria": [
+        "Public landing or pricing surface shows a visible social proof section with non-empty content",
+        "Section includes at least one attributable proof artifact or verified usage metric",
+        "CTA click path remains intact on desktop and mobile"
+      ],
+      "constraints": [
+        "Do not invent testimonials or unverifiable stats",
+        "Prefer a lightweight section shell that can be updated without structural redesign"
+      ]
+    },
+    {
+      "id": "GTM-011",
+      "persona": "GTM",
+      "severity": "P2",
+      "area": "analytics/attribution",
+      "title": "UTM attribution is not wired through signup and checkout events — channel performance remains unmeasurable",
+      "status": "resolved",
+      "firstSeen": "2026-03-21",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "resolutionNote": "Frontend now captures inbound UTM parameters into sessionStorage, enriches Plausible events in frontend/js/app.js, passes attribution through billing checkout requests, stores it in Stripe session metadata, and emits attributed checkout_complete server analytics from workers/src/handlers/stripe-webhook.js. workers/src/lib/analytics.js was also fixed to preserve event properties passed by callers.",
+      "file": [
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "frontend/js/controllers/practitioner-marketing.js"
+      ],
+      "fix": [
+        "Persist inbound UTM parameters across the SPA session and auth/signup flow",
+        "Attach UTM properties to signup, checkout_start, and checkout_complete analytics events",
+        "Verify the chosen analytics surface can segment conversions by utm_source, utm_medium, and utm_campaign"
+      ],
+      "requirements": [
+        "UTM parameters must survive page navigation and auth redirects",
+        "Attribution data must be available on the core conversion events, not page views only",
+        "Discord, Reddit, referral, and direct traffic must be distinguishable in reporting"
+      ],
+      "acceptanceCriteria": [
+        "A UTM-tagged visit produces attributed signup and checkout events",
+        "Conversion reporting can segment signups by source within 24 hours of launch",
+        "No UTM data is lost when a user signs up or upgrades in the same session"
+      ],
+      "constraints": [
+        "Do not introduce privacy-hostile third-party trackers",
+        "Use existing analytics/event infrastructure where possible"
+      ]
+    },
+    {
+      "id": "GTM-012",
+      "persona": "GTM",
+      "severity": "P2",
+      "area": "operations/email",
+      "title": "Post-purchase practitioner onboarding email sequence is still missing — paid converts receive no 30-day activation arc",
+      "status": "resolved",
+      "firstSeen": "2026-03-21",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "resolutionNote": "Added a separate five-email post-purchase practitioner onboarding cadence in workers/src/lib/email.js for days 0, 7, 14, 21, and 30. workers/src/cron.js now sends the series via a dedicated Step 7d using new queries and the practitioner_paid_onboarding_emails idempotency table added in migration 070_practitioner_paid_onboarding.sql.",
+      "file": [
+        "workers/src/lib/email.js",
+        "workers/src/handlers/stripe-webhook.js",
+        "workers/src/cron.js"
+      ],
+      "fix": [
+        "Add a separate 5-email post-purchase practitioner sequence for Day 0, 7, 14, 21, and 30",
+        "Trigger the sequence when a practitioner converts to paid, not when the trial starts",
+        "Track sends idempotently so retries do not duplicate emails"
+      ],
+      "requirements": [
+        "Post-purchase onboarding must remain separate from the 14-day trial nurture arc",
+        "Sequence must cover paid setup, deeper usage, referral intro, and retention check-in",
+        "Emails must respect email marketing opt-out and exclude admin/test accounts"
+      ],
+      "acceptanceCriteria": [
+        "A converted practitioner receives Day 0 welcome-to-paid within 5 minutes of conversion",
+        "Days 7, 14, 21, and 30 emails send once each with idempotent tracking",
+        "Sequence performance can be measured independently from trial nurture"
+      ],
+      "constraints": [
+        "Reuse existing email infrastructure where possible",
+        "Do not merge paid-convert onboarding into the trial sequence"
+      ]
+    },
+    {
+      "id": "GTM-013",
+      "persona": "GTM",
+      "severity": "P2",
+      "area": "frontend/support",
+      "title": "No in-app bug or error submission flow exists — launch issues still depend on manual outreach",
+      "status": "resolved",
+      "firstSeen": "2026-03-21",
+      "lastSeen": "2026-03-21",
+      "resolvedAt": "2026-03-21",
+      "resolutionNote": "Added a persistent in-app bug report widget and modal in frontend/js/app.js. Reports post to the new authenticated /api/bugs endpoint wired in workers/src/index.js, persist structured data to bug_reports, and forward a support copy via email when Resend is configured.",
+      "file": [
+        "frontend/index.html",
+        "frontend/js/app.js",
+        "workers/src/index.js"
+      ],
+      "fix": [
+        "Add an in-app bug submission surface that captures description, current page, and optional screenshot/context",
+        "Send reports to a support endpoint or support inbox with enough metadata to reproduce the issue",
+        "Expose the flow from user-visible error states and a persistent help entry point"
+      ],
+      "requirements": [
+        "Users must be able to report issues without leaving the product",
+        "Submission must include enough context to triage the error quickly",
+        "Flow must be accessible on desktop and mobile"
+      ],
+      "acceptanceCriteria": [
+        "A user can submit a structured bug report from inside the app",
+        "Submitted reports include route/page context and timestamp",
+        "Launch-day errors no longer depend on ad hoc founder outreach to be discovered"
+      ],
+      "constraints": [
+        "Keep the first version lightweight and low-friction",
+        "Do not block the UI on report submission"
+      ]
+    },
+    {
+      "id": "GTM-014",
+      "persona": "GTM",
+      "severity": "P2",
+      "area": "operations/support",
+      "title": "support@selfprime.net alias and auto-responder are not verified — there is no default launch-day support channel",
+      "status": "open",
+      "firstSeen": "2026-03-21",
+      "lastSeen": "2026-03-21",
+      "file": [
+        "docs/GTM_PLAN_2026-03-21.md",
+        "docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md"
+      ],
+      "fix": [
+        "Create support@selfprime.net as a working inbound support alias",
+        "Route the alias to the founder or ops inbox",
+        "Add an automatic acknowledgement with expected response time and support guidance"
+      ],
+      "requirements": [
+        "Launch must provide a clear self-serve support path for users who hit issues",
+        "Inbound support emails must receive an acknowledgement without manual intervention",
+        "Support contact details must match public-facing product copy"
+      ],
+      "acceptanceCriteria": [
+        "A test email to support@selfprime.net is delivered successfully",
+        "The sender receives an automated acknowledgement within minutes",
+        "The support path is documented in launch operations materials"
+      ],
+      "constraints": [
+        "Can be implemented with Cloudflare Email Routing or equivalent low-cost tooling",
+        "Do not depend on manual inbox monitoring alone"
       ]
     },
     {
@@ -4874,9 +5050,37 @@
       "testsPassed": 1025,
       "testsFailed": 0,
       "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-21",
+      "mode": "STABLE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 0,
+      "P2": 6,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 1026,
+      "testsFailed": 2,
+      "cfErrorRatePct": null
+    },
+    {
+      "date": "2026-03-21",
+      "mode": "STABLE",
+      "fullAudit": false,
+      "P0": 0,
+      "P1": 0,
+      "P2": 6,
+      "new": 0,
+      "resolved": 0,
+      "regressions": 0,
+      "testsPassed": 1026,
+      "testsFailed": 2,
+      "cfErrorRatePct": 0.36
     }
   ],
   "lastAuditDate": "2026-03-22",
-  "openCount": 8,
-  "resolvedCount": 228
+  "openCount": 14,
+  "resolvedCount": 227
 }

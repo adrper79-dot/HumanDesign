@@ -1,3 +1,10 @@
+// ─── FILE CEILING: 8500 lines (ARCH-001) ───────────────────────────────────────
+// app.js is intentionally a large single-file bundle for fast first-load in
+// the PWA. Any new feature should extract to a separate module under frontend/js/
+// rather than expanding this file. ESLint max-lines rule enforces the ceiling.
+// Current line count is monitored in audits/FINAL_CHECKOUT_*.md.
+// ────────────────────────────────────────────────────────────────────────────────
+
 // Debug logging: auto-enabled on localhost; set window.DEBUG=true in DevTools to enable on production
 window.DEBUG = /localhost|127\.0\.0\.1/.test(location.hostname);
 
@@ -54,14 +61,29 @@ function isLikelyMobilePhone() {
   const ua = navigator.userAgent || '';
   const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
   const uaMobile = /Android|iPhone|iPod|Mobile|SamsungBrowser|Silk/i.test(ua);
+  const foldablePhone = /SM-F|Z Flip|Z Fold/i.test(ua);
   const hasTouch = navigator.maxTouchPoints > 1;
-  return uaDataMobile || uaMobile || hasTouch;
+  const coarsePointer = !!window.matchMedia?.('(pointer: coarse)').matches;
+  return uaDataMobile || uaMobile || foldablePhone || (hasTouch && coarsePointer);
 }
 
 function shouldUseMobileLayout() {
   const shortestEdge = Math.min(window.innerWidth || 0, window.innerHeight || 0);
-  return shortestEdge <= MOBILE_LAYOUT_MAX_WIDTH && isLikelyMobilePhone();
+  const foldablePhone = /SM-F|Z Flip|Z Fold/i.test(navigator.userAgent || '');
+  return isLikelyMobilePhone() && (shortestEdge <= MOBILE_LAYOUT_MAX_WIDTH || foldablePhone);
 }
+
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function escapeAttr(value) {
+  return String(value ?? '').replace(/[&"'<>]/g, c => ({'&':'&amp;','"':'&quot;',"'":'&#39;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+window.escapeHtml = window.escapeHtml || escapeHtml;
+window.escapeAttr = window.escapeAttr || escapeAttr;
+window.escapeHTML = window.escapeHTML || window.escapeHtml;
 
 function syncMobileLayoutClass() {
   document.documentElement.classList.toggle('force-mobile-layout', shouldUseMobileLayout());
@@ -737,6 +759,62 @@ function restoreModalFocus(modalId) {
   }
 }
 
+// ── Modal Focus Trap (ARIA-001) ───────────────────────────────────────────────
+// Keeps keyboard focus cycling within an open modal (WCAG 2.1 SC 2.1.2).
+// Usage: trapFocus(modalElement, closeCallback) → call releaseFocusTrap(el) on close.
+const _focusTrapHandlers = new Map();
+const _FOCUSABLE_SELECTORS = [
+  'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+  'select:not([disabled])', 'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+function trapFocus(modal, onEscape) {
+  if (!modal) return;
+  releaseFocusTrap(modal); // remove any prior trap on this element
+
+  function _getFocusable() {
+    return Array.from(modal.querySelectorAll(_FOCUSABLE_SELECTORS))
+      .filter(el => !el.closest('[hidden]') && el.offsetParent !== null);
+  }
+
+  function handler(e) {
+    if (e.key === 'Escape' && typeof onEscape === 'function') {
+      onEscape();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const focusable = _getFocusable();
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last  = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (!modal.contains(document.activeElement) || document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      }
+    } else {
+      if (!modal.contains(document.activeElement) || document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
+  }
+
+  modal.addEventListener('keydown', handler);
+  _focusTrapHandlers.set(modal, handler);
+  // Move initial focus to first focusable element in the modal
+  _getFocusable()[0]?.focus();
+}
+
+function releaseFocusTrap(modal) {
+  if (!modal) return;
+  const handler = _focusTrapHandlers.get(modal);
+  if (handler) {
+    modal.removeEventListener('keydown', handler);
+    _focusTrapHandlers.delete(modal);
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * ACC-P2-9: Standardized Loading State Management
  * Synchronizes aria-busy, button disabled state, and spinner visibility
@@ -844,11 +922,15 @@ function openSecuritySettings() {
   if (!modal) return;
   modal.classList.remove('hidden');
   _renderSecurityModal();
+  trapFocus(modal, closeSecurityModal);
 }
 
 function closeSecurityModal() {
   const modal = document.getElementById('securityModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    releaseFocusTrap(modal);
+  }
   // ACC-P2-8: Restore focus to trigger element
   restoreModalFocus('securityModal');
 }
@@ -1764,6 +1846,8 @@ async function submitAuth() {
     const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
     // P0-FIX: Include stored referral slug so backend can record attribution
     const authBody = { email, password };
+    const attribution = getStoredAttribution();
+    if (Object.keys(attribution).length > 0) authBody.attribution = attribution;
     if (authMode === 'register') {
       const pendingRef = (localStorage.getItem('ps_pending_ref') || '').toLowerCase();
       if (pendingRef) authBody.ref = pendingRef;
@@ -3752,7 +3836,7 @@ async function loadChartHistory() {
   try {
     const data = await apiFetch('/api/chart/history');
     if (!data.charts?.length) {
-      list.innerHTML = '<p style="color:var(--text-dim)">No previous charts found.</p>';
+      list.innerHTML = '<div class="empty-state" style="padding:var(--space-4);text-align:center"><span style="font-size:2.5rem">📂</span><h3 style="margin:var(--space-3) 0 6px;color:var(--text)">No saved charts yet</h3><p style="color:var(--text-dim);margin:0">Generate your first blueprint to start building your archive.</p></div>';
       return;
     }
     list.innerHTML = data.charts.map(c => {
@@ -3975,7 +4059,7 @@ function renderProfile(data) {
   // Check if data exists (null/undefined, not just empty objects)
   if ((qsg === null || qsg === undefined) && (ti === null || ti === undefined)) {
     window.DEBUG && console.warn('[Profile] No profile data found - showing raw response');
-    return `<div class="alert alert-warn">Profile generation returned no data. Raw response below.</div>` + rawToggle(data);
+    return `<div class="empty-state" style="padding:var(--space-6);text-align:center"><span style="font-size:2.5rem">✦</span><h3 style="margin:var(--space-3) 0 6px;color:var(--text)">Profile generation returned no data</h3><p style="color:var(--text-dim);margin:0">Try regenerating your profile or verify your birth chart data below.</p></div>` + rawToggle(data);
   }
   
   if (window.DEBUG) console.log('✅ Profile data valid - rendering...');
@@ -4505,7 +4589,7 @@ function renderTransits(data) {
   const positions = t.transitPositions || t.positions || {};
 
   if (!Object.keys(positions).length) {
-    return `<div class="alert alert-warn">No transit positions returned. Check API response.</div>` + rawToggle(data);
+    return `<div class="empty-state" style="padding:var(--space-6);text-align:center"><span style="font-size:2.5rem">☽</span><h3 style="margin:var(--space-3) 0 6px;color:var(--text)">No transit data available</h3><p style="color:var(--text-dim);margin:0">Transit positions could not be loaded. Try refreshing.</p></div>` + rawToggle(data);
   }
 
   const PLANET_SYMBOLS = { Sun:'☉', Moon:'☽', Mercury:'☿', Venus:'♀', Mars:'♂', Jupiter:'♃', Saturn:'♄', Uranus:'♅', Neptune:'♆', Pluto:'♇', NorthNode:'☊', TrueNode:'☊', Chiron:'⚷' };
@@ -4813,7 +4897,11 @@ async function generateComposite() {
 function renderComposite(data) {
   if (data.error) return `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   const c = data.composite || {};
-  
+
+  if (!c.personA || !c.personB) {
+    return `<div class="empty-state" style="padding:var(--space-6);text-align:center"><span style="font-size:2.5rem">⊕</span><h3 style="margin:var(--space-3) 0 6px;color:var(--text)">No relationship data yet</h3><p style="color:var(--text-dim);margin:0">Enter birth details for both people above and generate your composite chart.</p></div>`;
+  }
+
   let html = `<div class="card">
     <div class="card-title"><span class="icon-partnership"></span> Relationship Dynamics</div>
     <div class="chart-grid">
@@ -5026,7 +5114,7 @@ async function loadRectificationHistory() {
     const data = await apiFetch('/api/rectify?limit=5&offset=0', { method: 'GET' });
 
     if (!data.ok || !data.rectifications || data.rectifications.length === 0) {
-      content.innerHTML = '<div style="color: var(--text-dim); padding: var(--space-3);">No previous analyses yet.</div>';
+      content.innerHTML = '<div class="empty-state" style="padding:var(--space-4);text-align:center"><span style="font-size:2.5rem">⏱</span><h3 style="margin:var(--space-3) 0 6px;color:var(--text)">No analyses yet</h3><p style="color:var(--text-dim);margin:0">Run your first birth time rectification above to build your history.</p></div>';
       return;
     }
 
@@ -6113,7 +6201,9 @@ async function loadDiaryEntries() {
     const entries = Array.isArray(data?.data) ? data.data : [];
 
     if (entries.length === 0) {
-      container.innerHTML = `<div class="alert alert-info">${window.t('diary.noEvents')}</div>`;
+      container.innerHTML = hasFilters
+        ? `<div class="no-results" style="text-align:center;padding:var(--space-6)"><span style="font-size:2.5rem">🔍</span><h3 style="margin:var(--space-4) 0 8px;color:var(--text)">No matching events</h3><p style="color:var(--text-dim)">Try broadening your search or adjusting your filters.</p></div>`
+        : `<div class="empty-state"><span style="font-size:3rem">📔</span><h3 style="margin:var(--space-4) 0 8px;font-size:var(--font-size-md);color:var(--text)">No diary entries yet</h3><p style="max-width:min(460px,90vw);margin:0 auto 24px;color:var(--text-dim)">Use Diary to capture important life events — career shifts, relationships, health — and unlock AI pattern analysis over time.</p></div>`;
       return;
     }
 
@@ -6362,7 +6452,7 @@ async function loadCheckinStats() {
       markCheckinMilestone(streak);
     }
     if (checkins.length === 0) {
-      historyEl.innerHTML = '<div class="alert alert-info">No check-in history yet. Save your first check-in above!</div>';
+      historyEl.innerHTML = '<div class="empty-state" style="padding:var(--space-4);text-align:center"><span style="font-size:2.5rem">📊</span><h3 style="margin:var(--space-3) 0 6px;color:var(--text)">No check-in history yet</h3><p style="color:var(--text-dim);margin:0">Save your first daily check-in above to begin tracking your alignment patterns.</p></div>';
     } else {
       const moodIcon = { great: '😊', good: '🙂', neutral: '😐', challenging: '😕', difficult: '😞' };
       historyEl.innerHTML = checkins.slice().reverse().map(c => {
@@ -6745,13 +6835,73 @@ function showNotification(message, type = 'info') {
 /**
  * Track analytics event (stub for future analytics integration)
  */
-function trackEvent(category, action, label) {
-  if (window.DEBUG) console.log(`📊 Event: ${category} / ${action} / ${label}`);
-  // Plausible Analytics — fires when plausible.io/js/script.js is loaded
-  if (typeof window.plausible === 'function') {
-    window.plausible(`${category}:${action}`, { props: { label: label || '' } });
+function getStoredAttribution() {
+  try {
+    const raw = sessionStorage.getItem('ps_attribution');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
   }
 }
+
+function captureAttributionFromLocation() {
+  try {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    const existing = getStoredAttribution();
+    const next = {
+      ...existing,
+      utm_source: params.get('utm_source') || existing.utm_source || '',
+      utm_medium: params.get('utm_medium') || existing.utm_medium || '',
+      utm_campaign: params.get('utm_campaign') || existing.utm_campaign || '',
+      utm_term: params.get('utm_term') || existing.utm_term || '',
+      utm_content: params.get('utm_content') || existing.utm_content || '',
+      landing_path: existing.landing_path || `${url.pathname}${url.search}`,
+      referrer: existing.referrer || document.referrer || '',
+    };
+
+    const cleaned = Object.fromEntries(
+      Object.entries(next).filter(([, value]) => typeof value === 'string' && value.trim())
+    );
+
+    if (Object.keys(cleaned).length > 0) {
+      sessionStorage.setItem('ps_attribution', JSON.stringify(cleaned));
+    }
+  } catch (_) {
+    // Attribution capture must never block the app bootstrap.
+  }
+}
+
+function buildAnalyticsPayload(labelOrProps) {
+  const props = labelOrProps && typeof labelOrProps === 'object' && !Array.isArray(labelOrProps)
+    ? { ...labelOrProps }
+    : (labelOrProps ? { label: labelOrProps } : {});
+  return { ...props, ...getStoredAttribution() };
+}
+
+function trackEvent(category, action, label) {
+  let eventName = category;
+  let payload = {};
+
+  if (typeof action === 'object' && action !== null && label === undefined) {
+    payload = buildAnalyticsPayload(action);
+  } else if (typeof action === 'undefined') {
+    payload = buildAnalyticsPayload(label);
+  } else {
+    eventName = `${category}:${action}`;
+    payload = buildAnalyticsPayload(label);
+  }
+
+  if (window.DEBUG) console.log(`📊 Event: ${eventName}`, payload);
+  // Plausible Analytics — fires when plausible.io/js/script.js is loaded
+  if (typeof window.plausible === 'function') {
+    window.plausible(eventName, { props: payload });
+  }
+}
+captureAttributionFromLocation();
+window.getStoredAttribution = getStoredAttribution;
 
 /**
  * Open share modal — fetches real referral code from API for logged-in users
@@ -6763,6 +6913,7 @@ async function openShareModal() {
   const modal = document.getElementById('shareModal');
   if (!modal) return;
   modal.classList.remove('hidden');
+  trapFocus(modal, closeShareModal);
 
   if (token) {
     // Fetch (or generate) the user's real referral code
@@ -6803,6 +6954,7 @@ function closeShareModal() {
   const modal = document.getElementById('shareModal');
   if (modal) {
     modal.classList.add('hidden');
+    releaseFocusTrap(modal);
   }
   // ACC-P2-8: Restore focus to trigger element
   restoreModalFocus('shareModal');
@@ -6985,6 +7137,26 @@ function openBlueprintCard() { if (typeof showBlueprintCard === 'function') show
 function switchToPricingModal()    { closePractitionerPricingModal(); openPricingModal(); }
 function switchToPracPricingModal() { openPractitionerPricingModal(); closePricingModal(); }
 
+// GTM-007: Reveal Individual tier in the consumer pricing grid ("See all plans")
+function showAllConsumerTiers() {
+  const grid = document.querySelector('#pricingOverlay .pricing-grid--2col');
+  if (grid) grid.classList.add('show-all-tiers');
+  const link = document.querySelector('.pricing-all-plans-link');
+  if (link) link.style.display = 'none';
+}
+
+// GTM-007: Show Individual tier card only if user is already on that plan
+function syncPricingModalToUserTier() {
+  const tier = (window._appState?.user?.tier || window._state?.tier || '');
+  const card = document.getElementById('priceCard-regular');
+  const grid = document.querySelector('#pricingOverlay .pricing-grid--2col');
+  if (card && grid && (tier === 'individual' || tier === 'regular')) {
+    grid.classList.add('show-all-tiers');
+    const link = document.querySelector('.pricing-all-plans-link');
+    if (link) link.style.display = 'none';
+  }
+}
+
 // ── Notification Drawer (AUDIT-UX-002) ──────────────────────────────────────
 function toggleNotifDrawer() {
   const drawer = document.getElementById('notifDrawer');
@@ -7003,7 +7175,7 @@ async function loadNotificationHistory() {
   try {
     const data = await apiFetch('/api/push/history?limit=30');
     if (!data.notifications?.length) {
-      list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:24px 0">No notifications yet.</p>';
+      list.innerHTML = '<div class="empty-state" style="padding:var(--space-4);text-align:center"><span style="font-size:2.5rem">🔔</span><h3 style="margin:var(--space-3) 0 6px;color:var(--text)">No notifications yet</h3><p style="color:var(--text-dim);margin:0">Enable push notifications to receive personalized transit alerts.</p></div>';
       return;
     }
     list.innerHTML = data.notifications.map(n => {
@@ -7106,6 +7278,7 @@ window.goToCompareAndClose = goToCompareAndClose;
 function renderTrustProof() {
   const items = window.TRUST_PROOF_ITEMS;
   if (!Array.isArray(items) || items.length < 1) return;
+  const heading = escapeHtml(window.TRUST_PROOF_HEADING || 'What practitioners & clients say');
 
   const requiredFields = ['role', 'outcome', 'consentStatus', 'date'];
   const valid = items.filter(item =>
@@ -7147,7 +7320,7 @@ function renderTrustProof() {
   }).join('');
 
   const html = `<div class="trust-proof-section">
-    <p class="trust-proof-heading">What practitioners &amp; clients say</p>
+    <p class="trust-proof-heading">${heading}</p>
     <div class="trust-proof-grid">${cards}</div>
   </div>`;
 
@@ -7165,6 +7338,211 @@ if (document.readyState === 'loading') {
 }
 window.renderTrustProof = renderTrustProof;
 
+function ensureBugReportModal() {
+  if (document.getElementById('bugReportModal')) return;
+
+  const style = document.createElement('style');
+  style.id = 'bug-report-widget-styles';
+  style.textContent = `
+    .bug-report-fab { position: fixed; right: 20px; bottom: 20px; z-index: 1200; border: 0; border-radius: 999px; padding: 12px 18px; background: linear-gradient(135deg, var(--gold), #f4d27a); color: #0a0a0f; font-weight: 700; box-shadow: 0 16px 40px rgba(0,0,0,0.24); cursor: pointer; }
+    .bug-report-fab:hover { transform: translateY(-1px); }
+    .bug-report-modal.hidden { display: none; }
+    .bug-report-modal { position: fixed; inset: 0; z-index: 1300; background: rgba(7, 8, 16, 0.72); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .bug-report-panel { width: min(640px, 100%); max-height: 90vh; overflow: auto; background: var(--bg2, #16161e); border: 1px solid var(--border, rgba(255,255,255,0.12)); border-radius: 18px; padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,0.35); }
+    .bug-report-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .bug-report-head h3 { margin: 0; color: var(--text, #fff); }
+    .bug-report-head p { margin: 6px 0 0; color: var(--text-dim, #aaa); font-size: 0.95rem; }
+    .bug-report-close { border: 0; background: transparent; color: var(--text-dim, #aaa); font-size: 1.4rem; cursor: pointer; }
+    .bug-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .bug-report-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .bug-report-field.full { grid-column: 1 / -1; }
+    .bug-report-field label { color: var(--text, #fff); font-size: 0.88rem; font-weight: 600; }
+    .bug-report-field input, .bug-report-field select, .bug-report-field textarea { width: 100%; border-radius: 10px; border: 1px solid var(--border, rgba(255,255,255,0.12)); background: var(--bg3, #1f2230); color: var(--text, #fff); padding: 11px 12px; font: inherit; }
+    .bug-report-field textarea { min-height: 110px; resize: vertical; }
+    .bug-report-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
+    .bug-report-help { color: var(--text-dim, #aaa); font-size: 0.82rem; }
+    .bug-report-submit { border: 0; border-radius: 10px; background: var(--gold, #c9a84c); color: #0a0a0f; padding: 12px 18px; font-weight: 700; cursor: pointer; }
+    .bug-report-status { min-height: 1.2em; color: var(--text-dim, #aaa); font-size: 0.9rem; margin-top: 10px; }
+    @media (max-width: 640px) {
+      .bug-report-grid { grid-template-columns: 1fr; }
+      .bug-report-fab { right: 14px; bottom: 14px; padding: 11px 14px; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const modal = document.createElement('div');
+  modal.id = 'bugReportModal';
+  modal.className = 'bug-report-modal hidden';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'bugReportTitle');
+  modal.innerHTML = `
+    <div class="bug-report-panel">
+      <div class="bug-report-head">
+        <div>
+          <h3 id="bugReportTitle">Report a bug</h3>
+          <p>Send the exact failure to support and save a copy in the internal issue queue.</p>
+        </div>
+        <button type="button" class="bug-report-close" aria-label="Close bug report" data-action="closeBugReport">×</button>
+      </div>
+      <form id="bugReportForm">
+        <div class="bug-report-grid">
+          <div class="bug-report-field full">
+            <label for="bugTitle">Short title</label>
+            <input id="bugTitle" name="title" maxlength="140" required placeholder="Checkout button spins forever">
+          </div>
+          <div class="bug-report-field">
+            <label for="bugCategory">Area</label>
+            <select id="bugCategory" name="category">
+              <option value="ui">UI</option>
+              <option value="auth">Auth</option>
+              <option value="payment">Payment</option>
+              <option value="profile">Profile</option>
+              <option value="chart_calc">Chart calculation</option>
+              <option value="transit">Transit</option>
+              <option value="api">API</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="bug-report-field">
+            <label for="bugSeverity">Severity</label>
+            <select id="bugSeverity" name="severity">
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div class="bug-report-field full">
+            <label for="bugDescription">What happened?</label>
+            <textarea id="bugDescription" name="description" required placeholder="Describe the failure, what you clicked, and what broke."></textarea>
+          </div>
+          <div class="bug-report-field full">
+            <label for="bugExpected">What did you expect instead?</label>
+            <textarea id="bugExpected" name="expectedBehavior" placeholder="Expected the billing portal to open."></textarea>
+          </div>
+          <div class="bug-report-field full">
+            <label for="bugActual">What actually happened?</label>
+            <textarea id="bugActual" name="actualBehavior" placeholder="Stayed on the same screen and showed no error."></textarea>
+          </div>
+          <div class="bug-report-field full">
+            <label for="bugSteps">How can we reproduce it?</label>
+            <textarea id="bugSteps" name="stepsToReproduce" placeholder="1. Open Pricing. 2. Click Start Your Practice. 3. Observe the spinner."></textarea>
+          </div>
+        </div>
+        <div class="bug-report-actions">
+          <div class="bug-report-help">The report includes page URL, browser, viewport, and your current tier context.</div>
+          <button type="submit" class="bug-report-submit">Send report</button>
+        </div>
+        <div id="bugReportStatus" class="bug-report-status" aria-live="polite"></div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const fab = document.createElement('button');
+  fab.type = 'button';
+  fab.id = 'bugReportFab';
+  fab.className = 'bug-report-fab';
+  fab.textContent = 'Report a bug';
+  fab.setAttribute('aria-haspopup', 'dialog');
+  fab.addEventListener('click', openBugReportModal);
+  document.body.appendChild(fab);
+
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeBugReportModal();
+  });
+  modal.querySelector('[data-action="closeBugReport"]').addEventListener('click', closeBugReportModal);
+  modal.querySelector('#bugReportForm').addEventListener('submit', submitBugReport);
+}
+
+function openBugReportModal() {
+  if (!token) {
+    openAuthOverlay();
+    return;
+  }
+  ensureBugReportModal();
+  storeModalTrigger('bugReportModal');
+  const modal = document.getElementById('bugReportModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const titleInput = modal.querySelector('#bugTitle');
+  if (titleInput) titleInput.focus();
+  trapFocus(modal, closeBugReportModal);
+}
+
+function closeBugReportModal() {
+  const modal = document.getElementById('bugReportModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  releaseFocusTrap(modal);
+  restoreModalTrigger('bugReportModal');
+}
+
+async function submitBugReport(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const status = document.getElementById('bugReportStatus');
+  const submitButton = form.querySelector('.bug-report-submit');
+  const formData = new FormData(form);
+  const payload = {
+    title: String(formData.get('title') || '').trim(),
+    category: String(formData.get('category') || 'ui'),
+    severity: String(formData.get('severity') || 'medium'),
+    description: String(formData.get('description') || '').trim(),
+    expectedBehavior: String(formData.get('expectedBehavior') || '').trim(),
+    actualBehavior: String(formData.get('actualBehavior') || '').trim(),
+    stepsToReproduce: String(formData.get('stepsToReproduce') || '').trim(),
+    pageUrl: window.location.href,
+    affectedSection: document.body?.dataset?.activeTab || document.querySelector('.tab-pane.active, .section.active')?.id || '',
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    userAgent: navigator.userAgent || '',
+    browser: navigator.userAgentData?.brands?.map((b) => `${b.brand} ${b.version}`).join(', ') || navigator.appName || '',
+    osName: navigator.userAgentData?.platform || navigator.platform || '',
+    userData: {
+      tier: currentUser?.tier || 'unknown',
+      storedTier: currentUser?.stored_tier || null,
+      hasChart: !!currentUser?.birth_date,
+    },
+  };
+
+  if (!payload.title || !payload.description) {
+    if (status) status.textContent = 'Title and description are required.';
+    return;
+  }
+
+  status.textContent = 'Sending report...';
+  submitButton.disabled = true;
+
+  try {
+    const result = await apiFetch('/api/bugs', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    if (!result?.ok) {
+      throw new Error(result?.error || 'Unable to send report');
+    }
+
+    trackEvent('support', 'bug_report_submitted', payload.category);
+    form.reset();
+    status.textContent = 'Report sent. Support has the details and a copy is in the queue.';
+    showNotification('Bug report sent', 'success');
+    setTimeout(closeBugReportModal, 900);
+  } catch (error) {
+    status.textContent = error.message || 'Unable to send report.';
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', ensureBugReportModal, { once: true });
+} else {
+  ensureBugReportModal();
+}
+
 // ── Push Notification Preferences ───────────────────────────────────────────
 function openPushPreferences() {
   storeModalTrigger('pushPrefsModal');
@@ -7173,11 +7551,15 @@ function openPushPreferences() {
   modal.classList.remove('hidden');
   _renderPushPrefsState();
   loadPushPreferences();
+  trapFocus(modal, closePushPreferences);
 }
 
 function closePushPreferences() {
   const modal = document.getElementById('pushPrefsModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    releaseFocusTrap(modal);
+  }
   restoreModalFocus('pushPrefsModal');
 }
 
@@ -7321,11 +7703,15 @@ function frmShow() {
   _frmCurrentStep = 1;
   // Prefer first-run.js's frmGoto if available (loads after this file)
   if (typeof frmGoto === 'function') { frmGoto(1); } else { _frmRender(); }
+  trapFocus(modal, frmClose);
 }
 
 function frmClose() {
   const modal = document.getElementById('first-run-modal');
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.style.display = 'none';
+    releaseFocusTrap(modal);
+  }
   try {
     localStorage.setItem('primeself_frm_seen', '1');
     localStorage.setItem('ps_hasSeenOnboarding', '1');
@@ -7431,7 +7817,9 @@ async function showPractitionerOnboarding() {
 
   _practOnbStep = 1;
   _practOnbRender();
-  document.getElementById('practitionerOnboardingOverlay')?.classList.remove('hidden');
+  const overlay = document.getElementById('practitionerOnboardingOverlay');
+  overlay?.classList.remove('hidden');
+  if (overlay) trapFocus(overlay, practOnbFinish);
 
   // Load referral link
   try {
@@ -7466,7 +7854,9 @@ function practOnbSkip() {
 }
 
 function practOnbFinish() {
-  document.getElementById('practitionerOnboardingOverlay')?.classList.add('hidden');
+  const overlay = document.getElementById('practitionerOnboardingOverlay');
+  overlay?.classList.add('hidden');
+  if (overlay) releaseFocusTrap(overlay);
   localStorage.setItem('pract_onb_seen', '1');
   switchTab('practitioner');
   // ACC-P2-8: Restore focus to trigger element
@@ -7648,8 +8038,10 @@ function setEvalType(type) {
     const btn2 = document.getElementById('quickpick2');
     btn1.textContent = picks[0];
     btn1.dataset.arg0 = picks[0];
+    btn1.setAttribute('aria-label', picks[0]);
     btn2.textContent = picks[1];
     btn2.dataset.arg0 = picks[1];
+    btn2.setAttribute('aria-label', picks[1]);
     row.style.display = '';
   }
 }
@@ -7846,6 +8238,8 @@ window.openCompatibilityWithClient = openCompatibilityWithClient;
 // disconnectNotion → practitioner-notes.js (lazy)
 window.switchToPricingModal = switchToPricingModal;
 window.switchToPracPricingModal = switchToPracPricingModal;
+window.showAllConsumerTiers = showAllConsumerTiers;
+window.syncPricingModalToUserTier = syncPricingModalToUserTier;
 window.logout = logout;
 window.saveDiaryEntry = saveDiaryEntry;
 window.loadDiaryEntries = loadDiaryEntries;

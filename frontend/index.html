@@ -445,9 +445,9 @@
         <button class="btn-secondary tier-cta" id="priceBtn-free" disabled>Current Plan</button>
       </div>
 
-      <!-- Individual Tier ($19/mo) — featured -->
-      <div class="pricing-card featured" id="priceCard-regular">
-        <div class="tier-badge-label">Most Popular</div>
+      <!-- Individual Tier ($19/mo) — GTM-007: hidden from marketing grid by default.
+           Shown only for existing Individual subscribers or via 'See all plans' link. -->
+      <div class="pricing-card" id="priceCard-regular" data-marketing-hidden="true">
         <div class="tier-name">Individual ✦</div>
         <div class="tier-price" data-monthly="19" data-annual="190"><span class="currency">$</span><span class="price-amount">19</span></div>
         <div class="tier-billing"><span class="billing-label">per month</span></div>
@@ -467,6 +467,11 @@
       </div>
 
     </div>
+
+    <!-- GTM-007: Disclosure for users who need the Individual plan -->
+    <p class="pricing-all-plans-link" style="text-align:center;font-size:0.82em;color:var(--text-dim);margin:-8px 0 16px">
+      Looking for a personal plan? <a data-action="showAllConsumerTiers" class="link-gold" style="cursor:pointer">See all plans →</a>
+    </p>
 
     <!-- Promo code field -->
     <div class="promo-code-section" id="promoSection">
@@ -1286,8 +1291,8 @@
             </div>
             <div class="quickpick-row" id="quickpickRow" style="display:none">
               <span class="quickpick-label">Quick pick:</span>
-              <button type="button" class="quickpick-btn" id="quickpick1" data-action="setQuickPick"></button>
-              <button type="button" class="quickpick-btn" id="quickpick2" data-action="setQuickPick"></button>
+              <button type="button" class="quickpick-btn" id="quickpick1" data-action="setQuickPick" aria-label="Quick pick option"></button>
+              <button type="button" class="quickpick-btn" id="quickpick2" data-action="setQuickPick" aria-label="Quick pick option"></button>
             </div>
 
             <div style="margin-top:var(--space-4)">
@@ -2606,6 +2611,7 @@
 <!-- GAP-001: Core app module (ES6) — loads state.js + router; controllers lazy-load on tab activation -->
 <script type="module" src="js/core.js" defer></script>
 <!-- Retain app.js temporarily for backward compatibility (legacy functions) — will be removed in Phase 2 -->
+<script src="js/trust-proof-content.js" defer></script>
 <script src="js/app.js" defer></script>
 <!-- GAP-001: Billing controller loaded eagerly so CTAs work before any tab is activated -->
 <script src="js/controllers/billing-controller.js" defer></script>

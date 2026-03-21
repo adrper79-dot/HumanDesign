@@ -35,8 +35,10 @@ function isLikelyMobilePhone() {
   const ua = navigator.userAgent || '';
   const uaDataMobile = !!(navigator.userAgentData && navigator.userAgentData.mobile);
   const uaMobile = /Android|iPhone|iPod|Mobile|SamsungBrowser|Silk/i.test(ua);
+  const foldablePhone = /SM-F|Z Flip|Z Fold/i.test(ua);
   const hasTouch = navigator.maxTouchPoints > 1;
-  return uaDataMobile || uaMobile || hasTouch;
+  const coarsePointer = !!window.matchMedia?.('(pointer: coarse)').matches;
+  return uaDataMobile || uaMobile || foldablePhone || (hasTouch && coarsePointer);
 }
 
 /**
@@ -44,7 +46,8 @@ function isLikelyMobilePhone() {
  */
 function shouldUseMobileLayout() {
   const shortestEdge = Math.min(window.innerWidth || 0, window.innerHeight || 0);
-  return shortestEdge <= MOBILE_LAYOUT_MAX_WIDTH && isLikelyMobilePhone();
+  const foldablePhone = /SM-F|Z Flip|Z Fold/i.test(navigator.userAgent || '');
+  return isLikelyMobilePhone() && (shortestEdge <= MOBILE_LAYOUT_MAX_WIDTH || foldablePhone);
 }
 
 /**

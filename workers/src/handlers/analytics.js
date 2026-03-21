@@ -15,6 +15,7 @@
 
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { FUNNELS } from '../lib/analytics.js';
+import { createLogger } from '../lib/logger.js';
 import { getTier, normalizeTierName } from '../lib/stripe.js';
 import { getUserTier } from '../middleware/tierEnforcement.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
@@ -339,7 +340,7 @@ async function handleAuditMetrics(env) {
       tierDistribution: revenue.data?.tierDistribution || [],
     });
   } catch (err) {
-    console.error(JSON.stringify({ event: 'analytics_overview_error', error: err.message }));
+    createLogger('analytics').error('analytics_overview_error', { error: err.message });
     return Response.json({ ok: false, error: 'Internal error processing analytics' }, { status: 500 });
   }
 }

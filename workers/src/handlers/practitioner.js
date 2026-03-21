@@ -391,6 +391,14 @@ async function handleInviteClient(request, env, userId, query) {
     await query(QUERIES.addClient, [pract.id, existingClient.id]);
     trackEvent(env, EVENTS.CLIENT_ADD, { userId, properties: { mode: 'added', tier: pract.tier } }).catch(() => {});
     trackFunnel(env, userId, FUNNELS.PRACTITIONER.name, 'first_client').catch(() => {});
+    // GTM-005: Gate 2 — first client added (fires once per practitioner)
+    if (currentCount === 0 && pract.tier !== 'free') {
+      trackEvent(env, EVENTS.PRACTITIONER_GATE2_COMPLETED, { userId, properties: { tier: pract.tier } }).catch(() => {});
+      const activationResult = await query(QUERIES.setPractitionerActivatedAt, [userId]).catch(() => null);
+      if (activationResult?.rows?.length) {
+        trackEvent(env, EVENTS.PRACTITIONER_ACTIVATED, { userId, properties: { tier: pract.tier } }).catch(() => {});
+      }
+    }
     return Response.json({
       ok: true,
       mode: 'added',
@@ -431,6 +439,14 @@ async function handleInviteClient(request, env, userId, query) {
 
   trackEvent(env, EVENTS.CLIENT_ADD, { userId, properties: { mode: 'invited', tier: pract.tier } }).catch(() => {});
   trackFunnel(env, userId, FUNNELS.PRACTITIONER.name, 'first_client').catch(() => {});
+  // GTM-005: Gate 2 — first client invited (fires once per practitioner)
+  if (currentCount === 0 && pract.tier !== 'free') {
+    trackEvent(env, EVENTS.PRACTITIONER_GATE2_COMPLETED, { userId, properties: { tier: pract.tier } }).catch(() => {});
+    const activationResult = await query(QUERIES.setPractitionerActivatedAt, [userId]).catch(() => null);
+    if (activationResult?.rows?.length) {
+      trackEvent(env, EVENTS.PRACTITIONER_ACTIVATED, { userId, properties: { tier: pract.tier } }).catch(() => {});
+    }
+  }
   return Response.json({
     ok: true,
     mode: 'invited',

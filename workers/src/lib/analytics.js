@@ -87,6 +87,11 @@ export const EVENTS = Object.freeze({
   CLIENT_REMOVE:       'client_remove',
   CLUSTER_CREATE:      'cluster_create',
   CLUSTER_SYNTHESIZE:  'cluster_synthesize',
+
+  // GTM-005: Practitioner activation funnel
+  PRACTITIONER_GATE1_COMPLETED: 'practitioner_gate1_completed', // paid subscription activated
+  PRACTITIONER_GATE2_COMPLETED: 'practitioner_gate2_completed', // first client added
+  PRACTITIONER_ACTIVATED:       'practitioner_activated',       // both gates met (fires once, idempotent)
 });
 
 // ─── Funnel Definitions ──────────────────────────────────────────────
@@ -128,10 +133,21 @@ export const FUNNELS = Object.freeze({
  * Lightweight — no full UA parser needed.
  */
 function getDeviceType(requestLike) {
-  const ua = (requestLike?.headers?.get?.('User-Agent') || requestLike?.headers?.['user-agent'] || '').toLowerCase();
-  if (/mobile|android|iphone|ipod/.test(ua)) return 'mobile';
-  if (/tablet|ipad/.test(ua)) return 'tablet';
+  const rawUa = requestLike?.headers?.get?.('User-Agent') || requestLike?.headers?.['user-agent'] || '';
+  const rawUaMobile = requestLike?.headers?.get?.('Sec-CH-UA-Mobile') || requestLike?.headers?.['sec-ch-ua-mobile'] || '';
+  const ua = normalizeDeviceSignal(rawUa);
+  const uaMobileHint = normalizeDeviceSignal(rawUaMobile);
+  if (uaMobileHint.includes('?1')) return 'mobile';
+  if (/tablet|ipad|sm-t|kindle/.test(ua)) return 'tablet';
+  if (/mobile|android|iphone|ipod|samsungbrowser|sm-f|galaxy z flip|galaxy z fold/.test(ua)) return 'mobile';
   return 'desktop';
+}
+
+function normalizeDeviceSignal(value) {
+  if (Array.isArray(value)) return value.join(' ').toLowerCase();
+  if (typeof value === 'string') return value.toLowerCase();
+  if (value == null) return '';
+  return String(value).toLowerCase();
 }
 
 /**
@@ -178,16 +194,27 @@ export async function trackEvent(env, eventName, opts = {}) {
   try {
     if (!env?.NEON_CONNECTION_STRING) return;
 
-    const { userId = null, sessionId = null, properties = {}, request = null, requestContext = null } = opts;
+    const {
+      userId = null,
+      sessionId = null,
+      properties = {},
+      request = null,
+      requestContext = null,
+      ...propertyAliases
+    } = opts;
     const sourceRequest = requestContext || request;
     const deviceType = sourceRequest ? getDeviceType(sourceRequest) : null;
     const country = sourceRequest ? getCountry(sourceRequest) : null;
+    const finalProperties = {
+      ...propertyAliases,
+      ...(properties && typeof properties === 'object' ? properties : {}),
+    };
 
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     await query(
       `INSERT INTO analytics_events (event_name, user_id, session_id, properties, device_type, country)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [eventName, userId, sessionId, JSON.stringify(properties), deviceType, country]
+      [eventName, userId, sessionId, JSON.stringify(finalProperties), deviceType, country]
     );
   } catch (err) {
     // Analytics must never block or crash user requests

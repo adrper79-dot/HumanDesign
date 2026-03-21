@@ -199,7 +199,7 @@ async function handleWebhook(request, env) {
       );
       await sendSMS(from, 'You\'ve been unsubscribed from Prime Self transit digests. Text START to re-subscribe.', env);
     } catch (err) {
-      console.warn('[sms] Opt-out error (non-fatal):', err.message);
+      createLogger('sms').warn('opt_out_error', { error: err.message });
     }
     return Response.json({ ok: true, action: 'opt-out' });
   }
@@ -213,7 +213,7 @@ async function handleWebhook(request, env) {
       );
       await sendSMS(from, 'Welcome to Prime Self transit digests! You\'ll receive daily transit insights based on your chart. Text STOP to unsubscribe.', env);
     } catch (err) {
-      console.warn('[sms] Opt-in error (non-fatal):', err.message);
+      createLogger('sms').warn('opt_in_error', { error: err.message });
     }
     return Response.json({ ok: true, action: 'opt-in' });
   }
@@ -232,7 +232,7 @@ async function handleWebhook(request, env) {
       const digest = await generateDigestForUser(user, env);
       await sendSMS(from, digest, env);
     } catch (err) {
-      console.warn('[sms] Status request error (non-fatal):', err.message);
+      createLogger('sms').warn('status_request_error', { error: err.message });
       await sendSMS(from, 'Unable to generate your transit update right now. Try again later.', env);
     }
     return Response.json({ ok: true, action: 'status' });
@@ -242,7 +242,7 @@ async function handleWebhook(request, env) {
   try {
     await sendSMS(from, 'Prime Self: Text TODAY for your transit update, or STOP to unsubscribe.', env);
   } catch (err) {
-    console.warn('[sms] Reply error (non-fatal):', err.message);
+    createLogger('sms').warn('reply_error', { error: err.message });
   }
 
   return Response.json({ ok: true, action: 'unknown-command' });
@@ -312,10 +312,10 @@ async function handleSendDigest(request, env) {
         }
         const digest = await generateDigestForUser(user, env);
         await sendSMS(user.phone, digest, env);
-        await recordUsage(env, user.id, 'sms_digest', '/api/sms/scheduled').catch(err => console.warn('[sms] Usage record failed (non-fatal):', err.message));
+        await recordUsage(env, user.id, 'sms_digest', '/api/sms/scheduled').catch(err => createLogger('sms').warn('usage_record_failed', { error: err.message }));
         sent++;
       } catch (err) {
-        console.warn(`[sms] Digest send failed for ${user.phone} (non-fatal):`, err.message);
+        createLogger('sms').warn('digest_send_failed', { phone: user.phone, error: err.message });
         failed++;
       }
     }
@@ -394,7 +394,7 @@ async function handleSendDigest(request, env) {
 
     const digest = await generateDigestForUser(user, env);
     await sendSMS(user.phone, digest, env);
-    await recordUsage(env, user.id, 'sms_digest', '/api/sms/send-digest').catch(err => console.warn('[sms] Usage record failed (non-fatal):', err.message));
+    await recordUsage(env, user.id, 'sms_digest', '/api/sms/send-digest').catch(err => createLogger('sms').warn('usage_record_failed', { error: err.message }));
 
     return Response.json({
       ok: true,
@@ -505,7 +505,7 @@ async function handleSubscribe(request, env) {
         );
       } catch (smsErr) {
         // Log but don't fail the subscription if SMS fails
-        console.warn('Confirmation SMS failed (non-fatal):', smsErr.message);
+        createLogger('sms').warn('confirmation_sms_failed', { error: smsErr.message });
       }
     }
 
@@ -567,7 +567,7 @@ async function handleUnsubscribe(request, env) {
         );
       } catch (smsErr) {
         // Log but don't fail the unsubscribe if SMS fails
-        console.warn('Confirmation SMS failed (non-fatal):', smsErr.message);
+        createLogger('sms').warn('confirmation_sms_failed', { error: smsErr.message });
       }
     }
 

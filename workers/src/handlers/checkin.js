@@ -13,6 +13,7 @@
 
 import { trackEvent } from './achievements.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
+import { createLogger } from '../lib/logger.js';
 import { getUserFromRequest } from '../middleware/auth.js';
 import { getCurrentTransits } from '../../../src/engine/transits.js';
 import { reportHandledRouteError } from '../lib/routeErrors.js';
@@ -141,7 +142,7 @@ export async function handleCheckinCreate(request, env, ctx) {
       aspects: transits.transitToNatalAspects || []
     };
   } catch (error) {
-    console.warn('Failed to compute transit snapshot:', error);
+    createLogger('checkin').warn('transit_snapshot_failed', { error: error?.message || String(error) });
     // Continue without transit data
   }
 
