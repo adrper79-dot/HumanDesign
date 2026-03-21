@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { loadLocalEnv } from '../scripts/load-local-env.js';
+loadLocalEnv();
 const apiBase = process.env.PROD_API || process.env.PUBLIC_API || 'https://prime-self-api.adrper79.workers.dev';
 const frontendBase = process.env.FRONTEND_BASE || 'https://selfprime.net';
 const testEmail = process.env.E2E_TEST_EMAIL || `gatecheck_${Date.now()}@example.com`;
