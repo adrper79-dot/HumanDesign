@@ -351,6 +351,52 @@ export const QUERIES = {
     WHERE user_id = $1
   `,
 
+  // GTM-005: Set activated_at only on first activation (idempotent).
+  // Returns a row only if the update was applied (activated_at was NULL).
+  setPractitionerActivatedAt: `
+    UPDATE practitioners
+    SET activated_at = NOW()
+    WHERE user_id = $1
+      AND activated_at IS NULL
+    RETURNING user_id, activated_at
+  `,
+
+  // GTM-009: Set trial_started_at when a practitioner subscription enters trialing status.
+  setPractitionerTrialStartedAt: `
+    UPDATE practitioners
+    SET trial_started_at = COALESCE(trial_started_at, NOW())
+    WHERE user_id = $1
+  `,
+
+  // GTM-009: Fetch practitioners currently in trial for nurture email scheduling.
+  cronGetNurturePractitioners: `
+    SELECT p.id AS practitioner_id, p.user_id, u.email,
+           p.trial_started_at,
+           EXTRACT(DAY FROM (NOW() - p.trial_started_at)) AS days_since_trial
+    FROM practitioners p
+    JOIN users u ON u.id = p.user_id
+    JOIN subscriptions s ON s.user_id = p.user_id
+    WHERE s.status = 'trialing'
+      AND (p.tier = 'practitioner' OR p.tier = 'agency')
+      AND p.trial_started_at IS NOT NULL
+      AND u.email_verified != false
+      AND u.email_marketing_opted_out != true
+  `,
+
+  // GTM-009: Record a sent nurture email (UNIQUE prevents re-sends).
+  insertNurtureEmailSent: `
+    INSERT INTO practitioner_nurture_emails (practitioner_id, email_day)
+    VALUES ($1, $2)
+    ON CONFLICT (practitioner_id, email_day) DO NOTHING
+    RETURNING id
+  `,
+
+  // GTM-009: Check if a nurture email for a given day was already sent.
+  getNurtureEmailSent: `
+    SELECT 1 FROM practitioner_nurture_emails
+    WHERE practitioner_id = $1 AND email_day = $2
+  `,
+
   getPractitionerByUserId: `
     -- Keep this query compatible with older production schemas that may not
     -- yet include Discord integration columns.
@@ -1040,6 +1086,36 @@ export const QUERIES = {
     SELECT id, user_id, endpoint, p256dh, auth
     FROM push_subscriptions
     WHERE user_id = $1 AND active = true
+  `,
+
+  // ─── Native push failure tracking (WC-004) ────────────────
+
+  insertNotificationFailure: `
+    INSERT INTO notification_failures (user_id, endpoint, reason)
+    VALUES ($1, $2, $3)
+  `,
+
+  getNotificationFailuresForRetry: `
+    SELECT id, user_id, endpoint, reason, retry_count
+    FROM notification_failures
+    WHERE retry_count < 3
+      AND created_at > NOW() - INTERVAL '24 hours'
+    ORDER BY retry_count ASC, created_at ASC
+    LIMIT 50
+  `,
+
+  deleteNotificationFailure: `
+    DELETE FROM notification_failures WHERE id = $1
+  `,
+
+  incrementNotificationFailureRetry: `
+    UPDATE notification_failures
+    SET retry_count = retry_count + 1, last_retry_at = NOW()
+    WHERE id = $1
+  `,
+
+  deactivatePushSubscriptionByEndpoint: `
+    UPDATE push_subscriptions SET active = false WHERE endpoint = $1
   `,
 
   // ─── Referrals ────────────────────────────────────────────

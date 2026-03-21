@@ -24,6 +24,8 @@ import { createQueryFn, QUERIES } from './db/queries.js';
 import { generateDigestForUser, sendSMS } from './handlers/sms.js';
 import { processWebhookRetries } from './lib/webhookDispatcher.js';
 import { sendNotificationToUser } from './handlers/push.js';
+import { APNsClient } from './lib/apns-client.js';
+import { FCMClient } from './lib/fcm-client.js';
 import { evaluateUserAlerts } from './handlers/alerts.js';
 import {
   sendEmail,
@@ -34,6 +36,13 @@ import {
   sendUpgradeNudgeEmail,
   sendTrialEndingEmail,
   sendPractitionerWeeklyDigest,
+  sendNurtureDay0,
+  sendNurtureDay1,
+  sendNurtureDay3,
+  sendNurtureDay5,
+  sendNurtureDay7,
+  sendNurtureDay11,
+  sendNurtureDay14,
 } from './lib/email.js';
 import { createCronLogger } from './lib/logger.js';
 import { initSentry } from './lib/sentry.js';
@@ -195,6 +204,65 @@ export async function runDailyTransitCron(env) {
       log.error('push_processing_error', { error: pushErr?.message });
       sentry.captureException(pushErr, { tags: { source: 'cron', step: 'push_notifications' } });
       // Don't throw - push failures shouldn't break the main cron
+    }
+
+    // ─── Step 5b: Retry failed native push notifications ────
+    try {
+      await withTimeout((async () => {
+        const { rows: failures } = await query(QUERIES.getNotificationFailuresForRetry);
+        if (failures.length === 0) return;
+
+        log.info('native_push_retries_start', { count: failures.length });
+        let retrySuccess = 0, retryFailed = 0;
+
+        const keyGates = gates.sun ? `Sun in Gate ${gates.sun.gate}` : 'Transit energy active';
+        const retryNotification = {
+          title: '🌟 Your Daily Transit Energy',
+          body: `${keyGates}. Open Prime Self to explore today's cosmic weather.`,
+          tag: `transit-daily-retry-${snapshotDate}`,
+          data: { type: 'transit_daily', date: snapshotDate, url: '/app/transits' },
+        };
+
+        for (const failure of failures) {
+          const parts = failure.endpoint.split(':');
+          const platform = parts[1];
+          const token = parts.slice(2).join(':');
+
+          try {
+            let result;
+            if (platform === 'apns') {
+              result = await new APNsClient(env).send(token, retryNotification);
+            } else if (platform === 'fcm') {
+              result = await new FCMClient(env).send(token, retryNotification);
+            } else {
+              // Unknown platform — discard
+              await query(QUERIES.deleteNotificationFailure, [failure.id]).catch(() => {});
+              continue;
+            }
+
+            if (result.ok) {
+              await query(QUERIES.deleteNotificationFailure, [failure.id]).catch(() => {});
+              retrySuccess++;
+            } else if (result.unregistered) {
+              await query(QUERIES.deactivatePushSubscriptionByEndpoint, [failure.endpoint]).catch(() => {});
+              await query(QUERIES.deleteNotificationFailure, [failure.id]).catch(() => {});
+              retryFailed++;
+            } else {
+              await query(QUERIES.incrementNotificationFailureRetry, [failure.id]).catch(() => {});
+              retryFailed++;
+            }
+          } catch (retryErr) {
+            log.error('native_retry_item_failed', { failureId: failure.id, error: retryErr.message });
+            await query(QUERIES.incrementNotificationFailureRetry, [failure.id]).catch(() => {});
+            retryFailed++;
+          }
+        }
+
+        log.info('native_push_retries_complete', { success: retrySuccess, failed: retryFailed });
+      })(), 30000, 'native_push_retries');
+    } catch (nativeRetryErr) {
+      log.error('native_push_retry_error', { error: nativeRetryErr?.message });
+      // Non-critical — retry will run again on next cron cycle
     }
 
     // ─── Step 6: Evaluate transit alerts ────────────────
@@ -371,6 +439,68 @@ export async function runDailyTransitCron(env) {
       log.error('trial_reminder_error', { error: trialErr?.message });
       sentry.captureException(trialErr, { tags: { source: 'cron', step: 'trial_reminders' } });
       // Don't throw - trial reminder failures shouldn't break the main cron
+    }
+
+    // ─── Step 7c: Practitioner Trial Nurture Sequence (GTM-009) ──────────────
+    try {
+      await withTimeout((async () => {
+      const NURTURE_DAYS = [0, 1, 3, 5, 7, 11, 14];
+      const NURTURE_FNS = {
+        0:  (e, n, k, f, a) => sendNurtureDay0(e, n, k, f, a),
+        1:  (e, n, k, f, a) => sendNurtureDay1(e, n, k, f, a),
+        3:  (e, n, k, f, a) => sendNurtureDay3(e, n, k, f, a),
+        5:  (e, n, k, f, a) => sendNurtureDay5(e, n, k, f, a),
+        7:  (e, n, k, f, a) => sendNurtureDay7(e, n, k, f, a),
+        11: (e, n, k, f, a) => sendNurtureDay11(e, n, k, f, a),
+        14: (e, n, k, t, f, a) => sendNurtureDay14(e, n, t, f, a),
+      };
+
+      const { rows: nurtureRows } = await query(QUERIES.cronGetNurturePractitioners);
+      log.info('nurture_practitioners', { count: nurtureRows.length });
+
+      let nurtureSent = 0, nurtureSkipped = 0, nurtureFailed = 0;
+
+      for (const pract of nurtureRows) {
+        const day = Math.floor(Number(pract.days_since_trial));
+        if (!NURTURE_DAYS.includes(day)) continue;
+
+        try {
+          // Idempotency: skip if this day's email was already sent
+          const { rows: alreadySent } = await query(QUERIES.getNurtureEmailSent, [pract.practitioner_id, day]);
+          if (alreadySent.length > 0) { nurtureSkipped++; continue; }
+
+          // Day 3: skip nudge if practitioner already has at least 1 client
+          if (day === 3) {
+            const { rows: clients } = await query(QUERIES.countPractitionerClients, [pract.practitioner_id]).catch(() => ({ rows: [] }));
+            const count = parseInt(clients?.[0]?.count || '0', 10);
+            if (count >= 1) {
+              await query(QUERIES.insertNurtureEmailSent, [pract.practitioner_id, day]);
+              nurtureSkipped++;
+              continue;
+            }
+          }
+
+          const fn = NURTURE_FNS[day];
+          const displayName = pract.name || pract.email.split('@')[0];
+          if (day === 14) {
+            await fn(pract.email, displayName, pract.tier || 'Practitioner', env.RESEND_API_KEY, env.FROM_EMAIL, env.COMPANY_ADDRESS || '');
+          } else {
+            await fn(pract.email, displayName, env.RESEND_API_KEY, env.FROM_EMAIL, env.COMPANY_ADDRESS || '');
+          }
+
+          await query(QUERIES.insertNurtureEmailSent, [pract.practitioner_id, day]);
+          nurtureSent++;
+        } catch (err) {
+          log.error('nurture_email_failed', { practitionerId: pract.practitioner_id, day, error: err.message });
+          nurtureFailed++;
+        }
+      }
+
+      log.info('nurture_complete', { sent: nurtureSent, skipped: nurtureSkipped, failed: nurtureFailed });
+      })(), 45000, 'practitioner_nurture');
+    } catch (nurtureErr) {
+      log.error('nurture_error', { error: nurtureErr?.message });
+      sentry.captureException(nurtureErr, { tags: { source: 'cron', step: 'practitioner_nurture' } });
     }
 
     // ─── Step 8: Purge expired / old revoked refresh tokens ─

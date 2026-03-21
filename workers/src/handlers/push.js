@@ -15,6 +15,8 @@
 import { getUserFromRequest } from '../middleware/auth.js';
 import { createQueryFn, QUERIES } from '../db/queries.js';
 import { createLogger } from '../lib/logger.js';
+import { APNsClient } from '../lib/apns-client.js';
+import { FCMClient } from '../lib/fcm-client.js';
 
 // ─── Web Push Protocol Helpers (RFC 8030 / RFC 8291) ─────────────────────
 
@@ -617,15 +619,119 @@ async function getNotificationHistory(request, env, user) {
 }
 
 /**
+ * Deliver a notification to a native (APNs or FCM) subscription.
+ *
+ * Parses the "native:{platform}:{token}" endpoint format stored by
+ * nativeSubscribe(), routes to the appropriate client, and:
+ *  - on success: logs to push_notifications
+ *  - on unregistered: deactivates the subscription (token is invalid)
+ *  - on transient error: inserts a notification_failures row for cron retry
+ *
+ * @param {object} env          - Worker environment
+ * @param {object} sub          - Push subscription row (includes user_id)
+ * @param {object} notification - Payload { title, body, tag?, data? }
+ * @returns {boolean} - true if delivered successfully
+ */
+async function sendNativeNotification(env, sub, notification) {
+  const parts = sub.endpoint.split(':');
+  const platform = parts[1]; // 'apns' | 'fcm'
+  const token = parts.slice(2).join(':'); // rest — fcm tokens may contain ':'
+
+  const query = createQueryFn(env.NEON_CONNECTION_STRING);
+  const log = createLogger('push');
+
+  try {
+    let result;
+    if (platform === 'apns') {
+      const client = new APNsClient(env);
+      result = await client.send(token, {
+        title: notification.title,
+        body: notification.body,
+        data: notification.data || {},
+      });
+    } else if (platform === 'fcm') {
+      const client = new FCMClient(env);
+      result = await client.send(token, {
+        title: notification.title,
+        body: notification.body,
+        data: notification.data || {},
+      });
+    } else {
+      log.error('native_unknown_platform', { platform, subscriptionId: sub.id });
+      return false;
+    }
+
+    if (result.ok) {
+      await query(QUERIES.insertPushNotificationFull, [
+        sub.id,
+        sub.user_id,
+        notification.data?.type || 'unknown',
+        notification.title,
+        notification.body,
+        null,
+        null,
+        notification.tag || null,
+        JSON.stringify(notification.data || {}),
+        200,
+        null,
+        true,
+      ]).catch((e) => log.error('native_log_success_failed', { error: e.message }));
+      return true;
+    }
+
+    // Permanent failure — token no longer valid
+    if (result.unregistered) {
+      await query(QUERIES.deactivatePushSubscription, [sub.id]).catch((e) =>
+        log.error('native_deactivate_failed', { error: e.message })
+      );
+      log.info('native_subscription_deactivated', { subscriptionId: sub.id, platform });
+    } else {
+      // Transient failure — record for cron retry
+      const reason = result.reason || result.error || 'unknown';
+      await query(QUERIES.insertNotificationFailure, [sub.user_id, sub.endpoint, reason]).catch(
+        (e) => log.error('native_failure_insert_failed', { error: e.message })
+      );
+    }
+
+    const statusCode = result.status || 500;
+    const responseBody = result.reason || result.error || null;
+    await query(QUERIES.insertPushNotificationFull, [
+      sub.id,
+      sub.user_id,
+      notification.data?.type || 'unknown',
+      notification.title,
+      notification.body,
+      null,
+      null,
+      notification.tag || null,
+      JSON.stringify(notification.data || {}),
+      statusCode,
+      responseBody,
+      false,
+    ]).catch((e) => log.error('native_log_failure_failed', { error: e.message }));
+
+    return false;
+  } catch (error) {
+    log.error('native_send_error', { platform, error: error?.message || String(error) });
+    return false;
+  }
+}
+
+/**
  * Send push notification using Web Push API
  * Called by cron jobs and event handlers
- * 
+ *
  * @param {object} env - Worker environment
  * @param {object} subscription - Push subscription with endpoint, p256dh, auth
  * @param {object} notification - Notification payload { title, body, icon, badge, tag, data }
  * @returns {boolean} - True if sent successfully
  */
 export async function sendPushNotification(env, subscription, notification) {
+  // Native subscriptions must be dispatched via sendNativeNotification
+  if (subscription.endpoint?.startsWith('native:')) {
+    return sendNativeNotification(env, subscription, notification);
+  }
+
   try {
     const query = createQueryFn(env.NEON_CONNECTION_STRING);
     // Web Push requires web-push library or manual implementation

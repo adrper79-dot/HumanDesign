@@ -3655,7 +3655,7 @@
       "severity": "P1",
       "area": "workers/push",
       "title": "APNs and FCM native push delivery unimplemented — iOS and Android devices do not receive push notifications",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-21",
       "lastSeen": "2026-03-21",
       "file": [
@@ -3680,7 +3680,8 @@
       "constraints": [
         "APNs requires a p8 key file — do not store in source code; use Workers secrets",
         "Depends on BL-MOBILE-P1-1 (native app) for full end-to-end delivery; web-only delivery via VAPID already works"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     },
     {
       "id": "WC-005",
@@ -4253,7 +4254,7 @@
       "severity": "P2",
       "area": "frontend/accessibility",
       "title": "Modal dialogs have no keyboard focus trap — Tab key escapes to background content",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-22",
       "lastSeen": "2026-03-22",
       "file": [
@@ -4279,7 +4280,8 @@
       "constraints": [
         "Must not break existing keyboard navigation outside of modals",
         "Can be a lightweight custom implementation — no additional npm dependency required"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     },
     {
       "id": "ARIA-002",
@@ -4287,7 +4289,7 @@
       "severity": "P2",
       "area": "frontend/accessibility",
       "title": "63 button elements in index.html lack explicit aria-label — screen readers announce unnamed buttons",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-22",
       "lastSeen": "2026-03-22",
       "file": [
@@ -4310,7 +4312,8 @@
       "constraints": [
         "Prefer aria-label on the button element itself",
         "Do not change visual appearance — aria-label is invisible to sighted users"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     },
     {
       "id": "DB-001",
@@ -4318,7 +4321,7 @@
       "severity": "P2",
       "area": "workers/db/migrations",
       "title": "5 FK columns missing ON DELETE clause — user deletion leaves orphaned rows in 4 tables",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-22",
       "lastSeen": "2026-03-22",
       "file": [
@@ -4348,7 +4351,8 @@
         "Must write a new forward migration — do not modify existing migration files",
         "Test on a branch DB before applying to production",
         "Coordinate with GDPR deletion handler in workers/src/handlers/auth.js"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     },
     {
       "id": "CSS-001",
@@ -4356,7 +4360,7 @@
       "severity": "P3",
       "area": "frontend/css",
       "title": "Magic color values in alerts.css and calendar.css bypass design token system",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-22",
       "lastSeen": "2026-03-22",
       "file": [
@@ -4380,7 +4384,8 @@
       "constraints": [
         "Purely cosmetic — no behaviour change",
         "Can be batched with other CSS cleanup"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     },
     {
       "id": "ARCH-001",
@@ -4388,7 +4393,7 @@
       "severity": "P3",
       "area": "frontend/js",
       "title": "app.js grew to 8358 lines (+858 lines since last assessment) — monolith trend continuing",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-22",
       "lastSeen": "2026-03-22",
       "file": [
@@ -4410,7 +4415,8 @@
       "constraints": [
         "P3 tech-debt — schedule after launch",
         "Extract incrementally — one module at a time to avoid merge conflicts"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     },
     {
       "id": "QC-001",
@@ -4418,7 +4424,7 @@
       "severity": "P3",
       "area": "workers/src/handlers",
       "title": "27 raw console.log/warn/error calls in worker handlers — should route through logger.js",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-22",
       "lastSeen": "2026-03-22",
       "file": [
@@ -4450,7 +4456,8 @@
       "constraints": [
         "P3 tech-debt — schedule after launch",
         "Do not change log message content, only route through logger"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     },
     {
       "id": "UX-016",
@@ -4458,7 +4465,7 @@
       "severity": "P2",
       "area": "frontend/ux",
       "title": "Only 1 empty-state CSS class in 8,358-line app — most empty data views show blank content",
-      "status": "open",
+      "status": "resolved",
       "firstSeen": "2026-03-22",
       "lastSeen": "2026-03-22",
       "file": [
@@ -4480,7 +4487,8 @@
       "constraints": [
         "Must not alter app logic -- UI-only change",
         "Prioritize practitioner-facing views (client list) over personal views"
-      ]
+      ],
+      "resolvedAt": "2026-03-22"
     }
   ],
   "history": [
